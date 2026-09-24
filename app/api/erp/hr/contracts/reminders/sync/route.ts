@@ -15,8 +15,13 @@ export async function POST(request: NextRequest) {
     const body = bodySchema.parse(await request.json().catch(() => ({})));
     // Smart CRM owns the reminders — this only asks it to (re)generate contract
     // reminders into crm_action_items; contract data stays in its source module.
-    const { created } = await contractRegisterService.syncReminders(body.daysAhead ?? 30);
-    return apiOk({ created });
+    // Also syncs Contract Intelligence reminders (risk/missing-clause/renewal/
+    // payment) from the same button — a sibling function, not a second UI.
+    const [base, intelligence] = await Promise.all([
+      contractRegisterService.syncReminders(body.daysAhead ?? 30),
+      contractRegisterService.syncIntelligenceReminders(body.daysAhead ?? 30),
+    ]);
+    return apiOk({ created: base.created + intelligence.created });
   } catch (error) {
     return handleApiError(error);
   }

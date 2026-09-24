@@ -89,6 +89,11 @@ type SuperAdminRoznamchaRow = {
   debit: number;
   credit: number;
   usdRate: number;
+  /** The real usd_rate stored on the line at entry time, before the
+   * "default to 1 when missing" fallback baked into usdRate — null means
+   * this historical transaction genuinely has no rate on record, and the
+   * report must show "Rate Missing" rather than a fabricated 1:1 rate. */
+  rawUsdRate: number | null;
   debitUsd: number;
   creditUsd: number;
   searchText: string;
@@ -411,7 +416,8 @@ function toBaseRow(entry: RoznamchaEntryRow, lines: RoznamchaLineRow[]): SuperAd
 
   const debit = Number(primaryLine?.debit || 0);
   const credit = Number(primaryLine?.credit || 0);
-  const usdRate = Number(primaryLine?.usd_rate || 0) > 0 ? primaryLine!.usd_rate : 1;
+  const rawUsdRate = Number(primaryLine?.usd_rate || 0) > 0 ? Number(primaryLine!.usd_rate) : null;
+  const usdRate = rawUsdRate ?? 1;
   const debitUsd = debit > 0 ? Number(primaryLine?.usd_amount || 0) : 0;
   const creditUsd = credit > 0 ? Number(primaryLine?.usd_amount || 0) : 0;
   const currency = primaryLine?.currency ?? entry.countries?.currency_code ?? "-";
@@ -477,6 +483,7 @@ function toBaseRow(entry: RoznamchaEntryRow, lines: RoznamchaLineRow[]): SuperAd
     debit,
     credit,
     usdRate,
+    rawUsdRate,
     debitUsd,
     creditUsd,
     searchText: buildSearchText(entry, lines),
@@ -495,7 +502,8 @@ function lineToRow(
 ): SuperAdminRoznamchaRow {
   const debit = Number(line.debit || 0);
   const credit = Number(line.credit || 0);
-  const usdRate = Number(line.usd_rate || 0) > 0 ? line.usd_rate : 1;
+  const rawUsdRate = Number(line.usd_rate || 0) > 0 ? Number(line.usd_rate) : null;
+  const usdRate = rawUsdRate ?? 1;
   const debitUsd = debit > 0 ? Number(line.usd_amount || 0) : 0;
   const creditUsd = credit > 0 ? Number(line.usd_amount || 0) : 0;
   const currency = line.currency ?? entry.countries?.currency_code ?? "-";
@@ -561,6 +569,7 @@ function lineToRow(
     debit,
     credit,
     usdRate,
+    rawUsdRate,
     debitUsd,
     creditUsd,
     searchText: buildSearchText(entry, [line]),
@@ -2131,53 +2140,78 @@ function SuperAdminRoznamchaReportViewContent({
 
       {(() => {
         const columns: ReportColumn<SuperAdminRoznamchaRow>[] = [
-          { key: "index", header: "R#", render: (_, idx) => idx + 1, align: "center", width: "40px" },
-          { key: "entryDate", header: "Date", width: "80px", align: "center" },
-          { key: "journalSerial", header: "Journal Serial\nCountry Serial", render: (r) => (
-            <div className="flex flex-col text-[11px] text-left leading-tight gap-0.5">
-              <span className="font-bold text-slate-800 dark:text-slate-200">{r.countrySerialNo || "-"}</span>
-            </div>
+          { key: "entryDate", header: th("Date"), width: "85px", align: "center", render: (r) => (
+            <span className="font-semibold text-slate-800 dark:text-slate-200 whitespace-nowrap">
+              {r.entryDate ? String(r.entryDate).slice(0, 10) : "-"}
+            </span>
           ) },
-          { key: "branchSerial", header: "Branch Serial\nMain Branch Sr", render: (r) => (
-            <div className="flex flex-col text-[11px] text-left leading-tight gap-0.5">
-              <span className="font-bold text-slate-800 dark:text-slate-200">{r.branchSerialNo || "-"}</span>
-            </div>
+          { key: "journalSerial", header: th("RZ No."), width: "100px", align: "left", render: (r) => {
+            const rzNo = r.sourceReferenceNo ? (r.sourceReferenceNo.startsWith("RZ-") ? r.sourceReferenceNo : `RZ-${r.sourceReferenceNo.slice(-6)}`) : (r.debit > 0 ? `DR-${r.id.slice(0, 6).toUpperCase()}` : `CR-${r.id.slice(0, 6).toUpperCase()}`);
+            return (
+              <span className="font-mono font-bold text-blue-700 dark:text-blue-400 whitespace-nowrap" title={r.id}>
+                {rzNo}
+              </span>
+            );
+          } },
+          { key: "accountCodeName", header: th("Account Name"), render: (r) => (
+            <span className="font-bold text-slate-900 dark:text-slate-100 line-clamp-2">
+              {r.partyName || r.paymentAccountName || "—"}
+            </span>
           ) },
-          { key: "cityBranchSerial", header: "City Branch Sr\nEntry Serial", render: (r) => (
-            <div className="flex flex-col text-[11px] text-left leading-tight gap-0.5">
-              <span className="font-bold text-slate-800 dark:text-slate-200">{r.id || "-"}</span>
-            </div>
+          { key: "accountNo", header: th("Account No."), width: "110px", render: (r) => (
+            <span className="font-mono font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">
+              {r.accountCode || r.accountNo || "—"}
+            </span>
           ) },
-          { key: "accountCodeName", header: "Account Code\nAccount Name", render: (r) => (
-            <div className="flex flex-col text-[11px] text-left leading-tight gap-0.5">
-              <span className="font-bold text-slate-800 dark:text-slate-200">{r.accountCode || "-"}</span>
-              <span className="text-slate-500 font-normal">{r.partyName || "-"}</span>
-            </div>
+          { key: "narration", header: th("Details"), render: (r) => (
+            <span title={r.narration} className="line-clamp-2 leading-tight text-slate-600 dark:text-slate-400">
+              {r.narration || "—"}
+            </span>
           ) },
-          { key: "countryBranchName", header: "Country\nBranch", render: (r) => (
-             <div className="flex flex-col text-[11px] text-left leading-tight gap-0.5">
-              <span className="font-bold uppercase text-slate-800 dark:text-slate-200">{r.countryName || "-"}</span>
-              <span className="text-slate-500 font-normal">{r.countryBranchName || "-"}</span>
-            </div>
+          { key: "debit", header: th("Debit"), align: "right", width: "95px", render: (r) => (
+            r.debit > 0 ? (
+              <span className="font-black text-rose-700 dark:text-rose-400 font-mono whitespace-nowrap">
+                {fmtNumber(r.debit)}
+              </span>
+            ) : <span className="text-slate-300 dark:text-slate-700">—</span>
           ) },
-          { key: "cityBranchName", header: "City Branch", render: (r) => r.cityBranchId ? r.cityBranchName : "-", width: "100px" },
-          { key: "createdBy", header: "User name", render: (r) => ((r.sourceEntry as any)?.createdBy ?? r.sourceEntry?.created_by) || "admin" },
-          { key: "typeLabel", header: "Roznamcha Type\nRoznamcha Number *\nRoznamcha Category *", render: (r) => (
-            <div className="flex flex-col text-[11px] text-left leading-tight gap-0.5">
-              <span className="font-bold text-slate-800 dark:text-slate-200" title={th("Roznamcha Type")}>{r.typeLabel || "-"}</span>
-              <span className="font-semibold text-blue-700 dark:text-blue-400" title={th("Roznamcha Number")}>{r.sourceReferenceNo || r.voucherNo || "-"}</span>
-              <span className="text-slate-500 font-normal" title={th("Roznamcha Category")}>{r.sourceTransactionType || "-"}</span>
-            </div>
+          { key: "credit", header: th("Credit"), align: "right", width: "95px", render: (r) => (
+            r.credit > 0 ? (
+              <span className="font-black text-emerald-700 dark:text-emerald-400 font-mono whitespace-nowrap">
+                {fmtNumber(r.credit)}
+              </span>
+            ) : <span className="text-slate-300 dark:text-slate-700">—</span>
           ) },
-          { key: "narration", header: "Remarks / Notes", render: (r) => <span title={r.narration} className="line-clamp-3 max-w-[250px] leading-tight">{r.narration}</span> },
-          { key: "debit", header: "Debit", align: "right", render: (r) => fmtNumber(r.debit) },
-          { key: "credit", header: "Credit", align: "right", render: (r) => fmtNumber(r.credit) },
-          { key: "remainingBalance", header: "Running Balance", align: "right", render: (r) => fmtNumber(r.remainingBalance || 0) },
-          { key: "countryCurrency", header: "Currency", align: "center", render: (r) => r.countryCurrency || "PKR" },
-          ...(canViewConversionColumns ? ([
-            { key: "usdRate", header: "Exchange Rate", align: "right", render: (r: SuperAdminRoznamchaRow) => fmtRate(getRowRate(r.currency)) },
-            { key: "finalAmount", header: "Final Amount", align: "right", render: (r: SuperAdminRoznamchaRow) => fmtNumber((r.debit > 0 ? r.debit : r.credit) / getRowRate(r.currency)) }
-          ] as ReportColumn<SuperAdminRoznamchaRow>[]) : [])
+          { key: "countryCurrency", header: th("Currency"), align: "center", width: "65px", render: (r) => (
+            <span className="font-bold text-slate-700 dark:text-slate-300 text-xs">
+              {r.countryCurrency || "AED"}
+            </span>
+          ) },
+          { key: "usdRate", header: th("Exchange Rate"), align: "center", width: "100px", render: (r: SuperAdminRoznamchaRow) => (
+            r.rawUsdRate == null ? (
+              <span className="text-amber-600 dark:text-amber-400 font-semibold text-[11px] whitespace-nowrap">
+                {th("Rate Missing")}
+              </span>
+            ) : (
+              <span className="font-mono font-bold text-blue-700 dark:text-blue-400 text-xs whitespace-nowrap">
+                {fmtRate(r.rawUsdRate)}
+              </span>
+            )
+          ) },
+          { key: "finalAmount", header: th("USD Equivalent"), align: "right", width: "110px", render: (r: SuperAdminRoznamchaRow) => {
+            if (r.rawUsdRate == null) {
+              return <span className="text-amber-600 dark:text-amber-400 font-semibold text-[11px] whitespace-nowrap">{th("Rate Missing")}</span>;
+            }
+            const usdVal = r.debit > 0 ? r.debitUsd : r.creditUsd;
+            return (
+              <span className={cn(
+                "font-mono font-bold text-xs whitespace-nowrap",
+                r.credit > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
+              )}>
+                ${fmtNumber(usdVal)}
+              </span>
+            );
+          } }
         ];
 
         return (

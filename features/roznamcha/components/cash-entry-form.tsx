@@ -4047,19 +4047,23 @@ export function CashEntryForm({
       </div>
       <CardContent className="p-0">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[700px] border-collapse border border-slate-200 dark:border-slate-800 text-xs">
+          <table className="w-full min-w-[1050px] border-collapse border border-slate-200 dark:border-slate-800 text-xs">
             <thead className="bg-slate-50 text-slate-700 dark:bg-slate-900 dark:text-slate-300">
               <tr className="text-left">
-                <Th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{t(lang, "roz.col_date_history", "Date & History")}</Th>
-                <Th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{t(lang, "roz.col_serials_vouchers", "Serials & Vouchers")}</Th>
-                <Th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{t(lang, "roz.col_category", "Roznamcha Category")}</Th>
-                <Th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{t(lang, "roz.col_account_details", "Account Details")}</Th>
-                <Th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{t(lang, "roz.col_numbers", "Numbers")}</Th>
-                <Th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{t(lang, "roz.col_details", "Details")}</Th>
-                <Th className="p-3 font-bold text-center border border-slate-200 dark:border-slate-800">{t(lang, "roz.col_credit_debit", "Credit/Debit")}</Th>
-                <Th className="p-3 font-bold text-right border border-slate-200 dark:border-slate-800">{t(lang, "roz.col_debit", "Debit")}</Th>
-                <Th className="p-3 font-bold text-right border border-slate-200 dark:border-slate-800">{t(lang, "roz.col_credit", "Credit")}</Th>
-                <Th className="p-3 font-bold text-center border border-slate-200 dark:border-slate-800">{t(lang, "common.actions", "Actions")}</Th>
+                <Th className="p-2.5 font-bold border border-slate-200 dark:border-slate-800 whitespace-nowrap">Date &amp; Time</Th>
+                <Th className="p-2.5 font-bold border border-slate-200 dark:border-slate-800 whitespace-nowrap">User Name</Th>
+                <Th className="p-2.5 font-bold border border-slate-200 dark:border-slate-800 whitespace-nowrap">Branch Code</Th>
+                <Th className="p-2.5 font-bold border border-slate-200 dark:border-slate-800 whitespace-nowrap">Entry Serial</Th>
+                <Th className="p-2.5 font-bold border border-slate-200 dark:border-slate-800 whitespace-nowrap">RZH</Th>
+                <Th className="p-2.5 font-bold border border-slate-200 dark:border-slate-800">Name</Th>
+                <Th className="p-2.5 font-bold border border-slate-200 dark:border-slate-800">Number</Th>
+                <Th className="p-2.5 font-bold border border-slate-200 dark:border-slate-800 min-w-[200px]">Details</Th>
+                <Th className="p-2.5 font-bold text-right border border-slate-200 dark:border-slate-800 text-emerald-700 dark:text-emerald-400 whitespace-nowrap">Credit</Th>
+                <Th className="p-2.5 font-bold text-right border border-slate-200 dark:border-slate-800 text-rose-700 dark:text-rose-400 whitespace-nowrap">Debit</Th>
+                <Th className="p-2.5 font-bold text-center border border-slate-200 dark:border-slate-800 whitespace-nowrap">Exchange Rate</Th>
+                <Th className="p-2.5 font-bold text-right border border-slate-200 dark:border-slate-800 text-emerald-600 whitespace-nowrap">USD Credit</Th>
+                <Th className="p-2.5 font-bold text-right border border-slate-200 dark:border-slate-800 text-rose-600 whitespace-nowrap">USD Debit</Th>
+                <Th className="p-2.5 font-bold text-center border border-slate-200 dark:border-slate-800 whitespace-nowrap">Actions</Th>
               </tr>
             </thead>
             <tbody>
@@ -4103,194 +4107,193 @@ export function CashEntryForm({
                       </span>
                     );
 
-                    const globalSerial = row.super_admin_serial_number || `ERP-${row.id?.slice(0, 6)?.toUpperCase()}`;
-                    const countrySerial = row.country_transaction_serial_number || row.journal_no || "-";
-                    const branchSerial = row.branch_transaction_serial_number || row.voucher_no || "-";
-                    const entrySerial = line.entry_serial_number || (isDebit ? `DR-${row.id?.slice(0, 6)?.toUpperCase()}` : `CR-${row.id?.slice(0, 6)?.toUpperCase()}`);
+                    const lineExchangeRate = line.exchange_rate ?? line.usd_rate ?? row.exchange_rate ?? null;
+                    const lineUsdAmount = line.usd_amount ?? (lineExchangeRate ? amountVal / Number(lineExchangeRate) : null);
+                    const usdCredit = isCredit ? (lineUsdAmount ? `$${fmtAmount(lineUsdAmount)}` : (lineExchangeRate ? `$${fmtAmount(amountVal / Number(lineExchangeRate))}` : null)) : null;
+                    const usdDebit = isDebit ? (lineUsdAmount ? `$${fmtAmount(lineUsdAmount)}` : (lineExchangeRate ? `$${fmtAmount(amountVal / Number(lineExchangeRate))}` : null)) : null;
+
+                    // Clean RZ reference
+                    const rzRef = line.entry_serial_number || (row.journal_no ? (row.journal_no.startsWith("RZ-") ? row.journal_no : `RZ-${row.journal_no.slice(-6)}`) : (isDebit ? `DR-${row.id?.slice(0, 6)?.toUpperCase()}` : `CR-${row.id?.slice(0, 6)?.toUpperCase()}`));
+                    const rzhType = row.type ? (row.type.charAt(0).toUpperCase() + row.type.slice(1)) : "Cash";
 
                     return (
                       <tr key={`${row.id}-${line.id || idx}`} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/50">
-                        <td className="p-3 border border-slate-200 dark:border-slate-800 align-top">
-                          <div className="font-semibold text-slate-900 dark:text-slate-100">{new Date(row.created_at).toLocaleString()}</div>
-                          <div className="text-[10px] text-muted-foreground mt-1">{t(lang, "roz.creator", "Creator")}: {row.profiles?.full_name || row.created_by || t(lang, "common.system", "System")}</div>
-                          <div className="text-[10px] text-muted-foreground">{t(lang, "roz.location", "Location")}: {row.countries?.name || "-"} | {row.city_branches?.name || row.country_branches?.name || "-"}</div>
-                        </td>
-                        <td className="p-3 font-mono text-[10.5px] border border-slate-200 dark:border-slate-800 align-top">
-                          <div className="flex flex-col gap-1.5">
-                            {/* Global Serial (Super Admin Only) */}
-                            {userRoleLevel === "super_admin" && (
-                              <div className="flex items-center justify-between rounded bg-blue-50/80 px-2 py-0.5 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/50">
-                                <span className="font-bold text-[9px] uppercase tracking-wider text-blue-700 dark:text-blue-400">{t(lang, "roz.cef_global_label", "GLOBAL:")}</span>
-                                <span className="font-extrabold text-blue-900 dark:text-blue-200">{globalSerial}</span>
-                              </div>
-                            )}
-                            {/* Country Serial (Country Admin & Super Admin) */}
-                            {(userRoleLevel === "super_admin" || userRoleLevel === "country") && (
-                              <div className="flex items-center justify-between rounded bg-indigo-50/80 px-2 py-0.5 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/50">
-                                <span className="font-bold text-[9px] uppercase tracking-wider text-indigo-700 dark:text-indigo-400">{t(lang, "roz.cef_ctry_label", "CTRY:")}</span>
-                                <span className="font-extrabold text-indigo-900 dark:text-indigo-200">{countrySerial}</span>
-                              </div>
-                            )}
-                            {/* Branch Serial (Branch, Country & Super Admin) */}
-                            {(userRoleLevel === "super_admin" || userRoleLevel === "country" || userRoleLevel === "branch") && (
-                              <div className="flex items-center justify-between rounded bg-slate-100/80 px-2 py-0.5 dark:bg-slate-850 border border-slate-200 dark:border-slate-800">
-                                <span className="font-bold text-[9px] uppercase tracking-wider text-slate-600 dark:text-slate-400">{t(lang, "roz.cef_brn_label", "BRN:")}</span>
-                                <span className="font-extrabold text-slate-800 dark:text-slate-200">{branchSerial}</span>
-                              </div>
-                            )}
-                            {/* Entry Serial (DR / CR) - Visible to ALL levels */}
-                            <div className={cn(
-                              "flex items-center justify-between rounded px-2 py-0.5 border",
-                              isDebit 
-                                ? "bg-rose-50 border-rose-200 text-rose-800 dark:bg-rose-950/40 dark:border-rose-900/50 dark:text-rose-300"
-                                : "bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/40 dark:border-emerald-900/50 dark:text-emerald-300"
-                            )}>
-                              <span className="font-black text-[9px] uppercase tracking-wider">{isDebit ? "DR SERIAL:" : "CR SERIAL:"}</span>
-                              <span className="font-black font-mono">{entrySerial}</span>
-                            </div>
+                        {/* 1. Date & Time */}
+                        <td className="p-2.5 border border-slate-200 dark:border-slate-800 align-top whitespace-nowrap">
+                          <div className="font-bold text-slate-900 dark:text-slate-100">
+                            {row.entry_date ? String(row.entry_date).slice(0, 10) : new Date(row.created_at).toLocaleDateString()}
+                          </div>
+                          <div className="text-[10px] text-muted-foreground">
+                            {new Date(row.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                           </div>
                         </td>
-                          <td className="p-3 border border-slate-200 dark:border-slate-800 align-top">
-                            <span className="inline-flex items-center rounded-md bg-purple-50 px-2 py-1 text-[11px] font-bold text-purple-700 ring-1 ring-inset ring-purple-700/10 dark:bg-purple-400/10 dark:text-purple-400 dark:ring-purple-400/30">
-                              {getRoznamchaCategoryLabel(row)}
-                            </span>
-                          </td>
-                          <td className="p-3 border border-slate-200 dark:border-slate-800 align-top">
-                              <div className="flex flex-col gap-2">
-                                <div>
-                                  <span className={cn(
-                                    "text-[9px] font-bold uppercase tracking-wider mr-1",
-                                    isDebit ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"
-                                  )}>
-                                    {isDebit ? "DR" : "CR"}
-                                  </span>
-                                  <span className={cn(
-                                    "inline-flex max-w-fit items-center rounded-md border px-1.5 py-0.5 font-mono text-[9px] font-bold shadow-sm",
-                                    isDebit ? "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800/30 dark:bg-rose-950/20 dark:text-rose-300" :
-                                    "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800/30 dark:bg-emerald-950/20 dark:text-emerald-300"
-                                  )}>
-                                    {line.account_number || "—"}
-                                  </span>
-                                  <span className={cn(
-                                    "text-[10px] font-bold mt-0.5 line-clamp-2 block",
-                                    isDebit ? "text-rose-900 dark:text-rose-100" : "text-emerald-900 dark:text-emerald-100"
-                                  )}>
-                                    {line.ledgers?.name || "—"}
-                                  </span>
-                                </div>
-                              </div>
-                            </td>
-                          <td className="p-3 border border-slate-200 dark:border-slate-800 align-top">
-                            <div className="flex flex-col gap-1">
-                              {row.source_reference_no ? (
-                                <div className="flex items-center gap-1">
-                                  <span className="text-[9px] font-bold uppercase text-slate-400">{t(lang, "roz.cef_order_label", "Order:")}</span>
-                                  <span className="font-mono text-[10.5px] font-bold text-blue-700 dark:text-blue-400" title={t(lang, "roz.cef_source_booking_order", "Source Booking/Order")}>
-                                    {row.source_reference_no}
-                                  </span>
-                                </div>
-                              ) : null}
-                              {line.manual_reference_number ? (
-                                <div className="flex items-center gap-1">
-                                  <span className="text-[9px] font-bold uppercase text-slate-400">{t(lang, "roz.cef_manual_label", "Manual:")}</span>
-                                  <span className="font-mono text-[10.5px] font-bold text-slate-700 dark:text-slate-300" title={t(lang, "roz.cef_manual_number", "Manual Number")}>
-                                    {line.manual_reference_number}
-                                  </span>
-                                </div>
-                              ) : null}
-                              {line.customer_number ? (
-                                <div className="flex items-center gap-1">
-                                  <span className="text-[9px] font-bold uppercase text-slate-400">{t(lang, "roz.cef_cust_label", "Cust:")}</span>
-                                  <span className="font-mono text-[10.5px] font-bold text-slate-500 dark:text-slate-400" title={t(lang, "roz.cef_customer_number", "Customer Number")}>
-                                    {line.customer_number}
-                                  </span>
-                                </div>
-                              ) : null}
-                              {!row.source_reference_no && !line.manual_reference_number && !line.customer_number ? (
-                                <span className="text-[10px] text-slate-400 italic">—</span>
-                              ) : null}
+
+                        {/* 2. User Name */}
+                        <td className="p-2.5 border border-slate-200 dark:border-slate-800 align-top whitespace-nowrap">
+                          <span className="font-bold text-slate-800 dark:text-slate-200">
+                            {row.profiles?.full_name || row.created_by || t(lang, "common.system", "System")}
+                          </span>
+                        </td>
+
+                        {/* 3. Branch Code */}
+                        <td className="p-2.5 border border-slate-200 dark:border-slate-800 align-top whitespace-nowrap">
+                          <span className="font-mono text-[11px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200">
+                            {row.city_branches?.code || row.country_branches?.code || row.countries?.iso2 || "HQ-001"}
+                          </span>
+                        </td>
+
+                        {/* 4. Entry Serial / RZ Reference */}
+                        <td className="p-2.5 font-mono text-[11px] border border-slate-200 dark:border-slate-800 align-top whitespace-nowrap">
+                          <span className={cn(
+                            "inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10.5px] font-black border",
+                            isDebit
+                              ? "bg-rose-50 border-rose-200 text-rose-800 dark:bg-rose-950/40 dark:border-rose-900/50 dark:text-rose-300"
+                              : "bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/40 dark:border-emerald-900/50 dark:text-emerald-300"
+                          )}>
+                            {rzRef}
+                          </span>
+                        </td>
+
+                        {/* 5. RZH */}
+                        <td className="p-2.5 border border-slate-200 dark:border-slate-800 align-top whitespace-nowrap">
+                          <span className="inline-flex items-center rounded-md bg-purple-50 px-2 py-0.5 text-[10.5px] font-bold text-purple-700 ring-1 ring-inset ring-purple-700/10 dark:bg-purple-400/10 dark:text-purple-400 dark:ring-purple-400/30">
+                            {rzhType}
+                          </span>
+                        </td>
+
+                        {/* 6. Name */}
+                        <td className="p-2.5 border border-slate-200 dark:border-slate-800 align-top">
+                          <div className="font-bold text-slate-900 dark:text-slate-100 line-clamp-2">
+                            {line.ledgers?.name || row.narration?.slice(0, 20) || "Cash"}
+                          </div>
+                        </td>
+
+                        {/* 7. Number */}
+                        <td className="p-2.5 font-mono text-[11px] border border-slate-200 dark:border-slate-800 align-top whitespace-nowrap">
+                          <span className="font-bold text-slate-700 dark:text-slate-300">
+                            {line.account_number || line.manual_reference_number || row.voucher_no || row.journal_no || "—"}
+                          </span>
+                        </td>
+
+                        {/* 8. Details */}
+                        <td className="p-2.5 text-[11px] font-medium leading-relaxed text-slate-600 dark:text-slate-400 min-w-[200px] border border-slate-200 dark:border-slate-800 align-top" title={translateNarrationBlock(line.description || row.narration, lang) || ""}>
+                          <div className="line-clamp-2">
+                            {resolveVerifiedTranslation(row.translations?.[`lines.${idx}.description`] || row.translations?.narration, lang) || translateNarrationBlock(line.description || row.narration, lang) || "-"}
+                          </div>
+                          {(line.customer_number || row.source_reference_no) && (
+                            <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                              {line.customer_number ? `Cust: ${line.customer_number}` : ""} {row.source_reference_no ? `Ref: ${row.source_reference_no}` : ""}
                             </div>
-                          </td>
-                            <td className="p-3 text-[11px] font-medium leading-relaxed text-slate-600 dark:text-slate-400 max-w-[200px] border border-slate-200 dark:border-slate-800" title={translateNarrationBlock(line.description || row.narration, lang) || ""}>
-                              <div className="line-clamp-3">
-                                {resolveVerifiedTranslation(row.translations?.[`lines.${idx}.description`] || row.translations?.narration, lang) || translateNarrationBlock(line.description || row.narration, lang) || "-"}
-                              </div>
-                            </td>
-                          <td className="p-3 text-center whitespace-nowrap border border-slate-200 dark:border-slate-800">
-                            {typeBadge}
-                          </td>
-                          {/* Debit (Dr) — red, matching the Ledger */}
-                          <td className="p-3 text-right font-black whitespace-nowrap border border-slate-200 dark:border-slate-800 text-rose-700 dark:text-rose-400">
-                            {isDebit ? `${fmtAmount(Number(line.debit))} ${line.currency || ""}` : <span className="text-slate-300 dark:text-slate-700">—</span>}
-                          </td>
-                          {/* Credit (Cr / Jama) — green, positive with + sign, matching the Ledger */}
-                          <td className="p-3 text-right font-black whitespace-nowrap border border-slate-200 dark:border-slate-800 text-emerald-700 dark:text-emerald-400">
-                            {isCredit ? `+${fmtAmount(Number(line.credit))} ${line.currency || ""}` : <span className="text-slate-300 dark:text-slate-700">—</span>}
-                          </td>
-                          <td className="p-3 text-center border border-slate-200 dark:border-slate-800">
-                            {idx === 0 ? (
-                              <div className="flex items-center justify-center gap-1.5">
-                                {canEditOrDelete && (
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-7 px-2 text-[10px] font-bold border-slate-200 text-blue-600 hover:bg-slate-50 dark:border-slate-800"
-                                    onClick={() => handleEditEntry(row)}
-                                  >
-                                    {t(lang, "common.edit", "Edit")}
-                                  </Button>
-                                )}
+                          )}
+                        </td>
+
+                        {/* 9. Credit */}
+                        <td className="p-2.5 text-right font-black whitespace-nowrap border border-slate-200 dark:border-slate-800 text-emerald-700 dark:text-emerald-400 align-top">
+                          {isCredit ? `${fmtAmount(Number(line.credit))} ${line.currency || ""}` : <span className="text-slate-300 dark:text-slate-700">—</span>}
+                        </td>
+
+                        {/* 10. Debit */}
+                        <td className="p-2.5 text-right font-black whitespace-nowrap border border-slate-200 dark:border-slate-800 text-rose-700 dark:text-rose-400 align-top">
+                          {isDebit ? `${fmtAmount(Number(line.debit))} ${line.currency || ""}` : <span className="text-slate-300 dark:text-slate-700">—</span>}
+                        </td>
+
+                        {/* 11. Exchange Rate */}
+                        <td className="p-2.5 text-center whitespace-nowrap border border-slate-200 dark:border-slate-800 align-top">
+                          {lineExchangeRate ? (
+                            <div className="text-[11px] font-mono font-bold text-blue-700 dark:text-blue-400 leading-tight">
+                              <span>{Number(lineExchangeRate).toFixed(4)}</span>
+                              <span className="block text-[9px] text-slate-400 font-sans">{line.currency || "AED"}/USD</span>
+                            </div>
+                          ) : (
+                            <span className="text-amber-600 dark:text-amber-400 text-[10px] font-bold">
+                              {translateHeader(lang, "Rate Missing")}
+                            </span>
+                          )}
+                        </td>
+
+                        {/* 12. USD Credit */}
+                        <td className="p-2.5 text-right font-black whitespace-nowrap border border-slate-200 dark:border-slate-800 text-emerald-600 dark:text-emerald-400 align-top">
+                          {isCredit ? (
+                            usdCredit || <span className="text-amber-600 dark:text-amber-400 text-[10px] font-semibold">{translateHeader(lang, "Rate Missing")}</span>
+                          ) : (
+                            <span className="text-slate-300 dark:text-slate-700">—</span>
+                          )}
+                        </td>
+
+                        {/* 13. USD Debit */}
+                        <td className="p-2.5 text-right font-black whitespace-nowrap border border-slate-200 dark:border-slate-800 text-rose-600 dark:text-rose-400 align-top">
+                          {isDebit ? (
+                            usdDebit || <span className="text-amber-600 dark:text-amber-400 text-[10px] font-semibold">{translateHeader(lang, "Rate Missing")}</span>
+                          ) : (
+                            <span className="text-slate-300 dark:text-slate-700">—</span>
+                          )}
+                        </td>
+
+                        {/* 14. Actions */}
+                        <td className="p-2.5 text-center border border-slate-200 dark:border-slate-800 align-top whitespace-nowrap">
+                          {idx === 0 ? (
+                            <div className="flex items-center justify-center gap-1">
+                              {canEditOrDelete && (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-6 px-1.5 text-[10px] font-bold border-slate-200 text-blue-600 hover:bg-slate-50 dark:border-slate-800"
+                                  onClick={() => handleEditEntry(row)}
+                                >
+                                  {t(lang, "common.edit", "Edit")}
+                                </Button>
+                              )}
+                              
+                              <div className="relative">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6 border-none hover:bg-slate-100 dark:hover:bg-slate-900"
+                                  onClick={() => setActiveRowMenuId(activeRowMenuId === row.id ? null : row.id)}
+                                >
+                                  <MoreVertical className="h-3.5 w-3.5 text-slate-400" />
+                                </Button>
                                 
-                                <div className="relative">
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-7 w-7 border-none hover:bg-slate-100 dark:hover:bg-slate-900"
-                                    onClick={() => setActiveRowMenuId(activeRowMenuId === row.id ? null : row.id)}
-                                  >
-                                    <MoreVertical className="h-4 w-4 text-slate-400" />
-                                  </Button>
-                                  
-                                  {activeRowMenuId === row.id && (
-                                    <div className="absolute right-0 top-full z-50 mt-1 w-32 rounded-md border border-slate-200 bg-white shadow-lg outline-none dark:border-slate-700 dark:bg-slate-900">
+                                {activeRowMenuId === row.id && (
+                                  <div className="absolute right-0 top-full z-50 mt-1 w-32 rounded-md border border-slate-200 bg-white shadow-lg outline-none dark:border-slate-700 dark:bg-slate-900">
+                                    <button
+                                      type="button"
+                                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-medium text-blue-600 hover:bg-slate-50 dark:hover:bg-slate-800"
+                                      onClick={() => {
+                                        setActiveRowMenuId(null);
+                                        handleViewA4ById(row.id);
+                                      }}
+                                    >
+                                      <Printer className="h-3.5 w-3.5" />
+                                      {t(lang, "roz.cef_print_a4", "Print A4")}
+                                    </button>
+                                    {canEditOrDelete && (
                                       <button
                                         type="button"
-                                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-medium text-blue-600 hover:bg-slate-50 dark:hover:bg-slate-800"
+                                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-medium text-rose-600 hover:bg-slate-50 dark:hover:bg-slate-800"
                                         onClick={() => {
                                           setActiveRowMenuId(null);
-                                          handleViewA4ById(row.id);
+                                          handleDeleteEntry(row.id);
                                         }}
                                       >
-                                        <Printer className="h-3.5 w-3.5" />
-                                        {t(lang, "roz.cef_print_a4", "Print A4")}
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                        {t(lang, "common.delete", "Delete")}
                                       </button>
-                                      {canEditOrDelete && (
-                                        <button
-                                          type="button"
-                                          className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-medium text-rose-600 hover:bg-slate-50 dark:hover:bg-slate-800"
-                                          onClick={() => {
-                                            setActiveRowMenuId(null);
-                                            handleDeleteEntry(row.id);
-                                          }}
-                                        >
-                                          <Trash2 className="h-3.5 w-3.5" />
-                                          {t(lang, "common.delete", "Delete")}
-                                        </button>
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
+                                    )}
+                                  </div>
+                                )}
                               </div>
-                            ) : null}
-                          </td>
-                        </tr>
-                      );
-                    });
-                  })
-                  )}
-                </tbody>
+                            </div>
+                          ) : null}
+                        </td>
+                      </tr>
+                    );
+                  });
+                })
+              )}
+            </tbody>
               </table>
             </div>
           </CardContent>

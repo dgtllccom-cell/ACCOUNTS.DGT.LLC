@@ -42,6 +42,27 @@ export async function resolveDocumentFileUrl(storageKey: string | null | undefin
   }
 }
 
+/** Raw bytes for a stored office_documents file — local fs first, then Supabase Storage. Returns null if not found. */
+export async function readDocumentFileBuffer(storageKey: string | null | undefined): Promise<Buffer | null> {
+  if (!storageKey) return null;
+  const normalized = normalizeDocumentStorageKey(storageKey);
+
+  try {
+    return await fs.readFile(localDocumentPath(normalized));
+  } catch {
+    // Fall through to Supabase Storage.
+  }
+
+  try {
+    const supabase = createSupabaseServiceClient();
+    const { data, error } = await supabase.storage.from(BUCKET_NAME).download(normalized);
+    if (error || !data) return null;
+    return Buffer.from(await data.arrayBuffer());
+  } catch {
+    return null;
+  }
+}
+
 export async function saveDocumentBlob(options: {
   storageKey: string;
   buffer: Buffer;

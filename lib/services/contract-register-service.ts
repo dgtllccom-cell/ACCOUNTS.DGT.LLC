@@ -1,4 +1,5 @@
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { analyzeContract, getContractIntelligence, getPortfolioRiskSummary, type ContractIntelligenceResult } from "@/lib/document-intelligence/contract-intelligence";
 
 /**
  * Central Contract Control Center service.
@@ -204,6 +205,27 @@ export class ContractRegisterService {
       return { created: Number(n) || 0 };
     });
     return res ?? { created: 0 };
+  }
+
+  /** Sibling to syncReminders() — does not touch sync_contract_reminders(). */
+  async syncIntelligenceReminders(daysAhead = 30): Promise<{ created: number }> {
+    const res = await withLocalPg(async (sql) => {
+      const [{ n }] = await sql`SELECT public.sync_contract_intelligence_reminders(${daysAhead}) AS n`;
+      return { created: Number(n) || 0 };
+    });
+    return res ?? { created: 0 };
+  }
+
+  async getIntelligence(sourceModule: string, sourceId: string): Promise<ContractIntelligenceResult | null> {
+    return getContractIntelligence(sourceModule, sourceId);
+  }
+
+  async triggerIntelligence(sourceModule: string, sourceId: string, actor: { id?: string | null; name?: string | null }, lang: string = "en"): Promise<ContractIntelligenceResult | null> {
+    return analyzeContract({ sourceModule, sourceId, actorId: actor.id ?? null, actorName: actor.name ?? null, lang: lang as any });
+  }
+
+  async getIntelligenceSummary(scope?: ContractScope) {
+    return getPortfolioRiskSummary(scope);
   }
 }
 

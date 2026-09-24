@@ -1223,7 +1223,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
           isActive: String(u.status || "").toLowerCase() === "active",
           permissions: Array.isArray(u.permissions) ? u.permissions : [],
           permissionsCount: Array.isArray(u.permissions) ? u.permissions.length : 0,
-          passwordKey: "",
+          passwordKey: String(u.passwordKey || u.raw_password || ""),
           loginUrl: "/auth/login",
           loginPortalLabel: "ERP",
           createdAt: String(u.registrationDate || u.createdAt || ""),
@@ -2183,37 +2183,47 @@ export default function SuperAdminAllUsersDirectoryPage() {
                         </div>
                       </td>
 
-                      {/* 10. Password with eye toggle, copy & change modal */}
+                      {/* 10. Password with eye toggle, copy & change modal - Strictly authorized for Super Admin */}
                       <td className="py-3.5 px-3">
-                        <div className="flex items-center gap-1.5 font-mono text-xs text-slate-800 dark:text-slate-200">
-                          <span className={cn("font-medium select-none", !isPwdVisible && "tracking-widest")}>
-                            {isPwdVisible ? u.passwordKey : "••••••••"}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => setVisiblePasswords((prev) => ({ ...prev, [u.userId]: !prev[u.userId] }))}
-                            title={isPwdVisible ? th("Hide Password") : th("Show Password")}
-                            className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer shrink-0"
-                          >
-                            {isPwdVisible ? <EyeOff className="w-3.5 h-3.5 text-slate-500" /> : <Eye className="w-3.5 h-3.5 text-slate-500" />}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => copyToClipboard(u.passwordKey, `pwd-${u.userId}`)}
-                            title={th("Copy Password")}
-                            className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer shrink-0"
-                          >
-                            {copiedKey === `pwd-${u.userId}` ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleOpenPasswordModal(u)}
-                            title={th("Change Password")}
-                            className="p-1 rounded hover:bg-indigo-50 dark:hover:bg-indigo-950/50 text-indigo-600 hover:text-indigo-700 cursor-pointer shrink-0 transition-colors"
-                          >
-                            <KeyRound className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
+                        {sess?.isSuperAdmin ? (
+                          <div className="flex items-center gap-1.5 font-mono text-xs text-slate-800 dark:text-slate-200">
+                            <span className={cn("font-medium select-none", !isPwdVisible && "tracking-widest")}>
+                              {isPwdVisible ? (u.passwordKey || "—") : "••••••••"}
+                            </span>
+                            {u.passwordKey ? (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => setVisiblePasswords((prev) => ({ ...prev, [u.userId]: !prev[u.userId] }))}
+                                  title={isPwdVisible ? th("Hide Password") : th("Show Password")}
+                                  className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer shrink-0"
+                                >
+                                  {isPwdVisible ? <EyeOff className="w-3.5 h-3.5 text-slate-500" /> : <Eye className="w-3.5 h-3.5 text-slate-500" />}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => copyToClipboard(u.passwordKey, `pwd-${u.userId}`)}
+                                  title={th("Copy Password")}
+                                  className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer shrink-0"
+                                >
+                                  {copiedKey === `pwd-${u.userId}` ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                                </button>
+                              </>
+                            ) : null}
+                            <button
+                              type="button"
+                              onClick={() => handleOpenPasswordModal(u)}
+                              title={th("Change Password")}
+                              className="p-1 rounded hover:bg-indigo-50 dark:hover:bg-indigo-950/50 text-indigo-600 hover:text-indigo-700 cursor-pointer shrink-0 transition-colors"
+                            >
+                              <KeyRound className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1.5 font-mono text-xs text-muted-foreground">
+                            <span className="font-medium select-none tracking-widest">••••••••</span>
+                          </div>
+                        )}
                       </td>
 
                       {/* 11. Status */}

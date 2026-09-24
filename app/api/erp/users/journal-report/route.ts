@@ -462,8 +462,8 @@ export async function GET(request: NextRequest) {
         lastActivity: lastActivityDate,
         lastActivityAction: lastActivity?.action ?? null,
         lastLogin: lastLoginDate,
-        passwordKey: profile.raw_password ?? null,
-        raw_password: profile.raw_password ?? null,
+        passwordKey: session.isSuperAdmin ? (profile.raw_password ?? null) : null,
+        raw_password: session.isSuperAdmin ? (profile.raw_password ?? null) : null,
         activityCounts,
       };
     });
