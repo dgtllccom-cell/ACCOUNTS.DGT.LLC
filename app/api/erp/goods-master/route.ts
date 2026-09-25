@@ -35,6 +35,7 @@ const createSchema = z.object({
   variety: z.string().trim().max(150).optional().nullable(),
   extraDetails: z.string().trim().max(2000).optional().nullable(),
   originCountry: z.string().trim().max(120).optional().nullable(),
+  originCountryId: z.string().uuid().optional().nullable(),
   isActive: z.boolean().optional().default(true),
   originalLanguage: z.string().optional(),
 });
@@ -48,12 +49,13 @@ export async function GET(request: NextRequest) {
     const status = (request.nextUrl.searchParams.get("status") || "").toLowerCase();
     const limit = Math.min(Number(request.nextUrl.searchParams.get("limit") || 500) || 500, 1000);
 
-    const rows = await withLocalPg(async (sql) => {
+    const result = await withLocalPg(async (sql) => {
       const statusFilter =
         status === "active" ? sql`AND g.is_active = TRUE`
         : status === "inactive" ? sql`AND g.is_active = FALSE`
         : sql``;
-      return await sql`
+
+      const goodsRows = await sql`
         SELECT
           g.id,
           g.chs_code,
@@ -61,6 +63,7 @@ export async function GET(request: NextRequest) {
           g.category,
           g.variety AS master_variety,
           g.extra_details AS master_extra_details,
+          g.origin_country_id,
           g.is_active,
           g.created_at,
           co.name AS origin_country,
@@ -91,7 +94,47 @@ export async function GET(request: NextRequest) {
         ORDER BY g.created_at DESC
         LIMIT ${limit}
       `;
+
+      const ids = goodsRows.map((r: any) => r.id);
+      const variationRows = ids.length
+        ? await sql`
+            SELECT
+              v.id,
+              v.goods_id,
+              v.size,
+              v.brand,
+              v.variety,
+              v.extra_details,
+              v.is_active,
+              v.created_at
+            FROM public.goods_variations v
+            WHERE v.goods_id = ANY(${ids}::uuid[])
+              AND v.deleted_at IS NULL
+            ORDER BY v.created_at ASC
+          `
+        : [];
+
+      return { goodsRows, variationRows };
     });
+
+    const rows = result?.goodsRows ?? [];
+    const variationRows = result?.variationRows ?? [];
+
+    const variationsByGoodsId = new Map<string, any[]>();
+    for (const v of variationRows) {
+      const list = variationsByGoodsId.get(v.goods_id) || [];
+      list.push({
+        id: v.id,
+        goods_id: v.goods_id,
+        size: v.size,
+        brand: v.brand,
+        variety: v.variety || "",
+        extra_details: v.extra_details || "",
+        is_active: !!v.is_active,
+        created_at: v.created_at,
+      });
+      variationsByGoodsId.set(v.goods_id, list);
+    }
 
     let nameById = new Map<string, string>();
     try {
@@ -112,8 +155,10 @@ export async function GET(request: NextRequest) {
       variety: r.variation_varieties || r.master_variety || "",
       extra_details: r.variation_extra_details || r.master_extra_details || "",
       origin_country: r.origin_country ?? "",
+      origin_country_id: r.origin_country_id ?? null,
       is_active: !!r.is_active,
       created_at: r.created_at,
+      variations: variationsByGoodsId.get(r.id) || [],
     }));
     const active = list.filter((g) => g.is_active).length;
 
@@ -134,10 +179,10 @@ export async function POST(request: NextRequest) {
     const body = createSchema.parse(await request.json());
     const lang = normalizeLanguage(body.originalLanguage, session.preferredLanguage ?? "en");
 
-    // Resolve the origin country name -> id (registry sends the display name).
-    let originCountryId: string | null = null;
+    // Resolve the origin country name -> id (registry sends display name or explicit id).
+    let originCountryId: string | null = body.originCountryId ?? null;
     const originCountryName = body.originCountry?.trim() || null;
-    if (originCountryName) {
+    if (!originCountryId && originCountryName) {
       originCountryId = await withLocalPg(async (sql) => {
         const rows = await sql`
           SELECT id FROM public.countries
@@ -190,8 +235,6 @@ export async function POST(request: NextRequest) {
         `;
       }
     });
-
-    return apiCreated({ id: goodsId });
 
     return apiCreated({ id: goodsId });
   } catch (error) {

@@ -3,6 +3,8 @@ import { goodsRepository } from "@/lib/repositories/goods-repository";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 import { writeRecordChangeHistory } from "@/lib/api/record-change-history";
 
+import { withLocalPg } from "@/lib/db/local-postgres";
+
 export type GoodsMasterInput = {
   chsCode: string;
   goodsName: string;
@@ -182,7 +184,7 @@ export class GoodsService {
   async updateVariation(
     id: string,
     input: {
-      goodsId: string;
+      goodsId?: string;
       size?: string;
       brand?: string;
       variety?: string | null;
@@ -192,10 +194,19 @@ export class GoodsService {
     },
     actorId?: string | null
   ) {
-    const beforeGoods = await goodsRepository.getById(input.goodsId);
+    let targetGoodsId = input.goodsId || "";
+    if (!targetGoodsId) {
+      const foundGoodsId = await withLocalPg(async (sql) => {
+        const rows = await sql`SELECT goods_id FROM public.goods_variations WHERE id = ${id}::uuid LIMIT 1`;
+        return (rows[0]?.goods_id as string | undefined) ?? "";
+      });
+      if (foundGoodsId) targetGoodsId = foundGoodsId;
+    }
+
+    const beforeGoods = targetGoodsId ? await goodsRepository.getById(targetGoodsId) : null;
     const before = beforeGoods?.variations?.find((item: any) => item.id === id) ?? null;
-    await goodsRepository.updateVariation(id, input);
-    const afterGoods = await goodsRepository.getById(input.goodsId);
+    await goodsRepository.updateVariation(id, { ...input, goodsId: targetGoodsId });
+    const afterGoods = targetGoodsId ? await goodsRepository.getById(targetGoodsId) : null;
     const after = afterGoods?.variations?.find((item: any) => item.id === id) ?? null;
 
     await writeRecordChangeHistory({

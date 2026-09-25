@@ -14,6 +14,7 @@ const patchSchema = z.object({
   name: z.string().trim().min(1).max(200).optional(),
   category: z.string().trim().max(120).nullable().optional(),
   originCountry: z.string().trim().max(120).nullable().optional(),
+  originCountryId: z.string().uuid().nullable().optional(),
   isActive: z.boolean().optional(),
   originalLanguage: z.string().optional(),
 });
@@ -37,8 +38,8 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: s
     });
     if (!exists) return apiError("NOT_FOUND", "Goods record not found.", 404);
 
-    let originCountryId: string | null | undefined;
-    if (body.originCountry !== undefined) {
+    let originCountryId: string | null | undefined = body.originCountryId;
+    if (originCountryId === undefined && body.originCountry !== undefined) {
       const originCountryName = body.originCountry?.trim() || null;
       originCountryId = originCountryName
         ? await withLocalPg(async (sql) => {
