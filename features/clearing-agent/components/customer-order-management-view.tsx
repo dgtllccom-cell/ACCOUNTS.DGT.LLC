@@ -862,18 +862,15 @@ export function CustomerOrderManagementView() {
 
   // Check URL query parameters for ?create=true or ?orderId=
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get("create") === "true") {
-        setFormData({ ...EMPTY_FORM });
-        setPartySelections(emptyPartyState());
-        setEditingOrderId(null);
-        setCurrentStep(1);
-        setStep1SubStep("1A");
-        setIsFormOpen(true);
-      }
+    if (searchParams?.get("create") === "true") {
+      setFormData({ ...EMPTY_FORM });
+      setPartySelections(emptyPartyState());
+      setEditingOrderId(null);
+      setCurrentStep(1);
+      setStep1SubStep("1A");
+      setIsFormOpen(true);
     }
-  }, []);
+  }, [searchParams]);
 
   // Listen for click-outside to close active action dropups
   useEffect(() => {
@@ -2164,7 +2161,7 @@ export function CustomerOrderManagementView() {
         /* ========================================================================= */
         <div className="space-y-4 animate-in fade-in duration-200">
           {/* Top Action Bar */}
-          <div className="rounded-2xl border border-slate-200/90 bg-white px-4 py-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="rounded-xl border border-slate-200/90 bg-white px-4 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex items-center gap-3">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-100 dark:bg-blue-950/50 dark:border-blue-900 dark:text-blue-400">
@@ -2232,126 +2229,254 @@ export function CustomerOrderManagementView() {
             </div>
           </div>
 
-          {/* 6 Top KPI Summary Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          {/* 6 Top KPI Summary Cards — Compact Local Purchase Style */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
             {/* 1. Total Orders */}
-            <div className="rounded-xl border border-blue-100 bg-white p-3.5 dark:border-blue-900/40 dark:bg-slate-900 shadow-xs flex flex-col justify-between">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("kpi_total_orders", "Total Orders")}</span>
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400"><FileText className="h-3.5 w-3.5" /></span>
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-3.5 shadow-2xs flex flex-col justify-between hover:shadow-xs transition h-full min-h-[145px]">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-2">
+                  <div className="h-6 w-6 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                    <FileText className="h-3.5 w-3.5" />
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                    1. {tt("kpi_total_orders", "Total Orders")}
+                  </span>
+                </div>
               </div>
-              <div className="mt-2 text-xl font-black text-slate-900 dark:text-white">{orderCounts.total}</div>
-              <div className="mt-1 flex items-center gap-1 text-[9.5px] font-semibold text-slate-500">
-                <span>Draft: {orderCounts.draft}</span>
-                <span>•</span>
-                <span className="text-amber-600">Active: {orderCounts.confirmed}</span>
-                <span>•</span>
-                <span className="text-emerald-600">Done: {orderCounts.cleared}</span>
+              <div className="py-1.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                <div className="text-xl font-black text-slate-900 dark:text-white">{orderCounts.total}</div>
+                <div className="flex flex-wrap items-center gap-1 text-[9.5px] font-mono">
+                  <span className="text-slate-400">Draft: <strong className="text-slate-700 dark:text-slate-300">{orderCounts.draft}</strong></span>
+                  <span className="text-slate-300 dark:text-slate-700">•</span>
+                  <span className="text-amber-600">Active: <strong>{orderCounts.confirmed}</strong></span>
+                  <span className="text-slate-300 dark:text-slate-700">•</span>
+                  <span className="text-emerald-600">Done: <strong>{orderCounts.cleared}</strong></span>
+                </div>
+              </div>
+              <div className="pt-1.5 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-[10px]">
+                <span className="text-slate-400 font-medium">Orders Registry</span>
+                <span className="font-mono font-bold text-blue-700 dark:text-blue-400">{orders.length} total</span>
               </div>
             </div>
 
             {/* 2. Movements */}
-            <div className="rounded-xl border border-purple-100 bg-white p-3.5 dark:border-purple-900/40 dark:bg-slate-900 shadow-xs flex flex-col justify-between">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("kpi_movements", "Movements")}</span>
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400"><Route className="h-3.5 w-3.5" /></span>
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-3.5 shadow-2xs flex flex-col justify-between hover:shadow-xs transition h-full min-h-[145px]">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-2">
+                  <div className="h-6 w-6 rounded-lg bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+                    <Route className="h-3.5 w-3.5" />
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                    2. {tt("kpi_movements", "Movements")}
+                  </span>
+                </div>
               </div>
-              <div className="mt-2 text-xl font-black text-purple-600 dark:text-purple-400">{orderCounts.total}</div>
-              <div className="mt-1 flex items-center gap-1 text-[9.5px] font-semibold text-slate-500">
-                <span className="text-emerald-600">Imp: {orderCounts.import}</span>
-                <span>•</span>
-                <span className="text-purple-600">Exp: {orderCounts.export}</span>
-                <span>•</span>
-                <span className="text-amber-600">Tr: {orderCounts.transit}</span>
+              <div className="py-1.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                <div className="text-xl font-black text-purple-600 dark:text-purple-400">{orderCounts.total}</div>
+                <div className="flex flex-wrap items-center gap-1 text-[9.5px] font-mono">
+                  <span className="text-emerald-600">Imp: <strong>{orderCounts.import}</strong></span>
+                  <span className="text-slate-300 dark:text-slate-700">•</span>
+                  <span className="text-purple-600">Exp: <strong>{orderCounts.export}</strong></span>
+                  <span className="text-slate-300 dark:text-slate-700">•</span>
+                  <span className="text-amber-600">Tr: <strong>{orderCounts.transit}</strong></span>
+                </div>
+              </div>
+              <div className="pt-1.5 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-[10px]">
+                <span className="text-slate-400 font-medium">Logistics Modes</span>
+                <span className="font-mono font-bold text-purple-700 dark:text-purple-400">Multi-Modal</span>
               </div>
             </div>
 
             {/* 3. Locations & Ports */}
-            <div className="rounded-xl border border-sky-100 bg-white p-3.5 dark:border-sky-900/40 dark:bg-slate-900 shadow-xs flex flex-col justify-between">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("kpi_locations", "Locations & Ports")}</span>
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-50 text-sky-600 dark:bg-sky-950/60 dark:text-sky-400"><Anchor className="h-3.5 w-3.5" /></span>
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-3.5 shadow-2xs flex flex-col justify-between hover:shadow-xs transition h-full min-h-[145px]">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-2">
+                  <div className="h-6 w-6 rounded-lg bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
+                    <Anchor className="h-3.5 w-3.5" />
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                    3. {tt("kpi_locations", "Locations & Ports")}
+                  </span>
+                </div>
               </div>
-              <div className="mt-2 text-xl font-black text-slate-900 dark:text-white">{countries.length} <span className="text-xs font-normal text-slate-400">{tt("countries", "Countries")}</span></div>
-              <div className="mt-1 text-[9.5px] font-semibold text-slate-500">{ports.length} {tt("active_ports", "Active Ports")}</div>
+              <div className="py-1.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                <div className="text-xl font-black text-slate-900 dark:text-white">
+                  {countries.length} <span className="text-xs font-normal text-slate-400">{tt("countries", "Countries")}</span>
+                </div>
+                <div className="text-[9.5px] font-mono text-slate-500">
+                  {ports.length} {tt("active_ports", "Active Ports")}
+                </div>
+              </div>
+              <div className="pt-1.5 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-[10px]">
+                <span className="text-slate-400 font-medium">Global Gateways</span>
+                <span className="font-mono font-bold text-sky-700 dark:text-sky-400">Active</span>
+              </div>
             </div>
 
             {/* 4. Total Volume */}
-            <div className="rounded-xl border border-indigo-100 bg-white p-3.5 dark:border-indigo-900/40 dark:bg-slate-900 shadow-xs flex flex-col justify-between">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("kpi_total_volume", "Total Volume")}</span>
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400"><Scale className="h-3.5 w-3.5" /></span>
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-3.5 shadow-2xs flex flex-col justify-between hover:shadow-xs transition h-full min-h-[145px]">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-2">
+                  <div className="h-6 w-6 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                    <Scale className="h-3.5 w-3.5" />
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                    4. {tt("kpi_total_volume", "Total Volume")}
+                  </span>
+                </div>
               </div>
-              <div className="mt-2 text-xl font-black text-indigo-600 dark:text-indigo-400">{orderCounts.totalVolume.toLocaleString()} <span className="text-xs font-normal text-slate-400">MT</span></div>
-              <div className="mt-1 text-[9.5px] font-semibold text-slate-500">{tt("combined_cargo", "Combined Cargo")}</div>
+              <div className="py-1.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                <div className="text-xl font-black text-indigo-600 dark:text-indigo-400">
+                  {orderCounts.totalVolume.toLocaleString()} <span className="text-xs font-normal text-slate-400">MT</span>
+                </div>
+                <div className="text-[9.5px] font-mono text-slate-500">
+                  {tt("combined_cargo", "Combined Cargo Weight")}
+                </div>
+              </div>
+              <div className="pt-1.5 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-[10px]">
+                <span className="text-slate-400 font-medium">Manifest Weight</span>
+                <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400">Verified</span>
+              </div>
             </div>
 
             {/* 5. Active Routes */}
-            <div className="rounded-xl border border-emerald-100 bg-white p-3.5 dark:border-emerald-900/40 dark:bg-slate-900 shadow-xs flex flex-col justify-between">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("kpi_active_routes", "Active Routes")}</span>
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400"><Globe2 className="h-3.5 w-3.5" /></span>
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-3.5 shadow-2xs flex flex-col justify-between hover:shadow-xs transition h-full min-h-[145px]">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-2">
+                  <div className="h-6 w-6 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                    <Globe2 className="h-3.5 w-3.5" />
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                    5. {tt("kpi_active_routes", "Active Routes")}
+                  </span>
+                </div>
               </div>
-              <div className="mt-2 text-xl font-black text-emerald-600 dark:text-emerald-400">{orderCounts.uniqueRoutes}</div>
-              <div className="mt-1 text-[9.5px] font-semibold text-slate-500">{tt("cross_border_routes", "Cross-Border Routes")}</div>
+              <div className="py-1.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                <div className="text-xl font-black text-emerald-600 dark:text-emerald-400">
+                  {orderCounts.uniqueRoutes}
+                </div>
+                <div className="text-[9.5px] font-mono text-slate-500">
+                  {tt("cross_border_routes", "Cross-Border Routes")}
+                </div>
+              </div>
+              <div className="pt-1.5 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-[10px]">
+                <span className="text-slate-400 font-medium">Transit Corridors</span>
+                <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">Active</span>
+              </div>
             </div>
 
             {/* 6. Quick Info */}
-            <div className="rounded-xl border border-slate-200 bg-white p-3.5 dark:border-slate-800 dark:bg-slate-900 shadow-xs flex flex-col justify-between">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("kpi_quick_info", "Quick Info")}</span>
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"><BadgeInfo className="h-3.5 w-3.5" /></span>
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-3.5 shadow-2xs flex flex-col justify-between hover:shadow-xs transition h-full min-h-[145px]">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-2">
+                  <div className="h-6 w-6 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center shrink-0">
+                    <BadgeInfo className="h-3.5 w-3.5" />
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                    6. {tt("kpi_quick_info", "Quick Info")}
+                  </span>
+                </div>
               </div>
-              <div className="mt-2 text-xs font-black text-slate-800 dark:text-slate-200 truncate">{userContext.context?.branchName || tt("global_group", "Global Group")}</div>
-              <div className="mt-1 text-[9.5px] font-medium text-slate-500">{tt("shipping_clearing_erp", "Shipping & Clearing ERP")}</div>
+              <div className="py-1.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                <div className="text-xs font-black text-slate-800 dark:text-slate-200 truncate">
+                  {userContext.context?.branchName || tt("global_group", "Global Group")}
+                </div>
+                <div className="text-[9.5px] font-medium text-slate-500 truncate">
+                  {tt("shipping_clearing_erp", "Shipping & Clearing ERP")}
+                </div>
+              </div>
+              <div className="pt-1.5 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-[10px]">
+                <span className="text-slate-400 font-medium">System Context</span>
+                <span className="font-mono font-bold text-slate-700 dark:text-slate-300">Enterprise</span>
+              </div>
             </div>
           </div>
 
-          {/* Filter Row */}
-          <div className="rounded-2xl border border-slate-200/90 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <div className="flex flex-col gap-2.5 md:flex-row md:items-center md:justify-between">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={tt("search_placeholder", "Search by Order No, Customer, Shipper, Goods, Port, Container...")}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2 pl-9 pr-8 text-xs font-medium text-slate-800 outline-none transition focus:border-blue-500 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                />
-                {searchQuery ? (
-                  <button
-                    type="button"
-                    onClick={() => setSearchQuery("")}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                ) : null}
+          {/* Smart Filter Bar — Local Purchase Aesthetic */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-2.5 shadow-2xs space-y-2">
+            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+              {/* Quick Status Chips */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 text-xs font-bold">
+                <button
+                  type="button"
+                  onClick={() => setStatusFilter("all")}
+                  className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 ${
+                    statusFilter === "all"
+                      ? "bg-blue-600 text-white shadow-xs"
+                      : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-slate-700/60"
+                  }`}
+                >
+                  <span>{tt("all_statuses", "All")}</span>
+                  <span className="font-mono text-[10px] opacity-80">({orders.length})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStatusFilter("booking_confirmed")}
+                  className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 ${
+                    statusFilter === "booking_confirmed"
+                      ? "bg-blue-600 text-white shadow-xs"
+                      : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-slate-700/60"
+                  }`}
+                >
+                  <span className="text-amber-500">●</span>
+                  <span>{tt("status_confirmed", "Active")}</span>
+                  <span className="font-mono text-[10px] opacity-80">({orderCounts.confirmed})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStatusFilter("draft")}
+                  className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 ${
+                    statusFilter === "draft"
+                      ? "bg-blue-600 text-white shadow-xs"
+                      : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-slate-700/60"
+                  }`}
+                >
+                  <span className="text-slate-400">●</span>
+                  <span>{tt("status_draft", "Draft")}</span>
+                  <span className="font-mono text-[10px] opacity-80">({orderCounts.draft})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStatusFilter("completed")}
+                  className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 ${
+                    statusFilter === "completed"
+                      ? "bg-blue-600 text-white shadow-xs"
+                      : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-slate-700/60"
+                  }`}
+                >
+                  <span className="text-emerald-500">●</span>
+                  <span>{tt("status_completed", "Cleared")}</span>
+                  <span className="font-mono text-[10px] opacity-80">({orderCounts.cleared})</span>
+                </button>
               </div>
 
+              {/* Right Side: Search + Dropdowns */}
               <div className="flex flex-wrap items-center gap-2">
-                {/* Status Filter */}
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="rounded-xl border border-slate-200 bg-white px-2.5 py-2 text-xs font-bold text-slate-700 outline-none transition focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                >
-                  <option value="all">{tt("all_statuses", "All Statuses")}</option>
-                  <option value="draft">{tt("status_draft", "Draft")}</option>
-                  <option value="pending_approval">{tt("status_pending_approval", "Pending Approval")}</option>
-                  <option value="approved">{tt("status_approved", "Approved")}</option>
-                  <option value="booking_confirmed">{tt("status_confirmed", "Confirmed")}</option>
-                  <option value="in_transit">{tt("status_in_transit", "In Transit")}</option>
-                  <option value="completed">{tt("status_completed", "Completed")}</option>
-                  <option value="rejected">{tt("status_rejected", "Rejected")}</option>
-                </select>
+                <div className="relative min-w-[220px] flex-1 sm:flex-none">
+                  <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder={tt("search_placeholder", "Search order, customer, goods, route...")}
+                    className="w-full h-8.5 rounded-xl border border-slate-200 bg-slate-50/70 pl-8 pr-7 text-xs font-medium text-slate-800 outline-none transition focus:border-blue-500 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                  />
+                  {searchQuery ? (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery("")}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  ) : null}
+                </div>
 
                 {/* Transport Mode Filter */}
                 <select
                   value={modeFilter}
                   onChange={(e) => setModeFilter(e.target.value)}
-                  className="rounded-xl border border-slate-200 bg-white px-2.5 py-2 text-xs font-bold text-slate-700 outline-none transition focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                  className="h-8.5 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-bold text-slate-700 outline-none transition focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                 >
                   <option value="all">{tt("all_modes", "All Modes")}</option>
                   <option value="by_sea">{tt("tm_by_sea", "Sea")}</option>
@@ -2364,7 +2489,7 @@ export function CustomerOrderManagementView() {
                 <select
                   value={movementFilter}
                   onChange={(e) => setMovementFilter(e.target.value)}
-                  className="rounded-xl border border-slate-200 bg-white px-2.5 py-2 text-xs font-bold text-slate-700 outline-none transition focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                  className="h-8.5 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-bold text-slate-700 outline-none transition focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                 >
                   <option value="all">{tt("all_movements", "All Movements")}</option>
                   <option value="import">{tt("mv_import", "Import")}</option>
@@ -2382,7 +2507,7 @@ export function CustomerOrderManagementView() {
                       setMovementFilter("all");
                       setSearchQuery("");
                     }}
-                    className="inline-flex items-center gap-1 rounded-xl border border-rose-200 bg-rose-50 px-2.5 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300 transition"
+                    className="h-8.5 inline-flex items-center gap-1 rounded-xl border border-rose-200 bg-rose-50 px-2.5 text-xs font-bold text-rose-700 hover:bg-rose-100 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300 transition"
                   >
                     <X className="h-3.5 w-3.5" />
                     <span>{tt("reset_filters", "Reset")}</span>
@@ -2392,21 +2517,21 @@ export function CustomerOrderManagementView() {
             </div>
           </div>
 
-          {/* Full Enterprise Customer Orders Registry Table */}
-          <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/70 px-4 py-3 dark:border-slate-800 dark:bg-slate-800/40">
-              <div className="flex items-center gap-2 text-xs font-black text-slate-800 dark:text-slate-100">
+          {/* Full Enterprise Customer Orders Registry Table — Compact Local Purchase Style */}
+          <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-2xs dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex items-center justify-between border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white px-4 py-3 dark:border-slate-800 dark:from-slate-850 dark:to-slate-900">
+              <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
                 <FileText className="h-4 w-4 text-blue-600" />
-                <span>{tt("registry_table_title", "Customer Shipping Orders")}</span>
+                <span>{tt("registry_table_title", "Customer Shipping Orders Registry")}</span>
               </div>
-              <span className="text-[10px] font-bold text-slate-500">
+              <span className="text-[10px] font-mono font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 px-2.5 py-0.5 rounded-full border border-blue-200 dark:border-blue-800">
                 {visibleOrders.length} / {orders.length} {tt("visible", "visible")}
               </span>
             </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
-                <thead className="border-b border-slate-100 bg-slate-50/80 font-bold uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-400">
+                <thead className="border-b border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800 text-[9px] font-black uppercase tracking-wider sticky top-0">
                   <tr>
                     <Th className="px-3.5 py-3">#</Th>
                     <Th className="px-3.5 py-3">{tt("th_order_no", "Order No")}</Th>
@@ -2565,6 +2690,34 @@ export function CustomerOrderManagementView() {
                   )}
                 </tbody>
               </table>
+            </div>
+
+            {/* Bottom Summary Strip — Local Purchase 4-stat Strip */}
+            <div className="border-t border-slate-100 bg-slate-50/60 dark:border-slate-800 dark:bg-slate-850/60">
+              <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-slate-100 dark:divide-slate-800">
+                <div className="px-3.5 py-2.5 min-w-0">
+                  <span className="block text-[7.5px] text-slate-400 uppercase font-bold tracking-wide">Visible Orders</span>
+                  <strong className="block text-[12px] font-black text-slate-800 dark:text-slate-100">{visibleOrders.length}</strong>
+                </div>
+                <div className="px-3.5 py-2.5 min-w-0">
+                  <span className="block text-[7.5px] text-slate-400 uppercase font-bold tracking-wide">Total Cargo Weight</span>
+                  <strong className="block text-[12px] font-black text-indigo-600 dark:text-indigo-400">
+                    {orderCounts.totalVolume.toLocaleString()} MT
+                  </strong>
+                </div>
+                <div className="px-3.5 py-2.5 min-w-0">
+                  <span className="block text-[7.5px] text-slate-400 uppercase font-bold tracking-wide">Active Corridors</span>
+                  <strong className="block text-[12px] font-black text-emerald-600 dark:text-emerald-400">
+                    {orderCounts.uniqueRoutes} Routes
+                  </strong>
+                </div>
+                <div className="px-3.5 py-2.5 min-w-0">
+                  <span className="block text-[7.5px] text-slate-400 uppercase font-bold tracking-wide">Confirmed / Cleared</span>
+                  <strong className="block text-[12px] font-black text-blue-600 dark:text-blue-400">
+                    {orderCounts.confirmed} / {orderCounts.cleared}
+                  </strong>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -2803,7 +2956,7 @@ export function CustomerOrderManagementView() {
           </div>
 
           {/* Stepper Progress Bar (Screenshots 1, 2, 3) */}
-          <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="rounded-xl border border-slate-200/90 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div className="flex items-center flex-1 max-w-2xl px-1">
                 {stepsList.map((st, idx) => {
@@ -2888,10 +3041,10 @@ export function CustomerOrderManagementView() {
               />
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-5 xl:grid-cols-12 xl:items-start" dir="ltr">
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(320px,0.64fr)_minmax(0,1.36fr)] xl:items-start 2xl:grid-cols-[minmax(360px,0.6fr)_minmax(0,1.4fr)]" dir="ltr">
               {/* LEFT COLUMN: The Form Cards */}
-              <div dir={isRtl ? "rtl" : "ltr"} className="space-y-4 xl:col-span-5">
-                <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+              <div dir={isRtl ? "rtl" : "ltr"} className="space-y-3">
+                <div className="rounded-xl border border-slate-200/90 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                   {(currentStep === 1 || currentStep === 2 || currentStep === 3) && (
                     <Step1BookingCustomer
                       lang={lang}
@@ -2942,7 +3095,7 @@ export function CustomerOrderManagementView() {
                   )}
 
                 {/* Stepper Footer Controls */}
-                <div className="flex flex-wrap items-center justify-between gap-2 pt-4 mt-6 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-3 mt-4 border-t border-slate-100 dark:border-slate-800">
                   <div>
                     {currentStep > 1 ? (
                       <button
@@ -3043,11 +3196,11 @@ export function CustomerOrderManagementView() {
             </div>
 
             {/* RIGHT COLUMN: The Live Customer Order Report Panel (Enlarged 7-cols) */}
-            <div dir={isRtl ? "rtl" : "ltr"} className="space-y-4 xl:col-span-7 xl:sticky xl:top-4 h-fit max-h-[calc(100vh-2rem)] overflow-y-auto pr-0.5">
+            <div dir={isRtl ? "rtl" : "ltr"} className="space-y-4 xl:sticky xl:top-3 h-fit max-h-[calc(100vh-1.5rem)] overflow-y-auto rounded-2xl bg-slate-50/70 p-2 pr-1 dark:bg-slate-950/30">
               {/* Live Report Card Container */}
-              <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-4">
+              <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-4">
                 {/* Header with Title and Live Badge */}
-                <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
+                <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 bg-gradient-to-r from-blue-50/80 to-white p-3 dark:border-slate-800 dark:from-slate-800/80 dark:to-slate-900">
                   <div className="flex items-center gap-2.5">
                     <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-600/20">
                       <Route className="h-4 w-4" />
@@ -3056,7 +3209,7 @@ export function CustomerOrderManagementView() {
                       <h2 className="text-sm font-black text-slate-900 dark:text-white">
                         {tt("live_report", "Live Customer Order Report")}
                       </h2>
-                      <p className="text-[10px] text-slate-500">
+                      <p className="text-[11px] text-slate-500">
                         {tt("live_report_desc", "Real-time summary of your customer order details, movements and related information.")}
                       </p>
                     </div>
@@ -3107,7 +3260,7 @@ export function CustomerOrderManagementView() {
                 </div>
 
                 {/* Customer Account Live Report — Formal Document / Message Layout (Voice note + Image 3 Reference) */}
-                <div className="rounded-xl border border-blue-200/90 bg-white p-4 shadow-sm dark:border-blue-900/60 dark:bg-slate-900 space-y-3.5">
+                <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-3.5">
                   {/* Top Bar: Customer Name, Badges & Live Ledger Balance */}
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
                     <div className="flex items-center gap-3">
@@ -3139,7 +3292,7 @@ export function CustomerOrderManagementView() {
                       <div className="flex items-center gap-2.5 bg-slate-50 dark:bg-slate-800/80 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xs">
                         <CreditCard className="h-4 w-4 text-emerald-600 shrink-0" />
                         <div className="text-right">
-                          <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400 leading-none">Live Ledger Balance</div>
+                          <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400 leading-none">{tt("live_ledger_balance", "Live Ledger Balance")}</div>
                           <div className={`font-black font-mono text-sm leading-tight mt-0.5 ${
                             selectedAccountInfo?.current_balance != null && Number(selectedAccountInfo.current_balance) < 0
                               ? "text-rose-600 dark:text-rose-400"
@@ -3167,18 +3320,20 @@ export function CustomerOrderManagementView() {
                     </div>
                   </div>
 
-                  {/* Customer Profile & Billing Address / Remarks Layout (Clean & Non-Duplicated) */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 text-xs">
-                    {/* COLUMN 1: BILLING ADDRESS & DIRECT CONTACT */}
-                    <div className="rounded-xl border border-slate-200/80 bg-slate-50/60 p-3 dark:border-slate-800 dark:bg-slate-850/60 space-y-2">
-                      <div className="flex items-center justify-between border-b border-slate-200/60 pb-1.5 dark:border-slate-750">
+                  {/* Customer detail message + report options / scope message */}
+                  <div className="grid grid-cols-1 gap-3.5 text-xs lg:grid-cols-[minmax(0,1.15fr)_minmax(260px,0.85fr)]">
+                    <div className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-3.5 dark:border-slate-800 dark:bg-slate-850/60 space-y-2.5">
+                      <div className="flex items-center justify-between border-b border-slate-200/60 pb-2 dark:border-slate-750">
                         <span className="text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-400 flex items-center gap-1.5">
                           <Building2 className="h-3 w-3" />
-                          {tt("billing_address_direct_contact", "Billing Address & Direct Contact")}
+                          {tt("customer_detail_message", "Customer Detail Message")}
+                        </span>
+                        <span className="rounded-full border border-blue-200 bg-white px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-blue-700 dark:border-blue-900 dark:bg-slate-900 dark:text-blue-300">
+                          {tt("customer_file", "Customer File")}
                         </span>
                       </div>
                       <div className="space-y-1 text-slate-700 dark:text-slate-300">
-                        <div className="font-bold text-slate-900 dark:text-white">
+                        <div className="text-[13px] font-black text-slate-900 dark:text-white">
                           {selectedCustomerInfo?.contact_person || selectedCustomerInfo?.customer_name || formData.customer_name || "—"}
                         </div>
                         {selectedCustomerInfo?.company_name ? (
@@ -3192,62 +3347,62 @@ export function CustomerOrderManagementView() {
                         <div className="font-medium text-slate-800 dark:text-slate-200 text-[11px]">
                           {[selectedCustomerInfo?.city_name, selectedCustomerInfo?.country_name].filter(Boolean).join(", ") || "—"}
                         </div>
-                        <div className="pt-1.5 border-t border-slate-200/50 dark:border-slate-750 space-y-0.5 text-[11px]">
-                          <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
+                        <div className="grid grid-cols-1 gap-1.5 pt-1.5 sm:grid-cols-2">
+                          <div className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 dark:border-slate-700 dark:bg-slate-900/70">
                             <span className="font-semibold text-slate-500">{tt("phone_colon", "Phone:")}</span>
-                            <span className="font-mono text-slate-800 dark:text-slate-200">{selectedCustomerInfo?.mobile || "—"}</span>
+                            <span className="block font-mono text-slate-800 dark:text-slate-200">{selectedCustomerInfo?.mobile || "—"}</span>
                           </div>
-                          {selectedCustomerInfo?.whatsapp ? (
-                            <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
-                              <span className="font-semibold text-slate-500">{tt("whatsapp_colon", "WhatsApp:")}</span>
-                              <span className="font-mono text-slate-800 dark:text-slate-200">{selectedCustomerInfo.whatsapp}</span>
-                            </div>
-                          ) : null}
-                          <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400 truncate">
+                          <div className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 dark:border-slate-700 dark:bg-slate-900/70">
                             <span className="font-semibold text-slate-500">{tt("email_colon", "Email:")}</span>
-                            <span className="text-slate-800 dark:text-slate-200 truncate">{selectedCustomerInfo?.email || "—"}</span>
+                            <span className="block truncate text-slate-800 dark:text-slate-200">{selectedCustomerInfo?.email || "—"}</span>
                           </div>
                         </div>
+                        {selectedCustomerInfo?.whatsapp ? (
+                          <div className="rounded-lg border border-emerald-200 bg-emerald-50/70 px-2 py-1.5 text-[11px] dark:border-emerald-900/50 dark:bg-emerald-950/20">
+                            <span className="font-semibold text-emerald-700 dark:text-emerald-300">{tt("whatsapp_colon", "WhatsApp:")}</span>{" "}
+                            <span className="font-mono text-slate-800 dark:text-slate-200">{selectedCustomerInfo.whatsapp}</span>
+                          </div>
+                        ) : null}
                       </div>
                     </div>
 
-                    {/* COLUMN 2: INSTRUCTIONS, REMARKS & SECONDARY PARTIES */}
-                    <div className="rounded-xl border border-slate-200/80 bg-slate-50/60 p-3 dark:border-slate-800 dark:bg-slate-850/60 space-y-2 flex flex-col justify-between">
-                      <div>
-                        <div className="flex items-center justify-between border-b border-slate-200/60 pb-1.5 dark:border-slate-750">
-                          <span className="text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
-                            <FileText className="h-3 w-3" />
-                            {tt("order_instructions_remarks", "Order Instructions & Remarks")}
-                          </span>
+                    <div className="rounded-xl border border-blue-200/80 bg-blue-50/50 p-3.5 dark:border-blue-900/50 dark:bg-blue-950/15 space-y-2.5">
+                      <div className="flex items-center justify-between border-b border-blue-200/60 pb-2 dark:border-blue-900/40">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-300 flex items-center gap-1.5">
+                          <Globe2 className="h-3 w-3" />
+                          {tt("report_options_country_scope", "Report Options & Country Scope")}
+                        </span>
+                        <span className="rounded-full border border-emerald-200 bg-white px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-emerald-700 dark:border-emerald-900 dark:bg-slate-900 dark:text-emerald-300">
+                          {tt("live_scope", "Live Scope")}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="rounded-lg border border-white/80 bg-white px-2 py-1.5 dark:border-slate-700 dark:bg-slate-900/70">
+                          <span className="block text-[9px] font-bold uppercase text-slate-400">{tt("origin_country", "Origin Country")}</span>
+                          <span className="block truncate font-bold text-slate-800 dark:text-slate-100">{formData.loading_country_name || tt("country_pending", "Country Pending")}</span>
                         </div>
-                        <div className="text-slate-600 dark:text-slate-300 italic text-[11px] leading-relaxed pt-1.5">
-                          {formData.remarks || tt("no_special_instructions", "No special instructions registered for this customer order.")}
+                        <div className="rounded-lg border border-white/80 bg-white px-2 py-1.5 dark:border-slate-700 dark:bg-slate-900/70">
+                          <span className="block text-[9px] font-bold uppercase text-slate-400">{tt("destination_country", "Destination Country")}</span>
+                          <span className="block truncate font-bold text-slate-800 dark:text-slate-100">{formData.receiving_country_name || tt("target_country_fallback", "Target Country")}</span>
+                        </div>
+                        <div className="rounded-lg border border-white/80 bg-white px-2 py-1.5 dark:border-slate-700 dark:bg-slate-900/70">
+                          <span className="block text-[9px] font-bold uppercase text-slate-400">{tt("branch_scope", "Branch Scope")}</span>
+                          <span className="block truncate font-bold text-slate-800 dark:text-slate-100">{userContext.context?.branchName || tt("global_group", "Global Group")}</span>
+                        </div>
+                        <div className="rounded-lg border border-white/80 bg-white px-2 py-1.5 dark:border-slate-700 dark:bg-slate-900/70">
+                          <span className="block text-[9px] font-bold uppercase text-slate-400">{tt("report_status", "Report Status")}</span>
+                          <span className="block truncate font-bold text-emerald-700 dark:text-emerald-300">{tt("live", "Live")}</span>
                         </div>
                       </div>
-
-                      {/* Secondary Parties if assigned */}
-                      {(partySelections.supplier?.companyName || partySelections.buyer?.companyName) ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-2 border-t border-slate-200/60 dark:border-slate-750 text-xs">
-                          {partySelections.supplier?.companyName ? (
-                            <div className="rounded-lg bg-white p-1.5 dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700">
-                              <span className="text-[8.5px] uppercase font-bold text-slate-400 block">{tt("supplier_label", "Supplier")}</span>
-                              <span className="font-bold text-slate-800 dark:text-slate-200 text-[10.5px] truncate block">{partySelections.supplier.companyName}</span>
-                            </div>
-                          ) : null}
-                          {partySelections.buyer?.companyName ? (
-                            <div className="rounded-lg bg-white p-1.5 dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700">
-                              <span className="text-[8.5px] uppercase font-bold text-slate-400 block">{tt("buyer_label", "Buyer")}</span>
-                              <span className="font-bold text-slate-800 dark:text-slate-200 text-[10.5px] truncate block">{partySelections.buyer.companyName}</span>
-                            </div>
-                          ) : null}
-                        </div>
-                      ) : null}
+                      <div className="rounded-lg border border-blue-100 bg-white/80 p-2 text-[11px] leading-relaxed text-slate-600 dark:border-blue-900/50 dark:bg-slate-900/60 dark:text-slate-300">
+                        {formData.remarks || tt("no_special_instructions", "No special instructions registered for this customer order.")}
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 {/* 1. Unified Movement & Dynamic Route Journey Specification Card (Non-Duplicate) */}
-                <div className="rounded-xl border border-sky-200/90 bg-white p-4 shadow-sm dark:border-sky-900/60 dark:bg-slate-900 space-y-3.5">
+                <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-3.5">
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
                     <div className="flex items-center gap-3">
                       <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-600 text-white font-black text-sm shadow-md shadow-sky-600/20">
@@ -3365,7 +3520,7 @@ export function CustomerOrderManagementView() {
                 </div>
 
                 {/* 2. Truck & Driver Assignment Message Card */}
-                <div className="rounded-xl border border-indigo-200/90 bg-white p-4 shadow-sm dark:border-indigo-900/60 dark:bg-slate-900 space-y-3.5">
+                <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-3.5">
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
                     <div className="flex items-center gap-3">
                       <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white font-black text-sm shadow-md shadow-indigo-600/20">
@@ -3457,7 +3612,7 @@ export function CustomerOrderManagementView() {
                 </div>
 
                 {/* 3. Goods & Cargo Manifest Breakdown Table Message Card */}
-                <div className="rounded-xl border border-emerald-200/90 bg-white p-4 shadow-sm dark:border-emerald-900/60 dark:bg-slate-900 space-y-3.5">
+                <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-3.5">
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
                     <div className="flex items-center gap-3">
                       <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 text-white font-black text-sm shadow-md shadow-emerald-600/20">
