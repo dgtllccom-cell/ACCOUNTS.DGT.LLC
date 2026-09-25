@@ -28,6 +28,46 @@ export const enterpriseRoleScopes: Record<EnterpriseRole, string> = {
   auditor_viewer: "Read-only assigned scope"
 };
 
+/**
+ * Approved Shipping Line baseline (agent_user). Single source of truth for: the role template,
+ * the one-time sync of existing Shipping users' custom permission sets (migration 20261210) and
+ * the domain safeguard in the session builder. Every token below is one an existing route guard
+ * actually checks. Deliberately NOT included: ledger_full:read (a Shipping user may post to another
+ * branch's account without seeing its ledger/balance), *:post/approve on receipts & charges.
+ */
+export const SHIPPING_APPROVED_BUNDLE: readonly string[] = [
+  "accounts:read",
+  "accounts:create",
+  "roznamcha:read",
+  "roznamcha:create",
+  "transactions:read",
+  "transactions:create",
+  "roznamcha:post_cross_branch",
+  "record_transfers:read",
+  "record_transfers:create",
+  "shipping_records:read",
+  "shipping_records:create",
+  "shipping_records:update",
+  "shipping_reports:read",
+  "reports:read",
+  "shipping:read",
+  "inter_branch_transfers:read",
+  "inter_branch_transfers:create",
+  "inter_branch_transfers:approve",
+  "clearing_bill_customer_charges:read",
+  "clearing_bill_customer_charges:create",
+  "customer_receipts:read",
+  "customer_receipts:create"
+];
+
+/** Bundle tokens that are NOT part of the pre-existing agent_user baseline; they only apply to a Shipping-domain agent. */
+export const SHIPPING_BUNDLE_SHIPPING_DOMAIN_ONLY: readonly string[] = [
+  "accounts:read", "accounts:create", "roznamcha:read", "roznamcha:create", "roznamcha:post_cross_branch",
+  "shipping_reports:read", "reports:read", "shipping:read", "inter_branch_transfers:read", "inter_branch_transfers:create",
+  "inter_branch_transfers:approve", "clearing_bill_customer_charges:read", "clearing_bill_customer_charges:create",
+  "customer_receipts:read", "customer_receipts:create"
+];
+
 export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
   super_admin: ["*:*"],
   super_admin_reports: [
@@ -555,7 +595,8 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "messages:create",
     "messages:read",
     "whatsapp:read",
-    "whatsapp:create"
+    "whatsapp:create",
+    ...SHIPPING_APPROVED_BUNDLE
   ],
   staff_user: ["transactions:create", "transactions:read", "customers:read", "companies:read", "shipping_records:read", "whatsapp:read", "location_master:read", "route_templates:read"],
   auditor_viewer: ["reports:read", "audit_logs:read", "ledgers:read", "companies:read", "kyc:read", "documents:read", "uae_tax:read", "uae_tax_filing:read", "contracts:read"]
