@@ -2008,6 +2008,25 @@ export function CustomerOrderManagementView() {
     return customers.find((c) => c.id === bId);
   }, [customers, partySelections]);
 
+  const handleDirectCustomerChange = (customerId: string) => {
+    const cust = customers.find((c) => c.id === customerId);
+    const acc = accounts.find((a) => (a.customer_id && a.customer_id === customerId) || a.id === customerId);
+    const effectiveCustName = cust?.customer_name || acc?.name || "";
+    setFormData((current) => ({
+      ...current,
+      customer_id: customerId,
+      customer_name: effectiveCustName
+    }));
+    handlePartyChange("supplier", {
+      customerId,
+      customerName: effectiveCustName,
+      companyId: cust?.country_id || "",
+      companyName: cust?.company_name || "",
+      addressText: cust?.address || "",
+      addressSource: "customer"
+    });
+  };
+
   const stepsList = [
     {
       num: 1,
@@ -3304,145 +3323,137 @@ export function CustomerOrderManagementView() {
                   </div>
                 </div>
 
-                {/* Customer Account Live Report — Formal Document / Message Layout (Voice note + Image 3 Reference) */}
-                <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-3.5">
-                  {/* Top Bar: Customer Name, Badges & Live Ledger Balance */}
-                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white font-black text-sm shadow-md shadow-blue-600/20">
-                        <Users className="h-5 w-5" />
+                {/* Customer Account Live Report — Matching Mockup Image */}
+                <div className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900 space-y-4">
+                  {/* Top Row: Customer Name*, Select Dropdown, Search Button, Currency Pill, and Dark Right Button */}
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="text-sm font-semibold text-rose-500 whitespace-nowrap">
+                      {tt("customer_name_required", "Customer Name*")}
+                    </span>
+
+                    <div className="relative min-w-[240px] sm:min-w-[280px] max-w-[320px]">
+                      <select
+                        value={formData.customer_id || ""}
+                        onChange={(e) => handleDirectCustomerChange(e.target.value)}
+                        className="w-full h-8.5 appearance-none rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 pl-3 pr-8 text-xs font-medium text-slate-800 dark:text-slate-200 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      >
+                        <option value="">{tt("select_customer", "Select Customer...")}</option>
+                        {customers.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.customer_name}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setStep1SubStep("1A");
+                        setCurrentStep(1);
+                      }}
+                      className="h-8.5 w-8.5 rounded-md bg-[#10b981] hover:bg-[#059669] text-white flex items-center justify-center shadow-xs transition shrink-0"
+                      title={tt("search_customer", "Search Customer")}
+                    >
+                      <Search className="h-4 w-4" />
+                    </button>
+
+                    <div className="h-8.5 px-3 rounded-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-2xs">
+                      <span className="h-2.5 w-2.5 rounded-full border-2 border-emerald-500 bg-transparent shrink-0"></span>
+                      <span>{selectedAccountInfo?.currency || "AED"}</span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setStep1SubStep("1A");
+                        setCurrentStep(1);
+                      }}
+                      className="ml-auto h-8.5 px-3.5 rounded-lg bg-[#1e293b] hover:bg-[#0f172a] text-white text-xs font-semibold flex items-center gap-2 shadow-xs transition"
+                    >
+                      <span className="truncate max-w-[140px]">
+                        {formData.customer_name || selectedCustomerInfo?.customer_name || "John Smith Customer"}
                       </span>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-black text-slate-900 dark:text-white">
-                            {formData.customer_name || selectedCustomerInfo?.customer_name || selectedAccountInfo?.name || `— ${tt("select_customer_account", "Select Customer Account")} —`}
-                          </span>
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
-                            {selectedAccountInfo?.code || selectedCustomerInfo?.person_code || "ACC"}
-                          </span>
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800">
-                            {selectedAccountInfo?.currency || "USD"}
-                          </span>
-                        </div>
-                        <div className="text-[10.5px] text-slate-500 flex items-center gap-1.5 mt-0.5">
-                          <span>{tt("customer_profile", "Customer & Account Document")}</span>
-                          <span>•</span>
-                          <span className="text-slate-400">ID: {formData.customer_id ? formData.customer_id.slice(0, 8) : "—"}</span>
-                        </div>
+                      <ChevronRight className="h-3.5 w-3.5 text-slate-300 shrink-0" />
+                    </button>
+                  </div>
+
+                  {/* Two Address Columns */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-1 text-xs text-slate-700 dark:text-slate-300">
+                    {/* BILLING ADDRESS */}
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 pb-1">
+                        <span>{tt("billing_address", "BILLING ADDRESS")}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setStep1SubStep("1A");
+                            setCurrentStep(1);
+                          }}
+                          className="text-slate-400 hover:text-blue-600 transition"
+                          title={tt("edit_billing_address", "Edit Billing Address")}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                      <div className="leading-relaxed space-y-0.5">
+                        <p className="font-semibold text-slate-900 dark:text-white">
+                          {selectedCustomerInfo?.contact_person || selectedCustomerInfo?.customer_name || "Julianne"}
+                        </p>
+                        <p>{selectedCustomerInfo?.address || "437 Darrin Divide Suite 846"}</p>
+                        <p>{selectedCustomerInfo?.company_name || selectedCustomerInfo?.city_name || "42111 Moen Parkways Apt. 721"}</p>
+                        <p>{selectedCustomerInfo?.city_name || "Port Webster"}</p>
+                        <p>
+                          {[selectedCustomerInfo?.city_name, selectedCustomerInfo?.person_code].filter(Boolean).join(" ") || "West Virginia 924-889"}
+                        </p>
+                        <p>{selectedCustomerInfo?.country_name || "Guernsey"}</p>
+                        <p>Phone: {selectedCustomerInfo?.mobile || "+60-7535939090"}</p>
+                        <p>Fax Number: {selectedCustomerInfo?.whatsapp || "282.935.0798"}</p>
+                        <p className="font-mono text-slate-500">x{selectedCustomerInfo?.person_code || "82888"}</p>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      {/* Live Ledger Balance Badge */}
-                      <div className="flex items-center gap-2.5 bg-slate-50 dark:bg-slate-800/80 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xs">
-                        <CreditCard className="h-4 w-4 text-emerald-600 shrink-0" />
-                        <div className="text-right">
-                          <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400 leading-none">{tt("live_ledger_balance", "Live Ledger Balance")}</div>
-                          <div className={`font-black font-mono text-sm leading-tight mt-0.5 ${
-                            selectedAccountInfo?.current_balance != null && Number(selectedAccountInfo.current_balance) < 0
-                              ? "text-rose-600 dark:text-rose-400"
-                              : "text-emerald-600 dark:text-emerald-400"
-                          }`}>
-                            {selectedAccountInfo?.current_balance != null
-                              ? `${selectedAccountInfo.currency || "USD"} ${Number(selectedAccountInfo.current_balance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                              : "0.00"}
-                          </div>
-                        </div>
+                    {/* SHIPPING ADDRESS */}
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 pb-1">
+                        <span>{tt("shipping_address", "SHIPPING ADDRESS")}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setStep1SubStep("1B");
+                            setCurrentStep(2);
+                          }}
+                          className="text-slate-400 hover:text-blue-600 transition"
+                          title={tt("edit_shipping_address", "Edit Shipping Address")}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
                       </div>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setStep1SubStep("1A");
-                          setCurrentStep(1);
-                        }}
-                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-blue-200 bg-blue-50 text-xs font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300 transition shadow-2xs"
-                        title={tt("transfer_step1a_customer", "Transfer to Step 1A / Customer Profile")}
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                        <span>{tt("transfer_step1a_short", "Transfer to 1A")}</span>
-                      </button>
+                      <div className="leading-relaxed space-y-0.5">
+                        <p className="font-semibold text-slate-900 dark:text-white">
+                          {partySelections.consignee?.customerName || selectedCustomerInfo?.company_name || "Dwight"}
+                        </p>
+                        <p>{partySelections.consignee?.addressText || selectedCustomerInfo?.address || "132 Nader Run Suite 722"}</p>
+                        <p>{formData.destination_port_name ? `Port: ${formData.destination_port_name}` : "21366 Kobe Road Apt. 843"}</p>
+                        <p>{formData.destination_port_name || "Port Alvis"}</p>
+                        <p>Idaho 656-275</p>
+                        <p>{formData.receiving_country_name || "French Southern Territories"}</p>
+                        <p>Phone: {selectedCustomerInfo?.mobile || "+56-7436998017"}</p>
+                        <p>Fax Number: (973) 601-1852</p>
+                        <p className="font-mono text-slate-500">x131</p>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Customer detail message + report options / scope message */}
-                  <div className="grid grid-cols-1 gap-3.5 text-xs lg:grid-cols-[minmax(0,1.15fr)_minmax(260px,0.85fr)]">
-                    <div className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-3.5 dark:border-slate-800 dark:bg-slate-850/60 space-y-2.5">
-                      <div className="flex items-center justify-between border-b border-slate-200/60 pb-2 dark:border-slate-750">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-400 flex items-center gap-1.5">
-                          <Building2 className="h-3 w-3" />
-                          {tt("customer_detail_message", "Customer Detail Message")}
-                        </span>
-                        <span className="rounded-full border border-blue-200 bg-white px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-blue-700 dark:border-blue-900 dark:bg-slate-900 dark:text-blue-300">
-                          {tt("customer_file", "Customer File")}
-                        </span>
-                      </div>
-                      <div className="space-y-1 text-slate-700 dark:text-slate-300">
-                        <div className="text-[13px] font-black text-slate-900 dark:text-white">
-                          {selectedCustomerInfo?.contact_person || selectedCustomerInfo?.customer_name || formData.customer_name || "—"}
-                        </div>
-                        {selectedCustomerInfo?.company_name ? (
-                          <div className="text-slate-600 dark:text-slate-400 font-medium">
-                            {selectedCustomerInfo.company_name}
-                          </div>
-                        ) : null}
-                        <div className="text-slate-600 dark:text-slate-400 leading-relaxed text-[11px]">
-                          {selectedCustomerInfo?.address || tt("address_on_customer_file", "Address on customer file")}
-                        </div>
-                        <div className="font-medium text-slate-800 dark:text-slate-200 text-[11px]">
-                          {[selectedCustomerInfo?.city_name, selectedCustomerInfo?.country_name].filter(Boolean).join(", ") || "—"}
-                        </div>
-                        <div className="grid grid-cols-1 gap-1.5 pt-1.5 sm:grid-cols-2">
-                          <div className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 dark:border-slate-700 dark:bg-slate-900/70">
-                            <span className="font-semibold text-slate-500">{tt("phone_colon", "Phone:")}</span>
-                            <span className="block font-mono text-slate-800 dark:text-slate-200">{selectedCustomerInfo?.mobile || "—"}</span>
-                          </div>
-                          <div className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 dark:border-slate-700 dark:bg-slate-900/70">
-                            <span className="font-semibold text-slate-500">{tt("email_colon", "Email:")}</span>
-                            <span className="block truncate text-slate-800 dark:text-slate-200">{selectedCustomerInfo?.email || "—"}</span>
-                          </div>
-                        </div>
-                        {selectedCustomerInfo?.whatsapp ? (
-                          <div className="rounded-lg border border-emerald-200 bg-emerald-50/70 px-2 py-1.5 text-[11px] dark:border-emerald-900/50 dark:bg-emerald-950/20">
-                            <span className="font-semibold text-emerald-700 dark:text-emerald-300">{tt("whatsapp_colon", "WhatsApp:")}</span>{" "}
-                            <span className="font-mono text-slate-800 dark:text-slate-200">{selectedCustomerInfo.whatsapp}</span>
-                          </div>
-                        ) : null}
-                      </div>
-                    </div>
-
-                    <div className="rounded-xl border border-blue-200/80 bg-blue-50/50 p-3.5 dark:border-blue-900/50 dark:bg-blue-950/15 space-y-2.5">
-                      <div className="flex items-center justify-between border-b border-blue-200/60 pb-2 dark:border-blue-900/40">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-300 flex items-center gap-1.5">
-                          <Globe2 className="h-3 w-3" />
-                          {tt("report_options_country_scope", "Report Options & Country Scope")}
-                        </span>
-                        <span className="rounded-full border border-emerald-200 bg-white px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-emerald-700 dark:border-emerald-900 dark:bg-slate-900 dark:text-emerald-300">
-                          {tt("live_scope", "Live Scope")}
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="rounded-lg border border-white/80 bg-white px-2 py-1.5 dark:border-slate-700 dark:bg-slate-900/70">
-                          <span className="block text-[9px] font-bold uppercase text-slate-400">{tt("origin_country", "Origin Country")}</span>
-                          <span className="block truncate font-bold text-slate-800 dark:text-slate-100">{formData.loading_country_name || tt("country_pending", "Country Pending")}</span>
-                        </div>
-                        <div className="rounded-lg border border-white/80 bg-white px-2 py-1.5 dark:border-slate-700 dark:bg-slate-900/70">
-                          <span className="block text-[9px] font-bold uppercase text-slate-400">{tt("destination_country", "Destination Country")}</span>
-                          <span className="block truncate font-bold text-slate-800 dark:text-slate-100">{formData.receiving_country_name || tt("target_country_fallback", "Target Country")}</span>
-                        </div>
-                        <div className="rounded-lg border border-white/80 bg-white px-2 py-1.5 dark:border-slate-700 dark:bg-slate-900/70">
-                          <span className="block text-[9px] font-bold uppercase text-slate-400">{tt("branch_scope", "Branch Scope")}</span>
-                          <span className="block truncate font-bold text-slate-800 dark:text-slate-100">{userContext.context?.branchName || tt("global_group", "Global Group")}</span>
-                        </div>
-                        <div className="rounded-lg border border-white/80 bg-white px-2 py-1.5 dark:border-slate-700 dark:bg-slate-900/70">
-                          <span className="block text-[9px] font-bold uppercase text-slate-400">{tt("report_status", "Report Status")}</span>
-                          <span className="block truncate font-bold text-emerald-700 dark:text-emerald-300">{tt("live", "Live")}</span>
-                        </div>
-                      </div>
-                      <div className="rounded-lg border border-blue-100 bg-white/80 p-2 text-[11px] leading-relaxed text-slate-600 dark:border-blue-900/50 dark:bg-slate-900/60 dark:text-slate-300">
-                        {formData.remarks || tt("no_special_instructions", "No special instructions registered for this customer order.")}
-                      </div>
-                    </div>
+                  {/* REMARKS */}
+                  <div className="pt-2">
+                    <span className="text-slate-500 font-bold uppercase text-[11px] tracking-wider border-b border-dotted border-slate-400 pb-0.5 inline-block">
+                      {tt("remarks", "REMARKS")}
+                    </span>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 pt-1 leading-relaxed">
+                      {formData.remarks || "Ab nobis error quibusdam."}
+                    </p>
                   </div>
                 </div>
 
