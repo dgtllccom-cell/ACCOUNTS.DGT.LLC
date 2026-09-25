@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { type EnterpriseRole, enterpriseRoles } from "@/lib/permissions/enterprise-roles";
-import { enterpriseRolePermissions } from "@/lib/permissions/enterprise-roles";
+import { enterpriseRolePermissions, SHIPPING_BUNDLE_SHIPPING_DOMAIN_ONLY } from "@/lib/permissions/enterprise-roles";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { isDemoAuthEnabled, isSupabaseConfigured } from "@/lib/supabase/config";
 import { readTempSession } from "@/lib/auth/temp-session";
@@ -22,6 +22,23 @@ export type RoleAssignmentScope = {
   operationalDomain: OperationalDomain;
   mobileProfile: MobileProfile;
 };
+
+/**
+ * Role-template permissions for a set of roles. The Shipping-only tokens of the approved agent_user
+ * bundle apply only when the agent's assignment is in the Shipping (or both) operational domain — an
+ * agent_user row left on the default 'business' domain must not inherit reports/accounts/roznamcha.
+ */
+function roleTemplatePermissions(roles: EnterpriseRole[], assignments: Array<{ role: string; operationalDomain?: string | null }>): string[] {
+  const out = new Set(roles.flatMap((role) => enterpriseRolePermissions[role] ?? []));
+  if (roles.includes("agent_user")) {
+    const shippingAgent = assignments.some((a) => a.role === "agent_user" && (a.operationalDomain === "shipping" || a.operationalDomain === "both"));
+    if (!shippingAgent) {
+      const otherRoleGrants = new Set(roles.filter((r) => r !== "agent_user").flatMap((r) => enterpriseRolePermissions[r] ?? []));
+      for (const t of SHIPPING_BUNDLE_SHIPPING_DOMAIN_ONLY) if (!otherRoleGrants.has(t)) out.delete(t);
+    }
+  }
+  return [...out];
+}
 
 export type ErpSession = {
   userId: string;
@@ -393,7 +410,7 @@ async function resolveErpSessionFromDb(
     permissions = explicit && Array.isArray(explicit) ? explicit.filter((p) => typeof p === "string" && p.length > 0) : [];
   } catch { permissions = []; }
   if (!permissions.length) {
-    permissions = [...new Set(roles.flatMap((role) => enterpriseRolePermissions[role] ?? []))];
+    permissions = roleTemplatePermissions(roles, assignments);
   }
   if (roles.includes("super_admin") && !permissions.includes("*:*")) {
     permissions = ["*:*", ...permissions];
@@ -541,7 +558,7 @@ export async function getCurrentErpSession(): Promise<ErpSession | null> {
       const { initialCountryIds, initialCountryBranchIds, initialCityBranchIds, downwardCountryIds, downwardCountryBranchIds } = getAssignmentRoots(tempAssignments);
       const isSuperAdmin = temp.roles.includes("super_admin");
       const resolvedScopes = await resolveHierarchyScopes(admin, initialCountryIds, initialCountryBranchIds, initialCityBranchIds, isSuperAdmin, downwardCountryIds, downwardCountryBranchIds);
-      let perms = [...new Set(temp.roles.flatMap((role) => enterpriseRolePermissions[role] ?? []))];
+      let perms = roleTemplatePermissions(temp.roles, tempAssignments);
 
       // Same branch_rules custom-grant/deny application as resolveErpSessionFromDb,
       // so a synthetic dev-session identity or DB-unreachable fallback session is
