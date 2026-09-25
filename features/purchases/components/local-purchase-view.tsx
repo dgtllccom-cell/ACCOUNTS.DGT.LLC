@@ -1036,8 +1036,11 @@ export function LocalPurchaseView({
   }, [purchaseCost, taxAmount]);
 
   const combinedBillCost = useMemo(() => {
+    // When draft items exist, use their total only (the current form values
+    // still reflect the last-added item and would double-count otherwise).
+    // When no items have been added yet, use the live form's finalCost.
     const draftTotal = draftItems.reduce((acc, item) => acc + (item.finalCost || 0), 0);
-    return draftTotal + finalCost;
+    return draftTotal > 0 ? draftTotal : finalCost;
   }, [draftItems, finalCost]);
 
   // Final Amount (AED) — combinedBillCost converted at the booking-level exchange
@@ -2881,7 +2884,7 @@ export function LocalPurchaseView({
                       <input
                         value={qualityReportRef}
                         onChange={e => setQualityReportRef(e.target.value)}
-                        placeholder="Passed"
+                        placeholder={t(lang, "purchase.quality_passed_placeholder", "Passed")}
                         className="w-full h-9 rounded-lg border border-slate-200 bg-white px-3 text-xs outline-none font-bold text-emerald-700"
                       />
                     </div>
@@ -3430,7 +3433,7 @@ export function LocalPurchaseView({
                           <Th className="p-2 border-b text-right">{t(lang, "lp.col_gross_wt", "Gross Wt")}</Th>
                           <Th className="p-2 border-b text-right">{t(lang, "lp.col_net_wt", "Net Wt")}</Th>
                           <Th className="p-2 border-b text-right">{t(lang, "lp.col_rate", "Rate")}</Th>
-                          <Th className="p-2 border-b text-right">{t(lang, "lp.col_amount_usd", "Amount USD")}</Th>
+                          <Th className="p-2 border-b text-right">{t(lang, "lp.col_amount", "Amount")} ({purchaseCurrency})</Th>
                           <Th className="p-2 border-b text-right">{t(lang, "lp.col_final_aed", "Final AED")}</Th>
                           <Th className="p-2 border-b text-center">{t(lang, "lp.col_action", "Action")}</Th>
                         </tr>
@@ -3542,7 +3545,7 @@ export function LocalPurchaseView({
                           <Th className="p-2 border-b text-right">{t(lang, "lp.col_gross_wt", "GROSS WT")}</Th>
                           <Th className="p-2 border-b text-right">{t(lang, "lp.col_net_wt", "NET WT")}</Th>
                           <Th className="p-2 border-b text-right">{t(lang, "lp.col_rate", "RATE")}</Th>
-                          <Th className="p-2 border-b text-right">{t(lang, "lp.col_amount_usd", "AMOUNT USD")}</Th>
+                          <Th className="p-2 border-b text-right">{t(lang, "lp.col_amount", "AMOUNT")} ({purchaseCurrency})</Th>
                           <Th className="p-2 border-b text-right">{t(lang, "lp.col_final_aed", "FINAL AED")}</Th>
                         </tr>
                       </thead>
