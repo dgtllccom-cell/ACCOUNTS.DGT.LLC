@@ -3440,7 +3440,7 @@ export function CustomerOrderManagementView() {
                 </div>
 
                 {/* Auto-Generated Serials & Timestamps Banner */}
-                <div className="rounded-xl border border-slate-200/90 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-800/60 space-y-2">
+                <div className="hidden rounded-xl border border-slate-200/90 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-800/60 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                       <Hash className="h-3.5 w-3.5 text-blue-600" />
@@ -3479,7 +3479,7 @@ export function CustomerOrderManagementView() {
                 </div>
 
                 {/* Customer Account Live Report — Formal Document / Message Layout (Voice note + Image 3 Reference) */}
-                <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-3.5">
+                <div className="hidden rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-3.5">
                   {/* Top Bar: Customer Name, Badges & Live Ledger Balance */}
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
                     <div className="flex items-center gap-3">
@@ -3621,7 +3621,7 @@ export function CustomerOrderManagementView() {
                 </div>
 
                 {/* 1. Unified Movement & Dynamic Route Journey Specification Card (Non-Duplicate) */}
-                <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-3.5">
+                <div className="hidden rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-3.5">
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
                     <div className="flex items-center gap-3">
                       <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-600 text-white font-black text-sm shadow-md shadow-sky-600/20">
@@ -3739,7 +3739,7 @@ export function CustomerOrderManagementView() {
                 </div>
 
                 {/* 2. Truck & Driver Assignment Message Card */}
-                <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-3.5">
+                <div className="hidden rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-3.5">
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
                     <div className="flex items-center gap-3">
                       <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white font-black text-sm shadow-md shadow-indigo-600/20">
@@ -3831,7 +3831,7 @@ export function CustomerOrderManagementView() {
                 </div>
 
                 {/* 3. Goods & Cargo Manifest Breakdown Table Message Card */}
-                <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-3.5">
+                <div className="hidden rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-3.5">
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
                     <div className="flex items-center gap-3">
                       <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 text-white font-black text-sm shadow-md shadow-emerald-600/20">
@@ -3990,7 +3990,7 @@ export function CustomerOrderManagementView() {
                 </div>
 
                 {/* Registered Customer Orders Mini-Table (Screenshots 1, 2, 3) */}
-                <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <div className="hidden space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <h3 className="text-xs font-black text-slate-900 dark:text-white">
