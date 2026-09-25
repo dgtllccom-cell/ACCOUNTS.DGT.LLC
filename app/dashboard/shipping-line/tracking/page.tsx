@@ -9,12 +9,12 @@ export default async function ShippingLineTrackingPage({
 }) {
   const { id } = await searchParams;
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+    <div className="p-3 sm:p-5">
       <CanonicalShipmentTrackingView
         domain="shipping"
         initialShipmentId={id || null}
-        title="Shipping Line & Container Auto-Tracker"
-        description="Monitor vessel departures, transshipment, port arrivals, container discharges, and multi-leg customer cargo."
+        title="Container & Vessel Tracking"
+        description="Track shipments, containers and vessels in real-time with complete journey details."
       />
     </div>
   );

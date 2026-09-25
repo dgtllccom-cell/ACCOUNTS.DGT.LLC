@@ -1,4 +1,4 @@
-import { withLocalPg } from "@/lib/db/local-postgres";
+﻿import { withLocalPg } from "@/lib/db/local-postgres";
 import type { ErpSession } from "@/lib/auth/session";
 import {
   TRACKING_EVENT_CODES,
@@ -129,13 +129,13 @@ export class ShipmentTrackingService {
         orderNo: r.order_no,
         customerName: r.customer_name,
         currentStage: r.current_stage || "booking",
-        containerNumber: r.container_number || r.bl_record_container_number || "—",
-        blNumber: r.bl_number || r.bl_record_bl_number || "—",
-        vesselName: r.vessel_name || "—",
-        voyageNumber: r.voyage_number || "—",
-        shippingLineName: r.shipping_line_name || "—",
-        pol: r.port_of_loading || r.loading_port_name || "—",
-        pod: r.port_of_discharge || r.destination_port_name || "—",
+        containerNumber: r.container_number || r.bl_record_container_number || "â€”",
+        blNumber: r.bl_number || r.bl_record_bl_number || "â€”",
+        vesselName: r.vessel_name || "â€”",
+        voyageNumber: r.voyage_number || "â€”",
+        shippingLineName: r.shipping_line_name || "â€”",
+        pol: r.port_of_loading || r.loading_port_name || "â€”",
+        pod: r.port_of_discharge || r.destination_port_name || "â€”",
         etd: r.etd,
         eta: r.eta,
         transportMode: r.leg_transport_mode || r.transport_mode || "by_sea",
@@ -224,14 +224,14 @@ export class ShipmentTrackingService {
         activeLeg?.container_number ||
         blRecord?.container_number ||
         (handover?.container_numbers?.length ? handover.container_numbers.join(", ") : null) ||
-        "—";
+        "â€”";
 
-      const blNumber = activeLeg?.bl_number || blRecord?.bl_number || handover?.bl_reference || "—";
-      const vesselName = activeLeg?.vessel_name || blRecord?.vessel_name || "—";
-      const voyageNumber = activeLeg?.voyage_number || blRecord?.voyage_number || "—";
-      const shippingLine = activeLeg?.shipping_line_name || blRecord?.shipping_line_name || "—";
-      const pol = activeLeg?.port_of_loading || blRecord?.loading_port || order.loading_port_name || "—";
-      const pod = activeLeg?.port_of_discharge || blRecord?.discharge_port || order.destination_port_name || "—";
+      const blNumber = activeLeg?.bl_number || blRecord?.bl_number || handover?.bl_reference || "â€”";
+      const vesselName = activeLeg?.vessel_name || blRecord?.vessel_name || "â€”";
+      const voyageNumber = activeLeg?.voyage_number || blRecord?.voyage_number || "â€”";
+      const shippingLine = activeLeg?.shipping_line_name || blRecord?.shipping_line_name || "â€”";
+      const pol = activeLeg?.port_of_loading || blRecord?.loading_port || order.loading_port_name || "â€”";
+      const pod = activeLeg?.port_of_discharge || blRecord?.discharge_port || order.destination_port_name || "â€”";
       const etd = activeLeg?.etd || blRecord?.etd || null;
       const eta = activeLeg?.eta || blRecord?.eta || null;
 
@@ -393,6 +393,142 @@ export class ShipmentTrackingService {
       `;
 
       return eventRow;
+    });
+  }
+  /**
+   * Enriched tracking list for the full tracking table view.
+   */
+  async searchTrackingList(
+    query: string,
+    domain: "business" | "shipping" | "both",
+    session: ErpSession,
+    limit = 100,
+    offset = 0,
+    modeFilter?: string,
+    statusFilter?: string
+  ) {
+    return withLocalPg(async (sql) => {
+      const q = `%${(query || "").trim().toLowerCase()}%`;
+      const hasQ = query.trim().length > 0;
+
+      const scopeFilter = session.isSuperAdmin
+        ? sql``
+        : session.cityBranchIds?.length
+        ? sql`AND o.city_branch_id = ANY(${session.cityBranchIds})`
+        : session.countryBranchIds?.length
+        ? sql`AND o.country_branch_id = ANY(${session.countryBranchIds})`
+        : session.countryIds?.length
+        ? sql`AND o.country_id = ANY(${session.countryIds})`
+        : sql``;
+
+      const modeCondition =
+        modeFilter && modeFilter !== "all"
+          ? sql`AND COALESCE(al.transport_mode, o.transport_mode) = ${modeFilter}`
+          : sql``;
+
+      const statusCondition =
+        statusFilter && statusFilter !== "all"
+          ? sql`AND o.current_stage = ${statusFilter}`
+          : sql``;
+
+      const searchCondition = hasQ
+        ? sql`AND (
+            lower(o.order_no) LIKE ${q}
+            OR lower(coalesce(o.customer_name,'')) LIKE ${q}
+            OR lower(coalesce(al.bl_number,'')) LIKE ${q}
+            OR lower(coalesce(al.container_number,'')) LIKE ${q}
+            OR lower(coalesce(al.vessel_name,'')) LIKE ${q}
+            OR lower(coalesce(al.voyage_number,'')) LIKE ${q}
+            OR lower(coalesce(al.truck_number,'')) LIKE ${q}
+            OR lower(coalesce(o.truck_number,'')) LIKE ${q}
+            OR lower(coalesce(sl.name,'')) LIKE ${q}
+          )`
+        : sql``;
+
+      const countRows = (await sql`
+        SELECT COUNT(DISTINCT o.id)::int AS total
+        FROM public.clearing_customer_orders o
+        LEFT JOIN public.clearing_customer_order_legs al ON al.order_id = o.id AND al.deleted_at IS NULL
+        LEFT JOIN public.shipping_lines sl ON sl.id = al.shipping_line_id AND sl.deleted_at IS NULL
+        WHERE o.deleted_at IS NULL
+        ${scopeFilter}
+        ${modeCondition}
+        ${statusCondition}
+        ${searchCondition}
+      `) as any[];
+      const total = countRows[0]?.total ?? 0;
+
+      const rows = (await sql`
+        SELECT DISTINCT ON (o.id, o.created_at)
+          o.id, o.order_no, o.customer_name, o.current_stage,
+          o.transport_mode AS order_transport_mode,
+          o.loading_port_name, o.destination_port_name,
+          o.loading_country_name, o.receiving_country_name,
+          o.created_at, o.country_id, o.country_branch_id, o.city_branch_id,
+          o.truck_number AS order_truck_number,
+          al.id AS leg_id, al.leg_no,
+          al.transport_mode AS leg_transport_mode,
+          al.vessel_name, al.voyage_number, al.container_number, al.bl_number,
+          al.truck_number AS leg_truck_number, al.truck_driver_name,
+          al.port_of_loading, al.port_of_discharge, al.eta, al.etd, al.status AS leg_status,
+          al.from_location_text, al.to_location_text,
+          al.from_country_name AS leg_from_country, al.to_country_name AS leg_to_country,
+          sl.name AS shipping_line_name,
+          bl.bl_number AS bl_rec_number, bl.container_number AS bl_rec_container,
+          bl.vessel_name AS bl_rec_vessel, bl.voyage_number AS bl_rec_voyage,
+          bl.shipping_line_name AS bl_rec_shipping_line,
+          bl.loading_port AS bl_rec_pol, bl.discharge_port AS bl_rec_pod, bl.eta AS bl_rec_eta,
+          ev.location_name AS current_location,
+          ev.event_name AS latest_event_name, ev.event_time AS latest_event_time
+        FROM public.clearing_customer_orders o
+        LEFT JOIN public.clearing_customer_order_legs al ON al.order_id = o.id AND al.deleted_at IS NULL
+        LEFT JOIN public.shipping_lines sl ON sl.id = al.shipping_line_id AND sl.deleted_at IS NULL
+        LEFT JOIN public.shipping_bl_records bl ON (bl.order_id = o.id OR bl.leg_id = al.id) AND bl.deleted_at IS NULL
+        LEFT JOIN LATERAL (
+          SELECT e.location_name, e.event_name, e.event_time
+          FROM public.shipment_tracking_events e
+          WHERE e.order_id = o.id AND e.deleted_at IS NULL
+          ORDER BY e.event_time DESC, e.created_at DESC LIMIT 1
+        ) ev ON true
+        WHERE o.deleted_at IS NULL
+        ${scopeFilter}
+        ${modeCondition}
+        ${statusCondition}
+        ${searchCondition}
+        ORDER BY o.created_at DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `) as any[];
+
+      const filtered = rows.filter((r) => hasScopeAccess(session, r));
+      return {
+        total,
+        rows: filtered.map((r) => ({
+          id: r.id,
+          orderNo: r.order_no,
+          customerName: r.customer_name,
+          currentStage: r.current_stage || "booking",
+          blNumber: r.bl_number || r.bl_rec_number || "—",
+          containerNumber: r.container_number || r.bl_rec_container || "—",
+          truckNumber: r.leg_truck_number || r.order_truck_number || "—",
+          truckDriverName: r.truck_driver_name || null,
+          shippingLine: r.shipping_line_name || r.bl_rec_shipping_line || "—",
+          vesselName: r.vessel_name || r.bl_rec_vessel || "—",
+          voyageNumber: r.voyage_number || r.bl_rec_voyage || "—",
+          vesselVoyage: (r.vessel_name || r.bl_rec_vessel)
+            ? `${r.vessel_name || r.bl_rec_vessel}${r.voyage_number || r.bl_rec_voyage ? ` / ${r.voyage_number || r.bl_rec_voyage}` : ""}`
+            : "—",
+          from: r.from_location_text || r.port_of_loading || r.bl_rec_pol || r.loading_port_name || r.loading_country_name || "—",
+          to: r.to_location_text || r.port_of_discharge || r.bl_rec_pod || r.destination_port_name || r.receiving_country_name || "—",
+          transportMode: r.leg_transport_mode || r.order_transport_mode || "by_sea",
+          currentLocation: r.current_location || r.latest_event_name || r.from_location_text || r.port_of_loading || r.loading_port_name || "—",
+          eta: r.eta || r.bl_rec_eta || null,
+          etd: r.etd || null,
+          legId: r.leg_id || null,
+          legNo: r.leg_no || 1,
+          legStatus: r.leg_status || null,
+          latestEventTime: r.latest_event_time || null,
+        })),
+      };
     });
   }
 }

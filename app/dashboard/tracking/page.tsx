@@ -12,12 +12,12 @@ export default async function TrackingPortalPage({
   const { id } = await searchParams;
   const lang = await getRequestLanguage();
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+    <div className="p-3 sm:p-5">
       <CanonicalShipmentTrackingView
         domain="both"
         initialShipmentId={id || null}
-        title={t(lang, "cst.portal_title", "Shipment & Container Auto-Tracking Portal")}
-        description={t(lang, "cst.portal_desc", "Unified tracking across all transport modes: Search by Shipment No, BL No, Container No, Vessel, Voyage, Customer, or Shipping Line.")}
+        title={t(lang, "cst.portal_title", "Container & Vessel Tracking")}
+        description={t(lang, "cst.portal_desc", "Track shipments, containers and vessels in real-time with complete journey details.")}
       />
     </div>
   );
