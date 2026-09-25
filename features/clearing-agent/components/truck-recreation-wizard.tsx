@@ -21,6 +21,8 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardList,
+  Check,
+  ArrowRight,
 } from "lucide-react";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
@@ -345,6 +347,53 @@ export function TruckRecreationWizard({
     };
   }, [form.driverId]);
 
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4 | 5>(1);
+
+  function canGoNext(step: number): boolean {
+    if (step === 1) {
+      if (!form.ownerId) {
+        setMessage({ kind: "error", text: tt("trk.select_owner_error", "Please select a Truck Owner to continue.") });
+        return false;
+      }
+    }
+    if (step === 2) {
+      if (!form.truckNumber.trim() || !form.chassisNumber.trim() || !form.engineNumber.trim()) {
+        setMessage({ kind: "error", text: tt("trk.truck_required_error", "Truck Number, Chassis No and Engine No are required.") });
+        return false;
+      }
+    }
+    // Step 3: Company is optional, can always proceed!
+    // Step 4: Transporter is optional, can always proceed!
+    setMessage(null);
+    return true;
+  }
+
+  function handleNext() {
+    if (!canGoNext(currentStep)) return;
+    if (currentStep < 5) {
+      setCurrentStep((p) => ((p + 1) as any));
+    }
+  }
+
+  function handlePrev() {
+    setMessage(null);
+    if (currentStep > 1) {
+      setCurrentStep((p) => ((p - 1) as any));
+    }
+  }
+
+  function canGoToStep(targetStep: 1 | 2 | 3 | 4 | 5): boolean {
+    if (targetStep <= currentStep) {
+      setMessage(null);
+      return true;
+    }
+    for (let s = currentStep; s < targetStep; s++) {
+      if (!canGoNext(s)) return false;
+    }
+    setMessage(null);
+    return true;
+  }
+
   function resetForm() {
     setForm(EMPTY_FORM);
     setEditingId(null);
@@ -352,6 +401,7 @@ export function TruckRecreationWizard({
     setCompanyDetails(null);
     setTransporterDetails(null);
     setDriverDetails(null);
+    setCurrentStep(1);
   }
 
   function openNewRegistration() {
@@ -368,6 +418,7 @@ export function TruckRecreationWizard({
 
   function startEdit(row: TruckRow) {
     setEditingId(row.id);
+    setCurrentStep(1);
     setForm({
       ownerId: row.owner_person_id || "",
       truckNumber: row.truck_number || "",
@@ -449,12 +500,12 @@ export function TruckRecreationWizard({
           ],
         },
         {
-          title: tt("trk.section_company", "3. Registered Company (Mandatory)"),
-          rows: [{ label: tt("trk.company_name_label", "Company Name *").replace(" *", ""), value: row.company_display_name }],
+          title: tt("trk.section_company", "3. Registered Company"),
+          rows: [{ label: tt("trk.company_name_label", "Company Name"), value: row.company_display_name }],
         },
         {
           title: tt("trk.section_transporter", "4. Transporter Information"),
-          rows: [{ label: tt("trk.transporter_name_label", "Transporter Name *").replace(" *", ""), value: row.transporter_display_name }],
+          rows: [{ label: tt("trk.transporter_name_label", "Transporter Name"), value: row.transporter_display_name }],
         },
         {
           title: tt("trk.section_driver", "5. Driver Information"),
@@ -489,7 +540,11 @@ export function TruckRecreationWizard({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.ownerId || !form.truckNumber.trim() || !form.chassisNumber.trim() || !form.engineNumber.trim() || !form.companyId || !form.driverId) {
+    if (currentStep !== 5) {
+      handleNext();
+      return;
+    }
+    if (!form.ownerId || !form.truckNumber.trim() || !form.chassisNumber.trim() || !form.engineNumber.trim() || !form.driverId) {
       setMessage({ kind: "error", text: tt("trk.required_fields_error", "Please fill all mandatory fields marked with *.") });
       return;
     }
@@ -505,7 +560,7 @@ export function TruckRecreationWizard({
         owner_person_id: form.ownerId,
         owner_name: ownerDetails?.customer_name || null,
         owner_mobile: ownerDetails?.mobile || ownerDetails?.whatsapp || null,
-        transport_company_id: form.companyId,
+        transport_company_id: form.companyId || null,
         transport_company: companyDetails?.name || null,
         transporter_person_id: form.transporterId || null,
         driver_person_id: form.driverId,
@@ -1021,373 +1076,688 @@ export function TruckRecreationWizard({
           {formHeader}
           {messageBanner}
 
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 lg:grid-cols-5">
-            {/* Left column: compact entry form */}
-            <div className="space-y-3 lg:col-span-2">
-              {/* 1. Owner */}
-              <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                <h2 className="mb-2.5 flex items-center gap-2 text-xs font-black text-blue-700 dark:text-blue-300">
-                  <User className="h-3.5 w-3.5" /> {tt("trk.section_owner", "1. Truck Owner Information")}
-                </h2>
-                <div className="flex flex-col gap-2">
-                  <PersonPicker
-                    label={tt("trk.truck_owner_name_label", "Truck Owner Name *")}
-                    value={form.ownerId}
-                    onValueChange={(id) => setForm((p) => ({ ...p, ownerId: id }))}
-                    placeholder={tt("trk.search_owner_ph", "Search truck owner...")}
-                    lang={activeLang}
-                    createLabel={tt("trk.new_truck_owner", "+ New Truck Owner")}
-                  />
-                  {form.ownerId && (
-                    <button
-                      type="button"
-                      onClick={() => setParty360({ customerId: form.ownerId, name: ownerDetails?.customer_name || "" })}
-                      className="inline-flex w-fit items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-[11px] font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900 dark:bg-blue-950/60 dark:text-blue-300"
+          {/* Stepper Progress Bar */}
+          <div className="rounded-3xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+              {[
+                { step: 1, label: tt("trk.step1", "Step 1"), name: tt("trk.section_owner", "Owner Info"), icon: User, required: true },
+                { step: 2, label: tt("trk.step2", "Step 2"), name: tt("trk.section_truck_details", "Truck & Specs"), icon: TruckIcon, required: true },
+                { step: 3, label: tt("trk.step3", "Step 3"), name: tt("trk.section_company_short", "Company"), badge: tt("common.optional", "Optional"), icon: Building2, required: false },
+                { step: 4, label: tt("trk.step4", "Step 4"), name: tt("trk.section_transporter_short", "Transporter"), badge: tt("common.optional", "Optional"), icon: TruckIcon, required: false },
+                { step: 5, label: tt("trk.step5", "Step 5"), name: tt("trk.section_driver_review", "Driver & Finalize"), icon: UserCheck, required: true },
+              ].map((s) => {
+                const isActive = currentStep === s.step;
+                const isPassed = currentStep > s.step;
+                const StepIcon = s.icon;
+                return (
+                  <button
+                    key={s.step}
+                    type="button"
+                    onClick={() => {
+                      if (canGoToStep(s.step as any)) setCurrentStep(s.step as any);
+                    }}
+                    className={`group relative flex items-center gap-3 rounded-2xl border p-3 text-start transition-all ${
+                      isActive
+                        ? "border-blue-500 bg-blue-50/70 shadow-sm shadow-blue-500/10 ring-2 ring-blue-500/20 dark:border-blue-500 dark:bg-blue-950/40"
+                        : isPassed
+                        ? "border-emerald-200 bg-emerald-50/40 hover:bg-emerald-50/80 dark:border-emerald-900/60 dark:bg-emerald-950/20"
+                        : "border-slate-200/70 bg-slate-50/50 hover:bg-slate-100/60 dark:border-slate-800 dark:bg-slate-800/40"
+                    }`}
+                  >
+                    <div
+                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl font-bold transition-all ${
+                        isActive
+                          ? "bg-blue-600 text-white shadow-md shadow-blue-500/25"
+                          : isPassed
+                          ? "bg-emerald-600 text-white shadow-sm"
+                          : "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+                      }`}
                     >
-                      <Eye className="h-3 w-3" /> {tt("trk.view_owner_details", "View Owner Details")}
-                    </button>
-                  )}
-                </div>
-              </section>
-
-              {/* 2. Truck Details */}
-              <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                <h2 className="mb-2.5 flex items-center gap-2 text-xs font-black text-blue-700 dark:text-blue-300">
-                  <TruckIcon className="h-3.5 w-3.5" /> {tt("trk.section_truck_details", "2. Truck Details")}
-                </h2>
-                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                  <label className="space-y-1 text-xs">
-                    <span className="font-bold text-slate-500 dark:text-slate-400">{tt("trk.truck_no", "Truck Number *")}</span>
-                    <input
-                      required
-                      value={form.truckNumber}
-                      onChange={(e) => setForm((p) => ({ ...p, truckNumber: e.target.value }))}
-                      className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
-                    />
-                  </label>
-                  <label className="space-y-1 text-xs">
-                    <span className="font-bold text-slate-500 dark:text-slate-400">{tt("trk.truck_name_label", "Truck Name")}</span>
-                    <input
-                      value={form.truckName}
-                      onChange={(e) => setForm((p) => ({ ...p, truckName: e.target.value }))}
-                      className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
-                    />
-                  </label>
-                  <label className="space-y-1 text-xs">
-                    <span className="font-bold text-slate-500 dark:text-slate-400">{tt("trk.model", "Model *")}</span>
-                    <input
-                      value={form.truckModel}
-                      onChange={(e) => setForm((p) => ({ ...p, truckModel: e.target.value }))}
-                      placeholder={tt("trk.ph_model", "Enter model")}
-                      className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
-                    />
-                  </label>
-                  <label className="space-y-1 text-xs">
-                    <span className="font-bold text-slate-500 dark:text-slate-400">{tt("trk.chassis_no", "Chassis No *")}</span>
-                    <input
-                      required
-                      value={form.chassisNumber}
-                      onChange={(e) => setForm((p) => ({ ...p, chassisNumber: e.target.value }))}
-                      placeholder={tt("trk.ph_chassis_no", "Enter chassis number")}
-                      className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
-                    />
-                  </label>
-                  <label className="space-y-1 text-xs sm:col-span-2">
-                    <span className="font-bold text-slate-500 dark:text-slate-400">{tt("trk.engine_no", "Engine No")} *</span>
-                    <input
-                      required
-                      value={form.engineNumber}
-                      onChange={(e) => setForm((p) => ({ ...p, engineNumber: e.target.value }))}
-                      placeholder={tt("trk.ph_engine_no", "Enter engine number")}
-                      className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
-                    />
-                  </label>
-                </div>
-              </section>
-
-              {/* 2b. Vehicle Specifications — registration_number/truck_type/make/
-                  manufacturing_year/color/fuel_type/capacity/registration_expiry_date/
-                  insurance_expiry_date all exist as real trucks columns and were
-                  already accepted by /api/erp/master-data/trucks, but this wizard
-                  never collected them. truck_type/make/color/fuel_type dropdowns
-                  are backed by the real erp_truck_master_options master (5-language,
-                  fetched above) instead of hardcoded lists. */}
-              <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                <h2 className="mb-2.5 flex items-center gap-2 text-xs font-black text-blue-700 dark:text-blue-300">
-                  <ListChecks className="h-3.5 w-3.5" /> {tt("com.vehicle_specifications", "Vehicle Specifications")}
-                </h2>
-                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                  <label className="space-y-1 text-xs">
-                    <span className="font-bold text-slate-500 dark:text-slate-400">{tt("trk.reg_no", "Registration No *").replace(" *", "")}</span>
-                    <input
-                      value={form.registrationNumber}
-                      onChange={(e) => setForm((p) => ({ ...p, registrationNumber: e.target.value }))}
-                      className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
-                    />
-                  </label>
-                  <label className="space-y-1 text-xs">
-                    <span className="font-bold text-slate-500 dark:text-slate-400">{tt("trk.truck_type", "Truck Type *").replace(" *", "")}</span>
-                    <select
-                      value={form.truckType}
-                      onChange={(e) => setForm((p) => ({ ...p, truckType: e.target.value }))}
-                      className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
-                    >
-                      <option value="" />
-                      {truckTypeOptions.map((o) => (
-                        <option key={o.id} value={o.code}>{optionLabel(o)}</option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="space-y-1 text-xs">
-                    <span className="font-bold text-slate-500 dark:text-slate-400">{tt("trk.make", "Make *").replace(" *", "")}</span>
-                    <select
-                      value={form.make}
-                      onChange={(e) => setForm((p) => ({ ...p, make: e.target.value }))}
-                      className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
-                    >
-                      <option value="" />
-                      {makeOptions.map((o) => (
-                        <option key={o.id} value={o.code}>{optionLabel(o)}</option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="space-y-1 text-xs">
-                    <span className="font-bold text-slate-500 dark:text-slate-400">{tt("trk.year", "Year *").replace(" *", "")}</span>
-                    <input
-                      type="number"
-                      min={1980}
-                      max={new Date().getFullYear() + 1}
-                      value={form.manufacturingYear}
-                      onChange={(e) => setForm((p) => ({ ...p, manufacturingYear: e.target.value }))}
-                      className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
-                    />
-                  </label>
-                  <label className="space-y-1 text-xs">
-                    <span className="font-bold text-slate-500 dark:text-slate-400">{tt("trk.color", "Color")}</span>
-                    <select
-                      value={form.color}
-                      onChange={(e) => setForm((p) => ({ ...p, color: e.target.value }))}
-                      className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
-                    >
-                      <option value="" />
-                      {colorOptions.map((o) => (
-                        <option key={o.id} value={o.code}>{optionLabel(o)}</option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="space-y-1 text-xs">
-                    <span className="font-bold text-slate-500 dark:text-slate-400">{tt("trk.fuel_type", "Fuel Type")}</span>
-                    <select
-                      value={form.fuelType}
-                      onChange={(e) => setForm((p) => ({ ...p, fuelType: e.target.value }))}
-                      className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
-                    >
-                      <option value="" />
-                      {fuelTypeOptions.map((o) => (
-                        <option key={o.id} value={o.code}>{optionLabel(o)}</option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="space-y-1 text-xs">
-                    <span className="font-bold text-slate-500 dark:text-slate-400">{tt("trk.capacity", "Capacity (Tons) *").replace(" *", "")}</span>
-                    <input
-                      value={form.capacity}
-                      onChange={(e) => setForm((p) => ({ ...p, capacity: e.target.value }))}
-                      className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
-                    />
-                  </label>
-                  <label className="space-y-1 text-xs">
-                    <span className="font-bold text-slate-500 dark:text-slate-400">{tt("tr.reg_expiry", "Reg. Expiry")}</span>
-                    <input
-                      type="date"
-                      value={form.registrationExpiryDate}
-                      onChange={(e) => setForm((p) => ({ ...p, registrationExpiryDate: e.target.value }))}
-                      className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
-                    />
-                  </label>
-                  <label className="space-y-1 text-xs">
-                    <span className="font-bold text-slate-500 dark:text-slate-400">{tt("tr.ins_expiry", "Insurance Expiry")}</span>
-                    <input
-                      type="date"
-                      value={form.insuranceExpiryDate}
-                      onChange={(e) => setForm((p) => ({ ...p, insuranceExpiryDate: e.target.value }))}
-                      className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
-                    />
-                  </label>
-                </div>
-              </section>
-
-              {/* 3. Company */}
-              <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                <h2 className="mb-2.5 flex items-center gap-2 text-xs font-black text-blue-700 dark:text-blue-300">
-                  <Building2 className="h-3.5 w-3.5" /> {tt("trk.section_company", "3. Registered Company (Mandatory)")}
-                </h2>
-                <CompanyPicker
-                  label={tt("trk.company_name_label", "Company Name *")}
-                  value={form.companyId}
-                  onValueChange={(id) => setForm((p) => ({ ...p, companyId: id }))}
-                  placeholder={tt("trk.search_company_ph", "Search company...")}
-                />
-              </section>
-
-              {/* 4. Transporter */}
-              <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                <h2 className="mb-2.5 flex items-center gap-2 text-xs font-black text-blue-700 dark:text-blue-300">
-                  <TruckIcon className="h-3.5 w-3.5" /> {tt("trk.section_transporter", "4. Transporter Information")}
-                </h2>
-                <div className="flex flex-col gap-2">
-                  <PersonPicker
-                    label={tt("trk.transporter_name_label", "Transporter Name *")}
-                    value={form.transporterId}
-                    onValueChange={(id) => setForm((p) => ({ ...p, transporterId: id }))}
-                    placeholder={tt("trk.search_transporter_ph", "Search transporter...")}
-                    lang={activeLang}
-                    createLabel={tt("trk.new_transporter", "+ New Transporter")}
-                  />
-                  {form.transporterId && (
-                    <button
-                      type="button"
-                      onClick={() => setParty360({ customerId: form.transporterId, name: transporterDetails?.customer_name || "" })}
-                      className="inline-flex w-fit items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-[11px] font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900 dark:bg-blue-950/60 dark:text-blue-300"
-                    >
-                      <Eye className="h-3 w-3" /> {tt("trk.view_transporter_details", "View Transporter Details")}
-                    </button>
-                  )}
-                </div>
-              </section>
-
-              {/* 5. Driver — reuses the Customer/Person Management master */}
-              <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                <h2 className="mb-2.5 flex items-center gap-2 text-xs font-black text-blue-700 dark:text-blue-300">
-                  <UserCheck className="h-3.5 w-3.5" /> {tt("trk.section_driver", "5. Driver Information")}
-                </h2>
-                <div className="space-y-2.5">
-                  <div className="flex items-end gap-2">
-                    <div className="flex-1">
-                      <PersonPicker
-                        label={tt("trk.driver_name_label", "Driver Name *")}
-                        value={form.driverId}
-                        onValueChange={(id) => setForm((p) => ({ ...p, driverId: id }))}
-                        placeholder={tt("trk.search_driver_ph", "Search driver...")}
-                        lang={activeLang}
-                        createLabel={tt("trk.new_driver", "+ New Driver")}
-                      />
+                      {isPassed ? <Check className="h-5 w-5" /> : <StepIcon className="h-4 w-4" />}
                     </div>
-                    {form.driverId && (
-                      <button
-                        type="button"
-                        onClick={() => setParty360({ customerId: form.driverId, name: driverDetails?.customer_name || "" })}
-                        className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-2.5 text-xs font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900 dark:bg-blue-950/60 dark:text-blue-300"
-                        title={tt("trk.view_driver_details", "View Driver Details")}
-                      >
-                        <Eye className="h-3.5 w-3.5" />
-                      </button>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className={`text-[10px] font-black uppercase tracking-wider ${
+                            isActive ? "text-blue-700 dark:text-blue-300" : isPassed ? "text-emerald-700 dark:text-emerald-300" : "text-slate-500 dark:text-slate-400"
+                          }`}
+                        >
+                          {s.label}
+                        </span>
+                        {s.badge && (
+                          <span className="rounded bg-slate-200/80 px-1.5 py-0.5 text-[9px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                            {s.badge}
+                          </span>
+                        )}
+                      </div>
+                      <div className="truncate text-xs font-bold text-slate-800 dark:text-slate-200">
+                        {s.name}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+            {/* Left column: active step entry form */}
+            <div className="space-y-4 lg:col-span-7">
+              {/* STEP 1: Owner Information */}
+              {currentStep === 1 && (
+                <section className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                  <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                        <User className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <h2 className="text-sm font-black text-slate-900 dark:text-white">
+                          {tt("trk.step_1_heading", "Step 1: Truck Owner Information")}
+                        </h2>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                          {tt("trk.step_1_sub", "Select or register the owner of this vehicle")}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-black uppercase text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
+                      {tt("trk.step_x_of_y", "Step 1 of 5")}
+                    </span>
+                  </div>
+
+                  <div className="space-y-4">
+                    <PersonPicker
+                      label={tt("trk.truck_owner_name_label", "Truck Owner Name *")}
+                      value={form.ownerId}
+                      onValueChange={(id) => setForm((p) => ({ ...p, ownerId: id }))}
+                      placeholder={tt("trk.search_owner_ph", "Search truck owner...")}
+                      lang={activeLang}
+                      createLabel={tt("trk.new_truck_owner", "+ New Truck Owner")}
+                    />
+
+                    {form.ownerId && (
+                      <div className="rounded-2xl border border-blue-100 bg-blue-50/50 p-3.5 dark:border-blue-900/40 dark:bg-blue-950/20">
+                        <div className="flex items-center justify-between">
+                          <div className="min-w-0">
+                            <div className="text-xs font-black text-slate-900 dark:text-white">
+                              {ownerDetails?.customer_name}
+                            </div>
+                            <div className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+                              {ownerDetails?.person_code ? `${tt("trk.owner_code_label", "Owner Code")}: ${ownerDetails.person_code}` : ""}
+                              {ownerDetails?.mobile ? ` • ${ownerDetails.mobile}` : ""}
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setParty360({ customerId: form.ownerId, name: ownerDetails?.customer_name || "" })}
+                            className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-blue-200 bg-white px-3 py-1.5 text-xs font-bold text-blue-700 shadow-sm hover:bg-blue-50 dark:border-blue-800 dark:bg-slate-900 dark:text-blue-300"
+                          >
+                            <Eye className="h-3.5 w-3.5" /> {tt("trk.view_owner_details", "View Owner Details")}
+                          </button>
+                        </div>
+                      </div>
                     )}
                   </div>
-                  <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                    <label className="space-y-1 text-xs">
-                      <span className="font-bold text-slate-500 dark:text-slate-400">{tt("common.mobile", "Mobile")}</span>
-                      <input
-                        value={form.driverMobile}
-                        onChange={(e) => setForm((p) => ({ ...p, driverMobile: e.target.value }))}
-                        className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
-                      />
-                    </label>
-                    <label className="space-y-1 text-xs">
-                      <span className="font-bold text-slate-500 dark:text-slate-400">{tt("trk.license_no", "Driving License Number")}</span>
-                      <input
-                        value={form.driverLicenseNo}
-                        onChange={(e) => setForm((p) => ({ ...p, driverLicenseNo: e.target.value }))}
-                        className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
-                      />
-                    </label>
-                    <label className="space-y-1 text-xs sm:col-span-2">
-                      <span className="font-bold text-slate-500 dark:text-slate-400">{tt("trk.licence_expiry_label", "Licence Expiry Date")}</span>
-                      <input
-                        type="date"
-                        value={form.driverLicenseExpiry}
-                        onChange={(e) => setForm((p) => ({ ...p, driverLicenseExpiry: e.target.value }))}
-                        className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
-                      />
-                    </label>
-                  </div>
-                </div>
-              </section>
 
-              {/* 6. Additional Information */}
-              <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                <h2 className="mb-2.5 flex items-center gap-2 text-xs font-black text-blue-700 dark:text-blue-300">
-                  <ListChecks className="h-3.5 w-3.5" /> {tt("trk.section_additional", "6. Additional Information")}
-                </h2>
-                <div className="space-y-2.5">
-                  <label className="space-y-1 text-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-slate-500 dark:text-slate-400">{tt("trk.remarks", "Remarks (Optional)")}</span>
-                      <VoiceDictateButton
-                        context="clearing"
-                        lang={activeLang}
-                        value={form.remarks}
-                        onChange={(next) => setForm((p) => ({ ...p, remarks: next }))}
-                      />
+                  <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-4 dark:border-slate-800">
+                    <button
+                      type="button"
+                      onClick={backToList}
+                      className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+                    >
+                      <X className="h-4 w-4" /> {tt("common.cancel", "Cancel")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleNext}
+                      className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-600/25 hover:bg-blue-700"
+                    >
+                      {tt("common.next", "Next: Truck Details & Specs")} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+                    </button>
+                  </div>
+                </section>
+              )}
+
+              {/* STEP 2: Truck Details & Vehicle Specifications */}
+              {currentStep === 2 && (
+                <section className="space-y-4 rounded-3xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                        <TruckIcon className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <h2 className="text-sm font-black text-slate-900 dark:text-white">
+                          {tt("trk.step_2_heading", "Step 2: Truck Details & Specifications")}
+                        </h2>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                          {tt("trk.step_2_sub", "Enter identification numbers and physical specifications")}
+                        </p>
+                      </div>
                     </div>
-                    <textarea
-                      rows={2}
-                      value={form.remarks}
-                      onChange={(e) => setForm((p) => ({ ...p, remarks: e.target.value }))}
-                      className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
-                    />
-                  </label>
-                  <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                    <label className="space-y-1 text-xs">
-                      <span className="font-bold text-slate-500 dark:text-slate-400">{tt("common.status", "Status")}</span>
-                      <select
-                        value={form.status}
-                        onChange={(e) => setForm((p) => ({ ...p, status: e.target.value }))}
-                        className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
-                      >
-                        <option value="active">{tt("common.active", "Active")}</option>
-                        <option value="inactive">{tt("common.inactive", "Inactive")}</option>
-                        <option value="suspended">{tt("trk.badge_pending", "Pending")}</option>
-                        <option value="expired">{tt("trk.badge_completed", "Completed")}</option>
-                      </select>
-                    </label>
-                    <label className="space-y-1 text-xs">
-                      <span className="font-bold text-slate-500 dark:text-slate-400">{tt("common.registration_date", "Registration Date")}</span>
-                      <input
-                        type="date"
-                        value={form.registrationDate}
-                        onChange={(e) => setForm((p) => ({ ...p, registrationDate: e.target.value }))}
-                        disabled
-                        className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-semibold outline-none dark:border-slate-700 dark:bg-slate-800"
-                      />
-                    </label>
+                    <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-black uppercase text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
+                      {tt("trk.step_x_of_y", "Step 2 of 5")}
+                    </span>
                   </div>
-                </div>
 
-                {editingId ? <div className="mt-3.5 border-t border-slate-100 pt-3.5 dark:border-slate-800"><TruckAttachments entityId={editingId} entityKey="truck" /></div> : null}
+                  {/* 2a. Basic Identifiers */}
+                  <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-800/30">
+                    <h3 className="mb-3 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                      {tt("trk.section_truck_details", "2. Truck Details")}
+                    </h3>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <label className="space-y-1 text-xs">
+                        <span className="font-bold text-slate-600 dark:text-slate-400">{tt("trk.truck_no", "Truck Number *")}</span>
+                        <input
+                          required
+                          value={form.truckNumber}
+                          onChange={(e) => setForm((p) => ({ ...p, truckNumber: e.target.value }))}
+                          placeholder="e.g. TRK-8891"
+                          className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                        />
+                      </label>
+                      <label className="space-y-1 text-xs">
+                        <span className="font-bold text-slate-600 dark:text-slate-400">{tt("trk.truck_name_label", "Truck Name")}</span>
+                        <input
+                          value={form.truckName}
+                          onChange={(e) => setForm((p) => ({ ...p, truckName: e.target.value }))}
+                          placeholder="e.g. Dammam Express"
+                          className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                        />
+                      </label>
+                      <label className="space-y-1 text-xs">
+                        <span className="font-bold text-slate-600 dark:text-slate-400">{tt("trk.model", "Model *")}</span>
+                        <input
+                          value={form.truckModel}
+                          onChange={(e) => setForm((p) => ({ ...p, truckModel: e.target.value }))}
+                          placeholder={tt("trk.ph_model", "Enter model")}
+                          className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                        />
+                      </label>
+                      <label className="space-y-1 text-xs">
+                        <span className="font-bold text-slate-600 dark:text-slate-400">{tt("trk.chassis_no", "Chassis No *")}</span>
+                        <input
+                          required
+                          value={form.chassisNumber}
+                          onChange={(e) => setForm((p) => ({ ...p, chassisNumber: e.target.value }))}
+                          placeholder={tt("trk.ph_chassis_no", "Enter chassis number")}
+                          className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                        />
+                      </label>
+                      <label className="space-y-1 text-xs sm:col-span-2">
+                        <span className="font-bold text-slate-600 dark:text-slate-400">{tt("trk.engine_no", "Engine No *")}</span>
+                        <input
+                          required
+                          value={form.engineNumber}
+                          onChange={(e) => setForm((p) => ({ ...p, engineNumber: e.target.value }))}
+                          placeholder={tt("trk.ph_engine_no", "Enter engine number")}
+                          className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                        />
+                      </label>
+                    </div>
+                  </div>
 
-                <div className="mt-3.5 flex flex-wrap items-center gap-2">
-                  <button
-                    type="submit"
-                    disabled={saving}
-                    className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-emerald-600/25 hover:bg-emerald-700 disabled:opacity-50"
-                  >
-                    {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                    {tt("common.save", "Save")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={backToList}
-                    className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
-                  >
-                    <X className="h-4 w-4" /> {tt("common.cancel", "Cancel")}
-                  </button>
-                </div>
-              </section>
+                  {/* 2b. Vehicle Specifications */}
+                  <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-800/30">
+                    <h3 className="mb-3 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                      {tt("com.vehicle_specifications", "Vehicle Specifications")}
+                    </h3>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <label className="space-y-1 text-xs">
+                        <span className="font-bold text-slate-600 dark:text-slate-400">{tt("trk.reg_no", "Registration No")}</span>
+                        <input
+                          value={form.registrationNumber}
+                          onChange={(e) => setForm((p) => ({ ...p, registrationNumber: e.target.value }))}
+                          placeholder="e.g. 1234-XYZ"
+                          className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                        />
+                      </label>
+                      <label className="space-y-1 text-xs">
+                        <span className="font-bold text-slate-600 dark:text-slate-400">{tt("trk.truck_type", "Truck Type")}</span>
+                        <select
+                          value={form.truckType}
+                          onChange={(e) => setForm((p) => ({ ...p, truckType: e.target.value }))}
+                          className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                        >
+                          <option value="" />
+                          {truckTypeOptions.map((o) => (
+                            <option key={o.id} value={o.code}>{optionLabel(o)}</option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="space-y-1 text-xs">
+                        <span className="font-bold text-slate-600 dark:text-slate-400">{tt("trk.make", "Make")}</span>
+                        <select
+                          value={form.make}
+                          onChange={(e) => setForm((p) => ({ ...p, make: e.target.value }))}
+                          className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                        >
+                          <option value="" />
+                          {makeOptions.map((o) => (
+                            <option key={o.id} value={o.code}>{optionLabel(o)}</option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="space-y-1 text-xs">
+                        <span className="font-bold text-slate-600 dark:text-slate-400">{tt("trk.year", "Year")}</span>
+                        <input
+                          type="number"
+                          min={1980}
+                          max={new Date().getFullYear() + 1}
+                          value={form.manufacturingYear}
+                          onChange={(e) => setForm((p) => ({ ...p, manufacturingYear: e.target.value }))}
+                          className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                        />
+                      </label>
+                      <label className="space-y-1 text-xs">
+                        <span className="font-bold text-slate-600 dark:text-slate-400">{tt("trk.color", "Color")}</span>
+                        <select
+                          value={form.color}
+                          onChange={(e) => setForm((p) => ({ ...p, color: e.target.value }))}
+                          className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                        >
+                          <option value="" />
+                          {colorOptions.map((o) => (
+                            <option key={o.id} value={o.code}>{optionLabel(o)}</option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="space-y-1 text-xs">
+                        <span className="font-bold text-slate-600 dark:text-slate-400">{tt("trk.fuel_type", "Fuel Type")}</span>
+                        <select
+                          value={form.fuelType}
+                          onChange={(e) => setForm((p) => ({ ...p, fuelType: e.target.value }))}
+                          className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                        >
+                          <option value="" />
+                          {fuelTypeOptions.map((o) => (
+                            <option key={o.id} value={o.code}>{optionLabel(o)}</option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="space-y-1 text-xs sm:col-span-2">
+                        <span className="font-bold text-slate-600 dark:text-slate-400">{tt("trk.capacity", "Capacity (Tons)")}</span>
+                        <input
+                          value={form.capacity}
+                          onChange={(e) => setForm((p) => ({ ...p, capacity: e.target.value }))}
+                          placeholder="e.g. 25"
+                          className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                        />
+                      </label>
+                      <label className="space-y-1 text-xs">
+                        <span className="font-bold text-slate-600 dark:text-slate-400">{tt("tr.reg_expiry", "Reg. Expiry")}</span>
+                        <input
+                          type="date"
+                          value={form.registrationExpiryDate}
+                          onChange={(e) => setForm((p) => ({ ...p, registrationExpiryDate: e.target.value }))}
+                          className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                        />
+                      </label>
+                      <label className="space-y-1 text-xs">
+                        <span className="font-bold text-slate-600 dark:text-slate-400">{tt("tr.ins_expiry", "Insurance Expiry")}</span>
+                        <input
+                          type="date"
+                          value={form.insuranceExpiryDate}
+                          onChange={(e) => setForm((p) => ({ ...p, insuranceExpiryDate: e.target.value }))}
+                          className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                        />
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-4 dark:border-slate-800">
+                    <button
+                      type="button"
+                      onClick={handlePrev}
+                      className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+                    >
+                      <ChevronLeft className="h-4 w-4 rtl:rotate-180" /> {tt("common.back", "Back: Owner Info")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleNext}
+                      className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-600/25 hover:bg-blue-700"
+                    >
+                      {tt("common.next", "Next: Registered Company")} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+                    </button>
+                  </div>
+                </section>
+              )}
+
+              {/* STEP 3: Registered Company (Optional) */}
+              {currentStep === 3 && (
+                <section className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                  <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                        <Building2 className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h2 className="text-sm font-black text-slate-900 dark:text-white">
+                            {tt("trk.step_3_heading", "Step 3: Registered Company")}
+                          </h2>
+                          <span className="rounded-md bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/60">
+                            {tt("common.optional", "Optional")}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                          {tt("trk.step_3_sub", "Optional registration if the truck is registered under a transport company")}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-black uppercase text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
+                      {tt("trk.step_x_of_y", "Step 3 of 5")}
+                    </span>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="rounded-2xl border border-blue-100 bg-blue-50/60 p-3.5 text-xs text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-200">
+                      <p className="font-semibold leading-relaxed">
+                        {tt(
+                          "trk.company_optional_help",
+                          "Company registration is not mandatory. If this truck is owned independently or not linked to any transport company, you can leave this empty and click 'Next' or 'Skip'."
+                        )}
+                      </p>
+                    </div>
+
+                    <CompanyPicker
+                      label={tt("trk.company_name_label", "Company Name (Optional)")}
+                      value={form.companyId}
+                      onValueChange={(id) => setForm((p) => ({ ...p, companyId: id }))}
+                      placeholder={tt("trk.search_company_ph", "Search company (or leave blank)...")}
+                    />
+
+                    {form.companyId && (
+                      <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50/70 p-3 text-xs dark:border-slate-800 dark:bg-slate-800/40">
+                        <div className="min-w-0">
+                          <span className="font-bold text-slate-800 dark:text-slate-200">{companyDetails?.name}</span>
+                          {companyDetails?.company_code && (
+                            <span className="ms-2 text-slate-500">({companyDetails.company_code})</span>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setForm((p) => ({ ...p, companyId: "" }))}
+                          className="text-xs font-bold text-rose-600 hover:underline dark:text-rose-400"
+                        >
+                          {tt("common.clear", "Clear")}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-4 dark:border-slate-800">
+                    <button
+                      type="button"
+                      onClick={handlePrev}
+                      className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+                    >
+                      <ChevronLeft className="h-4 w-4 rtl:rotate-180" /> {tt("common.back", "Back: Truck Details")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleNext}
+                      className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-600/25 hover:bg-blue-700"
+                    >
+                      {form.companyId
+                        ? tt("common.next", "Next: Transporter Info")
+                        : tt("trk.skip_or_next_transporter", "Skip / Next: Transporter")} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+                    </button>
+                  </div>
+                </section>
+              )}
+
+              {/* STEP 4: Transporter Information (Optional) */}
+              {currentStep === 4 && (
+                <section className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                  <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                        <TruckIcon className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h2 className="text-sm font-black text-slate-900 dark:text-white">
+                            {tt("trk.step_4_heading", "Step 4: Transporter Information")}
+                          </h2>
+                          <span className="rounded-md bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/60">
+                            {tt("common.optional", "Optional")}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                          {tt("trk.step_4_sub", "Optional transporter person or dispatch party")}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-black uppercase text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
+                      {tt("trk.step_x_of_y", "Step 4 of 5")}
+                    </span>
+                  </div>
+
+                  <div className="space-y-4">
+                    <PersonPicker
+                      label={tt("trk.transporter_name_label", "Transporter Name (Optional)")}
+                      value={form.transporterId}
+                      onValueChange={(id) => setForm((p) => ({ ...p, transporterId: id }))}
+                      placeholder={tt("trk.search_transporter_ph", "Search transporter (or leave blank)...")}
+                      lang={activeLang}
+                      createLabel={tt("trk.new_transporter", "+ New Transporter")}
+                    />
+
+                    {form.transporterId && (
+                      <div className="rounded-2xl border border-blue-100 bg-blue-50/50 p-3.5 dark:border-blue-900/40 dark:bg-blue-950/20">
+                        <div className="flex items-center justify-between">
+                          <div className="min-w-0">
+                            <div className="text-xs font-black text-slate-900 dark:text-white">
+                              {transporterDetails?.customer_name}
+                            </div>
+                            <div className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+                              {transporterDetails?.person_code ? `${tt("trk.transporter_code_label", "Transporter Code")}: ${transporterDetails.person_code}` : ""}
+                              {transporterDetails?.mobile ? ` • ${transporterDetails.mobile}` : ""}
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setParty360({ customerId: form.transporterId, name: transporterDetails?.customer_name || "" })}
+                            className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-blue-200 bg-white px-3 py-1.5 text-xs font-bold text-blue-700 shadow-sm hover:bg-blue-50 dark:border-blue-800 dark:bg-slate-900 dark:text-blue-300"
+                          >
+                            <Eye className="h-3.5 w-3.5" /> {tt("trk.view_transporter_details", "View Transporter Details")}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-4 dark:border-slate-800">
+                    <button
+                      type="button"
+                      onClick={handlePrev}
+                      className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+                    >
+                      <ChevronLeft className="h-4 w-4 rtl:rotate-180" /> {tt("common.back", "Back: Company")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleNext}
+                      className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-600/25 hover:bg-blue-700"
+                    >
+                      {tt("common.next", "Next: Driver & Review")} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+                    </button>
+                  </div>
+                </section>
+              )}
+
+              {/* STEP 5: Driver Information & Finalization */}
+              {currentStep === 5 && (
+                <section className="space-y-4 rounded-3xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                        <UserCheck className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <h2 className="text-sm font-black text-slate-900 dark:text-white">
+                          {tt("trk.step_5_heading", "Step 5: Driver Information & Finalization")}
+                        </h2>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                          {tt("trk.step_5_sub", "Assign driver, add remarks and complete registration")}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
+                      {tt("trk.step_final", "Step 5 of 5")}
+                    </span>
+                  </div>
+
+                  {/* Driver fields */}
+                  <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-800/30">
+                    <h3 className="mb-3 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                      {tt("trk.section_driver", "5. Driver Information")}
+                    </h3>
+                    <div className="space-y-3">
+                      <div className="flex items-end gap-2">
+                        <div className="flex-1">
+                          <PersonPicker
+                            label={tt("trk.driver_name_label", "Driver Name *")}
+                            value={form.driverId}
+                            onValueChange={(id) => setForm((p) => ({ ...p, driverId: id }))}
+                            placeholder={tt("trk.search_driver_ph", "Search driver...")}
+                            lang={activeLang}
+                            createLabel={tt("trk.new_driver", "+ New Driver")}
+                          />
+                        </div>
+                        {form.driverId && (
+                          <button
+                            type="button"
+                            onClick={() => setParty360({ customerId: form.driverId, name: driverDetails?.customer_name || "" })}
+                            className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-2.5 text-xs font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900 dark:bg-blue-950/60 dark:text-blue-300"
+                            title={tt("trk.view_driver_details", "View Driver Details")}
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <label className="space-y-1 text-xs">
+                          <span className="font-bold text-slate-600 dark:text-slate-400">{tt("common.mobile", "Mobile")}</span>
+                          <input
+                            value={form.driverMobile}
+                            onChange={(e) => setForm((p) => ({ ...p, driverMobile: e.target.value }))}
+                            className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                          />
+                        </label>
+                        <label className="space-y-1 text-xs">
+                          <span className="font-bold text-slate-600 dark:text-slate-400">{tt("trk.license_no", "Driving License Number")}</span>
+                          <input
+                            value={form.driverLicenseNo}
+                            onChange={(e) => setForm((p) => ({ ...p, driverLicenseNo: e.target.value }))}
+                            className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                          />
+                        </label>
+                        <label className="space-y-1 text-xs sm:col-span-2">
+                          <span className="font-bold text-slate-600 dark:text-slate-400">{tt("trk.licence_expiry_label", "Licence Expiry Date")}</span>
+                          <input
+                            type="date"
+                            value={form.driverLicenseExpiry}
+                            onChange={(e) => setForm((p) => ({ ...p, driverLicenseExpiry: e.target.value }))}
+                            className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Additional info */}
+                  <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-800/30">
+                    <h3 className="mb-3 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                      {tt("trk.section_additional", "6. Additional Information")}
+                    </h3>
+                    <div className="space-y-3">
+                      <label className="space-y-1 text-xs">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-slate-600 dark:text-slate-400">{tt("trk.remarks", "Remarks (Optional)")}</span>
+                          <VoiceDictateButton
+                            context="clearing"
+                            lang={activeLang}
+                            value={form.remarks}
+                            onChange={(next) => setForm((p) => ({ ...p, remarks: next }))}
+                          />
+                        </div>
+                        <textarea
+                          rows={2}
+                          value={form.remarks}
+                          onChange={(e) => setForm((p) => ({ ...p, remarks: e.target.value }))}
+                          className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                        />
+                      </label>
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <label className="space-y-1 text-xs">
+                          <span className="font-bold text-slate-600 dark:text-slate-400">{tt("common.status", "Status")}</span>
+                          <select
+                            value={form.status}
+                            onChange={(e) => setForm((p) => ({ ...p, status: e.target.value }))}
+                            className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                          >
+                            <option value="active">{tt("common.active", "Active")}</option>
+                            <option value="inactive">{tt("common.inactive", "Inactive")}</option>
+                            <option value="suspended">{tt("trk.badge_pending", "Pending")}</option>
+                            <option value="expired">{tt("trk.badge_completed", "Completed")}</option>
+                          </select>
+                        </label>
+                        <label className="space-y-1 text-xs">
+                          <span className="font-bold text-slate-600 dark:text-slate-400">{tt("common.registration_date", "Registration Date")}</span>
+                          <input
+                            type="date"
+                            value={form.registrationDate}
+                            onChange={(e) => setForm((p) => ({ ...p, registrationDate: e.target.value }))}
+                            disabled
+                            className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-semibold outline-none dark:border-slate-700 dark:bg-slate-800"
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {editingId ? (
+                    <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-800/30">
+                      <TruckAttachments entityId={editingId} entityKey="truck" />
+                    </div>
+                  ) : null}
+
+                  <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-4 dark:border-slate-800">
+                    <button
+                      type="button"
+                      onClick={handlePrev}
+                      className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+                    >
+                      <ChevronLeft className="h-4 w-4 rtl:rotate-180" /> {tt("common.back", "Back: Transporter")}
+                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={backToList}
+                        className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+                      >
+                        <X className="h-4 w-4" /> {tt("common.cancel", "Cancel")}
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={saving}
+                        className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 text-xs font-black text-white shadow-md shadow-emerald-600/25 hover:bg-emerald-700 disabled:opacity-50"
+                      >
+                        {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                        {editingId ? tt("trk.update_truck", "Update Truck") : tt("trk.save_truck", "Save Truck Registration")}
+                      </button>
+                    </div>
+                  </div>
+                </section>
+              )}
             </div>
 
-            {/* Right column: large live report */}
-            <div className="lg:col-span-3">
+            {/* Right column: live report */}
+            <div className="lg:col-span-5">
               <div className="rounded-3xl border border-blue-100 bg-white shadow-md dark:border-blue-950/60 dark:bg-slate-900 lg:sticky lg:top-6">
                 <div className="flex items-center justify-between gap-3 rounded-t-3xl border-b border-slate-100 bg-gradient-to-r from-blue-50 to-white px-5 py-4 dark:border-slate-800 dark:from-blue-950/40 dark:to-slate-900">
                   <div className="flex items-center gap-3">
@@ -1451,7 +1821,7 @@ export function TruckRecreationWizard({
                   />
 
                   <ReportSection
-                    title={tt("trk.section_company", "3. Registered Company (Mandatory)").replace(" (Mandatory)", "")}
+                    title={tt("trk.section_company", "3. Registered Company")}
                     icon={Building2}
                     rows={[
                       { label: tt("common.name", "Name"), value: companyDetails?.name },

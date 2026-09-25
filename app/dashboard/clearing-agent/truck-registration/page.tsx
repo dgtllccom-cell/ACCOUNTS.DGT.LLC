@@ -12,8 +12,8 @@ export default async function TruckRegistrationPage() {
   const session = await requireErpSession();
   const lang = (session.preferredLanguage ?? "en") as SupportedLanguage;
   return (
-    <div className="min-h-screen bg-slate-50/50 p-4 dark:bg-slate-950/50 sm:p-6 lg:p-8">
-      <div className="mx-auto max-w-screen-2xl">
+    <div className="min-h-screen bg-slate-50/50 p-2 sm:p-4 lg:p-6 dark:bg-slate-950/50">
+      <div className="mx-auto w-full max-w-[1850px]">
         <TruckRecreationWizard
           lang={lang}
           userName={session.fullName || session.email || null}
