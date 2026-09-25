@@ -352,13 +352,13 @@ export function TruckRecreationWizard({
   function canGoNext(step: number): boolean {
     if (step === 1) {
       if (!form.ownerId) {
-        setMessage({ kind: "error", text: tt("trk.select_owner_error", "Please select a Truck Owner to continue.") });
+        setMessage({ kind: "error", text: tt("trk.required_fields_error", "Please select a Truck Owner to continue.") });
         return false;
       }
     }
     if (step === 2) {
       if (!form.truckNumber.trim() || !form.chassisNumber.trim() || !form.engineNumber.trim()) {
-        setMessage({ kind: "error", text: tt("trk.truck_required_error", "Truck Number, Chassis No and Engine No are required.") });
+        setMessage({ kind: "error", text: tt("trk.required_fields_error", "Truck Number, Chassis No and Engine No are required.") });
         return false;
       }
     }
@@ -1080,11 +1080,11 @@ export function TruckRecreationWizard({
           <div className="rounded-3xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
               {[
-                { step: 1, label: tt("trk.step1", "Step 1"), name: tt("trk.section_owner", "Owner Info"), icon: User, required: true },
-                { step: 2, label: tt("trk.step2", "Step 2"), name: tt("trk.section_truck_details", "Truck & Specs"), icon: TruckIcon, required: true },
-                { step: 3, label: tt("trk.step3", "Step 3"), name: tt("trk.section_company_short", "Company"), badge: tt("common.optional", "Optional"), icon: Building2, required: false },
-                { step: 4, label: tt("trk.step4", "Step 4"), name: tt("trk.section_transporter_short", "Transporter"), badge: tt("common.optional", "Optional"), icon: TruckIcon, required: false },
-                { step: 5, label: tt("trk.step5", "Step 5"), name: tt("trk.section_driver_review", "Driver & Finalize"), icon: UserCheck, required: true },
+                { step: 1, label: "Step 1", name: tt("trk.section_owner", "Owner Info"), icon: User, required: true },
+                { step: 2, label: "Step 2", name: tt("trk.section_truck_details", "Truck & Specs"), icon: TruckIcon, required: true },
+                { step: 3, label: "Step 3", name: tt("trk.section_company", "Company"), badge: "Optional", icon: Building2, required: false },
+                { step: 4, label: "Step 4", name: tt("trk.section_transporter", "Transporter"), badge: "Optional", icon: TruckIcon, required: false },
+                { step: 5, label: "Step 5", name: tt("trk.section_driver", "Driver & Finalize"), icon: UserCheck, required: true },
               ].map((s) => {
                 const isActive = currentStep === s.step;
                 const isPassed = currentStep > s.step;
@@ -1153,15 +1153,15 @@ export function TruckRecreationWizard({
                       </div>
                       <div>
                         <h2 className="text-sm font-black text-slate-900 dark:text-white">
-                          {tt("trk.step_1_heading", "Step 1: Truck Owner Information")}
+                          Step 1: {tt("trk.section_owner", "Truck Owner Information")}
                         </h2>
                         <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                          {tt("trk.step_1_sub", "Select or register the owner of this vehicle")}
+                          Select or register the owner of this vehicle
                         </p>
                       </div>
                     </div>
                     <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-black uppercase text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
-                      {tt("trk.step_x_of_y", "Step 1 of 5")}
+                      Step 1 of 5
                     </span>
                   </div>
 
@@ -1212,7 +1212,7 @@ export function TruckRecreationWizard({
                       onClick={handleNext}
                       className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-600/25 hover:bg-blue-700"
                     >
-                      {tt("common.next", "Next: Truck Details & Specs")} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+                      Next Step <ArrowRight className="h-4 w-4 rtl:rotate-180" />
                     </button>
                   </div>
                 </section>
@@ -1228,15 +1228,15 @@ export function TruckRecreationWizard({
                       </div>
                       <div>
                         <h2 className="text-sm font-black text-slate-900 dark:text-white">
-                          {tt("trk.step_2_heading", "Step 2: Truck Details & Specifications")}
+                          Step 2: {tt("trk.section_truck_details", "Truck Details & Specifications")}
                         </h2>
                         <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                          {tt("trk.step_2_sub", "Enter identification numbers and physical specifications")}
+                          Enter identification numbers and physical specifications
                         </p>
                       </div>
                     </div>
                     <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-black uppercase text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
-                      {tt("trk.step_x_of_y", "Step 2 of 5")}
+                      Step 2 of 5
                     </span>
                   </div>
 
@@ -1411,14 +1411,14 @@ export function TruckRecreationWizard({
                       onClick={handlePrev}
                       className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
                     >
-                      <ChevronLeft className="h-4 w-4 rtl:rotate-180" /> {tt("common.back", "Back: Owner Info")}
+                      <ChevronLeft className="h-4 w-4 rtl:rotate-180" /> Back
                     </button>
                     <button
                       type="button"
                       onClick={handleNext}
                       className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-600/25 hover:bg-blue-700"
                     >
-                      {tt("common.next", "Next: Registered Company")} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+                      Next Step <ArrowRight className="h-4 w-4 rtl:rotate-180" />
                     </button>
                   </div>
                 </section>
@@ -1435,29 +1435,26 @@ export function TruckRecreationWizard({
                       <div>
                         <div className="flex items-center gap-2">
                           <h2 className="text-sm font-black text-slate-900 dark:text-white">
-                            {tt("trk.step_3_heading", "Step 3: Registered Company")}
+                            Step 3: {tt("trk.section_company", "Registered Company")}
                           </h2>
                           <span className="rounded-md bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/60">
-                            {tt("common.optional", "Optional")}
+                            Optional
                           </span>
                         </div>
                         <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                          {tt("trk.step_3_sub", "Optional registration if the truck is registered under a transport company")}
+                          Optional registration if the truck is registered under a transport company
                         </p>
                       </div>
                     </div>
                     <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-black uppercase text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
-                      {tt("trk.step_x_of_y", "Step 3 of 5")}
+                      Step 3 of 5
                     </span>
                   </div>
 
                   <div className="space-y-4">
                     <div className="rounded-2xl border border-blue-100 bg-blue-50/60 p-3.5 text-xs text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-200">
                       <p className="font-semibold leading-relaxed">
-                        {tt(
-                          "trk.company_optional_help",
-                          "Company registration is not mandatory. If this truck is owned independently or not linked to any transport company, you can leave this empty and click 'Next' or 'Skip'."
-                        )}
+                        Company registration is not mandatory. If this truck is owned independently or not linked to any transport company, you can leave this empty and click Next or Skip.
                       </p>
                     </div>
 
@@ -1493,7 +1490,7 @@ export function TruckRecreationWizard({
                       onClick={handlePrev}
                       className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
                     >
-                      <ChevronLeft className="h-4 w-4 rtl:rotate-180" /> {tt("common.back", "Back: Truck Details")}
+                      <ChevronLeft className="h-4 w-4 rtl:rotate-180" /> Back
                     </button>
                     <button
                       type="button"
@@ -1501,8 +1498,8 @@ export function TruckRecreationWizard({
                       className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-600/25 hover:bg-blue-700"
                     >
                       {form.companyId
-                        ? tt("common.next", "Next: Transporter Info")
-                        : tt("trk.skip_or_next_transporter", "Skip / Next: Transporter")} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+                        ? "Next Step"
+                        : "Skip / Next Step"} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
                     </button>
                   </div>
                 </section>
@@ -1519,19 +1516,19 @@ export function TruckRecreationWizard({
                       <div>
                         <div className="flex items-center gap-2">
                           <h2 className="text-sm font-black text-slate-900 dark:text-white">
-                            {tt("trk.step_4_heading", "Step 4: Transporter Information")}
+                            Step 4: {tt("trk.section_transporter", "Transporter Information")}
                           </h2>
                           <span className="rounded-md bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/60">
-                            {tt("common.optional", "Optional")}
+                            Optional
                           </span>
                         </div>
                         <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                          {tt("trk.step_4_sub", "Optional transporter person or dispatch party")}
+                          Optional transporter person or dispatch party
                         </p>
                       </div>
                     </div>
                     <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-black uppercase text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
-                      {tt("trk.step_x_of_y", "Step 4 of 5")}
+                      Step 4 of 5
                     </span>
                   </div>
 
@@ -1575,14 +1572,14 @@ export function TruckRecreationWizard({
                       onClick={handlePrev}
                       className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
                     >
-                      <ChevronLeft className="h-4 w-4 rtl:rotate-180" /> {tt("common.back", "Back: Company")}
+                      <ChevronLeft className="h-4 w-4 rtl:rotate-180" /> Back
                     </button>
                     <button
                       type="button"
                       onClick={handleNext}
                       className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-600/25 hover:bg-blue-700"
                     >
-                      {tt("common.next", "Next: Driver & Review")} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+                      Next Step <ArrowRight className="h-4 w-4 rtl:rotate-180" />
                     </button>
                   </div>
                 </section>
@@ -1598,15 +1595,15 @@ export function TruckRecreationWizard({
                       </div>
                       <div>
                         <h2 className="text-sm font-black text-slate-900 dark:text-white">
-                          {tt("trk.step_5_heading", "Step 5: Driver Information & Finalization")}
+                          Step 5: {tt("trk.section_driver", "Driver Information & Finalization")}
                         </h2>
                         <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                          {tt("trk.step_5_sub", "Assign driver, add remarks and complete registration")}
+                          Assign driver, add remarks and complete registration
                         </p>
                       </div>
                     </div>
                     <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
-                      {tt("trk.step_final", "Step 5 of 5")}
+                      Step 5 of 5
                     </span>
                   </div>
 
@@ -1732,7 +1729,7 @@ export function TruckRecreationWizard({
                       onClick={handlePrev}
                       className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
                     >
-                      <ChevronLeft className="h-4 w-4 rtl:rotate-180" /> {tt("common.back", "Back: Transporter")}
+                      <ChevronLeft className="h-4 w-4 rtl:rotate-180" /> Back
                     </button>
                     <div className="flex items-center gap-2">
                       <button
@@ -1748,7 +1745,7 @@ export function TruckRecreationWizard({
                         className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 text-xs font-black text-white shadow-md shadow-emerald-600/25 hover:bg-emerald-700 disabled:opacity-50"
                       >
                         {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                        {editingId ? tt("trk.update_truck", "Update Truck") : tt("trk.save_truck", "Save Truck Registration")}
+                        {tt("common.save", "Save")}
                       </button>
                     </div>
                   </div>
