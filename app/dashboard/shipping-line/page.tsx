@@ -1,9 +1,5 @@
-import { redirect } from "next/navigation";
+import LogisticsDashboardPage from "../logistics/page";
 
-export const metadata = { title: "Shipping Line" };
+export const metadata = { title: "Shipping Line — Shipping & Clearance Dashboard" };
 
-
-export default function ShippingLineDashboardPage() {
-  redirect("/dashboard/logistics" as any);
-}
-
+export default LogisticsDashboardPage;

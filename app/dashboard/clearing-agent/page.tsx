@@ -1,9 +1,5 @@
-import { redirect } from "next/navigation";
+import LogisticsDashboardPage from "../logistics/page";
 
-export const metadata = { title: "Clearing Agent Workspace" };
+export const metadata = { title: "Clearing Agent — Shipping & Clearance Dashboard" };
 
-
-export default function ClearingAgentDashboardPage() {
-  redirect("/dashboard/logistics" as any);
-}
-
+export default LogisticsDashboardPage;
