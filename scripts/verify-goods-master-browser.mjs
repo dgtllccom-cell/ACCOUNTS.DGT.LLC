@@ -91,7 +91,7 @@ async function main() {
     console.log(`5. Filling Step 1 fields (WALNUT IN SHELL, ${testHsCode}, Chile)...`);
     await page.fill("input[placeholder='e.g. WALNUT IN SHELL']", "WALNUT IN SHELL");
     await page.fill("input[placeholder='e.g. 08023200']", testHsCode);
-    await page.selectOption("select[aria-label='Select origin country']", { label: "Chile" });
+    await page.selectOption("select:has(option:has-text('Chile'))", { label: "Chile" });
 
     // Click Save Basic Item
     console.log("6. Clicking Save Basic Item...");
