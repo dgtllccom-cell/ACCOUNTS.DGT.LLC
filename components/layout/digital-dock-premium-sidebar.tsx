@@ -360,10 +360,17 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     icon: Ship,
     children: [
       { label: nt("New Customer Order"), href: "/dashboard/clearing-agent/customer-order", icon: ListPlus },
-      { label: nt("Customer Bills"), href: "/dashboard/clearing-agent/customer-bill", icon: Receipt },
-      { label: nt("Truck Expenses Bill"), href: "/dashboard/clearing-agent/truck-expenses", icon: Truck },
-      { label: nt("Customs Expenses Bill"), href: "/dashboard/clearing-agent/customs-expenses", icon: Landmark },
-      { label: nt("Other Expenses Bill"), href: "/dashboard/clearing-agent/other-expenses", icon: Receipt },
+      {
+        key: "sub-all-expenses-bill",
+        label: nt("All Expenses Bills"),
+        icon: Receipt,
+        children: [
+          { label: nt("Customer Expenses Bill"), href: "/dashboard/clearing-agent/customer-bill", icon: Receipt },
+          { label: nt("Truck Expenses Bill"), href: "/dashboard/clearing-agent/truck-expenses", icon: Truck },
+          { label: nt("Customs Expenses Bill"), href: "/dashboard/clearing-agent/customs-expenses", icon: Landmark },
+          { label: nt("Other Expenses Bill"), href: "/dashboard/clearing-agent/other-expenses", icon: Receipt },
+        ],
+      },
       { label: nt("Shipping Lines"), href: "/dashboard/shipping-line", icon: Ship },
       { label: nt("BL Entry"), href: "/dashboard/shipping-line/bl-entry", icon: FileText },
       { label: nt("Container & Vessel Tracking"), href: "/dashboard/shipping-line/tracking", icon: Compass, tone: "red" },

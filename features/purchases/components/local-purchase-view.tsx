@@ -423,6 +423,10 @@ export function LocalPurchaseView({
   const [purchaseAccountNo, setPurchaseAccountNo] = useState("");
   const [salesAccountNo, setSalesAccountNo] = useState("");
   const [brokerAccountNo, setBrokerAccountNo] = useState("");
+  const [hasBroker, setHasBroker] = useState(false);
+  const [brokerType, setBrokerType] = useState<"permanent" | "temporary">("permanent");
+  const [tempBrokerName, setTempBrokerName] = useState("");
+  const [tempBrokerPhone, setTempBrokerPhone] = useState("");
   const [contractNo, setContractNo] = useState("");
   
   // Origin Country & Shipping Mode
@@ -518,6 +522,7 @@ export function LocalPurchaseView({
   const [divideUnit, setDivideUnit] = useState("50_kg");
   const [divideType, setDivideType] = useState("D/KGs");
   const [divideKgs, setDivideKgs] = useState<any>("50");
+
 
   // Rate & Financials
   const [rateType, setRateType] = useState("per_kg");
@@ -623,6 +628,24 @@ export function LocalPurchaseView({
     if (isGlobalUser && !selectedCountryId && !selectedBranchId) return undefined;
     return countryBranches.find(b => b.id === selectedBranchId) || filteredCountryBranches[0] || countryBranches[0];
   }, [countryBranches, filteredCountryBranches, selectedBranchId, selectedCountryId, isGlobalUser]);
+
+  // Auto-lock purchase currency to branch / country currency
+  useEffect(() => {
+    const cName = String(activeBranch?.countryName || activeBranch?.country_name || "").toUpperCase();
+    let autoCurr = activeBranch?.currency || activeBranch?.countryCurrency || activeBranch?.country_currency;
+    if (!autoCurr) {
+      if (cName.includes("EMIRATES") || cName.includes("UAE") || cName.includes("DUBAI")) autoCurr = "AED";
+      else if (cName.includes("PAKISTAN")) autoCurr = "PKR";
+      else if (cName.includes("AFGHANISTAN")) autoCurr = "AFN";
+      else if (cName.includes("IRAN")) autoCurr = "IRR";
+      else if (cName.includes("CHINA")) autoCurr = "CNY";
+      else if (cName.includes("INDIA")) autoCurr = "INR";
+      else autoCurr = "AED";
+    }
+    if (autoCurr) {
+      setPurchaseCurrency(autoCurr);
+    }
+  }, [activeBranch, selectedCountryId]);
 
   const activeCityBranches = useMemo(() => {
     if (!selectedBranchId) return [];
@@ -2390,26 +2413,102 @@ export function LocalPurchaseView({
                       </select>
                     </div>
 
-                    {/* 3. Broker / Agent Account */}
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 flex items-center gap-1">
-                        <User className="h-3 w-3 text-purple-600" /> {t(lang, "lp.broker_account", "Broker / Agent Account")}
-                      </label>
-                      <select
-                        value={brokerAccountNo}
-                        onChange={e => setBrokerAccountNo(e.target.value)}
-                        className="w-full h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs outline-none"
-                      >
-                        <option value="">{t(lang, "lp.select_broker", "Select Broker Account...")}</option>
-                        {accountsList.map(acc => (
-                          <option key={acc.id} value={acc.code}>
-                            {acc.code} - {acc.name} ({acc.currency})
-                          </option>
-                        ))}
-                      </select>
+                    {/* 3. Broker / Agent Selection (Yes / No) */}
+                    <div className="rounded-xl border border-slate-200 p-2.5 bg-slate-50/50 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] font-bold text-slate-700 uppercase flex items-center gap-1">
+                          <User className="h-3 w-3 text-purple-600" /> {t(lang, "lp.broker_involved", "Broker / Agent")}
+                        </label>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => { setHasBroker(false); setBrokerAccountNo(""); setTempBrokerName(""); }}
+                            className={`px-2.5 py-0.5 rounded text-[10px] font-extrabold uppercase transition ${
+                              !hasBroker ? "bg-slate-700 text-white shadow-2xs" : "bg-white text-slate-500 border border-slate-200 hover:bg-slate-100"
+                            }`}
+                          >
+                            {t(lang, "common.no", "No")}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setHasBroker(true)}
+                            className={`px-2.5 py-0.5 rounded text-[10px] font-extrabold uppercase transition ${
+                              hasBroker ? "bg-purple-600 text-white shadow-2xs" : "bg-white text-slate-500 border border-slate-200 hover:bg-slate-100"
+                            }`}
+                          >
+                            {t(lang, "common.yes", "Yes")}
+                          </button>
+                        </div>
+                      </div>
+
+                      {hasBroker && (
+                        <div className="pt-2 border-t border-slate-200 space-y-2 animate-in fade-in duration-150">
+                          <div className="flex items-center gap-3">
+                            <label className="text-[9px] font-bold text-slate-500 uppercase">{t(lang, "lp.broker_type", "Account Type:")}</label>
+                            <label className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-700 cursor-pointer">
+                              <input
+                                type="radio"
+                                name="brokerType"
+                                checked={brokerType === "permanent"}
+                                onChange={() => setBrokerType("permanent")}
+                                className="text-purple-600 focus:ring-purple-500"
+                              />
+                              {t(lang, "lp.permanent_account", "Permanent Account")}
+                            </label>
+                            <label className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-700 cursor-pointer">
+                              <input
+                                type="radio"
+                                name="brokerType"
+                                checked={brokerType === "temporary"}
+                                onChange={() => setBrokerType("temporary")}
+                                className="text-purple-600 focus:ring-purple-500"
+                              />
+                              {t(lang, "lp.temporary_walkin", "Temporary / Arzi")}
+                            </label>
+                          </div>
+
+                          {brokerType === "permanent" ? (
+                            <div>
+                              <select
+                                value={brokerAccountNo}
+                                onChange={e => setBrokerAccountNo(e.target.value)}
+                                className="w-full h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs outline-none font-semibold text-slate-800"
+                              >
+                                <option value="">{t(lang, "lp.select_broker", "Select Broker Account...")}</option>
+                                {accountsList.map(acc => (
+                                  <option key={acc.id} value={acc.code}>
+                                    {acc.code} - {acc.name} ({acc.currency})
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-2 gap-2 bg-white p-2 rounded-lg border border-purple-100">
+                              <div>
+                                <label className="block text-[8.5px] font-bold text-slate-500 uppercase mb-0.5">{t(lang, "lp.broker_name", "Broker Name *")}</label>
+                                <input
+                                  value={tempBrokerName}
+                                  onChange={e => setTempBrokerName(e.target.value)}
+                                  placeholder={t(lang, "lp.ph_broker_name", "Broker name")}
+                                  className="w-full h-7 rounded border border-slate-200 px-2 text-[11px] font-bold text-slate-800 outline-none"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[8.5px] font-bold text-slate-500 uppercase mb-0.5">{t(lang, "lp.broker_phone", "Phone / Contact")}</label>
+                                <input
+                                  value={tempBrokerPhone}
+                                  onChange={e => setTempBrokerPhone(e.target.value)}
+                                  placeholder="+971..."
+                                  className="w-full h-7 rounded border border-slate-200 px-2 text-[11px] outline-none"
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
 
-                    {/* 3a. Contract No. — matches the approved prototype's "Contract No." field */}
+                    {/* 3a. Contract No. */}
                     <div>
                       <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
                         {t(lang, "lp.contract_no", "Contract No.")}
@@ -2420,23 +2519,6 @@ export function LocalPurchaseView({
                         onChange={e => setContractNo(e.target.value)}
                         placeholder={t(lang, "lp.contract_no_ph", "Contract no.")}
                         className="w-full h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs outline-none"
-                      />
-                    </div>
-
-                    {/* 3b. Supplier / Vendor (Person Master) */}
-                    <div>
-                      <PersonPicker
-                        label={t(lang, "lp.supplier", "Supplier / Vendor")}
-                        value={supplierPersonId}
-                        onValueChange={async (personId) => {
-                          setSupplierPersonId(personId);
-                          if (!personId) return;
-                          try {
-                            const res = await fetch(`/api/erp/customers/${personId}`);
-                            const json = await res.json();
-                            if (json?.customer?.customer_name) setSupplierName(json.customer.customer_name);
-                          } catch { /* ignore */ }
-                        }}
                       />
                     </div>
 
@@ -2488,39 +2570,6 @@ export function LocalPurchaseView({
                       </select>
                     </div>
 
-                    {/* 6b. Purchase Currency + Exchange Rate to AED — booking-level (see
-                        finalAmountAed useMemo); the payload field `exchangeRate` already
-                        existed and was always hardcoded to 1 before this real input. */}
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 flex items-center gap-1">
-                          <Coins className="h-3 w-3 text-emerald-600" /> {t(lang, "lp.purchase_currency", "Purchase Currency *")}
-                        </label>
-                        <select
-                          value={purchaseCurrency}
-                          onChange={e => setPurchaseCurrency(e.target.value)}
-                          className="w-full h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs outline-none font-bold text-slate-700"
-                        >
-                          {CURRENCIES.map(c => (
-                            <option key={c} value={c}>{c}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
-                          {t(lang, "lp.exchange_rate_to_aed", "Exchange Rate to AED")}
-                        </label>
-                        <input
-                          type="number"
-                          step="0.0001"
-                          min="0"
-                          value={exchangeRateToAed}
-                          onChange={e => setExchangeRateToAed(e.target.value)}
-                          className="w-full h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs outline-none font-mono font-bold text-slate-700"
-                        />
-                      </div>
-                    </div>
-
                     {/* 7. Remarks / Terms Notes */}
                     <div>
                       <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.remarks_label", "Remarks / Terms Notes")}</label>
@@ -2531,6 +2580,107 @@ export function LocalPurchaseView({
                         placeholder={t(lang, "lp.ph_remarks", "Write booking terms, shipment notes, or payment instructions...")}
                         className="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-xs outline-none font-sans"
                       />
+                    </div>
+                    {/* Warehouse Transfer Routing Details (if Warehouse Transfer selected) */}
+                    {shipmentType === "Warehouse Transfer" && (
+                      <div className="rounded-xl border border-slate-200 p-3 space-y-3 bg-slate-50/50">
+                        <p className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest flex items-center gap-1">
+                          <Warehouse className="h-3 w-3 text-purple-500" /> {t(lang, "lp.wh_transfer", "Warehouse Transfer Details")}
+                        </p>
+
+                        <div className="space-y-2">
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.wh_master", "Warehouse Master Setup")}</label>
+                              <select
+                                value={selectedWarehouseId}
+                                onChange={e => {
+                                  const whId = e.target.value;
+                                  setSelectedWarehouseId(whId);
+                                  const found = warehousesList.find(w => w.id === whId);
+                                  setWarehouseName(found ? found.warehouse_name : "");
+                                }}
+                                className="w-full h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs outline-none font-semibold text-slate-800"
+                              >
+                                <option value="">{t(lang, "lp.select_warehouse", "Select Warehouse...")}</option>
+                                {warehousesList.map(w => (
+                                  <option key={w.id} value={w.id}>{w.warehouse_name} ({w.id})</option>
+                                ))}
+                                <option value="CUSTOM">{t(lang, "lp.custom_manual", "+ Custom Manual Entry")}</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.wh_code", "Warehouse Code")}</label>
+                              <input
+                                value={selectedWarehouseId === "CUSTOM" ? "" : selectedWarehouseId}
+                                readOnly={selectedWarehouseId !== "CUSTOM"}
+                                onChange={e => selectedWarehouseId === "CUSTOM" && setSelectedWarehouseId(e.target.value)}
+                                placeholder={t(lang, "lp.code_word", "Code")}
+                                className="w-full h-9 rounded-lg border border-slate-200 bg-slate-100 px-3 text-xs font-mono outline-none text-slate-600 font-bold"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.wh_name_auto", "Warehouse Name (Auto)")}</label>
+                              <input
+                                value={warehouseName}
+                                readOnly={selectedWarehouseId !== "CUSTOM"}
+                                onChange={e => setWarehouseName(e.target.value)}
+                                placeholder={t(lang, "lp.ph_auto_name", "Auto Loaded Name")}
+                                className="w-full h-9 rounded-lg border border-slate-200 bg-slate-100 px-3 text-xs outline-none text-slate-800 font-bold"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.wh_transfer_date", "Warehouse Transfer Date")}</label>
+                              <input
+                                type="date"
+                                value={transferDate}
+                                onChange={e => setTransferDate(e.target.value)}
+                                className="w-full h-9 rounded-lg border border-slate-200 bg-white px-3 text-xs font-mono outline-none"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Link to Warehouse stock Account */}
+                          <div>
+                            <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.wh_account_link", "Link with Warehouse Account *")}</label>
+                            <select
+                              value={warehouseAccountNo}
+                              onChange={e => setWarehouseAccountNo(e.target.value)}
+                              className="w-full h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs outline-none text-purple-700 font-bold"
+                            >
+                              <option value="">{t(lang, "lp.wh_account_link", "Link with Warehouse Account *")}</option>
+                              {accountsList.map(acc => (
+                                <option key={acc.id} value={acc.code}>
+                                  {acc.code} - {acc.name} ({acc.currency})
+                                </option>
+                              ))}
+                            </select>
+                            <p className="text-[8px] text-slate-400 mt-1">{t(lang, "lp.wh_stock_auto", "Stock will be automatically transferred to this Warehouse Account upon posting.")}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Export Shipment Workflow Notice */}
+                    {shipmentType === "Export Shipment" && (
+                      <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-3 space-y-2 text-xs text-amber-800">
+                        <p className="text-[10px] font-extrabold uppercase tracking-widest flex items-center gap-1">
+                          <Flag className="h-3.5 w-3.5 text-amber-600" /> {t(lang, "lp.export_workflow", "Export Shipment Workflow")}
+                        </p>
+                        <p className="text-[10px] leading-relaxed">
+                          {t(lang, "lp.export_note", "This purchase is designated for export. Shipment routes, customs documentation, and container loading tracking must be completed via the Export Loading & Shipping modules after booking.")}
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="flex gap-2 pt-2">
+                      <Button type="button" onClick={() => { if (!validateBookingStep()) return; setCurrentStep(2); }}
+                        className="w-full h-9 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-[10px] font-extrabold flex items-center justify-center gap-1 shadow-sm">
+                        {t(lang, "lp.next_goods_entry", "Next: Goods Entry")} <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -2916,289 +3066,6 @@ export function LocalPurchaseView({
                 </div>
               )}
 
-              {/* PAYMENT & LOGISTICS — merged into the Step 1 "Booking" display (owner-approved
-                  Booking/Goods Entry/Final restyle). Condition changed from the old, separate
-                  "STEP 3: PAYMENT & LOGISTICS" (currentStep === 3) so this content renders
-                  together with the Step 1 Bill & Accounts fields, matching the prototype's
-                  single "Booking" step. Field bindings/logic below are unchanged. */}
-              {currentStep === 1 && (
-                <div className="space-y-4 animate-in fade-in duration-200">
-                  <div className="border-l-2 border-purple-600 pl-2">
-                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                      <Truck className="h-3.5 w-3.5 text-purple-600" /> {t(lang, "lp.payment_logistics", "3. Payment & Logistics Details")}
-                    </h4>
-                  </div>
-
-                  <div className="space-y-3">
-
-                    {/* ── A. PAYMENT INFORMATION BLOCK ── */}
-                    <div className="rounded-xl border border-slate-200 p-3 space-y-3 bg-slate-50/50">
-                      <p className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest flex items-center gap-1">
-                        <CreditCard className="h-3 w-3 text-blue-500" /> {t(lang, "lp.payment_condition_s", "Payment Condition")}
-                      </p>
-
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div>
-                          <label className="block text-[9px] font-bold text-slate-400 uppercase">{t(lang, "lp.sel_payment_type", "Selected Payment Type")}</label>
-                          <span className="font-extrabold text-slate-800 text-[11px] block mt-1">{paymentMode}</span>
-                        </div>
-                        {paymentMode !== "Advance" && (
-                          <div>
-                            <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.payment_date", "Payment Date")}</label>
-                            <input
-                              type="date"
-                              value={cashPaymentDate}
-                              onChange={e => setCashPaymentDate(e.target.value)}
-                              className="w-full h-9 rounded-lg border border-slate-200 bg-white px-3 text-xs font-mono outline-none"
-                            />
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Advance Payment Details */}
-                      {paymentMode === "Advance" && (
-                        <div className="space-y-2 border-t border-slate-200/60 pt-2">
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>
-                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.adv_pct", "Advance Payment Percentage (%)")}</label>
-                              <input
-                                type="number"
-                                step="any"
-                                value={advancePercentage}
-                                onChange={e => setAdvancePercentage(e.target.value)}
-                                className="w-full h-9 rounded-lg border border-slate-200 bg-white px-3 text-xs font-mono font-bold text-blue-700 outline-none"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.adv_amount", "Advance Payment Amount")}</label>
-                              <input
-                                type="number"
-                                step="any"
-                                value={manualAdvanceAmount || calculatedAdvanceAmount.toFixed(2)}
-                                onChange={e => setManualAdvanceAmount(e.target.value)}
-                                className="w-full h-9 rounded-lg border border-emerald-200 bg-emerald-50/50 px-3 text-xs font-mono font-bold text-emerald-700 outline-none"
-                              />
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>
-                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.remaining_amount", "Remaining Amount")}</label>
-                              <input
-                                readOnly
-                                value={`${purchaseCurrency} ${remainingBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-                                className="w-full h-9 rounded-lg border border-slate-200 bg-slate-100 px-3 text-xs font-mono font-bold text-red-650 outline-none"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.total_bill_cost", "Total Bill Cost")}</label>
-                              <input
-                                readOnly
-                                value={`${purchaseCurrency} ${combinedBillCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-                                className="w-full h-9 rounded-lg border border-slate-200 bg-slate-100 px-3 text-xs font-mono font-bold text-slate-700 outline-none"
-                              />
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>
-                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.adv_due_date", "Advance Payment Due Date")}</label>
-                              <input
-                                type="date"
-                                value={advancePaymentDate}
-                                onChange={e => setAdvancePaymentDate(e.target.value)}
-                                className="w-full h-9 rounded-lg border border-slate-200 bg-white px-3 text-xs font-mono outline-none"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.remaining_due_date", "Remaining Payment Due Date")}</label>
-                              <input
-                                type="date"
-                                value={remainingDueDate}
-                                onChange={e => setRemainingDueDate(e.target.value)}
-                                className="w-full h-9 rounded-lg border border-slate-200 bg-white px-3 text-xs font-mono outline-none"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* ── B. WAREHOUSE TRANSFER BLOCK ── */}
-                    {shipmentType === "Warehouse Transfer" && (
-                      <div className="rounded-xl border border-slate-200 p-3 space-y-3 bg-slate-50/50">
-                        <p className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest flex items-center gap-1">
-                          <Warehouse className="h-3 w-3 text-purple-500" /> {t(lang, "lp.wh_transfer", "Warehouse Transfer Details")}
-                        </p>
-
-                        <div className="space-y-2">
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>
-                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.wh_master", "Warehouse Master Setup")}</label>
-                              <select
-                                value={selectedWarehouseId}
-                                onChange={e => {
-                                  const whId = e.target.value;
-                                  setSelectedWarehouseId(whId);
-                                  const found = warehousesList.find(w => w.id === whId);
-                                  setWarehouseName(found ? found.warehouse_name : "");
-                                }}
-                                className="w-full h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs outline-none font-semibold text-slate-800"
-                              >
-                                <option value="">{t(lang, "lp.select_warehouse", "Select Warehouse...")}</option>
-                                {warehousesList.map(w => (
-                                  <option key={w.id} value={w.id}>{w.warehouse_name} ({w.id})</option>
-                                ))}
-                                <option value="CUSTOM">{t(lang, "lp.custom_manual", "+ Custom Manual Entry")}</option>
-                              </select>
-                            </div>
-                            <div>
-                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.wh_code", "Warehouse Code")}</label>
-                              <input
-                                value={selectedWarehouseId === "CUSTOM" ? "" : selectedWarehouseId}
-                                readOnly={selectedWarehouseId !== "CUSTOM"}
-                                onChange={e => selectedWarehouseId === "CUSTOM" && setSelectedWarehouseId(e.target.value)}
-                                placeholder={t(lang, "lp.code_word", "Code")}
-                                className="w-full h-9 rounded-lg border border-slate-200 bg-slate-100 px-3 text-xs font-mono outline-none text-slate-600 font-bold"
-                              />
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>
-                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.wh_name_auto", "Warehouse Name (Auto)")}</label>
-                              <input
-                                value={warehouseName}
-                                readOnly={selectedWarehouseId !== "CUSTOM"}
-                                onChange={e => setWarehouseName(e.target.value)}
-                                placeholder={t(lang, "lp.ph_auto_name", "Auto Loaded Name")}
-                                className="w-full h-9 rounded-lg border border-slate-200 bg-slate-100 px-3 text-xs outline-none text-slate-800 font-bold"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.wh_transfer_date", "Warehouse Transfer Date")}</label>
-                              <input
-                                type="date"
-                                value={transferDate}
-                                onChange={e => setTransferDate(e.target.value)}
-                                className="w-full h-9 rounded-lg border border-slate-200 bg-white px-3 text-xs font-mono outline-none"
-                              />
-                            </div>
-                          </div>
-
-                          {/* Link to Warehouse stock Account */}
-                          <div>
-                            <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.wh_account_link", "Link with Warehouse Account *")}</label>
-                            <select
-                              value={warehouseAccountNo}
-                              onChange={e => setWarehouseAccountNo(e.target.value)}
-                              className="w-full h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs outline-none text-purple-700 font-bold"
-                            >
-                              <option value="">{t(lang, "lp.wh_account_link", "Link with Warehouse Account *")}</option>
-                              {accountsList.map(acc => (
-                                <option key={acc.id} value={acc.code}>
-                                  {acc.code} - {acc.name} ({acc.currency})
-                                </option>
-                              ))}
-                            </select>
-                            <p className="text-[8px] text-slate-400 mt-1">{t(lang, "lp.wh_stock_auto", "Stock will be automatically transferred to this Warehouse Account upon posting.")}</p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* ── C. LOADING BY TRUCK BLOCK ── */}
-                    {shipmentType === "Loading by Truck" && (
-                      <div className="rounded-xl border border-slate-200 p-3 space-y-3 bg-slate-50/50">
-                        <p className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest flex items-center gap-1">
-                          <Truck className="h-3 w-3 text-purple-500" /> {t(lang, "lp.truck_details", "Loading by Truck Details")}
-                        </p>
-
-                        <div className="space-y-2">
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>
-                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.truck_master", "Truck Management Master")}</label>
-                              <select
-                                value={selectedTruckId}
-                                onChange={e => {
-                                  const tId = e.target.value;
-                                  setSelectedTruckId(tId);
-                                  const found = TRUCK_LIST.find(t => t.id === tId);
-                                  if (found) {
-                                    setTruckNo(found.truckNo);
-                                    setDriverName(found.driverName);
-                                  } else {
-                                    setTruckNo("");
-                                    setDriverName("");
-                                  }
-                                }}
-                                className="w-full h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs outline-none font-semibold text-slate-800"
-                              >
-                                <option value="">{t(lang, "lp.select_truck", "Select Registered Truck...")}</option>
-                                {TRUCK_LIST.map(t => (
-                                  <option key={t.id} value={t.id}>{t.truckNo} - {t.driverName} ({t.details})</option>
-                                ))}
-                                <option value="CUSTOM">{t(lang, "lp.custom_truck", "+ Custom / Non-Setup Entry")}</option>
-                              </select>
-                            </div>
-                            <div>
-                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.truck_no", "Truck Number *")}</label>
-                              <input
-                                value={truckNo}
-                                readOnly={selectedTruckId !== "CUSTOM" && selectedTruckId !== ""}
-                                onChange={e => setTruckNo(e.target.value)}
-                                placeholder={t(lang, "lp.ph_truck_no", "Truck Number")}
-                                className="w-full h-9 rounded-lg border border-slate-200 bg-white px-3 text-xs font-mono font-bold text-indigo-700 outline-none"
-                              />
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>
-                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.driver_name", "Driver Name")}</label>
-                              <input
-                                value={driverName}
-                                readOnly={selectedTruckId !== "CUSTOM" && selectedTruckId !== ""}
-                                onChange={e => setDriverName(e.target.value)}
-                                placeholder={t(lang, "lp.ph_driver", "Driver Name")}
-                                className="w-full h-9 rounded-lg border border-slate-200 bg-white px-3 text-xs outline-none"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.purchase_date", "Loading Date")}</label>
-                              <input
-                                type="date"
-                                value={loadingDate}
-                                onChange={e => setLoadingDate(e.target.value)}
-                                className="w-full h-9 rounded-lg border border-slate-200 bg-white px-3 text-xs font-mono outline-none"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* ── D. EXPORT BLOCK ── */}
-                    {shipmentType === "Export Shipment" && (
-                      <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-3 space-y-2 text-xs text-amber-800">
-                        <p className="text-[10px] font-extrabold uppercase tracking-widest flex items-center gap-1">
-                          <Flag className="h-3.5 w-3.5 text-amber-600" /> {t(lang, "lp.export_workflow", "Export Shipment Workflow")}
-                        </p>
-                        <p className="text-[10px] leading-relaxed">
-                          {t(lang, "lp.export_note", "This purchase is designated for export. Shipment routes, customs documentation, and container loading tracking must be completed via the Export Loading & Shipping modules after booking.")}
-                        </p>
-                      </div>
-                    )}
-
-                  </div>
-
-                  <div className="flex gap-2 pt-2">
-                    <Button type="button" onClick={() => { if (!validateBookingStep()) return; setCurrentStep(2); }}
-                      className="w-full h-9 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-[10px] font-extrabold flex items-center justify-center gap-1 shadow-sm">
-                      {t(lang, "lp.next_goods_entry", "Next: Goods Entry")} <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
-                    </Button>
-                  </div>
-                </div>
-              )}
-
               {/* STEP 3: FINAL PURCHASE */}
               {currentStep === 3 && (
                 <div className="space-y-4 animate-in fade-in duration-200">
@@ -3206,6 +3073,92 @@ export function LocalPurchaseView({
                     <h4 className="text-[10px] font-black uppercase tracking-wider text-blue-600">
                       {t(lang, "lp.final_purchase_title", "FINAL PURCHASE")}
                     </h4>
+                  </div>
+
+                  
+                  {/* Payment Details & Schedule (Moved from Step 1 per owner requirement) */}
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 space-y-2.5 shadow-2xs">
+                    <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                      <span className="text-[10px] font-extrabold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                        <CreditCard className="h-3.5 w-3.5 text-blue-600" /> {t(lang, "lp.card_payment_details", "PAYMENT DETAILS")}
+                      </span>
+                      <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wide bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300">
+                        {paymentMode}
+                      </span>
+                    </div>
+
+                    {/* When Not Advance: Payment Date */}
+                    {paymentMode !== "Advance" && (
+                      <div>
+                        <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">
+                          {paymentMode === "Credit" ? t(lang, "lp.due_date", "Due Date") : t(lang, "lp.payment_date", "Payment Date")}
+                        </label>
+                        <input
+                          type="date"
+                          value={cashPaymentDate}
+                          onChange={e => setCashPaymentDate(e.target.value)}
+                          className="w-full h-8 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-mono font-bold text-slate-800 outline-none focus:ring-1 focus:ring-blue-500"
+                        />
+                      </div>
+                    )}
+
+                    {/* When Advance: Percentage, Amount, and Due Dates */}
+                    {paymentMode === "Advance" && (
+                      <div className="space-y-2">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.adv_pct", "Advance %")}</label>
+                            <input
+                              type="number"
+                              step="any"
+                              value={advancePercentage}
+                              onChange={e => setAdvancePercentage(e.target.value)}
+                              className="w-full h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs font-mono font-bold text-blue-700 outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.adv_amount", "Advance Amount")}</label>
+                            <input
+                              type="number"
+                              step="any"
+                              value={manualAdvanceAmount || calculatedAdvanceAmount.toFixed(2)}
+                              onChange={e => setManualAdvanceAmount(e.target.value)}
+                              className="w-full h-8 rounded-lg border border-emerald-200 bg-emerald-50/50 px-2 text-xs font-mono font-bold text-emerald-700 outline-none"
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.adv_due_date", "Advance Due Date")}</label>
+                            <input
+                              type="date"
+                              value={advancePaymentDate}
+                              onChange={e => setAdvancePaymentDate(e.target.value)}
+                              className="w-full h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs font-mono outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.remaining_due_date", "Remaining Due Date")}</label>
+                            <input
+                              type="date"
+                              value={remainingDueDate}
+                              onChange={e => setRemainingDueDate(e.target.value)}
+                              className="w-full h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs font-mono outline-none"
+                            />
+                          </div>
+                        </div>
+                        <div className="p-1.5 bg-slate-50 dark:bg-slate-800/40 rounded-lg text-[8.5px] space-y-0.5">
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">{t(lang, "lp.total_bill_cost", "Total Bill")}:</span>
+                            <span className="font-mono font-bold text-slate-700">{purchaseCurrency} {combinedBillCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">{t(lang, "lp.remaining_amount", "Remaining Balance")}:</span>
+                            <span className="font-mono font-bold text-red-600">{purchaseCurrency} {remainingBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 space-y-2.5 text-xs shadow-2xs">
