@@ -1113,7 +1113,12 @@ export function LocalPurchaseView({
 
     const isPerUnit = priceType === "Price / Box" || priceType === "Price / Bag" || priceType === "Price / Unit" || rateType === "Per Bag / Package";
     const calcAmount = isPerUnit ? qtyNo * rateVal : (netKg > 0 ? netKg * rateVal : grossKg * rateVal);
-    const calcFinalAed = calcAmount * exVal;
+
+    // Per-entry tax calculation
+    const itemHasTax = applyTax === "Yes";
+    const itemTaxPct = itemHasTax ? Number(taxPercentage || 0) : 0;
+    const itemTaxAmount = itemHasTax ? (calcAmount * itemTaxPct) / 100 : 0;
+    const itemFinalAmount = calcAmount + itemTaxAmount;
 
     const itemObj = {
       id: `draft-${Date.now()}-${Math.random()}`,
@@ -1140,17 +1145,17 @@ export function LocalPurchaseView({
       rateType: isPerUnit ? "per_bag" : "per_kg",
       purchaseRate: rateVal,
       currency: purchaseCurrency,
-      exchangeRate: exVal,
+      exchangeRate: 1,
       amount: calcAmount,
-      finalAed: calcFinalAed,
+      finalAed: itemFinalAmount,
       qualityReportRef: qualityReportRef || "Passed",
       origin: selectedOriginCountryName || "—",
       purchaseCost: calcAmount,
-      applyTax: applyTax || "No",
-      taxType: taxType || "VAT",
-      taxPercentage: Number(taxPercentage || 0),
-      taxAmount: 0,
-      finalCost: calcAmount
+      applyTax: itemHasTax ? "Yes" : "No",
+      taxType: itemHasTax ? (taxType || "VAT") : "No Tax",
+      taxPercentage: itemTaxPct,
+      taxAmount: itemTaxAmount,
+      finalCost: itemFinalAmount
     };
 
     setDraftItems(prev => [...prev, itemObj]);
@@ -1160,6 +1165,8 @@ export function LocalPurchaseView({
     setCustomGoodsName("");
     setHsCode("");
     setQualityDetails("");
+    setApplyTax("No");
+    setTaxPercentage("0");
   }
 
   async function handleSubmit(e: React.SyntheticEvent, options?: { draftOnly?: boolean }) {
@@ -3188,7 +3195,7 @@ export function LocalPurchaseView({
                     <div className="flex justify-between items-center text-[11px] pt-1.5 border-t border-slate-100 dark:border-slate-800">
                       <span className="text-slate-500 font-bold">{t(lang, "lp.final_amount_auto", "Final Amount")}</span>
                       <span className="font-mono font-black text-emerald-600 dark:text-emerald-400">
-                        AED {finalAmountAed.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        {purchaseCurrency} {combinedBillCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                     </div>
                   </div>
@@ -3387,7 +3394,8 @@ export function LocalPurchaseView({
                           <Th className="p-2 border-b text-right">{t(lang, "lp.col_net_wt", "Net Wt")}</Th>
                           <Th className="p-2 border-b text-right">{t(lang, "lp.col_rate", "Rate")}</Th>
                           <Th className="p-2 border-b text-right">{t(lang, "lp.col_amount", "Amount")} ({purchaseCurrency})</Th>
-                          <Th className="p-2 border-b text-right">{t(lang, "lp.col_final_aed", "Final AED")}</Th>
+                          <Th className="p-2 border-b text-center">{t(lang, "lp.col_tax_details", "Tax")}</Th>
+                          <Th className="p-2 border-b text-right">{t(lang, "lp.col_final_amount", "Total Amount")} ({purchaseCurrency})</Th>
                           <Th className="p-2 border-b text-center">{t(lang, "lp.col_action", "Action")}</Th>
                         </tr>
                       </thead>
@@ -3412,10 +3420,21 @@ export function LocalPurchaseView({
                                 <div className="text-[8px] text-slate-400 uppercase">{(item.priceType || item.rateType || "").replace("_", " ")}</div>
                               </td>
                               <td className="p-2 text-right font-mono font-bold text-slate-700">
-                                {(item.finalCost || item.purchaseCost || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {item.currency || purchaseCurrency}
+                                {(item.purchaseCost || item.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </td>
+                              <td className="p-2 text-center">
+                                {item.applyTax === "Yes" && Number(item.taxAmount || 0) > 0 ? (
+                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                    {item.taxPercentage}% ({Number(item.taxAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-500 border border-slate-200">
+                                    {t(lang, "common.no", "No")}
+                                  </span>
+                                )}
                               </td>
                               <td className="p-2 text-right font-mono font-black text-emerald-600">
-                                {((item.finalCost || item.purchaseCost || 0) * Number(exchangeRateToAed || 1)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                {(item.finalCost || (item.purchaseCost || 0) + (item.taxAmount || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </td>
                               <td className="p-2 text-center">
                                 <button
@@ -3442,7 +3461,7 @@ export function LocalPurchaseView({
 
                   {/* Goods Bottom Summary — 4-stat compact strip */}
                   <div className="border-t border-amber-100 bg-amber-50/30">
-                    <div className="grid grid-cols-4 divide-x divide-amber-100">
+                    <div className="grid grid-cols-5 divide-x divide-amber-100">
                       <div className="px-3 py-2.5 min-w-0">
                         <span className="block text-[7.5px] text-slate-400 uppercase mb-0.5 whitespace-nowrap font-bold tracking-wide">{t(lang, "lp.total_goods_lines", "Goods Entered")}</span>
                         <strong className="block text-[12px] font-black text-slate-800 truncate">{draftItems.length}</strong>
@@ -3450,19 +3469,25 @@ export function LocalPurchaseView({
                       <div className="px-3 py-2.5 min-w-0">
                         <span className="block text-[7.5px] text-slate-400 uppercase mb-0.5 whitespace-nowrap font-bold tracking-wide">{t(lang, "lp.col_packages", "Total Qty")}</span>
                         <strong className="block text-[12px] font-black text-slate-800 truncate">
-                          {draftItems.reduce((a, i) => a + i.quantityKgs, 0).toLocaleString()}
+                          {draftItems.reduce((a, i) => a + (i.quantityKgs || 0), 0).toLocaleString()}
                         </strong>
                       </div>
                       <div className="px-3 py-2.5 min-w-0">
                         <span className="block text-[7.5px] text-slate-400 uppercase mb-0.5 whitespace-nowrap font-bold tracking-wide">{t(lang, "lp.net_weight", "Net Weight")}</span>
                         <strong className="block text-[12px] font-black text-blue-700 truncate">
-                          {draftItems.reduce((a, i) => a + i.netWeight, 0).toLocaleString()} <span className="text-[9px] font-bold">kg</span>
+                          {draftItems.reduce((a, i) => a + (i.netWeight || 0), 0).toLocaleString()} <span className="text-[9px] font-bold">kg</span>
+                        </strong>
+                      </div>
+                      <div className="px-3 py-2.5 min-w-0">
+                        <span className="block text-[7.5px] text-slate-400 uppercase mb-0.5 whitespace-nowrap font-bold tracking-wide">{t(lang, "lp.col_tax_amt", "Total Tax")}</span>
+                        <strong className="block text-[12px] font-black text-amber-700 truncate">
+                          {purchaseCurrency} {draftItems.reduce((a, i) => a + (i.taxAmount || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </strong>
                       </div>
                       <div className="px-3 py-2.5 min-w-0">
                         <span className="block text-[7.5px] text-slate-400 uppercase mb-0.5 whitespace-nowrap font-bold tracking-wide">{t(lang, "lp.final_amount_auto", "Final Amount")}</span>
-                        <strong className="block text-[11px] font-black text-emerald-600 truncate">
-                          {purchaseCurrency} {combinedBillCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        <strong className="block text-[12px] font-black text-emerald-700 truncate">
+                          {purchaseCurrency} {draftItems.reduce((a, i) => a + (i.finalCost || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </strong>
                       </div>
                     </div>
@@ -3499,7 +3524,8 @@ export function LocalPurchaseView({
                           <Th className="p-2 border-b text-right">{t(lang, "lp.col_net_wt", "NET WT")}</Th>
                           <Th className="p-2 border-b text-right">{t(lang, "lp.col_rate", "RATE")}</Th>
                           <Th className="p-2 border-b text-right">{t(lang, "lp.col_amount", "AMOUNT")} ({purchaseCurrency})</Th>
-                          <Th className="p-2 border-b text-right">{t(lang, "lp.col_final_aed", "FINAL AED")}</Th>
+                          <Th className="p-2 border-b text-center">{t(lang, "lp.col_tax_details", "TAX")}</Th>
+                          <Th className="p-2 border-b text-right">{t(lang, "lp.col_final_amount", "TOTAL AMOUNT")} ({purchaseCurrency})</Th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 text-[10px]">
@@ -3517,10 +3543,21 @@ export function LocalPurchaseView({
                               <td className="p-2 text-right font-mono font-bold text-blue-700">{(item.netWeight || 0).toLocaleString()} kg</td>
                               <td className="p-2 text-right font-mono font-bold text-slate-700">{item.purchaseRate}</td>
                               <td className="p-2 text-right font-mono font-bold text-slate-700">
-                                {(item.finalCost || item.purchaseCost || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {item.currency || purchaseCurrency}
+                                {(item.purchaseCost || item.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </td>
+                              <td className="p-2 text-center">
+                                {item.applyTax === "Yes" && Number(item.taxAmount || 0) > 0 ? (
+                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                    {item.taxPercentage}% ({Number(item.taxAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-500 border border-slate-200">
+                                    {t(lang, "common.no", "No")}
+                                  </span>
+                                )}
                               </td>
                               <td className="p-2 text-right font-mono font-black text-emerald-600">
-                                {((item.finalCost || item.purchaseCost || 0) * Number(exchangeRateToAed || 1)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                {(item.finalCost || (item.purchaseCost || 0) + (item.taxAmount || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </td>
                             </tr>
                           ))
@@ -3536,8 +3573,19 @@ export function LocalPurchaseView({
                             <td className="p-2 text-right font-mono text-slate-600">{totalGrossWeight.toLocaleString()} kg</td>
                             <td className="p-2 text-right font-mono font-bold text-blue-700">{netWeight.toLocaleString()} kg</td>
                             <td className="p-2 text-right font-mono font-bold text-slate-700">{purchaseRate || 0}</td>
-                            <td className="p-2 text-right font-mono font-bold text-slate-700">{purchaseCurrency} {combinedBillCost.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                            <td className="p-2 text-right font-mono font-black text-emerald-600">AED {finalAmountAed.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                            <td className="p-2 text-right font-mono font-bold text-slate-700">{purchaseCost.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                            <td className="p-2 text-center">
+                              {applyTax === "Yes" && taxAmount > 0 ? (
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                  {taxPercentage}% ({taxAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })})
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-500 border border-slate-200">
+                                  {t(lang, "common.no", "No")}
+                                </span>
+                              )}
+                            </td>
+                            <td className="p-2 text-right font-mono font-black text-emerald-600">{combinedBillCost.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                           </tr>
                         )}
                       </tbody>
@@ -3546,7 +3594,7 @@ export function LocalPurchaseView({
 
                   {/* 4-stat totals grid */}
                   <div className="border-t border-slate-100 bg-slate-50/60">
-                    <div className="grid grid-cols-4 divide-x divide-slate-100">
+                    <div className="grid grid-cols-5 divide-x divide-slate-100">
                       <div className="px-3 py-2 min-w-0">
                         <span className="block text-[7.5px] text-slate-400 uppercase font-bold tracking-wide">{t(lang, "lp.total_goods_lines", "Goods Items")}</span>
                         <strong className="block text-[11px] font-black text-slate-800 truncate">{draftItems.length > 0 ? draftItems.length : 1}</strong>
@@ -3564,9 +3612,15 @@ export function LocalPurchaseView({
                         </strong>
                       </div>
                       <div className="px-3 py-2 min-w-0">
+                        <span className="block text-[7.5px] text-slate-400 uppercase font-bold tracking-wide">{t(lang, "lp.col_tax_amt", "Total Tax")}</span>
+                        <strong className="block text-[11px] font-black text-amber-700 truncate">
+                          {purchaseCurrency} {(draftItems.length > 0 ? draftItems.reduce((a,i)=>a+(i.taxAmount || 0), 0) : taxAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </strong>
+                      </div>
+                      <div className="px-3 py-2 min-w-0">
                         <span className="block text-[7.5px] text-slate-400 uppercase font-bold tracking-wide">{t(lang, "lp.final_amount_auto", "Final Amount")}</span>
                         <strong className="block text-[11px] font-black text-emerald-600 truncate">
-                          AED {finalAmountAed.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          {purchaseCurrency} {combinedBillCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </strong>
                       </div>
                     </div>
@@ -3676,7 +3730,7 @@ export function LocalPurchaseView({
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                         <span className="text-slate-400">{t(lang, "lp.final_amount_auto", "Final Amount")}</span>
-                        <span className="font-mono font-black text-right text-emerald-600">AED {finalAmountAed.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                        <span className="font-mono font-black text-right text-emerald-600">{purchaseCurrency} {combinedBillCost.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                       </div>
                     </div>
                   </div>
