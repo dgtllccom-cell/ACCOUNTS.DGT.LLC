@@ -18,6 +18,25 @@ const config: Config = {
       }
     },
     extend: {
+      fontFamily: {
+        sans: [
+          "Inter",
+          "-apple-system",
+          "BlinkMacSystemFont",
+          '"Segoe UI"',
+          "Roboto",
+          '"Helvetica Neue"',
+          "Arial",
+          "sans-serif"
+        ],
+        arabic: [
+          '"Noto Sans Arabic"',
+          '"Segoe UI"',
+          "Tahoma",
+          "Arial",
+          "sans-serif"
+        ]
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
