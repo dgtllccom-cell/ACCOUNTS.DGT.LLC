@@ -21,81 +21,10 @@ const patchSchema = z.object({
 
 /**
  * Single Goods Master row — operates on the canonical `goods` table.
- * GET returns the goods row with its linked variations and master parameters.
  * PATCH updates the goods row.
  * DELETE is a SOFT delete (sets deleted_at) and cascades to its variations;
  * no rows are physically removed.
  */
-export async function GET(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
-  try {
-    const session = await requireErpSession();
-    authorizeApiScope(session, { resource: "goods", action: "read" });
-    const { id } = paramsSchema.parse(await ctx.params);
-
-    const data = await withLocalPg(async (sql) => {
-      const goodsRows = await sql`
-        SELECT
-          g.id,
-          g.chs_code,
-          g.goods_name AS name,
-          g.category,
-          g.variety AS master_variety,
-          g.extra_details AS master_extra_details,
-          g.origin_country_id,
-          g.is_active,
-          g.created_at,
-          co.name AS origin_country
-        FROM public.goods g
-        LEFT JOIN public.countries co ON co.id = g.origin_country_id
-        WHERE g.id = ${id}::uuid AND g.deleted_at IS NULL
-        LIMIT 1
-      `;
-      if (!goodsRows.length) return null;
-
-      const variations = await sql`
-        SELECT
-          id,
-          goods_id,
-          size,
-          brand,
-          variety,
-          extra_details,
-          is_active,
-          created_at
-        FROM public.goods_variations
-        WHERE goods_id = ${id}::uuid AND deleted_at IS NULL
-        ORDER BY created_at ASC
-      `;
-
-      const parameters = await sql`
-        SELECT
-          id,
-          goods_id,
-          param_type,
-          param_code,
-          param_value,
-          sort_order,
-          is_active,
-          created_at
-        FROM public.goods_master_parameters
-        WHERE (goods_id = ${id}::uuid OR goods_id IS NULL)
-          AND deleted_at IS NULL
-        ORDER BY param_type ASC, sort_order ASC, param_value ASC
-      `;
-
-      return {
-        goods: goodsRows[0],
-        variations: variations ?? [],
-        parameters: parameters ?? [],
-      };
-    });
-
-    if (!data) return apiError("NOT_FOUND", "Goods record not found.", 404);
-    return apiOk(data);
-  } catch (error) {
-    return handleApiError(error);
-  }
-}
 export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
