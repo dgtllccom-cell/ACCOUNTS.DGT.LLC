@@ -3196,6 +3196,19 @@ export const HEADER_TRANSLATIONS: Record<string, Row> = {
   "ERP REPORT": { ur: "ای آر پی رپورٹ", ar: "تقرير ERP", fa: "گزارش ERP", ps: "د ERP راپور" },
   "NO MATCHING RECORDS FOR THE SELECTED FILTERS": { ur: "منتخب فلٹرز کے لیے کوئی ریکارڈ نہیں ملا", ar: "لا توجد سجلات مطابقة للمرشحات المحددة", fa: "رکوردی مطابق با فیلترهای انتخاب‌شده یافت نشد", ps: "د ټاکل شویو فیلټرونو لپاره کوم ریکارډ ونه موندل شو" },
   "NO CSV DATA AVAILABLE": { ur: "CSV ڈیٹا دستیاب نہیں", ar: "لا توجد بيانات CSV", fa: "داده CSV موجود نیست", ps: "د CSV معلومات شتون نلري" },
+  "BOOKING NO": { ur: "بکنگ نمبر", ar: "رقم الحجز", fa: "شماره رزرو", ps: "د بکینګ شمېره" },
+  "PURCHASE BOOKING JOURNAL REGISTER": { ur: "پرچیز بکنگ جرنل رجسٹر", ar: "سجل قيد حجوزات الشراء", fa: "ثبت ژورنال رزرو خرید", ps: "د پیرود بکینګ ژورنال ثبت" },
+  "UNPAID": { ur: "غیر ادا شدہ", ar: "غير مدفوع", fa: "پرداخت‌نشده", ps: "نه تادیه شوی" },
+  "PARTIAL": { ur: "جزوی", ar: "جزئي", fa: "جزئی", ps: "جزوی" },
+  "ACCEPTED": { ur: "قبول شدہ", ar: "مقبول", fa: "پذیرفته‌شده", ps: "منل شوی" },
+  "CONFIRMED": { ur: "تصدیق شدہ", ar: "مؤكد", fa: "تأیید‌شده", ps: "تایید شوی" },
+  "REJECTED": { ur: "مسترد", ar: "مرفوض", fa: "ردشده", ps: "رد شوی" },
+  "OPEN": { ur: "کھلا", ar: "مفتوح", fa: "باز", ps: "پرانیستل شوی" },
+  "CLOSED": { ur: "بند", ar: "مغلق", fa: "بسته", ps: "تړل شوی" },
+  "NOT LOADED": { ur: "لوڈ نہیں", ar: "غير محمّل", fa: "بارگیری‌نشده", ps: "نه دی بار شوی" },
+  "PARTIALLY LOADED": { ur: "جزوی لوڈ", ar: "محمّل جزئيًا", fa: "نیمه‌بارگیری‌شده", ps: "نیمګړی بار شوی" },
+  "DELIVERED": { ur: "ڈیلیور شدہ", ar: "تم التسليم", fa: "تحویل‌شده", ps: "سپارل شوی" },
+  "ARRIVED": { ur: "پہنچ گیا", ar: "وصل", fa: "رسیده", ps: "رسیدلی" },
 };
 
 /** Normalize an English header for lookup: trim, collapse whitespace, uppercase. */

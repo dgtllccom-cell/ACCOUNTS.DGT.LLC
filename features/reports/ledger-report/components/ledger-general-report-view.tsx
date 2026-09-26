@@ -1719,7 +1719,8 @@ export function LedgerReportView({
                 disabled={tableRows.length === 0 || loading}
                 title={tableRows.length === 0 ? t(effectiveLang, "ledger.print_needs_data", "Load ledger data for a date range that has entries, then print.") : undefined}
                 className="gap-2 bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:text-blue-800 dark:bg-blue-900/20 dark:border-blue-800/50 dark:text-blue-300 dark:hover:bg-blue-900/40 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                onClick={() => setPrintMode(true)}
+                onClick={() => openPrint(true)}
+                data-testid="print-action"
               >
                 <Printer className="h-4 w-4" />
                 {t(effectiveLang, "ledger.print_preview", "Print Preview")}

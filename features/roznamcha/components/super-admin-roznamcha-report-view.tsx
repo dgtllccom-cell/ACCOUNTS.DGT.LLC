@@ -1,5 +1,7 @@
 "use client";
 
+import { openScopedGenericReport } from "@/lib/reports/open-scoped-report";
+import { pl } from "@/lib/reports/print-label";
 import { openRoznamchaVoucherPrintReport } from "@/lib/reports/open-roznamcha-voucher-print-report";
 import { DownloadActionIcon, PdfActionIcon } from "@/components/ui/download-action-icon";
 import { Fragment, useEffect, useMemo, useState, useRef, Suspense } from "react";
@@ -1658,6 +1660,61 @@ function SuperAdminRoznamchaReportViewContent({
     return rowsForPrint;
   }
 
+  // Journal register print on the shared standard (replaces the in-page ProfessionalReportViewer).
+  async function printRoznamchaJournal() {
+    const country = appliedFilters.countryId === "all" ? "" : (countryOptions.find((o) => o.value === appliedFilters.countryId)?.label || "");
+    const branch = appliedFilters.branchId === "all" ? "" : (branchOptions.find((o) => o.value === appliedFilters.branchId)?.label || "");
+    const currencies = new Set(visibleRows.map((r) => r.currency || r.countryCurrency || ""));
+    const single = currencies.size === 1;
+    const period = `${appliedFilters.fromDate || "…"} → ${appliedFilters.toDate || "…"}`;
+    await openScopedGenericReport({
+      title: `${pageTitle}`,
+      lang: effectiveLang,
+      orientation: "landscape",
+      countryId: appliedFilters.countryId === "all" ? null : appliedFilters.countryId,
+      countryName: country || null,
+      branchName: branch || null,
+      reportPeriod: period,
+      filters: [
+        { label: pl("Period"), value: period },
+        ...(country ? [{ label: pl("Country"), value: country }] : []),
+        ...(branch ? [{ label: pl("Branch"), value: branch }] : []),
+      ],
+      columns: [
+        { key: "entryDate", label: pl("Date"), format: "date", align: "center" },
+        { key: "voucherNo", label: pl("Voucher No"), align: "center" },
+        { key: "countryName", label: pl("Country") },
+        { key: "branchName", label: pl("Branch") },
+        { key: "party", label: pl("Account / Party") },
+        { key: "narration", label: pl("Narration") },
+        { key: "currency", label: pl("Currency"), align: "center" },
+        { key: "debit", label: pl("Debit"), format: "number", align: "right" },
+        { key: "credit", label: pl("Credit"), format: "number", align: "right" },
+        { key: "status", label: pl("Status"), format: "status", align: "center" },
+      ],
+      rows: visibleRows.map((r) => ({
+        entryDate: r.entryDate,
+        voucherNo: r.voucherNo || r.journalNo || "",
+        countryName: r.countryName || "",
+        branchName: r.cityBranchName || r.countryBranchName || "",
+        party: `${r.accountNo ? r.accountNo + " - " : ""}${r.partyName || ""}`,
+        narration: r.narration || "",
+        currency: r.currency || r.countryCurrency || "",
+        debit: Number(r.debit) || 0,
+        credit: Number(r.credit) || 0,
+        status: r.status || "",
+      })),
+      totalsRow: single ? { debit: totalDebitSum, credit: totalCreditSum } : undefined,
+    });
+  }
+
+  useEffect(() => {
+    if (!printMode) return;
+    setPrintMode(false);
+    void printRoznamchaJournal();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [printMode]);
+
   function openSelectedReport(autoPrint: boolean, mode: "voucher" | "journal", row: SuperAdminRoznamchaRow | null = null) {
     const targetRow = row || selectedRow;
     if (!targetRow) return;
@@ -2233,6 +2290,7 @@ function SuperAdminRoznamchaReportViewContent({
                   size="sm"
                   className="gap-2 bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:text-blue-800 dark:bg-blue-900/20 dark:border-blue-800/50 dark:text-blue-300 dark:hover:bg-blue-900/40"
                   onClick={() => setPrintMode(true)}
+                  data-testid="print-action"
                 >
                   <Printer className="h-4 w-4" />
                   {th("Print Preview")}
@@ -2428,26 +2486,6 @@ function SuperAdminRoznamchaReportViewContent({
           </div>
         )}
       </DetailDrawer>
-
-      <RoznamchaPrintPreview
-        open={printMode}
-        onClose={() => setPrintMode(false)}
-        rows={visibleRows}
-        scope={typeFilter}
-        lang={lang}
-        title={pageTitle}
-        summary={{
-          totalDebit: totalDebitSum,
-          totalCredit: totalCreditSum,
-          balance: totalDebitSum - totalCreditSum,
-          totalTransactions: visibleRows.length,
-        }}
-        filters={{
-          "Country": appliedFilters.countryId === "all" ? "All" : (countryOptions.find(o => o.value === appliedFilters.countryId)?.label || appliedFilters.countryId),
-          "Branch": appliedFilters.branchId === "all" ? "All" : (branchOptions.find(o => o.value === appliedFilters.branchId)?.label || appliedFilters.branchId),
-          "Date": `${appliedFilters.fromDate} to ${appliedFilters.toDate}`
-        }}
-      />
 
       {receiptPrintMode && activeDrawerEntry && typeof document !== 'undefined' && createPortal(
         <CashReceiptViewer

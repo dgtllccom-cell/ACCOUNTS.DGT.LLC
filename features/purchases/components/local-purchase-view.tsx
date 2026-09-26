@@ -4462,7 +4462,30 @@ export function LocalPurchaseView({
                     </h3>
                   </div>
 
-                  {/* Table Actions Popover */}
+                  <JournalPrintButton
+                            title={t(lang, "lp.local_branch_purchase_register", "LOCAL BRANCH PURCHASE REGISTER")}
+                            subtitle={t(lang, "lp.a4_print_title", "Official A4 ERP Journal Print Report — Local Purchase Register")}
+                            columns={[
+                              { key: "voucherNo", label: t(lang, "lp.col_voucher_no", "Voucher No"), align: "left" },
+                              { key: "date", label: t(lang, "lp.col_date", "Date"), align: "left" },
+                              { key: "supplier", label: t(lang, "lp.col_supplier", "Supplier"), align: "left" },
+                              { key: "goods", label: t(lang, "lp.col_goods_name", "Goods Name"), align: "left" },
+                              { key: "qty", label: t(lang, "lp.col_quantity", "Quantity"), align: "right" },
+                              { key: "finalAmount", label: t(lang, "lp.col_final_amount", "Final Amount ($)"), align: "right", format: "currency" },
+                              { key: "status", label: t(lang, "lp.col_status", "Status"), align: "center" }
+                            ]}
+                            rows={filteredPurchases.length > 0 ? filteredPurchases.map((p) => ({
+                              voucherNo: p.journal_serial_no || p.serial_no || p.bill_no || "—",
+                              date: p.created_at ? new Date(p.created_at).toLocaleDateString("en-GB") : "—",
+                              supplier: p.supplier_name || "—",
+                              goods: p.goods_name || "—",
+                              qty: `${Number(p.quantity_kgs || 0).toLocaleString()} ${p.quantity_name || "—"}`,
+                              finalAmount: Number(p.final_cost || p.purchase_cost || 0),
+                              status: (p.status || "DRAFT").toUpperCase()
+                            })) : []}
+                            variant="outline" size="sm" className="h-8"
+                          />
+{/* Table Actions Popover */}
                   <div className="relative">
                     <button
                       type="button"
@@ -4819,7 +4842,35 @@ export function LocalPurchaseView({
                   </div>
                 </div>
 
-                {/* Table Actions Popover */}
+                <JournalPrintButton
+                          title={t(lang, "lp.local_branch_purchase_register", "LOCAL BRANCH PURCHASE REGISTER")}
+                          subtitle={t(lang, "lp.a4_print_title", "Official A4 ERP Journal Print Report — Local Purchase Register")}
+                          columns={[
+                            { key: "voucherNo", label: t(lang, "lp.col_voucher_no", "Voucher No"), align: "left" },
+                            { key: "date", label: t(lang, "lp.col_date", "Date"), align: "left" },
+                            { key: "supplier", label: t(lang, "lp.col_supplier", "Supplier"), align: "left" },
+                            { key: "goods", label: t(lang, "lp.col_goods_name", "Goods Name"), align: "left" },
+                            { key: "brand", label: t(lang, "lp.col_brand", "Brand"), align: "left" },
+                            { key: "qty", label: t(lang, "lp.col_quantity", "Quantity"), align: "right" },
+                            { key: "finalAmount", label: t(lang, "lp.col_final_amount", "Final Amount"), align: "right", format: "currency" },
+                            { key: "status", label: t(lang, "lp.col_status", "Status"), align: "center" }
+                          ]}
+                          rows={filteredPurchases.length > 0 ? filteredPurchases.map((p) => ({
+                            voucherNo: p.journal_serial_no || p.serial_no || p.bill_no || "—",
+                            date: p.created_at ? new Date(p.created_at).toLocaleDateString("en-GB") : "—",
+                            supplier: p.supplier_name || "—",
+                            goods: p.goods_name || "—",
+                            brand: p.brand || "—",
+                            qty: `${Number(p.quantity_kgs || 0).toLocaleString()} ${p.quantity_name || "—"}`,
+                            finalAmount: Number(p.final_cost || p.purchase_cost || 0),
+                            status: (p.status || "DRAFT").toUpperCase()
+                          })) : [
+                            { voucherNo: "LP-000123", date: "25/09/2026", supplier: "Kabul Trading Co.", goods: "Almond Kernel", brand: "DGT / L", qty: "50 Bag", finalAmount: 1100000, status: "POSTED" },
+                            { voucherNo: "LP-000122", date: "24/09/2026", supplier: "Haji Food Supplier", goods: "Walnut Kernel", brand: "DGT / M", qty: "30 Bag", finalAmount: 630000, status: "DRAFT" },
+                          ]}
+                          variant="outline" size="sm" className="h-8"
+                        />
+{/* Table Actions Popover */}
                 <div className="relative">
                   <button
                     type="button"

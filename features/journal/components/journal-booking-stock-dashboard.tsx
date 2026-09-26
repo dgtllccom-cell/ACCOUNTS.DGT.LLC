@@ -330,6 +330,16 @@ export function JournalBookingStockDashboard({ session }: { session: any }) {
             <p className="text-blue-200 text-xs mt-0.5">{t(lang, "jbsd.container_goods_received_desc", "Container Goods Received — Transferred Purchase Orders Only")}</p>
           </div>
           <div className="flex items-center gap-2">
+            {/* Visible Print action (journal register print standard) — prints ALL matching rows */}
+            <button
+              type="button"
+              onClick={() => void handlePrint()}
+              data-testid="print-action"
+              className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-sm font-semibold transition-all duration-200"
+            >
+              <Printer className="w-4 h-4" />
+              {t(lang, "common.print", "Print")}
+            </button>
             {/* Search/Filter Toggle */}
             <div className="relative" ref={filterPopoverRef}>
               <button

@@ -13,7 +13,9 @@ import {
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Th } from "@/components/ui/translated-th";
-import { JournalPrintButton } from "@/components/reports/journal-print-button";
+import { useErpScope } from "@/lib/hooks/use-erp-scope";
+import { openScopedGenericReport } from "@/lib/reports/open-scoped-report";
+import { pl } from "@/lib/reports/print-label";
 import type { GenericReportColumn } from "@/lib/reports/open-generic-erp-report";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
@@ -147,6 +149,7 @@ interface LocalPurchaseRecord {
 export function LocalPurchaseJournalReportView({ session }: { session: any }) {
   const router = useRouter();
   const activeLang = useActiveLanguage();
+  const erpScope = useErpScope();
   const th = (label: string) => translateHeader(activeLang, label);
   const isRtl = ["ur","ar","fa","ps"].includes(activeLang);
   const tt = (key: string, fb: string) => t(activeLang, key as never, fb);
@@ -293,7 +296,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
     acceptedCount: acceptedBillsCount,
     transferredCount: postedBillsCount,
     completedCount: purchases.filter(p => p.status === "completed" || p.status === "posted" || !p.status).length,
-    currency: "AED",
+    currency: "—",
     totalAmount: grandTotalPurchase,
     acceptedAmount: acceptedPurchases.reduce((acc, p) => acc + Number(p.finalCost || p.final_cost || 0), 0),
     transferredAmount: grandTotalPurchase,
@@ -307,13 +310,84 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
     thisMonthCompleted: postedBillsCount,
     quickInfo: {
       currency: "AED",
-      exchangeRate: "3.6725",
-      company: "DGT LLC",
-      financialYear: "2026",
+      exchangeRate: "—",
+      company: "—",
+      financialYear: String(new Date().getFullYear()),
       userName: session?.fullName || session?.email || "—",
       branchName: session?.branchName || "—"
     }
   }), [purchases, grandTotalPurchase, acceptedPurchases, branches, grandTotalEntries, postedBillsCount, session]);
+
+  // Journal register print on the shared standard — every scoped row, grouped rows flattened.
+  async function printLocalPurchaseJournal() {
+    const rows = countryGroups.flatMap((cg) =>
+      cg.records.map((row: any) => {
+        const pkgCount = Number(row.quantityKgs || row.quantity_kgs || 0);
+        const empKgs = Number(row.emptyKgs || row.empty_kgs || 0);
+        const netWt = Number(row.netWeight || row.net_weight || 0);
+        const grossWt = Number(row.totalGrossWeight || row.total_gross_weight || netWt + pkgCount * empKgs);
+        return {
+          branchSerial: row.branchSerialNo || row.branch_serial_no || row.computedBranchSerial || "",
+          voucher: row.serialNo || row.serial_no || row.billNo || row.bill_no || row.journal_serial_no || "",
+          date: row.createdAt || row.created_at || "",
+          branch: row.branchName || row.branch_name || "",
+          country: row.countryName || row.country_name || cg.countryName || "",
+          purchaseAcc: row.purchaseAccountNo || row.purchase_account_no || "",
+          goods: row.goodsName || row.goods_name || "",
+          brand: row.brand || "",
+          qty: pkgCount,
+          unit: row.quantityName || row.quantity_name || "",
+          grossWt,
+          netWt,
+          rate: Number(row.purchaseRate || row.purchase_rate || 0),
+          currency: row.localCurrency || row.local_currency || cg.currency || "",
+          total: Number(row.finalCost || row.final_cost || row.purchaseCost || row.purchase_cost || 0),
+          status: row.status || "",
+        };
+      })
+    );
+    const currencies = new Set(rows.map((r) => r.currency));
+    const single = currencies.size === 1;
+    const countryNames = Array.from(new Set(rows.map((r) => r.country).filter(Boolean)));
+    const branchNames = Array.from(new Set(rows.map((r) => r.branch).filter(Boolean)));
+    await openScopedGenericReport({
+      title: pl("Local Purchase Journal Report"),
+      lang: activeLang,
+      orientation: "landscape",
+      countryId: erpScope.lockedCountryId,
+      countryBranchId: erpScope.lockedCountryBranchId,
+      cityBranchId: erpScope.lockedCityBranchId,
+      countryName: erpScope.countryName || (countryNames.length === 1 ? countryNames[0] : null),
+      branchName: erpScope.branchDisplayName || (branchNames.length === 1 ? branchNames[0] : null),
+      printedBy: erpScope.userName,
+      filters: [
+        ...(selectedCountry ? [{ label: pl("Country"), value: String(selectedCountry) }] : []),
+        ...(selectedBranch ? [{ label: pl("Branch"), value: String(selectedBranch) }] : []),
+        ...(selectedStatus ? [{ label: pl("Status"), value: String(selectedStatus) }] : []),
+        ...(searchQuery ? [{ label: pl("Search"), value: searchQuery }] : []),
+      ],
+      columns: [
+        { key: "branchSerial", label: pl("BR S/N"), align: "center" },
+        { key: "voucher", label: pl("Voucher No"), align: "center" },
+        { key: "date", label: pl("Date"), format: "date", align: "center" },
+        { key: "branch", label: pl("Branch") },
+        { key: "country", label: pl("Country") },
+        { key: "purchaseAcc", label: pl("Purchase Account"), align: "center" },
+        { key: "goods", label: pl("Goods Name") },
+        { key: "brand", label: pl("Brand") },
+        { key: "qty", label: pl("Qty"), format: "number", align: "right" },
+        { key: "unit", label: pl("Unit"), align: "center" },
+        { key: "grossWt", label: pl("Gross Wt (KG)"), format: "number", align: "right" },
+        { key: "netWt", label: pl("Net Wt (KG)"), format: "number", align: "right" },
+        { key: "rate", label: pl("Price"), format: "number", align: "right" },
+        { key: "currency", label: pl("Currency"), align: "center" },
+        { key: "total", label: pl("Total Cost"), format: "number", align: "right" },
+        { key: "status", label: pl("Status"), format: "status", align: "center" },
+      ],
+      rows,
+      totalsRow: single ? { qty: rows.reduce((a, r) => a + r.qty, 0), netWt: rows.reduce((a, r) => a + r.netWt, 0), total: rows.reduce((a, r) => a + r.total, 0) } : undefined,
+    });
+  }
 
   return (
     <div className="space-y-5 p-4 sm:p-6 text-slate-900 dark:text-slate-100 bg-slate-50/50 dark:bg-slate-950 min-h-screen" dir={isRtl ? "rtl" : "ltr"}>
@@ -330,7 +404,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
         onStatusChange={setSelectedStatus}
         searchText={searchQuery}
         onSearchChange={setSearchQuery}
-        onPrint={() => window.print()}
+        onPrint={() => void printLocalPurchaseJournal()}
         onResetRefresh={() => {
           setSelectedCountry("");
           setSelectedBranch("");

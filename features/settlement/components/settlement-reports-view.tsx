@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { ArrowRight, Printer, Download, RefreshCw, Filter, Calendar } from "lucide-react";
 import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { useErpScope } from "@/lib/hooks/use-erp-scope";
 import { t } from "@/lib/i18n/ui";
 import { Th } from "@/components/ui/translated-th";
 import { ErpDatePicker } from "@/components/ui/erp-date-picker";
@@ -15,6 +16,7 @@ const num = (v: unknown) => {
 
 export function SettlementReportsView() {
   const lang = useActiveLanguage();
+  const erpScope = useErpScope();
   const _ = (key: string, fallback: string) => t(lang, key as never, fallback);
   const [reportType, setReportType] = useState("consolidated");
   const [fromDate, setFromDate] = useState("");
@@ -61,18 +63,24 @@ export function SettlementReportsView() {
     }
     openUniversalPrintReport({
       lang,
+      scope: {
+        country: erpScope.countryName || "",
+        branch: erpScope.branchDisplayName || "",
+        userName: erpScope.userName || "",
+        dateRange: `${fromDate || "…"} → ${toDate || "…"}`,
+      },
       title: _("settr.print_title", "Settlement & Reconciliation Consolidated Report"),
       subtitle: `${_("settr.report_period", "Report Period")}: ${fromDate || _("settr.all_time", "All Time")} → ${toDate || _("settr.present", "Present")}`,
       rows: printRows,
       columns: [
-        { label: _("settr.col_date", "Date"), key: "source_date" },
+        { label: _("settr.col_date", "Date"), key: "source_date", format: "date" },
         { label: _("settr.col_reference", "Reference / Serial"), key: "source_reference_no" },
         { label: _("settr.col_module", "Module"), key: "source_module" },
         { label: _("settr.col_party", "Party"), key: "party_name" },
         { label: _("settr.col_dir", "Dir"), key: "direction" },
-        { label: _("settr.col_local_amount", "Local Amount"), key: "local_amount" },
-        { label: _("settr.col_usd_amount", "USD Amount"), key: "original_usd_amount" },
-        { label: _("settr.col_remaining", "Remaining"), key: "remaining_local" },
+        { label: _("settr.col_local_amount", "Local Amount"), key: "local_amount", format: "number", align: "right" },
+        { label: _("settr.col_usd_amount", "USD Amount"), key: "original_usd_amount", format: "number", align: "right" },
+        { label: _("settr.col_remaining", "Remaining"), key: "remaining_local", format: "number", align: "right" },
         { label: _("settr.col_status", "Status"), key: "settlement_status" }
       ]
     });
@@ -126,6 +134,7 @@ export function SettlementReportsView() {
             {data.length > 0 && (
               <button
                 onClick={handlePrint}
+                data-testid="print-action"
                 className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 flex items-center gap-1.5"
               >
                 <Printer className="h-4 w-4" /> {_("common.print","Print")}
