@@ -657,7 +657,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
     async function fetchHistory() {
       if (!record.purchase_order_id && !record.purchase_order_no && !record.id) return;
       try {
-        const res = await fetch(`/api/erp/purchases/loading-records?limit=2000`);
+        const res = await fetch(`/api/erp/purchases/loading-records?limit=150`);
         const data = await res.json();
         if (data.ok && data.data?.records) {
            const matches = data.data.records.filter((r: LoadingRecord) => 

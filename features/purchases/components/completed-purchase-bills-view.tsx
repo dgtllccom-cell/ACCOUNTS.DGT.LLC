@@ -33,7 +33,7 @@ export function CompletedPurchaseBillsView({ sessionInfo }: { sessionInfo?: { us
     setLoading(true);
     try {
       const [poRes, lrRes] = await Promise.all([
-        fetch("/api/erp/purchases/orders?limit=500", { cache: "no-store" }),
+        fetch("/api/erp/purchases/orders?limit=1000", { cache: "no-store" }),
         fetch("/api/erp/purchases/loading-records?limit=1000", { cache: "no-store" })
       ]);
       const poPayload = await poRes.json().catch(() => ({}));

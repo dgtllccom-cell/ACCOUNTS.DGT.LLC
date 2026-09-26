@@ -3027,7 +3027,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
     setLoading(true);
     setError("");
     try {
-      const response = await fetch("/api/erp/purchases/orders?limit=500", { cache: "no-store", credentials: "include" });
+      const response = await fetch("/api/erp/purchases/orders?limit=200", { cache: "no-store", credentials: "include" });
       const body = await response.json();
       if (!response.ok || body?.ok === false) throw new Error(body?.error?.message ?? body?.message ?? "Unable to load purchase orders.");
       const payload = (body?.data ?? body) as OrdersPayload | PurchaseOrderRow[];

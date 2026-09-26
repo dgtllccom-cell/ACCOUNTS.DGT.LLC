@@ -2934,7 +2934,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
     setLoading(true);
     setError("");
     try {
-      const response = await fetch("/api/erp/sales/orders?limit=500", { cache: "no-store", credentials: "include" });
+      const response = await fetch("/api/erp/sales/orders?limit=200", { cache: "no-store", credentials: "include" });
       const body = await response.json();
       if (!response.ok || body?.ok === false) throw new Error(body?.error?.message ?? body?.message ?? "Unable to load sales orders.");
       const payload = (body?.data ?? body) as OrdersPayload | PurchaseOrderRow[];

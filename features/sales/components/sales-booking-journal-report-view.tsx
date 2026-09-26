@@ -100,7 +100,7 @@ export function SalesBookingJournalReportView() {
     setLoading(true);
     setError("");
     try {
-      const qp = new URLSearchParams({ limit: "2000" });
+      const qp = new URLSearchParams({ limit: "100" });
       if (searchQuery.trim()) qp.set("q", searchQuery.trim());
       if (countryId) qp.set("countryId", countryId);
       if (branchId) qp.set("countryBranchId", branchId);

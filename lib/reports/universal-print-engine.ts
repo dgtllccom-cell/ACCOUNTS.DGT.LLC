@@ -666,6 +666,18 @@ export function buildUniversalPrintHtml(input: UniversalPrintInput): string {
       color: #64748b;
     }
     .page-footer .page-counter::after { content: counter(page) " / " counter(pages); }
+
+    /* ── Journal Register standard (shared with erp-report-template-builder) ── */
+    .report-table th { background: #112b3d; border-color: #112b3d; }
+    .report-table tbody tr:nth-child(even) { background-color: #f7faf8; }
+    .report-table thead { display: table-header-group; }
+    .kpi-card.b { border-inline-start: 3px solid #0d8c85; }
+    .net-text { color: #0b6b66 !important; }
+    @media print {
+      @page {
+        @bottom-right { content: "${tr("PAGE")} " counter(page) " / " counter(pages); font: 700 7pt sans-serif; color: #112b3d; }
+      }
+    }
   </style>
 </head>
 <body>
