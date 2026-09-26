@@ -4808,7 +4808,10 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
             let statementPurchaseForeign = 0;
             let statementPurchaseLocal = 0;
 
-            if (goodsSumFC > 0) {
+            if (fromLoading) {
+              statementPurchaseForeign = loadingPurchaseAmount;
+              statementPurchaseLocal = loadingPurchaseAmount * exRate;
+            } else if (goodsSumFC > 0) {
               statementPurchaseForeign = goodsSumFC;
               statementPurchaseLocal = goodsSumLC > 0 ? goodsSumLC : goodsSumFC * exRate;
             } else if (formFC > 0) {
@@ -4887,12 +4890,12 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
 
             const statTotalPaidFC = isCredit
               ? historyWithBalance.reduce((sum, p) => sum + p.amtUSD, 0)
+              : fromLoading
+              ? totalPaidSoFar
               : (historyWithBalance.reduce((sum, p) => sum + p.amtUSD, 0) || (paidAdvanceBC || 0));
-            const statTotalPaidLC = isCredit
-              ? historyWithBalance.reduce((sum, p) => sum + p.amtAED, 0)
-              : (statTotalPaidFC * exRate);
-            const statRemainingFC = Math.max(0, statementPurchaseForeign - statTotalPaidFC);
-            const statRemainingLC = Math.max(0, statementPurchaseLocal - statTotalPaidLC);
+            const statTotalPaidLC = statTotalPaidFC * exRate;
+            const statRemainingFC = fromLoading ? outstandingBalance : Math.max(0, statementPurchaseForeign - statTotalPaidFC);
+            const statRemainingLC = fromLoading ? (outstandingBalance * exRate) : Math.max(0, statementPurchaseLocal - statTotalPaidLC);
 
             const activePaymentAmountUSD = amount > 0
               ? (showCalcPanel && calcAmount ? Number(calcAmount) : amount / Number(exchangeRate || exRate || 1))
@@ -4970,6 +4973,106 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                     </button>
                   </div>
                 </div>
+
+                {/* Container Selection / Active Container Banner for Remaining Mode */}
+                {activeMode === "remaining" && fromLoading && (
+                  <div className="flex flex-wrap items-center justify-between gap-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-xl px-4 py-2.5 shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white font-bold shrink-0">
+                        <Truck className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-black text-blue-900 dark:text-blue-200 flex items-center gap-2">
+                          <span>Active Container: {selectedLoadingRecord?.loading_record_no || (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("loadingRecordId") : "") || "Loaded Batch"}</span>
+                          <span className="text-[10px] bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300 font-extrabold px-2 py-0.5 rounded-full">Proportional Batch</span>
+                        </div>
+                        <div className="text-[11px] text-blue-700 dark:text-blue-300 mt-0.5">
+                          Loaded Value: <strong className="font-mono">{money(loadingPurchaseAmount, poCurrency)}</strong> | Allocated Advance: <strong className="font-mono text-emerald-600 dark:text-emerald-400">{money(loadingAdvancePaid, poCurrency)}</strong> | Remaining Batch Due: <strong className="font-mono text-rose-600 dark:text-rose-400">{money(outstandingBalance, poCurrency)}</strong>
+                        </div>
+                      </div>
+                    </div>
+                    {loadingRecords.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSelectedLoadingRecord(null)}
+                        className="text-xs font-bold border-blue-300 hover:bg-blue-100 dark:border-blue-700 dark:hover:bg-blue-900/40 cursor-pointer"
+                      >
+                        Switch Container
+                      </Button>
+                    )}
+                  </div>
+                )}
+
+                {activeMode === "remaining" && !fromLoading && (
+                  <div className="bg-amber-50/40 border border-amber-200 rounded-xl p-5 dark:bg-amber-950/10 dark:border-amber-900/40 text-center space-y-3">
+                    <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600">
+                      <Truck className="h-5 w-5" />
+                    </div>
+                    <div className="space-y-0.5">
+                      <h3 className="text-xs font-black uppercase text-amber-800 dark:text-amber-400">{t("select_loaded_container", currentLanguage) || "Select Loaded Container / Batch"}</h3>
+                      <p className="text-[11px] text-slate-500 max-w-md mx-auto">
+                        {t("select_container_instruction", currentLanguage) || "Select a loaded container below to post its proportional remaining payment."}
+                      </p>
+                    </div>
+                    {loadingLoadingRecords ? (
+                      <div className="text-xs text-amber-700 italic flex items-center justify-center gap-1.5 py-4">
+                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-amber-600 border-t-transparent" />
+                        {t("loading_container_records", currentLanguage) || "Loading container records..."}
+                      </div>
+                    ) : loadingRecords.length > 0 ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 pt-1 max-h-[280px] overflow-y-auto p-1">
+                        {loadingRecords.map((lr) => {
+                          const poRow = selected || {};
+                          const finance = calcLoadingFinance(lr, poRow, poRow.form_data?.form || {});
+                          const loadedQty = lr.report_payload?.loadedQuantity || lr.loadedQuantity || 0;
+                          const poAdvanceAmt = Number(poRow.advance_paid || poRow.form_data?.form?.advanceAmount || 0);
+                          const totalPOQuantity = Number(
+                            poRow.form_data?.totals?.totalQuantity ||
+                            goods.reduce((acc: number, item: any) => acc + Number(item.qtyNo || item.quantity || 0), 0) ||
+                            poRow.form_data?.form?.quantity ||
+                            1
+                          );
+                          const loadedAdvanceUSD = totalPOQuantity > 0 ? (loadedQty / totalPOQuantity) * poAdvanceAmt : poAdvanceAmt;
+                          const loadedRemainingUSD = Math.max(0, finance.amountUSD - loadedAdvanceUSD);
+
+                          return (
+                            <button
+                              key={lr.id}
+                              type="button"
+                              onClick={() => handleSelectLoadingRecord(lr)}
+                              className="flex flex-col text-left p-3 rounded-xl border border-slate-200 bg-white hover:border-blue-500 hover:shadow-md transition text-xs space-y-1.5 dark:bg-slate-900 dark:border-slate-800 shadow-xs cursor-pointer"
+                            >
+                              <div className="flex justify-between items-center w-full">
+                                <span className="font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-1">
+                                  Container #{lr.loading_record_no || lr.container_number || lr.report_payload?.containerNumber || "-"}
+                                </span>
+                                <span className="text-[10px] font-black uppercase text-blue-600 bg-blue-50 dark:bg-blue-950/30 dark:text-blue-400 px-2 py-0.5 rounded-full">
+                                  {Number(loadedQty).toLocaleString()} {lr.report_payload?.unit || "Bags"}
+                                </span>
+                              </div>
+                              <div className="grid grid-cols-2 gap-1 text-[10px] text-slate-400 w-full">
+                                <div>Net: <span className="font-semibold text-slate-700 dark:text-slate-300">{Number(finance.netWeight || 0).toLocaleString()} KG</span></div>
+                                <div>Gross: <span className="font-semibold text-slate-700 dark:text-slate-300">{Number(finance.grossWeight || 0).toLocaleString()} KG</span></div>
+                                <div className="col-span-2 border-t border-slate-100 dark:border-slate-800 pt-1 mt-0.5 flex justify-between items-center w-full">
+                                  <span>Batch Due:</span>
+                                  <span className="font-black text-xs text-rose-600 dark:text-rose-400">{money(loadedRemainingUSD, poCurrency)}</span>
+                                </div>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="text-xs text-slate-400 italic py-4 bg-slate-50 dark:bg-slate-900/10 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
+                        No loaded containers found for this purchase order.
+                        <div className="text-[10px] text-slate-400 mt-0.5 font-normal">Please make sure the containers are added and loaded in the Loading module first.</div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
 
                 {/* ââ ROW 1: 5 TOP SUMMARY CARDS (1, 2, 3, 4, 17) ââ */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
@@ -5133,6 +5236,30 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                         <div className="border-t border-slate-200 dark:border-slate-800/80 pt-1.5 text-[10px] text-slate-500 dark:text-slate-400">
                           <span className="inline-flex items-center gap-1 font-bold text-purple-600 dark:text-purple-400">
                             ✓ {translateHeader(currentLanguage, "Credit Liability Transferred. Actual payments will appear below only after money is paid.")}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : activeMode === "remaining" ? (
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] p-3 shadow-sm flex flex-col justify-between">
+                      <div className="text-[11px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400 pb-1.5 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-1.5">
+                        <span>7</span>
+                        <span>Remaining Payment & Loading Batch Summary</span>
+                      </div>
+                      <div className="space-y-2 mt-2 text-[11px]">
+                        <div>
+                          <span className="text-[9.5px] font-bold uppercase text-blue-600 dark:text-blue-400 block">
+                            {fromLoading ? `Batch: ${selectedLoadingRecord?.loading_record_no || "Active Container"}` : "Overall Contract Remaining"}
+                          </span>
+                          <div className="space-y-0.5 text-slate-700 dark:text-slate-300 text-[10.5px]">
+                            <div><span className="text-slate-500 dark:text-slate-400">Portion Value: </span><span className="font-mono font-bold">{poCurrencyHeader} {statementPurchaseForeign.toLocaleString(undefined, { minimumFractionDigits: 2 })} + AED {statementPurchaseLocal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
+                            <div><span className="text-slate-500 dark:text-slate-400">Allocated Advance: </span><span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold">{poCurrencyHeader} {(fromLoading ? loadingAdvancePaid : paidAdvanceBC).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
+                            <div><span className="text-slate-500 dark:text-slate-400">Remaining for Batch: </span><span className="font-mono text-rose-600 dark:text-rose-400 font-bold">{poCurrencyHeader} {statRemainingFC.toLocaleString(undefined, { minimumFractionDigits: 2 })} + AED {statRemainingLC.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
+                          </div>
+                        </div>
+                        <div className="border-t border-slate-200 dark:border-slate-800/80 pt-1.5 text-[10px] text-slate-500 dark:text-slate-400">
+                          <span className="inline-flex items-center gap-1 font-bold text-blue-600 dark:text-blue-400">
+                            ✓ Proportional financial obligation for loaded portion
                           </span>
                         </div>
                       </div>
