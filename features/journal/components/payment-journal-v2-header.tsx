@@ -146,6 +146,16 @@ export function PaymentJournalV2Header({
             )}
           </button>
 
+          {/* Visible Print action (journal register print standard) */}
+          <button
+            type="button"
+            onClick={onPrint}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold shadow-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition active:scale-[0.98] cursor-pointer"
+          >
+            <Printer className="h-3.5 w-3.5 shrink-0" />
+            <span>{translateHeader(lang, "Print")}</span>
+          </button>
+
           {/* Three-Dot Action Dropdown Menu */}
           <div className="relative" ref={menuRef}>
             <button

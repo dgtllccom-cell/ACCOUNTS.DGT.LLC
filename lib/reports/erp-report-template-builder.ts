@@ -66,15 +66,27 @@ export function dateLocaleFor(lang?: string): string {
   return DATE_LOCALES[lang || "en"] ?? DATE_LOCALES.en;
 }
 
+// Browsers ship no Gregorian month names for Pashto (they silently fall back to English),
+// so Pashto dates are composed from the standard Afghan month names.
+const PS_MONTHS = ["جنوري", "فبروري", "مارچ", "اپریل", "مۍ", "جون", "جولای", "اګست", "سپتمبر", "اکتوبر", "نومبر", "دسمبر"];
+
 export function formatDate(value: string | null | undefined, lang?: string): string {
   if (!value) return "-";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
+  if (lang === "ps") {
+    return `${String(date.getDate()).padStart(2, "0")} ${PS_MONTHS[date.getMonth()]} ${date.getFullYear()}`;
+  }
   try {
     return date.toLocaleDateString(dateLocaleFor(lang), { day: "2-digit", month: "short", year: "numeric" });
   } catch {
     return date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
   }
+}
+
+export function formatDateTime(date: Date, lang?: string): string {
+  const time = `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+  return `${formatDate(date.toISOString(), lang)}, ${time}`;
 }
 
 export function generateReportHtml(input: {
@@ -122,7 +134,7 @@ export function generateReportHtml(input: {
   const compWebsite = realOrEmpty(companyInfo.website);
   const printedBy = realOrEmpty(companyInfo.printedBy)
     || (typeof window !== "undefined" ? realOrEmpty((window as unknown as { __ERP_USER_NAME__?: string }).__ERP_USER_NAME__) : "");
-  const printedDate = companyInfo.printedDate || (() => { try { return new Date().toLocaleString(dateLocaleFor(lang), { dateStyle: "medium", timeStyle: "short" }); } catch { return new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }); } })();
+  const printedDate = companyInfo.printedDate || formatDateTime(new Date(), lang);
   const financialYear = realOrEmpty(companyInfo.financialYear);
   const reportPeriod = companyInfo.reportPeriod || formatDate(new Date().toISOString(), lang);
   const compLogo = companyInfo.logoUrl || "";
