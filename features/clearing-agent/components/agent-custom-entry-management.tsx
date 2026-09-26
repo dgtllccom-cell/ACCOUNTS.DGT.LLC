@@ -11,6 +11,7 @@ import { Th } from "@/components/ui/translated-th";
 import { ClearingAgentPicker } from "@/features/shipping/components/clearing-agent-picker";
 import { PersonPicker } from "@/components/erp/person-picker";
 import { VoiceFormFill } from "@/components/voice-form-fill";
+import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
 
 type AgentCustomEntryRow = {
@@ -464,6 +465,25 @@ export function AgentCustomEntryManagementView({ lang: langProp }: { lang: Suppo
                   className="bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-200 w-64 focus:outline-none focus:border-indigo-500"
                 />
               </div>
+              <JournalPrintButton
+                title={tt("ace.registered", "Registered Custom Declarations")}
+                columns={[
+                  { key: "entry_no", label: tt("ace.entry_ref", "Entry No"), align: "center" },
+                  { key: "customs_declaration_no", label: tt("ace.gd_number", "GD Number"), align: "center" },
+                  { key: "agent_name", label: tt("ace.agent_company", "Clearing Agent Company") },
+                  { key: "customs_station", label: tt("ace.customs_station", "Customs Station / Office") },
+                  { key: "consignee_name", label: tt("ace.consignee", "Consignee") },
+                  { key: "currency_code", label: tt("common.currency", "Currency"), align: "center" },
+                  { key: "duty_paid", label: tt("ace.duty_paid", "Duty Paid"), align: "right", format: "number" },
+                  { key: "clearance_status", label: tt("common.status", "Status"), align: "center", format: "status" },
+                ]}
+                rows={filteredRows as unknown as Record<string, unknown>[]}
+                filters={[
+                  ...(query.trim() ? [{ label: tt("common.search", "Search"), value: query.trim() }] : []),
+                  ...(statusFilter !== "all" ? [{ label: tt("common.status", "Status"), value: statusFilter }] : []),
+                ]}
+                orientation="landscape"
+              />
               <button
                 type="button"
                 onClick={() => router.push(`/dashboard/document-intelligence?domain=shipping&module=clearing_agent_custom_entries`)}

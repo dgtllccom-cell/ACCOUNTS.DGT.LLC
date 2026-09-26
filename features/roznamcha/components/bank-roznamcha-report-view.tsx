@@ -263,24 +263,29 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
     void loadMasterScopes();
   }, []);
 
+  function buildParams(pg: number, size: number) {
+    const params = new URLSearchParams();
+    if (fromDate) params.set("fromDate", fromDate);
+    if (toDate) params.set("toDate", toDate);
+    if (companyId !== "all") params.set("companyId", companyId);
+    if (countryId !== "all") params.set("countryId", countryId);
+    if (countryBranchId !== "all") params.set("countryBranchId", countryBranchId);
+    if (cityBranchId !== "all") params.set("cityBranchId", cityBranchId);
+    if (bankName !== "all") params.set("bankName", bankName);
+    if (chequeNo.trim()) params.set("chequeNo", chequeNo.trim());
+    if (searchQuery.trim()) params.set("q", searchQuery.trim());
+    if (activeTab !== "all") params.set("tab", activeTab);
+    params.set("page", String(pg));
+    params.set("pageSize", String(size));
+    params.set("sortBy", "entry_date");
+    params.set("sortDir", "asc");
+    return params;
+  }
+
   async function loadData() {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (fromDate) params.set("fromDate", fromDate);
-      if (toDate) params.set("toDate", toDate);
-      if (companyId !== "all") params.set("companyId", companyId);
-      if (countryId !== "all") params.set("countryId", countryId);
-      if (countryBranchId !== "all") params.set("countryBranchId", countryBranchId);
-      if (cityBranchId !== "all") params.set("cityBranchId", cityBranchId);
-      if (bankName !== "all") params.set("bankName", bankName);
-      if (chequeNo.trim()) params.set("chequeNo", chequeNo.trim());
-      if (searchQuery.trim()) params.set("q", searchQuery.trim());
-      if (activeTab !== "all") params.set("tab", activeTab);
-      params.set("page", String(page));
-      params.set("pageSize", String(pageSize));
-      params.set("sortBy", "entry_date");
-      params.set("sortDir", "asc");
+      const params = buildParams(page, pageSize);
 
       const res = await apiGet<ApiResponse>(`/api/erp/bank-roznamcha?${params.toString()}`);
       setData(res);
@@ -360,8 +365,21 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
   }
 
   // Print Official Journal Table
-  function handlePrintReport() {
+  async function fetchAllEntriesForPrint(): Promise<any[]> {
+    const size = 200;
+    const all: any[] = [];
+    for (let pg = 1; pg <= 100; pg += 1) {
+      const res = await apiGet<ApiResponse>(`/api/erp/bank-roznamcha?${buildParams(pg, size).toString()}`);
+      const batch = (res?.entries ?? []) as any[];
+      all.push(...batch);
+      if (batch.length < size || all.length >= (res?.totalCount ?? all.length)) break;
+    }
+    return all;
+  }
+
+  async function handlePrintReport() {
     if (typeof window === "undefined" || !data) return;
+    const printEntries = await fetchAllEntriesForPrint();
     const s: any = (data as any).summary || summary || {};
     openJournalReportWindow({
       lang: activeLang,
@@ -397,8 +415,8 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
         { key: "balance", label: tt("bankroz.balance", "Balance"), num: true },
         { key: "status", label: tt("bankroz.status", "Status") }
       ],
-      rows: (data.entries || []).map((r: any, idx: number) => ({
-        sno: String(idx + 1 + (page - 1) * pageSize),
+      rows: printEntries.map((r: any, idx: number) => ({
+        sno: String(idx + 1),
         entry: r.entry_serial_number,
         date: `${formatShortDate(r.entry_date)} ${formatTimeOnly(r.entry_time)}`,
         branch: r.city_branch?.name || r.country_branch?.name || "",

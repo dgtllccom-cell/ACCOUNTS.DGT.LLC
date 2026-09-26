@@ -64,6 +64,7 @@ import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
 import { LocationBackdrop } from "@/components/location-backdrop";
 import { VoiceFormFill } from "@/components/voice-form-fill";
 import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
+import { openScopedGenericReport } from "@/lib/reports/open-scoped-report";
 import { RoznamchaReportsDropdown } from "@/features/roznamcha/components/roznamcha-reports-dropdown";
 import { Th } from "@/components/ui/translated-th";
 import { resolveVerifiedTranslation } from "@/lib/i18n/verified-record-translations";
@@ -1936,25 +1937,60 @@ export function CashEntryForm({
   // one A4 report (reuses the same openA4ReportWindow print engine as the
   // per-row "Print A4" action; autoPrint controls whether the browser print
   // dialog opens immediately or the user picks "Save as PDF" themselves).
-  const handlePrintRegister = (autoPrint: boolean) => {
-    const rows: Array<{ label: string; value: string }> = [];
+  const handlePrintRegister = (_autoPrint: boolean) => {
+    // One journal-register row per posted line, using the shared journal print standard.
+    const rows: Record<string, unknown>[] = [];
     filteredRecentEntries.forEach((row) => {
       (row.roznamcha_lines || []).forEach((line: any) => {
-        const isDebit = Number(line.debit || 0) > 0;
-        const amountVal = isDebit ? Number(line.debit) : Number(line.credit || 0);
-        const sign = isDebit ? t(lang, "roz.col_debit", "Debit") : t(lang, "roz.col_credit", "Credit");
         rows.push({
-          label: `${new Date(row.created_at).toLocaleDateString()} · ${row.voucher_no || row.journal_no || "-"}`,
-          value: `${line.ledgers?.name || "-"} (${line.account_number || "-"}) — ${sign} ${fmtAmount(amountVal)} ${line.currency || branchCurrency}`
+          date: row.entry_date || row.created_at,
+          voucher: row.voucher_no || row.journal_no || row.reference_no || "-",
+          user: row.profiles?.full_name || row.created_by || "-",
+          account: line.ledgers?.name || "-",
+          accountNo: line.account_number || "-",
+          narration: row.narration || "-",
+          currency: line.currency || branchCurrency,
+          debit: Number(line.debit || 0),
+          credit: Number(line.credit || 0),
         });
       });
     });
-    openA4ReportWindow({
+    const totalDebit = rows.reduce((sum, r) => sum + Number(r.debit || 0), 0);
+    const totalCredit = rows.reduce((sum, r) => sum + Number(r.credit || 0), 0);
+    const period =
+      tableDateMode === "day"
+        ? (tableDate || entryDate || todayIso())
+        : tableDateMode === "range"
+          ? `${tableFromDate || "…"} → ${tableToDate || "…"}`
+          : t(lang, "common.all", "All");
+    void openScopedGenericReport({
       title: t(lang, "roz.cef_backdrop_title", "Cash / Roznamcha Entry"),
       subtitle: `${selectedCountry?.name || ""} ${selectedMainBranch ? "· " + selectedMainBranch.name : ""} ${selectedCityBranch ? "· " + selectedCityBranch.name : ""}`.trim(),
+      lang,
+      orientation: "landscape",
+      countryId: countryId || null,
+      countryBranchId: countryBranchId || null,
+      cityBranchId: cityBranchId || null,
+      countryName: selectedCountry?.name,
+      branchName: selectedCityBranch?.name || selectedMainBranch?.name,
+      reportPeriod: period,
+      filters: [
+        { label: "Period", value: period },
+        ...(tableSearchQuery.trim() ? [{ label: "Search", value: tableSearchQuery.trim() }] : []),
+      ],
+      columns: [
+        { key: "date", label: "Date", format: "date", align: "center" },
+        { key: "voucher", label: "Voucher No", align: "center" },
+        { key: "user", label: "User" },
+        { key: "account", label: "Account" },
+        { key: "accountNo", label: "Account No", align: "center" },
+        { key: "narration", label: "Narration" },
+        { key: "currency", label: "Currency", align: "center" },
+        { key: "debit", label: "Debit", format: "number", align: "right" },
+        { key: "credit", label: "Credit", format: "number", align: "right" },
+      ],
       rows,
-      autoPrint,
-      lang
+      totalsRow: { debit: totalDebit, credit: totalCredit },
     });
   };
 

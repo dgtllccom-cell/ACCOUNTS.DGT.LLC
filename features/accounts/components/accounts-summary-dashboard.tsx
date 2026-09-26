@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { Th } from "@/components/ui/translated-th";
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
@@ -152,8 +153,8 @@ export function AccountsSummaryDashboard() {
   }, [rows]);
 
   // Filtered rows
-  const filtered = useMemo(() => {
-    return rows.filter((r) => {
+  const applyFilters = (list: AccountRow[]) => {
+    return list.filter((r) => {
       if (search.trim()) {
         const q = search.toLowerCase();
         if (
@@ -167,7 +168,33 @@ export function AccountsSummaryDashboard() {
       if (filterCountry !== "all" && r.countryName !== filterCountry) return false;
       return true;
     });
-  }, [rows, search, filterType, filterStatus, filterCountry]);
+  };
+  const filtered = useMemo(() => applyFilters(rows),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [rows, search, filterType, filterStatus, filterCountry]);
+
+  const toPrintRow = (r: AccountRow, i: number): Record<string, unknown> => ({
+    sr: i + 1,
+    account_no: `${r.journalCode} / ${r.accountCode}`,
+    account_name: r.accountName,
+    type: r.accountCategory,
+    sub_type: r.subType || "",
+    status: r.status || "Active",
+    branch: r.branchName,
+    country: r.countryName,
+    currency: r.currency,
+    balance: r.currentBalance,
+    created: r.createdAt ? new Date(r.createdAt).toISOString().slice(0, 10) : "",
+  });
+
+  // On-screen list loads up to 1000 rows; print re-queries with the API maximum (2000)
+  // and re-applies the same search / type / status / country filters.
+  async function fetchAllAccounts(): Promise<Record<string, unknown>[]> {
+    const res = await fetch("/api/erp/accounting/reports/accounts/general?limit=2000");
+    const json = await res.json();
+    const all: AccountRow[] = json && json.ok && json.data && Array.isArray(json.data.rows) ? json.data.rows : rows;
+    return applyFilters(all).map(toPrintRow);
+  }
 
   const cards = [
     { label: t(lang, "cdash.total_accounts", "Total Accounts"), value: stats.total, sub: t(lang, "acct.asd_all_registered_accounts", "All registered accounts"), color: "text-[#0284c7]", icon: Hash },
@@ -276,6 +303,31 @@ export function AccountsSummaryDashboard() {
             </select>
           </div>
 
+          <JournalPrintButton
+            title={t(lang, "acct.asd_all_accounts_register", "All Accounts Register")}
+            columns={[
+              { key: "sr", label: "Sr#", align: "center" },
+              { key: "account_no", label: "Account No." },
+              { key: "account_name", label: "Account Name" },
+              { key: "type", label: "Type" },
+              { key: "sub_type", label: "Sub Type" },
+              { key: "status", label: "Status", align: "center", format: "status" },
+              { key: "branch", label: "Branch" },
+              { key: "country", label: "Country" },
+              { key: "currency", label: "Currency", align: "center" },
+              { key: "balance", label: "Balance", align: "right", format: "number" },
+              { key: "created", label: "Created", format: "date" },
+            ]}
+            rows={filtered.map(toPrintRow)}
+            fetchFullData={fetchAllAccounts}
+            filters={[
+              ...(search.trim() ? [{ label: t(lang, "common.search", "Search"), value: search.trim() }] : []),
+              ...(filterType !== "all" ? [{ label: t(lang, "bank.account_type", "Account Type"), value: filterType }] : []),
+              ...(filterStatus !== "all" ? [{ label: t(lang, "log.tbl_status", "Status"), value: filterStatus }] : []),
+              ...(filterCountry !== "all" ? [{ label: t(lang, "report.country", "Country"), value: filterCountry }] : []),
+            ]}
+            orientation="landscape"
+          />
           <Button
             type="button"
             variant="outline"

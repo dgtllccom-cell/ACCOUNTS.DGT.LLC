@@ -2,7 +2,8 @@
  
 import { DownloadActionIcon, PdfActionIcon } from "@/components/ui/download-action-icon";
 import { printStore } from "@/lib/store/print-store";
-import { JournalPrintButton } from "@/components/reports/journal-print-button";
+import { useErpScope } from "@/lib/hooks/use-erp-scope";
+import { printPaymentJournal } from "@/lib/reports/payment-journal-print";
 import { createPortal } from "react-dom";
 import React, { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
@@ -2761,6 +2762,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
   // own disconnected state â this page previously had its own separate, broken language
   // dropdown (corrupted-encoding option labels) that never reflected the real selection.
   const currentLanguage = useActiveLanguage() as LanguageCode;
+  const erpScope = useErpScope();
   const isRtl = ["ur", "ar", "fa", "ps"].includes(currentLanguage);
 
   useEffect(() => {
@@ -2932,7 +2934,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
     setLoading(true);
     setError("");
     try {
-      const response = await fetch("/api/erp/sales/orders?limit=200", { cache: "no-store", credentials: "include" });
+      const response = await fetch("/api/erp/sales/orders?limit=500", { cache: "no-store", credentials: "include" });
       const body = await response.json();
       if (!response.ok || body?.ok === false) throw new Error(body?.error?.message ?? body?.message ?? "Unable to load sales orders.");
       const payload = (body?.data ?? body) as OrdersPayload | PurchaseOrderRow[];
@@ -4218,7 +4220,26 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
         ]}
         activeFiltersCount={activeFiltersCount}
         onOpenFilters={() => setFiltersOpen(true)}
-        onPrint={() => window.print()}
+        onPrint={() => void printPaymentJournal({
+          kind: "sales",
+          rows: filtered as Record<string, unknown>[],
+          lang: currentLanguage,
+          title: translateHeader(currentLanguage, "Sales Payments Journal"),
+          modeLabel: String(mode).toUpperCase(),
+          filters: [
+            ...(startDateFilter || endDateFilter ? [{ label: "Period", value: `${startDateFilter || "…"} → ${endDateFilter || "…"}` }] : []),
+            ...(partyFilter ? [{ label: "Party", value: partyFilter }] : []),
+            ...(currencyFilter ? [{ label: "Currency", value: String(currencyFilter) }] : []),
+            ...(query ? [{ label: "Search", value: String(query) }] : []),
+          ],
+          countryId: erpScope.lockedCountryId,
+          countryBranchId: erpScope.lockedCountryBranchId,
+          cityBranchId: erpScope.lockedCityBranchId,
+          countryName: erpScope.countryName,
+          branchName: erpScope.branchDisplayName,
+          printedBy: erpScope.userName,
+          reportPeriod: startDateFilter || endDateFilter ? `${startDateFilter || "…"} → ${endDateFilter || "…"}` : null,
+        })}
         onExport={() => exportRows(filtered, activeMode, currentLanguage)}
         onRefresh={() => void loadOrders()}
         onBankingBalanceClick={() => {
@@ -6571,6 +6592,7 @@ function MiniFilter({ label, value, options, onChange }: { label: string; value:
 
 function ReportActions({ rows, mode }: { rows: PurchaseOrderRow[]; mode: PaymentMode }) {
   const currentLanguage = useActiveLanguage() as LanguageCode;
+  const scope = useErpScope();
   function handleReportAction(fn: () => void) {
     fn();
     const details = document.activeElement?.closest("details");
@@ -6586,40 +6608,10 @@ function ReportActions({ rows, mode }: { rows: PurchaseOrderRow[]; mode: Payment
         <MenuAction icon={<DownloadActionIcon />} label={t("download", currentLanguage)} onClick={() => handleReportAction(() => exportRows(rows, mode, currentLanguage))} />
         <MenuAction icon={<FileSpreadsheet />} label={t("export_excel", currentLanguage)} onClick={() => handleReportAction(() => exportRows(rows, mode, currentLanguage))} />
         <MenuAction icon={<PdfActionIcon />} label={t("export_pdf", currentLanguage)} onClick={() => handleReportAction(() => {
-          import("@/lib/reports/open-generic-erp-report").then(({ openGenericErpReport }) => {
-            openGenericErpReport({
-              title: t("sales_order_payment_journal", currentLanguage),
-              subtitle: `${translateHeader(currentLanguage, "Mode")}: ${mode.toUpperCase()} | ${translateHeader(currentLanguage, "Total")} ${rows.length} ${translateHeader(currentLanguage, "Records")}`,
-              columns: [
-                { key: "po_no", label: t("col_po_booking", currentLanguage) },
-                { key: "branch", label: t("branch", currentLanguage) },
-                { key: "supplier_customer", label: t("col_party_name", currentLanguage) },
-                { key: "mode", label: t("col_mode", currentLanguage) },
-                { key: "bank_name", label: t("col_bank_account", currentLanguage) },
-                { key: "amount", label: t("col_amount", currentLanguage), format: "currency" },
-                { key: "status", label: translateHeader(currentLanguage, "Status"), format: "status" }
-              ],
-              rows: rows as Record<string, unknown>[]
-            });
-          });
+          void printPaymentJournal({ kind: "sales", rows: rows as Record<string, unknown>[], lang: currentLanguage, title: translateHeader(currentLanguage, "Sales Payments Journal"), modeLabel: String(mode).toUpperCase(), countryId: scope.lockedCountryId, countryBranchId: scope.lockedCountryBranchId, cityBranchId: scope.lockedCityBranchId, countryName: scope.countryName, branchName: scope.branchDisplayName, printedBy: scope.userName });
         })} />
         <MenuAction icon={<Printer />} label={t("print_btn", currentLanguage)} onClick={() => handleReportAction(() => {
-          import("@/lib/reports/open-generic-erp-report").then(({ openGenericErpReport }) => {
-            openGenericErpReport({
-              title: t("sales_order_payment_journal", currentLanguage),
-              subtitle: `${translateHeader(currentLanguage, "Mode")}: ${mode.toUpperCase()} | ${translateHeader(currentLanguage, "Total")} ${rows.length} ${translateHeader(currentLanguage, "Records")}`,
-              columns: [
-                { key: "po_no", label: t("col_po_booking", currentLanguage) },
-                { key: "branch", label: t("branch", currentLanguage) },
-                { key: "supplier_customer", label: t("col_party_name", currentLanguage) },
-                { key: "mode", label: t("col_mode", currentLanguage) },
-                { key: "bank_name", label: t("col_bank_account", currentLanguage) },
-                { key: "amount", label: t("col_amount", currentLanguage), format: "currency" },
-                { key: "status", label: translateHeader(currentLanguage, "Status"), format: "status" }
-              ],
-              rows: rows as Record<string, unknown>[]
-            });
-          });
+          void printPaymentJournal({ kind: "sales", rows: rows as Record<string, unknown>[], lang: currentLanguage, title: translateHeader(currentLanguage, "Sales Payments Journal"), modeLabel: String(mode).toUpperCase(), countryId: scope.lockedCountryId, countryBranchId: scope.lockedCountryBranchId, cityBranchId: scope.lockedCityBranchId, countryName: scope.countryName, branchName: scope.branchDisplayName, printedBy: scope.userName });
         })} />
       </div>
     </details>

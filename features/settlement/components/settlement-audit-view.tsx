@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { ShieldCheck, RefreshCw, Clock, Filter } from "lucide-react";
 
 export function SettlementAuditView() {
@@ -30,6 +31,14 @@ export function SettlementAuditView() {
     loadData();
   }, []);
 
+  // Audit API caps a page at 200 rows; print fetches that maximum (on-screen list shows 50).
+  async function fetchAllAudit(): Promise<Record<string, unknown>[]> {
+    const res = await fetch("/api/erp/settlement/audit?limit=200");
+    if (!res.ok) return history;
+    const data = await res.json();
+    return data.data || data || [];
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
@@ -37,12 +46,29 @@ export function SettlementAuditView() {
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">{th("Settlement Audit Trail")}</h1>
           <p className="text-xs text-slate-500">Immutable chronological log of all settlement links, adjustments, and review actions</p>
         </div>
+        <div className="flex items-center gap-2">
+        <JournalPrintButton
+          title={th("Settlement Audit Trail")}
+          columns={[
+            { key: (r) => (r as any).created_at ? new Date((r as any).created_at).toLocaleString() : "", label: th("Timestamp") },
+            { key: (r) => (r as any).actor_name || "System User", label: th("Actor") },
+            { key: "action", label: th("Action") },
+            { key: (r) => (r as any).source_reference_no || (r as any).party_name || "Link Match", label: th("Ref / Entity") },
+            { key: (r) => (r as any).amount_involved ? `${(r as any).currency ? (r as any).currency + " " : ""}${Number((r as any).amount_involved).toLocaleString()}` : "", label: th("Amount"), align: "right" },
+            { key: (r) => (r as any).previous_status ? `${(r as any).previous_status} → ${(r as any).new_status}` : (r as any).new_status || "", label: th("Status Change") },
+            { key: "reason", label: th("Reason / Notes") },
+          ]}
+          rows={history}
+          fetchFullData={fetchAllAudit}
+          orientation="landscape"
+        />
         <button
           onClick={loadData}
           className="inline-flex items-center gap-2 p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold"
         >
           <RefreshCw className="h-4 w-4" /> {th("Refresh Log")}
         </button>
+        </div>
       </div>
 
       <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">

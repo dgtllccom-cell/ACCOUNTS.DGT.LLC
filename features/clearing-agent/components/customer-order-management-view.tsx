@@ -51,6 +51,7 @@ import {
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { Th } from "@/components/ui/translated-th";
+import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { SmartSearchFilter, type SmartFilterState } from "@/components/ui/smart-search-filter";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
@@ -2564,9 +2565,35 @@ export function CustomerOrderManagementView() {
                 <FileText className="h-4 w-4 text-blue-600" />
                 <span>{tt("registry_table_title", "Customer Shipping Orders Registry")}</span>
               </div>
+              <div className="flex items-center gap-2">
+              <JournalPrintButton
+                title={tt("registry_table_title", "Customer Shipping Orders Registry")}
+                columns={[
+                  { key: "order_no", label: tt("th_order_no", "Order No"), align: "center" },
+                  { key: "created_at", label: tt("th_date", "Date"), align: "center", format: "date" },
+                  { key: "customer_name", label: tt("th_party", "Customer / Account") },
+                  { key: "exporter_name", label: tt("th_shipper", "Shipper / Exporter") },
+                  { key: (r) => String((r as any).buyer_name || (r as any).importer_name || ""), label: tt("th_buyer", "Buyer / Importer") },
+                  { key: "goods_name", label: tt("th_goods", "Goods & Qty") },
+                  { key: (r) => (r as any).goods_quantity ? `${(r as any).goods_quantity} ${(r as any).goods_unit || ""}`.trim() : "", label: "Quantity", align: "right" },
+                  { key: (r) => String((r as any).route_name || [(r as any).loading_country_name, (r as any).receiving_country_name].filter(Boolean).join(" -> ")), label: tt("th_route", "Route / Ports") },
+                  { key: (r) => `${(r as any).movement_type || ""} ${String((r as any).transport_mode || "").replace("_", " ")}`.trim(), label: tt("th_movement", "Mode & Movement") },
+                  { key: (r) => tt(getOrderProgress(r as any).labelKey, String((r as any).status ?? "")), label: tt("th_step_status", "Status"), align: "center" },
+                  { key: "branch_name", label: tt("th_branch", "Branch / Agent") },
+                ]}
+                rows={visibleOrders as unknown as Record<string, unknown>[]}
+                filters={[
+                  ...(statusFilter !== "all" ? [{ label: tt("th_step_status", "Status"), value: statusFilter }] : []),
+                  ...(modeFilter !== "all" ? [{ label: "Mode", value: modeFilter }] : []),
+                  ...(movementFilter !== "all" ? [{ label: tt("th_movement", "Mode & Movement"), value: movementFilter }] : []),
+                  ...((searchQuery || filterState.query) ? [{ label: "Search", value: String(searchQuery || filterState.query) }] : []),
+                ]}
+                orientation="landscape"
+              />
               <span className="text-[10px] font-mono font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 px-2.5 py-0.5 rounded-full border border-blue-200 dark:border-blue-800">
                 {visibleOrders.length} / {orders.length} {tt("visible", "visible")}
               </span>
+              </div>
             </div>
 
             <div className="overflow-x-auto">

@@ -261,7 +261,7 @@ export function PurchaseModuleWorkspace({
     setLoading(true);
     setError("");
     try {
-      const response = await fetch(`/api/erp/purchases/orders?limit=300&lang=${encodeURIComponent(lang || "en")}`, { cache: "no-store" });
+      const response = await fetch(`/api/erp/purchases/orders?limit=500&lang=${encodeURIComponent(lang || "en")}`, { cache: "no-store" });
       const body = (await response.json().catch(() => ({}))) as OrdersPayload;
       if (!response.ok || body.ok === false) {
         const message = typeof body.error === "string" ? body.error : body.error?.message;

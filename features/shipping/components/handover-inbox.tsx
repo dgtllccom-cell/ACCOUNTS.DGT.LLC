@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Loader2, Inbox, CheckCircle2, XCircle, RefreshCw, ChevronLeft, Ship, Package } from "lucide-react";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
+import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { apiGet, apiPatch } from "@/lib/api/client";
 
 type Row = Record<string, any>;
@@ -162,9 +163,24 @@ export function ShippingHandoverInbox({ lang }: { lang?: string }) {
             <h1 className="inline-flex items-center gap-2 text-lg font-black text-slate-900 dark:text-slate-50"><Inbox className="h-5 w-5 text-slate-400" />{s.t("hi_title", "Shipping Handover Inbox")}</h1>
             <p className="mt-0.5 max-w-2xl text-xs text-slate-500">{s.t("hi_blurb", "Handovers that a business team has authorized to your agency. Accept one to bring it into the shipment / BL workflow.")}</p>
           </div>
+          <div className="flex items-center gap-2">
+          <JournalPrintButton
+            title={s.t("hi_title", "Shipping Handover Inbox")}
+            columns={[
+              { key: "handover_no", label: s.t("hi_c_no", "Handover"), align: "center" },
+              { key: (r) => s.t(`hi_action_${(r as any).action_type}`, String((r as any).action_type ?? "")), label: s.t("hi_c_action", "Action") },
+              { key: (r) => String((r as any).contract_reference || (r as any).bl_reference || ""), label: s.t("hi_c_ref", "Contract / B/L") },
+              { key: (r) => ((r as any).container_numbers ?? []).length, label: s.t("hi_c_containers", "Containers"), align: "right", format: "number" },
+              { key: (r) => s.t(`hi_st_${(r as any).status}`, String((r as any).status ?? "")), label: s.t("hi_c_status", "Status"), align: "center" },
+            ]}
+            rows={rows}
+            filters={[{ label: s.t("hi_c_status", "Status"), value: s.t(`hi_st_${status || "all"}`, status || "All") }]}
+            orientation="landscape"
+          />
           <button type="button" onClick={() => void load()} className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
             <RefreshCw className="h-3.5 w-3.5" />{s.t("refresh", "Refresh")}
           </button>
+          </div>
         </header>
 
         {error ? <p className="rounded-xl bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">{error}</p> : null}

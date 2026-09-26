@@ -44,6 +44,8 @@ export async function GET(req: NextRequest) {
       customerId: customerId ?? undefined,
       status: status ?? undefined,
       search: search ?? undefined,
+      limit: searchParams.get("limit") ? Number(searchParams.get("limit")) || undefined : undefined,
+      offset: searchParams.get("offset") ? Number(searchParams.get("offset")) || undefined : undefined,
       isSuperAdmin: !!session.isSuperAdmin,
       countryIds: session.countryIds ?? [],
       countryBranchIds: session.countryBranchIds ?? [],

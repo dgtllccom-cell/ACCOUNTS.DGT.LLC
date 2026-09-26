@@ -26,6 +26,7 @@ import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { UnifiedErpRegisterBar, type UnifiedRegisterKpiData } from "@/components/reports/unified-erp-register-bar";
 import { printDomFragmentViaModal } from "@/lib/reports/print-dom-fragment";
 
@@ -405,6 +406,51 @@ export function LocalPurchaseDestinationQueueView({
     }));
   }, [filteredPurchases, session]);
 
+  // Flat print rows: same records, same order and same values as the on-screen table.
+  const printRows = useMemo(
+    () =>
+      countryGroups.flatMap((cg) =>
+        cg.records.map((row) => {
+          const pkgCount = Number(row.quantityKgs || row.quantity_kgs || 0);
+          const empKgs = Number(row.emptyKgs || row.empty_kgs || 0);
+          const netWt = Number(row.netWeight || row.net_weight || 0);
+          const grossWt = Number(row.totalGrossWeight || row.total_gross_weight || netWt + pkgCount * empKgs);
+          const rate = Number(row.purchaseRate || row.purchase_rate || 0);
+          const totalCost = Number(row.finalCost || row.final_cost || row.purchaseCost || row.purchase_cost || 0);
+          return {
+            super_sn: row.superAdminSerialNo || row.super_admin_serial_no || row.global_serial_no || "",
+            country_sn: row.countrySerialNo || row.country_serial_no || row.computedCountrySerial || "",
+            branch_sn: row.branchSerialNo || row.branch_serial_no || row.computedBranchSerial || "",
+            voucher_no: row.serialNo || row.serial_no || row.journal_serial_no || row.billNo || "",
+            date: row.createdAt || row.created_at || "",
+            branch_name: row.branchName || row.branch_name || "",
+            country_name: row.countryName || row.country_name || "",
+            purchase_acc: row.purchaseAccountNo || row.purchase_account_no || "",
+            sales_acc: row.salesAccountNo || row.sales_account_no || row.brokerAccountNo || row.broker_account_no || "",
+            goods_name: row.goodsName || row.goods_name || "",
+            brand: row.brand || "",
+            origin: row.originCountryName || row.origin_country_name || "Local",
+            qty: pkgCount,
+            unit: row.quantityName || row.quantity_name || "",
+            gross_wt: grossWt,
+            net_wt: netWt,
+            price: rate,
+            currency: row.localCurrency || row.local_currency || cg.currency,
+            total_cost: totalCost,
+            destination:
+              stage === "loading"
+                ? [row.truckNo || row.truck_no, row.driverName || row.driver_name].filter(Boolean).join(" / ")
+                : stage === "warehouse_transfer"
+                ? [row.warehouseName || row.warehouse_name, row.warehousePlotNo || row.warehouse_plot_no].filter(Boolean).join(" ")
+                : row.warehousePlotNo || row.warehouse_plot_no || "Export",
+            status: th(((row as any)[config.statusField] === "completed" ? config.completedLabel : config.pendingLabel).toUpperCase()),
+          } as Record<string, unknown>;
+        })
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [countryGroups, stage, activeLang, config]
+  );
+
   // Financial & Operational Metrics
   const grandTotalEntries = filteredPurchases.length;
   const grandTotalPurchase = useMemo(
@@ -536,7 +582,6 @@ export function LocalPurchaseDestinationQueueView({
         searchText={searchQuery}
         onSearchChange={setSearchQuery}
         searchPlaceholder={tt("lpdest.search_placeholder", "Search booking, supplier, branch, truck...")}
-        onPrint={() => window.print()}
         onResetRefresh={() => {
           setSelectedCountry("");
           setSelectedBranch("");
@@ -652,9 +697,45 @@ export function LocalPurchaseDestinationQueueView({
                 {tableTitle}
               </CardTitle>
             </div>
-            <span className="text-[10px] font-mono font-bold text-slate-500">
-              Total Scoped Entries: {filteredPurchases.length}
-            </span>
+            <div className="flex items-center gap-3">
+              <JournalPrintButton
+                title={tableTitle}
+                columns={[
+                  { key: "super_sn", label: th("SUPER S/N"), align: "center" },
+                  { key: "country_sn", label: th("CTY S/N"), align: "center" },
+                  { key: "branch_sn", label: th("BR S/N"), align: "center" },
+                  { key: "voucher_no", label: th("VOUCHER NO"), align: "center" },
+                  { key: "date", label: th("DATE"), align: "center", format: "date" },
+                  { key: "branch_name", label: th("BRANCH NAME") },
+                  { key: "country_name", label: th("COUNTRY") },
+                  { key: "purchase_acc", label: "PURCHASE ACC (DR)", align: "center" },
+                  { key: "sales_acc", label: "SALES ACC (CR)", align: "center" },
+                  { key: "goods_name", label: th("GOODS NAME") },
+                  { key: "brand", label: th("BRAND") },
+                  { key: "origin", label: th("ORIGIN") },
+                  { key: "qty", label: th("QTY"), align: "right", format: "number" },
+                  { key: "unit", label: th("UNIT") },
+                  { key: "gross_wt", label: th("GROSS WT"), align: "right", format: "number" },
+                  { key: "net_wt", label: th("NET WT"), align: "right", format: "number" },
+                  { key: "price", label: th("PRICE"), align: "right", format: "number" },
+                  { key: "currency", label: th("CURRENCY"), align: "center" },
+                  { key: "total_cost", label: th("TOTAL COST"), align: "right", format: "number" },
+                  { key: "destination", label: stage === "loading" ? th("TRUCK / DRIVER") : stage === "warehouse_transfer" ? th("WAREHOUSE") : th("DESTINATION") },
+                  { key: "status", label: th("STATUS"), align: "center" },
+                ]}
+                rows={printRows}
+                filters={[
+                  ...(selectedCountry ? [{ label: th("COUNTRY"), value: (countries.find((c: any) => (typeof c === "string" ? c : c.id) === selectedCountry) as any)?.name ?? selectedCountry }] : []),
+                  ...(selectedBranch ? [{ label: th("BRANCH NAME"), value: (branches.find((b: any) => (typeof b === "string" ? b : b.id) === selectedBranch) as any)?.name ?? selectedBranch }] : []),
+                  ...(selectedStatus ? [{ label: th("STATUS"), value: selectedStatus }] : []),
+                  ...(searchQuery.trim() ? [{ label: "Search", value: searchQuery.trim() }] : []),
+                ]}
+                orientation="landscape"
+              />
+              <span className="text-[10px] font-mono font-bold text-slate-500">
+                Total Scoped Entries: {filteredPurchases.length}
+              </span>
+            </div>
           </div>
         </CardHeader>
 

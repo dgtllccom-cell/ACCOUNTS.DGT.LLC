@@ -30,6 +30,7 @@ import {
 import { SupportedLanguage } from "@/lib/i18n/languages";
 import { apiGet, apiPost } from "@/lib/api/client";
 import { Th } from "@/components/ui/translated-th";
+import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import { SimpleModal } from "@/components/ui/simple-modal";
@@ -419,8 +420,7 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
     }
   };
 
-  const filteredBills = useMemo(() => {
-    return recentBills.filter(b => {
+  const billMatches = (b: MoneyExchangeEntry) => {
       const matchQty = searchQtyCur ? b.qty_currency?.toLowerCase().includes(searchQtyCur.toLowerCase()) : true;
       const matchEx = searchExCur ? b.ex_currency?.toLowerCase().includes(searchExCur.toLowerCase()) : true;
       const matchType = filterType === "ALL" ? true : b.transaction_type === filterType;
@@ -434,8 +434,23 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
       ) : true;
 
       return matchQty && matchEx && matchType && matchSearch;
-    });
-  }, [recentBills, searchQtyCur, searchExCur, filterType, searchQuery]);
+  };
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const filteredBills = useMemo(() => recentBills.filter(billMatches), [recentBills, searchQtyCur, searchExCur, filterType, searchQuery]);
+
+  const billPrintRow = (b: MoneyExchangeEntry) => {
+    const isPurchase = b.transaction_type === "Purchase";
+    return {
+      ...b,
+      account: isPurchase
+        ? (b.purchase_account_code ? `${b.purchase_account_code}-${b.purchase_account_name}` : "")
+        : (b.sales_account_code ? `${b.sales_account_code}-${b.sales_account_name}` : ""),
+      party: b.receipt_name || b.received_from || "",
+      type_label: isPurchase ? tr("money_exchange.badge_purchase", "Purchase") : tr("money_exchange.badge_sale", "Sale"),
+      status_label: (b.status || "posted") === "posted" ? tr("money_exchange.dash_completed", "Completed") : tr("money_exchange.dash_pending", "Pending"),
+    } as unknown as Record<string, unknown>;
+  };
 
   const stockValueInBranchCurrency = useMemo(
     () => stock.reduce((sum, s) => sum + s.available * (s.avgRate || 0), 0),
@@ -671,6 +686,39 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
                   <option value="Purchase">{tr("money_exchange.opt_purchase", "Purchase")}</option>
                   <option value="Sale">{tr("money_exchange.opt_sale", "Sale")}</option>
                 </select>
+                <JournalPrintButton
+                  title={tr("money_exchange.exchange_report_title", "Exchange Transactions Report")}
+                  subtitle={selectedBranchLabel ? `${selectedBranchLabel.name} (${selectedBranchLabel.code})` : undefined}
+                  columns={[
+                    { key: "serial_no", label: tr("money_exchange.dash_serial", "Serial"), align: "center" },
+                    { key: "entry_date", label: tr("money_exchange.detail_date", "Date"), align: "center", format: "date" },
+                    { key: "type_label", label: tr("money_exchange.type_header", "Type"), align: "center" },
+                    { key: "qty_currency", label: tr("money_exchange.dash_buy_currency", "Buy Currency"), align: "center" },
+                    { key: "ex_currency", label: tr("money_exchange.dash_sell_currency", "Sell Currency"), align: "center" },
+                    { key: "quantity", label: tr("money_exchange.quantity_label", "Quantity"), align: "right", format: "number" },
+                    { key: "rate", label: tr("money_exchange.rate_label", "Rate"), align: "right", format: "number" },
+                    { key: "final_amount", label: tr("money_exchange.final_amount_header", "Final Amount"), align: "right", format: "number" },
+                    { key: "account", label: tr("money_exchange.dash_account", "Account") },
+                    { key: "party", label: tr("money_exchange.dash_party", "Party") },
+                    { key: "status_label", label: tr("money_exchange.dash_status", "Status"), align: "center" },
+                  ]}
+                  rows={filteredBills.map(billPrintRow)}
+                  fetchFullData={async () => {
+                    if (!selectedBranch) return [];
+                    const qs = new URLSearchParams({ branchId: selectedBranch, limit: "5000" });
+                    if (dashDateFrom) qs.set("dateFrom", dashDateFrom);
+                    if (dashDateTo) qs.set("dateTo", dashDateTo);
+                    if (dashTxnType !== "all") qs.set("transactionType", dashTxnType);
+                    const res = await apiGet<any>(`/api/erp/money-exchange?${qs.toString()}`);
+                    return ((res?.entries ?? []) as MoneyExchangeEntry[]).filter(billMatches).map(billPrintRow);
+                  }}
+                  filters={[
+                    ...(dashDateFrom ? [{ label: tr("money_exchange.dash_date_range", "Date Range"), value: `${dashDateFrom} - ${dashDateTo || ""}` }] : []),
+                    ...(filterType !== "ALL" ? [{ label: tr("money_exchange.type_header", "Type"), value: filterType }] : []),
+                    ...(searchQuery.trim() ? [{ label: "Search", value: searchQuery.trim() }] : []),
+                  ]}
+                  orientation="landscape"
+                />
                 <Button type="button" variant="outline" size="sm" onClick={fetchRecentBills} disabled={loadingBills} className="h-8 px-2 text-[11px] font-bold">
                   <RefreshCw className={cn("h-3.5 w-3.5", loadingBills && "animate-spin")} />
                 </Button>

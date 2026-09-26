@@ -34,6 +34,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { apiGet, apiPatch, apiPost } from "@/lib/api/client";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { cn } from "@/lib/utils";
@@ -238,6 +239,39 @@ export function TransferHandoverCenter({ lang: langProp }: { lang?: string | nul
           </div>
 
           <div className="flex items-center gap-2">
+            <JournalPrintButton
+              title={s.t("heading", "Transfer & Handover Center")}
+              subtitle={s.t(`tab_${tab}`, tab.charAt(0).toUpperCase() + tab.slice(1))}
+              columns={[
+                { key: "transfer_no", label: "Transfer No", align: "center" },
+                { key: (r) => s.t(`type_${(r as any).transfer_type}`, String((r as any).transfer_type ?? "")), label: "Type" },
+                { key: "order_reference", label: s.t("order_ref", "Order"), align: "center" },
+                { key: "customer_party_name", label: s.t("party", "Party") },
+                { key: "sender_name", label: s.t("sender", "Sender") },
+                { key: (r) => String((r as any).receiver_name || (r as any).dest_city_branch_name || (r as any).dest_country_name || ""), label: s.t("receiver", "Receiver") },
+                { key: "narration", label: s.t("narration", "Narration") },
+                { key: "created_at", label: "Date", align: "center", format: "date" },
+                { key: (r) => s.t(`status_${(r as any).status}`, String((r as any).status ?? "")), label: "Status", align: "center" },
+              ]}
+              rows={filteredItems as unknown as Record<string, unknown>[]}
+              fetchFullData={async () => {
+                const q = new URLSearchParams({ tab, limit: "5000", offset: "0" });
+                if (typeFilter !== "all") q.set("type", typeFilter);
+                const data = await apiGet<{ transfers: TransferRow[] }>(`/api/erp/transfer-center?${q.toString()}`);
+                const all = data.transfers || [];
+                const needle = searchQuery.trim().toLowerCase();
+                if (!needle) return all as unknown as Record<string, unknown>[];
+                return all.filter((it) =>
+                  [it.transfer_no, it.order_reference, it.sender_name, it.receiver_name, it.customer_party_name, it.narration, it.bill_number, it.container_number]
+                    .some((v) => v?.toLowerCase().includes(needle))
+                ) as unknown as Record<string, unknown>[];
+              }}
+              filters={[
+                { label: "Type", value: typeFilter === "all" ? s.t("type_all", "All Types") : s.t(`type_${typeFilter}`, typeFilter) },
+                ...(searchQuery.trim() ? [{ label: "Search", value: searchQuery.trim() }] : []),
+              ]}
+              orientation="landscape"
+            />
             <Button
               variant="outline"
               size="sm"

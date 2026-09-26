@@ -32,6 +32,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { apiGet } from "@/lib/api/client";
+import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import type { CompanyRow } from "@/lib/repositories/companies-repository";
 import { printStore } from "@/lib/store/print-store";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
@@ -530,6 +531,20 @@ export function CompanyRegistry({
   }, [companies, searchQuery, countryFilter, statusFilter]);
 
   // Paginated List
+  // Print ALL groups matching the filters (not just the current 10-row page). The list is
+  // loaded in full client-side (API hard cap 500 companies), so no re-fetch is needed.
+  const printRows = useMemo(() => filteredCompanies.map((c, idx) => ({
+    sr: idx + 1,
+    account_no: c.accountNo,
+    consortium: localizeTerm(c.consortium, lang),
+    owner: localizeTerm(c.groupData?.ownerName ?? "", lang),
+    branch_rules: localizeTerm(c.branchRules, lang),
+    location_summary: getGroupLocationCoverages(c.companies).map((cov) => `${cov.shortName}: ${cov.companyCount}`).join(", "),
+    companies_count: c.companiesCount,
+    contracts_count: c.contractsCount,
+    contact: [c.primaryContact && c.primaryContact !== "—" ? c.primaryContact : "", c.email && c.email !== "—" ? c.email : ""].filter(Boolean).join(" / "),
+  })), [filteredCompanies, lang]);
+
   const paginatedCompanies = useMemo(() => {
     const start = (page - 1) * pageSize;
     return filteredCompanies.slice(start, start + pageSize);
@@ -947,6 +962,27 @@ export function CompanyRegistry({
             <span>{activeLang === "ur" ? "ری سیٹ" : "Reset"}</span>
           </Button>
 
+          <JournalPrintButton
+            title={tt("creg.title", "Company Management Registry")}
+            columns={[
+              { key: "sr", label: "#", align: "center" },
+              { key: "account_no", label: "Account No." },
+              { key: "consortium", label: "Consortium" },
+              { key: "owner", label: "Owner" },
+              { key: "branch_rules", label: "Branch Rules" },
+              { key: "location_summary", label: "Location Summary" },
+              { key: "companies_count", label: "Companies Count", align: "center", format: "number" },
+              { key: "contracts_count", label: "Contracts", align: "center", format: "number" },
+              { key: "contact", label: "Contacts" },
+            ]}
+            rows={printRows}
+            filters={[
+              ...(searchQuery.trim() ? [{ label: tt("common.search", "Search"), value: searchQuery.trim() }] : []),
+              ...(statusFilter !== "all" ? [{ label: "Status", value: statusFilter }] : []),
+              ...(countryFilter !== "all" ? [{ label: "Country", value: countryFilter }] : []),
+            ]}
+            orientation="landscape"
+          />
           <Button
             type="button"
             onClick={() => {

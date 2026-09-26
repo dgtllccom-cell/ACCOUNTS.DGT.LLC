@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Loader2, Send, RefreshCw, Ban, Plus, X } from "lucide-react";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
+import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { apiGet, apiPost, apiPatch } from "@/lib/api/client";
 
 type Row = Record<string, any>;
@@ -65,6 +66,18 @@ export function BusinessHandovers({ lang }: { lang?: string }) {
             <p className="mt-0.5 max-w-2xl text-xs text-slate-500">{s.t("bh_blurb", "Authorise a Purchase / Sales record into the Shipping / Clearing workflow. Only operational information is shared — never price, profit or ledgers.")}</p>
           </div>
           <div className="flex items-center gap-2">
+            <JournalPrintButton
+              title={s.t("bh_title", "Business → Shipping Handovers")}
+              columns={[
+                { key: "handover_no", label: s.t("bh_c_no", "Handover"), align: "center" },
+                { key: (r) => String((r as any).business_reference_no || (r as any).contract_reference || ""), label: s.t("bh_c_source", "Business Record") },
+                { key: (r) => s.t(`hi_action_${(r as any).action_type}`, String((r as any).action_type ?? "")), label: s.t("bh_c_action", "Action") },
+                { key: (r) => (r as any).clearing_agent_id ? String(agents.find((a) => a.id === (r as any).clearing_agent_id)?.name ?? "") : "", label: s.t("bh_c_agent", "Agent") },
+                { key: (r) => s.t(`hi_st_${(r as any).status}`, String((r as any).status ?? "")), label: s.t("bh_c_status", "Status"), align: "center" },
+              ]}
+              rows={rows}
+              orientation="landscape"
+            />
             <button type="button" onClick={() => void load()} className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"><RefreshCw className="h-3.5 w-3.5" />{s.t("refresh", "Refresh")}</button>
             <button type="button" onClick={() => setShowNew(true)} className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-500"><Plus className="h-3.5 w-3.5" />{s.t("bh_new", "New Handover")}</button>
           </div>

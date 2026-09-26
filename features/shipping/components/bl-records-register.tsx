@@ -10,6 +10,7 @@ import { Th } from "@/components/ui/translated-th";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
+import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { BlEntryView } from "./bl-entry-view";
 
 type BlRecordRow = {
@@ -114,6 +115,31 @@ export function BlRecordsRegister({ context = "shipping", lang: langProp }: { co
             <Button type="button" size="sm" variant="outline" className="h-9" onClick={() => void loadRows(query)} disabled={loading}>
               <RefreshCcw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             </Button>
+            <JournalPrintButton
+              title={_("bler.title", "Bill of Lading Register")}
+              columns={[
+                { key: "bl_number", label: _("bler.col_bl_no", "BL No"), align: "center" },
+                { key: "shipping_line_name", label: _("bler.col_shipping_line", "Shipping Line") },
+                { key: (r) => `${(r as any).vessel_name ?? ""} / ${(r as any).voyage_number ?? ""}`, label: _("bler.col_vessel_voyage", "Vessel / Voyage") },
+                { key: (r) => `${(r as any).loading_port ?? ""} -> ${(r as any).discharge_port ?? ""}`, label: _("bler.col_route", "Route") },
+                { key: "eta", label: "ETA", align: "center", format: "date" },
+                { key: "etd", label: "ETD", align: "center", format: "date" },
+                { key: "shipment_status", label: _("bler.col_status", "Status"), align: "center", format: "status" },
+                { key: (r) => String((r as any).city_branches?.name || (r as any).city_branches?.code || ""), label: _("bler.col_branch", "Branch") },
+              ]}
+              rows={rows as unknown as Record<string, unknown>[]}
+              fetchFullData={async () => {
+                const params = new URLSearchParams();
+                if (query.trim()) params.set("q", query.trim());
+                params.set("limit", "300");
+                const res = await fetch(`/api/erp/shipping/bl-records?${params.toString()}`, { cache: "no-store" });
+                const json = await res.json();
+                const records = json?.data?.records ?? [];
+                return (Array.isArray(records) ? records : []) as Record<string, unknown>[];
+              }}
+              filters={query.trim() ? [{ label: _("common.search", "Search"), value: query.trim() }] : []}
+              orientation="landscape"
+            />
             <Button
               type="button"
               size="sm"

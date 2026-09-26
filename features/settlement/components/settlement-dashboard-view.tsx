@@ -9,6 +9,7 @@ import {
   Filter, Search, ExternalLink, Link2, Unlink
 } from "lucide-react";
 import type { SettlementKPIs, SettlementTransaction } from "../types/settlement";
+import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 
 export function SettlementDashboardView() {
@@ -68,6 +69,21 @@ export function SettlementDashboardView() {
     } finally {
       setSyncing(false);
     }
+  }
+
+  // Screen shows the 10 most recent rows; print pages through the whole registry (API max 200/page).
+  async function fetchAllTransactions(): Promise<Record<string, unknown>[]> {
+    const all: Record<string, unknown>[] = [];
+    const pageSize = 200;
+    for (let offset = 0; offset < 100000; offset += pageSize) {
+      const res = await fetch(`/api/erp/settlement?limit=${pageSize}&offset=${offset}`);
+      if (!res.ok) break;
+      const d = await res.json();
+      const items: Record<string, unknown>[] = d.data?.items || d.items || [];
+      all.push(...items);
+      if (items.length < pageSize) break;
+    }
+    return all.length ? all : (recentTransactions as unknown as Record<string, unknown>[]);
   }
 
   const netFx = kpis?.netFxUsd ?? 0;
@@ -275,12 +291,32 @@ export function SettlementDashboardView() {
               {s.t("recent_sub","Live transaction feed linked from Roznamcha, Purchase, Sales, and Banks")}
             </p>
           </div>
+          <div className="flex items-center gap-3">
+          <JournalPrintButton
+            title={s.t("recent_title","Recent Settlement Registry Records")}
+            columns={[
+              { key: "source_date", label: "Date", format: "date" },
+              { key: "source_reference_no", label: "Reference" },
+              { key: "source_module", label: "Module" },
+              { key: "party_name", label: s.t("c_party","Party Name") },
+              { key: "direction", label: s.t("c_dir","Dir"), align: "center" },
+              { key: "local_currency", label: "Currency", align: "center" },
+              { key: "local_amount", label: s.t("c_local_amount","Local Amount"), align: "right", format: "number" },
+              { key: "original_usd_amount", label: s.t("c_usd_amount","USD Amount"), align: "right", format: "number" },
+              { key: "remaining_local", label: s.t("c_remaining","Remaining"), align: "right", format: "number" },
+              { key: "settlement_status", label: s.t("c_status","Status"), align: "center", format: "status" },
+            ]}
+            rows={recentTransactions as unknown as Record<string, unknown>[]}
+            fetchFullData={fetchAllTransactions}
+            orientation="landscape"
+          />
           <Link
             href="/dashboard/settlement/unsettled"
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400"
           >
             {s.t("view_all_open","View All Open Entries")} <ArrowRight className="h-3.5 w-3.5" />
           </Link>
+          </div>
         </div>
 
         <div className="overflow-x-auto">

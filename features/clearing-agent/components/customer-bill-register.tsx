@@ -10,6 +10,7 @@ import { Th } from "@/components/ui/translated-th";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
+import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { CustomerBillManagementView } from "./customer-bill-management-view";
 import type { CustomerBillRow } from "@/lib/services/clearing-customer-bill-service";
 
@@ -103,6 +104,33 @@ export function CustomerBillRegister({ lang: langProp }: { lang?: SupportedLangu
                 className="h-9 pl-9 text-xs"
               />
             </div>
+            <JournalPrintButton
+              title={_("cbill.register_title", "Customer Bill Register")}
+              columns={[
+                { key: "bill_no", label: _("cbr.col_bill_no", "Bill No"), align: "center" },
+                { key: "customer_name", label: _("cbr.col_customer", "Customer") },
+                { key: "order_no", label: _("cbr.col_order", "Order"), align: "center" },
+                { key: "currency_code", label: _("common.currency", "Currency"), align: "center" },
+                { key: "grand_total", label: _("cbr.col_total", "Grand Total"), align: "right", format: "number" },
+                { key: "balance_due", label: _("cbr.col_balance", "Balance Due"), align: "right", format: "number" },
+                { key: "status", label: _("common.status", "Status"), align: "center", format: "status" },
+              ]}
+              rows={filteredRows as unknown as Record<string, unknown>[]}
+              fetchFullData={async () => {
+                const all: CustomerBillRow[] = [];
+                for (let offset = 0; offset < 20000; offset += 100) {
+                  const res = await fetch(`/api/erp/clearing-agent/customer-bill?limit=100&offset=${offset}`, { cache: "no-store" });
+                  const json = await res.json();
+                  const page: CustomerBillRow[] = json.success && Array.isArray(json.data) ? json.data : [];
+                  all.push(...page);
+                  if (page.length < 100) break;
+                }
+                const q = query.trim().toLowerCase();
+                return all.filter((r) => !q || [r.bill_no, r.customer_name, r.order_no].some((v) => (v || "").toLowerCase().includes(q))) as unknown as Record<string, unknown>[];
+              }}
+              filters={query.trim() ? [{ label: _("common.search", "Search"), value: query.trim() }] : []}
+              orientation="landscape"
+            />
             <Button type="button" size="sm" variant="outline" className="h-9" onClick={() => void loadRows()} disabled={loading}>
               <RefreshCcw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             </Button>

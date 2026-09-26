@@ -1603,7 +1603,7 @@ export function PurchaseBookingJournalReportView({
     setLoading(true);
     setMessage("");
     try {
-      const params = new URLSearchParams({ limit: isSuperAdmin ? "1000" : "150" });
+      const params = new URLSearchParams({ limit: "2000" });
       if (nextFilters.fromDate) params.set("dateFrom", nextFilters.fromDate);
       if (nextFilters.toDate) params.set("dateTo", nextFilters.toDate);
       if (nextFilters.bookingNo) params.set("purchaseOrderNo", nextFilters.bookingNo);

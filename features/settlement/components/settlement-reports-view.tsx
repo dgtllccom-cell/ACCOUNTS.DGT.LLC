@@ -37,12 +37,33 @@ export function SettlementReportsView() {
     }
   }
 
-  function handlePrint() {
+  async function fetchAllRows(): Promise<any[]> {
+    const all: any[] = [];
+    const pageSize = 200; // API max
+    for (let offset = 0; offset < 100000; offset += pageSize) {
+      const res = await fetch(`/api/erp/settlement?limit=${pageSize}&offset=${offset}&fromDate=${fromDate}&toDate=${toDate}`);
+      if (!res.ok) break;
+      const json = await res.json();
+      const items: any[] = json.data?.items || json.items || [];
+      all.push(...items);
+      if (items.length < pageSize) break;
+    }
+    return all;
+  }
+
+  async function handlePrint() {
+    let printRows = data;
+    try {
+      const full = await fetchAllRows();
+      if (full.length) printRows = full;
+    } catch (e) {
+      console.error("Full settlement fetch failed, printing loaded rows", e);
+    }
     openUniversalPrintReport({
       lang,
       title: _("settr.print_title", "Settlement & Reconciliation Consolidated Report"),
       subtitle: `${_("settr.report_period", "Report Period")}: ${fromDate || _("settr.all_time", "All Time")} → ${toDate || _("settr.present", "Present")}`,
-      rows: data,
+      rows: printRows,
       columns: [
         { label: _("settr.col_date", "Date"), key: "source_date" },
         { label: _("settr.col_reference", "Reference / Serial"), key: "source_reference_no" },

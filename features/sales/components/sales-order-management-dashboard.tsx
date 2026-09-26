@@ -35,6 +35,7 @@ import { RecordTranslationCorrectionDialog } from "@/features/translations/compo
 import { ERP_TABLE_STYLES } from "@/components/ui/erp-data-table";
 import { TradeDocumentCenter } from "@/features/reports/components/trade-document-center";
 import { DashboardPageHeader } from "@/components/layout/dashboard-page-header";
+import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { AddExpenseBillButton } from "@/features/expenses/components/add-expense-bill-button";
 
 
@@ -136,13 +137,66 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
   }
 
   // Filtered lists
-  const filtered = useMemo(() => {
-    if (activeTab === "Dashboard Overview") return orders;
-    if (activeTab === "Draft Sales Bookings") return orders.filter(o => o.sales_status === "draft");
-    if (activeTab === "Confirmed Sales") return orders.filter(o => o.sales_status === "Confirmed" || o.sales_status === "confirmed");
-    if (activeTab === "Finalized Orders") return orders.filter(o => o.sales_status === "Finalized" || o.sales_status === "finalized");
-    return orders;
-  }, [orders, activeTab]);
+  const applyTabFilter = (list: SalesOrder[]) => {
+    if (activeTab === "Dashboard Overview") return list;
+    if (activeTab === "Draft Sales Bookings") return list.filter(o => o.sales_status === "draft");
+    if (activeTab === "Confirmed Sales") return list.filter(o => o.sales_status === "Confirmed" || o.sales_status === "confirmed");
+    if (activeTab === "Finalized Orders") return list.filter(o => o.sales_status === "Finalized" || o.sales_status === "finalized");
+    return list;
+  };
+  const filtered = useMemo(() => applyTabFilter(orders),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [orders, activeTab]);
+
+  // Flat print row mirroring the on-screen table columns.
+  const toPrintRow = (order: SalesOrder): Record<string, unknown> => {
+    const raw = order.form_data || {};
+    const f = raw.form || {};
+    const purchaseAmount = Number(order.order_total || 0);
+    const exRate = Number(order.exchange_rate || 1);
+    const invPct = Number(f.invoicePercentage || 100);
+    const invoiceAmt = (purchaseAmount * invPct) / 100;
+    const postingState = deriveSalesBookingPostingState(order as any);
+    return {
+      journal_serial: order.super_admin_serial_number || raw.traceability?.superAdminSerialNumber || "",
+      country_serial: order.country_transaction_serial_number || raw.traceability?.countryTransactionSerialNumber || "",
+      branch_serial: order.branch_transaction_serial_number || raw.traceability?.branchTransactionSerialNumber || "",
+      sales_order_no: order.sales_order_no,
+      order_date: order.order_date,
+      customer: localized(order, "customer_name", order.customer_name || ""),
+      user: f.userName || "",
+      branch: localized(order, "branch_name", f.branchName || ""),
+      country: localized(order, "country_name", f.branchCountry || ""),
+      sales_account: localized(order, "sales_account_name", f.salesAccountName || ""),
+      purchase_account: localized(order, "purchase_account_name", f.purchaseAccountName || ""),
+      goods: localized(order, "product_name", order.product_summary || ""),
+      brand: f.brand || "",
+      size: f.size || "",
+      quantity: order.quantity,
+      unit: f.qtyName || "Bags",
+      gross_weight: Number(f.grossWeight || 0),
+      net_weight: order.total_weight,
+      pur_currency: order.original_currency_code || "USD",
+      exchange_rate: exRate.toFixed(4),
+      final_currency: order.currency_code || "AED",
+      pur_amount: purchaseAmount,
+      invoice_pct: `${invPct}%`,
+      invoice_amount: invoiceAmt,
+      final_invoice_amount: invoiceAmt * exRate,
+      payment_status: postingState.label,
+      transfer_status: postingState.visualStatus === "red" ? "Pending" : order.sales_status,
+    };
+  };
+
+  // API returns at most 200 orders per request (no paging); print re-queries with that
+  // maximum, same search term and same lifecycle-tab filter as the screen.
+  async function fetchAllOrdersForPrint(): Promise<Record<string, unknown>[]> {
+    const qp = new URLSearchParams();
+    if (search.trim()) qp.set("q", search.trim());
+    qp.set("limit", "200");
+    const res = await apiGet<{ salesOrders: SalesOrder[] }>(`/api/erp/sales/orders?${qp.toString()}`);
+    return applyTabFilter(res.salesOrders || []).map(toPrintRow);
+  }
 
   // Aggregated totals matching requested dashboard summary stats
   const dashboardStats = useMemo(() => {
@@ -260,6 +314,46 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
             <RefreshCcw className="h-3.5 w-3.5 mr-1.5" />
             {t(activeLang, "sales.sodash_refresh", "Refresh")}
           </Button>
+          <JournalPrintButton
+            title={t(activeLang, "nav.sales_order_management" as never, "Sales Order Management")}
+            subtitle={t(activeLang, LIFECYCLE_TAB_LABEL_KEYS[activeTab] as never, activeTab)}
+            columns={[
+              { key: "journal_serial", label: "Journal Serial", align: "center" },
+              { key: "country_serial", label: "Country Serial", align: "center" },
+              { key: "branch_serial", label: "Branch Serial", align: "center" },
+              { key: "sales_order_no", label: "Sales Order No", align: "center" },
+              { key: "order_date", label: "Date", format: "date" },
+              { key: "customer", label: "Customer" },
+              { key: "user", label: "User" },
+              { key: "branch", label: "Branch" },
+              { key: "country", label: "Country" },
+              { key: "sales_account", label: "Sales Account" },
+              { key: "purchase_account", label: "Purchase Account" },
+              { key: "goods", label: "Goods Name" },
+              { key: "brand", label: "Brand" },
+              { key: "size", label: "Goods Size" },
+              { key: "quantity", label: "Quantity", align: "right", format: "number" },
+              { key: "unit", label: "Unit", align: "center" },
+              { key: "gross_weight", label: "Gross Wt (KG)", align: "right", format: "number" },
+              { key: "net_weight", label: "Net Wt (KG)", align: "right", format: "number" },
+              { key: "pur_currency", label: "Pur Currency", align: "center" },
+              { key: "exchange_rate", label: "Ex. Rate", align: "right" },
+              { key: "final_currency", label: "Final Currency", align: "center" },
+              { key: "pur_amount", label: "Pur Amount", align: "right", format: "number" },
+              { key: "invoice_pct", label: "Invoice %", align: "right" },
+              { key: "invoice_amount", label: "Invoice Amount", align: "right", format: "number" },
+              { key: "final_invoice_amount", label: "Final Invoice Amount", align: "right", format: "number" },
+              { key: "payment_status", label: "Payment Status", align: "center", format: "status" },
+              { key: "transfer_status", label: "Transfer Status", align: "center", format: "status" },
+            ]}
+            rows={filtered.map(toPrintRow)}
+            fetchFullData={fetchAllOrdersForPrint}
+            filters={[
+              ...(search.trim() ? [{ label: t(activeLang, "sales.sodash_search_ph" as never, "Search"), value: search.trim() }] : []),
+              { label: "Status", value: t(activeLang, LIFECYCLE_TAB_LABEL_KEYS[activeTab] as never, activeTab) },
+            ]}
+            orientation="landscape"
+          />
           <Button
             onClick={() => router.push("/dashboard/sales/new-sales-booking-order")}
             className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 rounded-xl shadow-md shadow-blue-100"

@@ -53,11 +53,28 @@ export function formatNumber(value: unknown, unit?: string): string {
   return unit ? `${formatted} ${unit}` : formatted;
 }
 
-export function formatDate(value: string | null | undefined): string {
+/** Locale per ERP language: localized month names, Gregorian calendar, Latin digits (matches amounts). */
+const DATE_LOCALES: Record<string, string> = {
+  en: "en-GB",
+  ur: "ur-PK-u-ca-gregory-nu-latn",
+  ar: "ar-u-ca-gregory-nu-latn",
+  fa: "fa-IR-u-ca-gregory-nu-latn",
+  ps: "ps-AF-u-ca-gregory-nu-latn",
+};
+
+export function dateLocaleFor(lang?: string): string {
+  return DATE_LOCALES[lang || "en"] ?? DATE_LOCALES.en;
+}
+
+export function formatDate(value: string | null | undefined, lang?: string): string {
   if (!value) return "-";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  try {
+    return date.toLocaleDateString(dateLocaleFor(lang), { day: "2-digit", month: "short", year: "numeric" });
+  } catch {
+    return date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  }
 }
 
 export function generateReportHtml(input: {
@@ -105,9 +122,9 @@ export function generateReportHtml(input: {
   const compWebsite = realOrEmpty(companyInfo.website);
   const printedBy = realOrEmpty(companyInfo.printedBy)
     || (typeof window !== "undefined" ? realOrEmpty((window as unknown as { __ERP_USER_NAME__?: string }).__ERP_USER_NAME__) : "");
-  const printedDate = companyInfo.printedDate || new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
+  const printedDate = companyInfo.printedDate || (() => { try { return new Date().toLocaleString(dateLocaleFor(lang), { dateStyle: "medium", timeStyle: "short" }); } catch { return new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }); } })();
   const financialYear = realOrEmpty(companyInfo.financialYear);
-  const reportPeriod = companyInfo.reportPeriod || formatDate(new Date().toISOString());
+  const reportPeriod = companyInfo.reportPeriod || formatDate(new Date().toISOString(), lang);
   const compLogo = companyInfo.logoUrl || "";
   // QR verification payload: company + report + date, so a printed sheet is verifiable.
   // Rendered as an inline pure-SVG QR (components/ui/qr-code) — no external network call,
@@ -753,6 +770,29 @@ export function generateReportHtml(input: {
       .kpi-value { font-size: 11pt !important; }
       .kpi-label { font-size: 6.5pt !important; }
     }
+
+    /* ── Journal Register standard (ink / teal, zebra rows, page marker) ───────
+       Single visual standard for every journal, payment and register print. */
+    .letterhead { border-bottom: 3px solid #0d8c85; }
+    .brand-logo { background: #112b3d; }
+    .report-title-text { border-bottom: 3px solid #0d8c85; }
+    .filter-bar { border-inline-start: 4px solid #0d8c85; background: #f7faf8; }
+    .kpi-card { background: #f7faf8; border-color: #cfe0dc; }
+    .kpi-card.blue, .kpi-card.slate { border-color: #cfe0dc; background: #f7faf8; }
+    table.data-table th { background: #112b3d; border-color: #112b3d; }
+    table.data-table tbody tr:nth-child(even) td { background: #f7faf8; }
+    table.data-table tr.total-row td { background: #e8f3f1; border-top: 2px solid #112b3d; border-bottom: 2px solid #112b3d; }
+    .bottom-bar { background: #112b3d; }
+    .report-scope-chip { border-color: #b7dcd8; background: #e8f3f1; color: #0b6b66; }
+    @media print {
+      @page {
+        @bottom-right { content: "${label("PAGE")} " counter(page) " / " counter(pages); font: 700 7pt sans-serif; color: #112b3d; }
+        @bottom-left { content: "${label("System-generated report")}"; font: 600 7pt sans-serif; color: #64748b; }
+      }
+      table.data-table thead { display: table-header-group; }
+      table.data-table tr { break-inside: avoid; page-break-inside: avoid; }
+      table.data-table tfoot { display: table-footer-group; }
+    }
   </style>
   <script>
     let currentZoom = 1.0;
@@ -879,25 +919,25 @@ export function generateReportHtml(input: {
         <button class="zoom-btn" onclick="zoomOut()" title="Zoom Out">&minus;</button>
         <span class="zoom-val" id="zoomVal">100%</span>
         <button class="zoom-btn" onclick="zoomIn()" title="Zoom In">&plus;</button>
-        <button class="zoom-btn" onclick="resetZoom()" title="Reset Zoom" style="font-size:10px;">100%</button>
+        <button class="zoom-btn" onclick="resetZoom()" title="${label("Reset Zoom")}" style="font-size:10px;">100%</button>
       </div>
 
       <div class="zoom-controls" style="margin-right:8px;">
-        <span style="font-size:10.5px; font-weight:700; color:#94a3b8; margin-right:4px;">Density:</span>
+        <span style="font-size:10.5px; font-weight:700; color:#94a3b8; margin-right:4px;">${label("Density")}:</span>
         <select id="toolbarFontDensitySelect" onchange="changeFontDensity(this.value)" class="density-select">
-          <option value="normal"${tableDensityClass === "density-normal" ? " selected" : ""}>Standard (7.5px)</option>
-          <option value="compact"${tableDensityClass === "density-compact" ? " selected" : ""}>Compact (6.5px)</option>
-          <option value="dense"${tableDensityClass === "density-dense" ? " selected" : ""}>Dense (5.5px)</option>
+          <option value="normal"${tableDensityClass === "density-normal" ? " selected" : ""}>${label("Standard")} (7.5px)</option>
+          <option value="compact"${tableDensityClass === "density-compact" ? " selected" : ""}>${label("Compact")} (6.5px)</option>
+          <option value="dense"${tableDensityClass === "density-dense" ? " selected" : ""}>${label("Dense")} (5.5px)</option>
         </select>
       </div>
 
-      <button class="btn-action btn-slate" onclick="toggleColumnModal()">⚙️ Customize Columns</button>
-      <button class="btn-action btn-primary" onclick="window.print()">🖨️ Print Report</button>
-      <button class="btn-action btn-amber" onclick="window.print()">📄 Save as PDF</button>
-      <button class="btn-action btn-success" onclick="downloadCsv()">📊 Export Excel</button>
-      <button class="btn-action" onclick="sendEmail()">✉️ Email</button>
-      <button class="btn-action" onclick="sendWhatsApp()">💬 WhatsApp</button>
-      <button class="btn-action" onclick="window.close()">❌ Close</button>
+      <button class="btn-action btn-slate" onclick="toggleColumnModal()">⚙️ ${label("Customize Columns")}</button>
+      <button class="btn-action btn-primary" onclick="window.print()">🖨️ ${label("Print Report")}</button>
+      <button class="btn-action btn-amber" onclick="window.print()">📄 ${label("Save as PDF")}</button>
+      <button class="btn-action btn-success" onclick="downloadCsv()">📊 ${label("Export Excel")}</button>
+      <button class="btn-action" onclick="sendEmail()">✉️ ${label("Email")}</button>
+      <button class="btn-action" onclick="sendWhatsApp()">💬 ${label("WhatsApp")}</button>
+      <button class="btn-action" onclick="window.close()">❌ ${label("Close")}</button>
     </div>
   </div>
 
@@ -905,19 +945,19 @@ export function generateReportHtml(input: {
   <div id="columnModal" class="custom-modal-overlay" style="display:none;">
     <div class="custom-modal-content">
       <div class="custom-modal-header">
-        <span>⚙️ Customize Printable Columns & Font Density</span>
+        <span>⚙️ ${label("Customize Printable Columns")}</span>
         <button onclick="toggleColumnModal()" class="btn-xs" style="background:transparent;border:none;font-size:16px;">&times;</button>
       </div>
       <div class="custom-modal-body">
         <div class="modal-actions-bar">
-          <button class="btn-xs" onclick="selectAllColumns(true)">Select All</button>
-          <button class="btn-xs" onclick="selectAllColumns(false)">Deselect All</button>
-          <button class="btn-xs btn-amber-xs" onclick="resetDefaultColumns()">Reset Default</button>
-          <span style="margin-left:auto; font-weight:700;">Font Density:</span>
+          <button class="btn-xs" onclick="selectAllColumns(true)">${label("Select All")}</button>
+          <button class="btn-xs" onclick="selectAllColumns(false)">${label("Deselect All")}</button>
+          <button class="btn-xs btn-amber-xs" onclick="resetDefaultColumns()">${label("Reset Default")}</button>
+          <span style="margin-left:auto; font-weight:700;">${label("Font Density")}:</span>
           <select id="fontDensitySelect" onchange="changeFontDensity(this.value)" class="density-select">
-            <option value="normal"${tableDensityClass === "density-normal" ? " selected" : ""}>Standard (7.5px)</option>
-            <option value="compact"${tableDensityClass === "density-compact" ? " selected" : ""}>Compact Auto-Fit (6.5px)</option>
-            <option value="dense"${tableDensityClass === "density-dense" ? " selected" : ""}>Dense Fit (5.5px)</option>
+            <option value="normal"${tableDensityClass === "density-normal" ? " selected" : ""}>${label("Standard")} (7.5px)</option>
+            <option value="compact"${tableDensityClass === "density-compact" ? " selected" : ""}>${label("Compact")} (6.5px)</option>
+            <option value="dense"${tableDensityClass === "density-dense" ? " selected" : ""}>${label("Dense")} (5.5px)</option>
           </select>
         </div>
         <div id="columnCheckboxesGrid" class="checkbox-grid"></div>
@@ -932,7 +972,7 @@ export function generateReportHtml(input: {
         <!-- Letterhead Header -->
         <div class="letterhead">
           <div class="brand-col">
-            ${compLogo ? `<img class="brand-logo" src="${escapeHtml(compLogo)}" alt="logo" style="object-fit:contain;background:#fff;" />` : `<div class="brand-logo">⚓</div>`}
+            ${compLogo ? `<img class="brand-logo" src="${escapeHtml(compLogo)}" alt="" style="object-fit:contain;background:#fff;" />` : `<div class="brand-logo">⚓</div>`}
             <div class="brand-details">
               <div class="brand-name">${escapeHtml(compName)}</div>
               <div class="brand-tagline">${escapeHtml(compTagline)}</div>

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { DollarSign, TrendingUp, TrendingDown, RefreshCw, Calendar, Globe } from "lucide-react";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader as th } from "@/lib/i18n/table-headers";
+import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { getLanguageDirection } from "@/lib/i18n/languages";
 
 export function FxSettlementView() {
@@ -51,12 +52,30 @@ export function FxSettlementView() {
             {T("Historical exchange rate preservation and directional currency profit/loss audit")}
           </p>
         </div>
+        <div className="flex items-center gap-2">
+        <JournalPrintButton
+          title={T("FX Realization Breakdown")}
+          columns={[
+            { key: "settlement_date", label: T("Date"), format: "date" },
+            { key: (r) => `${(r as any).cr_ref ?? ""} (${(r as any).cr_party || "CR"})`, label: T("CR Side (Source)") },
+            { key: (r) => `${(r as any).dr_ref ?? ""} (${(r as any).dr_party || "DR"})`, label: T("DR Side (Target)") },
+            { key: "local_currency", label: T("Currency"), align: "center" },
+            { key: "linked_local_amount", label: T("Linked Local"), align: "right", format: "number" },
+            { key: "cr_usd_rate", label: T("CR Rate"), align: "right", format: "number" },
+            { key: "dr_usd_rate", label: T("DR Rate"), align: "right", format: "number" },
+            { key: "fx_difference_usd", label: T("FX Diff (USD)"), align: "right", format: "number" },
+            { key: "fx_direction", label: T("Direction"), align: "center", format: "status" },
+          ]}
+          rows={fxList}
+          orientation="landscape"
+        />
         <button
           onClick={loadData}
           className="inline-flex items-center gap-2 p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold"
         >
           <RefreshCw className="h-4 w-4" /> {T("Refresh")}
         </button>
+        </div>
       </div>
 
       {/* KPI Cards */}

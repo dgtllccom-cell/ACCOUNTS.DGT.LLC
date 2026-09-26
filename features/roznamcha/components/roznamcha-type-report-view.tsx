@@ -280,6 +280,32 @@ export function RoznamchaTypeReportView({
     return apiGet<SessionInfo>("/api/erp/auth/session");
   }
 
+  function buildParams(info: SessionInfo | null | undefined, pg: number, size: number) {
+    const params = new URLSearchParams();
+    if (selectedCategory !== "all") params.set("entryCategory", selectedCategory);
+    if (fromDate) params.set("fromDate", fromDate);
+    if (toDate) params.set("toDate", toDate);
+    if (!info?.scopes?.isSuperAdmin) {
+      if (info?.scopes?.countryIds?.[0]) params.set("countryId", info.scopes.countryIds[0]);
+      if (info?.scopes?.cityBranchIds?.[0]) params.set("cityBranchId", info.scopes.cityBranchIds[0]);
+      else if (info?.scopes?.countryBranchIds?.[0]) params.set("countryBranchId", info.scopes.countryBranchIds[0]);
+    } else {
+      if (countryId !== "all") params.set("countryId", countryId);
+      if (branchId !== "all") params.set("branchId", branchId);
+    }
+    if (debitCredit !== "all") params.set("debitCredit", debitCredit);
+    if (currency !== "all") params.set("currency", currency);
+    if (referenceNo.trim()) params.set("referenceNo", referenceNo.trim());
+    if (billNo.trim()) params.set("billNo", billNo.trim());
+    if (status !== "all") params.set("status", status);
+    if (q.trim()) params.set("q", q.trim());
+    params.set("sortBy", sortBy);
+    params.set("sortDir", sortDir);
+    params.set("page", String(pg));
+    params.set("pageSize", String(size));
+    return params;
+  }
+
   async function loadData() {
     setLoading(true);
     try {
@@ -289,30 +315,9 @@ export function RoznamchaTypeReportView({
         setSessionInfo(info);
       }
 
-      const params = new URLSearchParams();
-      if (selectedCategory !== "all") params.set("entryCategory", selectedCategory);
-      if (fromDate) params.set("fromDate", fromDate);
-      if (toDate) params.set("toDate", toDate);
-      if (!info?.scopes?.isSuperAdmin) {
-        if (info?.scopes?.countryIds?.[0]) params.set("countryId", info.scopes.countryIds[0]);
-        if (info?.scopes?.cityBranchIds?.[0]) params.set("cityBranchId", info.scopes.cityBranchIds[0]);
-        else if (info?.scopes?.countryBranchIds?.[0]) params.set("countryBranchId", info.scopes.countryBranchIds[0]);
-      } else {
-        if (countryId !== "all") params.set("countryId", countryId);
-        if (branchId !== "all") params.set("branchId", branchId);
-      }
-      if (debitCredit !== "all") params.set("debitCredit", debitCredit);
-      if (currency !== "all") params.set("currency", currency);
-      if (referenceNo.trim()) params.set("referenceNo", referenceNo.trim());
-      if (billNo.trim()) params.set("billNo", billNo.trim());
-      if (status !== "all") params.set("status", status);
-      if (q.trim()) params.set("q", q.trim());
-      params.set("sortBy", sortBy);
-      params.set("sortDir", sortDir);
-      params.set("page", String(page));
-      params.set("pageSize", String(pageSize));
+      const params = buildParams(info, page, pageSize);
 
-      const res = await apiGet<ReportResponse>(`/api/erp/roznamcha/type-report?${params.toString()}`);
+      const res = await apiGet<ReportResponse>(`/api/erp/roznamcha/reports?${params.toString()}`);
       setData(res);
     } catch (err) {
       console.error("Failed to load Roznamcha report data:", err);
@@ -416,9 +421,26 @@ export function RoznamchaTypeReportView({
     downloadTextFile(`roznamcha-${selectedCategory}-${todayIso()}.csv`, csvContent, "text/csv");
   }
 
+  async function fetchAllRowsForPrint(): Promise<typeof rows> {
+    // Print every row matching the applied filters (all pages), not only the visible page.
+    const size = 200;
+    const collected: typeof rows = [];
+    let pg = 1;
+    for (;;) {
+      const res = await apiGet<ReportResponse>(`/api/erp/roznamcha/reports?${buildParams(sessionInfo, pg, size).toString()}`);
+      const batch = (res?.entries ?? []) as typeof rows;
+      collected.push(...batch);
+      const total = res?.totalCount ?? collected.length;
+      if (batch.length < size || collected.length >= total || pg >= 100) break;
+      pg += 1;
+    }
+    return collected;
+  }
+
   async function printReport() {
-    const totDr = data?.totalDebit ?? rows.reduce((s, r) => s + Number(primaryLine(r)?.debit || 0), 0);
-    const totCr = data?.totalCredit ?? rows.reduce((s, r) => s + Number(primaryLine(r)?.credit || 0), 0);
+    const printRows = await fetchAllRowsForPrint();
+    const totDr = data?.totalDebit ?? printRows.reduce((s, r) => s + Number(primaryLine(r)?.debit || 0), 0);
+    const totCr = data?.totalCredit ?? printRows.reduce((s, r) => s + Number(primaryLine(r)?.credit || 0), 0);
 
     const sc = sessionInfo?.scopes;
     const brand = await resolveLedgerBranding(
@@ -435,7 +457,7 @@ export function RoznamchaTypeReportView({
 
     openUniversalPrintReport({
       title: localizedPageTitle,
-      subtitle: `From: ${fromDate || "Start"} | To: ${toDate || "Today"} | Total Entries: ${data?.totalCount ?? rows.length}`,
+      subtitle: `From: ${fromDate || "Start"} | To: ${toDate || "Today"} | Total Entries: ${data?.totalCount ?? printRows.length}`,
       lang: currentLang,
       moduleType: "roznamcha",
       orientation: "landscape",
@@ -461,10 +483,10 @@ export function RoznamchaTypeReportView({
         { key: "debit", label: tt("rozrep.debit", "Debit"), format: "currency", align: "right", width: "7%" },
         { key: "credit", label: tt("rozrep.credit", "Credit"), format: "currency", align: "right", width: "7%" },
       ],
-      rows: rows.map((row, idx) => {
+      rows: printRows.map((row, idx) => {
         const line = primaryLine(row);
         return {
-          srNo: idx + 1 + (page - 1) * pageSize,
+          srNo: idx + 1,
           entryDate: cleanDate(row.entry_date || row.created_at),
           entrySerial: entrySerial(row),
           countryName: row.countries?.name ?? "-",

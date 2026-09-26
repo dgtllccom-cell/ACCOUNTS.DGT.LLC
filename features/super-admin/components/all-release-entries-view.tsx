@@ -134,10 +134,22 @@ export function AllReleaseEntriesView({ lang: langProp = "en" }: { lang?: string
   // CSV export of the current filtered result set (server-side filtered; capped so the browser
   // never pulls the entire ERP history). Fetches up to EXPORT_CAP matching rows in one request.
   const EXPORT_CAP = 5000;
+  // The activity API caps pageSize at 100, so page through every matching row (same filters).
+  async function fetchAllEntries(): Promise<FeedEntry[]> {
+    const all: FeedEntry[] = [];
+    const size = 100;
+    for (let p = 1; all.length < EXPORT_CAP; p++) {
+      const r = await apiGet<ActivityResponse>(`/api/erp/super-admin/activity?${buildQuery({ page: String(p), pageSize: String(size) }).toString()}`);
+      const batch = r.entries || [];
+      all.push(...batch);
+      if (batch.length < size || all.length >= (r.total ?? 0)) break;
+    }
+    return all;
+  }
   async function exportCsv() {
     setExporting(true);
     try {
-      const res = await apiGet<ActivityResponse>(`/api/erp/super-admin/activity?${buildQuery({ page: "1", pageSize: String(EXPORT_CAP) }).toString()}`);
+      const res = { entries: await fetchAllEntries() };
       const cols: Array<[string, (e: FeedEntry) => string]> = [
         [tt("rozrep.sno", "Sr #"), (e) => String(e.sr)],
         [tt("bankroz.date_time", "Date / Time"), (e) => (e.date ? new Date(e.date).toLocaleString() : "")],
@@ -173,7 +185,14 @@ export function AllReleaseEntriesView({ lang: langProp = "en" }: { lang?: string
     }
   }
 
-  function printJournal() {
+  async function printJournal() {
+    let printEntries = entries;
+    try {
+      const full = await fetchAllEntries();
+      if (full.length) printEntries = full;
+    } catch {
+      // fall back to the loaded page
+    }
     openJournalReportWindow({
       lang,
       autoPrint: true,
@@ -207,7 +226,7 @@ export function AllReleaseEntriesView({ lang: langProp = "en" }: { lang?: string
         { key: "credit", label: tt("rozrep.credit", "Credit"), num: true },
         { key: "status", label: tt("acct.status", "Status") }
       ],
-      rows: entries.map((e) => ({
+      rows: printEntries.map((e) => ({
         sr: String(e.sr), date: e.date ? new Date(e.date).toLocaleString() : "-", module: moduleLabel(e.module),
         country: e.country, branch: e.branch, entryName: e.entryName, party: e.party, reference: e.reference,
         debit: e.debit ? fmtMoney(e.debit) : "-", credit: e.credit ? fmtMoney(e.credit) : "-", status: e.status

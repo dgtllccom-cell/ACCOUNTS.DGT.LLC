@@ -19,6 +19,7 @@ import { SearchableSelect } from "@/components/ui/searchable-select";
 import { ExpensesInvoicePrint } from "@/components/reports/expenses-invoice-print";
 import { ExpensesInvoicePrintStyle2 } from "@/components/reports/expenses-invoice-print-style2";
 import { apiGet, apiPost } from "@/lib/api/client";
+import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { Th } from "@/components/ui/translated-th";
 import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
 import { VoiceFormFill } from "@/components/voice-form-fill";
@@ -508,6 +509,18 @@ export function ExpensesBillEntryForm({
       setLoadingBills(false);
     }
   };
+
+  const billPrintRow = (b: any) => ({
+    serial_no: b.serial_no,
+    bill_date: b.bill_date,
+    country: b.city_branches?.countries?.name || "",
+    branch: b.city_branches?.name || b.branch_id || "",
+    type: [b.bill_mode, b.bill_title].filter(Boolean).join(" - "),
+    user: b.profiles?.full_name || "",
+    currency: b.city_branches?.countries?.currency_code || "",
+    total: b.expenses_bill_lines?.reduce((sum: number, l: any) => sum + Number(l.grand_amount), 0) || 0,
+    transfer_status: b.transferred_to_roznamcha ? tt("exp.transferred", "Transferred") : tt("exp.no_transfer", "No Transfer"),
+  }) as Record<string, unknown>;
 
   const filteredLedgers = useMemo(() => {
     if (!transferBill) return [];
@@ -1514,6 +1527,30 @@ export function ExpensesBillEntryForm({
         <h3 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
           <FileText className="w-4 h-4 text-primary" />
           {tt("exp.recent_bills", "Recent Expenses Bills")}
+          <span className="ms-auto">
+            <JournalPrintButton
+              title={tt("exp.recent_bills", "Recent Expenses Bills")}
+              columns={[
+                { key: "serial_no", label: "Serial", align: "center" },
+                { key: "bill_date", label: "Date", align: "center", format: "date" },
+                { key: "country", label: "Country" },
+                { key: "branch", label: "Branch" },
+                { key: "type", label: "Type" },
+                { key: "user", label: "User" },
+                { key: "currency", label: "Currency", align: "center" },
+                { key: "total", label: "Total Amount", align: "right", format: "number" },
+                { key: "transfer_status", label: "Transfer Status", align: "center" },
+              ]}
+              rows={recentBills.map(billPrintRow)}
+              fetchFullData={async () => {
+                const qs = new URLSearchParams({ limit: "5000" });
+                if (initialBillCategory) qs.set("category", initialBillCategory);
+                const res = await apiGet<any>(`/api/erp/expenses?${qs.toString()}`);
+                return ((res?.bills ?? []) as any[]).map(billPrintRow);
+              }}
+              orientation="landscape"
+            />
+          </span>
         </h3>
         <Card className="shadow-sm overflow-hidden">
           <div className="overflow-x-auto">

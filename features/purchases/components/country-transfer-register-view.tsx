@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, Globe, RefreshCcw, Search } from "lucide-react";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { JournalPrintButton } from "@/components/reports/journal-print-button";
 
 function buildTt(lang: string) {
   return (key: string, fb: string) => t((lang || "en") as any, key as any, fb);
@@ -109,6 +110,23 @@ export function CountryTransferRegisterView() {
           >
             <RefreshCcw className="h-3.5 w-3.5" /> {tt("common.refresh", "Refresh")}
           </button>
+          <JournalPrintButton
+            title={tt("ctransfer.title", "Country Transfer Register")}
+            columns={[
+              { key: "purchase_order_no", label: tt("ctransfer.bill_no", "Bill / PO No."), align: "center" },
+              { key: "purchase_contract_no", label: tt("purchase.contract_no_label", "Contract No"), align: "center" },
+              { key: (r) => `${(r as any).source_country_name ?? ""} / ${(r as any).source_branch_name ?? ""}`, label: tt("ctransfer.source", "Source Country / Branch") },
+              { key: (r) => `${(r as any).dest_country_name ?? ""} / ${(r as any).dest_branch_name ?? ""}`, label: tt("ctransfer.destination", "Destination Country / Branch") },
+              { key: "goods_name", label: tt("ctransfer.goods", "Goods") },
+              { key: "currency_code", label: tt("common.currency", "Currency"), align: "center" },
+              { key: "order_total", label: tt("ctransfer.amount", "Purchase Amount"), align: "right", format: "number" },
+              { key: "advance_paid", label: tt("ctransfer.advance", "Advance"), align: "right", format: "number" },
+              { key: "remaining_due", label: tt("ctransfer.remaining", "Remaining"), align: "right", format: "number" },
+              { key: "payment_status", label: tt("common.status", "Status"), align: "center", format: "status" },
+            ]}
+            rows={filtered as unknown as Record<string, unknown>[]}
+            orientation="landscape"
+          />
         </div>
       </div>
 

@@ -15,6 +15,7 @@ import { Plus, RefreshCcw, Check, X as XIcon, MapPin } from "lucide-react";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { Th } from "@/components/ui/translated-th";
 import { SearchSelect } from "@/components/ui/search-select";
+import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { ReviewMarker } from "@/components/ui/review-marker";
 import { listCountries, type LocationCountry } from "@/features/locations/location-api";
 
@@ -175,6 +176,21 @@ export function LocationMasterView({ lang: langProp }: { lang?: string }) {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <JournalPrintButton
+              title={s.t("title", "Central Location Master")}
+              columns={[
+                { key: "name", label: s.t("col_name", "Name") },
+                { key: (r) => typeLabel(String((r as any).location_type ?? "")), label: s.t("col_type", "Type") },
+                { key: (r) => (r as any).country?.name ?? "", label: s.t("col_country", "Country") },
+                { key: "code", label: s.t("col_code", "Code"), align: "center" },
+                { key: (r) => s.t(`status_${(r as any).status}`, String((r as any).status ?? "")), label: s.t("col_status", "Status"), align: "center", format: "status" },
+              ]}
+              rows={rows as unknown as Record<string, unknown>[]}
+              filters={[
+                ...(typeFilter ? [{ label: s.t("col_type", "Type"), value: typeLabel(typeFilter) }] : []),
+                ...(statusFilter ? [{ label: s.t("col_status", "Status"), value: s.t(`status_${statusFilter}`, statusFilter) }] : []),
+              ]}
+            />
             <button type="button" onClick={() => void loadRows()} className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
               <RefreshCcw className="h-3.5 w-3.5" /> {s.t("refresh", "Refresh")}
             </button>

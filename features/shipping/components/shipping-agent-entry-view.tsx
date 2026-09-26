@@ -9,6 +9,7 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { Th } from "@/components/ui/translated-th";
 import { ClearingAgentPicker, type ClearingAgentRow as ClearingAgentPickerRow } from "@/features/shipping/components/clearing-agent-picker";
 import { ShippingLinePicker, type ShippingLineRow as ShippingLinePickerRow } from "@/features/shipping/components/shipping-line-picker";
+import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { apiGet } from "@/lib/api/client";
 import { VoiceDictateButton } from "@/components/voice-dictate-button";
 
@@ -343,6 +344,22 @@ export function ShippingAgentEntryView({ lang: langProp }: { lang: SupportedLang
         <div className="bg-card border border-border/80 rounded-2xl p-6 shadow-sm space-y-4 text-card-foreground">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/60 pb-4">
             <h2 className="text-lg font-bold text-foreground">{tt("sag.registered", "Registered Shipping Agents")} ({filteredRows.length})</h2>
+            <div className="flex flex-wrap items-center gap-3">
+            <JournalPrintButton
+              title={tt("sag.registered", "Registered Shipping Agents")}
+              columns={[
+                { key: "agent_code", label: tt("sag.agent_code", "Agent Code"), align: "center" },
+                { key: "agent_name", label: tt("sag.agent_name", "Agent Name") },
+                { key: "shipping_line_name", label: tt("sag.shipping_line", "Shipping Line") },
+                { key: "contact_person", label: tt("sag.contact_person", "Contact Person") },
+                { key: "phone", label: tt("sag.phone", "Phone"), align: "center" },
+                { key: (r) => (r as any).city_name ? `${(r as any).city_name}, ${(r as any).country_name || ""}` : String((r as any).country_name || ""), label: tt("sag.location", "Location") },
+                { key: "status", label: tt("common.status", "Status"), align: "center", format: "status" },
+              ]}
+              rows={filteredRows as unknown as Record<string, unknown>[]}
+              filters={query.trim() ? [{ label: tt("common.search", "Search"), value: query.trim() }] : []}
+              orientation="landscape"
+            />
             <div className="relative">
               <Search className="w-4 h-4 absolute left-3 top-2.5 text-muted-foreground" />
               <input
@@ -352,6 +369,7 @@ export function ShippingAgentEntryView({ lang: langProp }: { lang: SupportedLang
                 onChange={(e) => setQuery(e.target.value)}
                 className="bg-background border border-border/80 rounded-xl pl-9 pr-4 py-2 text-xs text-foreground placeholder:text-muted-foreground/50 w-64 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
               />
+            </div>
             </div>
           </div>
 

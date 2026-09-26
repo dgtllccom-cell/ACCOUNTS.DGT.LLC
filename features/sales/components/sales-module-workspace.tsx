@@ -215,7 +215,7 @@ export function SalesModuleWorkspace({
     setLoading(true);
     setError("");
     try {
-      const response = await fetch("/api/erp/sales/orders?limit=300", { cache: "no-store" });
+      const response = await fetch("/api/erp/sales/orders?limit=500", { cache: "no-store" });
       const body = (await response.json().catch(() => ({}))) as OrdersPayload;
       if (!response.ok || body.ok === false) {
         const message = typeof body.error === "string" ? body.error : body.error?.message;

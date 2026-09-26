@@ -36,6 +36,7 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { QrCode as QrCodeGraphic } from "@/components/ui/qr-code";
 import { VoiceDictateButton } from "@/components/voice-dictate-button";
 
@@ -1242,6 +1243,20 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
                     className="w-full rounded-xl border border-border bg-background ps-9 pe-3 py-2 text-xs outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
+                <JournalPrintButton
+                  title={tt("transit.registered_entries", "Registered Transit Entries")}
+                  columns={[
+                    { key: "entry_serial", label: tt("transit.col_entry_serial", "Entry Serial"), align: "center" },
+                    { key: (r) => [(r as any).invoice_no, (r as any).transit_no].filter(Boolean).join(" / "), label: tt("transit.col_invoice_transit", "Invoice / Transit No"), align: "center" },
+                    { key: "goods_name", label: tt("transit.col_goods_desc", "Goods Description") },
+                    { key: (r) => `${(r as any).quantity ?? ""} ${(r as any).unit ?? ""}`.trim(), label: tt("common.quantity", "Quantity"), align: "right" },
+                    { key: "total_amount", label: tt("transit.col_total_amount", "Total Amount"), align: "right", format: "number" },
+                    { key: (r) => [(r as any).export_company, (r as any).import_company].filter(Boolean).join(" / "), label: tt("transit.col_export_import", "Export / Import Company") },
+                  ]}
+                  rows={filteredEntries as unknown as Record<string, unknown>[]}
+                  filters={searchQuery.trim() ? [{ label: tt("common.search", "Search"), value: searchQuery.trim() }] : []}
+                  orientation="landscape"
+                />
                 <Button
                   size="sm"
                   variant="outline"

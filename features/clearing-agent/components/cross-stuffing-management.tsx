@@ -6,6 +6,7 @@ import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { getLanguageDirection } from "@/lib/i18n/languages";
 import { Th } from "@/components/ui/translated-th";
+import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { WarehousePicker } from "@/features/warehouses/components/warehouse-picker";
 import { GoodsPicker, type GoodsPickerValue } from "@/features/goods-master/components/goods-picker";
 
@@ -220,6 +221,25 @@ export function CrossStuffingManagement({ lang: langProp }: { lang?: string }) {
           <button type="button" onClick={() => void loadEvents()} className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
             <RefreshCcw className="h-3.5 w-3.5" /> {tt("common.refresh", "Refresh")}
           </button>
+          <JournalPrintButton
+            title={tt("cs.title", "Cross-Stuffing")}
+            columns={[
+              { key: "container_number", label: tt("cs.col_container", "Container"), align: "center" },
+              { key: "warehouse_name", label: tt("cs.col_warehouse", "Warehouse") },
+              { key: "event_date", label: tt("cs.col_date", "Date"), align: "center", format: "date" },
+              { key: "status", label: tt("cs.col_status", "Status"), align: "center", format: "status" },
+              { key: "line_count", label: tt("cs.col_lines", "Lines"), align: "right", format: "number" },
+              { key: "total_quantity", label: tt("cs.col_total_qty", "Total Qty"), align: "right", format: "number" },
+            ]}
+            rows={events as unknown as Record<string, unknown>[]}
+            fetchFullData={async () => {
+              const res = await fetch("/api/erp/cross-stuffing?limit=500");
+              const json = await res.json();
+              if (!res.ok) throw new Error(json?.error || "Failed to load");
+              return (json.events || []) as Record<string, unknown>[];
+            }}
+            orientation="landscape"
+          />
           <button type="button" onClick={openNew} className="inline-flex items-center gap-1.5 rounded-xl bg-cyan-600 px-3.5 py-2 text-xs font-black text-white shadow-sm hover:bg-cyan-500">
             <Plus className="h-3.5 w-3.5" /> {tt("cs.new_event", "New Cross-Stuffing Event")}
           </button>

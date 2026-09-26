@@ -26,7 +26,6 @@ import {
   Eye,
   SlidersHorizontal,
   Download,
-  Printer,
   Columns3,
   Filter,
   Navigation,
@@ -51,6 +50,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import {
@@ -334,6 +334,25 @@ export function CanonicalShipmentTrackingView({
       setListLoading(false);
     }
   }, [debouncedQuery, domain, currentPage, modeFilter, statusFilter]);
+
+  // Print every record matching the applied search/mode/status filters. The list API is
+  // server-paged (max 100 per request), so page through it with the same params.
+  const fetchAllTrackingRows = useCallback(async (): Promise<Record<string, unknown>[]> => {
+    const all: TrackingListRow[] = [];
+    const size = 100;
+    for (let offset = 0; offset < 50000; offset += size) {
+      const params = new URLSearchParams({ q: debouncedQuery, domain, limit: String(size), offset: String(offset) });
+      if (modeFilter !== "all") params.set("mode", modeFilter);
+      if (statusFilter !== "all") params.set("status", statusFilter);
+      const res = await fetch(`/api/erp/tracking/list?${params}`);
+      const json = await res.json();
+      if (!json.ok) break;
+      const batch: TrackingListRow[] = json.data.rows || [];
+      all.push(...batch);
+      if (batch.length < size || all.length >= (json.data.total || 0)) break;
+    }
+    return all as unknown as Record<string, unknown>[];
+  }, [debouncedQuery, domain, modeFilter, statusFilter]);
 
   // ── Load detail panel ─────────────────────────────────────────────────────
   const loadDetail = useCallback(
@@ -691,12 +710,33 @@ export function CanonicalShipmentTrackingView({
 
               {/* Table Actions */}
               <div className="flex items-center gap-1 border border-border/70 rounded-lg p-0.5">
-                <button
-                  className="p-1.5 rounded-md hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"
-                  title="Print"
-                >
-                  <Printer className="h-3.5 w-3.5" />
-                </button>
+                <JournalPrintButton
+                  title={title || "Container & Vessel Tracking"}
+                  columns={[
+                    { key: "orderNo", label: "Shipment No" },
+                    { key: "blNumber", label: "BL No" },
+                    { key: "containerNumber", label: "Container No" },
+                    { key: "truckNumber", label: "Truck No" },
+                    { key: "shippingLine", label: "Shipping Line" },
+                    { key: "vesselVoyage", label: "Vessel / Voyage" },
+                    { key: "from", label: "From" },
+                    { key: "to", label: "To" },
+                    { key: (r) => modeLabel(String((r as any).transportMode ?? "")), label: "Mode", align: "center" },
+                    { key: "currentLocation", label: "Current Location" },
+                    { key: (r) => formatDate((r as any).eta), label: "ETA" },
+                    { key: (r) => statusLabel(String((r as any).currentStage ?? "")), label: "Status", align: "center", format: "status" },
+                  ]}
+                  rows={listRows as unknown as Record<string, unknown>[]}
+                  fetchFullData={fetchAllTrackingRows}
+                  filters={[
+                    ...(debouncedQuery.trim() ? [{ label: "Search", value: debouncedQuery.trim() }] : []),
+                    ...(modeFilter !== "all" ? [{ label: "Mode", value: modeLabel(modeFilter) }] : []),
+                    ...(statusFilter !== "all" ? [{ label: "Status", value: statusLabel(statusFilter) }] : []),
+                  ]}
+                  orientation="landscape"
+                  variant="ghost"
+                  className="h-7 px-2"
+                />
                 <button
                   className="p-1.5 rounded-md hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"
                   title="Export"

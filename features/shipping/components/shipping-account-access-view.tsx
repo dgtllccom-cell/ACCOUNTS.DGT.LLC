@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 
 type MinimalAccountView = {
@@ -318,7 +319,37 @@ export function ShippingAccountAccessView({ lang: langProp }: { lang?: Supported
             </div>
             {statement && (
               <div className="space-y-2 rounded-md border p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className={`text-sm font-semibold ${s.textStart}`}>{s.t("statement_title", "Account Statement")}</p>
+                {statement.lines.length > 0 && (
+                  <JournalPrintButton
+                    title={s.t("statement_title", "Account Statement")}
+                    subtitle={`${selected.name} (${selected.code})`}
+                    columns={[
+                      { key: "entryDate", label: s.t("col_date", "Date"), align: "center", format: "date" },
+                      { key: "voucherNo", label: s.t("col_voucher", "Voucher"), align: "center" },
+                      { key: (r) => String((r as any).referenceNo ?? (r as any).description ?? ""), label: s.t("col_reference", "Reference") },
+                      { key: "createdByName", label: s.t("col_user", "User") },
+                      { key: "branchName", label: s.t("col_branch", "Branch") },
+                      { key: (r) => String((r as any).sourceModule ?? "roznamcha"), label: s.t("col_source", "Source") },
+                      { key: "debit", label: s.t("col_debit", "Debit"), align: "right", format: "number" },
+                      { key: "credit", label: s.t("col_credit", "Credit"), align: "right", format: "number" },
+                      // The running balance is printed only when the page itself shows it
+                      // (full-ledger mode); own-transactions mode returns null balances.
+                      ...(statement.lines.some((l) => l.runningBalance !== null)
+                        ? [{ key: "runningBalance", label: s.t("col_balance", "Balance"), align: "right" as const, format: "number" as const }]
+                        : []),
+                    ]}
+                    rows={statement.lines as unknown as Record<string, unknown>[]}
+                    filters={[
+                      { label: s.t("col_currency", "Currency"), value: selected.currency },
+                      ...(statement.openingBalance !== null ? [{ label: s.t("opening_balance", "Opening balance"), value: statement.openingBalance.toLocaleString() }] : []),
+                      ...(statement.closingBalance !== null ? [{ label: s.t("closing_balance", "Closing balance"), value: statement.closingBalance.toLocaleString() }] : []),
+                    ]}
+                    orientation="landscape"
+                  />
+                )}
+                </div>
                 <p className={`text-xs text-muted-foreground ${s.textStart}`}>
                   {statement.mode === "full" ? s.t("statement_mode_full", "Complete authorised ledger with running balance.") : s.t("statement_mode_own", "Only the transactions you posted are shown. Other activity and the balance are not available to you.")}
                   {statement.domainFilter === "shipping" ? " " + s.t("statement_shipping_only", "Shipping-side activity only. Business transactions of a shared account are not shown.") : ""}

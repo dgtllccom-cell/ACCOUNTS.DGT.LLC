@@ -4530,11 +4530,7 @@ export function LocalPurchaseView({
                               qty: `${Number(p.quantity_kgs || 0).toLocaleString()} ${p.quantity_name || "—"}`,
                               finalAmount: Number(p.final_cost || p.purchase_cost || 0),
                               status: (p.status || "DRAFT").toUpperCase()
-                            })) : [
-                              { voucherNo: "LP-001235", date: "25/09/2026", supplier: "XYZ Trading", goods: "Almond Kernel", qty: "50 Bag", finalAmount: 22500, status: "POSTED" },
-                              { voucherNo: "LP-001234", date: "24/09/2026", supplier: "ABC Foods", goods: "Walnut Kernel", qty: "30 Bag", finalAmount: 18400, status: "DRAFT" },
-                              { voucherNo: "LP-001233", date: "22/09/2026", supplier: "Kabul Trading", goods: "Pistachio", qty: "20 Bag", finalAmount: 12700, status: "POSTED" },
-                            ]}
+                            })) : []}
                             variant="ghost"
                             className="w-full justify-start text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 h-8 px-2"
                           />

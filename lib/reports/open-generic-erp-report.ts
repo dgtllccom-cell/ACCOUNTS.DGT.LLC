@@ -32,7 +32,7 @@ export function formatCellValue(value: unknown, column: GenericReportColumn, lan
   }
 
   if (column.format === "date") {
-    return formatDate(String(value));
+    return formatDate(String(value), lang);
   }
 
   if (column.format === "currency") {

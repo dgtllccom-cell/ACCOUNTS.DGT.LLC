@@ -256,7 +256,33 @@ export function JournalBookingStockDashboard({ session }: { session: any }) {
     URL.revokeObjectURL(url);
   };
 
-  const handlePrint = () => {
+  const fetchAllRowsForPrint = async (): Promise<Record<string, unknown>[]> => {
+    // Every row matching the applied filters (all server pages), not just the visible page.
+    const size = 500;
+    const all: Record<string, unknown>[] = [];
+    for (let pg = 1; pg <= 100; pg += 1) {
+      const params = new URLSearchParams();
+      if (dateFrom) params.set("dateFrom", dateFrom);
+      if (dateTo) params.set("dateTo", dateTo);
+      if (purchaseOrderNo) params.set("purchaseOrderNo", purchaseOrderNo);
+      if (goodsName) params.set("goodsName", goodsName);
+      if (hsCode) params.set("hsCode", hsCode);
+      if (countryId) params.set("countryId", countryId);
+      if (countryBranchId) params.set("countryBranchId", countryBranchId);
+      params.set("page", String(pg));
+      params.set("limit", String(size));
+      const res = await fetch(`/api/erp/purchases/journal-booking-stock?${params.toString()}`, { credentials: "include" });
+      const body = await res.json();
+      if (!res.ok || !body?.ok) throw new Error(body?.error?.message ?? "Failed to load stock data");
+      const batch = (body.data?.rows ?? []) as Record<string, unknown>[];
+      all.push(...batch);
+      if (batch.length < size || pg >= (body.data?.pagination?.totalPages ?? pg)) break;
+    }
+    return all;
+  };
+
+  const handlePrint = async () => {
+    const printRows = await fetchAllRowsForPrint();
     void openScopedGenericReport({
       title: "Journal Booking Stock — Container Goods Received",
       subtitle: [dateFrom, dateTo].filter(Boolean).join(" — "),
@@ -285,7 +311,7 @@ export function JournalBookingStockDashboard({ session }: { session: any }) {
         { key: (r) => `${(r as any).salesAccountNo ?? ""} - ${(r as any).salesAccount ?? ""}`, label: "Sales Account" },
         { key: "importExport", label: "Imp/Exp" },
       ],
-      rows: (data?.rows ?? []) as unknown as Record<string, unknown>[],
+      rows: printRows,
     });
   };
 

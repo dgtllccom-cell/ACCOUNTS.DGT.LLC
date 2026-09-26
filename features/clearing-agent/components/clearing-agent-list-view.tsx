@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Users, Search, Plus, Phone, Mail, MapPin, Building2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import type { ClearingAgentRow } from "@/lib/repositories/clearing-agents-repository";
 
 export function ClearingAgentListView({ initialAgents }: { initialAgents: ClearingAgentRow[] }) {
@@ -36,12 +37,28 @@ export function ClearingAgentListView({ initialAgents }: { initialAgents: Cleari
             Registered customs brokers, clearing representatives and authorized shipping partners.
           </p>
         </div>
+        <div className="flex items-center gap-2">
+        <JournalPrintButton
+          title="Clearing Agents"
+          columns={[
+            { key: (r) => String((r as any).clearing_agent_code || (r as any).code || ""), label: "Agent Code", align: "center" },
+            { key: "name", label: "Agent Name" },
+            { key: "contact_person", label: "Contact Person" },
+            { key: "phone", label: "Phone", align: "center" },
+            { key: "email", label: "Email" },
+            { key: (r) => String((r as any).status || "active"), label: "Status", align: "center", format: "status" },
+          ]}
+          rows={filtered as unknown as Record<string, unknown>[]}
+          filters={search.trim() ? [{ label: "Search", value: search.trim() }] : []}
+          orientation="landscape"
+        />
         <Link href="/dashboard/shipping-line/agent-entry">
           <Button className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs gap-1.5 shadow-sm">
             <Plus className="h-4 w-4" />
             New Agent Entry
           </Button>
         </Link>
+        </div>
       </div>
 
       {/* Search & Filter Bar */}
