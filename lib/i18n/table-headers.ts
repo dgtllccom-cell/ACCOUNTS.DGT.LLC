@@ -830,7 +830,6 @@ export const HEADER_TRANSLATIONS: Record<string, Row> = {
   "SIZE": { ur: "سائز", ar: "الحجم", fa: "اندازه", ps: "کچه" },
   "UNIT PRICE": { ur: "فی یونٹ قیمت", ar: "سعر الوحدة", fa: "قیمت واحد", ps: "د واحد بیه" },
   "PRICE": { ur: "قیمت", ar: "السعر", fa: "قیمت", ps: "بیه" },
-  "CATEGORY": { ur: "زمرہ", ar: "الفئة", fa: "دسته‌بندی", ps: "کټګوري" },
   "CODE": { ur: "کوڈ", ar: "الرمز", fa: "کد", ps: "کوډ" },
   "NAME": { ur: "نام", ar: "الاسم", fa: "نام", ps: "نوم" },
   "SALES ACCOUNT": { ur: "فروخت اکاؤنٹ", ar: "حساب المبيعات", fa: "حساب فروش", ps: "د پلور حساب" },
