@@ -208,7 +208,6 @@ export async function POST(request: NextRequest) {
         company_id: body.companyId ?? null,
         id_type: body.idType ?? null,
         id_value: body.idValue ?? null,
-        raw_password: body.password ?? null,
         designation: body.designation ?? null,
         department: body.department ?? null,
         cnic_passport_no: body.cnicPassportNo ?? null,
@@ -236,7 +235,6 @@ export async function POST(request: NextRequest) {
             company_id: body.companyId ?? null,
             id_type: body.idType ?? null,
             id_value: body.idValue ?? null,
-            raw_password: body.password ?? null
           }
         });
 
@@ -253,7 +251,6 @@ export async function POST(request: NextRequest) {
               company_id: body.companyId ?? null,
               id_type: body.idType ?? null,
               id_value: body.idValue ?? null,
-              raw_password: body.password ?? null
             }
           });
 
@@ -279,7 +276,6 @@ export async function POST(request: NextRequest) {
       user_code: issuedUserCode,
       preferred_language_code: body.preferredLanguage,
       default_company_id: body.companyId ?? null,
-      raw_password: body.password ?? null,
       employee_id: body.employeeId ?? null,
       person_master_id: body.personMasterId ?? null,
       first_name: body.firstName ?? null,
@@ -646,15 +642,14 @@ export async function PATCH(request: NextRequest) {
       const userMetadata: any = {};
       const updates: any = {};
       if (body.password !== undefined) {
+        // SECURITY: the password lives only in Supabase Auth (hashed). Never store or echo a readable copy;
+        // also clear any legacy readable copy left on the profile row by earlier versions.
         updates.password = body.password;
-        userMetadata.raw_password = body.password;
-        // Also update profile table raw_password
         try {
-          await admin.from("profiles").update({ raw_password: body.password, updated_at: new Date().toISOString() }).eq("id", body.userId);
-        } catch { /* ignore if column missing */ }
+          await admin.from("profiles").update({ raw_password: null, updated_at: new Date().toISOString() }).eq("id", body.userId);
+        } catch { /* column may not exist */ }
       }
       if (body.email !== undefined) updates.email = body.email;
-      if (body.password !== undefined) userMetadata.raw_password = body.password;
       if (body.phone !== undefined) userMetadata.phone = body.phone;
       if (body.purpose !== undefined) userMetadata.purpose = body.purpose;
       if (body.designation !== undefined) userMetadata.designation = body.designation;
@@ -670,6 +665,8 @@ export async function PATCH(request: NextRequest) {
           ...(currentAuth?.user?.user_metadata ?? {}),
           ...userMetadata
         };
+        delete (updates.user_metadata as any).raw_password;
+        delete (updates.user_metadata as any).password;
         
         await admin.auth.admin.updateUserById(body.userId, updates);
       } catch {

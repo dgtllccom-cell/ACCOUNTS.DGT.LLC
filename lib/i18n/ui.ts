@@ -29382,6 +29382,11 @@ const en: Dict = {
   "shipacc.no_statement_lines": "No transactions to show.",
   "shipacc.domain_both": "Shared (Business + Shipping)",
   "shipacc.duplicate_account": "An account for this party already exists. Use the existing account instead of creating a new one.",
+  "users.jr_err_admin_unavailable": "Supabase admin client unavailable",
+  "users.jr_err_list_auth_users": "Failed to list auth users",
+  "users.jr_sub_general_admin": "General Administration",
+  "users.jr_sub_shipping_ops": "Shipping Line Operations",
+  "users.jr_sub_transport_ops": "Transport Operations",
 };
 
 const ur: Dict = {
@@ -49663,6 +49668,11 @@ const ur: Dict = {
   "shipacc.no_statement_lines": "دکھانے کے لیے کوئی ٹرانزیکشن نہیں۔",
   "shipacc.domain_both": "مشترکہ (بزنس + شپنگ)",
   "shipacc.duplicate_account": "اس فریق کا اکاؤنٹ پہلے سے موجود ہے۔ نیا بنانے کے بجائے موجودہ اکاؤنٹ استعمال کریں۔",
+  "users.jr_err_admin_unavailable": "سپا بیس ایڈمن کلائنٹ دستیاب نہیں",
+  "users.jr_err_list_auth_users": "تصدیقی صارفین کی فہرست حاصل نہ ہو سکی",
+  "users.jr_sub_general_admin": "جنرل ایڈمنسٹریشن",
+  "users.jr_sub_shipping_ops": "شپنگ لائن آپریشنز",
+  "users.jr_sub_transport_ops": "ٹرانسپورٹ آپریشنز",
 };
 
 const ar: Dict = {
@@ -69945,6 +69955,11 @@ const ar: Dict = {
   "shipacc.no_statement_lines": "لا توجد معاملات للعرض.",
   "shipacc.domain_both": "مشترك (أعمال + شحن)",
   "shipacc.duplicate_account": "يوجد حساب لهذا الطرف بالفعل. استخدم الحساب الحالي بدلاً من إنشاء حساب جديد.",
+  "users.jr_err_admin_unavailable": "عميل مسؤول Supabase غير متاح",
+  "users.jr_err_list_auth_users": "تعذر جلب قائمة مستخدمي المصادقة",
+  "users.jr_sub_general_admin": "الإدارة العامة",
+  "users.jr_sub_shipping_ops": "عمليات خطوط الشحن",
+  "users.jr_sub_transport_ops": "عمليات النقل",
 };
 
 const fa: Dict = {
@@ -90226,6 +90241,11 @@ const fa: Dict = {
   "shipacc.no_statement_lines": "تراکنشی برای نمایش وجود ندارد.",
   "shipacc.domain_both": "مشترک (تجاری + حمل‌ونقل)",
   "shipacc.duplicate_account": "برای این طرف حساب از قبل وجود دارد. به جای ایجاد حساب جدید از حساب موجود استفاده کنید.",
+  "users.jr_err_admin_unavailable": "کلاینت مدیر Supabase در دسترس نیست",
+  "users.jr_err_list_auth_users": "دریافت فهرست کاربران احراز هویت ناموفق بود",
+  "users.jr_sub_general_admin": "مدیریت عمومی",
+  "users.jr_sub_shipping_ops": "عملیات خط کشتیرانی",
+  "users.jr_sub_transport_ops": "عملیات حمل‌ونقل",
 };
 
 const ps: Dict = {
@@ -110514,6 +110534,11 @@ const ps: Dict = {
   "shipacc.no_statement_lines": "د ښودلو لپاره هیڅ راکړه ورکړه نشته.",
   "shipacc.domain_both": "ګډ (سوداګري + بار وړل)",
   "shipacc.duplicate_account": "د دې اړخ حساب لا مخکې شتون لري. د نوي جوړولو پر ځای موجود حساب وکاروئ.",
+  "users.jr_err_admin_unavailable": "د Supabase اډمین کلاینټ نشته",
+  "users.jr_err_list_auth_users": "د تصدیق کارونکو لیست ترلاسه نه شو",
+  "users.jr_sub_general_admin": "عمومي اداره",
+  "users.jr_sub_shipping_ops": "د بار وړونکې کرښې عملیات",
+  "users.jr_sub_transport_ops": "د ټرانسپورټ عملیات",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
