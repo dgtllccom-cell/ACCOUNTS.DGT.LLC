@@ -117,14 +117,24 @@ npm install --include=dev
 node scripts/db-apply-all-migrations.mjs || true
 echo "[VPS 3c/7] ERP translation memory verified (in-memory glossary active)."
 
+echo "[VPS 3d/7] Ensuring swap space & freeing RAM before build..."
+if [ $(free -m | awk '/Swap:/ {print $2}') -lt 2000 ]; then
+  echo 'Allocating 2GB swap space...'
+  fallocate -l 2G /swapfile 2>/dev/null || dd if=/dev/zero of=/swapfile bs=1M count=2048
+  chmod 600 /swapfile
+  mkswap /swapfile 2>/dev/null || true
+  swapon /swapfile 2>/dev/null || true
+fi
+pm2 stop all 2>/dev/null || true
+
 echo "[VPS 4/7] Cleaning Stale Build Cache & Compiling Next.js..."
 rm -rf .next
-NODE_OPTIONS='--max-old-space-size=4096' npm run build
+NODE_OPTIONS='--max-old-space-size=3584' npm run build
 
 echo "[VPS 5/7] Restarting PM2 process (dgt-nextjs)..."
 pm2 delete dgt-nextjs 2>/dev/null || true
 pm2 flush 2>/dev/null || true
-pm2 start ecosystem.config.cjs || pm2 start npm --name "dgt-nextjs" -- start
+pm2 start ecosystem.config.cjs
 pm2 save
 
 echo "[VPS 6/7] Reloading Nginx Proxy..."
@@ -144,10 +154,10 @@ echo "\n\n=== VPS DEPLOYMENT & DATABASE MIGRATION COMPLETED SUCCESSFULLY ==="
 `;
 
 try {
-  const out = execSync(`ssh -o StrictHostKeyChecking=no ${SERVER} "bash -s"`, {
+  const out = execSync(`ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=15 -o ServerAliveCountMax=60 ${SERVER} "bash -s"`, {
     input: remoteScript.replace(/\r\n/g, '\n').replace(/\r/g, '\n'),
     encoding: 'utf8',
-    timeout: 600000
+    timeout: 900000
   });
   console.log(out);
   console.log("\nFULL VPS DEPLOYMENT & DATABASE MIGRATION COMPLETED SUCCESSFULLY!");
