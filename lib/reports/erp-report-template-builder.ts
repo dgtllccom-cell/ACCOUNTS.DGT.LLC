@@ -89,6 +89,13 @@ export function formatDateTime(date: Date, lang?: string): string {
   return `${formatDate(date.toISOString(), lang)}, ${time}`;
 }
 
+/** Short ASCII verification payload (the built-in QR encoder holds ~62 bytes; long/Unicode titles overflowed and rendered blank). */
+export function reportVerifyPayload(seed: string): string {
+  let h = 5381;
+  for (let i = 0; i < seed.length; i++) h = ((h * 33) ^ seed.charCodeAt(i)) >>> 0;
+  return `ERP-${Date.now().toString(36).toUpperCase()}-${h.toString(36).toUpperCase()}`;
+}
+
 export function generateReportHtml(input: {
   title: string;
   subtitle?: string;
@@ -126,7 +133,7 @@ export function generateReportHtml(input: {
   };
 
   const compName = realOrEmpty(companyInfo.name) || "DIGITAL DOCK ERP";
-  const compTagline = realOrEmpty(companyInfo.tagline) || "ERP Reporting System";
+  const compTagline = realOrEmpty(companyInfo.tagline) || label("ERP Reporting System");
   // Contact fields come ONLY from the entity's branding record — never fabricated.
   const compAddress = realOrEmpty(companyInfo.address);
   const compPhone = realOrEmpty(companyInfo.phone);
@@ -141,7 +148,7 @@ export function generateReportHtml(input: {
   // QR verification payload: company + report + date, so a printed sheet is verifiable.
   // Rendered as an inline pure-SVG QR (components/ui/qr-code) — no external network call,
   // so Print / Save-as-PDF works offline and can never show a broken image.
-  const qrPayload = `ERP|${compName}|${title}|${printedDate}|${reportPeriod}`;
+  const qrPayload = reportVerifyPayload(`${compName}|${title}|${printedDate}|${reportPeriod}`);
   const qrSvg = qrCodeSvgMarkup(qrPayload, { size: 120 });
 
   // Table density from the real column count so a normal report reads at a comfortable
@@ -172,7 +179,9 @@ export function generateReportHtml(input: {
     
     @page {
       size: A4 ${orientation};
-      margin: 6mm;
+      margin: 6mm 6mm 11mm 6mm;
+      @bottom-right { content: "${label("PAGE")} " counter(page) " / " counter(pages); font: 700 7pt sans-serif; color: #112b3d; }
+      @bottom-left { content: "${label("System-generated report")}"; font: 600 7pt sans-serif; color: #64748b; }
     }
 
     * { box-sizing: border-box; }
@@ -791,16 +800,12 @@ export function generateReportHtml(input: {
     .filter-bar { border-inline-start: 4px solid #0d8c85; background: #f7faf8; }
     .kpi-card { background: #f7faf8; border-color: #cfe0dc; }
     .kpi-card.blue, .kpi-card.slate { border-color: #cfe0dc; background: #f7faf8; }
-    table.data-table th { background: #112b3d; border-color: #112b3d; }
+    table.data-table th { background: #112b3d; border-color: #112b3d; word-break: normal; overflow-wrap: normal; hyphens: none; }
     table.data-table tbody tr:nth-child(even) td { background: #f7faf8; }
     table.data-table tr.total-row td { background: #e8f3f1; border-top: 2px solid #112b3d; border-bottom: 2px solid #112b3d; }
     .bottom-bar { background: #112b3d; }
     .report-scope-chip { border-color: #b7dcd8; background: #e8f3f1; color: #0b6b66; }
     @media print {
-      @page {
-        @bottom-right { content: "${label("PAGE")} " counter(page) " / " counter(pages); font: 700 7pt sans-serif; color: #112b3d; }
-        @bottom-left { content: "${label("System-generated report")}"; font: 600 7pt sans-serif; color: #64748b; }
-      }
       table.data-table thead { display: table-header-group; }
       table.data-table tr { break-inside: avoid; page-break-inside: avoid; }
       table.data-table tfoot { display: table-footer-group; }
@@ -1001,7 +1006,7 @@ export function generateReportHtml(input: {
 
           <div class="title-col">
             <h1 class="report-title-text">${escapeHtml(title)}</h1>
-            <div style="margin-top:6px;"><div style="width:52px;height:52px;display:block;">${qrSvg}</div><div style="font-size:8.5px;line-height:1.2;color:#475569;margin-top:3px;white-space:nowrap;">${escapeHtml(translateHeader(lang, "Scan to verify"))}</div></div>
+            ${qrSvg ? `<div style="margin-top:6px;"><div style="width:52px;height:52px;display:block;">${qrSvg}</div><div style="font-size:8.5px;line-height:1.2;color:#475569;margin-top:3px;white-space:nowrap;">${escapeHtml(translateHeader(lang, "Scan to verify"))}</div></div>` : ""}
           </div>
 
           <div class="meta-col">
@@ -1009,7 +1014,7 @@ export function generateReportHtml(input: {
             <div>${label("Printed Date")}: <b>${escapeHtml(printedDate)}</b></div>
             ${isAccounting && financialYear ? `<div>${label("Financial Year")}: <b>${escapeHtml(financialYear)}</b></div>` : ""}
             <div>${label("Report Period")}: <b>${escapeHtml(reportPeriod)}</b></div>
-            ${(companyInfo.country || companyInfo.branch || companyInfo.currency) ? `<div class="report-scope-chip">${label("Scope")}: ${escapeHtml([companyInfo.country, companyInfo.branch, companyInfo.currency].filter(Boolean).join(" / "))}</div>` : ""}
+            ${(companyInfo.country || companyInfo.branch || companyInfo.currency) ? `<div class="report-scope-chip">${label("Scope")}: ${escapeHtml([companyInfo.country, companyInfo.branch, companyInfo.currency].filter(Boolean).join(" / "))}</div>` : `<div class="report-scope-chip">${label("Scope")}: ${escapeHtml(label("All Countries"))}</div>`}
           </div>
         </div>
 

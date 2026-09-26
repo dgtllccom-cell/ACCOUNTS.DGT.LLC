@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { escapeHtml, formatMoney, formatNumber, formatDate, type ERPCompanyInfo } from "./erp-report-template-builder";
+import { escapeHtml, formatMoney, formatNumber, formatDate, reportVerifyPayload, type ERPCompanyInfo } from "./erp-report-template-builder";
 import { qrCodeSvgMarkup } from "@/components/ui/qr-code";
 import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
 import { printStore } from "@/lib/store/print-store";
@@ -263,7 +263,7 @@ export function buildUniversalPrintHtml(input: UniversalPrintInput): string {
   const closeBal = ledgerSummary?.closingBalance ?? Number(totals?.runningBalance ?? totals?.balance ?? totals?.closingBalance ?? (openBal + totalDr - totalCr));
   const closeDc = ledgerSummary?.closingDcType || (closeBal >= 0 ? "Dr" : "Cr");
 
-  const qrPayload = `ERP|${entityName}|${title}|${documentNo || "LEDGER"}|${fullDateTime}`;
+  const qrPayload = reportVerifyPayload(`${entityName}|${title}|${documentNo || "LEDGER"}|${fullDateTime}`);
   // Inline pure-SVG QR — no external network call, so Print / PDF is offline-safe.
   const qrSvg = qrCodeSvgMarkup(qrPayload, { size: 100 });
 
@@ -277,9 +277,10 @@ export function buildUniversalPrintHtml(input: UniversalPrintInput): string {
 
     @page {
       size: A4 ${effectiveOrientation};
-      margin: 6mm 6mm 10mm 6mm;
+      margin: 6mm 6mm 11mm 6mm;
       orphans: 3;
       widows: 3;
+      @bottom-right { content: "${tr("PAGE")} " counter(page) " / " counter(pages); font: 700 7pt sans-serif; color: #112b3d; }
     }
 
     * {
@@ -673,11 +674,6 @@ export function buildUniversalPrintHtml(input: UniversalPrintInput): string {
     .report-table thead { display: table-header-group; }
     .kpi-card.b { border-inline-start: 3px solid #0d8c85; }
     .net-text { color: #0b6b66 !important; }
-    @media print {
-      @page {
-        @bottom-right { content: "${tr("PAGE")} " counter(page) " / " counter(pages); font: 700 7pt sans-serif; color: #112b3d; }
-      }
-    }
   </style>
 </head>
 <body>

@@ -3209,6 +3209,8 @@ export const HEADER_TRANSLATIONS: Record<string, Row> = {
   "PARTIALLY LOADED": { ur: "جزوی لوڈ", ar: "محمّل جزئيًا", fa: "نیمه‌بارگیری‌شده", ps: "نیمګړی بار شوی" },
   "DELIVERED": { ur: "ڈیلیور شدہ", ar: "تم التسليم", fa: "تحویل‌شده", ps: "سپارل شوی" },
   "ARRIVED": { ur: "پہنچ گیا", ar: "وصل", fa: "رسیده", ps: "رسیدلی" },
+  "ERP REPORTING SYSTEM": { ur: "ای آر پی رپورٹنگ سسٹم", ar: "نظام تقارير ERP", fa: "سامانه گزارش‌دهی ERP", ps: "د ERP راپورونو سیستم" },
+  "UNSETTLED": { ur: "غیر تصفیہ شدہ", ar: "غير مسوّى", fa: "تسویه‌نشده", ps: "نه تصفیه شوی" },
 };
 
 /** Normalize an English header for lookup: trim, collapse whitespace, uppercase. */

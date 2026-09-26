@@ -70,7 +70,8 @@ function renderCell(value: unknown, column: GenericReportColumn, row: Record<str
   }
 
   const align = column.align === "right" ? "right" : column.align === "center" ? "center" : "left";
-  return `<span style="display:block;text-align:${align};">${escapeHtml(text)}</span>`;
+  const nowrap = column.format === "number" || column.format === "currency" || column.format === "date" ? "white-space:nowrap;" : "";
+  return `<span style="display:block;text-align:${align};${nowrap}">${escapeHtml(text)}</span>`;
 }
 
 function buildCsv(columns: GenericReportColumn[], rows: Record<string, unknown>[], lang: string) {

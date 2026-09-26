@@ -586,6 +586,19 @@ export function RoznamchaTypeReportView({
           </Button>
         </div>
 
+        {/* Visible Print action (journal register print standard) — prints ALL matching rows */}
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => void printReport()}
+          data-testid="print-action"
+          className="h-7 gap-1 rounded-lg px-2.5 text-[10px] font-bold"
+        >
+          <Printer className="h-3 w-3" />
+          {tt("report.print", "Print")}
+        </Button>
+
         {/* Action Dropdown Menu */}
         <div className="relative">
           <Button
