@@ -215,8 +215,17 @@ const DEFAULT_FORM = {
   sealNumber: "",
 
   // Step 2 Active Item inputs
-  saleSource: "booking",
+  saleType: "stock", // "stock" | "endorse"
+  saleSource: "stock",
   stockLotNo: "",
+  selectedLotId: "",
+  warehouseId: "",
+  warehouseName: "",
+  branchName: "",
+  isEndorseSale: false,
+  endorseQtyPurchased: 0,
+  endorseQtyAllocated: 0,
+  endorseLinkedLotNo: "",
   goodsName: "",
   size: "",
   brand: "",
@@ -425,10 +434,10 @@ export function SalesOrderWizard({ session }) {
   const localBadgeCls = (n) => (isLocalSale ? localBadgeColors[(n - 1) % localBadgeColors.length] : "bg-blue-600");
 
   useEffect(() => {
-    const src = form.saleSource || "booking";
     let cancelled = false;
     setSaleLotsLoading(true);
-    fetch(`/api/erp/sales/available-lots?source=${encodeURIComponent(src)}&lang=${lang}`, { credentials: "same-origin" })
+    const goodsParam = form.goodsName ? `&goodsName=${encodeURIComponent(form.goodsName)}` : "";
+    fetch(`/api/erp/sales/available-lots?source=stock&lang=${lang}${goodsParam}`, { credentials: "same-origin" })
       .then((r) => r.json())
       .then((j) => {
         if (cancelled) return;
@@ -443,21 +452,29 @@ export function SalesOrderWizard({ session }) {
     return () => {
       cancelled = true;
     };
-  }, [form.saleSource, lang]);
+  }, [form.goodsName, lang]);
 
-  const availableSaleLots = useMemo(() => {
-    return saleLots.filter((lot) => lot.source === (form.saleSource || "booking"));
-  }, [saleLots, form.saleSource]);
+  const availableLotsForProduct = useMemo(() => {
+    if (!form.goodsName) return saleLots;
+    const target = form.goodsName.trim().toLowerCase();
+    const filtered = saleLots.filter((lot) => {
+      const gName = (lot.goodsName || "").trim().toLowerCase();
+      const matchName = gName === target || gName.includes(target) || target.includes(gName);
+      const matchId = form.goodsId && lot.goodsId && lot.goodsId === form.goodsId;
+      return matchName || matchId;
+    });
+    return filtered.length > 0 ? filtered : saleLots;
+  }, [saleLots, form.goodsName, form.goodsId]);
 
   const filteredSaleLots = useMemo(() => {
     const needle = lotSearch.trim().toLowerCase();
-    if (!needle) return availableSaleLots;
-    return availableSaleLots.filter((lot) => [lot.lotNo, lot.goodsName, lot.location, lot.stockRef, lot.status].join(" ").toLowerCase().includes(needle));
-  }, [availableSaleLots, lotSearch]);
+    if (!needle) return availableLotsForProduct;
+    return availableLotsForProduct.filter((lot) => [lot.lotNo, lot.goodsName, lot.location, lot.branchName, lot.warehouseName, lot.stockRef, lot.status].join(" ").toLowerCase().includes(needle));
+  }, [availableLotsForProduct, lotSearch]);
 
   const selectedSaleLot = useMemo(() => {
-    return saleLots.find((lot) => lot.lotNo === form.stockLotNo) || null;
-  }, [saleLots, form.stockLotNo]);
+    return saleLots.find((lot) => lot.lotNo === form.stockLotNo || (form.selectedLotId && lot.id === form.selectedLotId)) || null;
+  }, [saleLots, form.stockLotNo, form.selectedLotId]);
 
   // Real prior-sales deduction history for a lot (was MOCK_LOT_DEDUCTIONS) — fetched on demand.
   const loadLotDeductions = useCallback((lot) => {
@@ -480,24 +497,29 @@ export function SalesOrderWizard({ session }) {
   const applySaleLot = (lot) => {
     setForm((prev) => ({
       ...prev,
-      saleSource: lot.source,
+      saleType: "stock",
+      saleSource: lot.source || "stock",
       stockLotNo: lot.lotNo,
       allotName: lot.lotNo,
+      selectedLotId: lot.id || "",
+      warehouseId: lot.warehouseId || "",
+      warehouseName: lot.warehouseName || "",
+      branchName: lot.branchName || "",
       sourceStockRef: lot.stockRef || lot.lotNo,
-      goodsName: lot.goodsName,
-      brand: lot.brand,
-      size: lot.size,
-      origin: lot.origin,
-      hsCode: lot.hsCode,
-      qtyName: lot.qtyName,
-      qtyNo: lot.availableQty,
-      qtyKgs: lot.qtyKgs,
-      emptyKgs: lot.emptyKgs,
-      netWeight: lot.netWeight,
-      currencyType: lot.currencyType,
-      salesCurrency: lot.currencyType,
-      exchangeRate: lot.exchangeRate,
-      coursePrice: lot.coursePrice,
+      goodsName: lot.goodsName || prev.goodsName,
+      brand: lot.brand || prev.brand,
+      size: lot.size || prev.size,
+      origin: lot.origin || prev.origin,
+      hsCode: lot.hsCode || prev.hsCode,
+      qtyName: lot.qtyName || prev.qtyName || "BAGS",
+      qtyNo: prev.qtyNo > 0 ? prev.qtyNo : Math.min(100, lot.availableQty || 100),
+      qtyKgs: lot.qtyKgs || prev.qtyKgs,
+      emptyKgs: lot.emptyKgs || prev.emptyKgs,
+      netWeight: lot.netWeight || prev.netWeight,
+      currencyType: lot.currencyType || prev.currencyType,
+      salesCurrency: lot.currencyType || prev.salesCurrency,
+      exchangeRate: lot.exchangeRate || prev.exchangeRate,
+      coursePrice: lot.coursePrice || prev.coursePrice,
       manualTotalAmount: "",
       manualFinalAmount: ""
     }));
@@ -1577,6 +1599,26 @@ export function SalesOrderWizard({ session }) {
     intake.linkedSourceId,
     !!activeSession
   ]);
+
+  const validateStep1Ownership = () => {
+    if (!form.countryId) {
+      alert(t(lang, "purchase.wiz_err_country_req", "Please select a Country before proceeding."));
+      return false;
+    }
+    if (!form.countryBranchId && !form.branchCode && !form.branchName) {
+      alert(t(lang, "purchase.wiz_err_branch_req", "Please select a Branch before proceeding."));
+      return false;
+    }
+    if (!form.customerAccountNo && !form.customerAccountId) {
+      alert(t(lang, "sales.wiz_err_customer_acct_req", "Please select a Customer Account (DR) before proceeding."));
+      return false;
+    }
+    if (!form.salesAccountNo && !form.salesAccountId) {
+      alert(t(lang, "sales.wiz_err_sales_acct_req", "Please select a Sales Account (CR) before proceeding."));
+      return false;
+    }
+    return true;
+  };
 
   const buildSalesOrderPayload = (salesStatus = "Draft", customOrderNo = null) => {
     const usdRate = Number(form.exchangeRate || 1);
@@ -2948,10 +2990,10 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 <div className="flex items-center gap-1.5 shrink-0 relative" ref={dropdownRef}>
                   <div className="flex items-center gap-0.5 bg-muted/40 p-0.5 rounded border border-border/50 mr-2">
                     <button type="button" onClick={() => setActiveTab("booking")} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "booking" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_booking", "1 Booking")}</button>
-                    <button type="button" onClick={() => setActiveTab("goods")} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "goods" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_goods", "2 Goods")}</button>
-                    <button type="button" onClick={() => setActiveTab("others")} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "others" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_others", "3 Others")}</button>
-                    <button type="button" onClick={() => setActiveTab("reports_tab")} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "reports_tab" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_reports", "4 Reports")}</button>
-                    <button type="button" onClick={() => setActiveTab("report")} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "report" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_verify", "5 Verify")}</button>
+                    <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("goods"); }} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "goods" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_goods", "2 Goods")}</button>
+                    <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("shipping"); }} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${(activeTab === "shipping" || activeTab === "others") ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "purchase.tab3_shipping_payment", "3 Shipping & Payment")}</button>
+                    <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("reports_tab"); }} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "reports_tab" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_reports", "4 Reports")}</button>
+                    <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("report"); }} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "report" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_verify", "5 Verify")}</button>
                   </div>
                   <div className="flex items-center gap-2 bg-muted/50 rounded-md p-1 border border-border/50 mr-1">
                     <span className="relative flex h-2 w-2 ml-1">
@@ -3130,10 +3172,10 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               <div className="flex items-center gap-1.5 shrink-0 relative" ref={dropdownRef}>
                 <div className="flex items-center gap-0.5 bg-muted/40 p-0.5 rounded border border-border/50 mr-2">
                   <button type="button" onClick={() => setActiveTab("booking")} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "booking" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_booking", "1 Booking")}</button>
-                  <button type="button" onClick={() => setActiveTab("goods")} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "goods" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_goods", "2 Goods")}</button>
-                  <button type="button" onClick={() => setActiveTab("others")} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "others" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_others", "3 Others")}</button>
-                  <button type="button" onClick={() => setActiveTab("reports_tab")} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "reports_tab" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_reports", "4 Reports")}</button>
-                  <button type="button" onClick={() => setActiveTab("report")} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "report" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_verify", "5 Verify")}</button>
+                  <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("goods"); }} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "goods" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_goods", "2 Goods")}</button>
+                  <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("shipping"); }} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${(activeTab === "shipping" || activeTab === "others") ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "purchase.tab3_shipping_payment", "3 Shipping & Payment")}</button>
+                  <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("reports_tab"); }} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "reports_tab" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_reports", "4 Reports")}</button>
+                  <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("report"); }} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "report" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_verify", "5 Verify")}</button>
                 </div>
                 <div className="flex items-center gap-2 bg-muted/50 rounded-md p-1 border border-border/50 mr-1">
                   <span className="relative flex h-2 w-2 ml-1">
@@ -3318,7 +3360,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => setActiveTab("others")}
+                    onClick={() => setActiveTab("shipping")}
                     className="font-bold text-xs h-10 px-8 border-slate-200 text-slate-700 hover:bg-slate-50"
                   >
                     <ChevronLeft className="h-4 w-4 mr-1.5" /> {t(lang, "common.back", "Back")}
@@ -3338,7 +3380,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 </div>
               </div>
             </div>
-          ) : activeTab === "others" ? (
+          ) : (activeTab === "shipping" || activeTab === "others") ? (
             <div className="w-full mt-4 space-y-4 animate-in fade-in duration-200">
               {/* Global Info Cards at top */}
               {renderGlobalInfoCards()}
@@ -4230,7 +4272,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   <div className="flex justify-end gap-3 pt-4 border-t border-border mt-4">
                     <Button
                       type="button"
-                      onClick={() => setActiveTab("goods")}
+                      onClick={() => { if (!validateStep1Ownership()) return; setActiveTab("goods"); }}
                       className={cn(
                         "w-full font-bold h-10 rounded-lg text-xs uppercase tracking-wider transition-all shadow",
                         isLocalSale
@@ -4245,73 +4287,375 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               )}
 
               {activeTab === "goods" && (
-                <fieldset disabled={isTransferred && !session?.scopes?.isSuperAdmin} className={cn("space-y-3 order-2 w-full mt-0 animate-in fade-in zoom-in-95 duration-200", sectionPanelCls)}>
-                  <div className={sectionPanelHeaderCls}>
+                <fieldset disabled={isTransferred && !session?.scopes?.isSuperAdmin} className={cn("space-y-4 order-2 w-full mt-0 animate-in fade-in zoom-in-95 duration-200", sectionPanelCls)}>
+                  <div className="flex items-center justify-between border-b border-border pb-2.5">
                     <h3 className={cn("text-xs font-black uppercase tracking-wider flex items-center gap-2", isLocalSale ? "text-amber-900 dark:text-amber-200" : "text-foreground")}>
+                      <Package className="h-4 w-4 text-blue-600" />
                       {t(lang, "purchase.goods_entry_title", "GOODS ENTRY")}
                     </h3>
-                    {isLocalSale && (
-                      <span className="text-[9px] font-bold text-amber-800 bg-amber-50 dark:bg-amber-950/60 dark:text-amber-300 px-2 py-0.5 rounded border border-amber-400 dark:border-amber-700 uppercase tracking-wide shrink-0">
-                        {t(lang, "sales.local_sale_badge", "Local Sale")}
-                      </span>
-                    )}
-                  </div>
-                  
-                  <div className="rounded-xl border border-sky-200 bg-sky-50/70 p-3.5 shadow-sm">
-                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-sky-700 font-bold mb-1">{t(lang, "sales.sale_source_lot_selection", "Sale Source / Lot Selection")}</p>
-                    <select
-                      value={form.saleSource || "booking"}
-                      onChange={(e) => openSaleSource(e.target.value)}
-                      className="w-full bg-background border border-input rounded px-3 py-2 text-foreground font-bold outline-none focus:border-primary text-xs h-10 mt-2 shadow-sm"
-                    >
-                      <option value="booking">{t(lang, "sales.opt_booking_sale", "Booking Sale (Fresh Booking)")}</option>
-                      <option value="in_transit">{t(lang, "sales.opt_in_transit_lot", "In-Transit Lot (Cargo on Route)")}</option>
-                      <option value="local">{t(lang, "sales.opt_local_purchase", "Local Purchase (Purchased Locally)")}</option>
-                      <option value="warehouse">{t(lang, "sales.opt_warehouse_stock", "Warehouse Stock (In Whse)")}</option>
-                      <option value="endorse">{t(lang, "sales.opt_endorse_stock", "Endorse Stock (Traceable Stock)")}</option>
-                    </select>
-                    {form.saleSource && form.saleSource !== "booking" && (
+                    <div className="flex items-center gap-2">
+                      {isLocalSale && (
+                        <span className="text-[9px] font-bold text-amber-800 bg-amber-50 dark:bg-amber-950/60 dark:text-amber-300 px-2 py-0.5 rounded border border-amber-400 dark:border-amber-700 uppercase tracking-wide shrink-0">
+                          {t(lang, "sales.local_sale_badge", "Local Sale")}
+                        </span>
+                      )}
                       <button
                         type="button"
-                        onClick={() => setLotPanelOpen(prev => !prev)}
-                        className="mt-2.5 w-full h-8 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded text-[10px] shadow transition uppercase tracking-wider"
+                        onClick={() => setActiveTab("booking")}
+                        className="text-[10.5px] font-bold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 underline"
                       >
-                        {lotPanelOpen ? t(lang, "sales.close_stock_panel_btn", "Close Stock Panel") : t(lang, "sales.view_open_stock_lots_btn", "View / Open Stock Lots")}
+                        {t(lang, "purchase.back_to_booking", "← Back to Booking")}
                       </button>
-                    )}
+                    </div>
+                  </div>
 
-                    {selectedSaleLot ? (
-                      <div className="mt-3 space-y-1.5 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-[10px]">
-                        <div>
-                          <span className="text-emerald-700 font-bold block uppercase text-[8px]">{t(lang, "sales.selected_lot_colon", "Selected Lot:")}</span>
-                          <span className="font-black text-foreground text-xs">{selectedSaleLot.lotNo}</span>
+                  {/* 1. TOP QUESTION: Endorse Sale vs Stock Sale */}
+                  <div className="rounded-xl border border-blue-200 dark:border-blue-900/60 bg-blue-50/50 dark:bg-blue-950/20 p-3.5 shadow-xs space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                      <h4 className="text-xs font-black text-slate-900 dark:text-slate-100">
+                        {t(lang, "sales.sale_type_question", "Are you selling through Endorse or from available Stock?")}
+                      </h4>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {/* Choice 1: Endorse Sale */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setValue("saleType", "endorse");
+                          setValue("saleSource", "endorse");
+                          setValue("isEndorseSale", true);
+                          setValue("stockLotNo", "");
+                          setValue("selectedLotId", "");
+                        }}
+                        className={`p-3 rounded-xl border text-left transition-all flex items-start gap-3 cursor-pointer ${
+                          (form.saleType === "endorse" || form.saleSource === "endorse")
+                            ? "border-blue-600 bg-white dark:bg-slate-900 shadow-md ring-2 ring-blue-500/20"
+                            : "border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/50 hover:border-slate-300 dark:hover:border-slate-700"
+                        }`}
+                      >
+                        <div className={`mt-0.5 rounded-lg p-2 ${
+                          (form.saleType === "endorse" || form.saleSource === "endorse")
+                            ? "bg-blue-600 text-white"
+                            : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                        }`}>
+                          <FileSignature className="h-4 w-4" />
                         </div>
-                        <div className="flex justify-between border-t border-emerald-100/50 pt-1.5">
-                          <span className="text-emerald-700 font-semibold">{t(lang, "sales.goods_colon", "Goods:")}</span>
-                          <span className="font-bold text-foreground truncate max-w-[120px]">{selectedSaleLot.goodsName}</span>
+                        <div className="space-y-0.5 flex-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-black text-slate-900 dark:text-slate-100">
+                              {t(lang, "sales.opt_endorse_sale", "Endorse Sale")}
+                            </span>
+                            {(form.saleType === "endorse" || form.saleSource === "endorse") && (
+                              <Badge className="bg-blue-600 text-white text-[9px] px-1.5 py-0 h-4">{t(lang, "sales.badge_selected", "Selected")}</Badge>
+                            )}
+                          </div>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                            {t(lang, "sales.endorse_sale_desc", "Sell goods agreed before purchase. No physical stock deducted.")}
+                          </p>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-emerald-700 font-semibold">{t(lang, "sales.available_qty_colon", "Available Qty:")}</span>
-                          <span className="font-black text-foreground font-mono">{Number(selectedSaleLot.availableQty || 0).toLocaleString()} {translateOptionLabel(lang, selectedSaleLot.qtyName)}</span>
+                      </button>
+
+                      {/* Choice 2: Stock Sale */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setValue("saleType", "stock");
+                          setValue("saleSource", "stock");
+                          setValue("isEndorseSale", false);
+                        }}
+                        className={`p-3 rounded-xl border text-left transition-all flex items-start gap-3 cursor-pointer ${
+                          (form.saleType !== "endorse" && form.saleSource !== "endorse")
+                            ? "border-blue-600 bg-white dark:bg-slate-900 shadow-md ring-2 ring-blue-500/20"
+                            : "border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/50 hover:border-slate-300 dark:hover:border-slate-700"
+                        }`}
+                      >
+                        <div className={`mt-0.5 rounded-lg p-2 ${
+                          (form.saleType !== "endorse" && form.saleSource !== "endorse")
+                            ? "bg-blue-600 text-white"
+                            : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                        }`}>
+                          <Package className="h-4 w-4" />
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-emerald-700 font-semibold">{t(lang, "tl.net_weight_colon", "Net Weight:")}</span>
-                          <span className="font-black text-foreground font-mono">{Number(selectedSaleLot.netWeight || 0).toLocaleString()} KG</span>
+                        <div className="space-y-0.5 flex-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-black text-slate-900 dark:text-slate-100">
+                              {t(lang, "sales.opt_stock_sale", "Stock Sale")}
+                            </span>
+                            {(form.saleType !== "endorse" && form.saleSource !== "endorse") && (
+                              <Badge className="bg-blue-600 text-white text-[9px] px-1.5 py-0 h-4">{t(lang, "sales.badge_selected", "Selected")}</Badge>
+                            )}
+                          </div>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                            {t(lang, "sales.stock_sale_desc", "Sell from real available inventory across warehouse and branches.")}
+                          </p>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-emerald-700 font-semibold">{t(lang, "sales.stock_ref_colon", "Stock Ref:")}</span>
-                          <span className="font-bold text-foreground font-mono">{selectedSaleLot.stockRef}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 2. IMMEDIATELY BELOW: Required Goods / Product Selection */}
+                  <div className="relative">
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300">
+                        {t(lang, "purchase.goods_name_star", "Goods Name*")}
+                      </label>
+                      <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400">
+                        {t(lang, "sales.field_required_both", "*Required for both Endorse & Stock")}
+                      </span>
+                    </div>
+                    <SearchableSelect
+                      value={form.goodsName || ""}
+                      onChange={(val) => {
+                        if (val === "__ADD_NEW__") {
+                          setNewGoodForm({ goodsName: "", chsCode: "", size: "", brand: "", originCountryId: "" });
+                          setNewGoodError("");
+                          setNewGoodModal(true);
+                        } else {
+                          setValue("goodsName", val);
+                          const foundGood = dbGoods.find(g => (g.goods_name || g.goodsName) === val);
+                          if (foundGood) {
+                            const hs = foundGood.chs_code || foundGood.chsCode || "";
+                            const firstVar = foundGood.variations?.[0] || {};
+                            const br = firstVar.brand || foundGood.brand || "";
+                            const sz = firstVar.size || foundGood.size || "";
+                            const originId = foundGood.origin_country_id || foundGood.originCountryId;
+                            const originCountryObj = originId ? (allCountries.find(c => c.id === originId) || countries.find(c => c.id === originId) || transitCountryOptions.find(c => c.id === originId)) : null;
+                            const cName = originCountryObj?.name || foundGood.origin || "";
+
+                            setForm(prev => ({
+                              ...prev,
+                              goodsName: val,
+                              goodsId: foundGood.id || prev.goodsId,
+                              hsCode: hs || prev.hsCode,
+                              brand: br || prev.brand,
+                              size: sz || prev.size,
+                              origin: cName || prev.origin,
+                              stockLotNo: "",
+                              selectedLotId: ""
+                            }));
+                          }
+                        }
+                      }}
+                      options={[
+                        ...dbGoods.map(g => ({ label: g.goods_name || g.goodsName, value: g.goods_name || g.goodsName })),
+                      ]}
+                      placeholder={t(lang, "sales.select_goods_ph", "Select Goods")}
+                      addOptionLabel="Add New Good"
+                    />
+                  </div>
+
+                  {/* 3A. FOR STOCK SALE: Available Lots Table & Remaining Balance */}
+                  {form.saleType !== "endorse" && form.saleSource !== "endorse" && (
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 space-y-2.5">
+                      <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                          <Package className="h-3.5 w-3.5 text-blue-600" />
+                          {t(lang, "sales.selected_lot_title", "Selected Stock Lot")} ({availableLotsForProduct.length})
+                        </span>
+                        <span className="text-[9.5px] text-muted-foreground font-semibold">
+                          {form.goodsName ? `${availableLotsForProduct.length} lots for "${form.goodsName}"` : t(lang, "sales.field_required_both", "*Required for both Endorse & Stock")}
+                        </span>
+                      </div>
+
+                      {!form.goodsName ? (
+                        <div className="p-3 text-center rounded-lg border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 text-[10.5px] text-slate-500">
+                          ℹ️ {t(lang, "sales.open_stock_lots_msg", "Please select Goods / Product above to view available stock lots.")}
+                        </div>
+                      ) : saleLotsLoading ? (
+                        <div className="p-4 text-center text-xs text-muted-foreground flex items-center justify-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                          <span>{t(lang, "cns.loading", "Loading available lots…")}</span>
+                        </div>
+                      ) : availableLotsForProduct.length === 0 ? (
+                        <div className="p-3 rounded-lg border border-amber-200 bg-amber-50/60 dark:border-amber-900/60 dark:bg-amber-950/20 text-[10.5px] text-amber-800 dark:text-amber-200">
+                          ⚠️ {t(lang, "sales.no_lots_for_product", "No available inventory lots found for this product. You can choose another product or switch to Endorse Sale.")}
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto max-h-48 overflow-y-auto border border-slate-200 dark:border-slate-800 rounded-lg">
+                          <table className="w-full text-[10px] text-left">
+                            <thead className="bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 font-black border-b border-slate-200 dark:border-slate-800 sticky top-0">
+                              <tr>
+                                <th className="py-1.5 px-2 text-center w-10">Select</th>
+                                <th className="py-1.5 px-2">Branch</th>
+                                <th className="py-1.5 px-2">Warehouse / Loc</th>
+                                <th className="py-1.5 px-2">Lot Ref</th>
+                                <th className="py-1.5 px-2 text-right">Available Qty</th>
+                                <th className="py-1.5 px-2 text-right">Net WT</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                              {availableLotsForProduct.map((lot) => {
+                                const isSelected = form.stockLotNo === lot.lotNo || (form.selectedLotId && form.selectedLotId === lot.id);
+                                return (
+                                  <tr
+                                    key={lot.lotNo + (lot.id || '')}
+                                    onClick={() => applySaleLot(lot)}
+                                    className={`cursor-pointer transition-colors ${
+                                      isSelected
+                                        ? "bg-blue-50 dark:bg-blue-950/40 font-bold"
+                                        : "hover:bg-slate-50 dark:hover:bg-slate-800/40"
+                                    }`}
+                                  >
+                                    <td className="py-1.5 px-2 text-center">
+                                      <input
+                                        type="radio"
+                                        name="selected_stock_lot"
+                                        checked={isSelected}
+                                        onChange={() => applySaleLot(lot)}
+                                        className="cursor-pointer"
+                                      />
+                                    </td>
+                                    <td className="py-1.5 px-2 truncate max-w-[110px]">{lot.branchName || "Main Branch"}</td>
+                                    <td className="py-1.5 px-2 truncate max-w-[120px]">{lot.warehouseName || lot.location}</td>
+                                    <td className="py-1.5 px-2 font-mono font-bold text-blue-600">{lot.lotNo}</td>
+                                    <td className="py-1.5 px-2 text-right font-mono font-bold">
+                                      {Number(lot.availableQty || 0).toLocaleString()} {translateOptionLabel(lang, lot.qtyName)}
+                                    </td>
+                                    <td className="py-1.5 px-2 text-right font-mono">
+                                      {Number(lot.netWeight || 0).toLocaleString()} KG
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+
+                      {/* Selected Lot Summary with Live Stock Balance Indicator */}
+                      {selectedSaleLot && (
+                        <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 dark:border-emerald-900/60 dark:bg-emerald-950/20 p-3 space-y-2">
+                          <div className="flex items-center justify-between border-b border-emerald-100 dark:border-emerald-900/40 pb-1.5">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+                              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                              {t(lang, "sales.selected_lot_title", "Selected Stock Lot")}: <span className="font-mono text-xs text-foreground font-black">{selectedSaleLot.lotNo}</span>
+                            </span>
+                            <Badge variant="outline" className="text-[9px] border-emerald-300 text-emerald-700 bg-white">
+                              {selectedSaleLot.branchName || "Branch Stock"}
+                            </Badge>
+                          </div>
+
+                          <div className="grid grid-cols-3 gap-2 text-center pt-0.5">
+                            <div className="bg-white/80 dark:bg-slate-900/80 rounded-lg p-2 border border-emerald-100 dark:border-emerald-900/30">
+                              <div className="text-[9px] font-black uppercase text-slate-500">{t(lang, "sales.lbl_lot_available", "Available in Lot")}</div>
+                              <div className="text-xs sm:text-sm font-black text-slate-800 dark:text-slate-100 font-mono mt-0.5">
+                                {Number(selectedSaleLot.availableQty || 0).toLocaleString()} {selectedSaleLot.qtyName}
+                              </div>
+                            </div>
+
+                            <div className="bg-white/80 dark:bg-slate-900/80 rounded-lg p-2 border border-blue-100 dark:border-blue-900/30">
+                              <div className="text-[9px] font-black uppercase text-blue-600">{t(lang, "sales.lbl_selling_qty", "Selling Qty")}</div>
+                              <div className="text-xs sm:text-sm font-black text-blue-600 font-mono mt-0.5">
+                                {Number(form.qtyNo || 0).toLocaleString()} {form.qtyName || selectedSaleLot.qtyName}
+                              </div>
+                            </div>
+
+                            <div className="bg-white/80 dark:bg-slate-900/80 rounded-lg p-2 border border-emerald-100 dark:border-emerald-900/30">
+                              <div className="text-[9px] font-black uppercase text-slate-500">{t(lang, "sales.lbl_remaining_stock", "Remaining Stock")}</div>
+                              <div className={`text-xs sm:text-sm font-black font-mono mt-0.5 ${
+                                (Number(selectedSaleLot.availableQty || 0) - Number(form.qtyNo || 0)) < 0
+                                  ? "text-rose-600"
+                                  : "text-emerald-700 dark:text-emerald-300"
+                              }`}>
+                                {(Number(selectedSaleLot.availableQty || 0) - Number(form.qtyNo || 0)).toLocaleString()} {selectedSaleLot.qtyName}
+                              </div>
+                            </div>
+                          </div>
+
+                          {(Number(selectedSaleLot.availableQty || 0) - Number(form.qtyNo || 0)) < 0 && (
+                            <div className="text-[10px] font-bold text-rose-600 bg-rose-50 dark:bg-rose-950/40 p-2 rounded-lg border border-rose-200 dark:border-rose-900 flex items-center gap-1.5">
+                              <span>⚠️</span>
+                              <span>{t(lang, "sales.err_selling_exceeds_stock", "Selling quantity exceeds available lot quantity! Please adjust selling quantity.")}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* 3B. FOR ENDORSE SALE: Fulfillment Status & Lot Linker */}
+                  {(form.saleType === "endorse" || form.saleSource === "endorse") && (
+                    <div className="rounded-xl border border-purple-200 bg-purple-50/60 dark:border-purple-900/60 dark:bg-purple-950/20 p-3.5 space-y-3">
+                      <div className="flex items-center justify-between border-b border-purple-100 dark:border-purple-900/40 pb-2">
+                        <div className="flex items-center gap-2">
+                          <FileSignature className="h-4 w-4 text-purple-600" />
+                          <h4 className="text-xs font-black uppercase tracking-wider text-purple-950 dark:text-purple-200">
+                            {t(lang, "sales.endorse_fulfillment_title", "Endorse Fulfillment Status")}
+                          </h4>
+                        </div>
+                        <Badge className="bg-purple-600 text-white text-[9px] px-2 py-0.5">
+                          {t(lang, "sales.badge_endorse_agreement", "Pre-Purchase Agreement")}
+                        </Badge>
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+                        <div className="bg-white/80 dark:bg-slate-900/80 rounded-lg p-2 border border-purple-100 dark:border-purple-900/30">
+                          <div className="text-[9px] font-black uppercase text-slate-500">{t(lang, "sales.endorse_sale_qty", "Sale Quantity")}</div>
+                          <div className="text-xs sm:text-sm font-black text-purple-700 dark:text-purple-300 font-mono mt-0.5">
+                            {Number(form.qtyNo || 0).toLocaleString()} {form.qtyName || "BAGS"}
+                          </div>
+                        </div>
+
+                        <div className="bg-white/80 dark:bg-slate-900/80 rounded-lg p-2 border border-purple-100 dark:border-purple-900/30">
+                          <div className="text-[9px] font-black uppercase text-slate-500">{t(lang, "sales.endorse_qty_purchased", "Qty Purchased")}</div>
+                          <div className="text-xs sm:text-sm font-black text-slate-800 dark:text-slate-100 font-mono mt-0.5">
+                            {Number(form.endorseQtyPurchased || 0).toLocaleString()} {form.qtyName || "BAGS"}
+                          </div>
+                        </div>
+
+                        <div className="bg-white/80 dark:bg-slate-900/80 rounded-lg p-2 border border-purple-100 dark:border-purple-900/30">
+                          <div className="text-[9px] font-black uppercase text-slate-500">{t(lang, "sales.endorse_qty_allocated", "Qty Allocated")}</div>
+                          <div className="text-xs sm:text-sm font-black text-emerald-600 font-mono mt-0.5">
+                            {Number(form.endorseQtyAllocated || 0).toLocaleString()} {form.qtyName || "BAGS"}
+                          </div>
+                        </div>
+
+                        <div className="bg-white/80 dark:bg-slate-900/80 rounded-lg p-2 border border-purple-100 dark:border-purple-900/30">
+                          <div className="text-[9px] font-black uppercase text-slate-500">{t(lang, "sales.endorse_qty_outstanding", "Qty Outstanding")}</div>
+                          <div className="text-xs sm:text-sm font-black text-amber-600 font-mono mt-0.5">
+                            {Math.max(0, Number(form.qtyNo || 0) - Number(form.endorseQtyAllocated || 0)).toLocaleString()} {form.qtyName || "BAGS"}
+                          </div>
                         </div>
                       </div>
-                    ) : (
-                      form.saleSource !== "booking" && (
-                        <div className="mt-3 rounded-xl border border-dashed border-sky-300 bg-white/60 p-2.5 text-[10px] font-semibold text-sky-700 leading-relaxed">
-                          {t(lang, "sales.open_stock_lots_msg", "Please open stock lots to copy and use an available cargo lot for this sales entry.")}
+
+                      <div className="bg-white/90 dark:bg-slate-900/90 rounded-xl p-3 border border-purple-100 dark:border-purple-900/30 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <label className="text-[10px] font-black uppercase text-slate-700 dark:text-slate-300">
+                            {t(lang, "sales.link_purchased_lot_label", "Link Purchased Lot (When Entered Into Stock)")}
+                          </label>
+                          <span className="text-[9px] text-muted-foreground">{t(lang, "sales.optional_fulfillment", "Optional / Post-Purchase")}</span>
                         </div>
-                      )
-                    )}
-                  </div>
-                  <div className="grid grid-cols-1 gap-3">
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={form.endorseLinkedLotNo || ""}
+                            onChange={(e) => setValue("endorseLinkedLotNo", e.target.value)}
+                            placeholder={t(lang, "sales.link_lot_ph", "Enter or select purchased Lot No. (e.g. WH-..., LP-..., PO-...)")}
+                            className="flex-1 bg-background border border-input rounded-lg px-2.5 py-1.5 text-foreground outline-none focus:border-purple-500 text-xs font-mono"
+                          />
+                          {form.endorseLinkedLotNo && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setValue("endorseLinkedLotNo", "")}
+                              className="text-[10px] h-8"
+                            >
+                              {t(lang, "common.clear", "Clear")}
+                            </Button>
+                          )}
+                        </div>
+                        <p className="text-[9.5px] text-slate-500 dark:text-slate-400">
+                          ℹ️ {t(lang, "sales.endorse_note", "Goods sold under Endorse agreement will be saved without deducting physical stock. When purchase arrival occurs, link the lot here to fulfill this order.")}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 4. SECONDARY GOODS ENTRY FIELDS */}
+                  <div className="grid grid-cols-1 gap-3 pt-2">
                     {/* Manual Net KGs Input */}
                     <div>
                       <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.net_kgs_weight", "Net KGs (Weight)")}</label>
@@ -4348,46 +4692,6 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       </select>
                     </div>
 
-                    <div className="relative">
-                      <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.goods_name_star", "Goods Name*")}</label>
-                      <SearchableSelect
-                        value={form.goodsName || ""}
-                        onChange={(val) => {
-                          if (val === "__ADD_NEW__") {
-                            setNewGoodForm({ goodsName: "", chsCode: "", size: "", brand: "", originCountryId: "" });
-                            setNewGoodError("");
-                            setNewGoodModal(true);
-                          } else {
-                            setValue("goodsName", val);
-                            const foundGood = dbGoods.find(g => (g.goods_name || g.goodsName) === val);
-                            if (foundGood) {
-                              const hs = foundGood.chs_code || foundGood.chsCode || "";
-                              const firstVar = foundGood.variations?.[0] || {};
-                              const br = firstVar.brand || foundGood.brand || "";
-                              const sz = firstVar.size || foundGood.size || "";
-                              const originId = foundGood.origin_country_id || foundGood.originCountryId;
-                              const originCountryObj = originId ? (allCountries.find(c => c.id === originId) || countries.find(c => c.id === originId) || transitCountryOptions.find(c => c.id === originId)) : null;
-                              const cName = originCountryObj?.name || foundGood.origin || "";
-
-                              setForm(prev => ({
-                                ...prev,
-                                goodsName: val,
-                                hsCode: hs || prev.hsCode,
-                                brand: br || prev.brand,
-                                size: sz || prev.size,
-                                origin: cName || prev.origin
-                              }));
-                            }
-                          }
-                        }}
-                        options={[
-                          ...dbGoods.map(g => ({ label: g.goods_name || g.goodsName, value: g.goods_name || g.goodsName })),
-                        ]}
-                        placeholder={t(lang, "sales.select_goods_ph", "Select Goods")}
-                        addOptionLabel="Add New Good"
-                      />
-                    </div>
-
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <div className="flex items-center justify-between mb-1">
@@ -4417,50 +4721,13 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       </div>
                       <div>
                         <label className="block text-[10px] text-muted-foreground mb-1 font-bold">{t(lang, "purchase.allot_name_id", "Allot Name / ID")}</label>
-                        {form.saleSource && form.saleSource !== "booking" ? (
-                          <select
-                            value={form.allotName || ""}
-                            onChange={(e) => {
-                              const selectedLotNo = e.target.value;
-                              setValue("allotName", selectedLotNo);
-                              const lotObj = saleLots.find(l => l.lotNo === selectedLotNo);
-                              if (lotObj) {
-                                applySaleLot(lotObj);
-                              } else {
-                                setForm(prev => ({
-                                  ...prev,
-                                  allotName: "",
-                                  stockLotNo: "",
-                                  goodsName: "",
-                                  brand: "",
-                                  size: "",
-                                  origin: "",
-                                  hsCode: "",
-                                  qtyNo: 0,
-                                  qtyKgs: 0,
-                                  netWeight: "",
-                                  coursePrice: 0
-                                }));
-                              }
-                            }}
-                            className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] font-bold"
-                          >
-                            <option value="">{saleLotsLoading ? t(lang, "cns.loading", "Loading…") : t(lang, "sales.choose_lot_opt", "-- Choose Lot --")}</option>
-                            {saleLots.filter(l => l.source === form.saleSource).map((lot) => (
-                              <option key={lot.lotNo} value={lot.lotNo}>
-                                {lot.lotNo} - {lot.goodsName}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          <input
-                            type="text"
-                            value={form.allotName || ""}
-                            onChange={(e) => setValue("allotName", e.target.value)}
-                            placeholder={t(lang, "sales.alt_code_example_ph", "e.g. ALT-2003")}
-                            className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
-                          />
-                        )}
+                        <input
+                          type="text"
+                          value={form.allotName || form.stockLotNo || ""}
+                          onChange={(e) => setValue("allotName", e.target.value)}
+                          placeholder={t(lang, "sales.alt_code_example_ph", "e.g. ALT-2003")}
+                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] font-mono font-bold"
+                        />
                       </div>
                     </div>
 
@@ -4866,7 +5133,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       </Button>
                       <Button
                         type="button"
-                        onClick={() => setActiveTab("others")}
+                        onClick={() => setActiveTab("shipping")}
                         className={cn(
                           "flex-1 font-bold h-10 rounded-lg text-xs transition-all",
                           isLocalSale

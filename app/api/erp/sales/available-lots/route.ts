@@ -29,10 +29,12 @@ export async function GET(request: NextRequest) {
     if (!ok) authorizeApiScope(session, { resource: "sales", action: "read" });
 
     const p = request.nextUrl.searchParams;
-    const source = (p.get("source") || "booking") as SaleSource;
+    const source = (p.get("source") || "stock") as SaleSource;
     if (!SALE_SOURCES.includes(source)) return apiError("VALIDATION", "Unknown sale source", 400);
     const lang = await getRequestLanguage(p.get("lang"));
     const deductionsFor = p.get("deductionsFor");
+    const goodsName = p.get("goodsName");
+    const goodsId = p.get("goodsId");
 
     if (deductionsFor) {
       const deductions = await getLotDeductions(session, deductionsFor);
@@ -42,6 +44,8 @@ export async function GET(request: NextRequest) {
     const lots = await listAvailableLots(session, {
       source,
       q: p.get("q"),
+      goodsName,
+      goodsId,
       lang,
       limit: p.get("limit") ? Number(p.get("limit")) : undefined,
     });

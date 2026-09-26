@@ -12,6 +12,7 @@ const paramsSchema = z.object({ variationId: z.string().uuid() });
 const updateVariationSchema = z.object({
   brand: z.string().trim().min(1).max(100).optional(),
   size: z.string().trim().min(1).max(100).optional(),
+  variety: z.string().trim().max(100).optional().nullable(),
   extraDetails: z.string().trim().max(2000).optional().nullable(),
   isActive: z.boolean().optional(),
 });
@@ -35,6 +36,7 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ varia
         goodsId: exists.goods_id,
         brand: body.brand,
         size: body.size,
+        variety: body.variety,
         extraDetails: body.extraDetails,
         isActive: body.isActive,
         originalLanguage: session.preferredLanguage,

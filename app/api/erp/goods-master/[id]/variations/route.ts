@@ -13,6 +13,7 @@ const paramsSchema = z.object({ id: z.string().uuid() });
 const createVariationSchema = z.object({
   brand: z.string().trim().min(1).max(100),
   size: z.string().trim().min(1).max(100),
+  variety: z.string().trim().max(100).optional().nullable(),
   extraDetails: z.string().trim().max(2000).optional().nullable(),
 });
 
@@ -91,6 +92,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
         goodsId,
         size: body.size,
         brand: body.brand,
+        variety: body.variety,
         extraDetails: body.extraDetails,
         originalLanguage: session.preferredLanguage,
       },
@@ -105,6 +107,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
         goodsId,
         size: body.size,
         brand: body.brand,
+        variety: body.variety,
         extraDetails: body.extraDetails,
       },
     });

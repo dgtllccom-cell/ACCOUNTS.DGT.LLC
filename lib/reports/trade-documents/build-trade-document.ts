@@ -183,8 +183,11 @@ export function buildTradeDocumentHtml(input: TradeDocumentInput): string {
   const cell = (li: TradeLineItem, key: string): string => {
     switch (key) {
       case "tdoc.col_description": {
-        const bits = [li.description, li.brand ? `${tt("tdoc.brand", "Brand")}: ${li.brand}` : "", li.size ? `${tt("tdoc.size", "Size")}: ${li.size}` : ""].filter(isReal);
-        return bits.map((x, i) => i === 0 ? `<strong>${esc(x)}</strong>` : `<span class="sub">${esc(x)}</span>`).join("<br/>");
+        // ⚠️ IMPORTANT: Only the main goods name is shown on the customer-facing
+        // document. Internal ERP variant attributes (brand, size/grade, variety,
+        // report name, etc.) are for internal selection only and must NOT be
+        // printed or concatenated into the customer Quote / Invoice description.
+        return isReal(li.description) ? `<strong>${esc(li.description)}</strong>` : "";
       }
       case "tdoc.col_hs": return esc(li.hsCode || "");
       case "tdoc.col_packing": return esc(li.packing || "");

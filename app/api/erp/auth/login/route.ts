@@ -34,14 +34,10 @@ const BOOTSTRAP_IDENTIFIER = (process.env.BOOTSTRAP_SUPERADMIN_EMAIL || "superad
 const BOOTSTRAP_PASSWORD = (process.env.BOOTSTRAP_SUPERADMIN_PASSWORD || "").trim();
 const BOOTSTRAP_ENABLED = BOOTSTRAP_PASSWORD.length > 0;
 
-// Legacy plaintext `profiles.raw_password` login. OFF in production. Only on when
-// demo auth is enabled, or an operator sets ALLOW_LEGACY_RAW_PASSWORD_LOGIN=true
-// to migrate legacy accounts. When off, the column is never even read.
+// SECURITY: the legacy readable-password login path was removed. Passwords exist only as hashes in
+// Supabase Auth; profiles.raw_password is never read or compared.
 function legacyRawPwLoginEnabled() {
-  return (
-    isDemoAuthEnabled() ||
-    String(process.env.ALLOW_LEGACY_RAW_PASSWORD_LOGIN || "").toLowerCase() === "true"
-  );
+  return false;
 }
 
 export async function POST(request: NextRequest) {
@@ -152,7 +148,7 @@ export async function POST(request: NextRequest) {
   }
 
   const admin = createSupabaseAdminClient() as any;
-  const profileSelect = "id, user_code, full_name, raw_password";
+  const profileSelect = "id, user_code, full_name";
 
   // 1. Look up profile in database with direct SQL by email or user_code, with flexible aliases
   let profileRecord: any = null;
@@ -162,7 +158,7 @@ export async function POST(request: NextRequest) {
   try {
     profileRecord = await withLocalPg(async (sql) => {
       const rows = await sql`
-        SELECT p.id, p.user_code, p.full_name, p.raw_password, u.email as auth_email
+        SELECT p.id, p.user_code, p.full_name, u.email as auth_email
         FROM public.profiles p
         LEFT JOIN auth.users u ON u.id = p.id
         WHERE p.deleted_at IS NULL

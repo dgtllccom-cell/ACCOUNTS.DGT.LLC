@@ -360,6 +360,115 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     const newRemainingSales = isCreditSales ? totalSalesAmount : Math.max(0, totalSalesAmount - existingPaid);
     const salesPaymentStatus = isCreditSales ? "pending" : (newRemainingSales <= 0.01 && existingPaid > 0 ? "completed" : (existingPaid > 0 ? "partial" : "pending"));
 
+    // Stock deduction handling for Stock Sale vs Endorse Sale
+    const saleType = String(form.saleType || form.saleSource || "").toLowerCase();
+    const isEndorse = saleType === "endorse" || Boolean(form.isEndorseSale);
+    const isStockSale = saleType === "stock" || (!isEndorse && (Boolean(form.stockLotNo) || Boolean(form.selectedLotId)));
+    const alreadyDeducted = Boolean(formData.stockDeducted || form.stockDeducted || orderRow.stock_deducted);
+
+    let stockDeductionAudit: any = null;
+
+    if (isStockSale && !alreadyDeducted) {
+      const soldQty = Number(form.qtyNo || form.quantity || 1);
+      const lotNo = String(form.stockLotNo || form.allotName || "").trim();
+      const lotId = form.selectedLotId ? String(form.selectedLotId).trim() : null;
+
+      await withLocalPg(async (sql) => {
+        if (lotNo.startsWith("WH-") || form.saleSource === "warehouse" || form.warehouseId) {
+          let updatedBalances: any[] = [];
+          if (lotId) {
+            updatedBalances = await sql`
+              UPDATE public.product_inventory_balances
+              SET quantity_on_hand = GREATEST(0, quantity_on_hand - ${soldQty}),
+                  quantity_available = GREATEST(0, coalesce(quantity_available, quantity_on_hand) - ${soldQty}),
+                  updated_at = ${now}
+              WHERE id = ${lotId}::uuid
+              RETURNING id, product_id, warehouse_id, quantity_on_hand
+            `;
+          } else if (lotNo.startsWith("WH-")) {
+            const shortId = lotNo.replace(/^WH-/, "");
+            updatedBalances = await sql`
+              UPDATE public.product_inventory_balances
+              SET quantity_on_hand = GREATEST(0, quantity_on_hand - ${soldQty}),
+                  quantity_available = GREATEST(0, coalesce(quantity_available, quantity_on_hand) - ${soldQty}),
+                  updated_at = ${now}
+              WHERE id::text LIKE ${shortId + '%'}
+              RETURNING id, product_id, warehouse_id, quantity_on_hand
+            `;
+          }
+
+          if (updatedBalances.length > 0) {
+            const b = updatedBalances[0];
+            await sql`
+              INSERT INTO public.stock_movements (
+                movement_type,
+                product_id,
+                warehouse_id,
+                country_id,
+                city_branch_id,
+                quantity,
+                reference_no,
+                notes,
+                movement_date,
+                created_by,
+                created_at,
+                updated_at
+              ) VALUES (
+                'STOCK_OUT',
+                ${b.product_id},
+                ${b.warehouse_id},
+                ${orderRow.country_id ?? null},
+                ${orderRow.city_branch_id ?? null},
+                ${soldQty},
+                ${referenceNo},
+                ${'Sales Booking Posting - Bill: ' + (referenceNo || 'Direct')},
+                ${now},
+                ${session.userId ? sql`${session.userId}::uuid` : null},
+                ${now},
+                ${now}
+              )
+            `;
+          }
+        } else if (lotNo.startsWith("LP-") || form.saleSource === "local") {
+          if (lotId) {
+            await sql`
+              UPDATE public.local_purchases
+              SET numbers = GREATEST(0, numbers - ${soldQty}),
+                  status = CASE WHEN (numbers - ${soldQty}) <= 0 THEN 'sold' ELSE status END,
+                  updated_at = ${now}
+              WHERE id = ${lotId}::uuid
+            `;
+          } else {
+            const shortId = lotNo.replace(/^LP-/, "");
+            await sql`
+              UPDATE public.local_purchases
+              SET numbers = GREATEST(0, numbers - ${soldQty}),
+                  status = CASE WHEN (numbers - ${soldQty}) <= 0 THEN 'sold' ELSE status END,
+                  updated_at = ${now}
+              WHERE id::text LIKE ${shortId + '%'} OR lot_no = ${lotNo}
+            `;
+          }
+        } else if (form.saleSource === "in_transit" || lotNo.startsWith("PLR-")) {
+          const cleanPlrNo = lotNo.split("#")[0];
+          await sql`
+            UPDATE public.purchase_loading_records
+            SET loaded_quantity = GREATEST(0, loaded_quantity - ${soldQty}),
+                updated_at = ${now}
+            WHERE loading_record_no = ${cleanPlrNo}
+          `;
+        }
+      });
+
+      stockDeductionAudit = {
+        deducted: true,
+        deductedAt: now,
+        deductedBy: session.userId,
+        soldQty,
+        lotNo,
+        lotId
+      };
+    }
+
     const patch = {
       ledger_posting_status: "posted",
       payment_status: salesPaymentStatus,
@@ -368,8 +477,20 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       updated_at: now,
       form_data: {
         ...updatedFormData,
+        stockDeducted: isStockSale ? true : (alreadyDeducted ? true : false),
+        isEndorseSale: isEndorse,
+        stockDeductionAudit: stockDeductionAudit || formData.stockDeductionAudit || null,
+        endorseFulfillment: isEndorse ? {
+          saleQty: Number(form.qtyNo || form.quantity || 0),
+          purchasedQty: Number(form.endorseQtyPurchased || 0),
+          allocatedQty: Number(form.endorseQtyAllocated || 0),
+          outstandingQty: Math.max(0, Number(form.qtyNo || form.quantity || 0) - Number(form.endorseQtyAllocated || 0)),
+          linkedLotNo: form.endorseLinkedLotNo || null
+        } : (formData.endorseFulfillment || null),
         form: {
           ...updatedFormData.form,
+          stockDeducted: isStockSale ? true : (alreadyDeducted ? true : false),
+          isEndorseSale: isEndorse,
           ...(isCreditSales ? { advancePercent: 0, advanceAmount: 0 } : {})
         },
         workflow: {

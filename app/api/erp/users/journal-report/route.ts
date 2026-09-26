@@ -181,7 +181,7 @@ export async function GET(request: NextRequest) {
       withTimeout<ProfileRow>(
         admin
         .from("profiles")
-        .select("id, full_name, user_code, raw_password, preferred_language_code, created_at, updated_at, deleted_at")
+        .select("id, full_name, user_code, preferred_language_code, created_at, updated_at, deleted_at")
         .is("deleted_at", null)
         .order("created_at", { ascending: false })
           .limit(query.limit),
@@ -222,12 +222,9 @@ export async function GET(request: NextRequest) {
     const authUsers = (authUsersRes.error ? [] : authUsersRes.data ?? []) as any[];
 
     const emailLookup = new Map<string, string>();
-    const authMetaPasswordLookup = new Map<string, string>();
     for (const u of authUsers) {
       if (u?.id) {
         if (u?.email) emailLookup.set(u.id, u.email);
-        const metaPwd = u?.user_metadata?.raw_password || u?.user_metadata?.password;
-        if (metaPwd) authMetaPasswordLookup.set(u.id, String(metaPwd));
       }
     }
 
@@ -465,8 +462,9 @@ export async function GET(request: NextRequest) {
         lastActivity: lastActivityDate,
         lastActivityAction: lastActivity?.action ?? null,
         lastLogin: lastLoginDate,
-        passwordKey: session.isSuperAdmin ? (profile.raw_password || authMetaPasswordLookup.get(profile.id) || null) : null,
-        raw_password: session.isSuperAdmin ? (profile.raw_password || authMetaPasswordLookup.get(profile.id) || null) : null,
+        // SECURITY: passwords are hashed in Supabase Auth and are never returned, not even to Super Admin.
+        passwordKey: null,
+        raw_password: null,
         activityCounts,
       };
     });
