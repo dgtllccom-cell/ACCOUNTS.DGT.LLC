@@ -6,6 +6,7 @@ import { Download, Mail, MoreVertical, Printer, RefreshCcw, Search, SlidersHoriz
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
+import { useErpScope } from "@/lib/hooks/use-erp-scope";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { apiGet } from "@/lib/api/client";
 import { UnifiedErpRegisterBar, UnifiedRegisterKpiData } from "@/components/reports/unified-erp-register-bar";
@@ -52,6 +53,7 @@ type SalesReport = {
 export function SalesBookingJournalReportView() {
   const router = useRouter();
   const activeLang = useActiveLanguage();
+  const erpScope = useErpScope();
   const [reports, setReports] = useState<SalesReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
@@ -222,7 +224,13 @@ export function SalesBookingJournalReportView() {
       orientation: "landscape",
       scope: {
         scopeLevel: "Sales Booking Register",
-        userName: "ERP User",
+        userName: erpScope.userName || reports[0]?.audit?.userName || "",
+        country: erpScope.countryName || (countries.find(c => c.id === countryId)?.name ?? "") || "",
+        branch: erpScope.branchDisplayName || (branches.find(b => b.id === branchId)?.name ?? "") || "",
+        dateRange: (() => {
+          const ds = reports.map(r => String(r.salesDate || r.bookingDate || r.createdAt || "").slice(0, 10)).filter(Boolean).sort();
+          return ds.length ? `${ds[0]} → ${ds[ds.length - 1]}` : "";
+        })(),
       },
       kpis: [
         { label: tr("Total Sales Amount"), value: summary.amount, color: "blue" },
@@ -254,11 +262,11 @@ export function SalesBookingJournalReportView() {
         customerName: r.customerName || "-",
         goodsDescription: r.goodsDescription || r.productName || "-",
         quantity: r.quantity || 0,
-        unit: r.unit || "BAGS",
-        currency: r.currency || "USD",
+        unit: r.unit || "",
+        currency: r.currency || "",
         totalSalesAmount: r.totalSalesAmount || r.salesAmount || 0,
-        status: r.status || "CONFIRMED",
-        paymentStatus: r.paymentStatus || "PENDING",
+        status: r.status || "",
+        paymentStatus: r.paymentStatus || "",
       })),
       totals: {
         totalSalesAmount: summary.amount,
@@ -353,8 +361,8 @@ export function SalesBookingJournalReportView() {
                             scopeLevel: "Sales Booking Invoice",
                             country: r.countryName || "All Countries",
                             branch: r.branchName || "Main Branch",
-                            currency: r.currency || "USD",
-                            userName: r.audit?.userName || "ERP User",
+                            currency: r.currency || "",
+                            userName: r.audit?.userName || "",
                           },
                           partyDetails: {
                             type: "customer",
@@ -364,7 +372,7 @@ export function SalesBookingJournalReportView() {
                           },
                           kpis: [
                             { label: translateHeader(activeLang, "Total Amount"), value: totalAmt, color: "blue" },
-                            { label: translateHeader(activeLang, "Quantity"), value: `${qty.toLocaleString()} ${r.unit || "BAGS"}`, color: "emerald" },
+                            { label: translateHeader(activeLang, "Quantity"), value: `${qty.toLocaleString()} ${r.unit || ""}`, color: "emerald" },
                             { label: translateHeader(activeLang, "Containers"), value: r.containerCount || 0, color: "purple" },
                             { label: translateHeader(activeLang, "Status"), value: r.status || "PENDING", color: "amber" },
                           ],
@@ -383,7 +391,7 @@ export function SalesBookingJournalReportView() {
                           totals: { total: totalAmt, quantity: qty },
                           showSignatures: true,
                           signatureBlocks: [
-                            { title: translateHeader(activeLang, "Prepared By"), subtitle: r.audit?.userName || "Sales Officer" },
+                            { title: translateHeader(activeLang, "Prepared By"), subtitle: r.audit?.userName || "" },
                             { title: translateHeader(activeLang, "Verified & Audited"), subtitle: "Accounts Department" },
                             { title: translateHeader(activeLang, "Authorized Signature"), subtitle: "Managing Director" },
                           ],
@@ -435,8 +443,8 @@ export function SalesBookingJournalReportView() {
                           scopeLevel: "Sales Booking Invoice",
                           country: r.countryName || "All Countries",
                           branch: r.branchName || "Main Branch",
-                          currency: r.currency || "USD",
-                          userName: r.audit?.userName || "ERP User",
+                          currency: r.currency || "",
+                          userName: r.audit?.userName || "",
                         },
                         partyDetails: {
                           type: "customer",
@@ -446,7 +454,7 @@ export function SalesBookingJournalReportView() {
                         },
                         kpis: [
                           { label: translateHeader(activeLang, "Total Amount"), value: totalAmt, color: "blue" },
-                          { label: translateHeader(activeLang, "Quantity"), value: `${qty.toLocaleString()} ${r.unit || "BAGS"}`, color: "emerald" },
+                          { label: translateHeader(activeLang, "Quantity"), value: `${qty.toLocaleString()} ${r.unit || ""}`, color: "emerald" },
                           { label: translateHeader(activeLang, "Containers"), value: r.containerCount || 0, color: "purple" },
                           { label: translateHeader(activeLang, "Status"), value: r.status || "PENDING", color: "amber" },
                         ],
@@ -465,7 +473,7 @@ export function SalesBookingJournalReportView() {
                         totals: { total: totalAmt, quantity: qty },
                         showSignatures: true,
                         signatureBlocks: [
-                          { title: translateHeader(activeLang, "Prepared By"), subtitle: r.audit?.userName || "Sales Officer" },
+                          { title: translateHeader(activeLang, "Prepared By"), subtitle: r.audit?.userName || "" },
                           { title: translateHeader(activeLang, "Verified & Audited"), subtitle: "Accounts Department" },
                           { title: translateHeader(activeLang, "Authorized Signature"), subtitle: "Managing Director" },
                         ],

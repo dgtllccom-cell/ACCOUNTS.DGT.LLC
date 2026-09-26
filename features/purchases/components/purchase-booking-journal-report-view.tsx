@@ -45,6 +45,8 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
+import { openScopedGenericReport } from "@/lib/reports/open-scoped-report";
+import { useErpScope } from "@/lib/hooks/use-erp-scope";
 import { openPurchaseA4ReportWindow } from "@/lib/reports/open-purchase-a4-report-window";
 import { TradeDocumentCenter } from "@/features/reports/components/trade-document-center";
 import type { TradeDocType } from "@/lib/reports/trade-documents/types";
@@ -517,31 +519,59 @@ function exportCsv(rows: PurchaseReport[], fileName: string) {
   }
 }
 
-function printPurchaseBookingRegister(rows: PurchaseReport[], lang: string = "en") {
-  openUniversalPrintReport({
-    title: "Purchase Booking Confirmation Register",
-    subtitle: `Total ${rows.length} booking records`,
+type RegisterPrintScope = {
+  countryId?: string | null;
+  countryBranchId?: string | null;
+  cityBranchId?: string | null;
+  countryName?: string | null;
+  branchName?: string | null;
+  userName?: string | null;
+};
+
+/** Purchase Booking register on the shared journal print standard (all rows passed in). */
+async function printPurchaseBookingRegister(rows: PurchaseReport[], lang: string = "en", scope: RegisterPrintScope = {}) {
+  const dates = rows
+    .map((r) => String(r.bookingDate || r.purchaseDate || r.createdAt || "").slice(0, 10))
+    .filter(Boolean)
+    .sort();
+  const period = dates.length ? `${dates[0]} → ${dates[dates.length - 1]}` : null;
+  const countries = Array.from(new Set(rows.map((r) => r.countryName).filter(Boolean)));
+  const branches = Array.from(new Set(rows.map((r) => r.branchName).filter(Boolean)));
+  const byCurrency = new Map<string, number>();
+  rows.forEach((r) => {
+    const cur = String(r.currency || "");
+    byCurrency.set(cur, (byCurrency.get(cur) || 0) + Number(r.totalPurchaseAmount || r.purchaseAmount || 0));
+  });
+  const singleCurrency = byCurrency.size === 1;
+  await openScopedGenericReport({
+    title: "Purchase Booking Journal Register",
     lang,
-    moduleType: "purchase_procurement",
     orientation: "landscape",
-    scope: {
-      scopeLevel: "Purchase Booking Confirmation",
-      userName: "ERP User",
-    },
-    columns: [
-      { key: "purchaseBookingOrderNumber", label: "PO Number", width: "12%" },
-      { key: "bookingDate", label: "Date", format: "date", width: "9%" },
-      { key: "countryName", label: "Country", width: "9%" },
-      { key: "branchName", label: "Branch", width: "10%" },
-      { key: "supplierName", label: "Supplier", width: "14%" },
-      { key: "productName", label: "Goods / Description", width: "15%" },
-      { key: "quantity", label: "Quantity", align: "right", format: "number", width: "7%" },
-      { key: "unit", label: "Unit", align: "center", width: "6%" },
-      { key: "currency", label: "Currency", align: "center", width: "6%" },
-      { key: "totalPurchaseAmount", label: "Total Amount", align: "right", format: "currency", width: "12%" },
-      { key: "status", label: "Status", align: "center", format: "badge", width: "8%" },
+    countryId: scope.countryId,
+    countryBranchId: scope.countryBranchId,
+    cityBranchId: scope.cityBranchId,
+    countryName: scope.countryName || (countries.length === 1 ? String(countries[0]) : null),
+    branchName: scope.branchName || (branches.length === 1 ? String(branches[0]) : null),
+    printedBy: scope.userName,
+    reportPeriod: period,
+    filters: [
+      ...(countries.length > 1 ? [{ label: "Country", value: countries.join(", ") }] : []),
+      ...(branches.length > 1 ? [{ label: "Branch", value: `${branches.length}` }] : []),
     ],
-    rows: rows.map(r => ({
+    columns: [
+      { key: "purchaseBookingOrderNumber", label: "Booking No", align: "center" },
+      { key: "bookingDate", label: "Date", format: "date", align: "center" },
+      { key: "countryName", label: "Country" },
+      { key: "branchName", label: "Branch" },
+      { key: "supplierName", label: "Supplier" },
+      { key: "productName", label: "Goods / Description" },
+      { key: "quantity", label: "Quantity", align: "right", format: "number" },
+      { key: "unit", label: "Unit", align: "center" },
+      { key: "currency", label: "Currency", align: "center" },
+      { key: "totalPurchaseAmount", label: "Total Amount", align: "right", format: "number" },
+      { key: "status", label: "Status", align: "center", format: "status" },
+    ],
+    rows: rows.map((r) => ({
       purchaseBookingOrderNumber: r.purchaseBookingOrderNumber || "-",
       bookingDate: r.bookingDate || r.purchaseDate || r.createdAt,
       countryName: r.countryName || "-",
@@ -549,16 +579,14 @@ function printPurchaseBookingRegister(rows: PurchaseReport[], lang: string = "en
       supplierName: r.supplierName || "-",
       productName: r.productName || r.goodsDescription || "-",
       quantity: r.quantity || 0,
-      unit: r.unit || "BAGS",
-      currency: r.currency || "USD",
+      unit: r.unit || "",
+      currency: r.currency || "",
       totalPurchaseAmount: r.totalPurchaseAmount || r.purchaseAmount || 0,
-      status: r.status || "CONFIRMED",
+      status: r.status || "",
     })),
-    totals: {
-      totalPurchaseAmount: rows.reduce((sum, r) => sum + Number(r.totalPurchaseAmount || r.purchaseAmount || 0), 0),
-      quantity: rows.reduce((sum, r) => sum + Number(r.quantity || 0), 0),
-    },
-    autoPrint: false,
+    totalsRow: singleCurrency
+      ? { totalPurchaseAmount: Array.from(byCurrency.values())[0], quantity: rows.reduce((sum, r) => sum + Number(r.quantity || 0), 0) }
+      : undefined,
   });
 }
 
@@ -1019,6 +1047,7 @@ function BranchFilterRow({
 
 function ReportActions({ rows }: { rows: PurchaseReport[] }) {
   const lang = useActiveLanguage();
+  const erpScope = useErpScope();
   const tt = (k: string, f: string) => t(lang, ("pbjr." + k) as never, f);
   return (
     <details className="relative">
@@ -1044,7 +1073,7 @@ function ReportActions({ rows }: { rows: PurchaseReport[] }) {
         </button>
         <button
           type="button"
-          onClick={() => printPurchaseBookingRegister(rows, lang)}
+          onClick={() => void printPurchaseBookingRegister(rows, lang, { countryId: erpScope.lockedCountryId, countryBranchId: erpScope.lockedCountryBranchId, cityBranchId: erpScope.lockedCityBranchId, countryName: erpScope.countryName, branchName: erpScope.branchDisplayName, userName: erpScope.userName })}
           className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-900"
         >
           <Printer className="h-4 w-4 text-slate-650" />
@@ -1514,6 +1543,7 @@ export function PurchaseBookingJournalReportView({
   };
 
   const activeLang = useActiveLanguage();
+  const erpScope = useErpScope();
   const isRtl = ["ur", "ar", "fa", "ps"].includes(activeLang);
   const tt = (k: string, f: string) => t(activeLang, ("pbjr." + k) as never, f);
   const [brandCompany, setBrandCompany] = useState<string | null>(null);
@@ -2267,6 +2297,16 @@ export function PurchaseBookingJournalReportView({
           >
             <RefreshCcw className={loading ? "h-3 w-3 animate-spin text-slate-500" : "h-3 w-3 text-slate-500"} />
             {t(activeLang, "pb_register.reset_refresh", "Reset & Refresh")}
+          </button>
+
+          {/* Visible Print action (journal register print standard) */}
+          <button
+            type="button"
+            onClick={() => void printPurchaseBookingRegister(registerRows, activeLang, { countryId: erpScope.lockedCountryId, countryBranchId: erpScope.lockedCountryBranchId, cityBranchId: erpScope.lockedCityBranchId, countryName: erpScope.countryName, branchName: erpScope.branchDisplayName, userName: erpScope.userName })}
+            className="flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-[10px] font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
+          >
+            <Printer className="h-3 w-3 text-slate-500" />
+            {t(activeLang, "pbjr.print", "Print")}
           </button>
 
           {/* Three-dots menu */}
