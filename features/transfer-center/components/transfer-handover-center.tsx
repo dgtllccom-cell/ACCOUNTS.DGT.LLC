@@ -1,5 +1,6 @@
 "use client";
 
+import { pl } from "@/lib/reports/print-label";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -243,14 +244,14 @@ export function TransferHandoverCenter({ lang: langProp }: { lang?: string | nul
               title={s.t("heading", "Transfer & Handover Center")}
               subtitle={s.t(`tab_${tab}`, tab.charAt(0).toUpperCase() + tab.slice(1))}
               columns={[
-                { key: "transfer_no", label: "Transfer No", align: "center" },
+                { key: "transfer_no", label: pl("Transfer No"), align: "center" },
                 { key: (r) => s.t(`type_${(r as any).transfer_type}`, String((r as any).transfer_type ?? "")), label: "Type" },
                 { key: "order_reference", label: s.t("order_ref", "Order"), align: "center" },
                 { key: "customer_party_name", label: s.t("party", "Party") },
                 { key: "sender_name", label: s.t("sender", "Sender") },
                 { key: (r) => String((r as any).receiver_name || (r as any).dest_city_branch_name || (r as any).dest_country_name || ""), label: s.t("receiver", "Receiver") },
                 { key: "narration", label: s.t("narration", "Narration") },
-                { key: "created_at", label: "Date", align: "center", format: "date" },
+                { key: "created_at", label: pl("Date"), align: "center", format: "date" },
                 { key: (r) => s.t(`status_${(r as any).status}`, String((r as any).status ?? "")), label: "Status", align: "center" },
               ]}
               rows={filteredItems as unknown as Record<string, unknown>[]}
@@ -268,7 +269,7 @@ export function TransferHandoverCenter({ lang: langProp }: { lang?: string | nul
               }}
               filters={[
                 { label: "Type", value: typeFilter === "all" ? s.t("type_all", "All Types") : s.t(`type_${typeFilter}`, typeFilter) },
-                ...(searchQuery.trim() ? [{ label: "Search", value: searchQuery.trim() }] : []),
+                ...(searchQuery.trim() ? [{ label: pl("Search"), value: searchQuery.trim() }] : []),
               ]}
               orientation="landscape"
             />

@@ -1,5 +1,6 @@
 "use client";
 
+import { pl } from "@/lib/reports/print-label";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -715,7 +716,7 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
                   filters={[
                     ...(dashDateFrom ? [{ label: tr("money_exchange.dash_date_range", "Date Range"), value: `${dashDateFrom} - ${dashDateTo || ""}` }] : []),
                     ...(filterType !== "ALL" ? [{ label: tr("money_exchange.type_header", "Type"), value: filterType }] : []),
-                    ...(searchQuery.trim() ? [{ label: "Search", value: searchQuery.trim() }] : []),
+                    ...(searchQuery.trim() ? [{ label: pl("Search"), value: searchQuery.trim() }] : []),
                   ]}
                   orientation="landscape"
                 />

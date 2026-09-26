@@ -1,5 +1,6 @@
 "use client";
 
+import { pl } from "@/lib/reports/print-label";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -307,16 +308,16 @@ export function AccountsSummaryDashboard() {
             title={t(lang, "acct.asd_all_accounts_register", "All Accounts Register")}
             columns={[
               { key: "sr", label: "Sr#", align: "center" },
-              { key: "account_no", label: "Account No." },
-              { key: "account_name", label: "Account Name" },
-              { key: "type", label: "Type" },
-              { key: "sub_type", label: "Sub Type" },
-              { key: "status", label: "Status", align: "center", format: "status" },
-              { key: "branch", label: "Branch" },
-              { key: "country", label: "Country" },
-              { key: "currency", label: "Currency", align: "center" },
-              { key: "balance", label: "Balance", align: "right", format: "number" },
-              { key: "created", label: "Created", format: "date" },
+              { key: "account_no", label: pl("Account No.") },
+              { key: "account_name", label: pl("Account Name") },
+              { key: "type", label: pl("Type") },
+              { key: "sub_type", label: pl("Sub Type") },
+              { key: "status", label: pl("Status"), align: "center", format: "status" },
+              { key: "branch", label: pl("Branch") },
+              { key: "country", label: pl("Country") },
+              { key: "currency", label: pl("Currency"), align: "center" },
+              { key: "balance", label: pl("Balance"), align: "right", format: "number" },
+              { key: "created", label: pl("Created"), format: "date" },
             ]}
             rows={filtered.map(toPrintRow)}
             fetchFullData={fetchAllAccounts}

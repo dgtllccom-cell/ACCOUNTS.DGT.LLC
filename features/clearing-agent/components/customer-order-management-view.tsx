@@ -1,5 +1,6 @@
 "use client";
 
+import { pl } from "@/lib/reports/print-label";
 import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -2575,7 +2576,7 @@ export function CustomerOrderManagementView() {
                   { key: "exporter_name", label: tt("th_shipper", "Shipper / Exporter") },
                   { key: (r) => String((r as any).buyer_name || (r as any).importer_name || ""), label: tt("th_buyer", "Buyer / Importer") },
                   { key: "goods_name", label: tt("th_goods", "Goods & Qty") },
-                  { key: (r) => (r as any).goods_quantity ? `${(r as any).goods_quantity} ${(r as any).goods_unit || ""}`.trim() : "", label: "Quantity", align: "right" },
+                  { key: (r) => (r as any).goods_quantity ? `${(r as any).goods_quantity} ${(r as any).goods_unit || ""}`.trim() : "", label: pl("Quantity"), align: "right" },
                   { key: (r) => String((r as any).route_name || [(r as any).loading_country_name, (r as any).receiving_country_name].filter(Boolean).join(" -> ")), label: tt("th_route", "Route / Ports") },
                   { key: (r) => `${(r as any).movement_type || ""} ${String((r as any).transport_mode || "").replace("_", " ")}`.trim(), label: tt("th_movement", "Mode & Movement") },
                   { key: (r) => tt(getOrderProgress(r as any).labelKey, String((r as any).status ?? "")), label: tt("th_step_status", "Status"), align: "center" },
@@ -2584,9 +2585,9 @@ export function CustomerOrderManagementView() {
                 rows={visibleOrders as unknown as Record<string, unknown>[]}
                 filters={[
                   ...(statusFilter !== "all" ? [{ label: tt("th_step_status", "Status"), value: statusFilter }] : []),
-                  ...(modeFilter !== "all" ? [{ label: "Mode", value: modeFilter }] : []),
+                  ...(modeFilter !== "all" ? [{ label: pl("Mode"), value: modeFilter }] : []),
                   ...(movementFilter !== "all" ? [{ label: tt("th_movement", "Mode & Movement"), value: movementFilter }] : []),
-                  ...((searchQuery || filterState.query) ? [{ label: "Search", value: String(searchQuery || filterState.query) }] : []),
+                  ...((searchQuery || filterState.query) ? [{ label: pl("Search"), value: String(searchQuery || filterState.query) }] : []),
                 ]}
                 orientation="landscape"
               />

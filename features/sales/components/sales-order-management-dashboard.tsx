@@ -1,5 +1,6 @@
 "use client";
 
+import { pl } from "@/lib/reports/print-label";
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { 
@@ -318,33 +319,33 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
             title={t(activeLang, "nav.sales_order_management" as never, "Sales Order Management")}
             subtitle={t(activeLang, LIFECYCLE_TAB_LABEL_KEYS[activeTab] as never, activeTab)}
             columns={[
-              { key: "journal_serial", label: "Journal Serial", align: "center" },
-              { key: "country_serial", label: "Country Serial", align: "center" },
-              { key: "branch_serial", label: "Branch Serial", align: "center" },
-              { key: "sales_order_no", label: "Sales Order No", align: "center" },
-              { key: "order_date", label: "Date", format: "date" },
-              { key: "customer", label: "Customer" },
-              { key: "user", label: "User" },
-              { key: "branch", label: "Branch" },
-              { key: "country", label: "Country" },
-              { key: "sales_account", label: "Sales Account" },
-              { key: "purchase_account", label: "Purchase Account" },
-              { key: "goods", label: "Goods Name" },
-              { key: "brand", label: "Brand" },
-              { key: "size", label: "Goods Size" },
-              { key: "quantity", label: "Quantity", align: "right", format: "number" },
-              { key: "unit", label: "Unit", align: "center" },
-              { key: "gross_weight", label: "Gross Wt (KG)", align: "right", format: "number" },
-              { key: "net_weight", label: "Net Wt (KG)", align: "right", format: "number" },
-              { key: "pur_currency", label: "Pur Currency", align: "center" },
-              { key: "exchange_rate", label: "Ex. Rate", align: "right" },
-              { key: "final_currency", label: "Final Currency", align: "center" },
-              { key: "pur_amount", label: "Pur Amount", align: "right", format: "number" },
-              { key: "invoice_pct", label: "Invoice %", align: "right" },
-              { key: "invoice_amount", label: "Invoice Amount", align: "right", format: "number" },
-              { key: "final_invoice_amount", label: "Final Invoice Amount", align: "right", format: "number" },
-              { key: "payment_status", label: "Payment Status", align: "center", format: "status" },
-              { key: "transfer_status", label: "Transfer Status", align: "center", format: "status" },
+              { key: "journal_serial", label: pl("Journal Serial"), align: "center" },
+              { key: "country_serial", label: pl("Country Serial"), align: "center" },
+              { key: "branch_serial", label: pl("Branch Serial"), align: "center" },
+              { key: "sales_order_no", label: pl("Sales Order No"), align: "center" },
+              { key: "order_date", label: pl("Date"), format: "date" },
+              { key: "customer", label: pl("Customer") },
+              { key: "user", label: pl("User") },
+              { key: "branch", label: pl("Branch") },
+              { key: "country", label: pl("Country") },
+              { key: "sales_account", label: pl("Sales Account") },
+              { key: "purchase_account", label: pl("Purchase Account") },
+              { key: "goods", label: pl("Goods Name") },
+              { key: "brand", label: pl("Brand") },
+              { key: "size", label: pl("Goods Size") },
+              { key: "quantity", label: pl("Quantity"), align: "right", format: "number" },
+              { key: "unit", label: pl("Unit"), align: "center" },
+              { key: "gross_weight", label: pl("Gross Wt (KG)"), align: "right", format: "number" },
+              { key: "net_weight", label: pl("Net Wt (KG)"), align: "right", format: "number" },
+              { key: "pur_currency", label: pl("Pur Currency"), align: "center" },
+              { key: "exchange_rate", label: pl("Ex. Rate"), align: "right" },
+              { key: "final_currency", label: pl("Final Currency"), align: "center" },
+              { key: "pur_amount", label: pl("Pur Amount"), align: "right", format: "number" },
+              { key: "invoice_pct", label: pl("Invoice %"), align: "right" },
+              { key: "invoice_amount", label: pl("Invoice Amount"), align: "right", format: "number" },
+              { key: "final_invoice_amount", label: pl("Final Invoice Amount"), align: "right", format: "number" },
+              { key: "payment_status", label: pl("Payment Status"), align: "center", format: "status" },
+              { key: "transfer_status", label: pl("Transfer Status"), align: "center", format: "status" },
             ]}
             rows={filtered.map(toPrintRow)}
             fetchFullData={fetchAllOrdersForPrint}

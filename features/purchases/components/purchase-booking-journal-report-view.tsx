@@ -1,5 +1,6 @@
 "use client";
 
+import { pl } from "@/lib/reports/print-label";
 import { openLoadingRecordsPrintReport } from "@/lib/reports/open-loading-records-print-report";
 import { openPurchaseBookingOrderPrintReport } from "@/lib/reports/open-purchase-booking-print-report";
 import { DownloadActionIcon, PdfActionIcon } from "@/components/ui/download-action-icon";
@@ -544,7 +545,7 @@ async function printPurchaseBookingRegister(rows: PurchaseReport[], lang: string
   });
   const singleCurrency = byCurrency.size === 1;
   await openScopedGenericReport({
-    title: "Purchase Booking Journal Register",
+    title: pl("Purchase Booking Journal Register"),
     lang,
     orientation: "landscape",
     countryId: scope.countryId,
@@ -555,21 +556,21 @@ async function printPurchaseBookingRegister(rows: PurchaseReport[], lang: string
     printedBy: scope.userName,
     reportPeriod: period,
     filters: [
-      ...(countries.length > 1 ? [{ label: "Country", value: countries.join(", ") }] : []),
-      ...(branches.length > 1 ? [{ label: "Branch", value: `${branches.length}` }] : []),
+      ...(countries.length > 1 ? [{ label: pl("Country"), value: countries.join(", ") }] : []),
+      ...(branches.length > 1 ? [{ label: pl("Branch"), value: `${branches.length}` }] : []),
     ],
     columns: [
-      { key: "purchaseBookingOrderNumber", label: "Booking No", align: "center" },
-      { key: "bookingDate", label: "Date", format: "date", align: "center" },
-      { key: "countryName", label: "Country" },
-      { key: "branchName", label: "Branch" },
-      { key: "supplierName", label: "Supplier" },
-      { key: "productName", label: "Goods / Description" },
-      { key: "quantity", label: "Quantity", align: "right", format: "number" },
-      { key: "unit", label: "Unit", align: "center" },
-      { key: "currency", label: "Currency", align: "center" },
-      { key: "totalPurchaseAmount", label: "Total Amount", align: "right", format: "number" },
-      { key: "status", label: "Status", align: "center", format: "status" },
+      { key: "purchaseBookingOrderNumber", label: pl("Booking No"), align: "center" },
+      { key: "bookingDate", label: pl("Date"), format: "date", align: "center" },
+      { key: "countryName", label: pl("Country") },
+      { key: "branchName", label: pl("Branch") },
+      { key: "supplierName", label: pl("Supplier") },
+      { key: "productName", label: pl("Goods / Description") },
+      { key: "quantity", label: pl("Quantity"), align: "right", format: "number" },
+      { key: "unit", label: pl("Unit"), align: "center" },
+      { key: "currency", label: pl("Currency"), align: "center" },
+      { key: "totalPurchaseAmount", label: pl("Total Amount"), align: "right", format: "number" },
+      { key: "status", label: pl("Status"), align: "center", format: "status" },
     ],
     rows: rows.map((r) => ({
       purchaseBookingOrderNumber: r.purchaseBookingOrderNumber || "-",

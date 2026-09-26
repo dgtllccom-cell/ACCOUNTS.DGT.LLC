@@ -1,5 +1,6 @@
 "use client";
 
+import { pl } from "@/lib/reports/print-label";
 import { DownloadActionIcon } from "@/components/ui/download-action-icon";
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
 
@@ -1975,19 +1976,19 @@ export function CashEntryForm({
       branchName: selectedCityBranch?.name || selectedMainBranch?.name,
       reportPeriod: period,
       filters: [
-        { label: "Period", value: period },
-        ...(tableSearchQuery.trim() ? [{ label: "Search", value: tableSearchQuery.trim() }] : []),
+        { label: pl("Period"), value: period },
+        ...(tableSearchQuery.trim() ? [{ label: pl("Search"), value: tableSearchQuery.trim() }] : []),
       ],
       columns: [
-        { key: "date", label: "Date", format: "date", align: "center" },
-        { key: "voucher", label: "Voucher No", align: "center" },
-        { key: "user", label: "User" },
-        { key: "account", label: "Account" },
-        { key: "accountNo", label: "Account No", align: "center" },
-        { key: "narration", label: "Narration" },
-        { key: "currency", label: "Currency", align: "center" },
-        { key: "debit", label: "Debit", format: "number", align: "right" },
-        { key: "credit", label: "Credit", format: "number", align: "right" },
+        { key: "date", label: pl("Date"), format: "date", align: "center" },
+        { key: "voucher", label: pl("Voucher No"), align: "center" },
+        { key: "user", label: pl("User") },
+        { key: "account", label: pl("Account") },
+        { key: "accountNo", label: pl("Account No"), align: "center" },
+        { key: "narration", label: pl("Narration") },
+        { key: "currency", label: pl("Currency"), align: "center" },
+        { key: "debit", label: pl("Debit"), format: "number", align: "right" },
+        { key: "credit", label: pl("Credit"), format: "number", align: "right" },
       ],
       rows,
       totalsRow: { debit: totalDebit, credit: totalCredit },

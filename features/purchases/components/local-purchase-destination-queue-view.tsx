@@ -1,5 +1,6 @@
 "use client";
 
+import { pl } from "@/lib/reports/print-label";
 import React, { useMemo, useState, useEffect, Fragment } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -728,7 +729,7 @@ export function LocalPurchaseDestinationQueueView({
                   ...(selectedCountry ? [{ label: th("COUNTRY"), value: (countries.find((c: any) => (typeof c === "string" ? c : c.id) === selectedCountry) as any)?.name ?? selectedCountry }] : []),
                   ...(selectedBranch ? [{ label: th("BRANCH NAME"), value: (branches.find((b: any) => (typeof b === "string" ? b : b.id) === selectedBranch) as any)?.name ?? selectedBranch }] : []),
                   ...(selectedStatus ? [{ label: th("STATUS"), value: selectedStatus }] : []),
-                  ...(searchQuery.trim() ? [{ label: "Search", value: searchQuery.trim() }] : []),
+                  ...(searchQuery.trim() ? [{ label: pl("Search"), value: searchQuery.trim() }] : []),
                 ]}
                 orientation="landscape"
               />

@@ -1,5 +1,6 @@
 "use client";
 
+import { pl } from "@/lib/reports/print-label";
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import { Users, Search, Plus, Phone, Mail, MapPin, Building2, ExternalLink } from "lucide-react";
@@ -39,17 +40,17 @@ export function ClearingAgentListView({ initialAgents }: { initialAgents: Cleari
         </div>
         <div className="flex items-center gap-2">
         <JournalPrintButton
-          title="Clearing Agents"
+          title={pl("Clearing Agents")}
           columns={[
-            { key: (r) => String((r as any).clearing_agent_code || (r as any).code || ""), label: "Agent Code", align: "center" },
-            { key: "name", label: "Agent Name" },
-            { key: "contact_person", label: "Contact Person" },
-            { key: "phone", label: "Phone", align: "center" },
-            { key: "email", label: "Email" },
-            { key: (r) => String((r as any).status || "active"), label: "Status", align: "center", format: "status" },
+            { key: (r) => String((r as any).clearing_agent_code || (r as any).code || ""), label: pl("Agent Code"), align: "center" },
+            { key: "name", label: pl("Agent Name") },
+            { key: "contact_person", label: pl("Contact Person") },
+            { key: "phone", label: pl("Phone"), align: "center" },
+            { key: "email", label: pl("Email") },
+            { key: (r) => String((r as any).status || "active"), label: pl("Status"), align: "center", format: "status" },
           ]}
           rows={filtered as unknown as Record<string, unknown>[]}
-          filters={search.trim() ? [{ label: "Search", value: search.trim() }] : []}
+          filters={search.trim() ? [{ label: pl("Search"), value: search.trim() }] : []}
           orientation="landscape"
         />
         <Link href="/dashboard/shipping-line/agent-entry">

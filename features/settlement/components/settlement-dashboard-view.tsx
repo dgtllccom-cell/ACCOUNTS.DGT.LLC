@@ -1,5 +1,6 @@
 "use client";
 
+import { pl } from "@/lib/reports/print-label";
 import React, { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import {
@@ -295,12 +296,12 @@ export function SettlementDashboardView() {
           <JournalPrintButton
             title={s.t("recent_title","Recent Settlement Registry Records")}
             columns={[
-              { key: "source_date", label: "Date", format: "date" },
-              { key: "source_reference_no", label: "Reference" },
-              { key: "source_module", label: "Module" },
+              { key: "source_date", label: pl("Date"), format: "date" },
+              { key: "source_reference_no", label: pl("Reference") },
+              { key: "source_module", label: pl("Module") },
               { key: "party_name", label: s.t("c_party","Party Name") },
               { key: "direction", label: s.t("c_dir","Dir"), align: "center" },
-              { key: "local_currency", label: "Currency", align: "center" },
+              { key: "local_currency", label: pl("Currency"), align: "center" },
               { key: "local_amount", label: s.t("c_local_amount","Local Amount"), align: "right", format: "number" },
               { key: "original_usd_amount", label: s.t("c_usd_amount","USD Amount"), align: "right", format: "number" },
               { key: "remaining_local", label: s.t("c_remaining","Remaining"), align: "right", format: "number" },

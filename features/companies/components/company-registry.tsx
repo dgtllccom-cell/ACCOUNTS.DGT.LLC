@@ -1,5 +1,6 @@
 "use client";
 
+import { pl } from "@/lib/reports/print-label";
 import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import type { Route } from "next";
@@ -966,20 +967,20 @@ export function CompanyRegistry({
             title={tt("creg.title", "Company Management Registry")}
             columns={[
               { key: "sr", label: "#", align: "center" },
-              { key: "account_no", label: "Account No." },
-              { key: "consortium", label: "Consortium" },
-              { key: "owner", label: "Owner" },
-              { key: "branch_rules", label: "Branch Rules" },
-              { key: "location_summary", label: "Location Summary" },
-              { key: "companies_count", label: "Companies Count", align: "center", format: "number" },
-              { key: "contracts_count", label: "Contracts", align: "center", format: "number" },
-              { key: "contact", label: "Contacts" },
+              { key: "account_no", label: pl("Account No.") },
+              { key: "consortium", label: pl("Consortium") },
+              { key: "owner", label: pl("Owner") },
+              { key: "branch_rules", label: pl("Branch Rules") },
+              { key: "location_summary", label: pl("Location Summary") },
+              { key: "companies_count", label: pl("Companies Count"), align: "center", format: "number" },
+              { key: "contracts_count", label: pl("Contracts"), align: "center", format: "number" },
+              { key: "contact", label: pl("Contacts") },
             ]}
             rows={printRows}
             filters={[
               ...(searchQuery.trim() ? [{ label: tt("common.search", "Search"), value: searchQuery.trim() }] : []),
-              ...(statusFilter !== "all" ? [{ label: "Status", value: statusFilter }] : []),
-              ...(countryFilter !== "all" ? [{ label: "Country", value: countryFilter }] : []),
+              ...(statusFilter !== "all" ? [{ label: pl("Status"), value: statusFilter }] : []),
+              ...(countryFilter !== "all" ? [{ label: pl("Country"), value: countryFilter }] : []),
             ]}
             orientation="landscape"
           />

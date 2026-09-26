@@ -1,5 +1,6 @@
 "use client";
  
+import { pl } from "@/lib/reports/print-label";
 import { DownloadActionIcon, PdfActionIcon } from "@/components/ui/download-action-icon";
 import { printStore } from "@/lib/store/print-store";
 import { useErpScope } from "@/lib/hooks/use-erp-scope";
@@ -4227,10 +4228,10 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
           title: translateHeader(currentLanguage, "Sales Payments Journal"),
           modeLabel: String(mode).toUpperCase(),
           filters: [
-            ...(startDateFilter || endDateFilter ? [{ label: "Period", value: `${startDateFilter || "…"} → ${endDateFilter || "…"}` }] : []),
-            ...(partyFilter ? [{ label: "Party", value: partyFilter }] : []),
-            ...(currencyFilter ? [{ label: "Currency", value: String(currencyFilter) }] : []),
-            ...(query ? [{ label: "Search", value: String(query) }] : []),
+            ...(startDateFilter || endDateFilter ? [{ label: pl("Period"), value: `${startDateFilter || "…"} → ${endDateFilter || "…"}` }] : []),
+            ...(partyFilter ? [{ label: pl("Party"), value: partyFilter }] : []),
+            ...(currencyFilter ? [{ label: pl("Currency"), value: String(currencyFilter) }] : []),
+            ...(query ? [{ label: pl("Search"), value: String(query) }] : []),
           ],
           countryId: erpScope.lockedCountryId,
           countryBranchId: erpScope.lockedCountryBranchId,

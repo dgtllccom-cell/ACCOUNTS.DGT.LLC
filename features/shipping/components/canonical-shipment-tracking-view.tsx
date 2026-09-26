@@ -1,5 +1,6 @@
 "use client";
 
+import { pl } from "@/lib/reports/print-label";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import {
   Search,
@@ -713,25 +714,25 @@ export function CanonicalShipmentTrackingView({
                 <JournalPrintButton
                   title={title || "Container & Vessel Tracking"}
                   columns={[
-                    { key: "orderNo", label: "Shipment No" },
-                    { key: "blNumber", label: "BL No" },
-                    { key: "containerNumber", label: "Container No" },
-                    { key: "truckNumber", label: "Truck No" },
-                    { key: "shippingLine", label: "Shipping Line" },
-                    { key: "vesselVoyage", label: "Vessel / Voyage" },
-                    { key: "from", label: "From" },
+                    { key: "orderNo", label: pl("Shipment No") },
+                    { key: "blNumber", label: pl("BL No") },
+                    { key: "containerNumber", label: pl("Container No") },
+                    { key: "truckNumber", label: pl("Truck No") },
+                    { key: "shippingLine", label: pl("Shipping Line") },
+                    { key: "vesselVoyage", label: pl("Vessel / Voyage") },
+                    { key: "from", label: pl("From") },
                     { key: "to", label: "To" },
-                    { key: (r) => modeLabel(String((r as any).transportMode ?? "")), label: "Mode", align: "center" },
-                    { key: "currentLocation", label: "Current Location" },
+                    { key: (r) => modeLabel(String((r as any).transportMode ?? "")), label: pl("Mode"), align: "center" },
+                    { key: "currentLocation", label: pl("Current Location") },
                     { key: (r) => formatDate((r as any).eta), label: "ETA" },
-                    { key: (r) => statusLabel(String((r as any).currentStage ?? "")), label: "Status", align: "center", format: "status" },
+                    { key: (r) => statusLabel(String((r as any).currentStage ?? "")), label: pl("Status"), align: "center", format: "status" },
                   ]}
                   rows={listRows as unknown as Record<string, unknown>[]}
                   fetchFullData={fetchAllTrackingRows}
                   filters={[
-                    ...(debouncedQuery.trim() ? [{ label: "Search", value: debouncedQuery.trim() }] : []),
-                    ...(modeFilter !== "all" ? [{ label: "Mode", value: modeLabel(modeFilter) }] : []),
-                    ...(statusFilter !== "all" ? [{ label: "Status", value: statusLabel(statusFilter) }] : []),
+                    ...(debouncedQuery.trim() ? [{ label: pl("Search"), value: debouncedQuery.trim() }] : []),
+                    ...(modeFilter !== "all" ? [{ label: pl("Mode"), value: modeLabel(modeFilter) }] : []),
+                    ...(statusFilter !== "all" ? [{ label: pl("Status"), value: statusLabel(statusFilter) }] : []),
                   ]}
                   orientation="landscape"
                   variant="ghost"

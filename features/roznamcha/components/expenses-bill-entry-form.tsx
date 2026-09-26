@@ -1,5 +1,6 @@
 "use client";
 
+import { pl } from "@/lib/reports/print-label";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
@@ -1531,15 +1532,15 @@ export function ExpensesBillEntryForm({
             <JournalPrintButton
               title={tt("exp.recent_bills", "Recent Expenses Bills")}
               columns={[
-                { key: "serial_no", label: "Serial", align: "center" },
-                { key: "bill_date", label: "Date", align: "center", format: "date" },
-                { key: "country", label: "Country" },
-                { key: "branch", label: "Branch" },
-                { key: "type", label: "Type" },
-                { key: "user", label: "User" },
-                { key: "currency", label: "Currency", align: "center" },
-                { key: "total", label: "Total Amount", align: "right", format: "number" },
-                { key: "transfer_status", label: "Transfer Status", align: "center" },
+                { key: "serial_no", label: pl("Serial"), align: "center" },
+                { key: "bill_date", label: pl("Date"), align: "center", format: "date" },
+                { key: "country", label: pl("Country") },
+                { key: "branch", label: pl("Branch") },
+                { key: "type", label: pl("Type") },
+                { key: "user", label: pl("User") },
+                { key: "currency", label: pl("Currency"), align: "center" },
+                { key: "total", label: pl("Total Amount"), align: "right", format: "number" },
+                { key: "transfer_status", label: pl("Transfer Status"), align: "center" },
               ]}
               rows={recentBills.map(billPrintRow)}
               fetchFullData={async () => {
