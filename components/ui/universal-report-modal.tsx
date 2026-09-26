@@ -23,6 +23,7 @@ import { rtlLanguages } from "@/lib/i18n/languages";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { translateValue } from "@/lib/i18n/table-values";
 import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
+import { useErpScope } from "@/lib/hooks/use-erp-scope";
 
 export interface ReportColumn<T = any> {
   key: string;
@@ -87,6 +88,7 @@ export function UniversalReportModal<T extends Record<string, any> = Record<stri
   exportFileName = "erp-report"
 }: UniversalReportModalProps<T>) {
   const currentLanguage = useActiveLanguage();
+  const erpScope = useErpScope();
   const isRtl = rtlLanguages.includes(currentLanguage as any);
   const dir = isRtl ? "rtl" : "ltr";
   const th = (label: string) => translateHeader(currentLanguage, label);
@@ -116,9 +118,9 @@ export function UniversalReportModal<T extends Record<string, any> = Record<stri
       orientation: (columns.length > 8 ? "landscape" : "portrait") as "portrait" | "landscape",
       scope: {
         company: companyName,
-        country: countryName,
-        branch: branchName,
-        userName,
+        country: countryName || erpScope.countryName || undefined,
+        branch: branchName || erpScope.branchDisplayName || undefined,
+        userName: userName || erpScope.userName || undefined,
         currency,
         dateRange: fromDate && toDate ? `${fromDate} — ${toDate}` : (fromDate || toDate || undefined),
       },
@@ -130,7 +132,18 @@ export function UniversalReportModal<T extends Record<string, any> = Record<stri
         format: (c.isCurrency ? "currency" : c.isNumeric ? "number" : undefined) as any,
         currency: c.isCurrency ? currency : undefined,
       })),
-      rows: data as Record<string, any>[],
+      // Apply each column's own formatter (e.g. boolean -> localized Active/Inactive) so the
+      // printed value matches the on-screen value instead of the raw field.
+      rows: data.map((row) => {
+        const out: Record<string, any> = { ...(row as Record<string, any>) };
+        columns.forEach((c) => {
+          if (c.format) {
+            const v = c.format((row as any)[c.key], row);
+            if (typeof v === "string" || typeof v === "number") out[c.key] = v;
+          }
+        });
+        return out;
+      }),
       totals: Object.keys(totals).length ? totals : undefined,
       autoPrint: true,
     };

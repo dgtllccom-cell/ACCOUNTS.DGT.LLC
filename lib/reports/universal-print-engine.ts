@@ -230,8 +230,8 @@ export function buildUniversalPrintHtml(input: UniversalPrintInput): string {
   const dateRange = ledgerSummary?.datePeriod || scope.dateRange || "All Available Records";
 
   const printDate = new Date();
-  const printDateFormatted = printDate.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
-  const printTimeFormatted = printDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true });
+  const printDateFormatted = formatDate(printDate.toISOString(), targetLang);
+  const printTimeFormatted = `${String(printDate.getHours()).padStart(2, "0")}:${String(printDate.getMinutes()).padStart(2, "0")}`;
   const fullDateTime = `${printDateFormatted}, ${printTimeFormatted}`;
   const userName = realOrEmpty(scope.userName) || realOrEmpty(companyInfo.printedBy)
     || (typeof window !== "undefined" ? realOrEmpty((window as unknown as { __ERP_USER_NAME__?: string }).__ERP_USER_NAME__) : "")
@@ -250,7 +250,7 @@ export function buildUniversalPrintHtml(input: UniversalPrintInput): string {
     if (!s || s === "-") return s || "-";
     if (col.format === "currency" || col.format === "number" || col.format === "date" || col.format === "badge") return s;
     if (CURRENCY_RE.test(s)) return s.toUpperCase();                                  // usd -> USD
-    if (ISO_DT_RE.test(s)) { const d = formatDate(s); if (d && d !== s) return d; }    // 2025-10-15T00:00:00Z -> 15 Oct 2025
+    if (ISO_DT_RE.test(s)) { const d = formatDate(s, targetLang); if (d && d !== s) return d; }    // 2025-10-15T00:00:00Z -> 15 Oct 2025
     if (/^[a-z]+(?:_[a-z0-9]+){1,}$/i.test(s) && /_/.test(s)) return humanizeToken(s); // purchase_order_advance_payment -> Purchase Order Advance Payment
     return s;
   };
@@ -825,7 +825,7 @@ export function buildUniversalPrintHtml(input: UniversalPrintInput): string {
               } else if (c.format === "number") {
                 displayVal = formatNumber(val);
               } else if (c.format === "date") {
-                displayVal = formatDate(val);
+                displayVal = formatDate(val, targetLang);
               } else if (val === null || val === undefined) {
                 displayVal = "-";
               } else {

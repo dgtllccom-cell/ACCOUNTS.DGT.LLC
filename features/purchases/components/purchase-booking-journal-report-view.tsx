@@ -603,7 +603,7 @@ function printReport(rows?: PurchaseReport[], lang?: string) {
       lang: effectiveLang,
       moduleType: "purchase_procurement",
       orientation: "portrait",
-      scope: { scopeLevel: "Purchase Booking Register", userName: "ERP User" },
+      scope: { scopeLevel: "Purchase Booking Register", userName: "" },
       columns: [
         { key: "purchaseBookingOrderNumber", label: "PO Number" },
         { key: "bookingDate", label: "Date", format: "date" },
@@ -633,10 +633,10 @@ function openReportWindow(report: PurchaseReport, autoPrint: boolean, lang: Supp
     autoPrint,
     scope: {
       scopeLevel: "Purchase Booking Journal",
-      country: report.countryName || "All Countries",
+      country: report.countryName || "",
       branch: report.branchName || "",
-      currency: report.currency || "USD",
-      userName: report.audit?.userName || "Admin User",
+      currency: report.currency || "",
+      userName: report.audit?.userName || "",
     },
     partyDetails: {
       type: "supplier",
@@ -2220,57 +2220,6 @@ export function PurchaseBookingJournalReportView({
             />
           </div>
 
-          {/* Print Button */}
-          <button
-            type="button"
-            onClick={() => {
-              const mappedRows = registerRows.map((r) => {
-                const f = r.form_data?.form || {};
-                const g = r.form_data?.goodsEntries || [];
-                const firstGood = g[0] || {};
-                return {
-                  id: r.id,
-                  country: String(r.countryName || f.countryName || "UAE"),
-                  branch: String(r.branchName || f.branchName || "AL_RAS"),
-                  purchaseBookingNo: r.purchaseBookingOrderNumber || f.bookingNo || `PB-2026-${r.id.slice(0, 4)}`,
-                  salesAccount: r.salesAccountName || f.salesAccountName || "UAE-DET-AC-0003",
-                  purchaseAccount: r.purchaseAccountName || f.purchaseAccountName || "UAE-DET-AC-0003",
-                  goods: r.productName || firstGood.goodsName || "Almond Kernel California",
-                  contractQty: Number(r.quantity || firstGood.qtyNo || 10000),
-                  grossWeight: Number(r.totalGrossWeight || firstGood.qtyKgs * firstGood.qtyNo || 10500),
-                  tareWeight: Number(firstGood.emptyKgs || 1000),
-                  netWeight: Number(r.totalNetWeight || (firstGood.qtyKgs - firstGood.emptyKgs) * firstGood.qtyNo || 9500),
-                  purchasePriceRate: Number(r.purchaseRate || firstGood.coursePrice || 5.2),
-                  totalPurchaseFc: Number(r.totalPurchaseAmount || 49400),
-                  advanceFc: Number(f.advanceAmountFc || 20000),
-                  remainingFc: Number(f.remainingAmountFc || 29400),
-                  currencyFc: r.currency || "USD",
-                  exchangeRate: Number(f.exchangeRate || 0),
-                  finalAmountLc: Number(r.finalAmount || 181560.5),
-                  finalAdvanceLc: Number(f.advanceAmountLc || 73450),
-                  finalRemainingLc: Number(f.remainingAmountLc || 108110.5),
-                  currencyLc: "AED",
-                  loadedQty: Number(f.loadedQty || 4000),
-                  remainingToLoad: Number(f.remainingToLoad || 6000),
-                  loadingStatus: r.status === "Accepted" ? "Partially Loaded" : r.status === "Transferred" ? "Almost Complete" : r.status === "Completed" ? "Completed" : "Not Loaded"
-                };
-              });
-
-              openLoadingRecordsPrintReport({
-                rows: mappedRows,
-                companyInfo: {
-                  name: "",
-                  branch: "",
-                  printedBy: session?.fullName || session?.email || "—"
-                }
-              });
-            }}
-            className="flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-[10px] font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300"
-          >
-            <Printer className="h-3.5 w-3.5 text-slate-500" />
-            {t(activeLang, "common.print", "Print")}
-          </button>
-
           {/* Combined Reset & Refresh Button */}
           <button
             onClick={() => {
@@ -2303,6 +2252,7 @@ export function PurchaseBookingJournalReportView({
           {/* Visible Print action (journal register print standard) */}
           <button
             type="button"
+            data-testid="print-action"
             onClick={() => void printPurchaseBookingRegister(registerRows, activeLang, { countryId: erpScope.lockedCountryId, countryBranchId: erpScope.lockedCountryBranchId, cityBranchId: erpScope.lockedCityBranchId, countryName: erpScope.countryName, branchName: erpScope.branchDisplayName, userName: erpScope.userName })}
             className="flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-[10px] font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
           >
@@ -2679,7 +2629,7 @@ export function PurchaseBookingJournalReportView({
                               openPurchaseBookingOrderPrintReport({
                                 order: {
                                   id: report.id,
-                                  systemBillNo: report.purchaseBookingOrderNumber || f.bookingNo || `PB-2026-${report.id.slice(0, 4)}`,
+                                  systemBillNo: report.purchaseBookingOrderNumber || f.bookingNo || "-",
                                   manualBillNo: f.salesOrderNo || f.billNo || report.purchaseContractNo,
                                   superAdminSerialNo: (report as any).super_admin_serial_number || f.superAdminSerialNo,
                                   countrySerialNo: (report as any).country_transaction_serial_number || f.countrySerialNo,
@@ -2688,12 +2638,12 @@ export function PurchaseBookingJournalReportView({
                                   supplierName: report.supplierName || f.purchaseAccountName || "SUPPLIER ACCOUNT",
                                   supplierContact: f.supplierContact,
                                   buyerName: report.buyerName || f.customerName || "—",
-                                  purchaseAccountNo: report.purchaseAccountNumber || f.purchaseAccountNo || "UAE-DET-AC-0003",
+                                  purchaseAccountNo: report.purchaseAccountNumber || f.purchaseAccountNo || "-",
                                   purchaseAccountName: report.purchaseAccountName || f.purchaseAccountName || "Purchase Account",
-                                  salesAccountNo: report.salesAccountNumber || f.salesAccountNo || "UAE-DET-AC-0003",
+                                  salesAccountNo: report.salesAccountNumber || f.salesAccountNo || "-",
                                   salesAccountName: report.salesAccountName || f.salesAccountName || "Sales Account",
                                   countryName: report.countryName || f.countryName || "UAE",
-                                  branchName: report.branchName || f.branchName || "AL_RAS",
+                                  branchName: report.branchName || f.branchName || "",
                                   shippingMode: f.shippingMode || "By Sea",
                                   containerNumbers: f.containerNumbers || "N/A",
                                   vesselName: f.vesselName || "N/A",
@@ -2706,20 +2656,20 @@ export function PurchaseBookingJournalReportView({
                                     origin: g.origin || report.countryName || "USA",
                                     quantity: Number(g.qtyNo || report.quantity || 1),
                                     unit: g.qtyName || report.unit || "BAGS",
-                                    grossWeight: Number(g.qtyNo * g.qtyKgs || report.totalGrossWeight || 1000),
+                                    grossWeight: Number(g.qtyNo * g.qtyKgs || report.totalGrossWeight || 0),
                                     tareWeight: Number(g.emptyKgs || 0),
-                                    netWeight: Number(g.qtyNo * (g.qtyKgs - (g.emptyKgs || 0)) || report.totalNetWeight || 1000),
+                                    netWeight: Number(g.qtyNo * (g.qtyKgs - (g.emptyKgs || 0)) || report.totalNetWeight || 0),
                                     rateKg: Number(g.coursePrice || report.purchaseRate || 0),
                                     amountFc: Number(g.totalAmount || report.totalPurchaseAmount || 0),
-                                    currencyFc: g.purchaseCurrency || report.currency || "USD",
+                                    currencyFc: g.purchaseCurrency || report.currency || "",
                                     exchangeRate: Number(g.exchangeRate || f.exchangeRate || 0),
                                     amountLc: Number(g.finalAmount || report.finalAmount || 0),
-                                    currencyLc: report.finalCurrency || "AED"
+                                    currencyLc: report.finalCurrency || ""
                                   })),
                                   totalPurchaseFc: Number(report.totalPurchaseAmount || 0),
-                                  currencyFc: report.currency || "USD",
+                                  currencyFc: report.currency || "",
                                   totalPurchaseLc: Number(report.finalAmount || 0),
-                                  currencyLc: "AED",
+                                  currencyLc: String(f.localCurrency || f.baseCurrency || ""),
                                   advancePercent: Number(f.advancePercent || 10),
                                   advanceAmountFc: Number(f.advanceAmountFc || 0),
                                   advanceAmountLc: Number(f.advanceAmountLc || 0),
@@ -2734,7 +2684,7 @@ export function PurchaseBookingJournalReportView({
                                 },
                                 companyInfo: {
                                   name: "",
-                                  branch: report.branchName || "AL_RAS",
+                                  branch: report.branchName || "",
                                   printedBy: session?.fullName || session?.email || "—"
                                 },
                                 lang: activeLang
@@ -2761,7 +2711,7 @@ export function PurchaseBookingJournalReportView({
                               openPurchaseBookingOrderPrintReport({
                                 order: {
                                   id: report.id,
-                                  systemBillNo: report.purchaseBookingOrderNumber || f.bookingNo || `PB-2026-${report.id.slice(0, 4)}`,
+                                  systemBillNo: report.purchaseBookingOrderNumber || f.bookingNo || "-",
                                   manualBillNo: f.salesOrderNo || f.billNo || report.purchaseContractNo,
                                   superAdminSerialNo: (report as any).super_admin_serial_number || f.superAdminSerialNo,
                                   countrySerialNo: (report as any).country_transaction_serial_number || f.countrySerialNo,
@@ -2770,12 +2720,12 @@ export function PurchaseBookingJournalReportView({
                                   supplierName: report.supplierName || f.purchaseAccountName || "SUPPLIER ACCOUNT",
                                   supplierContact: f.supplierContact,
                                   buyerName: report.buyerName || f.customerName || "—",
-                                  purchaseAccountNo: report.purchaseAccountNumber || f.purchaseAccountNo || "UAE-DET-AC-0003",
+                                  purchaseAccountNo: report.purchaseAccountNumber || f.purchaseAccountNo || "-",
                                   purchaseAccountName: report.purchaseAccountName || f.purchaseAccountName || "Purchase Account",
-                                  salesAccountNo: report.salesAccountNumber || f.salesAccountNo || "UAE-DET-AC-0003",
+                                  salesAccountNo: report.salesAccountNumber || f.salesAccountNo || "-",
                                   salesAccountName: report.salesAccountName || f.salesAccountName || "Sales Account",
                                   countryName: report.countryName || f.countryName || "UAE",
-                                  branchName: report.branchName || f.branchName || "AL_RAS",
+                                  branchName: report.branchName || f.branchName || "",
                                   shippingMode: f.shippingMode || "By Sea",
                                   containerNumbers: f.containerNumbers || "N/A",
                                   vesselName: f.vesselName || "N/A",
@@ -2788,20 +2738,20 @@ export function PurchaseBookingJournalReportView({
                                     origin: g.origin || report.countryName || "USA",
                                     quantity: Number(g.qtyNo || report.quantity || 1),
                                     unit: g.qtyName || report.unit || "BAGS",
-                                    grossWeight: Number(g.qtyNo * g.qtyKgs || report.totalGrossWeight || 1000),
+                                    grossWeight: Number(g.qtyNo * g.qtyKgs || report.totalGrossWeight || 0),
                                     tareWeight: Number(g.emptyKgs || 0),
-                                    netWeight: Number(g.qtyNo * (g.qtyKgs - (g.emptyKgs || 0)) || report.totalNetWeight || 1000),
+                                    netWeight: Number(g.qtyNo * (g.qtyKgs - (g.emptyKgs || 0)) || report.totalNetWeight || 0),
                                     rateKg: Number(g.coursePrice || report.purchaseRate || 0),
                                     amountFc: Number(g.totalAmount || report.totalPurchaseAmount || 0),
-                                    currencyFc: g.purchaseCurrency || report.currency || "USD",
+                                    currencyFc: g.purchaseCurrency || report.currency || "",
                                     exchangeRate: Number(g.exchangeRate || f.exchangeRate || 0),
                                     amountLc: Number(g.finalAmount || report.finalAmount || 0),
-                                    currencyLc: report.finalCurrency || "AED"
+                                    currencyLc: report.finalCurrency || ""
                                   })),
                                   totalPurchaseFc: Number(report.totalPurchaseAmount || 0),
-                                  currencyFc: report.currency || "USD",
+                                  currencyFc: report.currency || "",
                                   totalPurchaseLc: Number(report.finalAmount || 0),
-                                  currencyLc: "AED",
+                                  currencyLc: String(f.localCurrency || f.baseCurrency || ""),
                                   advancePercent: Number(f.advancePercent || 10),
                                   advanceAmountFc: Number(f.advanceAmountFc || 0),
                                   advanceAmountLc: Number(f.advanceAmountLc || 0),
@@ -2816,7 +2766,7 @@ export function PurchaseBookingJournalReportView({
                                 },
                                 companyInfo: {
                                   name: "",
-                                  branch: report.branchName || "AL_RAS",
+                                  branch: report.branchName || "",
                                   printedBy: session?.fullName || session?.email || "—"
                                 }
                               });
@@ -2849,33 +2799,33 @@ export function PurchaseBookingJournalReportView({
                                   openLoadingRecordsPrintReport({
                                     rows: [{
                                       id: report.id,
-                                      country: String(report.countryName || f.countryName || "UAE"),
-                                      branch: String(report.branchName || f.branchName || "AL_RAS"),
-                                      purchaseBookingNo: report.purchaseBookingOrderNumber || f.bookingNo || `PB-2026-${report.id.slice(0, 4)}`,
-                                      salesAccount: report.salesAccountName || f.salesAccountName || "UAE-DET-AC-0003",
-                                      purchaseAccount: report.purchaseAccountName || f.purchaseAccountName || "UAE-DET-AC-0003",
-                                      goods: report.productName || firstGood.goodsName || "Almond Kernel California",
-                                      contractQty: Number(report.quantity || firstGood.qtyNo || 10000),
-                                      grossWeight: Number(report.totalGrossWeight || firstGood.qtyKgs * firstGood.qtyNo || 10500),
-                                      tareWeight: Number(firstGood.emptyKgs || 1000),
-                                      netWeight: Number(report.totalNetWeight || (firstGood.qtyKgs - firstGood.emptyKgs) * firstGood.qtyNo || 9500),
-                                      purchasePriceRate: Number(report.purchaseRate || firstGood.coursePrice || 5.2),
-                                      totalPurchaseFc: Number(report.totalPurchaseAmount || 49400),
-                                      advanceFc: Number(f.advanceAmountFc || 20000),
-                                      remainingFc: Number(f.remainingAmountFc || 29400),
-                                      currencyFc: report.currency || "USD",
+                                      country: String(report.countryName || f.countryName || ""),
+                                      branch: String(report.branchName || f.branchName || ""),
+                                      purchaseBookingNo: report.purchaseBookingOrderNumber || f.bookingNo || "-",
+                                      salesAccount: report.salesAccountName || f.salesAccountName || "-",
+                                      purchaseAccount: report.purchaseAccountName || f.purchaseAccountName || "-",
+                                      goods: report.productName || firstGood.goodsName || "-",
+                                      contractQty: Number(report.quantity || firstGood.qtyNo || 0),
+                                      grossWeight: Number(report.totalGrossWeight || firstGood.qtyKgs * firstGood.qtyNo || 0),
+                                      tareWeight: Number(firstGood.emptyKgs || 0),
+                                      netWeight: Number(report.totalNetWeight || (firstGood.qtyKgs - firstGood.emptyKgs) * firstGood.qtyNo || 0),
+                                      purchasePriceRate: Number(report.purchaseRate || firstGood.coursePrice || 0),
+                                      totalPurchaseFc: Number(report.totalPurchaseAmount || 0),
+                                      advanceFc: Number(f.advanceAmountFc || 0),
+                                      remainingFc: Number(f.remainingAmountFc || 0),
+                                      currencyFc: report.currency || "",
                                       exchangeRate: Number(f.exchangeRate || 0),
-                                      finalAmountLc: Number(report.finalAmount || 181560.5),
-                                      finalAdvanceLc: Number(f.advanceAmountLc || 73450),
-                                      finalRemainingLc: Number(f.remainingAmountLc || 108110.5),
-                                      currencyLc: "AED",
-                                      loadedQty: Number(f.loadedQty || 4000),
-                                      remainingToLoad: Number(f.remainingToLoad || 6000),
+                                      finalAmountLc: Number(report.finalAmount || 0),
+                                      finalAdvanceLc: Number(f.advanceAmountLc || 0),
+                                      finalRemainingLc: Number(f.remainingAmountLc || 0),
+                                      currencyLc: String(f.localCurrency || f.baseCurrency || ""),
+                                      loadedQty: Number(f.loadedQty || 0),
+                                      remainingToLoad: Number(f.remainingToLoad || 0),
                                       loadingStatus: report.status === "Accepted" ? "Partially Loaded" : report.status === "Transferred" ? "Almost Complete" : report.status === "Completed" ? "Completed" : "Not Loaded"
                                     }],
                                     companyInfo: {
                                       name: "",
-                                      branch: report.branchName || "AL_RAS",
+                                      branch: report.branchName || "",
                                       printedBy: session?.fullName || session?.email || "—"
                                     }
                                   });
@@ -3028,7 +2978,7 @@ export function PurchaseBookingJournalReportView({
                           openPurchaseBookingOrderPrintReport({
                             order: {
                               id: report.id,
-                              systemBillNo: report.purchaseBookingOrderNumber || f.bookingNo || `PB-2026-${report.id.slice(0, 4)}`,
+                              systemBillNo: report.purchaseBookingOrderNumber || f.bookingNo || "-",
                               manualBillNo: f.salesOrderNo || f.billNo || report.purchaseContractNo,
                               superAdminSerialNo: (report as any).super_admin_serial_number || f.superAdminSerialNo,
                               countrySerialNo: (report as any).country_transaction_serial_number || f.countrySerialNo,
@@ -3037,12 +2987,12 @@ export function PurchaseBookingJournalReportView({
                               supplierName: report.supplierName || f.purchaseAccountName || "SUPPLIER ACCOUNT",
                               supplierContact: f.supplierContact,
                               buyerName: report.buyerName || f.customerName || "—",
-                              purchaseAccountNo: report.purchaseAccountNumber || f.purchaseAccountNo || "UAE-DET-AC-0003",
+                              purchaseAccountNo: report.purchaseAccountNumber || f.purchaseAccountNo || "-",
                               purchaseAccountName: report.purchaseAccountName || f.purchaseAccountName || "Purchase Account",
-                              salesAccountNo: report.salesAccountNumber || f.salesAccountNo || "UAE-DET-AC-0003",
+                              salesAccountNo: report.salesAccountNumber || f.salesAccountNo || "-",
                               salesAccountName: report.salesAccountName || f.salesAccountName || "Sales Account",
                               countryName: report.countryName || f.countryName || "UAE",
-                              branchName: report.branchName || f.branchName || "AL_RAS",
+                              branchName: report.branchName || f.branchName || "",
                               shippingMode: f.shippingMode || "By Sea",
                               containerNumbers: f.containerNumbers || "N/A",
                               vesselName: f.vesselName || "N/A",
@@ -3055,20 +3005,20 @@ export function PurchaseBookingJournalReportView({
                                 origin: g.origin || report.countryName || "USA",
                                 quantity: Number(g.qtyNo || report.quantity || 1),
                                 unit: g.qtyName || report.unit || "BAGS",
-                                grossWeight: Number(g.qtyNo * g.qtyKgs || report.totalGrossWeight || 1000),
+                                grossWeight: Number(g.qtyNo * g.qtyKgs || report.totalGrossWeight || 0),
                                 tareWeight: Number(g.emptyKgs || 0),
-                                netWeight: Number(g.qtyNo * (g.qtyKgs - (g.emptyKgs || 0)) || report.totalNetWeight || 1000),
+                                netWeight: Number(g.qtyNo * (g.qtyKgs - (g.emptyKgs || 0)) || report.totalNetWeight || 0),
                                 rateKg: Number(g.coursePrice || report.purchaseRate || 0),
                                 amountFc: Number(g.totalAmount || report.totalPurchaseAmount || 0),
-                                currencyFc: g.purchaseCurrency || report.currency || "USD",
+                                currencyFc: g.purchaseCurrency || report.currency || "",
                                 exchangeRate: Number(g.exchangeRate || f.exchangeRate || 0),
                                 amountLc: Number(g.finalAmount || report.finalAmount || 0),
-                                currencyLc: report.finalCurrency || "AED"
+                                currencyLc: report.finalCurrency || ""
                               })),
                               totalPurchaseFc: Number(report.totalPurchaseAmount || 0),
-                              currencyFc: report.currency || "USD",
+                              currencyFc: report.currency || "",
                               totalPurchaseLc: Number(report.finalAmount || 0),
-                              currencyLc: "AED",
+                              currencyLc: String(f.localCurrency || f.baseCurrency || ""),
                               advancePercent: Number(f.advancePercent || 10),
                               advanceAmountFc: Number(f.advanceAmountFc || 0),
                               advanceAmountLc: Number(f.advanceAmountLc || 0),
@@ -3083,7 +3033,7 @@ export function PurchaseBookingJournalReportView({
                             },
                             companyInfo: {
                               name: "",
-                              branch: report.branchName || "AL_RAS",
+                              branch: report.branchName || "",
                               printedBy: session?.fullName || session?.email || "—"
                             }
                           });
@@ -3116,33 +3066,33 @@ export function PurchaseBookingJournalReportView({
                               openLoadingRecordsPrintReport({
                                 rows: [{
                                   id: report.id,
-                                  country: String(report.countryName || f.countryName || "UAE"),
-                                  branch: String(report.branchName || f.branchName || "AL_RAS"),
-                                  purchaseBookingNo: report.purchaseBookingOrderNumber || f.bookingNo || `PB-2026-${report.id.slice(0, 4)}`,
-                                  salesAccount: report.salesAccountName || f.salesAccountName || "UAE-DET-AC-0003",
-                                  purchaseAccount: report.purchaseAccountName || f.purchaseAccountName || "UAE-DET-AC-0003",
-                                  goods: report.productName || firstGood.goodsName || "Almond Kernel California",
-                                  contractQty: Number(report.quantity || firstGood.qtyNo || 10000),
-                                  grossWeight: Number(report.totalGrossWeight || firstGood.qtyKgs * firstGood.qtyNo || 10500),
-                                  tareWeight: Number(firstGood.emptyKgs || 1000),
-                                  netWeight: Number(report.totalNetWeight || (firstGood.qtyKgs - firstGood.emptyKgs) * firstGood.qtyNo || 9500),
-                                  purchasePriceRate: Number(report.purchaseRate || firstGood.coursePrice || 5.2),
-                                  totalPurchaseFc: Number(report.totalPurchaseAmount || 49400),
-                                  advanceFc: Number(f.advanceAmountFc || 20000),
-                                  remainingFc: Number(f.remainingAmountFc || 29400),
-                                  currencyFc: report.currency || "USD",
+                                  country: String(report.countryName || f.countryName || ""),
+                                  branch: String(report.branchName || f.branchName || ""),
+                                  purchaseBookingNo: report.purchaseBookingOrderNumber || f.bookingNo || "-",
+                                  salesAccount: report.salesAccountName || f.salesAccountName || "-",
+                                  purchaseAccount: report.purchaseAccountName || f.purchaseAccountName || "-",
+                                  goods: report.productName || firstGood.goodsName || "-",
+                                  contractQty: Number(report.quantity || firstGood.qtyNo || 0),
+                                  grossWeight: Number(report.totalGrossWeight || firstGood.qtyKgs * firstGood.qtyNo || 0),
+                                  tareWeight: Number(firstGood.emptyKgs || 0),
+                                  netWeight: Number(report.totalNetWeight || (firstGood.qtyKgs - firstGood.emptyKgs) * firstGood.qtyNo || 0),
+                                  purchasePriceRate: Number(report.purchaseRate || firstGood.coursePrice || 0),
+                                  totalPurchaseFc: Number(report.totalPurchaseAmount || 0),
+                                  advanceFc: Number(f.advanceAmountFc || 0),
+                                  remainingFc: Number(f.remainingAmountFc || 0),
+                                  currencyFc: report.currency || "",
                                   exchangeRate: Number(f.exchangeRate || 0),
-                                  finalAmountLc: Number(report.finalAmount || 181560.5),
-                                  finalAdvanceLc: Number(f.advanceAmountLc || 73450),
-                                  finalRemainingLc: Number(f.remainingAmountLc || 108110.5),
-                                  currencyLc: "AED",
-                                  loadedQty: Number(f.loadedQty || 4000),
-                                  remainingToLoad: Number(f.remainingToLoad || 6000),
+                                  finalAmountLc: Number(report.finalAmount || 0),
+                                  finalAdvanceLc: Number(f.advanceAmountLc || 0),
+                                  finalRemainingLc: Number(f.remainingAmountLc || 0),
+                                  currencyLc: String(f.localCurrency || f.baseCurrency || ""),
+                                  loadedQty: Number(f.loadedQty || 0),
+                                  remainingToLoad: Number(f.remainingToLoad || 0),
                                   loadingStatus: report.status === "Accepted" ? "Partially Loaded" : report.status === "Transferred" ? "Almost Complete" : report.status === "Completed" ? "Completed" : "Not Loaded"
                                 }],
                                 companyInfo: {
                                   name: "",
-                                  branch: report.branchName || "AL_RAS",
+                                  branch: report.branchName || "",
                                   printedBy: session?.fullName || session?.email || "—"
                                 }
                               });

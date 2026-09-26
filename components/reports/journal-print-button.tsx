@@ -97,6 +97,7 @@ export function JournalPrintButton({
       variant={variant}
       size={size}
       onClick={handlePrint}
+      data-testid="print-action"
       disabled={loading}
       className={`gap-1.5 font-bold shadow-xs ${className}`}
     >

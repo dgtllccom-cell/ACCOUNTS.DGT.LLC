@@ -1883,7 +1883,7 @@ export function GoodsMasterRegistry() {
             ? g.variations.map((v) => ({
                 chs_code: g.chs_code,
                 name: g.name,
-                category: g.category || "Dry Fruits",
+                category: g.category || "-",
                 variety: v.variety || "-",
                 brand: v.brand || "-",
                 size: v.size || "-",
@@ -1894,7 +1894,7 @@ export function GoodsMasterRegistry() {
                 {
                   chs_code: g.chs_code,
                   name: g.name,
-                  category: g.category || "Dry Fruits",
+                  category: g.category || "-",
                   variety: "-",
                   brand: "-",
                   size: "-",

@@ -2355,6 +2355,7 @@ export function CashEntryForm({
         variant="outline"
         className="h-8 gap-1.5 rounded-lg px-3 text-xs font-semibold border-slate-250 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 shadow-sm"
         onClick={() => handlePrintRegister(true)}
+        data-testid="print-action"
       >
         <Printer className="h-3.5 w-3.5" />
         {t(lang, "common.print", "Print")}
