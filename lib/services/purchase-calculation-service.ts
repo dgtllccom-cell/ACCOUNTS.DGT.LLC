@@ -274,14 +274,18 @@ export function resolvePurchaseLoadingSummary(
   const amounts = resolvePurchaseAmounts(order);
   const prev = Math.max(0, toNum(previousLoadedQuantity, 0));
   const current = Math.max(0, toNum(currentLoadedQuantity, 0));
-  const loadedQuantity = Math.min(amounts.totalQuantity, prev + current);
-  const proportions = resolveLoadingProportions(amounts, loadedQuantity, amounts.totalQuantity, paymentMadeForLoading);
+  const cumulativeLoaded = Math.min(amounts.totalQuantity, prev + current);
+  const remainingQuantity = Math.max(0, amounts.totalQuantity - cumulativeLoaded);
+
+  // Proportions are calculated specifically for THIS loading batch (currentLoadedQuantity)
+  const batchQty = current > 0 ? current : cumulativeLoaded;
+  const proportions = resolveLoadingProportions(amounts, batchQty, amounts.totalQuantity, paymentMadeForLoading);
 
   return {
-    totalQuantity: proportions.totalQuantity,
+    totalQuantity: amounts.totalQuantity,
     previousLoadedQuantity: prev,
     currentLoadedQuantity: current,
-    remainingQuantity: proportions.remainingQuantity,
+    remainingQuantity,
     totalPurchaseFC: amounts.totalPurchaseFC,
     totalPurchaseLC: amounts.totalPurchaseLC,
     paidAmountFC: amounts.paidAdvanceFC,
@@ -464,7 +468,7 @@ export function resolveLoadingProportions(
   const loadedAdvanceFC = amounts.advanceAmountFC * (loadingPercentage / 100);
   const loadedAdvanceLC = loadedAdvanceFC * amounts.exchangeRate;
 
-  const remainingLoadingFC = Math.max(0, loadedPurchaseFC - paymentMadeForLoading);
+  const remainingLoadingFC = Math.max(0, loadedPurchaseFC - loadedAdvanceFC - paymentMadeForLoading);
   const remainingLoadingLC = remainingLoadingFC * amounts.exchangeRate;
 
   return {
