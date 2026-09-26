@@ -257,10 +257,28 @@ if (CHANGED_ARG) {
     />\s*([A-Z][A-Za-z][A-Za-z ,/&'-]{3,70}?)\s*</g,
   ];
   const HC_JUNK = /^(TODO|FIXME|OK|N\/A|USD|PKR|AED|EUR|PDF|CSV|API|SMTP|IMAP|DGT LLC|Digital Dock ERP|Damaan)$/;
+  // The rule is "no NEW hard-coded English": only lines added/changed vs the ref are
+  // scanned, so pre-existing strings in a touched file do not block unrelated work
+  // (they stay tracked by the i18n backlog / gap matrix).
+  const addedLines = new Map();
+  try {
+    const collect = (cmd) => {
+      let cur = null;
+      for (const ln of execSync(cmd, { encoding: "utf8", maxBuffer: 256 * 1024 * 1024 }).split("\n")) {
+        if (ln.startsWith("+++ b/")) { cur = ln.slice(6).trim(); if (!addedLines.has(cur)) addedLines.set(cur, new Set()); continue; }
+        const m = ln.match(/^@@ -\S+ \+(\d+)(?:,(\d+))? @@/);
+        if (m && cur) { const st = Number(m[1]); const n = m[2] === undefined ? 1 : Number(m[2]); for (let k = st; k < st + n; k++) addedLines.get(cur).add(k); }
+      }
+    };
+    collect(`git diff -U0 ${ref}...HEAD -- ${CODE_GLOBS.join(" ")}`);
+    collect(`git diff -U0 --cached -- ${CODE_GLOBS.join(" ")}`);
+  } catch { /* fall back to whole-file scan */ }
   for (const f of changed) {
     if (!fs.existsSync(f)) continue;
     const s = fs.readFileSync(f, "utf8").split(/\r?\n/);
+    const added = addedLines.get(f);
     for (let i = 0; i < s.length; i++) {
+      if (added && !added.has(i + 1)) continue;
       const l = s[i];
       if (isCode.test(l) || /\b(?:t|tt|tr|nt)\(/.test(l)) continue;
       for (const p of HC_PATTERNS) {
