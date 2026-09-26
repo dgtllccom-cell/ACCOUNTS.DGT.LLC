@@ -3211,6 +3211,13 @@ export const HEADER_TRANSLATIONS: Record<string, Row> = {
   "ARRIVED": { ur: "پہنچ گیا", ar: "وصل", fa: "رسیده", ps: "رسیدلی" },
   "ERP REPORTING SYSTEM": { ur: "ای آر پی رپورٹنگ سسٹم", ar: "نظام تقارير ERP", fa: "سامانه گزارش‌دهی ERP", ps: "د ERP راپورونو سیستم" },
   "UNSETTLED": { ur: "غیر تصفیہ شدہ", ar: "غير مسوّى", fa: "تسویه‌نشده", ps: "نه تصفیه شوی" },
+  "BILL OF LADING REGISTER": { ur: "بل آف لیڈنگ رجسٹر", ar: "سجل بوليصة الشحن", fa: "ثبت بارنامه", ps: "د بار لیک ثبت" },
+  "SHIPPER / EXPORTER": { ur: "شپر / برآمد کنندہ", ar: "الشاحن / المصدّر", fa: "ارسال‌کننده / صادرکننده", ps: "لیږونکی / صادرونکی" },
+  "BUYER / IMPORTER": { ur: "خریدار / درآمد کنندہ", ar: "المشتري / المستورد", fa: "خریدار / واردکننده", ps: "پیرودونکی / وارد کوونکی" },
+  "BRANCH / AGENT": { ur: "برانچ / ایجنٹ", ar: "الفرع / الوكيل", fa: "شعبه / نماینده", ps: "څانګه / اجنټ" },
+  "CUSTOMER SHIPPING ORDERS REGISTRY": { ur: "کسٹمر شپنگ آرڈرز رجسٹری", ar: "سجل طلبات شحن العملاء", fa: "ثبت سفارش‌های حمل مشتریان", ps: "د پیرودونکو د بار لیږد امرونو ثبت" },
+  "BL / SHIPMENT": { ur: "بی ایل / شپمنٹ", ar: "بوليصة / شحنة", fa: "بارنامه / محموله", ps: "بی ایل / بار" },
+  "RED": { ur: "سرخ", ar: "أحمر", fa: "قرمز", ps: "سور" },
 };
 
 /** Normalize an English header for lookup: trim, collapse whitespace, uppercase. */
