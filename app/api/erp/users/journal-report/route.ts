@@ -9,6 +9,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { EnterpriseRole } from "@/lib/permissions/enterprise-roles";
 import { enterpriseRolePermissions } from "@/lib/permissions/enterprise-roles";
 import { getRequestLanguage } from "@/lib/i18n/server";
+import { t } from "@/lib/i18n/ui";
 import { localizeRecordFields } from "@/lib/i18n/localize-records";
 
 const querySchema = z.object({
@@ -174,7 +175,7 @@ export async function GET(request: NextRequest) {
     try {
       admin = createSupabaseAdminClient() as any;
     } catch (error) {
-      return apiOk(emptyReport(error instanceof Error ? error.message : "Supabase admin client unavailable"));
+      return apiOk(emptyReport(error instanceof Error ? error.message : t(session.preferredLanguage, "users.jr_err_admin_unavailable", "Supabase admin client unavailable")));
     }
 
     const [profilesRes, assignmentsRes, permissionsRes, authUsersRes] = await Promise.all([
@@ -206,7 +207,7 @@ export async function GET(request: NextRequest) {
           }))
           .catch((err) => ({
             data: [],
-            error: { message: err instanceof Error ? err.message : "Failed to list auth users" }
+            error: { message: err instanceof Error ? err.message : t(session.preferredLanguage, "users.jr_err_list_auth_users", "Failed to list auth users") }
           })),
         "auth users list"
       )
@@ -424,7 +425,7 @@ export async function GET(request: NextRequest) {
       }
 
       // Department/Office subtitle
-      let subtitle = "General Administration";
+      let subtitle = t(session.preferredLanguage, "users.jr_sub_general_admin", "General Administration");
       if (role === "super_admin") {
         subtitle = profile.user_code?.toLowerCase().includes("superadmin") ? "System Administrator" : "Group Administration";
       } else if (role === "country_admin") {
@@ -432,9 +433,9 @@ export async function GET(request: NextRequest) {
       } else if (role === "city_branch_admin") {
         subtitle = `${cityBranch?.city_name ?? "City"} Administration`;
       } else if (businessType === "Shipping Line") {
-        subtitle = "Shipping Line Operations";
+        subtitle = t(session.preferredLanguage, "users.jr_sub_shipping_ops", "Shipping Line Operations");
       } else if (businessType === "Transport Business") {
-        subtitle = "Transport Operations";
+        subtitle = t(session.preferredLanguage, "users.jr_sub_transport_ops", "Transport Operations");
       }
 
       // Formatted Last Login

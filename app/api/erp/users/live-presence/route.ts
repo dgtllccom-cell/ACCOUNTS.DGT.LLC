@@ -33,11 +33,22 @@ export async function GET(req: NextRequest) {
     const admin = createSupabaseAdminClient();
     const { data: assignments } = await admin
       .from("user_role_assignments")
-      .select("user_id, role, is_active, profiles:user_id(id, full_name, user_code), branches:country_branch_id(code, name)")
+      .select("user_id, role, is_active, country_id, city_branch_id, country_branch_id, profiles:user_id(id, full_name, user_code), branches:country_branch_id(code, name)")
       .is("deleted_at", null)
-      .limit(10);
+      .limit(200);
 
-    const liveUsers: LiveUserPresence[] = (assignments || []).map((a: any, idx: number) => {
+    // The read uses the service client, so the caller's country/branch scope must be applied here: a
+    // non-Super-Admin only ever sees users assigned inside their own countries / branches.
+    const scopedAssignments = (assignments || []).filter((a: any) => {
+      if (session.isSuperAdmin) return true;
+      return (
+        (a.country_id && (session.countryIds ?? []).includes(a.country_id)) ||
+        (a.country_branch_id && (session.countryBranchIds ?? []).includes(a.country_branch_id)) ||
+        (a.city_branch_id && (session.cityBranchIds ?? []).includes(a.city_branch_id))
+      );
+    }).slice(0, 10);
+
+    const liveUsers: LiveUserPresence[] = scopedAssignments.map((a: any, idx: number) => {
       const prof = a.profiles || {};
       const branch = a.branches || {};
       const isShipping = String(a.role || "").includes("shipping");

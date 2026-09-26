@@ -34,12 +34,6 @@ const BOOTSTRAP_IDENTIFIER = (process.env.BOOTSTRAP_SUPERADMIN_EMAIL || "superad
 const BOOTSTRAP_PASSWORD = (process.env.BOOTSTRAP_SUPERADMIN_PASSWORD || "").trim();
 const BOOTSTRAP_ENABLED = BOOTSTRAP_PASSWORD.length > 0;
 
-// SECURITY: the legacy readable-password login path was removed. Passwords exist only as hashes in
-// Supabase Auth; profiles.raw_password is never read or compared.
-function legacyRawPwLoginEnabled() {
-  return false;
-}
-
 export async function POST(request: NextRequest) {
   try {
     const contentType = request.headers.get("content-type") || "";
@@ -300,13 +294,8 @@ export async function POST(request: NextRequest) {
   let authenticatedEmail: string | null = null;
 
   if (profileRecord) {
-    const hasRawPwMatch = legacyRawPwLoginEnabled() &&
-      typeof profileRecord.raw_password === "string" &&
-      profileRecord.raw_password.length > 0 &&
-      (profileRecord.raw_password === rawPassword ||
-       profileRecord.raw_password.trim().toLowerCase() === cleanPass.toLowerCase());
     const hasBootstrapBypass = isBootstrapSuperAdmin;
-    if (hasRawPwMatch || hasBootstrapBypass) {
+    if (hasBootstrapBypass) {
       isAuthenticated = true;
       authenticatedEmail = profileRecord.auth_email || (rawIdentifier.includes("@") ? rawIdentifier.toLowerCase() : `${cleanId}@dgt.llc`);
     }
