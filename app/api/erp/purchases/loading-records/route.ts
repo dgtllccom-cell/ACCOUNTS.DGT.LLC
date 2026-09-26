@@ -9,7 +9,7 @@ import { requireSupabaseData, writeAuditLog } from "@/lib/api/supabase";
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { withLocalPg } from "@/lib/db/local-postgres";
-import { resolvePurchaseAmounts, resolvePurchaseLoadingSummary, validatePurchaseLoadingEntries } from "@/lib/services/purchase-calculation-service";
+import { resolvePurchaseAmounts, resolvePurchaseLoadingSummary, validatePurchaseLoadingEntries, resolveLoadingEligibility } from "@/lib/services/purchase-calculation-service";
 import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
@@ -318,13 +318,12 @@ export async function GET(request: NextRequest) {
       `;
     })) ?? [];
 
-    // ── 2. Fetch approved purchase orders with advance paid to ensure all approved bookings show automatically in loading queue ──
+    // ── 2. Fetch purchase orders and check loading eligibility per payment condition ──
     try {
       let poQuery = supabase
         .from("purchase_orders")
-        .select("id, purchase_order_no, country_id, country_branch_id, city_branch_id, form_data, advance_paid, remaining_due, order_total, payment_status, created_at, countries(name, iso2), country_branches(name, code), city_branches(name, code, city_name), purchase_order_payments(amount, exchange_rate, reference_no, narration, source_reference_no)")
-        .is("deleted_at", null)
-        .or("advance_paid.gt.0,payment_status.in.(partially_paid,paid)");
+        .select("id, purchase_order_no, country_id, country_branch_id, city_branch_id, form_data, advance_paid, remaining_due, order_total, payment_status, currency_code, exchange_rate, remaining_paid, credit_amount, created_at, countries(name, iso2, currency), country_branches(name, code), city_branches(name, code, city_name), purchase_order_payments(amount, exchange_rate, reference_no, narration, source_reference_no)")
+        .is("deleted_at", null);
 
       poQuery = enforceScopeFilter(poQuery, session, {
         countryId: query.countryId,
@@ -335,56 +334,62 @@ export async function GET(request: NextRequest) {
         poQuery = poQuery.in("city_branch_id", session.cityBranchIds);
       }
 
-      const { data: poList } = await poQuery.limit(100);
+      const { data: poList } = await poQuery.limit(200);
       const existingPoIds = new Set(records.map((r: any) => r.purchase_order_id).filter(Boolean));
       const syntheticRecords: any[] = [];
 
       if (poList && poList.length > 0) {
         for (const po of poList) {
-          if (!existingPoIds.has(po.id)) {
-            const form = po.form_data?.form || {};
-            syntheticRecords.push({
-              id: `synthetic-${po.id}`,
-              loading_record_no: `PLR-PENDING`,
-              purchase_order_id: po.id,
-              purchase_order_no: po.purchase_order_no,
-              container_number: "-",
-              container_type: "20ft Standard",
-              loading_status: "pending",
-              loaded_at: po.created_at,
-              loading_location: form.loadingPort || form.originCountry || "-",
-              receiving_location: form.receivedPort || form.destinationCountry || "-",
-              shipmentStatus: "Pending Loading",
-              carrier_name: "-",
-              remarks: "Automatic loading queue entry from approved Purchase Booking.",
-              report_payload: {
-                loadedQuantity: 0,
-                loadingQuantity: 0,
-                pending: true
-              },
-              country_id: po.country_id,
-              country_branch_id: po.country_branch_id,
-              city_branch_id: po.city_branch_id,
-              loaded_quantity: 0,
-              total_quantity: Number(po.form_data?.totals?.totalQuantity || form.quantity || 0),
-              loading_percentage: 0,
-              loaded_purchase_amount: 0,
-              loaded_advance_amount: 0,
-              purchase_currency: po.currency_code || form.currencyType || "USD",
-              exchange_rate: Number(po.exchange_rate || form.exchangeRate || 1),
-              loaded_purchase_local: 0,
-              loaded_advance_local: 0,
-              payment_made: 0,
-              remaining_loading_balance: Number(po.order_total || 0),
-              local_currency: po.countries?.currency || form.branchCurrency || "PKR",
-              posted_to_journal: false,
-              created_at: po.created_at,
-              countries: po.countries,
-              country_branches: po.country_branches,
-              city_branches: po.city_branches,
-              purchase_orders: [po]
-            });
-          }
+          if (existingPoIds.has(po.id)) continue;
+
+          // ── Loading Eligibility Gate ──
+          // Use resolveLoadingEligibility to check if the payment condition is satisfied
+          const eligibility = resolveLoadingEligibility(po as any);
+          if (!eligibility.eligible) continue; // Payment condition not yet satisfied → do NOT show in loading queue
+
+          const form = po.form_data?.form || {};
+          syntheticRecords.push({
+            id: `synthetic-${po.id}`,
+            loading_record_no: `PLR-PENDING`,
+            purchase_order_id: po.id,
+            purchase_order_no: po.purchase_order_no,
+            container_number: "-",
+            container_type: "20ft Standard",
+            loading_status: "pending",
+            loaded_at: po.created_at,
+            loading_location: form.loadingPort || form.originCountry || "-",
+            receiving_location: form.receivedPort || form.destinationCountry || "-",
+            shipmentStatus: "Pending Loading",
+            carrier_name: "-",
+            remarks: `Loading eligible: ${eligibility.reason}`,
+            report_payload: {
+              loadedQuantity: 0,
+              loadingQuantity: 0,
+              pending: true,
+              loadingEligibility: eligibility
+            },
+            country_id: po.country_id,
+            country_branch_id: po.country_branch_id,
+            city_branch_id: po.city_branch_id,
+            loaded_quantity: 0,
+            total_quantity: Number(po.form_data?.totals?.totalQuantity || form.quantity || 0),
+            loading_percentage: 0,
+            loaded_purchase_amount: 0,
+            loaded_advance_amount: 0,
+            purchase_currency: po.currency_code || form.currencyType || "USD",
+            exchange_rate: Number(po.exchange_rate || form.exchangeRate || 1),
+            loaded_purchase_local: 0,
+            loaded_advance_local: 0,
+            payment_made: 0,
+            remaining_loading_balance: Number(po.order_total || 0),
+            local_currency: (po as any).countries?.currency || form.branchCurrency || "PKR",
+            posted_to_journal: false,
+            created_at: po.created_at,
+            countries: po.countries,
+            country_branches: po.country_branches,
+            city_branches: po.city_branches,
+            purchase_orders: [po]
+          });
         }
       }
 
@@ -484,6 +489,13 @@ export async function POST(request: NextRequest) {
           `;
           const po = poRows[0];
           if (!po) return null;
+
+          // ── Loading Eligibility Gate (POST) ──
+          // Enforce payment condition before allowing loading record creation
+          const eligibility = resolveLoadingEligibility(po as any);
+          if (!eligibility.eligible) {
+            throw new Error(`Loading blocked: ${eligibility.reason}`);
+          }
 
           const amounts = resolvePurchaseAmounts(po as any);
           const formData = po.form_data || {};

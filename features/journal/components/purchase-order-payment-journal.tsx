@@ -3141,35 +3141,54 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
       const isRemainingCleared = remainingDue <= 0.01;
 
       if (activeMode === "advance") {
-        // Strict Business Rule: ONLY show Advance payment bills in Advance Journal
-        if (isCreditBill || isCashBill) return false;
-        if (!isAdvanceBill && advancePercent <= 0) return false;
-
+        // Business Rule: Show orders that need upfront payment before loading
+        // Advance/Endorsement bills → need advance % cleared
+        // Cash bills → need cash payment posted before loading
+        if (isCreditBill) return false;
+        
         const isFullyPaid = (row.payment_status || "").toLowerCase() === "paid" || (row.payment_status || "").toLowerCase() === "completed";
         if (isFullyPaid) return false;
         
+        if (isCashBill) {
+          // Cash bills: show until cash payment posted
+          if (paidAdvance > 0.01) return false; // Cash posted → moves to loading
+          return true;
+        }
+        
+        if (!isAdvanceBill && advancePercent <= 0) return false;
         if (advancePercent > 0 && remainingAdvance <= 0.01) return false; // Already cleared required advance -> moves to Loading
 
       } else if (activeMode === "advance_completed") {
-        if (isCreditBill || isCashBill) return false;
+        if (isCreditBill) return false;
+        
+        if (isCashBill) {
+          // Cash bills: show here when cash payment has been posted
+          if (paidAdvance <= 0.01) return false;
+          return true;
+        }
+        
         if (advancePercent === 0 && paidAdvance <= 0) return false;
         if (advancePercent > 0 && remainingAdvance > 0.01) return false; // Not yet cleared
         if (paidAdvance <= 0) return false; // Not paid anything
       } else if (activeMode === "remaining") {
-        // Strict Business Rule: Credit and Cash bills do NOT belong in Remaining Journal
-        if (isCreditBill || isCashBill) return false;
+        // Business Rule: Credit bills do NOT belong in Remaining Journal
+        if (isCreditBill) return false;
 
-        // Strict Business Rule: Required advance must be fully cleared first before appearing in remaining payments
-        if (advancePercent > 0 && remainingAdvance > 0.01 && !isUrlLoadingScope) return false;
+        // Business Rule: Advance/Endorsement must be fully cleared first
+        if (!isCashBill && advancePercent > 0 && remainingAdvance > 0.01 && !isUrlLoadingScope) return false;
+        
+        // Business Rule: Cash bills must have cash payment posted first
+        if (isCashBill && paidAdvance <= 0.01 && !isUrlLoadingScope) return false;
 
-        // Strict Business Rule: Remaining payment requires Transfer to Loading first.
+        // Business Rule: Remaining payment requires Loading/container movement first
         const workflow = row.form_data?.workflow || {};
         const hasTransferStatus = (workflow.transferStatus || "").toLowerCase() === "transferred";
         const hasTransferAudit = Boolean(row.form_data?.form?.transferAudit || workflow.transferAudit);
         const hasLoadingRecord = Number((row as any).loading_record_count || 0) > 0
           || Boolean(workflow.loadedQuantity && Number(workflow.loadedQuantity) > 0)
           || Boolean(workflow.transferredToRemaining);
-        const hasContainerMovement = hasTransferStatus || hasTransferAudit || hasLoadingRecord || isUrlLoadingScope;
+        const isInvoiceBill = paymentType.includes("invoice");
+        const hasContainerMovement = hasTransferStatus || hasTransferAudit || hasLoadingRecord || isUrlLoadingScope || isInvoiceBill;
         if (!hasContainerMovement) return false; // Block: not yet transferred from loading
 
         // Show remaining if not fully settled

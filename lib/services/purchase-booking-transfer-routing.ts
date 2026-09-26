@@ -29,7 +29,7 @@ export function resolvePurchaseBookingTransferDestination(
   if (normalized.includes("invoice")) {
     return {
       flow: "remaining",
-      path: "/dashboard/purchase/purchase-loading-form",
+      path: "/dashboard/journal/purchase-order-payment/remaining",
       currentStep: "purchase_invoice_payment",
       currentStepName: "Purchase Invoice Payment"
     };
@@ -55,8 +55,8 @@ export function resolvePurchaseBookingTransferDestination(
 
   if (normalized.includes("cash")) {
     return {
-      flow: "remaining",
-      path: "/dashboard/journal/purchase-order-payment/remaining",
+      flow: "advance",
+      path: "/dashboard/journal/purchase-order-payment/advance",
       currentStep: "purchase_cash_payment",
       currentStepName: "Purchase Cash Payment"
     };

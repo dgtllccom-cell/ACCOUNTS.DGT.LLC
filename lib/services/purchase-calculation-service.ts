@@ -543,3 +543,156 @@ export function formatAmount(value: number, decimals = 2): string {
 export function isDuplicatePosting(record: { posted_to_journal?: boolean; status?: string }): boolean {
   return record.posted_to_journal === true || record.status === "posted";
 }
+
+// ─── Loading Eligibility ────────────────────────────────────────────────────
+
+export type PaymentConditionType = "advance" | "endorsement" | "credit" | "cash" | "invoice" | "unknown";
+
+export type LoadingEligibility = {
+  /** Whether loading/delivery is allowed */
+  eligible: boolean;
+  /** Human-readable reason when not eligible */
+  reason: string;
+  /** Resolved payment condition */
+  paymentCondition: PaymentConditionType;
+  /** Required payment amount before loading (in purchase/FC currency) */
+  requiredAmountFC: number;
+  /** Actual amount paid so far (in purchase/FC currency) */
+  paidAmountFC: number;
+  /** Remaining amount to pay before loading becomes eligible */
+  shortfallFC: number;
+};
+
+/**
+ * Resolve the normalized payment condition from form data.
+ */
+export function resolvePaymentCondition(order: PurchaseOrderData): PaymentConditionType {
+  const form = getForm(order);
+  const raw = String(form.paymentType ?? form.paymentCondition ?? "").trim().toLowerCase();
+
+  if (raw.includes("endorsement")) return "endorsement";
+  if (raw.includes("advance")) return "advance";
+  if (raw.includes("credit")) return "credit";
+  if (raw.includes("cash")) return "cash";
+  if (raw.includes("invoice")) return "invoice";
+
+  // Fallback: if advancePercent > 0, treat as advance
+  const advPct = toNum(form.advancePercent, 0);
+  if (advPct > 0) return "advance";
+
+  return "unknown";
+}
+
+/**
+ * Determine whether a purchase order is eligible for loading/delivery based on
+ * its payment condition and actual payment state.
+ *
+ * Business Rules:
+ * - Advance / Endorsement → Required advance percentage must be fully cleared
+ * - Credit → Eligible immediately (credit payment handled post-delivery)
+ * - Cash → Requires at least one cash payment posted
+ * - Invoice → Eligible immediately (full invoice payment due after loading)
+ * - Unknown / no condition → Eligible if any payment posted
+ */
+export function resolveLoadingEligibility(
+  order: PurchaseOrderData,
+  /** Override: total payments posted so far (FC). If omitted, uses order.advance_paid */
+  totalPaymentsPostedFC?: number
+): LoadingEligibility {
+  const amounts = resolvePurchaseAmounts(order);
+  const condition = resolvePaymentCondition(order);
+  const paidFC = totalPaymentsPostedFC != null ? totalPaymentsPostedFC : amounts.paidAdvanceFC;
+
+  switch (condition) {
+    case "advance":
+    case "endorsement": {
+      // Required advance must be fully cleared (within ±0.01 tolerance)
+      const requiredFC = amounts.advanceAmountFC;
+      const shortfall = Math.max(0, requiredFC - paidFC);
+      if (shortfall <= 0.01) {
+        return {
+          eligible: true,
+          reason: "Required advance payment has been cleared.",
+          paymentCondition: condition,
+          requiredAmountFC: requiredFC,
+          paidAmountFC: paidFC,
+          shortfallFC: 0,
+        };
+      }
+      return {
+        eligible: false,
+        reason: `Advance payment not cleared. Required: ${formatAmount(requiredFC)} ${amounts.purchaseCurrency}, Paid: ${formatAmount(paidFC)} ${amounts.purchaseCurrency}, Shortfall: ${formatAmount(shortfall)} ${amounts.purchaseCurrency}.`,
+        paymentCondition: condition,
+        requiredAmountFC: requiredFC,
+        paidAmountFC: paidFC,
+        shortfallFC: shortfall,
+      };
+    }
+
+    case "credit":
+      // Credit bills are eligible immediately — payment is post-delivery
+      return {
+        eligible: true,
+        reason: "Credit payment condition — loading allowed before payment.",
+        paymentCondition: condition,
+        requiredAmountFC: 0,
+        paidAmountFC: paidFC,
+        shortfallFC: 0,
+      };
+
+    case "cash": {
+      // Cash requires at least one payment posted
+      if (paidFC > 0.01) {
+        return {
+          eligible: true,
+          reason: "Cash payment has been posted.",
+          paymentCondition: condition,
+          requiredAmountFC: amounts.totalPurchaseFC,
+          paidAmountFC: paidFC,
+          shortfallFC: Math.max(0, amounts.totalPurchaseFC - paidFC),
+        };
+      }
+      return {
+        eligible: false,
+        reason: "Cash payment required before loading.",
+        paymentCondition: condition,
+        requiredAmountFC: amounts.totalPurchaseFC,
+        paidAmountFC: 0,
+        shortfallFC: amounts.totalPurchaseFC,
+      };
+    }
+
+    case "invoice":
+      // Invoice payment condition: loading allowed, full payment due on invoice
+      return {
+        eligible: true,
+        reason: "Invoice payment condition — loading allowed, payment due on invoice.",
+        paymentCondition: condition,
+        requiredAmountFC: amounts.totalPurchaseFC,
+        paidAmountFC: paidFC,
+        shortfallFC: Math.max(0, amounts.totalPurchaseFC - paidFC),
+      };
+
+    default: {
+      // Unknown / not specified — eligible if any payment posted OR if order total is 0
+      if (paidFC > 0.01 || amounts.totalPurchaseFC <= 0) {
+        return {
+          eligible: true,
+          reason: "Payment posted — loading eligible.",
+          paymentCondition: condition,
+          requiredAmountFC: 0,
+          paidAmountFC: paidFC,
+          shortfallFC: 0,
+        };
+      }
+      return {
+        eligible: false,
+        reason: "No payment has been posted. Please select a payment condition and post the required payment before loading.",
+        paymentCondition: condition,
+        requiredAmountFC: 0,
+        paidAmountFC: 0,
+        shortfallFC: 0,
+      };
+    }
+  }
+}

@@ -3048,24 +3048,45 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
       const isRemainingCleared = remainingDue <= 0.01;
 
       if (activeMode === "advance") {
-        // Strict Business Rule: ONLY show Advance payment bills in Advance Journal
-        if (isCreditBill || isCashBill) return false;
-        if (!isAdvanceBill && advancePercent <= 0) return false;
+        // Business Rule: Show orders that need upfront payment before delivery
+        // Advance/Endorsement → need advance % cleared
+        // Cash → need cash payment posted before delivery
+        if (isCreditBill) return false;
 
         const isFullyPaid = (row.payment_status || "").toLowerCase() === "paid" || (row.payment_status || "").toLowerCase() === "completed";
         if (isFullyPaid) return false;
         
+        if (isCashBill) {
+          // Cash bills: show until cash payment posted
+          if (totalPaid > 0.01) return false; // Cash posted → moves to delivery
+          return true;
+        }
+        
+        if (!isAdvanceBill && advancePercent <= 0) return false;
         if (advancePercent > 0 && remainingAdvance <= 0.01) return false; // Already cleared required advance
 
       } else if (activeMode === "advance_completed") {
-        if (isCreditBill || isCashBill) return false;
+        if (isCreditBill) return false;
+        
+        if (isCashBill) {
+          // Cash bills: show here when cash payment has been posted
+          if (totalPaid <= 0.01) return false;
+          return true;
+        }
+        
         if (advancePercent === 0) return false;
         if (remainingAdvance > 0.01) return false; // Not yet cleared
         if (paidAdvance <= 0) return false; // Not paid anything
       } else if (activeMode === "remaining") {
-        // Strict Business Rule: Credit and Cash bills do NOT belong in Remaining Journal
-        if (isCreditBill || isCashBill) return false;
-        if (advancePercent > 0 && remainingAdvance > 0.01) return false;
+        // Business Rule: Credit bills do NOT belong in Remaining Journal
+        if (isCreditBill) return false;
+        
+        // Business Rule: Advance/Endorsement must be fully cleared first
+        if (!isCashBill && advancePercent > 0 && remainingAdvance > 0.01) return false;
+        
+        // Business Rule: Cash bills must have cash payment posted first
+        if (isCashBill && totalPaid <= 0.01) return false;
+        
         if (remainingDue <= 0.01) return false; // Already cleared
 
         // NOTE: sales orders have no loading/container-transfer stage (that's a Country
