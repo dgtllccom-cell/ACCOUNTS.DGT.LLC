@@ -11,11 +11,13 @@
  * - "Need Help?" support card with "Get Support" button
  * - "<< Collapse Menu" footer
  */
-import { useEffect, useMemo, useState, type ComponentType } from "react";
+import { useEffect, useMemo, useState, useRef, type ComponentType } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   ArrowRightLeft,
+  Award,
   Banknote,
   BarChart3,
   Inbox,
@@ -40,11 +42,14 @@ import {
   FileCheck2,
   FileSpreadsheet,
   FileText,
+  Filter,
   Globe,
   Globe2,
   History,
+  Info,
   MapPin,
   Route,
+  Search,
   Home,
   Landmark,
   Layers,
@@ -83,6 +88,7 @@ import { t as tUi } from "@/lib/i18n/ui";
 import { SafeSupportAssistant } from "@/components/support/safe-support-assistant";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { fetchBranding, brandingName } from "@/lib/branding/client";
+import { getCrmTranslation } from "@/lib/crm/crm-i18n";
 
 /* ---------------- Types ---------------- */
 export type SidebarDeepChild = {
@@ -521,21 +527,10 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     ],
   },
   {
-    key: "crm-control",
-    label: nt("CRM Control Center"),
-    icon: CalendarCheck,
-    children: [
-      { label: nt("CRM Dashboard"), href: "/dashboard/crm", icon: BarChart3 },
-      { label: nt("Today's Action Center"), href: "/dashboard/crm?tab=today", icon: CalendarCheck },
-      { label: nt("Due & Follow-Up"), href: "/dashboard/smart-due?tab=overdue", icon: Clock },
-      { label: nt("Cheques Reminders"), href: "/dashboard/crm?tab=cheques", icon: CreditCard },
-      { label: nt("Purchase Payments Due"), href: "/dashboard/crm?tab=purchases", icon: ShoppingCart },
-      { label: nt("Sales Recovery Due"), href: "/dashboard/crm?tab=sales", icon: CircleDollarSign },
-      { label: nt("Shipping / Clearing Due"), href: "/dashboard/crm?tab=shipping", icon: Ship },
-      { label: nt("Customer Follow-Up"), href: "/dashboard/crm?tab=customers", icon: Users },
-      { label: nt("New Customer Registration"), href: "/dashboard/crm/customers/new", icon: ListPlus },
-      { label: nt("CRM Reports"), href: "/dashboard/crm/reports", icon: FileBarChart },
-    ],
+    key: "crm-reports",
+    label: nt("CRM Reports"),
+    icon: FileBarChart,
+    href: "/dashboard/crm",
   },
   {
     key: "tax-einvoicing",
@@ -647,6 +642,17 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
       { label: nt("Arzi Bills Reports & Search"), href: "/dashboard/temp-bills/reports", icon: FileBarChart },
     ],
   },
+];
+
+export const CRM_REPORT_CENTER_OPTIONS = [
+  { key: "executive", label: nt("Executive Dashboard"), href: "/dashboard/crm?report=executive", icon: BarChart3 },
+  { key: "pipeline", label: nt("Lead Pipeline"), href: "/dashboard/crm?report=pipeline", icon: Filter },
+  { key: "customer-360", label: nt("Customer 360"), href: "/dashboard/crm?report=customer-360", icon: Users },
+  { key: "due-followup", label: nt("Due & Follow-Up"), href: "/dashboard/crm?report=due-followup", icon: Clock },
+  { key: "payments-recovery", label: nt("Payments & Recovery"), href: "/dashboard/crm?report=payments-recovery", icon: CircleDollarSign },
+  { key: "city-branch", label: nt("City & Branch Analysis"), href: "/dashboard/crm?report=city-branch", icon: MapPin },
+  { key: "team-performance", label: nt("Team Performance"), href: "/dashboard/crm?report=team-performance", icon: Award },
+  { key: "reports", label: nt("Universal Reports Hub"), href: "/dashboard/crm/reports", icon: FileText },
 ];
 
 /* ---------------- Helper to check path matches ---------------- */
@@ -1093,6 +1099,71 @@ export function DigitalDockPremiumSidebar({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
+  // CRM Report Center Floating Panel State
+  const [crmPanelOpen, setCrmPanelOpen] = useState(false);
+  const [crmSearchText, setCrmSearchText] = useState("");
+  const [crmPanelPos, setCrmPanelPos] = useState<{ top: number; left?: number; right?: number } | null>(null);
+  const crmButtonRef = useRef<HTMLDivElement | null>(null);
+  const crmPanelRef = useRef<HTMLDivElement | null>(null);
+  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => {
+      if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+    };
+  }, []);
+
+  const calculateCrmPosition = () => {
+    if (crmButtonRef.current) {
+      const rect = crmButtonRef.current.getBoundingClientRect();
+      const isRtl = document.dir === "rtl" || ["ur", "ar", "fa", "ps"].includes(lang);
+      const top = Math.max(16, Math.min(rect.top - 10, window.innerHeight - 440));
+      if (isRtl) {
+        setCrmPanelPos({ top, right: window.innerWidth - rect.left + 8 });
+      } else {
+        setCrmPanelPos({ top, left: rect.right + 8 });
+      }
+    }
+  };
+
+  const handleCrmMouseEnter = () => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+    calculateCrmPosition();
+    setCrmPanelOpen(true);
+  };
+
+  const handleCrmMouseLeave = () => {
+    closeTimeoutRef.current = setTimeout(() => {
+      setCrmPanelOpen(false);
+    }, 250);
+  };
+
+  const handlePanelMouseEnter = () => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+  };
+
+  const handlePanelMouseLeave = () => {
+    closeTimeoutRef.current = setTimeout(() => {
+      setCrmPanelOpen(false);
+    }, 250);
+  };
+
+  const handleCrmClick = (e: React.MouseEvent) => {
+    if (window.innerWidth < 1024) {
+      e.preventDefault();
+      calculateCrmPosition();
+      setCrmPanelOpen((prev) => !prev);
+    }
+  };
+
   // Clicking a top-level group opens it and closes every other top-level
   // group (plus that group's own sub-groups); clicking a level-2 sub-group
   // closes its sibling sub-groups under the same parent. Clicking an
@@ -1348,6 +1419,47 @@ export function DigitalDockPremiumSidebar({
                     </div>
                   )}
                 </div>
+              ) : item.key === "crm-reports" ? (
+                /* Level 1: CRM Reports with Hover Floating Report Center */
+                <div
+                  ref={crmButtonRef}
+                  onMouseEnter={handleCrmMouseEnter}
+                  onMouseLeave={handleCrmMouseLeave}
+                  className="relative"
+                >
+                  <Link
+                    href="/dashboard/crm"
+                    onClick={(e) => {
+                      if (window.innerWidth < 1024) {
+                        handleCrmClick(e);
+                      } else {
+                        onNavigate?.();
+                      }
+                    }}
+                    className={`relative w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13.5px] transition-all duration-150 cursor-pointer ${
+                      isDirectActive || crmPanelOpen
+                        ? "bg-[#edf5ff] text-[#2563eb] font-bold"
+                        : "text-[#0f172a] hover:bg-slate-50 font-medium hover:text-[#2563eb]"
+                    }`}
+                  >
+                    {(isDirectActive || crmPanelOpen) && (
+                      <span className="absolute left-0 top-1.5 bottom-1.5 w-[3.5px] rounded-r-md bg-[#2563eb]" />
+                    )}
+
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <Icon className={`h-[18px] w-[18px] shrink-0 transition-colors ${
+                        isDirectActive || crmPanelOpen ? "text-[#2563eb]" : "text-[#0f172a]"
+                      }`} />
+                      <span className="truncate text-left tracking-tight">
+                        {tr(item.label)}
+                      </span>
+                    </div>
+
+                    <ChevronRight className={`h-4 w-4 shrink-0 transition-transform duration-200 ${
+                      isDirectActive || crmPanelOpen ? "text-[#2563eb] translate-x-0.5" : "text-[#0f172a]"
+                    }`} />
+                  </Link>
+                </div>
               ) : (
                 /* Level 1: Standalone Direct Link Item */
                 <Link
@@ -1407,6 +1519,95 @@ export function DigitalDockPremiumSidebar({
           <span>{tr("Collapse Menu")}</span>
         </button>
       </div>
+
+      {/* 5. Floating CRM Report Center Popover */}
+      {mounted && crmPanelOpen && crmPanelPos && createPortal(
+        <div
+          ref={crmPanelRef}
+          onMouseEnter={handlePanelMouseEnter}
+          onMouseLeave={handlePanelMouseLeave}
+          style={{
+            top: `${crmPanelPos.top}px`,
+            ...(crmPanelPos.left !== undefined ? { left: `${crmPanelPos.left}px` } : {}),
+            ...(crmPanelPos.right !== undefined ? { right: `${crmPanelPos.right}px` } : {}),
+          }}
+          className="fixed z-[99999] w-72 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-3.5 select-none animate-in fade-in zoom-in-95 duration-150 font-sans"
+        >
+          {/* Panel Header */}
+          <div className="flex items-center justify-between px-1 pb-2 border-b border-slate-100 dark:border-slate-800">
+            <span className="text-[11.5px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
+              {getCrmTranslation(lang).crmReportCenter}
+            </span>
+            <span className="text-[10px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-950/40 px-1.5 py-0.5 rounded">
+              8 Reports
+            </span>
+          </div>
+
+          {/* Search Box */}
+          <div className="relative mt-2.5 mb-2">
+            <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
+            <input
+              type="text"
+              placeholder={getCrmTranslation(lang).searchCrmReport}
+              value={crmSearchText}
+              onChange={(e) => setCrmSearchText(e.target.value)}
+              className="w-full h-8 pl-8 pr-2.5 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* Filtered Report Options */}
+          <div className="space-y-1 max-h-[300px] overflow-y-auto [scrollbar-width:thin] py-1">
+            {CRM_REPORT_CENTER_OPTIONS
+              .map((opt) => {
+                const cTrans = getCrmTranslation(lang);
+                let label = opt.label;
+                if (opt.key === "executive") label = cTrans.executiveDashboard;
+                else if (opt.key === "pipeline") label = cTrans.leadPipeline;
+                else if (opt.key === "customer-360") label = cTrans.customer360;
+                else if (opt.key === "due-followup") label = cTrans.dueFollowUp;
+                else if (opt.key === "payments-recovery") label = cTrans.paymentsRecovery;
+                else if (opt.key === "city-branch") label = cTrans.cityBranchAnalysis;
+                else if (opt.key === "team-performance") label = cTrans.teamPerformance;
+                else if (opt.key === "reports") label = cTrans.universalReports;
+                return { ...opt, localizedLabel: label };
+              })
+              .filter((opt) => opt.localizedLabel.toLowerCase().includes(crmSearchText.toLowerCase().trim()) || opt.label.toLowerCase().includes(crmSearchText.toLowerCase().trim()))
+              .map((opt) => {
+                const OptIcon = opt.icon;
+                const isCustomer360 = opt.key === "customer-360";
+                const isActiveOpt = isPathActive(opt.href, pathname);
+
+                return (
+                  <Link
+                    key={opt.key}
+                    href={opt.href}
+                    onClick={() => {
+                      setCrmPanelOpen(false);
+                      onNavigate?.();
+                    }}
+                    className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-150 ${
+                      isActiveOpt || (isCustomer360 && (pathname === "/dashboard/crm" || pathname === "/dashboard/crm/"))
+                        ? "bg-purple-100/90 text-purple-700 font-bold dark:bg-purple-950/50 dark:text-purple-300 shadow-2xs"
+                        : "text-slate-700 dark:text-slate-300 hover:text-blue-600 hover:bg-slate-50 dark:hover:bg-slate-800"
+                    }`}
+                  >
+                    <OptIcon className={`h-4 w-4 shrink-0 ${
+                      isActiveOpt || isCustomer360 ? "text-purple-600 dark:text-purple-400" : "text-slate-500"
+                    }`} />
+                    <span className="truncate">{opt.localizedLabel}</span>
+                  </Link>
+                );
+              })}
+          </div>
+
+          {/* Footer Hint */}
+          <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center gap-1.5 text-[11px] text-slate-500">
+            <Info className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+            <span>{getCrmTranslation(lang).clickReportFullScreen}</span>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
