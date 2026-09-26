@@ -104,6 +104,7 @@ export async function GET(request: NextRequest) {
               v.size,
               v.brand,
               v.variety,
+              v.grade,
               v.extra_details,
               v.is_active,
               v.created_at
@@ -129,6 +130,7 @@ export async function GET(request: NextRequest) {
         size: v.size,
         brand: v.brand,
         variety: v.variety || "",
+        grade: v.grade || "Standard",
         extra_details: v.extra_details || "",
         is_active: !!v.is_active,
         created_at: v.created_at,

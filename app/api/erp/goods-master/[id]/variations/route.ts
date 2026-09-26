@@ -11,17 +11,17 @@ import { getRequestLanguage } from "@/lib/i18n/server";
 const paramsSchema = z.object({ id: z.string().uuid() });
 
 const createVariationSchema = z.object({
-  brand: z.string().trim().min(1).max(100),
-  size: z.string().trim().min(1).max(100),
+  brand: z.string().trim().min(1).max(100).optional().default("Default"),
+  size: z.string().trim().min(1).max(100).optional().default("Standard"),
   variety: z.string().trim().max(100).optional().nullable(),
-  extraDetails: z.string().trim().max(2000).optional().nullable(),
+  grade: z.string().trim().max(150).optional().nullable(),
+  extraDetails: z.string().trim().max(15000).optional().nullable(),
 });
 
 export async function GET(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
     authorizeApiScope(session, { resource: "goods", action: "read" });
-    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
     const { id } = paramsSchema.parse(await ctx.params);
 
     const variations = await withLocalPg(async (sql) => {
@@ -31,8 +31,9 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ id: str
           goods_id,
           size,
           brand,
-          extra_details,
           variety,
+          grade,
+          extra_details,
           is_active,
           created_at
         FROM public.goods_variations
@@ -99,6 +100,12 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
       session.userId,
     );
 
+    if (body.grade) {
+      await withLocalPg(async (sql) => {
+        await sql`UPDATE public.goods_variations SET grade = ${body.grade?.trim() || null} WHERE id = ${variationId}::uuid`;
+      });
+    }
+
     await auditApiAction(request, {
       action: "goods_variations.create.api",
       entityTable: "goods_variations",
@@ -108,6 +115,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
         size: body.size,
         brand: body.brand,
         variety: body.variety,
+        grade: body.grade,
         extraDetails: body.extraDetails,
       },
     });

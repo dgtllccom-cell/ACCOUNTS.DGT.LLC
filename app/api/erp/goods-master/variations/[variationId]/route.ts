@@ -13,7 +13,8 @@ const updateVariationSchema = z.object({
   brand: z.string().trim().min(1).max(100).optional(),
   size: z.string().trim().min(1).max(100).optional(),
   variety: z.string().trim().max(100).optional().nullable(),
-  extraDetails: z.string().trim().max(2000).optional().nullable(),
+  grade: z.string().trim().max(150).optional().nullable(),
+  extraDetails: z.string().trim().max(15000).optional().nullable(),
   isActive: z.boolean().optional(),
 });
 
@@ -43,6 +44,12 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ varia
       },
       session.userId,
     );
+
+    if (body.grade !== undefined) {
+      await withLocalPg(async (sql) => {
+        await sql`UPDATE public.goods_variations SET grade = ${body.grade?.trim() || null}, updated_at = NOW() WHERE id = ${variationId}::uuid`;
+      });
+    }
 
     await auditApiAction(request, {
       action: "goods_variations.update.api",
