@@ -318,84 +318,133 @@ export async function GET(request: NextRequest) {
       `;
     })) ?? [];
 
-    // ── 2. Fetch purchase orders and check loading eligibility per payment condition ──
+    // ── 2. Fetch purchase orders via withLocalPg (bypassing RLS) and check loading eligibility per payment condition ──
     try {
-      let poQuery = supabase
-        .from("purchase_orders")
-        .select("id, purchase_order_no, country_id, country_branch_id, city_branch_id, form_data, advance_paid, remaining_due, order_total, payment_status, currency_code, exchange_rate, remaining_paid, credit_amount, created_at, countries(name, iso2, currency), country_branches(name, code), city_branches(name, code, city_name), purchase_order_payments(amount, exchange_rate, reference_no, narration, source_reference_no)")
-        .is("deleted_at", null);
-
-      poQuery = enforceScopeFilter(poQuery, session, {
-        countryId: query.countryId,
-        countryBranchId: query.countryBranchId,
-        cityBranchId: query.cityBranchId
-      });
-      if (hasDirectCityScope && !query.cityBranchId && session.cityBranchIds.length > 0) {
-        poQuery = poQuery.in("city_branch_id", session.cityBranchIds);
-      }
-
-      const { data: poList } = await poQuery.limit(200);
       const existingPoIds = new Set(records.map((r: any) => r.purchase_order_id).filter(Boolean));
+      const includePending = !query.status || query.status === "pending";
       const syntheticRecords: any[] = [];
 
-      if (poList && poList.length > 0) {
-        for (const po of poList) {
-          if (existingPoIds.has(po.id)) continue;
+      if (includePending) {
+        const poList: any[] = (await withLocalPg(async (sql) => {
+          return sql`
+            select
+              po.id, po.purchase_order_no, po.country_id, po.country_branch_id, po.city_branch_id,
+              po.form_data, po.advance_paid, po.remaining_due, po.order_total, po.payment_status,
+              po.currency_code, po.exchange_rate, po.remaining_paid, po.credit_amount, po.created_at,
+              case when c.id is not null then jsonb_build_object('name', c.name, 'iso2', c.iso2, 'currency', c.currency_code) else null end as countries,
+              case when cb.id is not null then jsonb_build_object('name', cb.name, 'code', cb.code) else null end as country_branches,
+              case when ci.id is not null then jsonb_build_object('name', ci.name, 'code', ci.code, 'city_name', ci.city_name) else null end as city_branches,
+              coalesce(
+                (
+                  select jsonb_agg(
+                    jsonb_build_object(
+                      'amount', pop.amount,
+                      'exchange_rate', pop.exchange_rate,
+                      'reference_no', pop.reference_no,
+                      'narration', pop.narration,
+                      'source_reference_no', pop.source_reference_no
+                    )
+                  )
+                  from purchase_order_payments pop
+                  where pop.purchase_order_id = po.id and pop.deleted_at is null
+                ),
+                '[]'::jsonb
+              ) as purchase_order_payments
+            from purchase_orders po
+            left join countries c on c.id = po.country_id
+            left join country_branches cb on cb.id = po.country_branch_id
+            left join city_branches ci on ci.id = po.city_branch_id
+            where po.deleted_at is null
+              ${query.cityBranchId ? sql`and po.city_branch_id = ${query.cityBranchId}::uuid`
+                : query.countryBranchId ? sql`and po.country_branch_id = ${query.countryBranchId}::uuid`
+                : query.countryId ? sql`and po.country_id = ${query.countryId}::uuid`
+                : sql``}
+              ${!session.isSuperAdmin && session.cityBranchIds.length > 0
+                ? sql`and (po.city_branch_id = ANY(${session.cityBranchIds}::uuid[]) or po.city_branch_id is null) ${session.countryIds.length > 0 ? sql`and po.country_id = ANY(${session.countryIds}::uuid[])` : sql``}`
+                : !session.isSuperAdmin && session.countryBranchIds.length > 0
+                ? sql`and po.country_branch_id = ANY(${session.countryBranchIds}::uuid[])`
+                : !session.isSuperAdmin && session.countryIds.length > 0
+                ? sql`and po.country_id = ANY(${session.countryIds}::uuid[])`
+                : !session.isSuperAdmin
+                ? sql`and false`
+                : sql``}
+              ${term ? sql`and (po.purchase_order_no ilike ${"%" + term + "%"} or po.purchase_contract_no ilike ${"%" + term + "%"})` : sql``}
+            order by po.created_at desc
+            limit 200
+          `;
+        })) ?? [];
 
-          // ── Loading Eligibility Gate ──
-          // Use resolveLoadingEligibility to check if the payment condition is satisfied
-          const eligibility = resolveLoadingEligibility(po as any);
-          if (!eligibility.eligible) continue; // Payment condition not yet satisfied → do NOT show in loading queue
+        if (poList && poList.length > 0) {
+          for (const po of poList) {
+            if (existingPoIds.has(po.id)) continue;
 
-          const form = po.form_data?.form || {};
-          syntheticRecords.push({
-            id: `synthetic-${po.id}`,
-            loading_record_no: `PLR-PENDING`,
-            purchase_order_id: po.id,
-            purchase_order_no: po.purchase_order_no,
-            container_number: "-",
-            container_type: "20ft Standard",
-            loading_status: "pending",
-            loaded_at: po.created_at,
-            loading_location: form.loadingPort || form.originCountry || "-",
-            receiving_location: form.receivedPort || form.destinationCountry || "-",
-            shipmentStatus: "Pending Loading",
-            carrier_name: "-",
-            remarks: `Loading eligible: ${eligibility.reason}`,
-            report_payload: {
-              loadedQuantity: 0,
-              loadingQuantity: 0,
-              pending: true,
-              loadingEligibility: eligibility
-            },
-            country_id: po.country_id,
-            country_branch_id: po.country_branch_id,
-            city_branch_id: po.city_branch_id,
-            loaded_quantity: 0,
-            total_quantity: Number(po.form_data?.totals?.totalQuantity || form.quantity || 0),
-            loading_percentage: 0,
-            loaded_purchase_amount: 0,
-            loaded_advance_amount: 0,
-            purchase_currency: po.currency_code || form.currencyType || "USD",
-            exchange_rate: Number(po.exchange_rate || form.exchangeRate || 1),
-            loaded_purchase_local: 0,
-            loaded_advance_local: 0,
-            payment_made: 0,
-            remaining_loading_balance: Number(po.order_total || 0),
-            local_currency: (po as any).countries?.currency || form.branchCurrency || "PKR",
-            posted_to_journal: false,
-            created_at: po.created_at,
-            countries: po.countries,
-            country_branches: po.country_branches,
-            city_branches: po.city_branches,
-            purchase_orders: [po]
-          });
+            const payments = Array.isArray(po.purchase_order_payments) ? po.purchase_order_payments : [];
+            const totalPaymentsFromPop = payments.reduce((sum: number, p: any) => sum + Number(p.amount || 0), 0);
+            const totalPaidFC = Math.max(Number(po.advance_paid || 0), totalPaymentsFromPop);
+
+            // ── Loading Eligibility Gate ──
+            // Use resolveLoadingEligibility to check if the payment condition is satisfied
+            const eligibility = resolveLoadingEligibility(po as any, totalPaidFC);
+            if (!eligibility.eligible) continue; // Payment condition not yet satisfied → do NOT show in loading queue
+
+            const form = po.form_data?.form || {};
+            const totals = po.form_data?.totals || {};
+            const workflow = po.form_data?.workflow || {};
+            const goodsEntries = Array.isArray(po.form_data?.goodsEntries) ? po.form_data.goodsEntries : [];
+            const goodsQuantity = goodsEntries.reduce((sum: number, item: any) => sum + Number(item.qtyNo || item.quantity || 0), 0);
+            const totalQty = Number(workflow.totalQuantity || totals.totalQuantity || goodsQuantity || form.quantity || 0);
+
+            syntheticRecords.push({
+              id: `synthetic-${po.id}`,
+              loading_record_no: `PLR-PENDING`,
+              purchase_order_id: po.id,
+              purchase_order_no: po.purchase_order_no,
+              container_number: "-",
+              container_type: form.containerType || "20ft Standard",
+              loading_status: "pending",
+              loaded_at: po.created_at,
+              loading_location: form.loadingPort || form.originCountry || "-",
+              receiving_location: form.receivedPort || form.destinationCountry || "-",
+              shipmentStatus: "Pending Loading",
+              carrier_name: "-",
+              remarks: `Loading eligible: ${eligibility.reason}`,
+              report_payload: {
+                loadedQuantity: 0,
+                loadingQuantity: 0,
+                pending: true,
+                loadingEligibility: eligibility,
+                goodsEntries: goodsEntries
+              },
+              country_id: po.country_id,
+              country_branch_id: po.country_branch_id,
+              city_branch_id: po.city_branch_id,
+              loaded_quantity: 0,
+              total_quantity: totalQty,
+              loading_percentage: 0,
+              loaded_purchase_amount: 0,
+              loaded_advance_amount: 0,
+              purchase_currency: po.currency_code || form.currencyType || "USD",
+              exchange_rate: Number(po.exchange_rate || form.exchangeRate || 1),
+              loaded_purchase_local: 0,
+              loaded_advance_local: 0,
+              payment_made: 0,
+              remaining_loading_balance: Number(po.order_total || 0),
+              local_currency: (po as any).countries?.currency || (po as any).countries?.currency_code || form.branchCurrency || "PKR",
+              posted_to_journal: false,
+              created_at: po.created_at,
+              countries: po.countries,
+              country_branches: po.country_branches,
+              city_branches: po.city_branches,
+              purchase_orders: [po]
+            });
+          }
         }
       }
 
       const allRecords = await localizeLoadingRecords([...records, ...syntheticRecords], lang);
       return apiOk({ records: allRecords, summary: summarize(allRecords), setupRequired: false, setupMessage: null, ...scopePayload });
-    } catch (_) {
+    } catch (err: any) {
+      console.error("[loading-records GET] Error fetching purchase orders for loading queue:", err);
       const localizedRecords = await localizeLoadingRecords(records, lang);
       return apiOk({ records: localizedRecords, summary: summarize(localizedRecords), setupRequired: false, setupMessage: null, ...scopePayload });
     }
@@ -490,9 +539,17 @@ export async function POST(request: NextRequest) {
           const po = poRows[0];
           if (!po) return null;
 
+          const popRows = await tx`
+            select coalesce(sum(amount), 0) as total_payments
+            from purchase_order_payments
+            where purchase_order_id = ${purchaseOrderId}::uuid and deleted_at is null
+          `;
+          const totalPaymentsFromPop = Number(popRows[0]?.total_payments || 0);
+          const totalPaidFC = Math.max(Number(po.advance_paid || 0), totalPaymentsFromPop);
+
           // ── Loading Eligibility Gate (POST) ──
           // Enforce payment condition before allowing loading record creation
-          const eligibility = resolveLoadingEligibility(po as any);
+          const eligibility = resolveLoadingEligibility(po as any, totalPaidFC);
           if (!eligibility.eligible) {
             throw new Error(`Loading blocked: ${eligibility.reason}`);
           }

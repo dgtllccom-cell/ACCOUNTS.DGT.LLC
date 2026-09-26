@@ -572,7 +572,22 @@ export type LoadingEligibility = {
  */
 export function resolvePaymentCondition(order: PurchaseOrderData): PaymentConditionType {
   const form = getForm(order);
-  const raw = String(form.paymentType ?? form.paymentCondition ?? "").trim().toLowerCase();
+  const anyOrder = order as any;
+  const raw = String(
+    form.paymentType ??
+    form.paymentCondition ??
+    form.payment_condition ??
+    form.paymentTerms ??
+    form.payment_type ??
+    form.paymentMode ??
+    form.payment_mode ??
+    anyOrder.payment_condition ??
+    anyOrder.payment_type ??
+    anyOrder.payment_mode ??
+    anyOrder.payment_terms ??
+    anyOrder.payment_status ??
+    ""
+  ).trim().toLowerCase();
 
   if (raw.includes("endorsement")) return "endorsement";
   if (raw.includes("advance")) return "advance";

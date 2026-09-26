@@ -1,10 +1,10 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import { apiOk, handleApiError } from "@/lib/api/response";
+import { apiError, apiOk, handleApiError } from "@/lib/api/response";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
-import { requireSupabaseData, writeAuditLog } from "@/lib/api/supabase";
+import { writeAuditLog } from "@/lib/api/supabase";
 import { requireErpSession } from "@/lib/auth/session";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { withLocalPg } from "@/lib/db/local-postgres";
 
 const updateSchema = z.object({
   containerNumber: z.string().trim().min(1).max(160).optional(),
@@ -25,16 +25,20 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   try {
     const session = await requireErpSession();
     const body = updateSchema.parse(await request.json());
+    const id = (await params).id;
 
-    const supabase = createSupabaseAdminClient() as any;
-    const existing = (await requireSupabaseData(
-      supabase
-        .from("purchase_loading_records")
-        .select("*")
-        .eq("id", (await params).id)
-        .is("deleted_at", null)
-        .single()
-    )) as any;
+    const existing = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        select * from purchase_loading_records
+        where id = ${id}::uuid and deleted_at is null
+        limit 1
+      `;
+      return rows[0] || null;
+    });
+
+    if (!existing) {
+      return apiError("NOT_FOUND", "Purchase loading record not found", 404);
+    }
 
     authorizeApiScope(session, {
       resource: "purchases",
@@ -56,14 +60,19 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (body.remarks !== undefined) payload.remarks = body.remarks;
     if (body.reportPayload !== undefined) payload.report_payload = body.reportPayload;
 
-    const updated = (await requireSupabaseData(
-      supabase
-        .from("purchase_loading_records")
-        .update(payload)
-        .eq("id", (await params).id)
-        .select("id, loading_record_no")
-        .single()
-    )) as any;
+    const updated = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        update purchase_loading_records
+        set ${sql(payload as any)}
+        where id = ${id}::uuid
+        returning id, loading_record_no
+      `;
+      return rows[0] || null;
+    });
+
+    if (!updated) {
+      return apiError("UPDATE_FAILED", "Failed to update purchase loading record", 500);
+    }
 
     await writeAuditLog({
       action: "update",
@@ -83,16 +92,20 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
+    const id = (await params).id;
 
-    const supabase = createSupabaseAdminClient() as any;
-    const existing = (await requireSupabaseData(
-      supabase
-        .from("purchase_loading_records")
-        .select("*")
-        .eq("id", (await params).id)
-        .is("deleted_at", null)
-        .single()
-    )) as any;
+    const existing = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        select * from purchase_loading_records
+        where id = ${id}::uuid and deleted_at is null
+        limit 1
+      `;
+      return rows[0] || null;
+    });
+
+    if (!existing) {
+      return apiError("NOT_FOUND", "Purchase loading record not found", 404);
+    }
 
     authorizeApiScope(session, {
       resource: "purchases",
@@ -103,14 +116,19 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     });
 
     const deletedAt = new Date().toISOString();
-    const updated = (await requireSupabaseData(
-      supabase
-        .from("purchase_loading_records")
-        .update({ deleted_at: deletedAt })
-        .eq("id", (await params).id)
-        .select("id, loading_record_no")
-        .single()
-    )) as any;
+    const updated = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        update purchase_loading_records
+        set deleted_at = ${deletedAt}
+        where id = ${id}::uuid
+        returning id, loading_record_no
+      `;
+      return rows[0] || null;
+    });
+
+    if (!updated) {
+      return apiError("DELETE_FAILED", "Failed to delete purchase loading record", 500);
+    }
 
     await writeAuditLog({
       action: "delete",
@@ -121,7 +139,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
       ipAddress: request.headers.get("x-forwarded-for") ?? null
     });
 
-    return apiOk({ loadingRecordId: updated.id, message: "Record deleted." });
+    return apiOk({ loadingRecordId: updated.id, deleted: true });
   } catch (error) {
     return handleApiError(error);
   }
