@@ -29412,6 +29412,9 @@ const en: Dict = {
   "users.jr_sub_general_admin": "General Administration",
   "users.jr_sub_shipping_ops": "Shipping Line Operations",
   "users.jr_sub_transport_ops": "Transport Operations",
+  "login.dev_banner": "DEV TEST ENVIRONMENT — test data only. Do not enter real business data.",
+  "login.meta_title": "ERP Access Portal | Damaan Business Group",
+  "login.meta_description": "Secure Enterprise Login Portal for Damaan Business Group (DGT.LLC).",
 };
 
 const ur: Dict = {
@@ -49723,6 +49726,9 @@ const ur: Dict = {
   "users.jr_sub_general_admin": "جنرل ایڈمنسٹریشن",
   "users.jr_sub_shipping_ops": "شپنگ لائن آپریشنز",
   "users.jr_sub_transport_ops": "ٹرانسپورٹ آپریشنز",
+  "login.dev_banner": "ڈیولپمنٹ ٹیسٹ ماحول — صرف ٹیسٹ ڈیٹا۔ اصل کاروباری ڈیٹا درج نہ کریں۔",
+  "login.meta_title": "ای آر پی رسائی پورٹل | دامان بزنس گروپ",
+  "login.meta_description": "دامان بزنس گروپ (DGT.LLC) کے لیے محفوظ انٹرپرائز لاگ اِن پورٹل۔",
 };
 
 const ar: Dict = {
@@ -70035,6 +70041,9 @@ const ar: Dict = {
   "users.jr_sub_general_admin": "الإدارة العامة",
   "users.jr_sub_shipping_ops": "عمليات خطوط الشحن",
   "users.jr_sub_transport_ops": "عمليات النقل",
+  "login.dev_banner": "بيئة اختبار تطويرية — بيانات تجريبية فقط. لا تُدخل بيانات عمل حقيقية.",
+  "login.meta_title": "بوابة الدخول إلى ERP | مجموعة دمان للأعمال",
+  "login.meta_description": "بوابة تسجيل دخول آمنة للمؤسسة لمجموعة دمان للأعمال (DGT.LLC).",
 };
 
 const fa: Dict = {
@@ -90346,6 +90355,9 @@ const fa: Dict = {
   "users.jr_sub_general_admin": "مدیریت عمومی",
   "users.jr_sub_shipping_ops": "عملیات خط کشتیرانی",
   "users.jr_sub_transport_ops": "عملیات حمل‌ونقل",
+  "login.dev_banner": "محیط آزمایشی توسعه — فقط داده آزمایشی. داده واقعی کسب‌وکار وارد نکنید.",
+  "login.meta_title": "درگاه ورود ERP | گروه تجاری دامان",
+  "login.meta_description": "درگاه ورود امن سازمانی برای گروه تجاری دامان (DGT.LLC).",
 };
 
 const ps: Dict = {
@@ -110664,6 +110676,9 @@ const ps: Dict = {
   "users.jr_sub_general_admin": "عمومي اداره",
   "users.jr_sub_shipping_ops": "د بار وړونکې کرښې عملیات",
   "users.jr_sub_transport_ops": "د ټرانسپورټ عملیات",
+  "login.dev_banner": "د پراختیا ازموینې چاپیریال — یوازې ازمایښتي معلومات. ریښتینی سوداګریز معلومات مه ننباسئ.",
+  "login.meta_title": "د ERP لاسرسي پورټل | د دامان سوداګرۍ ډله",
+  "login.meta_description": "د دامان سوداګرۍ ډلې (DGT.LLC) لپاره خوندي انټرپرایز ننوتلو پورټل.",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
