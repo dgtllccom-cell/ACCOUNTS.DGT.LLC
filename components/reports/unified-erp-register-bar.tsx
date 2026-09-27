@@ -195,6 +195,7 @@ export function UnifiedErpRegisterBar({
         <button
           type="button"
           onClick={onPrint}
+          data-testid="print-action"
           className="flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-[10px] font-bold text-slate-700 shadow-2xs hover:bg-slate-50 transition dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
         >
           <Printer className="h-3.5 w-3.5 text-slate-500" />
