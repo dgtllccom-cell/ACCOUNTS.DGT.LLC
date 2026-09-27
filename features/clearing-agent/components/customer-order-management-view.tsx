@@ -3285,106 +3285,86 @@ export function CustomerOrderManagementView() {
                     {tt("live", "Live")}
                   </span>
                 </div>
+                {/* 3 Unified Summary Reports: 1. Order Bill & Serials, 2. Customer Address, 3. Ship Types Report */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 text-xs">
+                  {/* REPORT 1: ORDER BILL & SYSTEM SERIALS */}
+                  <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between space-y-3">
+                    <div>
+                      <div className="flex items-center justify-between pb-2 border-b border-slate-200/60 dark:border-slate-800">
+                        <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 text-xs">
+                          <span className="flex h-5 w-5 items-center justify-center rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                            <Receipt className="h-3 w-3" />
+                          </span>
+                          <span>{tt("order_bill_serials_report", "ORDER BILL & SERIALS")}</span>
+                        </div>
+                        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[9.5px] font-bold text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          {tt("live", "Live")}
+                        </span>
+                      </div>
 
-                {/* Auto-Generated Serials & Timestamps Banner */}
-                <div className="rounded-xl border border-slate-200/90 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-800/60 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                      <Hash className="h-3.5 w-3.5 text-blue-600" />
-                      {tt("auto_generated_order_serials", "Auto-Generated Order Serials & Timestamp")}
-                    </span>
-                    <span className="text-[10px] font-mono font-bold text-slate-400">
-                      {formData.order_date || "—"} • {formData.order_time || "—"}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
-                    <div className="rounded-lg border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-900 shadow-2xs">
-                      <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{tt("global_serial", "Global Serial")}</span>
-                      <span className="font-mono font-bold text-blue-700 dark:text-blue-300 text-[11px] truncate block">
-                        {formData.global_serial || "—"}
+                      {/* Prominent Bill Number / Global Serial */}
+                      <div className="pt-2.5 pb-2">
+                        <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">
+                          {tt("bill_no_global_serial", "Bill No / Order Reference")}
+                        </span>
+                        <div className="font-mono font-black text-slate-900 dark:text-white text-base tracking-tight truncate">
+                          {formData.global_serial || formData.order_no || "CL-ORD-PENDING"}
+                        </div>
+                      </div>
+
+                      {/* 4 System Serials */}
+                      <div className="grid grid-cols-2 gap-2 pt-1 text-[11px]">
+                        <div className="rounded-lg border border-slate-100 bg-slate-50/70 p-2 dark:border-slate-800/80 dark:bg-slate-850/50">
+                          <span className="text-[8px] font-black uppercase text-slate-400 block tracking-wider">
+                            {tt("entry_serial", "Entry Serial")}
+                          </span>
+                          <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-xs truncate block">
+                            {formData.entry_serial || "—"}
+                          </span>
+                        </div>
+                        <div className="rounded-lg border border-slate-100 bg-slate-50/70 p-2 dark:border-slate-800/80 dark:bg-slate-850/50">
+                          <span className="text-[8px] font-black uppercase text-slate-400 block tracking-wider">
+                            {tt("branch_serial", "Branch Serial")}
+                          </span>
+                          <span className="font-mono font-bold text-slate-700 dark:text-slate-300 text-xs truncate block">
+                            {formData.branch_serial || "—"}
+                          </span>
+                        </div>
+                        <div className="rounded-lg border border-slate-100 bg-slate-50/70 p-2 dark:border-slate-800/80 dark:bg-slate-850/50">
+                          <span className="text-[8px] font-black uppercase text-slate-400 block tracking-wider">
+                            {tt("country_serial", "Country Serial")}
+                          </span>
+                          <span className="font-mono font-bold text-slate-700 dark:text-slate-300 text-xs truncate block">
+                            {formData.country_serial || "—"}
+                          </span>
+                        </div>
+                        <div className="rounded-lg border border-slate-100 bg-slate-50/70 p-2 dark:border-slate-800/80 dark:bg-slate-850/50">
+                          <span className="text-[8px] font-black uppercase text-slate-400 block tracking-wider">
+                            {tt("super_admin_serial", "Super Admin Serial")}
+                          </span>
+                          <span className="font-mono font-bold text-blue-600 dark:text-blue-400 text-xs truncate block">
+                            {formData.super_admin_serial || formData.global_serial || "—"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Date & Time Footer */}
+                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-500">
+                      <span className="flex items-center gap-1.5 font-medium">
+                        <Calendar className="h-3 w-3 text-slate-400" />
+                        <span>{formData.order_date || "—"}</span>
+                      </span>
+                      <span className="font-mono font-semibold text-slate-600 dark:text-slate-400">
+                        {formData.order_time || "—"}
                       </span>
                     </div>
-                    <div className="rounded-lg border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-900 shadow-2xs">
-                      <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{tt("country_serial", "Country Serial")}</span>
-                      <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-[11px] truncate block">
-                        {formData.country_serial || "—"}
-                      </span>
-                    </div>
-                    <div className="rounded-lg border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-900 shadow-2xs">
-                      <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{tt("branch_serial", "Branch Serial")}</span>
-                      <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-[11px] truncate block">
-                        {formData.branch_serial || "—"}
-                      </span>
-                    </div>
-                    <div className="rounded-lg border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-900 shadow-2xs">
-                      <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{tt("entry_serial", "Entry Serial")}</span>
-                      <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400 text-[11px] truncate block">
-                        {formData.entry_serial || "—"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Customer Account Live Report — Matching Mockup Image */}
-                <div className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900 space-y-4">
-                  {/* Top Row: Customer Name*, Select Dropdown, Search Button, Currency Pill, and Dark Right Button */}
-                  <div className="flex flex-wrap items-center gap-3">
-                    <span className="text-sm font-semibold text-rose-500 whitespace-nowrap">
-                      {tt("customer_name_required", "Customer Name*")}
-                    </span>
-
-                    <div className="relative min-w-[240px] sm:min-w-[280px] max-w-[320px]">
-                      <select
-                        value={formData.customer_id || ""}
-                        onChange={(e) => handleDirectCustomerChange(e.target.value)}
-                        className="w-full h-8.5 appearance-none rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 pl-3 pr-8 text-xs font-medium text-slate-800 dark:text-slate-200 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                      >
-                        <option value="">{tt("select_customer", "Select Customer...")}</option>
-                        {customers.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.customer_name}
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setStep1SubStep("1A");
-                        setCurrentStep(1);
-                      }}
-                      className="h-8.5 w-8.5 rounded-md bg-[#10b981] hover:bg-[#059669] text-white flex items-center justify-center shadow-xs transition shrink-0"
-                      title={tt("search_customer", "Search Customer")}
-                    >
-                      <Search className="h-4 w-4" />
-                    </button>
-
-                    <div className="h-8.5 px-3 rounded-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-2xs">
-                      <span className="h-2.5 w-2.5 rounded-full border-2 border-emerald-500 bg-transparent shrink-0"></span>
-                      <span>{selectedAccountInfo?.currency || "AED"}</span>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setStep1SubStep("1A");
-                        setCurrentStep(1);
-                      }}
-                      className="ml-auto h-8.5 px-3.5 rounded-lg bg-[#1e293b] hover:bg-[#0f172a] text-white text-xs font-semibold flex items-center gap-2 shadow-xs transition"
-                    >
-                      <span className="truncate max-w-[140px]">
-                        {formData.customer_name || selectedCustomerInfo?.customer_name || tt("select_customer", "Select Customer...")}
-                      </span>
-                      <ChevronRight className="h-3.5 w-3.5 text-slate-300 shrink-0" />
-                    </button>
                   </div>
 
-                  {/* Two Main Columns: Customer Address & Ship Types Report */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-1 text-xs text-slate-700 dark:text-slate-300">
-                    {/* CUSTOMER ADDRESS */}
-                    <div className="space-y-2 rounded-xl border border-slate-200/80 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-850/40">
+                  {/* REPORT 2: CUSTOMER ADDRESS REPORT */}
+                  <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between space-y-2.5">
+                    <div>
                       <div className="flex items-center justify-between pb-2 border-b border-slate-200/60 dark:border-slate-800">
                         <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 text-xs">
                           <span className="flex h-5 w-5 items-center justify-center rounded-md bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
@@ -3406,63 +3386,57 @@ export function CustomerOrderManagementView() {
                       </div>
 
                       {selectedCustomerInfo || formData.customer_name || formData.customer_id ? (
-                        <div className="leading-relaxed space-y-1.5 pt-0.5">
-                          <p className="font-bold text-slate-900 dark:text-white text-sm">
+                        <div className="leading-relaxed space-y-1.5 pt-1">
+                          <p className="font-bold text-slate-900 dark:text-white text-sm truncate">
                             {selectedCustomerInfo?.customer_name || formData.customer_name || selectedCustomerInfo?.contact_person}
                           </p>
                           {selectedCustomerInfo?.company_name && (
-                            <p className="font-medium text-slate-600 dark:text-slate-300 text-[11.5px]">
+                            <p className="font-medium text-slate-600 dark:text-slate-300 text-[11.5px] truncate">
                               {selectedCustomerInfo.company_name}
                             </p>
                           )}
                           {selectedCustomerInfo?.address ? (
-                            <p className="text-slate-600 dark:text-slate-400 text-[11.5px] leading-snug">
+                            <p className="text-slate-600 dark:text-slate-400 text-[11px] leading-snug line-clamp-2">
                               {selectedCustomerInfo.address}
                             </p>
                           ) : null}
                           {[selectedCustomerInfo?.city_name, selectedCustomerInfo?.country_name].filter(Boolean).length > 0 && (
-                            <p className="text-slate-600 dark:text-slate-400 text-[11.5px]">
+                            <p className="text-slate-600 dark:text-slate-400 text-[11px]">
                               {[selectedCustomerInfo?.city_name, selectedCustomerInfo?.country_name].filter(Boolean).join(", ")}
                             </p>
                           )}
-                          <div className="pt-2 border-t border-slate-200/50 dark:border-slate-800 space-y-1 text-[11px] text-slate-600 dark:text-slate-400">
-                            {selectedCustomerInfo?.mobile && (
-                              <p className="flex items-center gap-1.5">
-                                <span className="font-semibold text-slate-500">{tt("phone_label", "Phone:")}</span>
-                                <span className="font-mono text-slate-800 dark:text-slate-200">{selectedCustomerInfo.mobile}</span>
-                              </p>
-                            )}
-                            {selectedCustomerInfo?.whatsapp && (
-                              <p className="flex items-center gap-1.5">
-                                <span className="font-semibold text-slate-500">{tt("whatsapp_label", "WhatsApp:")}</span>
-                                <span className="font-mono text-slate-800 dark:text-slate-200">{selectedCustomerInfo.whatsapp}</span>
-                              </p>
-                            )}
-                            {selectedCustomerInfo?.email && (
-                              <p className="flex items-center gap-1.5">
-                                <span className="font-semibold text-slate-500">{tt("email_label", "Email:")}</span>
-                                <span className="text-slate-800 dark:text-slate-200">{selectedCustomerInfo.email}</span>
-                              </p>
-                            )}
-                            {(selectedCustomerInfo?.person_code || selectedAccountInfo?.code) && (
-                              <p className="flex items-center gap-1.5 font-mono text-[10.5px] text-slate-400">
-                                <span>{tt("code_label", "Code:")}</span>
-                                <span className="font-bold text-slate-600 dark:text-slate-300">
-                                  {selectedCustomerInfo?.person_code || selectedAccountInfo?.code}
-                                </span>
-                              </p>
-                            )}
-                          </div>
                         </div>
                       ) : (
-                        <div className="py-8 text-center text-slate-400 dark:text-slate-500 italic text-[11.5px]">
+                        <div className="py-6 text-center text-slate-400 dark:text-slate-500 italic text-[11.5px]">
                           {tt("no_customer_selected_desc", "Select a customer to view complete address and contact details")}
                         </div>
                       )}
                     </div>
 
-                    {/* SHIP TYPES REPORT */}
-                    <div className="space-y-2 rounded-xl border border-slate-200/80 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-850/40">
+                    {/* Customer Contact Footer */}
+                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1 text-[11px] text-slate-600 dark:text-slate-400">
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-400 font-medium">{tt("phone_label", "Phone:")}</span>
+                        <span className="font-mono text-slate-800 dark:text-slate-200">{selectedCustomerInfo?.mobile || "—"}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-400 font-medium">{tt("whatsapp_label", "WhatsApp:")}</span>
+                        <span className="font-mono text-slate-800 dark:text-slate-200">{selectedCustomerInfo?.whatsapp || "—"}</span>
+                      </div>
+                      {(selectedCustomerInfo?.person_code || selectedAccountInfo?.code) && (
+                        <div className="flex items-center justify-between pt-0.5 text-[10.5px]">
+                          <span className="text-slate-400">{tt("code_label", "Code:")}</span>
+                          <span className="font-mono font-bold text-slate-600 dark:text-slate-300">
+                            {selectedCustomerInfo?.person_code || selectedAccountInfo?.code}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* REPORT 3: SHIP TYPES REPORT */}
+                  <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between space-y-2.5">
+                    <div>
                       <div className="flex items-center justify-between pb-2 border-b border-slate-200/60 dark:border-slate-800">
                         <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 text-xs">
                           <span className="flex h-5 w-5 items-center justify-center rounded-md bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300">
@@ -3483,30 +3457,30 @@ export function CustomerOrderManagementView() {
                         </button>
                       </div>
 
-                      {/* 3 Concise Message Cards */}
-                      <div className="space-y-2 pt-0.5">
-                        {/* Card 1: Transport Mode */}
-                        <div className="rounded-lg border border-sky-200/70 bg-white p-2.5 dark:border-sky-900/50 dark:bg-slate-800 flex items-center justify-between shadow-2xs">
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-sky-600 text-white shadow-2xs">
+                      {/* 3 Concise Mini-Cards */}
+                      <div className="space-y-2 pt-1">
+                        {/* Transport Mode */}
+                        <div className="rounded-lg border border-sky-100 bg-sky-50/40 p-2 dark:border-sky-900/40 dark:bg-slate-800/70 flex items-center justify-between shadow-2xs">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-sky-600 text-white shadow-2xs">
                               {formData.transport_mode?.includes("air") ? (
-                                <Plane className="h-3.5 w-3.5" />
+                                <Plane className="h-3 w-3" />
                               ) : formData.transport_mode?.includes("road") || formData.transport_mode?.includes("truck") ? (
-                                <Truck className="h-3.5 w-3.5" />
+                                <Truck className="h-3 w-3" />
                               ) : (
-                                <Ship className="h-3.5 w-3.5" />
+                                <Ship className="h-3 w-3" />
                               )}
                             </span>
                             <div className="min-w-0">
-                              <span className="text-[9.5px] font-black uppercase text-sky-600 dark:text-sky-400 block tracking-wider">
+                              <span className="text-[8.5px] font-black uppercase text-sky-600 dark:text-sky-400 block tracking-wider">
                                 {tt("transport_mode_label", "Transport Mode")}
                               </span>
-                              <div className="text-xs font-bold text-slate-900 dark:text-white capitalize truncate">
+                              <div className="text-[11px] font-bold text-slate-900 dark:text-white capitalize truncate">
                                 {formData.transport_mode?.replace("by_", "By ") || "By Sea"}
                               </div>
                             </div>
                           </div>
-                          <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700/60 shrink-0">
+                          <span className="text-[9.5px] font-semibold text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded bg-white dark:bg-slate-700/60 border border-slate-200/60 dark:border-slate-700 shrink-0">
                             {formData.transport_mode?.includes("air")
                               ? "Air Cargo"
                               : formData.transport_mode?.includes("road")
@@ -3515,22 +3489,22 @@ export function CustomerOrderManagementView() {
                           </span>
                         </div>
 
-                        {/* Card 2: Movement Type */}
-                        <div className="rounded-lg border border-indigo-200/70 bg-white p-2.5 dark:border-indigo-900/50 dark:bg-slate-800 flex items-center justify-between shadow-2xs">
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-2xs">
-                              <ArrowRightLeft className="h-3.5 w-3.5" />
+                        {/* Movement Type */}
+                        <div className="rounded-lg border border-indigo-100 bg-indigo-50/40 p-2 dark:border-indigo-900/40 dark:bg-slate-800/70 flex items-center justify-between shadow-2xs">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-indigo-600 text-white shadow-2xs">
+                              <ArrowRightLeft className="h-3 w-3" />
                             </span>
                             <div className="min-w-0">
-                              <span className="text-[9.5px] font-black uppercase text-indigo-600 dark:text-indigo-400 block tracking-wider">
+                              <span className="text-[8.5px] font-black uppercase text-indigo-600 dark:text-indigo-400 block tracking-wider">
                                 {tt("movement_type_label", "Movement Type")}
                               </span>
-                              <div className="text-xs font-bold text-slate-900 dark:text-white uppercase truncate">
+                              <div className="text-[11px] font-bold text-slate-900 dark:text-white uppercase truncate">
                                 {formData.movement_type || "Import"}
                               </div>
                             </div>
                           </div>
-                          <span className="text-[10px] font-semibold text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/60 shrink-0">
+                          <span className="text-[9.5px] font-semibold text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/60 dark:border-indigo-800 shrink-0">
                             {formData.movement_type === "export"
                               ? "Local → Foreign"
                               : formData.movement_type === "transit"
@@ -3539,47 +3513,54 @@ export function CustomerOrderManagementView() {
                           </span>
                         </div>
 
-                        {/* Card 3: Route Corridor */}
-                        <div className="rounded-lg border border-emerald-200/70 bg-white p-2.5 dark:border-emerald-900/50 dark:bg-slate-800 flex items-center justify-between shadow-2xs">
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-2xs">
-                              <Route className="h-3.5 w-3.5" />
+                        {/* Route Corridor */}
+                        <div className="rounded-lg border border-emerald-100 bg-emerald-50/40 p-2 dark:border-emerald-900/40 dark:bg-slate-800/70 flex items-center justify-between shadow-2xs">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-emerald-600 text-white shadow-2xs">
+                              <Route className="h-3 w-3" />
                             </span>
                             <div className="min-w-0">
-                              <span className="text-[9.5px] font-black uppercase text-emerald-600 dark:text-emerald-400 block tracking-wider">
+                              <span className="text-[8.5px] font-black uppercase text-emerald-600 dark:text-emerald-400 block tracking-wider">
                                 {tt("route_corridor_type", "Route Corridor")}
                               </span>
-                              <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                              <div className="text-[11px] font-bold text-slate-900 dark:text-white truncate">
                                 {formData.route_name || tt("direct_customs_corridor", "Direct Customs Corridor")}
                               </div>
                             </div>
                           </div>
-                          <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/60 shrink-0">
+                          <span className="text-[9.5px] font-semibold text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/60 dark:border-emerald-800 shrink-0">
                             {formData.customs_clearance_office || "Customs Corridor"}
                           </span>
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* REMARKS */}
-                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-                    <span className="text-slate-500 font-bold uppercase text-[11px] tracking-wider border-b border-dotted border-slate-400 pb-0.5 inline-block">
-                      {tt("remarks", "REMARKS")}
-                    </span>
-                    <p className="text-xs text-slate-600 dark:text-slate-300 pt-1 leading-relaxed">
-                      {formData.remarks ? (
-                        formData.remarks
-                      ) : (
-                        <span className="text-slate-400 dark:text-slate-500 italic">
-                          {tt("no_remarks_recorded", "No remarks recorded.")}
-                        </span>
-                      )}
-                    </p>
+                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[10.5px] text-slate-400">
+                      <span>{tt("shipment_type_label", "Shipment:")} <strong className="text-slate-700 dark:text-slate-300">{formData.shipment_type || "FCL"}</strong></span>
+                      <span>{tt("bill_terms", "Commercial Freight")}</span>
+                    </div>
                   </div>
                 </div>
 
-                {/* 1. Unified Movement & Dynamic Route Journey Specification Card (Non-Duplicate) */}
+                {/* REMARKS CARD (Directly below the 3 top reports) */}
+                <div className="rounded-xl border border-slate-200/80 bg-white p-3.5 shadow-2xs dark:border-slate-800 dark:bg-slate-900">
+                  <div className="flex items-center gap-2 pb-1.5 border-b border-slate-100 dark:border-slate-800">
+                    <span className="text-slate-500 font-bold uppercase text-[10.5px] tracking-wider">
+                      {tt("remarks", "REMARKS")}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 pt-1 leading-relaxed">
+                    {formData.remarks ? (
+                      formData.remarks
+                    ) : (
+                      <span className="text-slate-400 dark:text-slate-500 italic text-[11.5px]">
+                        {tt("no_remarks_recorded", "No remarks recorded.")}
+                      </span>
+                    )}
+                  </p>
+                </div>
+
+                {/* 1. Unified Movement & Dynamic Route Journey Specification Card */}
                 <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-3.5">
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
                     <div className="flex items-center gap-3">
@@ -3633,7 +3614,7 @@ export function CustomerOrderManagementView() {
                           <span className="flex h-5 w-5 items-center justify-center rounded-md bg-sky-100 text-sky-700 dark:bg-sky-900 dark:text-sky-300">
                             <MapPin className="h-3 w-3" />
                           </span>
-                          <span>{tt("stage_origin_loading", "1. Origin / Loading")}</span>
+                          <span>{tt("option1_origin_loading", "OPTION 1: ORIGIN & LOADING")}</span>
                         </div>
                         <span className="text-[9.5px] font-bold px-1.5 py-0.5 rounded bg-sky-100 text-sky-700 dark:bg-sky-900/60 dark:text-sky-300">
                           {formData.loading_country_name ? "Specified" : "Pending"}
@@ -3661,7 +3642,7 @@ export function CustomerOrderManagementView() {
                           <span className="flex h-5 w-5 items-center justify-center rounded-md bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300">
                             <Anchor className="h-3 w-3" />
                           </span>
-                          <span>{tt("stage_border_customs", "2. Border & Customs")}</span>
+                          <span>{tt("option2_border_customs", "OPTION 2: BORDER & CUSTOMS")}</span>
                         </div>
                         <span className="text-[9.5px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300">
                           In-Transit
@@ -3689,7 +3670,7 @@ export function CustomerOrderManagementView() {
                           <span className="flex h-5 w-5 items-center justify-center rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300">
                             <Globe2 className="h-3 w-3" />
                           </span>
-                          <span>{tt("stage_final_destination", "3. Final Destination")}</span>
+                          <span>{tt("option3_final_destination", "OPTION 3: FINAL DESTINATION")}</span>
                         </div>
                         <span className="text-[9.5px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300">
                           Destination
@@ -3728,7 +3709,7 @@ export function CustomerOrderManagementView() {
                   </div>
                 </div>
 
-                {/* 2. Truck & Driver Assignment Message Card */}
+                {/* 2. Vehicle & Fleet Report Card */}
                 <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-3.5">
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
                     <div className="flex items-center gap-3">
@@ -3737,10 +3718,8 @@ export function CustomerOrderManagementView() {
                       </span>
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-black text-slate-900 dark:text-white">
-                            {formData.truck_assignment_mode === "later"
-                              ? tt("truck_assignment_pending_later", "Truck Assignment Pending (Later)")
-                              : formData.truck_number || tt("vehicle_driver_unassigned", "Vehicle & Driver Unassigned")}
+                          <span className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wide">
+                            {tt("vehicle_fleet_report", "VEHICLE & FLEET REPORT")}
                           </span>
                           <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800">
                             {formData.truck_assignment_mode === "permanent"
@@ -3749,11 +3728,20 @@ export function CustomerOrderManagementView() {
                               ? tt("assign_later_value", "Assign Later")
                               : tt("hired_truck_value", "Hired Truck")}
                           </span>
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                            formData.truck_number
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800"
+                              : "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800"
+                          }`}>
+                            {formData.truck_assignment_mode === "later"
+                              ? tt("pending_later", "Pending (Later)")
+                              : formData.truck_number
+                              ? tt("assigned_status", "Assigned")
+                              : tt("pending_allocation", "Pending Allocation")}
+                          </span>
                         </div>
-                        <div className="text-[10.5px] text-slate-500 flex items-center gap-1.5 mt-0.5">
-                          <span>{tt("truck_driver_desc", "Fleet Details, Driver Credentials & Dispatch Timing")}</span>
-                          <span>•</span>
-                          <span className="text-slate-400">{tt("driver_colon", "Driver:")} {formData.truck_driver_name || "—"}</span>
+                        <div className="text-[10.5px] text-slate-500 mt-0.5">
+                          {tt("truck_driver_desc", "Fleet Details, Driver Credentials & Dispatch Timing")}
                         </div>
                       </div>
                     </div>
@@ -3788,11 +3776,15 @@ export function CustomerOrderManagementView() {
                       </div>
                       <div className="space-y-1.5 text-slate-700 dark:text-slate-300 pt-0.5">
                         <div className="font-black text-slate-900 dark:text-white text-sm font-mono">
-                          {formData.truck_assignment_mode === "later" ? tt("to_be_assigned_later", "To Be Assigned Later") : (formData.truck_number || "—")}
+                          {formData.truck_assignment_mode === "later"
+                            ? tt("to_be_assigned_later", "To Be Assigned Later")
+                            : (formData.truck_number || <span className="text-slate-400 italic font-normal text-xs">{tt("no_truck_allocated", "No Truck Allocated")}</span>)}
                         </div>
                         <div className="text-slate-600 dark:text-slate-400 leading-relaxed text-[11px]">
                           <span className="text-slate-400 font-medium">{tt("transporter_label", "Transporter:")} </span>
-                          <strong className="text-slate-800 dark:text-slate-200">{formData.truck_transport_company || formData.truck_owner_name || tt("internal_fleet", "Internal Fleet")}</strong>
+                          <strong className="text-slate-800 dark:text-slate-200">
+                            {formData.truck_transport_company || formData.truck_owner_name || tt("internal_fleet", "Internal Fleet")}
+                          </strong>
                         </div>
                         <div className="font-medium text-slate-800 dark:text-slate-200 text-[11px]">
                           <span className="text-slate-400 font-normal">{tt("fleet_mode_label", "Fleet Mode:")} </span>
@@ -3817,21 +3809,27 @@ export function CustomerOrderManagementView() {
                           {tt("driver_credentials_dispatch", "Driver Credentials & Dispatch")}
                         </span>
                         <span className="text-[9.5px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300">
-                          {formData.truck_driver_name ? "Assigned" : "Unassigned"}
+                          {formData.truck_driver_name ? tt("assigned_status", "Assigned") : tt("pending_assignment", "Pending")}
                         </span>
                       </div>
                       <div className="space-y-1.5 text-slate-700 dark:text-slate-300 pt-0.5">
                         <div className="font-bold text-slate-900 dark:text-white text-xs">
-                          {formData.truck_assignment_mode === "later" ? "—" : (formData.truck_driver_name || tt("driver_unassigned", "Driver Unassigned"))}
+                          {formData.truck_assignment_mode === "later"
+                            ? <span className="text-slate-400 italic font-normal">{tt("to_be_assigned_later", "To Be Assigned Later")}</span>
+                            : (formData.truck_driver_name || <span className="text-slate-400 italic font-normal">{tt("no_driver_assigned", "No Driver Assigned")}</span>)}
                         </div>
                         <div className="text-slate-600 dark:text-slate-400 leading-relaxed text-[11px]">
                           <span className="text-slate-400 font-medium">{tt("mobile_label", "Mobile:")} </span>
-                          <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">{formData.truck_driver_mobile || "—"}</span>
+                          <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">
+                            {formData.truck_driver_mobile || "—"}
+                          </span>
                         </div>
                         <div className="pt-1.5 border-t border-blue-100/60 dark:border-blue-900/40 space-y-0.5 text-[11px]">
                           <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
                             <span className="font-semibold text-slate-500">{tt("actual_dispatch_label", "Actual Dispatch:")}</span>
-                            <span className="font-mono text-emerald-700 dark:text-emerald-400 font-bold">{formData.actual_dispatch_date || "—"}</span>
+                            <span className="font-mono text-emerald-700 dark:text-emerald-400 font-bold">
+                              {formData.actual_dispatch_date || "—"}
+                            </span>
                           </div>
                         </div>
                       </div>
