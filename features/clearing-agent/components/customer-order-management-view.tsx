@@ -309,6 +309,28 @@ export function defaultGoodsItem(): CustomerOrderGoodsItem {
   };
 }
 
+export function getRouteCountryFlag(name: string): string {
+  const n = (name || "").toLowerCase();
+  if (n.includes("dubai") || n.includes("uae") || n.includes("emirates") || n.includes("jebel") || n.includes("sharjah") || n.includes("abu dhabi")) return "🇦🇪";
+  if (n.includes("iran") || n.includes("bandar") || n.includes("chabahar") || n.includes("tehran")) return "🇮🇷";
+  if (n.includes("afghanistan") || n.includes("kabul") || n.includes("kandahar") || n.includes("herat") || n.includes("torkham") || n.includes("chaman") || n.includes("spin boldak") || n.includes("jalalabad") || n.includes("islam qala")) return "🇦🇫";
+  if (n.includes("pakistan") || n.includes("karachi") || n.includes("lahore") || n.includes("peshawar") || n.includes("gwadar") || n.includes("qasim")) return "🇵🇰";
+  if (n.includes("uzbekistan") || n.includes("tashkent") || n.includes("termez") || n.includes("samarkand")) return "🇺🇿";
+  if (n.includes("india") || n.includes("mumbai") || n.includes("nhava") || n.includes("delhi")) return "🇮🇳";
+  if (n.includes("china") || n.includes("yiwu") || n.includes("guangzhou") || n.includes("urumqi")) return "🇨🇳";
+  if (n.includes("tajikistan") || n.includes("dushanbe")) return "🇹🇯";
+  if (n.includes("turkmenistan") || n.includes("ashgabat")) return "🇹🇲";
+  if (n.includes("turkey") || n.includes("istanbul") || n.includes("mersin")) return "🇹🇷";
+  if (n.includes("oman") || n.includes("muscat") || n.includes("sohar")) return "🇴🇲";
+  if (n.includes("saudi") || n.includes("riyadh") || n.includes("jeddah")) return "🇸🇦";
+  return "📍";
+}
+
+export function parseRouteStops(routeStr: string): string[] {
+  if (!routeStr) return [];
+  return routeStr.split(/➔|->|→|\s+via\s+|,/i).map((s) => s.trim()).filter(Boolean);
+}
+
 const EMPTY_FORM = {
   // Serials & Timestamps
   order_date: "",
@@ -3581,6 +3603,55 @@ export function CustomerOrderManagementView() {
                     </button>
                   </div>
 
+                  {/* Visual Route Journey Message Box (As requested: ek message ki tarah dikhana chahiye) */}
+                  {(() => {
+                    const liveRouteStops = parseRouteStops(formData.route_name);
+                    if (liveRouteStops.length === 0) return null;
+                    return (
+                      <div className="rounded-xl border border-emerald-200/90 bg-gradient-to-r from-emerald-50/70 via-sky-50/50 to-blue-50/60 p-3 dark:border-emerald-900/60 dark:from-emerald-950/30 dark:via-slate-900/50 dark:to-blue-950/30 shadow-2xs space-y-2">
+                        <div className="flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-1.5 font-black text-emerald-800 dark:text-emerald-300 uppercase tracking-wide">
+                            <Route className="h-4 w-4 text-emerald-600" />
+                            <span>{tt("route_pathway_title", "Transit Route Pathway (ملک بہ ملک راستہ)")}</span>
+                          </div>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                            {liveRouteStops.length > 1 ? `${liveRouteStops.length} Stages Route` : "Single Corridor"}
+                          </span>
+                        </div>
+
+                        {/* Visual Flow Chain (Pills with arrows) */}
+                        <div className="flex flex-wrap items-center gap-1.5 py-1">
+                          {liveRouteStops.map((stop, idx) => (
+                            <React.Fragment key={idx}>
+                              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-emerald-200/90 dark:border-emerald-800/80 shadow-2xs text-xs font-bold text-slate-800 dark:text-slate-100">
+                                <span className="text-sm">{getRouteCountryFlag(stop)}</span>
+                                <span>{stop}</span>
+                                <span className="text-[9px] px-1 py-0.2 rounded font-black uppercase text-slate-400 bg-slate-100 dark:bg-slate-700">
+                                  {idx === 0 ? "Origin" : idx === liveRouteStops.length - 1 ? "Dest" : `Via ${idx}`}
+                                </span>
+                              </div>
+                              {idx < liveRouteStops.length - 1 ? (
+                                <span className="text-emerald-600 dark:text-emerald-400 font-black text-sm px-0.5">➔</span>
+                              ) : null}
+                            </React.Fragment>
+                          ))}
+                        </div>
+
+                        {/* Narrative Route Message Line */}
+                        {liveRouteStops.length > 1 && (
+                          <div className="text-[11px] text-slate-600 dark:text-slate-300 pt-1 border-t border-emerald-200/50 dark:border-slate-800 flex items-center gap-1.5">
+                            <span className="font-semibold text-emerald-700 dark:text-emerald-400">{tt("journey_summary", "Journey:")}</span>
+                            <span>
+                              From <strong>{liveRouteStops[0]}</strong> transiting through{" "}
+                              <strong>{liveRouteStops.slice(1, -1).join(", ")}</strong> to final destination{" "}
+                              <strong>{liveRouteStops[liveRouteStops.length - 1]}</strong>.
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+
                   {/* 3-Stage Chronological Journey in Clean Message Layout (No Nested Packets) */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs pt-1">
                     {/* Stage 1: Origin & Loading */}
@@ -4376,6 +4447,27 @@ function Step1BookingCustomer({
     [accounts, formData.customer_id, selectedCustomer]
   );
 
+  const routeStops = useMemo(() => parseRouteStops(formData.route_name), [formData.route_name]);
+
+  const handleAddRouteStop = (stop: string) => {
+    if (!stop) return;
+    const cleanStop = stop.trim();
+    if (!formData.route_name || !formData.route_name.trim()) {
+      setFormData((c) => ({ ...c, route_name: cleanStop }));
+    } else {
+      setFormData((c) => ({ ...c, route_name: `${c.route_name.trim()} ➔ ${cleanStop}` }));
+    }
+  };
+
+  const handleRemoveRouteStop = (indexToRemove: number) => {
+    const nextStops = routeStops.filter((_, idx) => idx !== indexToRemove);
+    setFormData((c) => ({ ...c, route_name: nextStops.join(" ➔ ") }));
+  };
+
+  const handleClearRoute = () => {
+    setFormData((c) => ({ ...c, route_name: "" }));
+  };
+
   const handleCustomerSelection = (customerId: string) => {
     const cust = customers.find((c) => c.id === customerId);
     const acc = accounts.find((a) => (a.customer_id && a.customer_id === customerId) || a.id === customerId);
@@ -4647,55 +4739,203 @@ function Step1BookingCustomer({
             </div>
           )}
 
-          {/* 1. Customer Account SearchSelect */}
-          <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                <Users className="h-4 w-4 text-blue-600" />
-                <span>{tt("customer_account_label", "Customer Account")} *</span>
-              </label>
-              {formData.customer_name ? (
-                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
-                  ✓ {formData.customer_name}
-                </span>
+          {/* ROW 1: Customer Account & Route Via / Corridor (Side-by-Side) */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            {/* 1. Customer Account SearchSelect */}
+            <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-2xs flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                    <Users className="h-4 w-4 text-blue-600" />
+                    <span>{tt("customer_account_label", "Customer Account")} *</span>
+                  </label>
+                  {formData.customer_name ? (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                      ✓ {formData.customer_name}
+                    </span>
+                  ) : null}
+                </div>
+
+                <SearchSelect
+                  label=""
+                  value={formData.customer_id}
+                  options={customerOptions}
+                  placeholder={tt("select_customer_account_ph", "Select Customer Account...")}
+                  onValueChange={handleCustomerSelection}
+                  disabled={loading}
+                  searchPlaceholder="Search customer by name, code or mobile..."
+                  emptyLabel="No matching customers found"
+                />
+              </div>
+
+              {/* Tag summary underneath input */}
+              {selectedCustomer || selectedAccount ? (
+                <div className="flex flex-wrap items-center gap-2 pt-2 text-xs text-slate-600 dark:text-slate-300 border-t border-slate-100 dark:border-slate-800/60 mt-1">
+                  <span className="font-bold text-slate-900 dark:text-white">
+                    {selectedCustomer?.customer_name || selectedAccount?.name}
+                  </span>
+                  <span className="text-slate-300 dark:text-slate-600">•</span>
+                  <span className="font-mono text-slate-500">
+                    Code: {selectedAccount?.code || selectedCustomer?.person_code || "—"}
+                  </span>
+                  <span className="text-slate-300 dark:text-slate-600">•</span>
+                  <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                    Bal: {selectedAccount?.currency || "USD"} {Number(selectedAccount?.current_balance || 0).toLocaleString()}
+                  </span>
+                  <span className="text-slate-300 dark:text-slate-600">•</span>
+                  <span className="text-slate-500">
+                    {selectedCustomer?.city_name ? `${selectedCustomer.city_name}, ` : ""}{selectedCustomer?.country_name || ""}
+                  </span>
+                </div>
               ) : null}
             </div>
 
-            <SearchSelect
-              label=""
-              value={formData.customer_id}
-              options={customerOptions}
-              placeholder={tt("select_customer_account_ph", "Select Customer Account...")}
-              onValueChange={handleCustomerSelection}
-              disabled={loading}
-              searchPlaceholder="Search customer by name, code or mobile..."
-              emptyLabel="No matching customers found"
-            />
+            {/* 2. Route Via / Transit Corridor Pathway Builder */}
+            <div className="rounded-xl border border-emerald-200/90 bg-white dark:bg-slate-900 p-3 space-y-2 shadow-2xs dark:border-emerald-800/80 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                    <Route className="h-4 w-4 text-emerald-600" />
+                    <span>{tt("route_via_corridor", "Route Via / Corridor")}</span>
+                  </label>
+                  <div className="flex items-center gap-1.5">
+                    {routeStops.length > 0 && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                        {routeStops.length} {tt("route_stops_count", "Stops")}
+                      </span>
+                    )}
+                    {formData.route_name ? (
+                      <button
+                        type="button"
+                        onClick={handleClearRoute}
+                        className="text-[10px] font-semibold text-slate-400 hover:text-rose-500 transition-colors"
+                        title={tt("btn_clear", "Clear")}
+                      >
+                        {tt("btn_clear", "Clear")}
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
 
-            {/* Tag summary underneath input */}
-            {selectedCustomer || selectedAccount ? (
-              <div className="flex flex-wrap items-center gap-2 pt-1 text-xs text-slate-600 dark:text-slate-300">
-                <span className="font-bold text-slate-900 dark:text-white">
-                  {selectedCustomer?.customer_name || selectedAccount?.name}
-                </span>
-                <span className="text-slate-300 dark:text-slate-600">•</span>
-                <span className="font-mono text-slate-500">
-                  Code: {selectedAccount?.code || selectedCustomer?.person_code || "—"}
-                </span>
-                <span className="text-slate-300 dark:text-slate-600">•</span>
-                <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                  Bal: {selectedAccount?.currency || "USD"} {Number(selectedAccount?.current_balance || 0).toLocaleString()}
-                </span>
-                <span className="text-slate-300 dark:text-slate-600">•</span>
-                <span className="text-slate-500">
-                  {selectedCustomer?.city_name ? `${selectedCustomer.city_name}, ` : ""}{selectedCustomer?.country_name || ""}
-                </span>
+                {/* Preset & Add Country Dropdowns */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+                  <select
+                    value=""
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        setFormData((c) => ({ ...c, route_name: e.target.value }));
+                      }
+                    }}
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50/70 px-2.5 py-1.5 text-xs font-medium text-slate-700 focus:border-emerald-500 focus:bg-white focus:outline-none dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-200"
+                  >
+                    <option value="">{tt("corridor_presets_ph", "⚡ Corridor Presets ▾")}</option>
+                    <option value="Dubai ➔ Iran ➔ Afghanistan ➔ Uzbekistan ➔ India">🇦🇪 Dubai ➔ 🇮🇷 Iran ➔ 🇦🇫 Afghan ➔ 🇺🇿 Uzbek ➔ 🇮🇳 India</option>
+                    <option value="Dubai ➔ Iran ➔ Afghanistan ➔ Uzbekistan">🇦🇪 Dubai ➔ 🇮🇷 Iran ➔ 🇦🇫 Afghan ➔ 🇺🇿 Uzbekistan</option>
+                    <option value="Dubai ➔ Iran ➔ Afghanistan">🇦🇪 Dubai ➔ 🇮🇷 Iran ➔ 🇦🇫 Afghanistan</option>
+                    <option value="Dubai ➔ Bandar Abbas ➔ Dogharoun ➔ Islam Qala ➔ Herat">🇦🇪 Dubai ➔ 🇮🇷 Bandar Abbas ➔ 🇦🇫 Islam Qala ➔ Herat</option>
+                    <option value="Karachi ➔ Torkham ➔ Jalalabad ➔ Kabul">🇵🇰 Karachi ➔ 🇦🇫 Torkham ➔ Jalalabad ➔ Kabul</option>
+                    <option value="Karachi ➔ Chaman ➔ Spin Boldak ➔ Kandahar">🇵🇰 Karachi ➔ 🇦🇫 Chaman ➔ Spin Boldak ➔ Kandahar</option>
+                    <option value="Dubai ➔ Karachi ➔ Chaman ➔ Afghanistan">🇦🇪 Dubai ➔ 🇵🇰 Karachi ➔ 🇦🇫 Afghanistan</option>
+                    <option value="China ➔ Khunjerab ➔ Sost ➔ Pakistan">🇨🇳 China ➔ 🇵🇰 Khunjerab ➔ Sost ➔ Pakistan</option>
+                  </select>
+
+                  <select
+                    value=""
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        handleAddRouteStop(e.target.value);
+                      }
+                    }}
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50/70 px-2.5 py-1.5 text-xs font-medium text-slate-700 focus:border-emerald-500 focus:bg-white focus:outline-none dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-200"
+                  >
+                    <option value="">{tt("add_country_hub_ph", "➕ Add Country / Hub ▾")}</option>
+                    <optgroup label={tt("popular_trade_corridors", "Popular Trade Corridors")}>
+                      <option value="Dubai">🇦🇪 Dubai (UAE)</option>
+                      <option value="Jebel Ali">🇦🇪 Jebel Ali Port</option>
+                      <option value="Iran">🇮🇷 Iran</option>
+                      <option value="Bandar Abbas">🇮🇷 Bandar Abbas Port</option>
+                      <option value="Chabahar">🇮🇷 Chabahar Port</option>
+                      <option value="Dogharoun">🇮🇷 Dogharoun Border</option>
+                      <option value="Afghanistan">🇦🇫 Afghanistan</option>
+                      <option value="Islam Qala">🇦🇫 Islam Qala Border</option>
+                      <option value="Torkham">🇦🇫 Torkham Border</option>
+                      <option value="Spin Boldak">🇦🇫 Spin Boldak Border</option>
+                      <option value="Kabul">🇦🇫 Kabul</option>
+                      <option value="Herat">🇦🇫 Herat</option>
+                      <option value="Kandahar">🇦🇫 Kandahar</option>
+                      <option value="Mazar-i-Sharif">🇦🇫 Mazar-i-Sharif</option>
+                      <option value="Uzbekistan">🇺🇿 Uzbekistan</option>
+                      <option value="Hairatan">🇺🇿 Hairatan Border</option>
+                      <option value="Tashkent">🇺🇿 Tashkent</option>
+                      <option value="India">🇮🇳 India</option>
+                      <option value="Nhava Sheva">🇮🇳 Nhava Sheva (JNPT)</option>
+                      <option value="Mundra">🇮🇳 Mundra Port</option>
+                      <option value="Pakistan">🇵🇰 Pakistan</option>
+                      <option value="Karachi">🇵🇰 Karachi Port</option>
+                      <option value="Port Qasim">🇵🇰 Port Qasim</option>
+                      <option value="Gwadar">🇵🇰 Gwadar Port</option>
+                      <option value="Chaman">🇵🇰 Chaman Border</option>
+                      <option value="China">🇨🇳 China</option>
+                      <option value="Turkey">🇹🇷 Turkey</option>
+                      <option value="Turkmenistan">🇹🇲 Turkmenistan</option>
+                      <option value="Tajikistan">🇹🇯 Tajikistan</option>
+                      <option value="Oman">🇴🇲 Oman</option>
+                    </optgroup>
+                  </select>
+                </div>
+
+                {/* Removable Route Stop Tags */}
+                {routeStops.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-1.5 p-2 bg-slate-50/80 dark:bg-slate-950/50 rounded-lg border border-slate-200/80 dark:border-slate-800/80 mb-2">
+                    {routeStops.map((stop, sIdx) => {
+                      const flag = getRouteCountryFlag(stop);
+                      const isOrigin = sIdx === 0;
+                      const isDest = sIdx === routeStops.length - 1 && routeStops.length > 1;
+                      return (
+                        <div key={sIdx} className="flex items-center gap-1">
+                          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-bold border shadow-2xs ${
+                            isOrigin 
+                              ? "bg-blue-50 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800" 
+                              : isDest 
+                              ? "bg-purple-50 dark:bg-purple-950/50 text-purple-800 dark:text-purple-300 border-purple-200 dark:border-purple-800" 
+                              : "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700"
+                          }`}>
+                            <span>{flag}</span>
+                            <span>{stop}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveRouteStop(sIdx)}
+                              className="ml-1 text-slate-400 hover:text-rose-500 rounded p-0.5 transition-colors"
+                              title={`Remove ${stop}`}
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </span>
+                          {sIdx < routeStops.length - 1 && (
+                            <span className="text-slate-400 font-bold text-[10px]">➔</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-            ) : null}
+
+              {/* Text Input for Custom or Fine-Tuning */}
+              <div>
+                <input
+                  type="text"
+                  placeholder={tt("ph_route_via", "e.g. Dubai ➔ Iran ➔ Afghanistan ➔ Uzbekistan ➔ India")}
+                  value={formData.route_name}
+                  onChange={(e) => setFormData((c) => ({ ...c, route_name: e.target.value }))}
+                  className={inputClass}
+                />
+              </div>
+            </div>
           </div>
 
-          {/* 2. Ship Mode, Movement Type & Route Via Selectors */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {/* ROW 2: Shipping / Transport Mode & Movement Type (Wider 2-Column Grid) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-1.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
               <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                 <Ship className="h-4 w-4 text-blue-600" />
@@ -4728,27 +4968,6 @@ function Step1BookingCustomer({
                 <option value="up_transit">Up Transit (Border Entry &rarr; Bonded Corridor)</option>
                 <option value="down_transit">Down Transit (Inland &rarr; Border Exit)</option>
               </select>
-            </div>
-
-            <div className="rounded-xl border border-emerald-200/90 bg-white dark:bg-slate-900 p-3 space-y-1.5 shadow-2xs dark:border-emerald-800/80 sm:col-span-2 lg:col-span-1">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                  <Route className="h-4 w-4 text-emerald-600" />
-                  <span>{tt("route_via_corridor", "Route Via / Corridor")}</span>
-                </label>
-                {formData.route_name ? (
-                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.2 rounded border border-emerald-200 dark:border-emerald-800 truncate max-w-[110px]" title={formData.route_name}>
-                    ✓ {formData.route_name}
-                  </span>
-                ) : null}
-              </div>
-              <input
-                type="text"
-                placeholder={tt("ph_route_via", "e.g. via Torkham / Chaman / Bandar Abbas / Port Qasim")}
-                value={formData.route_name}
-                onChange={(e) => setFormData((c) => ({ ...c, route_name: e.target.value }))}
-                className={inputClass}
-              />
             </div>
           </div>
 
