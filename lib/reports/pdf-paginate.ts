@@ -162,19 +162,27 @@ export async function renderPaginatedPdf(opts: PaginatedPdfOptions): Promise<voi
     built.forEach((p) => doc.body.appendChild(p));
     iframe.style.height = `${H * total}px`;
 
-    const html2pdfModule: any = await import("html2pdf.js");
-    const html2pdf = html2pdfModule.default || html2pdfModule;
-    await html2pdf()
-      .set({
-        margin: 0,
-        filename: opts.filename,
-        image: { type: "jpeg" as const, quality: 0.9 },
-        html2canvas: { scale: 1.6, useCORS: true, logging: false, windowWidth: W, width: W },
-        pagebreak: { mode: ["css"] },
-        jsPDF: { orientation, unit: "mm" as const, format: "a4" as const, compress: true },
-      })
-      .from(doc.body)
-      .save();
+    // Rasterise each page inside the iframe (so the report's own stylesheet applies) and
+    // assemble an A4 PDF.
+    const [{ default: html2canvas }, { jsPDF }] = await Promise.all([import("html2canvas"), import("jspdf")]);
+    const pdf = new jsPDF({ orientation, unit: "mm", format: "a4", compress: true });
+    const pageW = orientation === "landscape" ? 297 : 210;
+    const pageH = orientation === "landscape" ? 210 : 297;
+    for (let i = 0; i < built.length; i += 1) {
+      const canvas = await html2canvas(built[i], {
+        scale: 1.6,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff",
+        width: W,
+        height: H,
+        windowWidth: W,
+        windowHeight: H,
+      });
+      if (i > 0) pdf.addPage("a4", orientation);
+      pdf.addImage(canvas.toDataURL("image/jpeg", 0.9), "JPEG", 0, 0, pageW, pageH);
+    }
+    pdf.save(opts.filename);
   } finally {
     iframe.remove();
   }

@@ -149,7 +149,7 @@ export function generateReportHtml(input: {
   // Rendered as an inline pure-SVG QR (components/ui/qr-code) — no external network call,
   // so Print / Save-as-PDF works offline and can never show a broken image.
   const qrPayload = reportVerifyPayload(`${compName}|${title}|${printedDate}|${reportPeriod}`);
-  const qrSvg = qrCodeSvgMarkup(qrPayload, { size: 120 });
+  const qrSvg = qrCodeSvgMarkup(qrPayload, { size: 52 });
 
   // Table density from the real column count so a normal report reads at a comfortable
   // size and only genuinely wide tables (>12 cols) get squeezed. (Was hard-coded
