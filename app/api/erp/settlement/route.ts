@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { apiOk, handleApiError } from "@/lib/api/response";
-import { requireErpSession } from "@/lib/auth/session";
+import { requireSettlementAccess } from "@/lib/permissions/settlement-access";
 import { settlementService } from "@/lib/services/settlement-service";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordFields, localizeJoinedNames } from "@/lib/i18n/localize-records";
@@ -10,23 +10,12 @@ export const revalidate = 0;
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await requireErpSession();
     const { searchParams } = new URL(request.url);
-    // Branch/country users only ever see settlement rows inside their own assignments
-    // (same derivation as the Roznamcha reports route); Super Admin is unrestricted.
-    let scope: { countryIds: string[]; countryBranchIds: string[]; cityBranchIds: string[] } | null = null;
-    if (!session.isSuperAdmin) {
-      scope = { countryIds: [], countryBranchIds: [], cityBranchIds: [] };
-      for (const a of session.assignments) {
-        if (a.cityBranchId) scope.cityBranchIds.push(a.cityBranchId);
-        else if (a.countryBranchId) scope.countryBranchIds.push(a.countryBranchId);
-        else if (a.countryId) scope.countryIds.push(a.countryId);
-      }
-    }
 
     const countryId = searchParams.get("countryId") || undefined;
     const countryBranchId = searchParams.get("countryBranchId") || undefined;
     const cityBranchId = searchParams.get("cityBranchId") || undefined;
+    const { scope } = await requireSettlementAccess("read", { countryId, countryBranchId, cityBranchId });
     const direction = (searchParams.get("direction") as "cr" | "dr" | "all") || "all";
     const status = searchParams.get("status") || undefined;
     const module = searchParams.get("module") || undefined;

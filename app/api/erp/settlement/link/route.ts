@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { apiCreated, apiError, apiOk, handleApiError } from "@/lib/api/response";
-import { requireErpSession } from "@/lib/auth/session";
+import { requireSettlementAccess } from "@/lib/permissions/settlement-access";
 import { settlementService } from "@/lib/services/settlement-service";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeJoinedNames } from "@/lib/i18n/localize-records";
@@ -21,7 +21,7 @@ export const revalidate = 0;
 
 export async function GET(request: NextRequest) {
   try {
-    await requireErpSession();
+    const { scope } = await requireSettlementAccess("read");
     const { searchParams } = new URL(request.url);
     const settlementId = searchParams.get("settlementId");
 
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
       return apiOk([]);
     }
 
-    let links: any[] = await settlementService.getTransactionLinks(settlementId);
+    let links: any[] = await settlementService.getTransactionLinks(settlementId, scope);
     const lang = await getRequestLanguage(searchParams.get("lang"));
     try {
       links = await localizeJoinedNames<any>(links, lang, [
@@ -47,9 +47,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await requireErpSession();
+    const { session } = await requireSettlementAccess("write");
     const body = await request.json();
-
     const { crSettlementId, drSettlementId, linkAmount, remarks, isAuto } = body;
 
     if (!crSettlementId || !drSettlementId || !linkAmount || Number(linkAmount) <= 0) {

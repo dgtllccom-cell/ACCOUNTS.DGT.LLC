@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { sqlScopeCondition, type SqlScope } from "@/lib/api/scope-middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
 
 export type SettlementTransactionRow = {
@@ -105,17 +106,12 @@ export class SettlementService {
     search?: string | null;
     limit?: number;
     offset?: number;
-    /** Session scope for non-super-admin callers (null = unrestricted super admin). */
-    scope?: { countryIds: string[]; countryBranchIds: string[]; cityBranchIds: string[] } | null;
+    /** Caller's session scope (sessionSqlScope) — always required. */
+    scope: SqlScope;
   }): Promise<{ items: SettlementTransactionRow[]; total: number }> {
-    const sc = params.scope;
-    if (sc && !sc.countryIds.length && !sc.countryBranchIds.length && !sc.cityBranchIds.length) {
-      return { items: [], total: 0 };
-    }
+    if (params.scope.kind === "none") return { items: [], total: 0 };
     const res = await withLocalPg(async (sql) => {
-      const scopeCond = sc
-        ? sql`(st.city_branch_id = ANY(${sc.cityBranchIds}::uuid[]) OR st.country_branch_id = ANY(${sc.countryBranchIds}::uuid[]) OR st.country_id = ANY(${sc.countryIds}::uuid[]))`
-        : sql`TRUE`;
+      const scopeCond = sqlScopeCondition(sql, params.scope, "st");
       const limit = Math.min(params.limit || 50, 200);
       const offset = params.offset || 0;
 
@@ -282,15 +278,52 @@ export class SettlementService {
     branchId?: string | null;
     fromDate?: string | null;
     toDate?: string | null;
+    scope: SqlScope;
   }) {
     const res = await withLocalPg(async (sql) => {
+      // Same totals as public.get_settlement_dashboard_kpis, computed here so the caller's
+      // country/branch scope applies (the SQL function only accepts one country / branch).
+      const txScope = sqlScopeCondition(sql, params.scope, "t");
+      const linkFilter = sql`sl.deleted_at IS NULL
+        AND ${sqlScopeCondition(sql, params.scope, "cr")}
+        AND ${sqlScopeCondition(sql, params.scope, "dr")}
+        AND (${params.fromDate ? sql`sl.settlement_date >= ${params.fromDate}::date` : sql`TRUE`})
+        AND (${params.toDate ? sql`sl.settlement_date <= ${params.toDate}::date` : sql`TRUE`})`;
       const [kpi] = await sql`
-        SELECT * FROM public.get_settlement_dashboard_kpis(
-          ${params.countryId ?? null}::uuid,
-          ${params.branchId ?? null}::uuid,
-          ${params.fromDate ?? null}::date,
-          ${params.toDate ?? null}::date
-        )
+        SELECT
+          SUM(CASE WHEN t.direction = 'cr' THEN t.local_amount ELSE 0 END) AS total_cr_local,
+          SUM(CASE WHEN t.direction = 'dr' THEN t.local_amount ELSE 0 END) AS total_dr_local,
+          SUM(CASE WHEN t.direction = 'cr' THEN t.original_usd_amount ELSE 0 END) AS total_cr_usd,
+          SUM(CASE WHEN t.direction = 'dr' THEN t.original_usd_amount ELSE 0 END) AS total_dr_usd,
+          SUM(CASE WHEN t.direction = 'cr' THEN t.remaining_local ELSE 0 END) AS remaining_cr_local,
+          SUM(CASE WHEN t.direction = 'dr' THEN t.remaining_local ELSE 0 END) AS remaining_dr_local,
+          SUM(CASE WHEN t.direction = 'cr' THEN t.remaining_usd ELSE 0 END) AS remaining_cr_usd,
+          SUM(CASE WHEN t.direction = 'dr' THEN t.remaining_usd ELSE 0 END) AS remaining_dr_usd,
+          COUNT(CASE WHEN t.settlement_status = 'settled' THEN 1 END) AS count_settled,
+          COUNT(CASE WHEN t.settlement_status = 'partially_settled' THEN 1 END) AS count_partial,
+          COUNT(CASE WHEN t.settlement_status = 'unsettled' THEN 1 END) AS count_unsettled,
+          COUNT(CASE WHEN t.is_flagged = TRUE THEN 1 END) AS count_flagged,
+          COALESCE((SELECT SUM(sl.fx_difference_usd) FROM public.settlement_links sl
+             JOIN public.settlement_transactions cr ON cr.id = sl.cr_settlement_id
+             JOIN public.settlement_transactions dr ON dr.id = sl.dr_settlement_id
+             WHERE ${linkFilter} AND sl.fx_direction = 'gain'), 0) AS total_fx_gain_usd,
+          COALESCE((SELECT SUM(ABS(sl.fx_difference_usd)) FROM public.settlement_links sl
+             JOIN public.settlement_transactions cr ON cr.id = sl.cr_settlement_id
+             JOIN public.settlement_transactions dr ON dr.id = sl.dr_settlement_id
+             WHERE ${linkFilter} AND sl.fx_direction = 'loss'), 0) AS total_fx_loss_usd,
+          COALESCE((SELECT SUM(CASE WHEN sl.fx_direction = 'gain' THEN sl.fx_difference_usd
+                                    WHEN sl.fx_direction = 'loss' THEN -ABS(sl.fx_difference_usd) ELSE 0 END)
+             FROM public.settlement_links sl
+             JOIN public.settlement_transactions cr ON cr.id = sl.cr_settlement_id
+             JOIN public.settlement_transactions dr ON dr.id = sl.dr_settlement_id
+             WHERE ${linkFilter}), 0) AS net_fx_usd
+        FROM public.settlement_transactions t
+        WHERE t.deleted_at IS NULL
+          AND ${txScope}
+          AND (${params.countryId ? sql`t.country_id = ${params.countryId}` : sql`TRUE`})
+          AND (${params.branchId ? sql`t.city_branch_id = ${params.branchId}` : sql`TRUE`})
+          AND (${params.fromDate ? sql`t.source_date >= ${params.fromDate}::date` : sql`TRUE`})
+          AND (${params.toDate ? sql`t.source_date <= ${params.toDate}::date` : sql`TRUE`})
       `;
 
       return {
@@ -334,7 +367,7 @@ export class SettlementService {
   /**
    * Get links for a specific transaction (either as CR or DR)
    */
-  async getTransactionLinks(settlementId: string): Promise<SettlementLinkRow[]> {
+  async getTransactionLinks(settlementId: string, scope: SqlScope): Promise<SettlementLinkRow[]> {
     const res = await withLocalPg(async (sql) => {
       return sql<SettlementLinkRow[]>`
         SELECT 
@@ -349,6 +382,8 @@ export class SettlementService {
         JOIN public.settlement_transactions dr ON dr.id = sl.dr_settlement_id
         WHERE sl.deleted_at IS NULL
           AND (sl.cr_settlement_id = ${settlementId} OR sl.dr_settlement_id = ${settlementId})
+          AND ${sqlScopeCondition(sql, scope, "cr")}
+          AND ${sqlScopeCondition(sql, scope, "dr")}
         ORDER BY sl.settlement_date DESC, sl.created_at DESC
       `;
     });
@@ -363,13 +398,15 @@ export class SettlementService {
     countryId?: string | null;
     cityBranchId?: string | null;
     limit?: number;
+    scope: SqlScope;
   }) {
     return withLocalPg(async (sql) => {
       const limit = Math.min(params.limit || 50, 100);
       return sql`
-        SELECT *
-        FROM public.settlement_exceptions_v
-        WHERE (${params.countryId ? sql`country_id = ${params.countryId}` : sql`TRUE`})
+        SELECT ev.*
+        FROM public.settlement_exceptions_v ev
+        WHERE ${sqlScopeCondition(sql, params.scope, "ev")}
+          AND (${params.countryId ? sql`country_id = ${params.countryId}` : sql`TRUE`})
           AND (${params.cityBranchId ? sql`city_branch_id = ${params.cityBranchId}` : sql`TRUE`})
         ORDER BY days_outstanding DESC, created_at DESC
         LIMIT ${limit}
@@ -417,9 +454,12 @@ export class SettlementService {
     settlementId?: string | null;
     countryId?: string | null;
     limit?: number;
+    scope: SqlScope;
   }) {
     return withLocalPg(async (sql) => {
       const limit = Math.min(params.limit || 50, 200);
+      // Audit rows are scoped through their settlement transaction; unlinked system rows are Super Admin only.
+      const auditScope = params.scope.kind === "all" ? sql`TRUE` : sql`(st.id IS NOT NULL AND ${sqlScopeCondition(sql, params.scope, "st")})`;
       return sql`
         SELECT 
           sal.*,
@@ -433,7 +473,8 @@ export class SettlementService {
         LEFT JOIN public.countries c ON c.id = sal.country_id
         LEFT JOIN public.city_branches cb ON cb.id = sal.city_branch_id
         LEFT JOIN public.settlement_transactions st ON st.id = sal.settlement_id
-        WHERE (${params.settlementId ? sql`sal.settlement_id = ${params.settlementId}` : sql`TRUE`})
+        WHERE ${auditScope}
+          AND (${params.settlementId ? sql`sal.settlement_id = ${params.settlementId}` : sql`TRUE`})
           AND (${params.countryId ? sql`sal.country_id = ${params.countryId}` : sql`TRUE`})
         ORDER BY sal.created_at DESC
         LIMIT ${limit}
@@ -449,12 +490,14 @@ export class SettlementService {
     cityBranchId?: string | null;
     fromDate?: string | null;
     toDate?: string | null;
+    scope: SqlScope;
   }) {
     return withLocalPg(async (sql) => {
       return sql`
-        SELECT *
-        FROM public.settlement_summary_v
-        WHERE (${params.countryId ? sql`country_id = ${params.countryId}` : sql`TRUE`})
+        SELECT sv.*
+        FROM public.settlement_summary_v sv
+        WHERE ${sqlScopeCondition(sql, params.scope, "sv")}
+          AND (${params.countryId ? sql`country_id = ${params.countryId}` : sql`TRUE`})
           AND (${params.cityBranchId ? sql`city_branch_id = ${params.cityBranchId}` : sql`TRUE`})
           AND (${params.fromDate ? sql`txn_date >= ${params.fromDate}::date` : sql`TRUE`})
           AND (${params.toDate ? sql`txn_date <= ${params.toDate}::date` : sql`TRUE`})
@@ -470,6 +513,7 @@ export class SettlementService {
     countryId?: string | null;
     fromDate?: string | null;
     toDate?: string | null;
+    scope: SqlScope;
   }) {
     return withLocalPg(async (sql) => {
       return sql`
@@ -499,6 +543,8 @@ export class SettlementService {
         JOIN public.settlement_transactions dr ON dr.id = sl.dr_settlement_id
         LEFT JOIN public.countries c ON c.id = cr.country_id
         WHERE sl.deleted_at IS NULL
+          AND ${sqlScopeCondition(sql, params.scope, "cr")}
+          AND ${sqlScopeCondition(sql, params.scope, "dr")}
           AND (${params.countryId ? sql`cr.country_id = ${params.countryId}` : sql`TRUE`})
           AND (${params.fromDate ? sql`sl.settlement_date >= ${params.fromDate}::date` : sql`TRUE`})
           AND (${params.toDate ? sql`sl.settlement_date <= ${params.toDate}::date` : sql`TRUE`})

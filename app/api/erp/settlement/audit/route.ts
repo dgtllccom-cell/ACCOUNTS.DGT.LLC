@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { apiOk, handleApiError } from "@/lib/api/response";
-import { requireErpSession } from "@/lib/auth/session";
+import { requireSettlementAccess, canAccessSettlementRecord } from "@/lib/permissions/settlement-access";
 import { settlementService } from "@/lib/services/settlement-service";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeJoinedNames } from "@/lib/i18n/localize-records";
@@ -10,17 +10,20 @@ export const revalidate = 0;
 
 export async function GET(request: NextRequest) {
   try {
-    await requireErpSession();
     const { searchParams } = new URL(request.url);
-
     const settlementId = searchParams.get("settlementId") || undefined;
     const countryId = searchParams.get("countryId") || undefined;
+    const { session, scope } = await requireSettlementAccess("read", { countryId });
+    if (settlementId && !canAccessSettlementRecord(session, await settlementService.getTransactionScope(settlementId))) {
+      return apiOk([]);
+    }
     const limit = Number(searchParams.get("limit") || 50);
 
     let history: any[] = await settlementService.getAuditHistory({
       settlementId,
       countryId,
-      limit
+      limit,
+      scope
     }) ?? [];
 
     const lang = await getRequestLanguage(searchParams.get("lang"));

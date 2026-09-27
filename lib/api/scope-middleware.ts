@@ -220,3 +220,54 @@ export function enforceScopeFilterWithDestination(
   }
   return q.or(allClauses.join(","));
 }
+
+/**
+ * Raw-SQL twin of {@link enforceScopeFilter} for routes/services that query through
+ * `withLocalPg` / `getSharedPg` instead of the Supabase client. Same rule, one place:
+ *   Super Admin → no restriction · country roles → their countries · branch users → their
+ *   city branches · country-branch users → their country branches · no assignment → no rows.
+ * `alias` is the table alias carrying country_id / country_branch_id / city_branch_id.
+ */
+export type SqlScope =
+  | { kind: "all" }
+  | { kind: "none" }
+  | { kind: "country"; ids: string[] }
+  | { kind: "countryBranch"; ids: string[] }
+  | { kind: "cityBranch"; ids: string[] };
+
+export function sessionSqlScope(session: ErpSession): SqlScope {
+  if (session.isSuperAdmin || session.roles?.includes("super_admin_reports")) return { kind: "all" };
+  const isCountryRole = session.roles.some((r) => r === "country_admin" || r === "country_user");
+  if (session.cityBranchIds.length > 0) {
+    if (isCountryRole && session.countryIds.length > 0) return { kind: "country", ids: session.countryIds };
+    return { kind: "cityBranch", ids: session.cityBranchIds };
+  }
+  if (session.countryBranchIds.length > 0) return { kind: "countryBranch", ids: session.countryBranchIds };
+  if (session.countryIds.length > 0) return { kind: "country", ids: session.countryIds };
+  return { kind: "none" };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function sqlScopeCondition(sql: any, scope: SqlScope, alias: string) {
+  const col = (c: string) => sql.unsafe(`${alias}.${c}`);
+  switch (scope.kind) {
+    case "all":
+      return sql`TRUE`;
+    case "none":
+      return sql`FALSE`;
+    case "country":
+      return sql`${col("country_id")} = ANY(${scope.ids}::uuid[])`;
+    case "countryBranch":
+      return sql`${col("country_branch_id")} = ANY(${scope.ids}::uuid[])`;
+    case "cityBranch":
+      return sql`${col("city_branch_id")} = ANY(${scope.ids}::uuid[])`;
+  }
+}
+
+/** Reject explicit country/branch query params that point outside the caller's scope (403). */
+export function assertExplicitScopeAllowed(session: ErpSession, scope: ApiScope) {
+  if (session.isSuperAdmin) return;
+  if (scope.cityBranchId && !canAccessCityBranch(session, scope.cityBranchId)) throw new ErpPermissionError("This branch is outside your authorized scope.");
+  if (scope.countryBranchId && !canAccessCountryBranch(session, scope.countryBranchId)) throw new ErpPermissionError("This branch is outside your authorized scope.");
+  if (scope.countryId && !canAccessCountry(session, scope.countryId)) throw new ErpPermissionError("This country is outside your authorized scope.");
+}
