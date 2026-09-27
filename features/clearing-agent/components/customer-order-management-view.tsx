@@ -841,6 +841,35 @@ export function CustomerOrderManagementView() {
 
   const tt = (k: string, f: string) => t(lang, ("com." + k) as never, f);
   const refreshLabel = t(lang, "common.refresh", "Refresh");
+  const transportModeSummary =
+    formData.transport_mode === "by_sea"
+      ? tt("tm_by_sea", "By Sea")
+      : formData.transport_mode === "by_road"
+        ? tt("tm_by_road", "By Road")
+        : formData.transport_mode === "by_air"
+          ? tt("tm_by_air", "By Air")
+          : formData.transport_mode === "by_rail"
+            ? tt("tm_by_rail", "By Rail")
+            : "—";
+  const movementTypeSummary =
+    formData.movement_type === "import"
+      ? tt("mv_import", "Import")
+      : formData.movement_type === "export"
+        ? tt("mv_export", "Export")
+        : formData.movement_type === "up_transit"
+          ? tt("mv_up_transit", "Up Transit")
+          : formData.movement_type === "down_transit"
+            ? tt("mv_down_transit", "Down Transit")
+            : formData.movement_type === "transit"
+              ? t(lang, "tl.type_transit", "Transit")
+              : String(formData.movement_type || "—").replaceAll("_", " ");
+  const orderStatusSummary = formData.status
+    ? t(
+        lang,
+        (`owf.status_${formData.status}`) as never,
+        String(formData.status).replaceAll("_", " ")
+      )
+    : "—";
 
   const setActiveRecord = useSetActiveRecord();
   useEffect(() => {
@@ -3284,8 +3313,153 @@ export function CustomerOrderManagementView() {
                   </span>
                 </div>
 
+                {/* Reference-image compact live summaries: entry stays left, report snapshots stay right. */}
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                  <div className="min-w-0 rounded-xl border border-blue-200/80 bg-blue-50/35 p-3 shadow-2xs dark:border-blue-900/60 dark:bg-blue-950/15">
+                    <div className="mb-2.5 flex items-start gap-2 border-b border-blue-200/70 pb-2 dark:border-blue-900/50">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-[10px] font-black text-white">1</span>
+                      <div className="min-w-0">
+                        <div className="truncate text-[10px] font-black uppercase tracking-wide text-slate-800 dark:text-slate-100">
+                          {t(lang, "roz.branch_user_info", "Branch & User Information")}
+                        </div>
+                        <div className="truncate text-[9px] font-semibold text-blue-600 dark:text-blue-300">
+                          {userContext.context?.companyName || userContext.context?.scopeLabel || "—"}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5 text-[10.5px]">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="shrink-0 font-semibold text-slate-500">{t(lang, "branch.branch_name", "Branch Name")}</span>
+                        <span className="truncate text-right font-bold text-slate-800 dark:text-slate-100">{userContext.context?.branchName || userContext.context?.scopeLabel || "—"}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="shrink-0 font-semibold text-slate-500">{t(lang, "rozrep.country", "Country")}</span>
+                        <span className="truncate text-right font-bold text-slate-800 dark:text-slate-100">{userContext.context?.country || "—"}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="shrink-0 font-semibold text-slate-500">{t(lang, "common.user", "User")}</span>
+                        <span className="truncate text-right font-bold text-slate-800 dark:text-slate-100">{userContext.context?.userName || "—"}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="shrink-0 font-semibold text-slate-500">{t(lang, "report.role", "Role")}</span>
+                        <span className="truncate text-right font-bold capitalize text-slate-800 dark:text-slate-100">
+                          {userContext.context?.role
+                            ? t(
+                                lang,
+                                (`role.${userContext.context.role}`) as never,
+                                userContext.context.role.replaceAll("_", " ")
+                              )
+                            : "—"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="min-w-0 rounded-xl border border-emerald-200/80 bg-emerald-50/35 p-3 shadow-2xs dark:border-emerald-900/60 dark:bg-emerald-950/15">
+                    <div className="mb-2.5 flex items-start gap-2 border-b border-emerald-200/70 pb-2 dark:border-emerald-900/50">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-[10px] font-black text-white">2</span>
+                      <div className="min-w-0">
+                        <div className="truncate text-[10px] font-black uppercase tracking-wide text-slate-800 dark:text-slate-100">
+                          {t(lang, "roz.customer_account_details", "Customer Details")}
+                        </div>
+                        <div className="truncate text-[9px] font-semibold text-emerald-600 dark:text-emerald-300">
+                          {formData.customer_name || selectedCustomerInfo?.customer_name || selectedAccountInfo?.name || "—"}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5 text-[10.5px]">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="shrink-0 font-semibold text-slate-500">{t(lang, "acct.customer_name", "Customer")}</span>
+                        <span className="truncate text-right font-bold text-slate-800 dark:text-slate-100">{selectedCustomerInfo?.contact_person || formData.customer_name || "—"}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="shrink-0 font-semibold text-slate-500">{tt("customer_account_label", "Account")}</span>
+                        <span className="truncate text-right font-mono font-bold text-slate-800 dark:text-slate-100">{selectedAccountInfo?.code || selectedCustomerInfo?.person_code || "—"}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="shrink-0 font-semibold text-slate-500">{t(lang, "branch.tel_prefix", "Phone")}</span>
+                        <span className="truncate text-right font-mono font-bold text-slate-800 dark:text-slate-100">{selectedCustomerInfo?.mobile || selectedCustomerInfo?.whatsapp || "—"}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="shrink-0 font-semibold text-slate-500">{t(lang, "branch.email_prefix", "Email")}</span>
+                        <span className="truncate text-right font-bold text-slate-800 dark:text-slate-100">{selectedCustomerInfo?.email || "—"}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="min-w-0 rounded-xl border border-violet-200/80 bg-violet-50/35 p-3 shadow-2xs dark:border-violet-900/60 dark:bg-violet-950/15">
+                    <div className="mb-2.5 flex items-start gap-2 border-b border-violet-200/70 pb-2 dark:border-violet-900/50">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-violet-600 text-[10px] font-black text-white">3</span>
+                      <div className="min-w-0">
+                        <div className="truncate text-[10px] font-black uppercase tracking-wide text-slate-800 dark:text-slate-100">
+                          {t(lang, "nav.shipment_details", "Loading / Shipment Details")}
+                        </div>
+                        <div className="truncate text-[9px] font-semibold text-violet-600 dark:text-violet-300">
+                          {transportModeSummary} • {movementTypeSummary}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5 text-[10.5px]">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="shrink-0 font-semibold text-slate-500">{tt("transport_mode", "Transport Mode")}</span>
+                        <span className="truncate text-right font-bold text-slate-800 dark:text-slate-100">{transportModeSummary}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="shrink-0 font-semibold text-slate-500">{tt("movement_type_route", "Movement Type")}</span>
+                        <span className="truncate text-right font-bold text-slate-800 dark:text-slate-100">{movementTypeSummary}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="shrink-0 font-semibold text-slate-500">{tt("loading_port", "Origin / Loading")}</span>
+                        <span className="truncate text-right font-bold text-slate-800 dark:text-slate-100">
+                          {formData.loading_port_name || formData.exit_border_port_name || formData.loading_source_name || formData.loading_country_name || "—"}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="shrink-0 font-semibold text-slate-500">{tt("destination_port", "Destination")}</span>
+                        <span className="truncate text-right font-bold text-slate-800 dark:text-slate-100">
+                          {formData.destination_port_name || formData.destination_city || formData.final_delivery_location || formData.receiving_country_name || "—"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="min-w-0 rounded-xl border border-amber-200/80 bg-amber-50/35 p-3 shadow-2xs dark:border-amber-900/60 dark:bg-amber-950/15">
+                    <div className="mb-2.5 flex items-start gap-2 border-b border-amber-200/70 pb-2 dark:border-amber-900/50">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-amber-500 text-[10px] font-black text-white">4</span>
+                      <div className="min-w-0">
+                        <div className="truncate text-[10px] font-black uppercase tracking-wide text-slate-800 dark:text-slate-100">
+                          {t(lang, "tc.order_reference", "Order Reference")}
+                        </div>
+                        <div className="truncate text-[9px] font-semibold text-amber-700 dark:text-amber-300">
+                          {formData.order_no || formData.entry_serial || tt("order_entry", "New Order")}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5 text-[10.5px]">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="shrink-0 font-semibold text-slate-500">{tt("th_order_no", "Order No")}</span>
+                        <span className="truncate text-right font-mono font-bold text-slate-800 dark:text-slate-100">{formData.order_no || "—"}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="shrink-0 font-semibold text-slate-500">{tt("entry_serial", "Entry Serial")}</span>
+                        <span className="truncate text-right font-mono font-bold text-slate-800 dark:text-slate-100">{formData.entry_serial || "—"}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="shrink-0 font-semibold text-slate-500">{t(lang, "roz.date", "Date / Time")}</span>
+                        <span className="truncate text-right font-mono font-bold text-slate-800 dark:text-slate-100">
+                          {[formData.order_date, formData.order_time].filter(Boolean).join(" • ") || "—"}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="shrink-0 font-semibold text-slate-500">{t(lang, "roz.status", "Status")}</span>
+                        <span className="truncate text-right font-bold capitalize text-emerald-700 dark:text-emerald-300">{orderStatusSummary}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Auto-Generated Serials & Timestamps Banner */}
-                <div className="rounded-xl border border-slate-200/90 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-800/60 space-y-2">
+                <div className="hidden rounded-xl border border-slate-200/90 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-800/60 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                       <Hash className="h-3.5 w-3.5 text-blue-600" />
@@ -3324,7 +3498,7 @@ export function CustomerOrderManagementView() {
                 </div>
 
                 {/* Customer Account Live Report — Matching Mockup Image */}
-                <div className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900 space-y-4">
+                <div className="hidden rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900 space-y-4">
                   {/* Top Row: Customer Name*, Select Dropdown, Search Button, Currency Pill, and Dark Right Button */}
                   <div className="flex flex-wrap items-center gap-3">
                     <span className="text-sm font-semibold text-rose-500 whitespace-nowrap">
@@ -3458,7 +3632,7 @@ export function CustomerOrderManagementView() {
                 </div>
 
                 {/* 1. Unified Movement & Dynamic Route Journey Specification Card (Non-Duplicate) */}
-                <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-3.5">
+                <div className="hidden rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-3.5">
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
                     <div className="flex items-center gap-3">
                       <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-600 text-white font-black text-sm shadow-md shadow-sky-600/20">
@@ -3576,7 +3750,7 @@ export function CustomerOrderManagementView() {
                 </div>
 
                 {/* 2. Truck & Driver Assignment Message Card */}
-                <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-3.5">
+                <div className="hidden rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-3.5">
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
                     <div className="flex items-center gap-3">
                       <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white font-black text-sm shadow-md shadow-indigo-600/20">
@@ -3668,7 +3842,7 @@ export function CustomerOrderManagementView() {
                 </div>
 
                 {/* 3. Goods & Cargo Manifest Breakdown Table Message Card */}
-                <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-3.5">
+                <div className="hidden rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-3.5">
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
                     <div className="flex items-center gap-3">
                       <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 text-white font-black text-sm shadow-md shadow-emerald-600/20">
@@ -3827,7 +4001,7 @@ export function CustomerOrderManagementView() {
                 </div>
 
                 {/* Registered Customer Orders Mini-Table (Screenshots 1, 2, 3) */}
-                <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <div className="hidden space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <h3 className="text-xs font-black text-slate-900 dark:text-white">
