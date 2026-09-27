@@ -1,7 +1,7 @@
 "use client";
 
 import { pl } from "@/lib/reports/print-label";
-import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
+import React, { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -46,7 +46,9 @@ import {
   Trash2,
   X,
   Hash,
-  Train
+  Train,
+  User,
+  ArrowRightLeft
 } from "lucide-react";
 
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
@@ -309,6 +311,28 @@ export function defaultGoodsItem(): CustomerOrderGoodsItem {
   };
 }
 
+export function getRouteCountryFlag(name: string): string {
+  const n = (name || "").toLowerCase();
+  if (n.includes("dubai") || n.includes("uae") || n.includes("emirates") || n.includes("jebel") || n.includes("sharjah") || n.includes("abu dhabi")) return "🇦🇪";
+  if (n.includes("iran") || n.includes("bandar") || n.includes("chabahar") || n.includes("tehran")) return "🇮🇷";
+  if (n.includes("afghanistan") || n.includes("kabul") || n.includes("kandahar") || n.includes("herat") || n.includes("torkham") || n.includes("chaman") || n.includes("spin boldak") || n.includes("jalalabad") || n.includes("islam qala")) return "🇦🇫";
+  if (n.includes("pakistan") || n.includes("karachi") || n.includes("lahore") || n.includes("peshawar") || n.includes("gwadar") || n.includes("qasim")) return "🇵🇰";
+  if (n.includes("uzbekistan") || n.includes("tashkent") || n.includes("termez") || n.includes("samarkand")) return "🇺🇿";
+  if (n.includes("india") || n.includes("mumbai") || n.includes("nhava") || n.includes("delhi")) return "🇮🇳";
+  if (n.includes("china") || n.includes("yiwu") || n.includes("guangzhou") || n.includes("urumqi")) return "🇨🇳";
+  if (n.includes("tajikistan") || n.includes("dushanbe")) return "🇹🇯";
+  if (n.includes("turkmenistan") || n.includes("ashgabat")) return "🇹🇲";
+  if (n.includes("turkey") || n.includes("istanbul") || n.includes("mersin")) return "🇹🇷";
+  if (n.includes("oman") || n.includes("muscat") || n.includes("sohar")) return "🇴🇲";
+  if (n.includes("saudi") || n.includes("riyadh") || n.includes("jeddah")) return "🇸🇦";
+  return "📍";
+}
+
+export function parseRouteStops(routeStr: string): string[] {
+  if (!routeStr) return [];
+  return routeStr.split(/➔|->|→|\s+via\s+|,/i).map((s) => s.trim()).filter(Boolean);
+}
+
 const EMPTY_FORM = {
   // Serials & Timestamps
   order_date: "",
@@ -449,6 +473,12 @@ const EMPTY_FORM = {
   buyer_name: "",
   consignee_name: "",
   remarks: "",
+  step1b_assignee_id: "",
+  step1b_assignee_name: "",
+  step1b_handover_notes: "",
+  step1c_assignee_id: "",
+  step1c_assignee_name: "",
+  step1c_handover_notes: "",
   legs: [] as RouteLeg[],
   loadingAllocations: [] as LoadingAllocation[]
 };
@@ -3166,6 +3196,7 @@ export function CustomerOrderManagementView() {
                       trucksList={trucksList}
                       warehousesList={warehousesList}
                       goodsMasterList={goodsMasterList}
+                      assignableUsers={assignableUsers}
                       onSelectSubStep={(sub) => {
                         setStep1SubStep(sub);
                         if (sub === "1A") setCurrentStep(1);
@@ -3187,7 +3218,7 @@ export function CustomerOrderManagementView() {
                   )}
 
                 {/* Stepper Footer Controls */}
-                <div className="flex flex-wrap items-center justify-between gap-2 pt-3 mt-4 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-2.5 mt-3 border-t border-slate-100 dark:border-slate-800">
                   <div>
                     {currentStep > 1 ? (
                       <button
@@ -3201,31 +3232,31 @@ export function CustomerOrderManagementView() {
                             setStep1SubStep("1A");
                           }
                         }}
-                        className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                        className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 shadow-2xs"
                       >
-                        <ChevronLeft className="h-4 w-4" />
+                        <ChevronLeft className="h-3.5 w-3.5" />
                         <span>{t(lang, "comv.back", "Previous")}</span>
                       </button>
                     ) : (
                       <button
                         type="button"
                         onClick={() => setIsFormOpen(false)}
-                        className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                        className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 shadow-2xs"
                       >
-                        <ArrowLeft className="h-4 w-4" />
+                        <ArrowLeft className="h-3.5 w-3.5" />
                         <span>{tt("back_to_registry", "Back to Registry")}</span>
                       </button>
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
                     <button
                       type="button"
                       onClick={() => void handleSaveProgress(false)}
                       disabled={saving}
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-xs font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300 transition"
+                      className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300 transition shadow-2xs"
                     >
-                      {saving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                      {saving ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
                       <span>{t(lang, "comv.save_draft", "Save Draft")}</span>
                     </button>
 
@@ -3234,30 +3265,34 @@ export function CustomerOrderManagementView() {
                         type="button"
                         onClick={() => void handleSaveProgress(true)}
                         disabled={saving}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2 text-xs font-bold text-white shadow-md shadow-blue-600/25 hover:bg-blue-700 transition"
+                        className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-xs shadow-blue-600/25 hover:bg-blue-700 transition"
                       >
-                        {saving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : null}
-                        <span>Save & Continue to Truck & Fleet (1B)</span>
-                        <ChevronRight className="h-4 w-4" />
+                        {saving ? <RefreshCw className="h-3 w-3 animate-spin" /> : null}
+                        <span>{tt("save_continue_1b", "Save & Continue to 1B (Truck)")}</span>
+                        <ChevronRight className="h-3.5 w-3.5" />
                       </button>
                     ) : currentStep === 2 ? (
                       <button
                         type="button"
                         onClick={() => void handleSaveProgress(true)}
                         disabled={saving}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2 text-xs font-bold text-white shadow-md shadow-blue-600/25 hover:bg-blue-700 transition"
+                        className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-xs shadow-blue-600/25 hover:bg-blue-700 transition"
                       >
-                        {saving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : null}
-                        <span>Save & Continue to Goods & Warehouse (1C)</span>
-                        <ChevronRight className="h-4 w-4" />
+                        {saving ? <RefreshCw className="h-3 w-3 animate-spin" /> : null}
+                        <span>
+                          {formData.step1b_assignee_name
+                            ? tt("com.handover_and_send_to", "Handover & Send to {name} →").replace("{name}", formData.step1b_assignee_name)
+                            : tt("save_continue_1c", "Save & Continue to 1C (Goods)")}
+                        </span>
+                        <ChevronRight className="h-3.5 w-3.5" />
                       </button>
                     ) : currentStep === 3 ? (
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5">
                         <button
                           type="button"
                           onClick={() => setCurrentStep(4)}
                           disabled={saving}
-                          className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 transition"
+                          className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 transition shadow-2xs"
                         >
                           <span>{tt("review_summary", "Review Summary")}</span>
                         </button>
@@ -3265,10 +3300,14 @@ export function CustomerOrderManagementView() {
                           type="button"
                           onClick={() => void handleSaveProgress(true)}
                           disabled={saving}
-                          className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-5 py-2 text-xs font-bold text-white shadow-md shadow-emerald-600/25 hover:bg-emerald-700 transition"
+                          className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-xs shadow-emerald-600/25 hover:bg-emerald-700 transition"
                         >
-                          {saving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                          <span>Save & Proceed to Review (Step 4)</span>
+                          {saving ? <RefreshCw className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+                          <span>
+                            {formData.step1c_assignee_name
+                              ? tt("com.handover_and_send_to", "Handover & Send to {name} →").replace("{name}", formData.step1c_assignee_name)
+                              : tt("save_proceed_step4", "Save & Proceed to Review (Step 4)")}
+                          </span>
                         </button>
                       </div>
                     ) : (
@@ -3276,10 +3315,10 @@ export function CustomerOrderManagementView() {
                         type="button"
                         onClick={() => void handleSaveProgress(true)}
                         disabled={saving}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-6 py-2 text-xs font-bold text-white shadow-md shadow-emerald-600/25 hover:bg-emerald-700 transition"
+                        className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs shadow-emerald-600/25 hover:bg-emerald-700 transition"
                       >
-                        {saving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                        <span>{tt("confirm_save_order", "Confirm & Save Customer Order")}</span>
+                        {saving ? <RefreshCw className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+                        <span>{tt("confirm_register_order", "Confirm & Register Order")}</span>
                       </button>
                     )}
                   </div>
@@ -3311,181 +3350,239 @@ export function CustomerOrderManagementView() {
                     {tt("live", "Live")}
                   </span>
                 </div>
+                {/* 3 Unified Summary Reports: 1. Order Bill & Serials, 2. Customer Address, 3. Ship Types Report */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 text-xs">
+                  {/* REPORT 1: ORDER BILL & SYSTEM SERIALS */}
+                  <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between space-y-2.5">
+                    <div>
+                      <div className="flex items-center justify-between pb-2 border-b border-slate-200/60 dark:border-slate-800">
+                        <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 text-xs">
+                          <span className="flex h-5 w-5 items-center justify-center rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                            <Receipt className="h-3 w-3" />
+                          </span>
+                          <span>{tt("order_bill_serials_report", "ORDER BILL & SERIALS")}</span>
+                        </div>
+                        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[9.5px] font-bold text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          {tt("live", "Live")}
+                        </span>
+                      </div>
 
-                {/* Auto-Generated Serials & Timestamps Banner */}
-                <div className="rounded-xl border border-slate-200/90 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-800/60 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                      <Hash className="h-3.5 w-3.5 text-blue-600" />
-                      {tt("auto_generated_order_serials", "Auto-Generated Order Serials & Timestamp")}
-                    </span>
-                    <span className="text-[10px] font-mono font-bold text-slate-400">
-                      {formData.order_date || "—"} • {formData.order_time || "—"}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
-                    <div className="rounded-lg border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-900 shadow-2xs">
-                      <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{tt("global_serial", "Global Serial")}</span>
-                      <span className="font-mono font-bold text-blue-700 dark:text-blue-300 text-[11px] truncate block">
-                        {formData.global_serial || "—"}
+                      {/* Prominent Bill Number / Global Serial */}
+                      <div className="leading-relaxed space-y-0.5 pt-1">
+                        <p className="font-mono font-black text-slate-900 dark:text-white text-base tracking-tight truncate">
+                          {formData.global_serial || formData.order_no || "CL-ORD-PENDING"}
+                        </p>
+                        <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                          {tt("bill_no_global_serial", "Bill No / Order Reference")}
+                        </p>
+                      </div>
+
+                      {/* Clean Serials List (No Nested Packets) */}
+                      <div className="pt-2 space-y-1.5 text-[11.5px] text-slate-600 dark:text-slate-400">
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500 font-medium">{tt("entry_serial", "Entry Serial:")}</span>
+                          <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400">{formData.entry_serial || "—"}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500 font-medium">{tt("branch_serial", "Branch Serial:")}</span>
+                          <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{formData.branch_serial || "—"}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500 font-medium">{tt("country_serial", "Country Serial:")}</span>
+                          <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{formData.country_serial || "—"}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500 font-medium">{tt("super_admin_serial", "Super Admin Serial:")}</span>
+                          <span className="font-mono font-bold text-blue-700 dark:text-blue-300">{formData.super_admin_serial || formData.global_serial || "—"}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Date & Time Footer */}
+                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-400">
+                      <span className="flex items-center gap-1.5 font-medium">
+                        <Calendar className="h-3 w-3 text-slate-400" />
+                        <span>{formData.order_date || "—"}</span>
+                      </span>
+                      <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">
+                        {formData.order_time || "—"}
                       </span>
                     </div>
-                    <div className="rounded-lg border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-900 shadow-2xs">
-                      <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{tt("country_serial", "Country Serial")}</span>
-                      <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-[11px] truncate block">
-                        {formData.country_serial || "—"}
-                      </span>
-                    </div>
-                    <div className="rounded-lg border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-900 shadow-2xs">
-                      <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{tt("branch_serial", "Branch Serial")}</span>
-                      <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-[11px] truncate block">
-                        {formData.branch_serial || "—"}
-                      </span>
-                    </div>
-                    <div className="rounded-lg border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-900 shadow-2xs">
-                      <span className="text-[8.5px] font-bold uppercase text-slate-400 block">{tt("entry_serial", "Entry Serial")}</span>
-                      <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400 text-[11px] truncate block">
-                        {formData.entry_serial || "—"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Customer Account Live Report — Matching Mockup Image */}
-                <div className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900 space-y-4">
-                  {/* Top Row: Customer Name*, Select Dropdown, Search Button, Currency Pill, and Dark Right Button */}
-                  <div className="flex flex-wrap items-center gap-3">
-                    <span className="text-sm font-semibold text-rose-500 whitespace-nowrap">
-                      {tt("customer_name_required", "Customer Name*")}
-                    </span>
-
-                    <div className="relative min-w-[240px] sm:min-w-[280px] max-w-[320px]">
-                      <select
-                        value={formData.customer_id || ""}
-                        onChange={(e) => handleDirectCustomerChange(e.target.value)}
-                        className="w-full h-8.5 appearance-none rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 pl-3 pr-8 text-xs font-medium text-slate-800 dark:text-slate-200 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                      >
-                        <option value="">{tt("select_customer", "Select Customer...")}</option>
-                        {customers.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.customer_name}
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setStep1SubStep("1A");
-                        setCurrentStep(1);
-                      }}
-                      className="h-8.5 w-8.5 rounded-md bg-[#10b981] hover:bg-[#059669] text-white flex items-center justify-center shadow-xs transition shrink-0"
-                      title={tt("search_customer", "Search Customer")}
-                    >
-                      <Search className="h-4 w-4" />
-                    </button>
-
-                    <div className="h-8.5 px-3 rounded-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-2xs">
-                      <span className="h-2.5 w-2.5 rounded-full border-2 border-emerald-500 bg-transparent shrink-0"></span>
-                      <span>{selectedAccountInfo?.currency || "AED"}</span>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setStep1SubStep("1A");
-                        setCurrentStep(1);
-                      }}
-                      className="ml-auto h-8.5 px-3.5 rounded-lg bg-[#1e293b] hover:bg-[#0f172a] text-white text-xs font-semibold flex items-center gap-2 shadow-xs transition"
-                    >
-                      <span className="truncate max-w-[140px]">
-                        {formData.customer_name || selectedCustomerInfo?.customer_name || "John Smith Customer"}
-                      </span>
-                      <ChevronRight className="h-3.5 w-3.5 text-slate-300 shrink-0" />
-                    </button>
                   </div>
 
-                  {/* Two Address Columns */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-1 text-xs text-slate-700 dark:text-slate-300">
-                    {/* BILLING ADDRESS */}
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 pb-1">
-                        <span>{tt("billing_address", "BILLING ADDRESS")}</span>
+                  {/* REPORT 2: CUSTOMER ADDRESS REPORT */}
+                  <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between space-y-2.5">
+                    <div>
+                      <div className="flex items-center justify-between pb-2 border-b border-slate-200/60 dark:border-slate-800">
+                        <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 text-xs">
+                          <span className="flex h-5 w-5 items-center justify-center rounded-md bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                            <User className="h-3 w-3" />
+                          </span>
+                          <span>{tt("customer_address", "CUSTOMER ADDRESS")}</span>
+                        </div>
                         <button
                           type="button"
                           onClick={() => {
                             setStep1SubStep("1A");
                             setCurrentStep(1);
                           }}
-                          className="text-slate-400 hover:text-blue-600 transition"
-                          title={tt("edit_billing_address", "Edit Billing Address")}
+                          className="text-slate-400 hover:text-blue-600 transition p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800"
+                          title={tt("edit_customer_address", "Edit Customer Address")}
                         >
                           <Pencil className="h-3.5 w-3.5" />
                         </button>
                       </div>
-                      <div className="leading-relaxed space-y-0.5">
-                        <p className="font-semibold text-slate-900 dark:text-white">
-                          {selectedCustomerInfo?.contact_person || selectedCustomerInfo?.customer_name || "Julianne"}
-                        </p>
-                        <p>{selectedCustomerInfo?.address || "437 Darrin Divide Suite 846"}</p>
-                        <p>{selectedCustomerInfo?.company_name || selectedCustomerInfo?.city_name || "42111 Moen Parkways Apt. 721"}</p>
-                        <p>{selectedCustomerInfo?.city_name || "Port Webster"}</p>
-                        <p>
-                          {[selectedCustomerInfo?.city_name, selectedCustomerInfo?.person_code].filter(Boolean).join(" ") || "West Virginia 924-889"}
-                        </p>
-                        <p>{selectedCustomerInfo?.country_name || "Guernsey"}</p>
-                        <p>Phone: {selectedCustomerInfo?.mobile || "+60-7535939090"}</p>
-                        <p>Fax Number: {selectedCustomerInfo?.whatsapp || "282.935.0798"}</p>
-                        <p className="font-mono text-slate-500">x{selectedCustomerInfo?.person_code || "82888"}</p>
-                      </div>
+
+                      {selectedCustomerInfo || formData.customer_name || formData.customer_id ? (
+                        <div className="leading-relaxed space-y-1 pt-1">
+                          <p className="font-bold text-slate-900 dark:text-white text-sm truncate">
+                            {selectedCustomerInfo?.customer_name || formData.customer_name || selectedCustomerInfo?.contact_person}
+                          </p>
+                          {selectedCustomerInfo?.company_name && (
+                            <p className="font-medium text-slate-600 dark:text-slate-300 text-[11.5px] truncate">
+                              {selectedCustomerInfo.company_name}
+                            </p>
+                          )}
+                          {selectedCustomerInfo?.address ? (
+                            <p className="text-slate-600 dark:text-slate-400 text-[11px] leading-snug line-clamp-2">
+                              {selectedCustomerInfo.address}
+                            </p>
+                          ) : null}
+                          {[selectedCustomerInfo?.city_name, selectedCustomerInfo?.country_name].filter(Boolean).length > 0 && (
+                            <p className="text-slate-600 dark:text-slate-400 text-[11px]">
+                              {[selectedCustomerInfo?.city_name, selectedCustomerInfo?.country_name].filter(Boolean).join(", ")}
+                            </p>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="py-6 text-center text-slate-400 dark:text-slate-500 italic text-[11.5px]">
+                          {tt("no_customer_selected_desc", "Select a customer to view complete address and contact details")}
+                        </div>
+                      )}
                     </div>
 
-                    {/* SHIPPING ADDRESS */}
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 pb-1">
-                        <span>{tt("shipping_address", "SHIPPING ADDRESS")}</span>
+                    {/* Customer Contact Footer */}
+                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1 text-[11px] text-slate-600 dark:text-slate-400">
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-400 font-medium">{tt("phone_label", "Phone:")}</span>
+                        <span className="font-mono text-slate-800 dark:text-slate-200">{selectedCustomerInfo?.mobile || "—"}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-400 font-medium">{tt("whatsapp_label", "WhatsApp:")}</span>
+                        <span className="font-mono text-slate-800 dark:text-slate-200">{selectedCustomerInfo?.whatsapp || "—"}</span>
+                      </div>
+                      {(selectedCustomerInfo?.person_code || selectedAccountInfo?.code) && (
+                        <div className="flex items-center justify-between pt-0.5 text-[10.5px]">
+                          <span className="text-slate-400">{tt("code_label", "Code:")}</span>
+                          <span className="font-mono font-bold text-slate-600 dark:text-slate-300">
+                            {selectedCustomerInfo?.person_code || selectedAccountInfo?.code}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* REPORT 3: SHIP TYPES REPORT */}
+                  <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between space-y-2.5">
+                    <div>
+                      <div className="flex items-center justify-between pb-2 border-b border-slate-200/60 dark:border-slate-800">
+                        <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 text-xs">
+                          <span className="flex h-5 w-5 items-center justify-center rounded-md bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300">
+                            <Ship className="h-3 w-3" />
+                          </span>
+                          <span>{tt("ship_types_report", "SHIP TYPES REPORT")}</span>
+                        </div>
                         <button
                           type="button"
                           onClick={() => {
-                            setStep1SubStep("1B");
-                            setCurrentStep(2);
+                            setStep1SubStep("1A");
+                            setCurrentStep(1);
                           }}
-                          className="text-slate-400 hover:text-blue-600 transition"
-                          title={tt("edit_shipping_address", "Edit Shipping Address")}
+                          className="text-slate-400 hover:text-sky-600 transition p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800"
+                          title={tt("edit_shipping_types", "Edit Shipping Types")}
                         >
                           <Pencil className="h-3.5 w-3.5" />
                         </button>
                       </div>
-                      <div className="leading-relaxed space-y-0.5">
-                        <p className="font-semibold text-slate-900 dark:text-white">
-                          {partySelections.consignee?.customerName || selectedCustomerInfo?.company_name || "Dwight"}
+
+                      {/* Main Transport Mode Header */}
+                      <div className="leading-relaxed space-y-0.5 pt-1">
+                        <p className="font-bold text-slate-900 dark:text-white text-base capitalize truncate flex items-center gap-2">
+                          <span>{formData.transport_mode?.replace("by_", "By ") || "By Sea"}</span>
+                          <span className="text-[10px] font-semibold text-sky-700 dark:text-sky-300 px-2 py-0.5 rounded-full bg-sky-50 dark:bg-sky-950/60 border border-sky-200/70 dark:border-sky-800">
+                            {formData.transport_mode?.includes("air")
+                              ? "Air Cargo"
+                              : formData.transport_mode?.includes("road")
+                              ? "Land / Trucking"
+                              : "Ocean Vessel"}
+                          </span>
                         </p>
-                        <p>{partySelections.consignee?.addressText || selectedCustomerInfo?.address || "132 Nader Run Suite 722"}</p>
-                        <p>{formData.destination_port_name ? `Port: ${formData.destination_port_name}` : "21366 Kobe Road Apt. 843"}</p>
-                        <p>{formData.destination_port_name || "Port Alvis"}</p>
-                        <p>Idaho 656-275</p>
-                        <p>{formData.receiving_country_name || "French Southern Territories"}</p>
-                        <p>Phone: {selectedCustomerInfo?.mobile || "+56-7436998017"}</p>
-                        <p>Fax Number: (973) 601-1852</p>
-                        <p className="font-mono text-slate-500">x131</p>
+                        <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                          {tt("transport_mode_label", "Transport Mode")}
+                        </p>
+                      </div>
+
+                      {/* Clean Message Lines (No Nested Packets) */}
+                      <div className="pt-2 space-y-1.5 text-[11.5px] text-slate-600 dark:text-slate-400">
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500 font-medium">{tt("movement_type_label", "Movement Type:")}</span>
+                          <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">
+                            {formData.movement_type || "Import"}
+                            <span className="ml-1 text-[10px] font-normal text-slate-500">
+                              ({formData.movement_type === "export"
+                                ? "Local → Foreign"
+                                : formData.movement_type === "transit"
+                                ? "Cross-Border"
+                                : "Foreign → Local"})
+                            </span>
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500 font-medium flex items-center gap-1">
+                            <Route className="h-3 w-3 text-slate-400" />
+                            <span>{tt("route_via_colon", "Route Via:")}</span>
+                          </span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[170px]" title={formData.route_name || "Direct Customs Corridor"}>
+                            {formData.route_name || tt("direct_customs_corridor", "Direct Customs Corridor")}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500 font-medium">{tt("clearance_office_label", "Clearance Office:")}</span>
+                          <span className="font-semibold text-emerald-700 dark:text-emerald-400 truncate max-w-[170px]">
+                            {formData.customs_clearance_office || "Customs Corridor"}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* REMARKS */}
-                  <div className="pt-2">
-                    <span className="text-slate-500 font-bold uppercase text-[11px] tracking-wider border-b border-dotted border-slate-400 pb-0.5 inline-block">
-                      {tt("remarks", "REMARKS")}
-                    </span>
-                    <p className="text-xs text-slate-600 dark:text-slate-300 pt-1 leading-relaxed">
-                      {formData.remarks || "Ab nobis error quibusdam."}
-                    </p>
+                    {/* Shipment & Freight Footer */}
+                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-400">
+                      <span>{tt("shipment_type_label", "Shipment:")} <strong className="text-slate-800 dark:text-slate-200 font-semibold">{formData.shipment_type || "FCL"}</strong></span>
+                      <span className="text-slate-400 font-medium">{tt("bill_terms", "Commercial Freight")}</span>
+                    </div>
                   </div>
                 </div>
 
-                {/* 1. Unified Movement & Dynamic Route Journey Specification Card (Non-Duplicate) */}
+                {/* REMARKS CARD (Directly below the 3 top reports) */}
+                <div className="rounded-xl border border-slate-200/80 bg-white p-3.5 shadow-2xs dark:border-slate-800 dark:bg-slate-900">
+                  <div className="flex items-center gap-2 pb-1.5 border-b border-slate-100 dark:border-slate-800">
+                    <span className="text-slate-500 font-bold uppercase text-[10.5px] tracking-wider">
+                      {tt("remarks", "REMARKS")}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 pt-1 leading-relaxed">
+                    {formData.remarks ? (
+                      formData.remarks
+                    ) : (
+                      <span className="text-slate-400 dark:text-slate-500 italic text-[11.5px]">
+                        {tt("no_remarks_recorded", "No remarks recorded.")}
+                      </span>
+                    )}
+                  </p>
+                </div>
+
+                {/* 1. Unified Movement & Dynamic Route Journey Specification Card */}
                 <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-3.5">
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
                     <div className="flex items-center gap-3">
@@ -3510,8 +3607,12 @@ export function CustomerOrderManagementView() {
                             {formData.transport_mode?.replace("by_", "By ") || "By Road"}
                           </span>
                         </div>
-                        <div className="text-[10.5px] text-slate-500 flex items-center gap-1.5 mt-0.5">
-                          <span>{tt("route_corridor_colon", "Route Corridor:")} <strong className="text-slate-700 dark:text-slate-300">{formData.route_name || tt("direct_customs_corridor", "Direct Customs Corridor")}</strong></span>
+                        <div className="text-[11px] text-slate-600 dark:text-slate-300 flex items-center gap-1.5 mt-1">
+                          <span className="text-slate-500 font-medium">{tt("route_via_colon", "Route Via:")}</span>
+                          <span className="inline-flex items-center gap-1 font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200/80 dark:border-emerald-800">
+                            <Route className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                            {formData.route_name || tt("direct_customs_corridor", "Direct Customs Corridor")}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -3530,80 +3631,210 @@ export function CustomerOrderManagementView() {
                     </button>
                   </div>
 
-                  {/* 3-Stage Chronological Journey Diagram */}
-                  <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-3.5 dark:border-slate-800 dark:bg-slate-850/50">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                      {/* Stage 1: Origin & Loading */}
-                      <div className="rounded-lg bg-white p-2.5 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
-                        <div className="flex items-center gap-1.5 text-[10px] font-black uppercase text-sky-600 dark:text-sky-400">
-                          <MapPin className="h-3 w-3" />
-                          <span>{tt("stage_origin_loading", "1. Origin / Loading")}</span>
+                  {/* Visual Route Journey Message Box (As requested: ek message ki tarah dikhana chahiye) */}
+                  {(() => {
+                    const liveRouteStops = parseRouteStops(formData.route_name);
+                    if (liveRouteStops.length === 0) return null;
+                    return (
+                      <div className="rounded-xl border border-emerald-200/90 bg-gradient-to-r from-emerald-50/70 via-sky-50/50 to-blue-50/60 p-3 dark:border-emerald-900/60 dark:from-emerald-950/30 dark:via-slate-900/50 dark:to-blue-950/30 shadow-2xs space-y-2">
+                        <div className="flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-1.5 font-black text-emerald-800 dark:text-emerald-300 uppercase tracking-wide">
+                            <Route className="h-4 w-4 text-emerald-600" />
+                            <span>{tt("route_pathway_title", "Transit Route Pathway (ملک بہ ملک راستہ)")}</span>
+                          </div>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                            {liveRouteStops.length > 1 ? `${liveRouteStops.length} Stages Route` : "Single Corridor"}
+                          </span>
                         </div>
-                        <div className="font-bold text-slate-900 dark:text-white text-xs truncate">
+
+                        {/* Visual Flow Chain (Pills with arrows) */}
+                        <div className="flex flex-wrap items-center gap-1.5 py-1">
+                          {liveRouteStops.map((stop, idx) => (
+                            <React.Fragment key={idx}>
+                              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-emerald-200/90 dark:border-emerald-800/80 shadow-2xs text-xs font-bold text-slate-800 dark:text-slate-100">
+                                <span className="text-sm">{getRouteCountryFlag(stop)}</span>
+                                <span>{stop}</span>
+                                <span className="text-[9px] px-1 py-0.2 rounded font-black uppercase text-slate-400 bg-slate-100 dark:bg-slate-700">
+                                  {idx === 0 ? "Origin" : idx === liveRouteStops.length - 1 ? "Dest" : `Via ${idx}`}
+                                </span>
+                              </div>
+                              {idx < liveRouteStops.length - 1 ? (
+                                <span className="text-emerald-600 dark:text-emerald-400 font-black text-sm px-0.5">➔</span>
+                              ) : null}
+                            </React.Fragment>
+                          ))}
+                        </div>
+
+                        {/* Narrative Route Message Line */}
+                        {liveRouteStops.length > 1 && (
+                          <div className="text-[11px] text-slate-600 dark:text-slate-300 pt-1 border-t border-emerald-200/50 dark:border-slate-800 flex items-center gap-1.5">
+                            <span className="font-semibold text-emerald-700 dark:text-emerald-400">{tt("journey_summary", "Journey:")}</span>
+                            <span>
+                              From <strong>{liveRouteStops[0]}</strong> transiting through{" "}
+                              <strong>{liveRouteStops.slice(1, -1).join(", ")}</strong> to final destination{" "}
+                              <strong>{liveRouteStops[liveRouteStops.length - 1]}</strong>.
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+
+                  {/* 3-Stage Chronological Journey in Clean Message Layout (No Nested Packets) */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs pt-1">
+                    {/* Stage 1: Origin & Loading */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 text-xs">
+                          <span className="flex h-5 w-5 items-center justify-center rounded-md bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300">
+                            <MapPin className="h-3 w-3" />
+                          </span>
+                          <span>{tt("option1_origin_loading", "1. ORIGIN & LOADING")}</span>
+                        </div>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-sky-50 text-sky-700 border border-sky-200 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-800">
+                          {formData.loading_country_name ? tt("specified", "Specified") : tt("pending", "Pending")}
+                        </span>
+                      </div>
+
+                      {/* Prominent Origin Country */}
+                      <div className="leading-relaxed space-y-0.5 pt-0.5">
+                        <p className="font-black text-slate-900 dark:text-white text-sm tracking-tight truncate">
                           {formData.loading_country_name || tt("country_pending", "Country Pending")}
+                        </p>
+                        <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                          {tt("origin_country_region", "Origin Country & Port of Loading")}
+                        </p>
+                      </div>
+
+                      {/* Clean Details List */}
+                      <div className="pt-1.5 space-y-1.5 text-[11.5px] text-slate-600 dark:text-slate-400">
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500 font-medium">{tt("port_label", "Port / Exit:")}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[170px]">
+                            {formData.loading_port_name || formData.origin_airport_name || formData.exit_border_port_name || tt("origin_port_border_fallback", "Origin Port / Border")}
+                          </span>
                         </div>
-                        <div className="text-[11px] text-slate-600 dark:text-slate-400">
-                          {formData.loading_port_name || formData.origin_airport_name || formData.exit_border_port_name || tt("origin_port_border_fallback", "Origin Port / Border")}
-                        </div>
-                        <div className="text-[10px] text-slate-400 truncate">
-                          {tt("facility_colon", "Facility:")} {formData.loading_source_name || tt("origin_facility_fallback", "Origin Facility")}
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500 font-medium">{tt("facility_colon", "Facility:")}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[170px]">
+                            {formData.loading_source_name || tt("origin_facility_fallback", "Origin Facility")}
+                          </span>
                         </div>
                       </div>
 
-                      {/* Stage 2: Customs & Border Transit */}
-                      <div className="rounded-lg bg-white p-2.5 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
-                        <div className="flex items-center gap-1.5 text-[10px] font-black uppercase text-amber-600 dark:text-amber-400">
-                          <Anchor className="h-3 w-3" />
-                          <span>{tt("stage_border_customs", "2. Border & Customs")}</span>
-                        </div>
-                        <div className="font-bold text-slate-900 dark:text-white text-xs truncate">
-                          {formData.entry_border_port_name || formData.exit_border_port_name || tt("border_checkpoint_fallback", "Border Checkpoint")}
-                        </div>
-                        <div className="text-[11px] text-slate-600 dark:text-slate-400 truncate">
-                          {tt("clearance_colon", "Clearance:")} {formData.customs_clearance_office || tt("in_transit_customs_fallback", "In-Transit Customs")}
-                        </div>
-                        <div className="text-[10px] text-slate-400 truncate">
-                          {tt("corridor_colon", "Corridor:")} {formData.route_name || tt("bonded_highway_fallback", "Bonded Highway")}
-                        </div>
-                      </div>
-
-                      {/* Stage 3: Destination & Receiving */}
-                      <div className="rounded-lg bg-white p-2.5 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
-                        <div className="flex items-center gap-1.5 text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400">
-                          <Globe2 className="h-3 w-3" />
-                          <span>{tt("stage_final_destination", "3. Final Destination")}</span>
-                        </div>
-                        <div className="font-bold text-slate-900 dark:text-white text-xs truncate">
-                          {formData.receiving_country_name || tt("target_country_fallback", "Target Country")}
-                        </div>
-                        <div className="text-[11px] text-slate-600 dark:text-slate-400 truncate">
-                          {formData.destination_port_name || formData.destination_city || tt("destination_port_city_fallback", "Destination Port / City")}
-                        </div>
-                        <div className="text-[10px] text-slate-400 truncate">
-                          {tt("delivery_colon", "Delivery:")} {formData.final_delivery_location || tt("target_warehouse_fallback", "Target Warehouse")}
-                        </div>
+                      {/* Planned Pickup Date Footer */}
+                      <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-400">
+                        <span className="text-slate-500 font-medium">{tt("planned_pickup_badge", "Planned Pickup:")}</span>
+                        <span className="font-mono font-bold text-slate-900 dark:text-white">
+                          {formData.planned_pickup_date || "—"}
+                        </span>
                       </div>
                     </div>
 
-                    {/* Operational Milestone Dates */}
-                    <div className="grid grid-cols-3 gap-2 mt-3 pt-2.5 border-t border-slate-200 dark:border-slate-750 text-[10.5px]">
-                      <div>
-                        <span className="text-slate-400 block text-[9.5px] uppercase font-bold">{tt("planned_pickup_badge", "Planned Pickup")}</span>
-                        <span className="font-mono font-medium text-slate-800 dark:text-slate-200">{formData.planned_pickup_date || "—"}</span>
+                    {/* Stage 2: Customs & Border Transit */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 text-xs">
+                          <span className="flex h-5 w-5 items-center justify-center rounded-md bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300">
+                            <Anchor className="h-3 w-3" />
+                          </span>
+                          <span>{tt("option2_border_customs", "2. BORDER & CUSTOMS")}</span>
+                        </div>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800">
+                          {tt("in_transit", "In-Transit")}
+                        </span>
                       </div>
-                      <div>
-                        <span className="text-slate-400 block text-[9.5px] uppercase font-bold">{tt("planned_dispatch_badge", "Planned Dispatch")}</span>
-                        <span className="font-mono font-medium text-slate-800 dark:text-slate-200">{formData.planned_dispatch_date || "—"}</span>
+
+                      {/* Prominent Checkpoint */}
+                      <div className="leading-relaxed space-y-0.5 pt-0.5">
+                        <p className="font-black text-slate-900 dark:text-white text-sm tracking-tight truncate">
+                          {formData.entry_border_port_name || formData.exit_border_port_name || tt("border_checkpoint_fallback", "Border Checkpoint")}
+                        </p>
+                        <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                          {tt("customs_transit_point", "Customs Clearance & Corridor")}
+                        </p>
                       </div>
-                      <div>
-                        <span className="text-slate-400 block text-[9.5px] uppercase font-bold">{tt("planned_arrival_badge", "Planned Arrival")}</span>
-                        <span className="font-mono font-medium text-slate-800 dark:text-slate-200">{formData.planned_arrival_date || "—"}</span>
+
+                      {/* Clean Details List */}
+                      <div className="pt-1.5 space-y-1.5 text-[11.5px] text-slate-600 dark:text-slate-400">
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500 font-medium">{tt("clearance_colon", "Clearance:")}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[170px]">
+                            {formData.customs_clearance_office || tt("in_transit_customs_fallback", "In-Transit Customs")}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500 font-medium flex items-center gap-1">
+                            <Route className="h-3 w-3 text-slate-400" />
+                            <span>{tt("route_via_colon", "Route Via:")}</span>
+                          </span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[170px]" title={formData.route_name || "Direct Customs Corridor"}>
+                            {formData.route_name || tt("bonded_highway_fallback", "Bonded Highway")}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Planned Dispatch Date Footer */}
+                      <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-400">
+                        <span className="text-slate-500 font-medium">{tt("planned_dispatch_badge", "Planned Dispatch:")}</span>
+                        <span className="font-mono font-bold text-slate-900 dark:text-white">
+                          {formData.planned_dispatch_date || "—"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Stage 3: Destination & Receiving */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 text-xs">
+                          <span className="flex h-5 w-5 items-center justify-center rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                            <Globe2 className="h-3 w-3" />
+                          </span>
+                          <span>{tt("option3_final_destination", "3. FINAL DESTINATION")}</span>
+                        </div>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800">
+                          {tt("destination", "Destination")}
+                        </span>
+                      </div>
+
+                      {/* Prominent Target Country */}
+                      <div className="leading-relaxed space-y-0.5 pt-0.5">
+                        <p className="font-black text-slate-900 dark:text-white text-sm tracking-tight truncate">
+                          {formData.receiving_country_name || tt("target_country_fallback", "Target Country")}
+                        </p>
+                        <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                          {tt("destination_delivery_point", "Receiving Port / Destination City")}
+                        </p>
+                      </div>
+
+                      {/* Clean Details List */}
+                      <div className="pt-1.5 space-y-1.5 text-[11.5px] text-slate-600 dark:text-slate-400">
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500 font-medium">{tt("dest_label", "Port/City:")}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[170px]">
+                            {formData.destination_port_name || formData.destination_city || tt("destination_port_city_fallback", "Destination Port / City")}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500 font-medium">{tt("delivery_colon", "Delivery:")}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[170px]">
+                            {formData.final_delivery_location || tt("target_warehouse_fallback", "Target Warehouse")}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Planned Arrival Date Footer */}
+                      <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-400">
+                        <span className="text-slate-500 font-medium">{tt("planned_arrival_badge", "Planned Arrival:")}</span>
+                        <span className="font-mono font-bold text-slate-900 dark:text-white">
+                          {formData.planned_arrival_date || "—"}
+                        </span>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* 2. Truck & Driver Assignment Message Card */}
+                {/* 2. Vehicle & Fleet Report Card */}
                 <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-3.5">
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
                     <div className="flex items-center gap-3">
@@ -3612,10 +3843,8 @@ export function CustomerOrderManagementView() {
                       </span>
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-black text-slate-900 dark:text-white">
-                            {formData.truck_assignment_mode === "later"
-                              ? tt("truck_assignment_pending_later", "Truck Assignment Pending (Later)")
-                              : formData.truck_number || tt("vehicle_driver_unassigned", "Vehicle & Driver Unassigned")}
+                          <span className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wide">
+                            {tt("vehicle_fleet_report", "VEHICLE & FLEET REPORT")}
                           </span>
                           <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800">
                             {formData.truck_assignment_mode === "permanent"
@@ -3624,11 +3853,20 @@ export function CustomerOrderManagementView() {
                               ? tt("assign_later_value", "Assign Later")
                               : tt("hired_truck_value", "Hired Truck")}
                           </span>
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                            formData.truck_number
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800"
+                              : "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800"
+                          }`}>
+                            {formData.truck_assignment_mode === "later"
+                              ? tt("pending_later", "Pending (Later)")
+                              : formData.truck_number
+                              ? tt("assigned_status", "Assigned")
+                              : tt("pending_allocation", "Pending Allocation")}
+                          </span>
                         </div>
-                        <div className="text-[10.5px] text-slate-500 flex items-center gap-1.5 mt-0.5">
-                          <span>{tt("truck_driver_desc", "Fleet Details, Driver Credentials & Dispatch Timing")}</span>
-                          <span>•</span>
-                          <span className="text-slate-400">{tt("driver_colon", "Driver:")} {formData.truck_driver_name || "—"}</span>
+                        <div className="text-[10.5px] text-slate-500 mt-0.5">
+                          {tt("truck_driver_desc", "Fleet Details, Driver Credentials & Dispatch Timing")}
                         </div>
                       </div>
                     </div>
@@ -3647,48 +3885,94 @@ export function CustomerOrderManagementView() {
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 text-xs">
+                  {/* Clean 2-Column Message Layout (No Nested Packets) */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs pt-1">
                     {/* Vehicle Specifications */}
-                    <div className="rounded-xl border border-slate-200/80 bg-slate-50/60 p-3 dark:border-slate-800 dark:bg-slate-850/60 space-y-2">
-                      <div className="flex items-center justify-between border-b border-slate-200/60 pb-1.5 dark:border-slate-750">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-indigo-700 dark:text-indigo-400 flex items-center gap-1.5">
-                          <Truck className="h-3 w-3" />
-                          {tt("vehicle_specifications", "Vehicle Specifications")}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 text-xs">
+                          <span className="flex h-5 w-5 items-center justify-center rounded-md bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+                            <Truck className="h-3 w-3" />
+                          </span>
+                          <span>{tt("vehicle_specifications", "VEHICLE SPECIFICATIONS")}</span>
+                        </div>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800 capitalize">
+                          {formData.truck_registration_type || tt("registered_status", "Registered")}
                         </span>
                       </div>
-                      <div className="space-y-1 text-slate-700 dark:text-slate-300">
-                        <div className="font-black text-slate-900 dark:text-white text-sm font-mono">
-                          {formData.truck_assignment_mode === "later" ? tt("to_be_assigned_later", "To Be Assigned Later") : (formData.truck_number || "—")}
+
+                      {/* Prominent Vehicle Number */}
+                      <div className="leading-relaxed space-y-0.5 pt-0.5">
+                        <p className="font-mono font-black text-slate-900 dark:text-white text-base tracking-tight truncate">
+                          {formData.truck_assignment_mode === "later"
+                            ? tt("to_be_assigned_later", "To Be Assigned Later")
+                            : (formData.truck_number || <span className="text-slate-400 italic font-normal text-xs">{tt("no_truck_allocated", "No Truck Allocated")}</span>)}
+                        </p>
+                        <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                          {tt("allocated_vehicle_plate", "Allocated Vehicle Plate & Transporter")}
+                        </p>
+                      </div>
+
+                      {/* Clean Details List */}
+                      <div className="pt-1.5 space-y-1.5 text-[11.5px] text-slate-600 dark:text-slate-400">
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500 font-medium">{tt("transporter_label", "Transporter:")}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[200px]">
+                            {formData.truck_transport_company || formData.truck_owner_name || tt("internal_fleet", "Internal Fleet")}
+                          </span>
                         </div>
-                        <div className="text-slate-600 dark:text-slate-400 leading-relaxed text-[11px]">
-                          {tt("transporter_label", "Transporter:")} <strong className="text-slate-800 dark:text-slate-200">{formData.truck_transport_company || formData.truck_owner_name || tt("internal_fleet", "Internal Fleet")}</strong>
-                        </div>
-                        <div className="font-medium text-slate-800 dark:text-slate-200 text-[11px]">
-                          {tt("registration_label", "Registration:")} <span className="capitalize font-semibold">{formData.truck_registration_type || tt("registered_status", "Registered")}</span>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500 font-medium">{tt("fleet_mode_label", "Fleet Mode:")}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200 capitalize">
+                            {formData.truck_assignment_mode === "permanent"
+                              ? tt("permanent_fleet_value", "Permanent Fleet")
+                              : formData.truck_assignment_mode === "later"
+                              ? tt("assign_later_value", "Assign Later")
+                              : tt("hired_truck_value", "Hired Truck")}
+                          </span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Driver & Contact Information */}
-                    <div className="rounded-xl border border-slate-200/80 bg-slate-50/60 p-3 dark:border-slate-800 dark:bg-slate-850/60 space-y-2">
-                      <div className="flex items-center justify-between border-b border-slate-200/60 pb-1.5 dark:border-slate-750">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-400 flex items-center gap-1.5">
-                          <Users className="h-3 w-3" />
-                          {tt("driver_credentials_dispatch", "Driver Credentials & Dispatch")}
+                    {/* Driver Credentials & Dispatch */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 text-xs">
+                          <span className="flex h-5 w-5 items-center justify-center rounded-md bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                            <Users className="h-3 w-3" />
+                          </span>
+                          <span>{tt("driver_credentials_dispatch", "DRIVER CREDENTIALS & DISPATCH")}</span>
+                        </div>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
+                          {formData.truck_driver_name ? tt("assigned_status", "Assigned") : tt("pending_assignment", "Pending")}
                         </span>
                       </div>
-                      <div className="space-y-1 text-slate-700 dark:text-slate-300">
-                        <div className="font-bold text-slate-900 dark:text-white">
-                          {formData.truck_assignment_mode === "later" ? "—" : (formData.truck_driver_name || tt("driver_unassigned", "Driver Unassigned"))}
+
+                      {/* Prominent Driver Name */}
+                      <div className="leading-relaxed space-y-0.5 pt-0.5">
+                        <p className="font-bold text-slate-900 dark:text-white text-base tracking-tight truncate">
+                          {formData.truck_assignment_mode === "later"
+                            ? <span className="text-slate-400 italic font-normal text-xs">{tt("to_be_assigned_later", "To Be Assigned Later")}</span>
+                            : (formData.truck_driver_name || <span className="text-slate-400 italic font-normal text-xs">{tt("no_driver_assigned", "No Driver Assigned")}</span>)}
+                        </p>
+                        <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                          {tt("driver_contact_timing", "Driver Mobile Contact & Dispatch Record")}
+                        </p>
+                      </div>
+
+                      {/* Clean Details List */}
+                      <div className="pt-1.5 space-y-1.5 text-[11.5px] text-slate-600 dark:text-slate-400">
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500 font-medium">{tt("mobile_label", "Driver Mobile:")}</span>
+                          <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">
+                            {formData.truck_driver_mobile || "—"}
+                          </span>
                         </div>
-                        <div className="text-slate-600 dark:text-slate-400 leading-relaxed text-[11px]">
-                          {tt("mobile_label", "Mobile:")} <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">{formData.truck_driver_mobile || "—"}</span>
-                        </div>
-                        <div className="pt-1.5 border-t border-slate-200/50 dark:border-slate-750 space-y-0.5 text-[11px]">
-                          <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
-                            <span className="font-semibold text-slate-500">{tt("actual_dispatch_label", "Actual Dispatch:")}</span>
-                            <span className="font-mono text-emerald-700 dark:text-emerald-400 font-bold">{formData.actual_dispatch_date || "—"}</span>
-                          </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500 font-medium">{tt("actual_dispatch_label", "Actual Dispatch:")}</span>
+                          <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400">
+                            {formData.actual_dispatch_date || "—"}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -3731,9 +4015,17 @@ export function CustomerOrderManagementView() {
                     </button>
                   </div>
 
-                  {/* Manifest Table */}
-                  <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white dark:border-slate-750 dark:bg-slate-850">
-                    <table className="w-full text-left text-xs border-collapse">
+                  {/* Manifest Table & Totals */}
+                  {(() => {
+                    const totalItems = (formData.goods_items || []).length;
+                    const totalPackages = (formData.goods_items || []).reduce((acc, it) => acc + (Number(it.quantity) || 0), 0);
+                    const totalKg = (formData.goods_items || []).reduce((acc, it) => acc + (Number(it.totalKg) || 0), 0);
+                    const totalMt = (totalKg / 1000).toFixed(3);
+
+                    return (
+                      <>
+                        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white dark:border-slate-750 dark:bg-slate-850">
+                          <table className="w-full text-left text-xs border-collapse">
                       <thead className="border-b border-slate-200 bg-slate-50/90 font-bold uppercase tracking-wider text-slate-500 dark:border-slate-750 dark:bg-slate-800 text-[9.5px]">
                         <tr>
                           <th className="py-2.5 px-3">#</th>
@@ -3746,6 +4038,7 @@ export function CustomerOrderManagementView() {
                           <th className="py-2.5 px-3 text-right">{tt("total_mt", "Total MT")}</th>
                           <th className="py-2.5 px-3">{tt("warehouse_source", "Warehouse Source")}</th>
                           <th className="py-2.5 px-3 text-center">{tt("quality_photo", "Quality Photo")}</th>
+                          <th className="py-2.5 px-3 text-center">{tt("actions", "Actions")}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-750 text-[11px]">
@@ -3818,130 +4111,146 @@ export function CustomerOrderManagementView() {
                                   <span className="text-[10px] text-slate-400">—</span>
                                 )}
                               </td>
+                              <td className="py-2.5 px-3 text-center">
+                                <div className="inline-flex items-center justify-center gap-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setStep1SubStep("1C");
+                                      setCurrentStep(3);
+                                    }}
+                                    className="p-1 text-blue-600 hover:text-blue-800 rounded hover:bg-blue-50 dark:hover:bg-blue-950/40"
+                                    title={tt("edit_item", "Edit Item in Step 1C")}
+                                  >
+                                    <Pencil className="h-3.5 w-3.5" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setFormData((current) => {
+                                        const filtered = (current.goods_items || []).filter((_, i) => i !== idx);
+                                        const items = filtered.length > 0 ? filtered : [defaultGoodsItem()];
+                                        const first = items[0];
+                                        const totalQty = items.reduce((sum, g) => sum + (Number(g.quantity) || 0), 0);
+                                        const totalKg = items.reduce((sum, g) => sum + (Number(g.totalKg) || 0), 0);
+                                        return {
+                                          ...current,
+                                          goods_items: items,
+                                          goods_id: first?.goodsId || "",
+                                          goods_name: items.map((g) => g.goodsName).filter(Boolean).join(", "),
+                                          goods_unit: first?.unit || "Bags",
+                                          goods_quantity: String(totalQty),
+                                          goods_gross_weight: String(totalKg),
+                                          goods_net_weight: String(totalKg)
+                                        };
+                                      });
+                                    }}
+                                    className="p-1 text-rose-600 hover:text-rose-800 rounded hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                                    title={tt("remove_item", "Remove Item")}
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+                              </td>
                             </tr>
                           );
                         })}
                       </tbody>
+                      <tfoot className="border-t-2 border-slate-200 bg-slate-50/80 font-bold text-slate-700 dark:border-slate-750 dark:bg-slate-800/60 text-[11px]">
+                        <tr>
+                          <td colSpan={4} className="py-2.5 px-3 text-right uppercase tracking-wider text-[10px] text-slate-500 font-bold">
+                            {tt("total_summary_colon", "Total Summary:")}
+                          </td>
+                          <td className="py-2.5 px-3 text-right font-mono font-bold text-slate-900 dark:text-white">
+                            {totalPackages.toLocaleString()}
+                          </td>
+                          <td className="py-2.5 px-3"></td>
+                          <td className="py-2.5 px-3 text-right font-mono font-bold text-indigo-700 dark:text-indigo-400">
+                            {totalKg.toLocaleString()} kg
+                          </td>
+                          <td className="py-2.5 px-3 text-right font-mono font-bold text-purple-700 dark:text-purple-400">
+                            {totalMt} MT
+                          </td>
+                          <td colSpan={3}></td>
+                        </tr>
+                      </tfoot>
                     </table>
                   </div>
 
-                  {/* Grand Manifest Totals KPI Banner */}
-                  {(() => {
-                    const totalItems = (formData.goods_items || []).length;
-                    const totalPackages = (formData.goods_items || []).reduce((acc, it) => acc + (Number(it.quantity) || 0), 0);
-                    const totalKg = (formData.goods_items || []).reduce((acc, it) => acc + (Number(it.totalKg) || 0), 0);
-                    const totalMt = (totalKg / 1000).toFixed(3);
-                    return (
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-center text-xs pt-1">
-                        <div className="rounded-xl border border-blue-200/80 bg-blue-50/50 p-2.5 dark:border-blue-900/40 dark:bg-blue-950/30">
-                          <span className="text-[9px] font-bold uppercase text-slate-400 block">Total Items</span>
-                          <span className="text-base font-black text-slate-900 dark:text-white mt-0.5 block">{totalItems}</span>
-                        </div>
-                        <div className="rounded-xl border border-emerald-200/80 bg-emerald-50/50 p-2.5 dark:border-emerald-900/40 dark:bg-emerald-950/30">
-                          <span className="text-[9px] font-bold uppercase text-slate-400 block">Total Packaging</span>
-                          <span className="text-base font-black text-emerald-700 dark:text-emerald-400 mt-0.5 block">{totalPackages.toLocaleString()} Units</span>
-                        </div>
-                        <div className="rounded-xl border border-indigo-200/80 bg-indigo-50/50 p-2.5 dark:border-indigo-900/40 dark:bg-indigo-950/30">
-                          <span className="text-[9px] font-bold uppercase text-slate-400 block">Total Gross Wt (KG)</span>
-                          <span className="text-base font-black text-indigo-700 dark:text-indigo-400 mt-0.5 block">{totalKg.toLocaleString()} kg</span>
-                        </div>
-                        <div className="rounded-xl border border-purple-200/80 bg-purple-50/50 p-2.5 dark:border-purple-900/40 dark:bg-purple-950/30">
-                          <span className="text-[9px] font-bold uppercase text-slate-400 block">Total Gross Wt (MT)</span>
-                          <span className="text-base font-black text-purple-700 dark:text-purple-400 mt-0.5 block">{totalMt} MT</span>
-                        </div>
+                  {/* Grand Manifest Totals Message Card (Corner Message Layout) */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 pt-2">
+                    {/* Left: Summary Note */}
+                    <div className="space-y-1 text-xs text-slate-500 dark:text-slate-400">
+                      <div className="flex items-center gap-1.5 font-bold text-slate-700 dark:text-slate-300">
+                        <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block"></span>
+                        <span>{tt("verified_manifest_summary", "Verified Cargo Manifest Summary")}</span>
                       </div>
-                    );
-                  })()}
-                </div>
-
-                {/* Registered Customer Orders Mini-Table (Screenshots 1, 2, 3) */}
-                <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <h3 className="text-xs font-black text-slate-900 dark:text-white">
-                        {tt("registered_orders", "Registered Customer Orders")} ({orders.length})
-                      </h3>
-                      <p className="text-[9.5px] text-slate-400">
-                        {tt("recent_orders_hint", "Recent orders from this customer and related parties.")}
+                      <p className="text-[11px] text-slate-400 dark:text-slate-500 max-w-sm">
+                        {tt("manifest_calc_note", "Cargo weights and packaging units are automatically calculated across all manifest line items.")}
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={handleExportCsv}
-                        className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-[10.5px] font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                        title={tt("export_csv", "Export to CSV")}
-                      >
-                        <Download className="h-3 w-3" />
-                        <span>CSV</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setIsFormOpen(false)}
-                        className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2 py-1 text-[10.5px] font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-300"
-                        title={tt("view_all", "View All in Table")}
-                      >
-                        <Filter className="h-3 w-3" />
-                        <span>{tt("full_table", "Full Registry")}</span>
-                      </button>
+                    {/* Right Corner: Message Card (No Packets) */}
+                    <div className="w-full sm:w-80 rounded-xl border border-slate-200/90 bg-slate-50/70 p-3.5 dark:border-slate-800 dark:bg-slate-850/80 shadow-2xs space-y-2">
+                      <div className="flex items-center justify-between pb-1.5 border-b border-slate-200 dark:border-slate-750">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                          {tt("manifest_totals_summary", "MANIFEST TOTALS SUMMARY")}
+                        </span>
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800">
+                          {totalItems} {tt("goods_item", "Items")}
+                        </span>
+                      </div>
+
+                      <div className="space-y-1.5 text-xs">
+                        {/* 1. Total Entries / Items */}
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                            <span className="font-bold text-slate-400 font-mono text-[11px]">1.</span>
+                            <span className="font-medium">{tt("total_entries_label", "Total Entries / Items:")}</span>
+                          </span>
+                          <span className="font-bold text-slate-900 dark:text-white font-mono">
+                            {totalItems}
+                          </span>
+                        </div>
+
+                        {/* 2. Total Packaging */}
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                            <span className="font-bold text-slate-400 font-mono text-[11px]">2.</span>
+                            <span className="font-medium">{tt("total_packaging_label", "Total Packaging / Units:")}</span>
+                          </span>
+                          <span className="font-bold text-emerald-700 dark:text-emerald-400 font-mono">
+                            {totalPackages.toLocaleString()} {tt("unit", "Units")}
+                          </span>
+                        </div>
+
+                        {/* 3. Total Gross Wt (KG) */}
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                            <span className="font-bold text-slate-400 font-mono text-[11px]">3.</span>
+                            <span className="font-medium">{tt("total_gross_wt_kg_label", "Total Gross Wt (KG):")}</span>
+                          </span>
+                          <span className="font-bold text-indigo-700 dark:text-indigo-400 font-mono">
+                            {totalKg.toLocaleString()} kg
+                          </span>
+                        </div>
+
+                        {/* 4. Total Gross Wt (MT) */}
+                        <div className="flex items-center justify-between pt-1 border-t border-slate-200/80 dark:border-slate-750">
+                          <span className="text-slate-700 dark:text-slate-300 flex items-center gap-1.5 font-bold">
+                            <span className="font-bold text-slate-400 font-mono text-[11px]">4.</span>
+                            <span>{tt("total_gross_wt_mt_label", "Total Gross Wt (MT):")}</span>
+                          </span>
+                          <span className="font-black text-purple-700 dark:text-purple-400 font-mono text-sm">
+                            {totalMt} MT
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-
-                  {/* Mini-table container */}
-                  <div className="overflow-x-auto rounded-xl border border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-900">
-                    <table className="w-full text-left text-[11px] border-collapse">
-                      <thead className="border-b border-slate-100 bg-slate-50/80 font-bold uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-800/60 text-[9.5px]">
-                        <tr>
-                          <th className="px-2.5 py-2">#</th>
-                          <th className="px-2.5 py-2">{tt("th_order_no", "Order No")}</th>
-                          <th className="px-2.5 py-2">{tt("th_party", "Customer")}</th>
-                          <th className="px-2.5 py-2">{tt("th_goods", "Goods")}</th>
-                          <th className="px-2.5 py-2">{tt("th_qty", "Qty")}</th>
-                          <th className="px-2.5 py-2">{tt("th_route", "Route / Ports")}</th>
-                          <th className="px-2.5 py-2">{tt("th_step_status", "Status")}</th>
-                          <th className="px-2.5 py-2 text-right">{tt("th_actions", "Actions")}</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                        {orders.slice(0, 5).map((order, oIdx) => (
-                          <tr key={order.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40">
-                            <td className="px-2.5 py-2 font-bold text-slate-400">{oIdx + 1}</td>
-                            <td className="px-2.5 py-2 font-mono font-bold text-blue-600 dark:text-blue-400">
-                              {order.order_no || `CL-${order.id.slice(0, 6)}`}
-                            </td>
-                            <td className="px-2.5 py-2 font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[100px]">
-                              {order.customer_name || "-"}
-                            </td>
-                            <td className="px-2.5 py-2 text-slate-700 dark:text-slate-300 truncate max-w-[90px]">
-                              {order.goods_name || "-"}
-                            </td>
-                            <td className="px-2.5 py-2 whitespace-nowrap text-slate-600 dark:text-slate-400">
-                              {order.goods_quantity ? `${order.goods_quantity} ${order.goods_unit || ""}` : "-"}
-                            </td>
-                            <td className="px-2.5 py-2 text-slate-500 truncate max-w-[100px]">
-                              {order.route_name || [order.loading_country_name, order.receiving_country_name].filter(Boolean).join(" → ") || "-"}
-                            </td>
-                            <td className="px-2.5 py-2">
-                              <span className="rounded-full bg-blue-50 px-1.5 py-0.5 text-[9px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-                                {order.status || "Draft"}
-                              </span>
-                            </td>
-                            <td className="px-2.5 py-2 text-right">
-                              <button
-                                type="button"
-                                onClick={() => loadEditOrder(order)}
-                                className="p-1 rounded text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40"
-                                title={tt("edit_resume_step", "Edit / Resume")}
-                              >
-                                <Pencil className="h-3 w-3" />
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                </>
+              );
+            })()}
                 </div>
               </div>
             </div>
@@ -4100,6 +4409,7 @@ function Step1BookingCustomer({
   trucksList,
   warehousesList,
   goodsMasterList,
+  assignableUsers,
   handlePartyChange,
   handleLoadingCountryChange,
   handleReceivingCountryChange,
@@ -4134,6 +4444,7 @@ function Step1BookingCustomer({
   trucksList?: any[];
   warehousesList?: any[];
   goodsMasterList?: any[];
+  assignableUsers?: { id: string; name: string }[];
   handlePartyChange: (roleKey: PartyRoleKey, next: PartySelection) => void;
   handleLoadingCountryChange: (countryId: string) => void;
   handleReceivingCountryChange: (countryId: string) => void;
@@ -4163,6 +4474,27 @@ function Step1BookingCustomer({
       ),
     [accounts, formData.customer_id, selectedCustomer]
   );
+
+  const routeStops = useMemo(() => parseRouteStops(formData.route_name), [formData.route_name]);
+
+  const handleAddRouteStop = (stop: string) => {
+    if (!stop) return;
+    const cleanStop = stop.trim();
+    if (!formData.route_name || !formData.route_name.trim()) {
+      setFormData((c) => ({ ...c, route_name: cleanStop }));
+    } else {
+      setFormData((c) => ({ ...c, route_name: `${c.route_name.trim()} ➔ ${cleanStop}` }));
+    }
+  };
+
+  const handleRemoveRouteStop = (indexToRemove: number) => {
+    const nextStops = routeStops.filter((_, idx) => idx !== indexToRemove);
+    setFormData((c) => ({ ...c, route_name: nextStops.join(" ➔ ") }));
+  };
+
+  const handleClearRoute = () => {
+    setFormData((c) => ({ ...c, route_name: "" }));
+  };
 
   const handleCustomerSelection = (customerId: string) => {
     const cust = customers.find((c) => c.id === customerId);
@@ -4301,6 +4633,7 @@ function Step1BookingCustomer({
     if (!item) return;
     setDraftGoodsItem({ ...item });
     setEditingGoodsIdx(idx);
+    selectSub("1C");
   };
 
   const handleCancelEditGoods = () => {
@@ -4421,87 +4754,215 @@ function Step1BookingCustomer({
       {/* ========================================================================= */}
       {step1SubStep === "1A" && (
         <div className="space-y-3.5 animate-in fade-in duration-150">
-          {/* Compact Serials & Timestamp Bar */}
-          <div className="rounded-xl border border-slate-200/90 bg-slate-50/80 px-3 py-2 text-xs dark:border-slate-800 dark:bg-slate-850">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="flex h-5 w-5 items-center justify-center rounded bg-blue-600 text-[10px] font-black text-white">
-                  1A
-                </span>
-                <span className="font-bold text-slate-800 dark:text-slate-200 text-xs">Serials:</span>
-                <span className="font-mono text-blue-700 dark:text-blue-300 font-bold">
-                  {formData.super_admin_serial || formData.order_no || "Auto"}
-                </span>
-                <span className="text-slate-300 dark:text-slate-600">•</span>
-                <span className="font-mono text-slate-600 dark:text-slate-300">
-                  {formData.country_serial || "Auto"}
-                </span>
-                <span className="text-slate-300 dark:text-slate-600">•</span>
-                <span className="font-mono text-slate-600 dark:text-slate-300">
-                  {formData.branch_serial || "Auto"}
-                </span>
-                <span className="text-slate-300 dark:text-slate-600">•</span>
-                <span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold">
-                  {formData.entry_serial || "Auto"}
-                </span>
+          {/* Multimodal Sea-Road Notice when By Sea is selected */}
+          {formData.transport_mode === "by_sea" && (
+            <div className="rounded-xl border border-blue-200/90 bg-blue-50/70 p-2.5 text-xs text-blue-900 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-200 shadow-2xs">
+              <div className="flex items-center gap-1.5 font-bold">
+                <Truck className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+                <span>{tt("com.sea_drayage_feeder_title", "Multimodal Sea-Road Drayage (Port Transfer Truck)")}</span>
               </div>
-              <div className="flex items-center gap-1 text-[10px] font-medium text-slate-500">
-                <Calendar className="h-3 w-3 text-blue-600" />
-                <span>{formData.order_date || new Date().toISOString().split("T")[0]}</span>
-                <span>•</span>
-                <span>{formData.order_time || new Date().toTimeString().slice(0, 5)}</span>
-              </div>
+              <p className="mt-1 text-[11px] text-blue-800/80 dark:text-blue-300/80 leading-relaxed">
+                {tt("com.sea_drayage_feeder_desc", "For Ocean Freight (By Sea), road haulage is required for initial port drayage / loading pickup and final delivery from port to destination warehouse.")}
+              </p>
             </div>
-          </div>
+          )}
 
-          {/* 1. Customer Account SearchSelect */}
-          <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                <Users className="h-4 w-4 text-blue-600" />
-                <span>{tt("customer_account_label", "Customer Account")} *</span>
-              </label>
-              {formData.customer_name ? (
-                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
-                  ✓ {formData.customer_name}
-                </span>
+          {/* ROW 1: Customer Account & Route Via / Corridor (Side-by-Side) */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            {/* 1. Customer Account SearchSelect */}
+            <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-2xs flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                    <Users className="h-4 w-4 text-blue-600" />
+                    <span>{tt("customer_account_label", "Customer Account")} *</span>
+                  </label>
+                  {formData.customer_name ? (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                      ✓ {formData.customer_name}
+                    </span>
+                  ) : null}
+                </div>
+
+                <SearchSelect
+                  label=""
+                  value={formData.customer_id}
+                  options={customerOptions}
+                  placeholder={tt("select_customer_account_ph", "Select Customer Account...")}
+                  onValueChange={handleCustomerSelection}
+                  disabled={loading}
+                  searchPlaceholder="Search customer by name, code or mobile..."
+                  emptyLabel="No matching customers found"
+                />
+              </div>
+
+              {/* Tag summary underneath input */}
+              {selectedCustomer || selectedAccount ? (
+                <div className="flex flex-wrap items-center gap-2 pt-2 text-xs text-slate-600 dark:text-slate-300 border-t border-slate-100 dark:border-slate-800/60 mt-1">
+                  <span className="font-bold text-slate-900 dark:text-white">
+                    {selectedCustomer?.customer_name || selectedAccount?.name}
+                  </span>
+                  <span className="text-slate-300 dark:text-slate-600">•</span>
+                  <span className="font-mono text-slate-500">
+                    Code: {selectedAccount?.code || selectedCustomer?.person_code || "—"}
+                  </span>
+                  <span className="text-slate-300 dark:text-slate-600">•</span>
+                  <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                    Bal: {selectedAccount?.currency || "USD"} {Number(selectedAccount?.current_balance || 0).toLocaleString()}
+                  </span>
+                  <span className="text-slate-300 dark:text-slate-600">•</span>
+                  <span className="text-slate-500">
+                    {selectedCustomer?.city_name ? `${selectedCustomer.city_name}, ` : ""}{selectedCustomer?.country_name || ""}
+                  </span>
+                </div>
               ) : null}
             </div>
 
-            <SearchSelect
-              label=""
-              value={formData.customer_id}
-              options={customerOptions}
-              placeholder={tt("select_customer_account_ph", "Select Customer Account...")}
-              onValueChange={handleCustomerSelection}
-              disabled={loading}
-              searchPlaceholder="Search customer by name, code or mobile..."
-              emptyLabel="No matching customers found"
-            />
+            {/* 2. Route Via / Transit Corridor Pathway Builder */}
+            <div className="rounded-xl border border-emerald-200/90 bg-white dark:bg-slate-900 p-3 space-y-2 shadow-2xs dark:border-emerald-800/80 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                    <Route className="h-4 w-4 text-emerald-600" />
+                    <span>{tt("route_via_corridor", "Route Via / Corridor")}</span>
+                  </label>
+                  <div className="flex items-center gap-1.5">
+                    {routeStops.length > 0 && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                        {routeStops.length} {tt("route_stops_count", "Stops")}
+                      </span>
+                    )}
+                    {formData.route_name ? (
+                      <button
+                        type="button"
+                        onClick={handleClearRoute}
+                        className="text-[10px] font-semibold text-slate-400 hover:text-rose-500 transition-colors"
+                        title={tt("btn_clear", "Clear")}
+                      >
+                        {tt("btn_clear", "Clear")}
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
 
-            {/* Tag summary underneath input */}
-            {selectedCustomer || selectedAccount ? (
-              <div className="flex flex-wrap items-center gap-2 pt-1 text-xs text-slate-600 dark:text-slate-300">
-                <span className="font-bold text-slate-900 dark:text-white">
-                  {selectedCustomer?.customer_name || selectedAccount?.name}
-                </span>
-                <span className="text-slate-300 dark:text-slate-600">•</span>
-                <span className="font-mono text-slate-500">
-                  Code: {selectedAccount?.code || selectedCustomer?.person_code || "—"}
-                </span>
-                <span className="text-slate-300 dark:text-slate-600">•</span>
-                <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                  Bal: {selectedAccount?.currency || "USD"} {Number(selectedAccount?.current_balance || 0).toLocaleString()}
-                </span>
-                <span className="text-slate-300 dark:text-slate-600">•</span>
-                <span className="text-slate-500">
-                  {selectedCustomer?.city_name ? `${selectedCustomer.city_name}, ` : ""}{selectedCustomer?.country_name || ""}
-                </span>
+                {/* Preset & Add Country Dropdowns */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+                  <select
+                    value=""
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        setFormData((c) => ({ ...c, route_name: e.target.value }));
+                      }
+                    }}
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50/70 px-2.5 py-1.5 text-xs font-medium text-slate-700 focus:border-emerald-500 focus:bg-white focus:outline-none dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-200"
+                  >
+                    <option value="">{tt("corridor_presets_ph", "⚡ Corridor Presets ▾")}</option>
+                    <option value="Dubai ➔ Iran ➔ Afghanistan ➔ Uzbekistan ➔ India">🇦🇪 Dubai ➔ 🇮🇷 Iran ➔ 🇦🇫 Afghan ➔ 🇺🇿 Uzbek ➔ 🇮🇳 India</option>
+                    <option value="Dubai ➔ Iran ➔ Afghanistan ➔ Uzbekistan">🇦🇪 Dubai ➔ 🇮🇷 Iran ➔ 🇦🇫 Afghan ➔ 🇺🇿 Uzbekistan</option>
+                    <option value="Dubai ➔ Iran ➔ Afghanistan">🇦🇪 Dubai ➔ 🇮🇷 Iran ➔ 🇦🇫 Afghanistan</option>
+                    <option value="Dubai ➔ Bandar Abbas ➔ Dogharoun ➔ Islam Qala ➔ Herat">🇦🇪 Dubai ➔ 🇮🇷 Bandar Abbas ➔ 🇦🇫 Islam Qala ➔ Herat</option>
+                    <option value="Karachi ➔ Torkham ➔ Jalalabad ➔ Kabul">🇵🇰 Karachi ➔ 🇦🇫 Torkham ➔ Jalalabad ➔ Kabul</option>
+                    <option value="Karachi ➔ Chaman ➔ Spin Boldak ➔ Kandahar">🇵🇰 Karachi ➔ 🇦🇫 Chaman ➔ Spin Boldak ➔ Kandahar</option>
+                    <option value="Dubai ➔ Karachi ➔ Chaman ➔ Afghanistan">🇦🇪 Dubai ➔ 🇵🇰 Karachi ➔ 🇦🇫 Afghanistan</option>
+                    <option value="China ➔ Khunjerab ➔ Sost ➔ Pakistan">🇨🇳 China ➔ 🇵🇰 Khunjerab ➔ Sost ➔ Pakistan</option>
+                  </select>
+
+                  <select
+                    value=""
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        handleAddRouteStop(e.target.value);
+                      }
+                    }}
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50/70 px-2.5 py-1.5 text-xs font-medium text-slate-700 focus:border-emerald-500 focus:bg-white focus:outline-none dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-200"
+                  >
+                    <option value="">{tt("add_country_hub_ph", "➕ Add Country / Hub ▾")}</option>
+                    <optgroup label={tt("popular_trade_corridors", "Popular Trade Corridors")}>
+                      <option value="Dubai">🇦🇪 Dubai (UAE)</option>
+                      <option value="Jebel Ali">🇦🇪 Jebel Ali Port</option>
+                      <option value="Iran">🇮🇷 Iran</option>
+                      <option value="Bandar Abbas">🇮🇷 Bandar Abbas Port</option>
+                      <option value="Chabahar">🇮🇷 Chabahar Port</option>
+                      <option value="Dogharoun">🇮🇷 Dogharoun Border</option>
+                      <option value="Afghanistan">🇦🇫 Afghanistan</option>
+                      <option value="Islam Qala">🇦🇫 Islam Qala Border</option>
+                      <option value="Torkham">🇦🇫 Torkham Border</option>
+                      <option value="Spin Boldak">🇦🇫 Spin Boldak Border</option>
+                      <option value="Kabul">🇦🇫 Kabul</option>
+                      <option value="Herat">🇦🇫 Herat</option>
+                      <option value="Kandahar">🇦🇫 Kandahar</option>
+                      <option value="Mazar-i-Sharif">🇦🇫 Mazar-i-Sharif</option>
+                      <option value="Uzbekistan">🇺🇿 Uzbekistan</option>
+                      <option value="Hairatan">🇺🇿 Hairatan Border</option>
+                      <option value="Tashkent">🇺🇿 Tashkent</option>
+                      <option value="India">🇮🇳 India</option>
+                      <option value="Nhava Sheva">🇮🇳 Nhava Sheva (JNPT)</option>
+                      <option value="Mundra">🇮🇳 Mundra Port</option>
+                      <option value="Pakistan">🇵🇰 Pakistan</option>
+                      <option value="Karachi">🇵🇰 Karachi Port</option>
+                      <option value="Port Qasim">🇵🇰 Port Qasim</option>
+                      <option value="Gwadar">🇵🇰 Gwadar Port</option>
+                      <option value="Chaman">🇵🇰 Chaman Border</option>
+                      <option value="China">🇨🇳 China</option>
+                      <option value="Turkey">🇹🇷 Turkey</option>
+                      <option value="Turkmenistan">🇹🇲 Turkmenistan</option>
+                      <option value="Tajikistan">🇹🇯 Tajikistan</option>
+                      <option value="Oman">🇴🇲 Oman</option>
+                    </optgroup>
+                  </select>
+                </div>
+
+                {/* Removable Route Stop Tags */}
+                {routeStops.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-1.5 p-2 bg-slate-50/80 dark:bg-slate-950/50 rounded-lg border border-slate-200/80 dark:border-slate-800/80 mb-2">
+                    {routeStops.map((stop, sIdx) => {
+                      const flag = getRouteCountryFlag(stop);
+                      const isOrigin = sIdx === 0;
+                      const isDest = sIdx === routeStops.length - 1 && routeStops.length > 1;
+                      return (
+                        <div key={sIdx} className="flex items-center gap-1">
+                          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-bold border shadow-2xs ${
+                            isOrigin 
+                              ? "bg-blue-50 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800" 
+                              : isDest 
+                              ? "bg-purple-50 dark:bg-purple-950/50 text-purple-800 dark:text-purple-300 border-purple-200 dark:border-purple-800" 
+                              : "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700"
+                          }`}>
+                            <span>{flag}</span>
+                            <span>{stop}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveRouteStop(sIdx)}
+                              className="ml-1 text-slate-400 hover:text-rose-500 rounded p-0.5 transition-colors"
+                              title={`Remove ${stop}`}
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </span>
+                          {sIdx < routeStops.length - 1 && (
+                            <span className="text-slate-400 font-bold text-[10px]">➔</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-            ) : null}
+
+              {/* Text Input for Custom or Fine-Tuning */}
+              <div>
+                <input
+                  type="text"
+                  placeholder={tt("ph_route_via", "e.g. Dubai ➔ Iran ➔ Afghanistan ➔ Uzbekistan ➔ India")}
+                  value={formData.route_name}
+                  onChange={(e) => setFormData((c) => ({ ...c, route_name: e.target.value }))}
+                  className={inputClass}
+                />
+              </div>
+            </div>
           </div>
 
-          {/* 2. Ship Mode & Movement Type Selectors */}
+          {/* ROW 2: Shipping / Transport Mode & Movement Type (Wider 2-Column Grid) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-1.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
               <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
@@ -4663,6 +5124,21 @@ function Step1BookingCustomer({
                   className={inputClass}
                 />
               </div>
+
+              {/* Row 5: Route Via / Corridor */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                  <Route className="h-3.5 w-3.5 text-sky-600" />
+                  <span>{tt("route_via_corridor", "Route Via / Transit Corridor")}</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder={tt("ph_route_via_import", "e.g. via Karachi Port / Bandar Abbas / Torkham")}
+                  value={formData.route_name}
+                  onChange={(e) => setFormData((c) => ({ ...c, route_name: e.target.value }))}
+                  className={inputClass}
+                />
+              </div>
             </div>
           )}
 
@@ -4778,6 +5254,21 @@ function Step1BookingCustomer({
                   </select>
                 </div>
               </div>
+
+              {/* Row 4: Route Via / Corridor */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                  <Route className="h-3.5 w-3.5 text-emerald-600" />
+                  <span>{tt("route_via_corridor", "Route Via / Transit Corridor")}</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder={tt("ph_route_via_export", "e.g. via Torkham / Chaman / Bandar Abbas / Spin Boldak")}
+                  value={formData.route_name}
+                  onChange={(e) => setFormData((c) => ({ ...c, route_name: e.target.value }))}
+                  className={inputClass}
+                />
+              </div>
             </div>
           )}
 
@@ -4818,8 +5309,9 @@ function Step1BookingCustomer({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {tt("transit_corridor_route", "Transit Corridor / Route Name")}
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                    <Route className="h-3.5 w-3.5 text-purple-600" />
+                    <span>{tt("route_via_corridor", "Route Via / Transit Corridor")}</span>
                   </label>
                   <input
                     type="text"
@@ -4914,19 +5406,12 @@ function Step1BookingCustomer({
                   transport_mode: "by_sea"
                 }));
               }}
-              className="text-[11px] font-bold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 underline"
+              className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 underline"
             >
-              {tt("reset_1a_form", "Reset 1A Form")}
+              <RefreshCw className="h-3 w-3" />
+              <span>{tt("reset_1a_form", "Reset 1A Form")}</span>
             </button>
-
-            <button
-              type="button"
-              onClick={onAdvanceToStep2}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-sm shadow-blue-600/25 hover:bg-blue-700 transition"
-            >
-              <span>{tt("save_continue_1b", "Save & Continue to 1B (Truck)")}</span>
-              <ChevronRight className="h-4 w-4" />
-            </button>
+            <span className="text-[10px] text-slate-400 font-medium">1A: Customer & Route</span>
           </div>
         </div>
       )}
@@ -4953,6 +5438,15 @@ function Step1BookingCustomer({
               <span className="font-bold text-purple-700 dark:text-purple-300 capitalize">
                 {tt("movement_label_colon", "Movement:")} {formData.movement_type.replace("_", " ")}
               </span>
+              {formData.route_name ? (
+                <>
+                  <span className="text-slate-300 dark:text-slate-600">•</span>
+                  <span className="font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-1">
+                    <Route className="h-3 w-3 text-emerald-600" />
+                    <span>{tt("route_via_colon", "Via:")} {formData.route_name}</span>
+                  </span>
+                </>
+              ) : null}
             </div>
             <button
               type="button"
@@ -5110,107 +5604,60 @@ function Step1BookingCustomer({
             </div>
           </div>
 
-          {/* Operational Dates: Planned vs Actual Pickup, Dispatch, Departure, Arrival */}
-          <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-3 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
-            <div className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5 border-b border-slate-100 pb-2 dark:border-slate-800">
-              <Calendar className="h-4 w-4 text-emerald-600" />
-              <span>Operational Tracking Dates — Planned vs. Actual</span>
+          {/* Step 1B Handover & Execution Assignment */}
+          <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-1.5 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <Users className="h-3.5 w-3.5 text-blue-600" />
+                <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                  {tt("com.step1b_execution_assignment", "Step 1B (Truck & Fleet) Handover & Execution")}
+                </span>
+              </div>
+              <span className="text-[10px] font-bold text-slate-400">{tt("workflow_role", "Workflow Role")}</span>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-              <div>
-                <label className="block text-[10.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                  Planned Pickup Date *
-                </label>
-                <input
-                  type="date"
-                  value={formData.planned_pickup_date || formData.expected_loading_date}
-                  onChange={(e) =>
-                    setFormData((c) => ({
-                      ...c,
-                      planned_pickup_date: e.target.value,
-                      expected_loading_date: e.target.value
-                    }))
-                  }
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className="block text-[10.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                  Actual Pickup Date
-                </label>
-                <input
-                  type="date"
-                  value={formData.actual_pickup_date || ""}
-                  onChange={(e) => setFormData((c) => ({ ...c, actual_pickup_date: e.target.value }))}
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className="block text-[10.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                  Planned Dispatch Date
-                </label>
-                <input
-                  type="date"
-                  value={formData.planned_dispatch_date || ""}
-                  onChange={(e) => setFormData((c) => ({ ...c, planned_dispatch_date: e.target.value }))}
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className="block text-[10.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                  Actual Dispatch Date
-                </label>
-                <input
-                  type="date"
-                  value={formData.actual_dispatch_date || ""}
-                  onChange={(e) => setFormData((c) => ({ ...c, actual_dispatch_date: e.target.value }))}
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className="block text-[10.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                  Planned Departure Date
-                </label>
-                <input
-                  type="date"
-                  value={formData.planned_departure_date}
-                  onChange={(e) => setFormData((c) => ({ ...c, planned_departure_date: e.target.value }))}
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className="block text-[10.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                  Actual Departure Date
-                </label>
-                <input
-                  type="date"
-                  value={formData.actual_departure_date}
-                  onChange={(e) => setFormData((c) => ({ ...c, actual_departure_date: e.target.value }))}
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className="block text-[10.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                  Planned Arrival Date
-                </label>
-                <input
-                  type="date"
-                  value={formData.planned_arrival_date}
-                  onChange={(e) => setFormData((c) => ({ ...c, planned_arrival_date: e.target.value }))}
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className="block text-[10.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                  Actual Arrival Date
-                </label>
-                <input
-                  type="date"
-                  value={formData.actual_arrival_date}
-                  onChange={(e) => setFormData((c) => ({ ...c, actual_arrival_date: e.target.value }))}
-                  className={inputClass}
-                />
-              </div>
+
+            <div className="space-y-2">
+              <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                {tt("com.assign_other_user", "Assign to Other User / Team Member")}
+              </label>
+              <select
+                value={formData.step1b_assignee_id || ""}
+                onChange={(e) => {
+                  const uid = e.target.value;
+                  const u = (assignableUsers || []).find((usr) => usr.id === uid);
+                  setFormData((c) => ({
+                    ...c,
+                    step1b_assignee_id: uid,
+                    step1b_assignee_name: u?.name || ""
+                  }));
+                }}
+                className={selectClass}
+              >
+                <option value="">{tt("self_execution_option", "Complete this step myself (Default)")}</option>
+                {(assignableUsers || []).map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name} (Fleet / Transport Operator)
+                  </option>
+                ))}
+              </select>
+
+              {formData.step1b_assignee_id ? (
+                <div className="space-y-1.5 animate-in fade-in duration-150">
+                  <input
+                    type="text"
+                    value={formData.step1b_handover_notes || ""}
+                    onChange={(e) => setFormData((c) => ({ ...c, step1b_handover_notes: e.target.value }))}
+                    placeholder={tt("com.handover_notes_optional", "Handover Instructions / Dispatch Note (Optional)")}
+                    className={inputClass}
+                  />
+                  <div className="rounded-lg bg-blue-50/70 p-2 text-[11px] text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 flex items-center gap-1.5">
+                    <CheckCircle2 className="h-3 w-3 shrink-0 text-blue-600" />
+                    <span>
+                      {tt("com.step_handover_success", "Step successfully handed over to {name}.").replace("{name}", formData.step1b_assignee_name || "Team Member")}
+                    </span>
+                  </div>
+                </div>
+              ) : null}
             </div>
           </div>
 
@@ -5219,20 +5666,12 @@ function Step1BookingCustomer({
             <button
               type="button"
               onClick={() => selectSub("1A")}
-              className="inline-flex items-center gap-1 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
             >
-              <ChevronLeft className="h-4 w-4" />
-              <span>Back to 1A (Customer & Route)</span>
+              <ChevronLeft className="h-3 w-3" />
+              <span>Back to 1A</span>
             </button>
-
-            <button
-              type="button"
-              onClick={onAdvanceToStep3}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-sm shadow-blue-600/25 hover:bg-blue-700 transition"
-            >
-              <span>Save & Continue to 1C (Goods & Warehouse)</span>
-              <ChevronRight className="h-4 w-4" />
-            </button>
+            <span className="text-[10px] text-slate-400 font-medium">1B: Truck & Fleet</span>
           </div>
         </div>
       )}
@@ -5250,6 +5689,7 @@ function Step1BookingCustomer({
               </span>
               <span className="font-bold text-slate-800 dark:text-slate-200">
                 {formData.customer_name} • {formData.transport_mode.replace("by_", "").toUpperCase()} • {formData.movement_type.toUpperCase()}
+                {formData.route_name ? ` • VIA: ${formData.route_name.toUpperCase()}` : ""}
               </span>
               <span className="text-slate-300 dark:text-slate-600">•</span>
               <span className="font-bold text-slate-600 dark:text-slate-400">
@@ -5297,13 +5737,16 @@ function Step1BookingCustomer({
             </div>
 
             {/* Goods Entry / Edit Input Form */}
-            <div className="rounded-xl border border-emerald-200/90 bg-emerald-50/30 p-3.5 space-y-3.5 dark:border-emerald-900/60 dark:bg-emerald-950/20">
+            <div className="rounded-xl border border-emerald-200/90 bg-emerald-50/30 p-2.5 space-y-2.5 dark:border-emerald-900/60 dark:bg-emerald-950/20">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5">
                   <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white text-[10px] font-black">
                     {editingGoodsIdx !== null ? editingGoodsIdx + 1 : (formData.goods_items || []).length + 1}
                   </span>
                   <span>{editingGoodsIdx !== null ? tt("edit_goods_item_num", "Edit Goods Item #{n}").replace("{n}", String(editingGoodsIdx + 1)) : tt("add_goods_item", "Add Goods Item")}</span>
+                </span>
+                <span className="text-[10px] text-slate-500 font-medium hidden sm:inline">
+                  {tt("goods_entry_flexible_hint", "Can be completed now or updated by warehouse / operations user later")}
                 </span>
                 {editingGoodsIdx !== null ? (
                   <button
@@ -5316,92 +5759,36 @@ function Step1BookingCustomer({
                 ) : null}
               </div>
 
-              {/* Own Warehouse or Other Warehouse Prominent Toggle */}
-              <div className="space-y-1.5">
+              {/* Warehouse Location Dropdown */}
+              <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <label className="text-[10.5px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                     <Warehouse className="h-3.5 w-3.5 text-blue-600" />
-                    <span>{tt("warehouse_location_toggle_label", "Warehouse Location (Own Warehouse or Other Warehouse?)")} *</span>
+                    <span>{tt("warehouse_location_toggle_label", "Warehouse Location")} *</span>
                   </label>
                   <span className="text-[10px] font-bold text-slate-400">{tt("step3_specification", "Step 3 Specification")}</span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                  {/* Option 1: Own Warehouse (Company) */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      handleDraftGoodsChange("warehouseSourceType", "company_warehouse");
-                    }}
-                    className={`flex items-start gap-2.5 p-2.5 rounded-xl border text-left transition-all ${
-                      draftGoodsItem.warehouseSourceType === "company_warehouse"
-                        ? "border-blue-600 bg-blue-50/80 dark:bg-blue-950/40 dark:border-blue-500 shadow-xs ring-2 ring-blue-500/20"
-                        : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900"
-                    }`}
-                  >
-                    <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
-                      draftGoodsItem.warehouseSourceType === "company_warehouse" ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
-                    }`}>
-                      <Warehouse className="h-4 w-4" />
-                    </span>
-                    <div>
-                      <div className="font-bold text-xs text-slate-900 dark:text-white">{tt("own_warehouse_title", "Own Warehouse")}</div>
-                      <div className="text-[10px] text-slate-500">{tt("company_dgt_warehouse", "Company DGT Warehouse")}</div>
-                    </div>
-                  </button>
-
-                  {/* Option 2: Customer Warehouse */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      handleDraftGoodsChange("warehouseSourceType", "customer_warehouse");
+                <select
+                  value={draftGoodsItem.warehouseSourceType}
+                  onChange={(e) => {
+                    const val = e.target.value as "company_warehouse" | "customer_warehouse" | "other";
+                    handleDraftGoodsChange("warehouseSourceType", val);
+                    if (val === "customer_warehouse") {
                       handleDraftGoodsChange("warehouseName", selectedCustomer ? `${selectedCustomer.customer_name}'s Warehouse` : tt("customer_warehouse_title", "Customer Warehouse"));
                       handleDraftGoodsChange("warehouseAddressText", selectedCustomer?.address || tt("customer_registered_address", "Customer Registered Address"));
-                    }}
-                    className={`flex items-start gap-2.5 p-2.5 rounded-xl border text-left transition-all ${
-                      draftGoodsItem.warehouseSourceType === "customer_warehouse"
-                        ? "border-emerald-600 bg-emerald-50/80 dark:bg-emerald-950/40 dark:border-emerald-500 shadow-xs ring-2 ring-emerald-500/20"
-                        : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900"
-                    }`}
-                  >
-                    <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
-                      draftGoodsItem.warehouseSourceType === "customer_warehouse" ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
-                    }`}>
-                      <Building2 className="h-4 w-4" />
-                    </span>
-                    <div>
-                      <div className="font-bold text-xs text-slate-900 dark:text-white">{tt("customer_warehouse_title", "Customer Warehouse")}</div>
-                      <div className="text-[10px] text-slate-500">{tt("client_premises_yard", "Client Premises / Yard")}</div>
-                    </div>
-                  </button>
-
-                  {/* Option 3: Other Warehouse */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      handleDraftGoodsChange("warehouseSourceType", "other");
-                    }}
-                    className={`flex items-start gap-2.5 p-2.5 rounded-xl border text-left transition-all ${
-                      draftGoodsItem.warehouseSourceType === "other"
-                        ? "border-purple-600 bg-purple-50/80 dark:bg-purple-950/40 dark:border-purple-500 shadow-xs ring-2 ring-purple-500/20"
-                        : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900"
-                    }`}
-                  >
-                    <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
-                      draftGoodsItem.warehouseSourceType === "other" ? "bg-purple-600 text-white" : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
-                    }`}>
-                      <MapPin className="h-4 w-4" />
-                    </span>
-                    <div>
-                      <div className="font-bold text-xs text-slate-900 dark:text-white">{tt("other_warehouse_title", "Other Warehouse")}</div>
-                      <div className="text-[10px] text-slate-500">{tt("third_party_yard_port", "Third-Party Yard / Port")}</div>
-                    </div>
-                  </button>
-                </div>
+                    }
+                  }}
+                  className={selectClass}
+                >
+                  <option value="company_warehouse">{tt("own_warehouse_title", "Own Warehouse (Company DGT Warehouse)")}</option>
+                  <option value="customer_warehouse">{tt("customer_warehouse_title", "Customer Warehouse (Client Premises / Yard)")}</option>
+                  <option value="other">{tt("other_warehouse_title", "Other Warehouse (Third-Party Yard / Port)")}</option>
+                </select>
 
                 {/* Dynamic inputs based on selection */}
                 {draftGoodsItem.warehouseSourceType === "company_warehouse" && (
-                  <div className="mt-2">
+                  <div className="mt-1.5">
                     <SearchSelect
                       label={`${tt("select_company_warehouse", "Select Company Warehouse")} *`}
                       value={draftGoodsItem.warehouseId}
@@ -5425,14 +5812,14 @@ function Step1BookingCustomer({
                 )}
 
                 {draftGoodsItem.warehouseSourceType === "customer_warehouse" && (
-                  <div className="mt-2 p-2 rounded-lg border border-emerald-200 bg-emerald-50/50 dark:border-emerald-900/50 dark:bg-emerald-950/20 text-xs">
+                  <div className="mt-1.5 p-2 rounded-lg border border-emerald-200 bg-emerald-50/50 dark:border-emerald-900/50 dark:bg-emerald-950/20 text-xs">
                     <span className="font-bold text-emerald-900 dark:text-emerald-300">{tt("customer_facility", "Customer Facility")}: </span>
                     <span className="text-slate-700 dark:text-slate-300">{draftGoodsItem.warehouseAddressText || selectedCustomer?.address || tt("address_from_customer_account", "Address from customer account")}</span>
                   </div>
                 )}
 
                 {draftGoodsItem.warehouseSourceType === "other" && (
-                  <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="mt-1.5 grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <input
                       type="text"
                       placeholder={`${tt("other_warehouse_yard_name", "Other Warehouse / Yard Name")} *`}
@@ -5453,7 +5840,7 @@ function Step1BookingCustomer({
 
               {/* Row 1: Goods Master Selection */}
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-[10.5px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">
                   {tt("goods_name_from_master", "Goods Name (from Goods Master or New Item)")} *
                 </label>
                 <SearchSelect
@@ -5476,10 +5863,10 @@ function Step1BookingCustomer({
                 />
               </div>
 
-              {/* Row 2: Qty Unit, Quantity, KG Per Qty, Total KG */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              {/* Row 2: Qty Unit, Quantity, KG Per Qty, Total Gross Wt (KG & MT) */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-1">{tt("qty_unit", "Qty Unit")}</label>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("qty_unit", "Qty Unit")}</label>
                   <select
                     value={draftGoodsItem.unit}
                     onChange={(e) => handleDraftGoodsChange("unit", e.target.value)}
@@ -5498,7 +5885,7 @@ function Step1BookingCustomer({
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-1">Quantity *</label>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">Quantity *</label>
                   <input
                     type="number"
                     min="0"
@@ -5510,7 +5897,7 @@ function Step1BookingCustomer({
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-1">KG Per Qty *</label>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">KG / Unit *</label>
                   <input
                     type="number"
                     min="0"
@@ -5522,156 +5909,48 @@ function Step1BookingCustomer({
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-emerald-700 dark:text-emerald-400 mb-1">
-                    Total KG (Auto)
+                  <label className="block text-[10px] font-bold uppercase text-emerald-700 dark:text-emerald-400 mb-0.5">
+                    Gross Wt (KG & MT)
                   </label>
                   <input
                     type="text"
                     readOnly
-                    value={draftGoodsItem.totalKg || "0"}
-                    className="w-full rounded-xl border border-emerald-300 bg-emerald-50/80 px-3 py-2 text-xs font-mono font-bold text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 cursor-not-allowed"
+                    value={`${(parseFloat(draftGoodsItem.totalKg || "0") || 0).toLocaleString()} kg (${((parseFloat(draftGoodsItem.totalKg || "0") || 0) / 1000).toFixed(3)} MT)`}
+                    className="w-full rounded-xl border border-emerald-300 bg-emerald-50/80 px-2.5 py-2 text-xs font-mono font-bold text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 cursor-not-allowed truncate"
+                    title={tt("calc_gross_wt_title", "Calculated Gross Weight in KG and MT")}
                   />
                 </div>
               </div>
 
               {/* Quality / Inspection Photo Upload & Action Buttons */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-emerald-200/50 dark:border-emerald-900/40">
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-emerald-200/50 dark:border-emerald-900/40">
+                <div className="flex items-center gap-2">
+                  <label className="text-[10.5px] font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1">
                     <Sparkles className="h-3.5 w-3.5 text-blue-600" />
-                    <span>{tt("quality_loading_inspection_photo", "Quality / Loading Inspection Photo")}</span>
+                    <span>{tt("quality_loading_inspection_photo", "Inspection Photo")}:</span>
                   </label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleGoodsPhotoUpload}
-                      className="text-xs text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-950/40 dark:file:text-blue-300"
-                    />
-                    {draftGoodsItem.photoUrl ? (
-                      <span className="text-[10px] text-emerald-600 font-bold">✓ Attached</span>
-                    ) : null}
-                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleGoodsPhotoUpload}
+                    className="text-[11px] text-slate-500 file:mr-1.5 file:py-0.5 file:px-2 file:rounded-md file:border-0 file:text-[11px] file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-950/40 dark:file:text-blue-300"
+                  />
+                  {draftGoodsItem.photoUrl ? (
+                    <span className="text-[10px] text-emerald-600 font-bold">✓ Attached</span>
+                  ) : null}
                 </div>
 
-                <div className="flex items-end justify-end gap-2">
+                <div className="flex items-center gap-1.5 ml-auto">
                   <button
                     type="button"
                     onClick={handleSaveDraftGoods}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-sm shadow-emerald-600/25 hover:bg-emerald-700 transition"
+                    className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs shadow-emerald-600/25 hover:bg-emerald-700 transition"
                   >
-                    <Plus className="h-4 w-4" />
-                    <span>{editingGoodsIdx !== null ? "Update Goods Item" : "Add to Manifest Table"}</span>
+                    <Plus className="h-3.5 w-3.5" />
+                    <span>{editingGoodsIdx !== null ? "Update Item" : "Add to Manifest"}</span>
                   </button>
                 </div>
               </div>
-            </div>
-
-            {/* Manifest Table */}
-            <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-850">
-              <table className="w-full text-left text-xs border-collapse">
-                <thead className="border-b border-slate-200 bg-slate-50/90 font-bold uppercase tracking-wider text-slate-500 dark:border-slate-750 dark:bg-slate-800 text-[9.5px]">
-                  <tr>
-                    <th className="py-2.5 px-3">#</th>
-                    <th className="py-2.5 px-3">Goods Description</th>
-                    <th className="py-2.5 px-3">Unit</th>
-                    <th className="py-2.5 px-3 text-right">Quantity</th>
-                    <th className="py-2.5 px-3 text-right">KG/Unit</th>
-                    <th className="py-2.5 px-3 text-right">Total KG</th>
-                    <th className="py-2.5 px-3 text-right">Total MT</th>
-                    <th className="py-2.5 px-3">Warehouse Source</th>
-                    <th className="py-2.5 px-3 text-center">Quality Photo</th>
-                    <th className="py-2.5 px-3 text-center">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-750 text-[11px]">
-                  {(formData.goods_items || []).filter((it) => it.goodsName || it.goodsId || Number(it.quantity) > 0).map((it, idx) => {
-                    const q = parseFloat(String(it.quantity || 0)) || 0;
-                    const kg = parseFloat(String(it.totalKg || 0)) || 0;
-                    const kgPer = parseFloat(String(it.kgPerQty || 0)) || (q > 0 ? kg / q : 0);
-                    const mt = kg > 0 ? (kg / 1000).toFixed(3) : "0.000";
-
-                    return (
-                      <tr key={it.id || idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                        <td className="py-2.5 px-3 font-bold text-slate-400">{idx + 1}</td>
-                        <td className="py-2.5 px-3 font-bold text-slate-800 dark:text-slate-200">
-                          <div>{it.goodsName || it.goods_name || "General Cargo"}</div>
-                          {it.goodsChsCode ? (
-                            <span className="inline-block text-[9.5px] font-mono text-slate-400">CHS: {it.goodsChsCode}</span>
-                          ) : null}
-                        </td>
-                        <td className="py-2.5 px-3 font-medium text-slate-700 dark:text-slate-300">
-                          {it.unit || "Bags"}
-                        </td>
-                        <td className="py-2.5 px-3 text-right font-bold text-slate-900 dark:text-white">
-                          {q.toLocaleString()}
-                        </td>
-                        <td className="py-2.5 px-3 text-right font-mono text-slate-600 dark:text-slate-400">
-                          {kgPer.toFixed(1)} kg
-                        </td>
-                        <td className="py-2.5 px-3 text-right font-mono font-bold text-blue-700 dark:text-blue-400">
-                          {kg.toLocaleString()} kg
-                        </td>
-                        <td className="py-2.5 px-3 text-right font-mono font-bold text-emerald-700 dark:text-emerald-400">
-                          {mt} MT
-                        </td>
-                        <td className="py-2.5 px-3 text-slate-600 dark:text-slate-300 truncate max-w-[130px]">
-                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold ${
-                            it.warehouseSourceType === "company_warehouse"
-                              ? "bg-blue-50 text-blue-700 border border-blue-200"
-                              : it.warehouseSourceType === "customer_warehouse"
-                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                              : "bg-purple-50 text-purple-700 border border-purple-200"
-                          }`}>
-                            {it.warehouseName || "Warehouse"}
-                          </span>
-                        </td>
-                        <td className="py-2.5 px-3 text-center">
-                          {it.photoUrl ? (
-                            <div className="inline-flex items-center gap-1">
-                              <img
-                                src={it.photoUrl}
-                                alt={tt("thumbnail", "Thumbnail")}
-                                className="h-6 w-6 rounded object-cover border border-slate-200 dark:border-slate-700"
-                              />
-                              <a
-                                href={it.photoUrl}
-                                download={it.photoName || `goods-photo-${idx + 1}.jpg`}
-                                className="p-1 rounded text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40"
-                                title={tt("download_quality_photo", "Download quality photo")}
-                              >
-                                <Download className="h-3.5 w-3.5" />
-                              </a>
-                            </div>
-                          ) : (
-                            <span className="text-[10px] text-slate-400">—</span>
-                          )}
-                        </td>
-                        <td className="py-2.5 px-3 text-center">
-                          <div className="inline-flex items-center gap-1">
-                            <button
-                              type="button"
-                              onClick={() => handleEditGoodsRow(idx)}
-                              className="p-1 text-blue-600 hover:text-blue-800 rounded hover:bg-blue-50 dark:hover:bg-blue-950/40"
-                              title={tt("edit_item", "Edit Item")}
-                            >
-                              <Pencil className="h-3.5 w-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => removeGoodsItem(idx)}
-                              className="p-1 text-rose-600 hover:text-rose-800 rounded hover:bg-rose-50 dark:hover:bg-rose-950/40"
-                              title={tt("remove_item", "Remove Item")}
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
             </div>
 
             {/* Total Goods Weights Bar */}
@@ -5683,6 +5962,76 @@ function Step1BookingCustomer({
                 Total Gross Weight: <span className="font-black font-mono">{totalGoodsKg.toLocaleString()} KG</span> ({totalGoodsMt} MT)
               </span>
             </div>
+          </div>
+
+          {/* Step 1C Handover & Execution Assignment */}
+          <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-1.5 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <Users className="h-3.5 w-3.5 text-emerald-600" />
+                <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                  {tt("com.step1c_execution_assignment", "Step 1C (Goods & Warehouse) Handover & Execution")}
+                </span>
+              </div>
+              <span className="text-[10px] font-bold text-slate-400">{tt("cargo_officer", "Cargo Officer")}</span>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                {tt("com.assign_other_user", "Assign to Other User / Team Member")}
+              </label>
+              <select
+                value={formData.step1c_assignee_id || ""}
+                onChange={(e) => {
+                  const uid = e.target.value;
+                  const u = (assignableUsers || []).find((usr) => usr.id === uid);
+                  setFormData((c) => ({
+                    ...c,
+                    step1c_assignee_id: uid,
+                    step1c_assignee_name: u?.name || ""
+                  }));
+                }}
+                className={selectClass}
+              >
+                <option value="">{tt("self_execution_option", "Complete this step myself (Default)")}</option>
+                {(assignableUsers || []).map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name} (Warehouse / Cargo Inspection Officer)
+                  </option>
+                ))}
+              </select>
+
+              {formData.step1c_assignee_id ? (
+                <div className="space-y-1.5 animate-in fade-in duration-150">
+                  <input
+                    type="text"
+                    value={formData.step1c_handover_notes || ""}
+                    onChange={(e) => setFormData((c) => ({ ...c, step1c_handover_notes: e.target.value }))}
+                    placeholder={tt("com.handover_notes_optional", "Handover Instructions / Dispatch Note (Optional)")}
+                    className={inputClass}
+                  />
+                  <div className="rounded-lg bg-emerald-50/70 p-2 text-[11px] text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 flex items-center gap-1.5">
+                    <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-600" />
+                    <span>
+                      {tt("com.step_handover_success", "Step successfully handed over to {name}.").replace("{name}", formData.step1c_assignee_name || "Team Member")}
+                    </span>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          </div>
+
+          {/* 1C Action Footer */}
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+            <button
+              type="button"
+              onClick={() => selectSub("1B")}
+              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+            >
+              <ChevronLeft className="h-3 w-3" />
+              <span>Back to 1B</span>
+            </button>
+            <span className="text-[10px] text-slate-400 font-medium">1C: Goods & Warehouse</span>
           </div>
         </div>
       )}
