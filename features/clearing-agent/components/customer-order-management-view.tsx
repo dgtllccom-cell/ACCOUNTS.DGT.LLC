@@ -3842,6 +3842,7 @@ export function CustomerOrderManagementView() {
                           <th className="py-2.5 px-3 text-right">{tt("total_mt", "Total MT")}</th>
                           <th className="py-2.5 px-3">{tt("warehouse_source", "Warehouse Source")}</th>
                           <th className="py-2.5 px-3 text-center">{tt("quality_photo", "Quality Photo")}</th>
+                          <th className="py-2.5 px-3 text-center">{tt("actions", "Actions")}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-750 text-[11px]">
@@ -3913,6 +3914,47 @@ export function CustomerOrderManagementView() {
                                 ) : (
                                   <span className="text-[10px] text-slate-400">—</span>
                                 )}
+                              </td>
+                              <td className="py-2.5 px-3 text-center">
+                                <div className="inline-flex items-center justify-center gap-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setStep1SubStep("1C");
+                                      setCurrentStep(3);
+                                    }}
+                                    className="p-1 text-blue-600 hover:text-blue-800 rounded hover:bg-blue-50 dark:hover:bg-blue-950/40"
+                                    title={tt("edit_item", "Edit Item in Step 1C")}
+                                  >
+                                    <Pencil className="h-3.5 w-3.5" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setFormData((current) => {
+                                        const filtered = (current.goods_items || []).filter((_, i) => i !== idx);
+                                        const items = filtered.length > 0 ? filtered : [defaultGoodsItem()];
+                                        const first = items[0];
+                                        const totalQty = items.reduce((sum, g) => sum + (Number(g.quantity) || 0), 0);
+                                        const totalKg = items.reduce((sum, g) => sum + (Number(g.totalKg) || 0), 0);
+                                        return {
+                                          ...current,
+                                          goods_items: items,
+                                          goods_id: first?.goodsId || "",
+                                          goods_name: items.map((g) => g.goodsName).filter(Boolean).join(", "),
+                                          goods_unit: first?.unit || "Bags",
+                                          goods_quantity: String(totalQty),
+                                          goods_gross_weight: String(totalKg),
+                                          goods_net_weight: String(totalKg)
+                                        };
+                                      });
+                                    }}
+                                    className="p-1 text-rose-600 hover:text-rose-800 rounded hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                                    title={tt("remove_item", "Remove Item")}
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
                               </td>
                             </tr>
                           );
@@ -4397,6 +4439,7 @@ function Step1BookingCustomer({
     if (!item) return;
     setDraftGoodsItem({ ...item });
     setEditingGoodsIdx(idx);
+    selectSub("1C");
   };
 
   const handleCancelEditGoods = () => {
@@ -5206,110 +5249,6 @@ function Step1BookingCustomer({
             </div>
           </div>
 
-          {/* Operational Dates: Planned vs Actual Pickup, Dispatch, Departure, Arrival */}
-          <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-3 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
-            <div className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5 border-b border-slate-100 pb-2 dark:border-slate-800">
-              <Calendar className="h-4 w-4 text-emerald-600" />
-              <span>Operational Tracking Dates — Planned vs. Actual</span>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-              <div>
-                <label className="block text-[10.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                  Planned Pickup Date *
-                </label>
-                <input
-                  type="date"
-                  value={formData.planned_pickup_date || formData.expected_loading_date}
-                  onChange={(e) =>
-                    setFormData((c) => ({
-                      ...c,
-                      planned_pickup_date: e.target.value,
-                      expected_loading_date: e.target.value
-                    }))
-                  }
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className="block text-[10.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                  Actual Pickup Date
-                </label>
-                <input
-                  type="date"
-                  value={formData.actual_pickup_date || ""}
-                  onChange={(e) => setFormData((c) => ({ ...c, actual_pickup_date: e.target.value }))}
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className="block text-[10.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                  Planned Dispatch Date
-                </label>
-                <input
-                  type="date"
-                  value={formData.planned_dispatch_date || ""}
-                  onChange={(e) => setFormData((c) => ({ ...c, planned_dispatch_date: e.target.value }))}
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className="block text-[10.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                  Actual Dispatch Date
-                </label>
-                <input
-                  type="date"
-                  value={formData.actual_dispatch_date || ""}
-                  onChange={(e) => setFormData((c) => ({ ...c, actual_dispatch_date: e.target.value }))}
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className="block text-[10.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                  Planned Departure Date
-                </label>
-                <input
-                  type="date"
-                  value={formData.planned_departure_date}
-                  onChange={(e) => setFormData((c) => ({ ...c, planned_departure_date: e.target.value }))}
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className="block text-[10.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                  Actual Departure Date
-                </label>
-                <input
-                  type="date"
-                  value={formData.actual_departure_date}
-                  onChange={(e) => setFormData((c) => ({ ...c, actual_departure_date: e.target.value }))}
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className="block text-[10.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                  Planned Arrival Date
-                </label>
-                <input
-                  type="date"
-                  value={formData.planned_arrival_date}
-                  onChange={(e) => setFormData((c) => ({ ...c, planned_arrival_date: e.target.value }))}
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className="block text-[10.5px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                  Actual Arrival Date
-                </label>
-                <input
-                  type="date"
-                  value={formData.actual_arrival_date}
-                  onChange={(e) => setFormData((c) => ({ ...c, actual_arrival_date: e.target.value }))}
-                  className={inputClass}
-                />
-              </div>
-            </div>
-          </div>
-
           {/* 1B Action Footer */}
           <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
             <button
@@ -5412,88 +5351,32 @@ function Step1BookingCustomer({
                 ) : null}
               </div>
 
-              {/* Own Warehouse or Other Warehouse Prominent Toggle */}
+              {/* Warehouse Location Dropdown */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <label className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                     <Warehouse className="h-3.5 w-3.5 text-blue-600" />
-                    <span>{tt("warehouse_location_toggle_label", "Warehouse Location (Own Warehouse or Other Warehouse?)")} *</span>
+                    <span>{tt("warehouse_location_toggle_label", "Warehouse Location")} *</span>
                   </label>
                   <span className="text-[10px] font-bold text-slate-400">{tt("step3_specification", "Step 3 Specification")}</span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                  {/* Option 1: Own Warehouse (Company) */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      handleDraftGoodsChange("warehouseSourceType", "company_warehouse");
-                    }}
-                    className={`flex items-start gap-2.5 p-2.5 rounded-xl border text-left transition-all ${
-                      draftGoodsItem.warehouseSourceType === "company_warehouse"
-                        ? "border-blue-600 bg-blue-50/80 dark:bg-blue-950/40 dark:border-blue-500 shadow-xs ring-2 ring-blue-500/20"
-                        : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900"
-                    }`}
-                  >
-                    <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
-                      draftGoodsItem.warehouseSourceType === "company_warehouse" ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
-                    }`}>
-                      <Warehouse className="h-4 w-4" />
-                    </span>
-                    <div>
-                      <div className="font-bold text-xs text-slate-900 dark:text-white">{tt("own_warehouse_title", "Own Warehouse")}</div>
-                      <div className="text-[10px] text-slate-500">{tt("company_dgt_warehouse", "Company DGT Warehouse")}</div>
-                    </div>
-                  </button>
-
-                  {/* Option 2: Customer Warehouse */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      handleDraftGoodsChange("warehouseSourceType", "customer_warehouse");
+                <select
+                  value={draftGoodsItem.warehouseSourceType}
+                  onChange={(e) => {
+                    const val = e.target.value as "company_warehouse" | "customer_warehouse" | "other";
+                    handleDraftGoodsChange("warehouseSourceType", val);
+                    if (val === "customer_warehouse") {
                       handleDraftGoodsChange("warehouseName", selectedCustomer ? `${selectedCustomer.customer_name}'s Warehouse` : tt("customer_warehouse_title", "Customer Warehouse"));
                       handleDraftGoodsChange("warehouseAddressText", selectedCustomer?.address || tt("customer_registered_address", "Customer Registered Address"));
-                    }}
-                    className={`flex items-start gap-2.5 p-2.5 rounded-xl border text-left transition-all ${
-                      draftGoodsItem.warehouseSourceType === "customer_warehouse"
-                        ? "border-emerald-600 bg-emerald-50/80 dark:bg-emerald-950/40 dark:border-emerald-500 shadow-xs ring-2 ring-emerald-500/20"
-                        : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900"
-                    }`}
-                  >
-                    <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
-                      draftGoodsItem.warehouseSourceType === "customer_warehouse" ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
-                    }`}>
-                      <Building2 className="h-4 w-4" />
-                    </span>
-                    <div>
-                      <div className="font-bold text-xs text-slate-900 dark:text-white">{tt("customer_warehouse_title", "Customer Warehouse")}</div>
-                      <div className="text-[10px] text-slate-500">{tt("client_premises_yard", "Client Premises / Yard")}</div>
-                    </div>
-                  </button>
-
-                  {/* Option 3: Other Warehouse */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      handleDraftGoodsChange("warehouseSourceType", "other");
-                    }}
-                    className={`flex items-start gap-2.5 p-2.5 rounded-xl border text-left transition-all ${
-                      draftGoodsItem.warehouseSourceType === "other"
-                        ? "border-purple-600 bg-purple-50/80 dark:bg-purple-950/40 dark:border-purple-500 shadow-xs ring-2 ring-purple-500/20"
-                        : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900"
-                    }`}
-                  >
-                    <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
-                      draftGoodsItem.warehouseSourceType === "other" ? "bg-purple-600 text-white" : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
-                    }`}>
-                      <MapPin className="h-4 w-4" />
-                    </span>
-                    <div>
-                      <div className="font-bold text-xs text-slate-900 dark:text-white">{tt("other_warehouse_title", "Other Warehouse")}</div>
-                      <div className="text-[10px] text-slate-500">{tt("third_party_yard_port", "Third-Party Yard / Port")}</div>
-                    </div>
-                  </button>
-                </div>
+                    }
+                  }}
+                  className={selectClass}
+                >
+                  <option value="company_warehouse">{tt("own_warehouse_title", "Own Warehouse (Company DGT Warehouse)")}</option>
+                  <option value="customer_warehouse">{tt("customer_warehouse_title", "Customer Warehouse (Client Premises / Yard)")}</option>
+                  <option value="other">{tt("other_warehouse_title", "Other Warehouse (Third-Party Yard / Port)")}</option>
+                </select>
 
                 {/* Dynamic inputs based on selection */}
                 {draftGoodsItem.warehouseSourceType === "company_warehouse" && (
@@ -5661,113 +5544,6 @@ function Step1BookingCustomer({
                   </button>
                 </div>
               </div>
-            </div>
-
-            {/* Manifest Table */}
-            <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-850">
-              <table className="w-full text-left text-xs border-collapse">
-                <thead className="border-b border-slate-200 bg-slate-50/90 font-bold uppercase tracking-wider text-slate-500 dark:border-slate-750 dark:bg-slate-800 text-[9.5px]">
-                  <tr>
-                    <th className="py-2.5 px-3">#</th>
-                    <th className="py-2.5 px-3">Goods Description</th>
-                    <th className="py-2.5 px-3">Unit</th>
-                    <th className="py-2.5 px-3 text-right">Quantity</th>
-                    <th className="py-2.5 px-3 text-right">KG/Unit</th>
-                    <th className="py-2.5 px-3 text-right">Total KG</th>
-                    <th className="py-2.5 px-3 text-right">Total MT</th>
-                    <th className="py-2.5 px-3">Warehouse Source</th>
-                    <th className="py-2.5 px-3 text-center">Quality Photo</th>
-                    <th className="py-2.5 px-3 text-center">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-750 text-[11px]">
-                  {(formData.goods_items || []).filter((it) => it.goodsName || it.goodsId || Number(it.quantity) > 0).map((it, idx) => {
-                    const q = parseFloat(String(it.quantity || 0)) || 0;
-                    const kg = parseFloat(String(it.totalKg || 0)) || 0;
-                    const kgPer = parseFloat(String(it.kgPerQty || 0)) || (q > 0 ? kg / q : 0);
-                    const mt = kg > 0 ? (kg / 1000).toFixed(3) : "0.000";
-
-                    return (
-                      <tr key={it.id || idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                        <td className="py-2.5 px-3 font-bold text-slate-400">{idx + 1}</td>
-                        <td className="py-2.5 px-3 font-bold text-slate-800 dark:text-slate-200">
-                          <div>{it.goodsName || it.goods_name || "General Cargo"}</div>
-                          {it.goodsChsCode ? (
-                            <span className="inline-block text-[9.5px] font-mono text-slate-400">CHS: {it.goodsChsCode}</span>
-                          ) : null}
-                        </td>
-                        <td className="py-2.5 px-3 font-medium text-slate-700 dark:text-slate-300">
-                          {it.unit || "Bags"}
-                        </td>
-                        <td className="py-2.5 px-3 text-right font-bold text-slate-900 dark:text-white">
-                          {q.toLocaleString()}
-                        </td>
-                        <td className="py-2.5 px-3 text-right font-mono text-slate-600 dark:text-slate-400">
-                          {kgPer.toFixed(1)} kg
-                        </td>
-                        <td className="py-2.5 px-3 text-right font-mono font-bold text-blue-700 dark:text-blue-400">
-                          {kg.toLocaleString()} kg
-                        </td>
-                        <td className="py-2.5 px-3 text-right font-mono font-bold text-emerald-700 dark:text-emerald-400">
-                          {mt} MT
-                        </td>
-                        <td className="py-2.5 px-3 text-slate-600 dark:text-slate-300 truncate max-w-[130px]">
-                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold ${
-                            it.warehouseSourceType === "company_warehouse"
-                              ? "bg-blue-50 text-blue-700 border border-blue-200"
-                              : it.warehouseSourceType === "customer_warehouse"
-                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                              : "bg-purple-50 text-purple-700 border border-purple-200"
-                          }`}>
-                            {it.warehouseName || "Warehouse"}
-                          </span>
-                        </td>
-                        <td className="py-2.5 px-3 text-center">
-                          {it.photoUrl ? (
-                            <div className="inline-flex items-center gap-1">
-                              <img
-                                src={it.photoUrl}
-                                alt={tt("thumbnail", "Thumbnail")}
-                                className="h-6 w-6 rounded object-cover border border-slate-200 dark:border-slate-700"
-                              />
-                              <a
-                                href={it.photoUrl}
-                                download={it.photoName || `goods-photo-${idx + 1}.jpg`}
-                                className="p-1 rounded text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40"
-                                title={tt("download_quality_photo", "Download quality photo")}
-                              >
-                                <Download className="h-3.5 w-3.5" />
-                              </a>
-                            </div>
-                          ) : (
-                            <span className="text-[10px] text-slate-400">—</span>
-                          )}
-                        </td>
-                        <td className="py-2.5 px-3 text-center">
-                          <div className="inline-flex items-center gap-1">
-                            <button
-                              type="button"
-                              onClick={() => handleEditGoodsRow(idx)}
-                              className="p-1 text-blue-600 hover:text-blue-800 rounded hover:bg-blue-50 dark:hover:bg-blue-950/40"
-                              title={tt("edit_item", "Edit Item")}
-                            >
-                              <Pencil className="h-3.5 w-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => removeGoodsItem(idx)}
-                              className="p-1 text-rose-600 hover:text-rose-800 rounded hover:bg-rose-50 dark:hover:bg-rose-950/40"
-                              title={tt("remove_item", "Remove Item")}
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
             </div>
 
             {/* Total Goods Weights Bar */}
