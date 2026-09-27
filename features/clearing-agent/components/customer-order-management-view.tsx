@@ -3288,7 +3288,7 @@ export function CustomerOrderManagementView() {
                 {/* 3 Unified Summary Reports: 1. Order Bill & Serials, 2. Customer Address, 3. Ship Types Report */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 text-xs">
                   {/* REPORT 1: ORDER BILL & SYSTEM SERIALS */}
-                  <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between space-y-3">
+                  <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between space-y-2.5">
                     <div>
                       <div className="flex items-center justify-between pb-2 border-b border-slate-200/60 dark:border-slate-800">
                         <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 text-xs">
@@ -3304,59 +3304,43 @@ export function CustomerOrderManagementView() {
                       </div>
 
                       {/* Prominent Bill Number / Global Serial */}
-                      <div className="pt-2.5 pb-2">
-                        <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">
-                          {tt("bill_no_global_serial", "Bill No / Order Reference")}
-                        </span>
-                        <div className="font-mono font-black text-slate-900 dark:text-white text-base tracking-tight truncate">
+                      <div className="leading-relaxed space-y-0.5 pt-1">
+                        <p className="font-mono font-black text-slate-900 dark:text-white text-base tracking-tight truncate">
                           {formData.global_serial || formData.order_no || "CL-ORD-PENDING"}
-                        </div>
+                        </p>
+                        <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                          {tt("bill_no_global_serial", "Bill No / Order Reference")}
+                        </p>
                       </div>
 
-                      {/* 4 System Serials */}
-                      <div className="grid grid-cols-2 gap-2 pt-1 text-[11px]">
-                        <div className="rounded-lg border border-slate-100 bg-slate-50/70 p-2 dark:border-slate-800/80 dark:bg-slate-850/50">
-                          <span className="text-[8px] font-black uppercase text-slate-400 block tracking-wider">
-                            {tt("entry_serial", "Entry Serial")}
-                          </span>
-                          <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-xs truncate block">
-                            {formData.entry_serial || "—"}
-                          </span>
+                      {/* Clean Serials List (No Nested Packets) */}
+                      <div className="pt-2 space-y-1.5 text-[11.5px] text-slate-600 dark:text-slate-400">
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500 font-medium">{tt("entry_serial", "Entry Serial:")}</span>
+                          <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400">{formData.entry_serial || "—"}</span>
                         </div>
-                        <div className="rounded-lg border border-slate-100 bg-slate-50/70 p-2 dark:border-slate-800/80 dark:bg-slate-850/50">
-                          <span className="text-[8px] font-black uppercase text-slate-400 block tracking-wider">
-                            {tt("branch_serial", "Branch Serial")}
-                          </span>
-                          <span className="font-mono font-bold text-slate-700 dark:text-slate-300 text-xs truncate block">
-                            {formData.branch_serial || "—"}
-                          </span>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500 font-medium">{tt("branch_serial", "Branch Serial:")}</span>
+                          <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{formData.branch_serial || "—"}</span>
                         </div>
-                        <div className="rounded-lg border border-slate-100 bg-slate-50/70 p-2 dark:border-slate-800/80 dark:bg-slate-850/50">
-                          <span className="text-[8px] font-black uppercase text-slate-400 block tracking-wider">
-                            {tt("country_serial", "Country Serial")}
-                          </span>
-                          <span className="font-mono font-bold text-slate-700 dark:text-slate-300 text-xs truncate block">
-                            {formData.country_serial || "—"}
-                          </span>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500 font-medium">{tt("country_serial", "Country Serial:")}</span>
+                          <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{formData.country_serial || "—"}</span>
                         </div>
-                        <div className="rounded-lg border border-slate-100 bg-slate-50/70 p-2 dark:border-slate-800/80 dark:bg-slate-850/50">
-                          <span className="text-[8px] font-black uppercase text-slate-400 block tracking-wider">
-                            {tt("super_admin_serial", "Super Admin Serial")}
-                          </span>
-                          <span className="font-mono font-bold text-blue-600 dark:text-blue-400 text-xs truncate block">
-                            {formData.super_admin_serial || formData.global_serial || "—"}
-                          </span>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500 font-medium">{tt("super_admin_serial", "Super Admin Serial:")}</span>
+                          <span className="font-mono font-bold text-blue-700 dark:text-blue-300">{formData.super_admin_serial || formData.global_serial || "—"}</span>
                         </div>
                       </div>
                     </div>
 
                     {/* Date & Time Footer */}
-                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-500">
+                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-400">
                       <span className="flex items-center gap-1.5 font-medium">
                         <Calendar className="h-3 w-3 text-slate-400" />
                         <span>{formData.order_date || "—"}</span>
                       </span>
-                      <span className="font-mono font-semibold text-slate-600 dark:text-slate-400">
+                      <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">
                         {formData.order_time || "—"}
                       </span>
                     </div>
@@ -3386,7 +3370,7 @@ export function CustomerOrderManagementView() {
                       </div>
 
                       {selectedCustomerInfo || formData.customer_name || formData.customer_id ? (
-                        <div className="leading-relaxed space-y-1.5 pt-1">
+                        <div className="leading-relaxed space-y-1 pt-1">
                           <p className="font-bold text-slate-900 dark:text-white text-sm truncate">
                             {selectedCustomerInfo?.customer_name || formData.customer_name || selectedCustomerInfo?.contact_person}
                           </p>
@@ -3457,87 +3441,57 @@ export function CustomerOrderManagementView() {
                         </button>
                       </div>
 
-                      {/* 3 Concise Mini-Cards */}
-                      <div className="space-y-2 pt-1">
-                        {/* Transport Mode */}
-                        <div className="rounded-lg border border-sky-100 bg-sky-50/40 p-2 dark:border-sky-900/40 dark:bg-slate-800/70 flex items-center justify-between shadow-2xs">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-sky-600 text-white shadow-2xs">
-                              {formData.transport_mode?.includes("air") ? (
-                                <Plane className="h-3 w-3" />
-                              ) : formData.transport_mode?.includes("road") || formData.transport_mode?.includes("truck") ? (
-                                <Truck className="h-3 w-3" />
-                              ) : (
-                                <Ship className="h-3 w-3" />
-                              )}
-                            </span>
-                            <div className="min-w-0">
-                              <span className="text-[8.5px] font-black uppercase text-sky-600 dark:text-sky-400 block tracking-wider">
-                                {tt("transport_mode_label", "Transport Mode")}
-                              </span>
-                              <div className="text-[11px] font-bold text-slate-900 dark:text-white capitalize truncate">
-                                {formData.transport_mode?.replace("by_", "By ") || "By Sea"}
-                              </div>
-                            </div>
-                          </div>
-                          <span className="text-[9.5px] font-semibold text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded bg-white dark:bg-slate-700/60 border border-slate-200/60 dark:border-slate-700 shrink-0">
+                      {/* Main Transport Mode Header */}
+                      <div className="leading-relaxed space-y-0.5 pt-1">
+                        <p className="font-bold text-slate-900 dark:text-white text-base capitalize truncate flex items-center gap-2">
+                          <span>{formData.transport_mode?.replace("by_", "By ") || "By Sea"}</span>
+                          <span className="text-[10px] font-semibold text-sky-700 dark:text-sky-300 px-2 py-0.5 rounded-full bg-sky-50 dark:bg-sky-950/60 border border-sky-200/70 dark:border-sky-800">
                             {formData.transport_mode?.includes("air")
                               ? "Air Cargo"
                               : formData.transport_mode?.includes("road")
                               ? "Land / Trucking"
                               : "Ocean Vessel"}
                           </span>
-                        </div>
+                        </p>
+                        <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                          {tt("transport_mode_label", "Transport Mode")}
+                        </p>
+                      </div>
 
-                        {/* Movement Type */}
-                        <div className="rounded-lg border border-indigo-100 bg-indigo-50/40 p-2 dark:border-indigo-900/40 dark:bg-slate-800/70 flex items-center justify-between shadow-2xs">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-indigo-600 text-white shadow-2xs">
-                              <ArrowRightLeft className="h-3 w-3" />
+                      {/* Clean Message Lines (No Nested Packets) */}
+                      <div className="pt-2 space-y-1.5 text-[11.5px] text-slate-600 dark:text-slate-400">
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500 font-medium">{tt("movement_type_label", "Movement Type:")}</span>
+                          <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">
+                            {formData.movement_type || "Import"}
+                            <span className="ml-1 text-[10px] font-normal text-slate-500">
+                              ({formData.movement_type === "export"
+                                ? "Local → Foreign"
+                                : formData.movement_type === "transit"
+                                ? "Cross-Border"
+                                : "Foreign → Local"})
                             </span>
-                            <div className="min-w-0">
-                              <span className="text-[8.5px] font-black uppercase text-indigo-600 dark:text-indigo-400 block tracking-wider">
-                                {tt("movement_type_label", "Movement Type")}
-                              </span>
-                              <div className="text-[11px] font-bold text-slate-900 dark:text-white uppercase truncate">
-                                {formData.movement_type || "Import"}
-                              </div>
-                            </div>
-                          </div>
-                          <span className="text-[9.5px] font-semibold text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/60 dark:border-indigo-800 shrink-0">
-                            {formData.movement_type === "export"
-                              ? "Local → Foreign"
-                              : formData.movement_type === "transit"
-                              ? "Cross-Border"
-                              : "Foreign → Local"}
                           </span>
                         </div>
-
-                        {/* Route Corridor */}
-                        <div className="rounded-lg border border-emerald-100 bg-emerald-50/40 p-2 dark:border-emerald-900/40 dark:bg-slate-800/70 flex items-center justify-between shadow-2xs">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-emerald-600 text-white shadow-2xs">
-                              <Route className="h-3 w-3" />
-                            </span>
-                            <div className="min-w-0">
-                              <span className="text-[8.5px] font-black uppercase text-emerald-600 dark:text-emerald-400 block tracking-wider">
-                                {tt("route_corridor_type", "Route Corridor")}
-                              </span>
-                              <div className="text-[11px] font-bold text-slate-900 dark:text-white truncate">
-                                {formData.route_name || tt("direct_customs_corridor", "Direct Customs Corridor")}
-                              </div>
-                            </div>
-                          </div>
-                          <span className="text-[9.5px] font-semibold text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/60 dark:border-emerald-800 shrink-0">
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500 font-medium">{tt("route_corridor_type", "Route Corridor:")}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[170px]" title={formData.route_name || "Direct Customs Corridor"}>
+                            {formData.route_name || tt("direct_customs_corridor", "Direct Customs Corridor")}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500 font-medium">{tt("clearance_office_label", "Clearance Office:")}</span>
+                          <span className="font-semibold text-emerald-700 dark:text-emerald-400 truncate max-w-[170px]">
                             {formData.customs_clearance_office || "Customs Corridor"}
                           </span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[10.5px] text-slate-400">
-                      <span>{tt("shipment_type_label", "Shipment:")} <strong className="text-slate-700 dark:text-slate-300">{formData.shipment_type || "FCL"}</strong></span>
-                      <span>{tt("bill_terms", "Commercial Freight")}</span>
+                    {/* Shipment & Freight Footer */}
+                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-400">
+                      <span>{tt("shipment_type_label", "Shipment:")} <strong className="text-slate-800 dark:text-slate-200 font-semibold">{formData.shipment_type || "FCL"}</strong></span>
+                      <span className="text-slate-400 font-medium">{tt("bill_terms", "Commercial Freight")}</span>
                     </div>
                   </div>
                 </div>
