@@ -4598,31 +4598,20 @@ export function LocalPurchaseView({
                       {(filteredPurchases.length > 0
                         ? paginatedPurchases.map((p, idx) => ({
                             id: p.id,
-                            country: p.country_name || p.countryName || "UAE",
-                            branch: p.branch_name || p.branchName || "Dubai",
-                            voucherNo: p.journal_serial_no || p.serial_no || p.bill_no || `LP-${String(idx + 1).padStart(6, "0")}`,
-                            date: p.created_at ? new Date(p.created_at).toLocaleDateString("en-GB") : "25/09/2026",
+                            country: p.country_name || p.countryName || "—",
+                            branch: p.branch_name || p.branchName || "—",
+                            voucherNo: p.journal_serial_no || p.serial_no || p.bill_no || "—",
+                            date: p.created_at ? new Date(p.created_at).toLocaleDateString("en-GB") : "—",
                             supplier: p.supplier_name || p.supplierName || "—",
                             goods: p.goods_name || p.goodsName || "—",
                             qty: Number(p.quantity_kgs || p.quantityKgs || 0),
-                            unit: p.quantity_name || p.quantityName || "Bag",
+                            unit: p.quantity_name || p.quantityName || "—",
                             amountFormatted: `$ ${Number(p.final_cost || p.purchase_cost || 0).toLocaleString()}`,
-                            status: p.status || "Posted",
+                            status: p.status || "—",
                             raw: p,
                             isMock: false
                           }))
-                        : [
-                            { id: "mock-sa-1", country: "UAE", branch: "Dubai", voucherNo: "LP-001235", date: "25/09/2026", supplier: "XYZ Trading", goods: "Almond Kernel", qty: 50, unit: "Bag", amountFormatted: "$ 22,500", status: "Posted", raw: null, isMock: true },
-                            { id: "mock-sa-2", country: "Pakistan", branch: "Karachi", voucherNo: "LP-001234", date: "24/09/2026", supplier: "ABC Foods", goods: "Walnut Kernel", qty: 30, unit: "Bag", amountFormatted: "$ 18,400", status: "Draft", raw: null, isMock: true },
-                            { id: "mock-sa-3", country: "Afghanistan", branch: "Kabul", voucherNo: "LP-001233", date: "22/09/2026", supplier: "Kabul Trading", goods: "Pistachio", qty: 20, unit: "Bag", amountFormatted: "$ 12,700", status: "Posted", raw: null, isMock: true },
-                            { id: "mock-sa-4", country: "Iran", branch: "Tehran", voucherNo: "LP-001232", date: "21/09/2026", supplier: "Iran Supplier", goods: "Raisin", qty: 40, unit: "Bag", amountFormatted: "$ 15,800", status: "Pending", raw: null, isMock: true },
-                            { id: "mock-sa-5", country: "Uzbekistan", branch: "Tashkent", voucherNo: "LP-001231", date: "20/09/2026", supplier: "Uzbek Agro", goods: "Cashew Nut", qty: 25, unit: "Bag", amountFormatted: "$ 14,200", status: "Posted", raw: null, isMock: true },
-                            { id: "mock-sa-6", country: "UAE", branch: "Jebel Ali", voucherNo: "LP-001230", date: "18/09/2026", supplier: "Gulf Supplier", goods: "Apricot Kernel", qty: 35, unit: "Bag", amountFormatted: "$ 16,900", status: "Verified", raw: null, isMock: true },
-                            { id: "mock-sa-7", country: "Pakistan", branch: "Quetta", voucherNo: "LP-001229", date: "16/09/2026", supplier: "Quetta Foods", goods: "Hazelnut", qty: 40, unit: "Bag", amountFormatted: "$ 17,600", status: "Posted", raw: null, isMock: true },
-                            { id: "mock-sa-8", country: "Afghanistan", branch: "Kandahar", voucherNo: "LP-001228", date: "15/09/2026", supplier: "Kandahar Supplier", goods: "Fig", qty: 28, unit: "Bag", amountFormatted: "$ 11,800", status: "Draft", raw: null, isMock: true },
-                            { id: "mock-sa-9", country: "Iran", branch: "Mashhad", voucherNo: "LP-001227", date: "12/09/2026", supplier: "Mashhad Trading", goods: "Dates", qty: 45, unit: "Bag", amountFormatted: "$ 19,300", status: "Posted", raw: null, isMock: true },
-                            { id: "mock-sa-10", country: "Uzbekistan", branch: "Samarkand", voucherNo: "LP-001226", date: "10/09/2026", supplier: "Samarkand Group", goods: "Black Raisin", qty: 32, unit: "Bag", amountFormatted: "$ 13,400", status: "Posted", raw: null, isMock: true },
-                          ]
+                        : []
                       ).map((row, rIdx) => {
                         const isRowSelected = selectedRowIds.has(row.id);
                         const rowNum = (currentPage - 1) * pageSize + rIdx + 1;
@@ -4987,30 +4976,19 @@ export function LocalPurchaseView({
                     {(filteredPurchases.length > 0
                       ? paginatedPurchases.map((p, idx) => ({
                           id: p.id,
-                          voucherNo: p.journal_serial_no || p.serial_no || p.bill_no || `LP-${String(idx + 1).padStart(6, "0")}`,
-                          date: p.created_at ? new Date(p.created_at).toLocaleDateString("en-GB") : "25/09/2026",
+                          voucherNo: p.journal_serial_no || p.serial_no || p.bill_no || "—",
+                          date: p.created_at ? new Date(p.created_at).toLocaleDateString("en-GB") : "—",
                           supplier: p.supplier_name || p.supplierName || "—",
                           goods: p.goods_name || p.goodsName || "—",
                           brand: p.brand || "DGT / L",
                           qty: Number(p.quantity_kgs || p.quantityKgs || 0),
-                          unit: p.quantity_name || p.quantityName || "Bag",
+                          unit: p.quantity_name || p.quantityName || "—",
                           amountFormatted: `${p.purchase_currency || localCurrency || "AFN"} ${Number(p.final_cost || p.finalCost || p.purchase_cost || 0).toLocaleString()}`,
-                          status: p.status || "Posted",
+                          status: p.status || "—",
                           raw: p,
                           isMock: false
                         }))
-                      : [
-                          { id: "mock-sc-1", voucherNo: "LP-000123", date: "25/09/2026", supplier: "Kabul Trading Co.", goods: "Almond Kernel", brand: "DGT / L", qty: 50, unit: "Bag", amountFormatted: "AFN 1,100,000", status: "Posted", raw: null, isMock: true },
-                          { id: "mock-sc-2", voucherNo: "LP-000122", date: "24/09/2026", supplier: "Haji Food Supplier", goods: "Walnut Kernel", brand: "DGT / M", qty: 30, unit: "Bag", amountFormatted: "AFN 630,000", status: "Draft", raw: null, isMock: true },
-                          { id: "mock-sc-3", voucherNo: "LP-000121", date: "22/09/2026", supplier: "Afghan Dry Fruits", goods: "Pistachio", brand: "DGT / Premium", qty: 20, unit: "Bag", amountFormatted: "AFN 500,000", status: "Posted", raw: null, isMock: true },
-                          { id: "mock-sc-4", voucherNo: "LP-000120", date: "20/09/2026", supplier: "Kandahar Supplier", goods: "Raisin", brand: "DGT / Golden", qty: 40, unit: "Bag", amountFormatted: "AFN 720,000", status: "Pending", raw: null, isMock: true },
-                          { id: "mock-sc-5", voucherNo: "LP-000119", date: "18/09/2026", supplier: "Mazar Trading", goods: "Cashew Nut", brand: "DGT / Jumbo", qty: 25, unit: "Bag", amountFormatted: "AFN 750,000", status: "Posted", raw: null, isMock: true },
-                          { id: "mock-sc-6", voucherNo: "LP-000118", date: "15/09/2026", supplier: "Herat Foods", goods: "Apricot Kernel", brand: "DGT / L", qty: 35, unit: "Bag", amountFormatted: "AFN 700,000", status: "Verified", raw: null, isMock: true },
-                          { id: "mock-sc-7", voucherNo: "LP-000117", date: "12/09/2026", supplier: "Shamshad Trading", goods: "Hazelnut", brand: "DGT / L", qty: 40, unit: "Bag", amountFormatted: "AFN 920,000", status: "Posted", raw: null, isMock: true },
-                          { id: "mock-sc-8", voucherNo: "LP-000116", date: "10/09/2026", supplier: "Qandahar Dry Fruits", goods: "Fig", brand: "DGT / M", qty: 28, unit: "Bag", amountFormatted: "AFN 672,000", status: "Draft", raw: null, isMock: true },
-                          { id: "mock-sc-9", voucherNo: "LP-000115", date: "08/09/2026", supplier: "Khost Supplier", goods: "Dates", brand: "DGT / L", qty: 45, unit: "Bag", amountFormatted: "AFN 1,088,000", status: "Posted", raw: null, isMock: true },
-                          { id: "mock-sc-10", voucherNo: "LP-000114", date: "05/09/2026", supplier: "Nangarhar Trading", goods: "Black Raisin", brand: "DGT / M", qty: 32, unit: "Bag", amountFormatted: "AFN 697,000", status: "Posted", raw: null, isMock: true },
-                        ]
+                      : []
                     ).map((row, rIdx) => {
                       const isRowSelected = selectedRowIds.has(row.id);
                       const rowNum = (currentPage - 1) * pageSize + rIdx + 1;
