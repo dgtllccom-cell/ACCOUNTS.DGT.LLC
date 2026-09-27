@@ -449,6 +449,12 @@ const EMPTY_FORM = {
   buyer_name: "",
   consignee_name: "",
   remarks: "",
+  step1b_assignee_id: "",
+  step1b_assignee_name: "",
+  step1b_handover_notes: "",
+  step1c_assignee_id: "",
+  step1c_assignee_name: "",
+  step1c_handover_notes: "",
   legs: [] as RouteLeg[],
   loadingAllocations: [] as LoadingAllocation[]
 };
@@ -3140,6 +3146,7 @@ export function CustomerOrderManagementView() {
                       trucksList={trucksList}
                       warehousesList={warehousesList}
                       goodsMasterList={goodsMasterList}
+                      assignableUsers={assignableUsers}
                       onSelectSubStep={(sub) => {
                         setStep1SubStep(sub);
                         if (sub === "1A") setCurrentStep(1);
@@ -3161,7 +3168,7 @@ export function CustomerOrderManagementView() {
                   )}
 
                 {/* Stepper Footer Controls */}
-                <div className="flex flex-wrap items-center justify-between gap-2 pt-3 mt-4 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-2.5 mt-3 border-t border-slate-100 dark:border-slate-800">
                   <div>
                     {currentStep > 1 ? (
                       <button
@@ -3175,31 +3182,31 @@ export function CustomerOrderManagementView() {
                             setStep1SubStep("1A");
                           }
                         }}
-                        className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                        className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 shadow-2xs"
                       >
-                        <ChevronLeft className="h-4 w-4" />
+                        <ChevronLeft className="h-3.5 w-3.5" />
                         <span>{t(lang, "comv.back", "Previous")}</span>
                       </button>
                     ) : (
                       <button
                         type="button"
                         onClick={() => setIsFormOpen(false)}
-                        className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                        className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 shadow-2xs"
                       >
-                        <ArrowLeft className="h-4 w-4" />
+                        <ArrowLeft className="h-3.5 w-3.5" />
                         <span>{tt("back_to_registry", "Back to Registry")}</span>
                       </button>
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
                     <button
                       type="button"
                       onClick={() => void handleSaveProgress(false)}
                       disabled={saving}
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-xs font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300 transition"
+                      className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300 transition shadow-2xs"
                     >
-                      {saving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                      {saving ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
                       <span>{t(lang, "comv.save_draft", "Save Draft")}</span>
                     </button>
 
@@ -3208,30 +3215,34 @@ export function CustomerOrderManagementView() {
                         type="button"
                         onClick={() => void handleSaveProgress(true)}
                         disabled={saving}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2 text-xs font-bold text-white shadow-md shadow-blue-600/25 hover:bg-blue-700 transition"
+                        className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-xs shadow-blue-600/25 hover:bg-blue-700 transition"
                       >
-                        {saving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : null}
-                        <span>Save & Continue to Truck & Fleet (1B)</span>
-                        <ChevronRight className="h-4 w-4" />
+                        {saving ? <RefreshCw className="h-3 w-3 animate-spin" /> : null}
+                        <span>{tt("save_continue_1b", "Save & Continue to 1B (Truck)")}</span>
+                        <ChevronRight className="h-3.5 w-3.5" />
                       </button>
                     ) : currentStep === 2 ? (
                       <button
                         type="button"
                         onClick={() => void handleSaveProgress(true)}
                         disabled={saving}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2 text-xs font-bold text-white shadow-md shadow-blue-600/25 hover:bg-blue-700 transition"
+                        className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-xs shadow-blue-600/25 hover:bg-blue-700 transition"
                       >
-                        {saving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : null}
-                        <span>Save & Continue to Goods & Warehouse (1C)</span>
-                        <ChevronRight className="h-4 w-4" />
+                        {saving ? <RefreshCw className="h-3 w-3 animate-spin" /> : null}
+                        <span>
+                          {formData.step1b_assignee_name
+                            ? tt("com.handover_and_send_to", "Handover & Send to {name} →").replace("{name}", formData.step1b_assignee_name)
+                            : tt("save_continue_1c", "Save & Continue to 1C (Goods)")}
+                        </span>
+                        <ChevronRight className="h-3.5 w-3.5" />
                       </button>
                     ) : currentStep === 3 ? (
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5">
                         <button
                           type="button"
                           onClick={() => setCurrentStep(4)}
                           disabled={saving}
-                          className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 transition"
+                          className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 transition shadow-2xs"
                         >
                           <span>{tt("review_summary", "Review Summary")}</span>
                         </button>
@@ -3239,10 +3250,14 @@ export function CustomerOrderManagementView() {
                           type="button"
                           onClick={() => void handleSaveProgress(true)}
                           disabled={saving}
-                          className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-5 py-2 text-xs font-bold text-white shadow-md shadow-emerald-600/25 hover:bg-emerald-700 transition"
+                          className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-xs shadow-emerald-600/25 hover:bg-emerald-700 transition"
                         >
-                          {saving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                          <span>Save & Proceed to Review (Step 4)</span>
+                          {saving ? <RefreshCw className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+                          <span>
+                            {formData.step1c_assignee_name
+                              ? tt("com.handover_and_send_to", "Handover & Send to {name} →").replace("{name}", formData.step1c_assignee_name)
+                              : tt("save_proceed_step4", "Save & Proceed to Review (Step 4)")}
+                          </span>
                         </button>
                       </div>
                     ) : (
@@ -3250,10 +3265,10 @@ export function CustomerOrderManagementView() {
                         type="button"
                         onClick={() => void handleSaveProgress(true)}
                         disabled={saving}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-6 py-2 text-xs font-bold text-white shadow-md shadow-emerald-600/25 hover:bg-emerald-700 transition"
+                        className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs shadow-emerald-600/25 hover:bg-emerald-700 transition"
                       >
-                        {saving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                        <span>{tt("confirm_save_order", "Confirm & Save Customer Order")}</span>
+                        {saving ? <RefreshCw className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+                        <span>{tt("confirm_register_order", "Confirm & Register Order")}</span>
                       </button>
                     )}
                   </div>
@@ -4285,6 +4300,7 @@ function Step1BookingCustomer({
   trucksList,
   warehousesList,
   goodsMasterList,
+  assignableUsers,
   handlePartyChange,
   handleLoadingCountryChange,
   handleReceivingCountryChange,
@@ -4319,6 +4335,7 @@ function Step1BookingCustomer({
   trucksList?: any[];
   warehousesList?: any[];
   goodsMasterList?: any[];
+  assignableUsers?: { id: string; name: string }[];
   handlePartyChange: (roleKey: PartyRoleKey, next: PartySelection) => void;
   handleLoadingCountryChange: (countryId: string) => void;
   handleReceivingCountryChange: (countryId: string) => void;
@@ -4607,38 +4624,18 @@ function Step1BookingCustomer({
       {/* ========================================================================= */}
       {step1SubStep === "1A" && (
         <div className="space-y-3.5 animate-in fade-in duration-150">
-          {/* Compact Serials & Timestamp Bar */}
-          <div className="rounded-xl border border-slate-200/90 bg-slate-50/80 px-3 py-2 text-xs dark:border-slate-800 dark:bg-slate-850">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="flex h-5 w-5 items-center justify-center rounded bg-blue-600 text-[10px] font-black text-white">
-                  1A
-                </span>
-                <span className="font-bold text-slate-800 dark:text-slate-200 text-xs">Serials:</span>
-                <span className="font-mono text-blue-700 dark:text-blue-300 font-bold">
-                  {formData.super_admin_serial || formData.order_no || "Auto"}
-                </span>
-                <span className="text-slate-300 dark:text-slate-600">•</span>
-                <span className="font-mono text-slate-600 dark:text-slate-300">
-                  {formData.country_serial || "Auto"}
-                </span>
-                <span className="text-slate-300 dark:text-slate-600">•</span>
-                <span className="font-mono text-slate-600 dark:text-slate-300">
-                  {formData.branch_serial || "Auto"}
-                </span>
-                <span className="text-slate-300 dark:text-slate-600">•</span>
-                <span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold">
-                  {formData.entry_serial || "Auto"}
-                </span>
+          {/* Multimodal Sea-Road Notice when By Sea is selected */}
+          {formData.transport_mode === "by_sea" && (
+            <div className="rounded-xl border border-blue-200/90 bg-blue-50/70 p-2.5 text-xs text-blue-900 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-200 shadow-2xs">
+              <div className="flex items-center gap-1.5 font-bold">
+                <Truck className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+                <span>{tt("com.sea_drayage_feeder_title", "Multimodal Sea-Road Drayage (Port Transfer Truck)")}</span>
               </div>
-              <div className="flex items-center gap-1 text-[10px] font-medium text-slate-500">
-                <Calendar className="h-3 w-3 text-blue-600" />
-                <span>{formData.order_date || new Date().toISOString().split("T")[0]}</span>
-                <span>•</span>
-                <span>{formData.order_time || new Date().toTimeString().slice(0, 5)}</span>
-              </div>
+              <p className="mt-1 text-[11px] text-blue-800/80 dark:text-blue-300/80 leading-relaxed">
+                {tt("com.sea_drayage_feeder_desc", "For Ocean Freight (By Sea), road haulage is required for initial port drayage / loading pickup and final delivery from port to destination warehouse.")}
+              </p>
             </div>
-          </div>
+          )}
 
           {/* 1. Customer Account SearchSelect */}
           <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
@@ -5100,19 +5097,12 @@ function Step1BookingCustomer({
                   transport_mode: "by_sea"
                 }));
               }}
-              className="text-[11px] font-bold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 underline"
+              className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 underline"
             >
-              {tt("reset_1a_form", "Reset 1A Form")}
+              <RefreshCw className="h-3 w-3" />
+              <span>{tt("reset_1a_form", "Reset 1A Form")}</span>
             </button>
-
-            <button
-              type="button"
-              onClick={onAdvanceToStep2}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-sm shadow-blue-600/25 hover:bg-blue-700 transition"
-            >
-              <span>{tt("save_continue_1b", "Save & Continue to 1B (Truck)")}</span>
-              <ChevronRight className="h-4 w-4" />
-            </button>
+            <span className="text-[10px] text-slate-400 font-medium">1A: Customer & Route</span>
           </div>
         </div>
       )}
@@ -5296,25 +5286,74 @@ function Step1BookingCustomer({
             </div>
           </div>
 
+          {/* Step 1B Handover & Execution Assignment */}
+          <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-1.5 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <Users className="h-3.5 w-3.5 text-blue-600" />
+                <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                  {tt("com.step1b_execution_assignment", "Step 1B (Truck & Fleet) Handover & Execution")}
+                </span>
+              </div>
+              <span className="text-[10px] font-bold text-slate-400">{tt("workflow_role", "Workflow Role")}</span>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                {tt("com.assign_other_user", "Assign to Other User / Team Member")}
+              </label>
+              <select
+                value={formData.step1b_assignee_id || ""}
+                onChange={(e) => {
+                  const uid = e.target.value;
+                  const u = (assignableUsers || []).find((usr) => usr.id === uid);
+                  setFormData((c) => ({
+                    ...c,
+                    step1b_assignee_id: uid,
+                    step1b_assignee_name: u?.name || ""
+                  }));
+                }}
+                className={selectClass}
+              >
+                <option value="">{tt("self_execution_option", "Complete this step myself (Default)")}</option>
+                {(assignableUsers || []).map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name} (Fleet / Transport Operator)
+                  </option>
+                ))}
+              </select>
+
+              {formData.step1b_assignee_id ? (
+                <div className="space-y-1.5 animate-in fade-in duration-150">
+                  <input
+                    type="text"
+                    value={formData.step1b_handover_notes || ""}
+                    onChange={(e) => setFormData((c) => ({ ...c, step1b_handover_notes: e.target.value }))}
+                    placeholder={tt("com.handover_notes_optional", "Handover Instructions / Dispatch Note (Optional)")}
+                    className={inputClass}
+                  />
+                  <div className="rounded-lg bg-blue-50/70 p-2 text-[11px] text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 flex items-center gap-1.5">
+                    <CheckCircle2 className="h-3 w-3 shrink-0 text-blue-600" />
+                    <span>
+                      {tt("com.step_handover_success", "Step successfully handed over to {name}.").replace("{name}", formData.step1b_assignee_name || "Team Member")}
+                    </span>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          </div>
+
           {/* 1B Action Footer */}
           <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
             <button
               type="button"
               onClick={() => selectSub("1A")}
-              className="inline-flex items-center gap-1 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
             >
-              <ChevronLeft className="h-4 w-4" />
-              <span>Back to 1A (Customer & Route)</span>
+              <ChevronLeft className="h-3 w-3" />
+              <span>Back to 1A</span>
             </button>
-
-            <button
-              type="button"
-              onClick={onAdvanceToStep3}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-sm shadow-blue-600/25 hover:bg-blue-700 transition"
-            >
-              <span>Save & Continue to 1C (Goods & Warehouse)</span>
-              <ChevronRight className="h-4 w-4" />
-            </button>
+            <span className="text-[10px] text-slate-400 font-medium">1B: Truck & Fleet</span>
           </div>
         </div>
       )}
@@ -5604,6 +5643,76 @@ function Step1BookingCustomer({
                 Total Gross Weight: <span className="font-black font-mono">{totalGoodsKg.toLocaleString()} KG</span> ({totalGoodsMt} MT)
               </span>
             </div>
+          </div>
+
+          {/* Step 1C Handover & Execution Assignment */}
+          <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-1.5 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <Users className="h-3.5 w-3.5 text-emerald-600" />
+                <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                  {tt("com.step1c_execution_assignment", "Step 1C (Goods & Warehouse) Handover & Execution")}
+                </span>
+              </div>
+              <span className="text-[10px] font-bold text-slate-400">{tt("cargo_officer", "Cargo Officer")}</span>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                {tt("com.assign_other_user", "Assign to Other User / Team Member")}
+              </label>
+              <select
+                value={formData.step1c_assignee_id || ""}
+                onChange={(e) => {
+                  const uid = e.target.value;
+                  const u = (assignableUsers || []).find((usr) => usr.id === uid);
+                  setFormData((c) => ({
+                    ...c,
+                    step1c_assignee_id: uid,
+                    step1c_assignee_name: u?.name || ""
+                  }));
+                }}
+                className={selectClass}
+              >
+                <option value="">{tt("self_execution_option", "Complete this step myself (Default)")}</option>
+                {(assignableUsers || []).map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name} (Warehouse / Cargo Inspection Officer)
+                  </option>
+                ))}
+              </select>
+
+              {formData.step1c_assignee_id ? (
+                <div className="space-y-1.5 animate-in fade-in duration-150">
+                  <input
+                    type="text"
+                    value={formData.step1c_handover_notes || ""}
+                    onChange={(e) => setFormData((c) => ({ ...c, step1c_handover_notes: e.target.value }))}
+                    placeholder={tt("com.handover_notes_optional", "Handover Instructions / Dispatch Note (Optional)")}
+                    className={inputClass}
+                  />
+                  <div className="rounded-lg bg-emerald-50/70 p-2 text-[11px] text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 flex items-center gap-1.5">
+                    <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-600" />
+                    <span>
+                      {tt("com.step_handover_success", "Step successfully handed over to {name}.").replace("{name}", formData.step1c_assignee_name || "Team Member")}
+                    </span>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          </div>
+
+          {/* 1C Action Footer */}
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+            <button
+              type="button"
+              onClick={() => selectSub("1B")}
+              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+            >
+              <ChevronLeft className="h-3 w-3" />
+              <span>Back to 1B</span>
+            </button>
+            <span className="text-[10px] text-slate-400 font-medium">1C: Goods & Warehouse</span>
           </div>
         </div>
       )}

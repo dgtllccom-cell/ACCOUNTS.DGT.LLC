@@ -8951,6 +8951,16 @@ export type UiKey =
   | "com.verified_manifest_summary"
   | "com.manifest_calc_note"
   | "com.total_summary_colon"
+  | "com.step1b_execution_assignment"
+  | "com.step1c_execution_assignment"
+  | "com.assign_other_user"
+  | "com.select_fleet_assignee"
+  | "com.select_warehouse_assignee"
+  | "com.handover_notes_optional"
+  | "com.sea_drayage_feeder_title"
+  | "com.sea_drayage_feeder_desc"
+  | "com.handover_and_send_to"
+  | "com.step_handover_success"
   | "wh.create_warehouse_title"
   | "wh.edit_warehouse_title"
   | "wh.warehouse_details_title"
@@ -29229,6 +29239,16 @@ const en: Dict = {
   "com.verified_manifest_summary": "Verified Cargo Manifest Summary",
   "com.manifest_calc_note": "Cargo weights and packaging units are automatically calculated across all manifest line items.",
   "com.total_summary_colon": "Total Summary:",
+  "com.step1b_execution_assignment": "Step 1B (Truck & Fleet) Handover & Execution",
+  "com.step1c_execution_assignment": "Step 1C (Goods & Warehouse) Handover & Execution",
+  "com.assign_other_user": "Assign to Other User / Team Member",
+  "com.select_fleet_assignee": "Select Fleet / Transport Operator",
+  "com.select_warehouse_assignee": "Select Warehouse / Cargo Inspection Officer",
+  "com.handover_notes_optional": "Handover Instructions / Dispatch Note (Optional)",
+  "com.sea_drayage_feeder_title": "Multimodal Sea-Road Drayage (Port Transfer Truck)",
+  "com.sea_drayage_feeder_desc": "For Ocean Freight (By Sea), road haulage is required for initial port drayage / loading pickup and final delivery from port to destination warehouse.",
+  "com.handover_and_send_to": "Handover & Send to {name} →",
+  "com.step_handover_success": "Step successfully handed over to {name}.",
   "wh.create_warehouse_title": "Create Warehouse",
   "wh.edit_warehouse_title": "Edit Warehouse - {name}",
   "wh.warehouse_details_title": "Warehouse Details - {name}",
@@ -49499,6 +49519,16 @@ const ur: Dict = {
   "com.verified_manifest_summary": "تصدیق شدہ کارگو منشور کا خلاصہ",
   "com.manifest_calc_note": "کارگو وزن اور پیکیجنگ یونٹس تمام منشور آئٹمز سے خودکار شمار کیے جاتے ہیں۔",
   "com.total_summary_colon": "کل خلاصہ:",
+  "com.step1b_execution_assignment": "مرحلہ 1B (ٹرک اور بیڑہ) ہینڈ اوور اور عملدرآمد",
+  "com.step1c_execution_assignment": "مرحلہ 1C (مال اور گودام) ہینڈ اوور اور عملدرآمد",
+  "com.assign_other_user": "کسی دوسرے صارف / ٹیم ممبر کو تفویض کریں",
+  "com.select_fleet_assignee": "ٹرانسپورٹ / فلیٹ آپریٹر منتخب کریں",
+  "com.select_warehouse_assignee": "گودام / کارگو انسپکشن آفیسر منتخب کریں",
+  "com.handover_notes_optional": "ہینڈ اوور ہدایات / ڈسپیچ نوٹ (اختیاری)",
+  "com.sea_drayage_feeder_title": "ملٹی موڈل سمندری و سڑک ٹرانسپورٹ (پورٹ ٹرانسفر ٹرک)",
+  "com.sea_drayage_feeder_desc": "بحری ترسیل کے لیے ابتدا میں پورٹ تک مال پہنچانے اور اختتام پر پورٹ سے کسٹمر کے گودام تک لے جانے کے لیے روڈ ٹرک درکار ہوتا ہے۔",
+  "com.handover_and_send_to": "{name} کو ہینڈ اوور اور ارسال کریں →",
+  "com.step_handover_success": "مرحلہ کامیابی سے {name} کو تفویض کر دیا گیا۔",
   "wh.create_warehouse_title": "گودام بنائیں",
   "wh.edit_warehouse_title": "گودام میں ترمیم کریں - {name}",
   "wh.warehouse_details_title": "گودام کی تفصیلات - {name}",
@@ -69822,6 +69852,16 @@ const ar: Dict = {
   "com.verified_manifest_summary": "ملخص بيان الشحن المعتمد",
   "com.manifest_calc_note": "يتم حساب أوزان البضائع ووحدات التعبئة تلقائياً عبر جميع بنود بيان الشحن.",
   "com.total_summary_colon": "الملخص الإجمالي:",
+  "com.step1b_execution_assignment": "تسليم وتنفيذ الخطوة 1B (الشاحنة والأسطول)",
+  "com.step1c_execution_assignment": "تسليم وتنفيذ الخطوة 1C (البضائع والمستودع)",
+  "com.assign_other_user": "تعيين لمستخدم آخر / عضو فريق",
+  "com.select_fleet_assignee": "حدد مشغل الأسطول / النقل",
+  "com.select_warehouse_assignee": "حدد مسؤول المستودع / فحص الشحنة",
+  "com.handover_notes_optional": "تعليمات التسليم / ملاحظة الإرسال (اختياري)",
+  "com.sea_drayage_feeder_title": "النقل المتعدد بحري-بري (شاحنة نقل الميناء)",
+  "com.sea_drayage_feeder_desc": "للشحن البحري، يلزم النقل البري بالشاحنات لنقل الحاويات إلى الميناء والتوصيل النهائي من الميناء إلى المستودع المستهدف.",
+  "com.handover_and_send_to": "تسليم وإرسال إلى {name} ←",
+  "com.step_handover_success": "تم تسليم المرحلة بنجاح إلى {name}.",
   "wh.create_warehouse_title": "إنشاء مستودع",
   "wh.edit_warehouse_title": "تعديل المستودع - {name}",
   "wh.warehouse_details_title": "تفاصيل المستودع - {name}",
@@ -90144,6 +90184,16 @@ const fa: Dict = {
   "com.verified_manifest_summary": "خلاصه بارنامه تایید شده محموله",
   "com.manifest_calc_note": "وزن‌های محموله و واحدهای بسته‌بندی به‌طور خودکار در تمام ردیف‌های بارنامه محاسبه می‌شوند.",
   "com.total_summary_colon": "خلاصه کل:",
+  "com.step1b_execution_assignment": "تحویل و اجرای مرحله 1B (کامیون و ناوگان)",
+  "com.step1c_execution_assignment": "تحویل و اجرای مرحله 1C (کالا و انبار)",
+  "com.assign_other_user": "واگذاری به کاربر دیگر / عضو تیم",
+  "com.select_fleet_assignee": "انتخاب متصدی ناوگان / حمل و نقل",
+  "com.select_warehouse_assignee": "انتخاب مسئول انبار / بازرسی محموله",
+  "com.handover_notes_optional": "دستورالعمل تحویل / یادداشت ارسال (اختیاری)",
+  "com.sea_drayage_feeder_title": "حمل و نقل ترکیبی دریایی-جاده‌ای (کامیون انتقال بندر)",
+  "com.sea_drayage_feeder_desc": "برای حمل دریایی، حمل جاده‌ای با کامیون جهت انتقال اولیه به بندر و تحویل نهایی از بندر به انبار مقصد الزامی است.",
+  "com.handover_and_send_to": "تحویل و ارسال به {name} ←",
+  "com.step_handover_success": "مرحله با موفقیت به {name} واگذار شد.",
   "wh.create_warehouse_title": "ایجاد انبار",
   "wh.edit_warehouse_title": "ویرایش انبار - {name}",
   "wh.warehouse_details_title": "جزئیات انبار - {name}",
@@ -110473,6 +110523,16 @@ const ps: Dict = {
   "com.verified_manifest_summary": "د تایید شوي کارګو منشور لنډیز",
   "com.manifest_calc_note": "د کارګو وزنونه او د بسته بندۍ واحدونه د منشور د ټولو توکو له مخې په اتوماتيک ډول حساب کیږي.",
   "com.total_summary_colon": "ټول لنډیز:",
+  "com.step1b_execution_assignment": "د 1B مرحلې (لارۍ او بیړۍ) سپارل او پلي کول",
+  "com.step1c_execution_assignment": "د 1C مرحلې (مالونه او ګدام) سپارل او پلي کول",
+  "com.assign_other_user": "بل کارن / د ټیم غړي ته وسپارئ",
+  "com.select_fleet_assignee": "د بیړۍ / ترانسپورت چلونکی وټاکئ",
+  "com.select_warehouse_assignee": "د ګدام / کارګو تفتیش مسؤل وټاکئ",
+  "com.handover_notes_optional": "د سپارلو لارښوونې / د لیږلو یادښت (اختیاري)",
+  "com.sea_drayage_feeder_title": "ملټي موډل سمندري-ځمکني ترانسپورت (د بندر انتقال لارۍ)",
+  "com.sea_drayage_feeder_desc": "د سمندري بار وړلو لپاره، بندر ته د کانټینر وړلو او له بندر څخه ګدام ته د رسولو لپاره ځمکنی موټر اړین دی.",
+  "com.handover_and_send_to": "وسپارئ او {name} ته یې ولیږئ ←",
+  "com.step_handover_success": "مرحله په بریالیتوب سره {name} ته وسپارل شوه.",
   "wh.create_warehouse_title": "ګدام جوړول",
   "wh.edit_warehouse_title": "ګدام سمول - {name}",
   "wh.warehouse_details_title": "د ګدام توضیحات - {name}",
