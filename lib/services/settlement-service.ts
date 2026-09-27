@@ -105,8 +105,17 @@ export class SettlementService {
     search?: string | null;
     limit?: number;
     offset?: number;
+    /** Session scope for non-super-admin callers (null = unrestricted super admin). */
+    scope?: { countryIds: string[]; countryBranchIds: string[]; cityBranchIds: string[] } | null;
   }): Promise<{ items: SettlementTransactionRow[]; total: number }> {
+    const sc = params.scope;
+    if (sc && !sc.countryIds.length && !sc.countryBranchIds.length && !sc.cityBranchIds.length) {
+      return { items: [], total: 0 };
+    }
     const res = await withLocalPg(async (sql) => {
+      const scopeCond = sc
+        ? sql`(st.city_branch_id = ANY(${sc.cityBranchIds}::uuid[]) OR st.country_branch_id = ANY(${sc.countryBranchIds}::uuid[]) OR st.country_id = ANY(${sc.countryIds}::uuid[]))`
+        : sql`TRUE`;
       const limit = Math.min(params.limit || 50, 200);
       const offset = params.offset || 0;
 
@@ -121,6 +130,7 @@ export class SettlementService {
         LEFT JOIN public.country_branches cb ON cb.id = st.country_branch_id
         LEFT JOIN public.city_branches cib ON cib.id = st.city_branch_id
         WHERE st.deleted_at IS NULL
+          AND ${scopeCond}
           AND (${params.countryId ? sql`st.country_id = ${params.countryId}` : sql`TRUE`})
           AND (${params.countryBranchId ? sql`st.country_branch_id = ${params.countryBranchId}` : sql`TRUE`})
           AND (${params.cityBranchId ? sql`st.city_branch_id = ${params.cityBranchId}` : sql`TRUE`})
@@ -145,6 +155,7 @@ export class SettlementService {
         SELECT COUNT(*) as total
         FROM public.settlement_transactions st
         WHERE st.deleted_at IS NULL
+          AND ${scopeCond}
           AND (${params.countryId ? sql`st.country_id = ${params.countryId}` : sql`TRUE`})
           AND (${params.countryBranchId ? sql`st.country_branch_id = ${params.countryBranchId}` : sql`TRUE`})
           AND (${params.cityBranchId ? sql`st.city_branch_id = ${params.cityBranchId}` : sql`TRUE`})

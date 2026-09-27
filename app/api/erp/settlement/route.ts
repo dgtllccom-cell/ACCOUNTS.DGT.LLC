@@ -10,8 +10,19 @@ export const revalidate = 0;
 
 export async function GET(request: NextRequest) {
   try {
-    await requireErpSession();
+    const session = await requireErpSession();
     const { searchParams } = new URL(request.url);
+    // Branch/country users only ever see settlement rows inside their own assignments
+    // (same derivation as the Roznamcha reports route); Super Admin is unrestricted.
+    let scope: { countryIds: string[]; countryBranchIds: string[]; cityBranchIds: string[] } | null = null;
+    if (!session.isSuperAdmin) {
+      scope = { countryIds: [], countryBranchIds: [], cityBranchIds: [] };
+      for (const a of session.assignments) {
+        if (a.cityBranchId) scope.cityBranchIds.push(a.cityBranchId);
+        else if (a.countryBranchId) scope.countryBranchIds.push(a.countryBranchId);
+        else if (a.countryId) scope.countryIds.push(a.countryId);
+      }
+    }
 
     const countryId = searchParams.get("countryId") || undefined;
     const countryBranchId = searchParams.get("countryBranchId") || undefined;
@@ -41,7 +52,8 @@ export async function GET(request: NextRequest) {
       isFlagged,
       search,
       limit,
-      offset
+      offset,
+      scope
     });
 
     const lang = await getRequestLanguage(searchParams.get("lang"));
