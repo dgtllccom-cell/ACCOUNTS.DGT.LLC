@@ -3891,9 +3891,17 @@ export function CustomerOrderManagementView() {
                     </button>
                   </div>
 
-                  {/* Manifest Table */}
-                  <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white dark:border-slate-750 dark:bg-slate-850">
-                    <table className="w-full text-left text-xs border-collapse">
+                  {/* Manifest Table & Totals */}
+                  {(() => {
+                    const totalItems = (formData.goods_items || []).length;
+                    const totalPackages = (formData.goods_items || []).reduce((acc, it) => acc + (Number(it.quantity) || 0), 0);
+                    const totalKg = (formData.goods_items || []).reduce((acc, it) => acc + (Number(it.totalKg) || 0), 0);
+                    const totalMt = (totalKg / 1000).toFixed(3);
+
+                    return (
+                      <>
+                        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white dark:border-slate-750 dark:bg-slate-850">
+                          <table className="w-full text-left text-xs border-collapse">
                       <thead className="border-b border-slate-200 bg-slate-50/90 font-bold uppercase tracking-wider text-slate-500 dark:border-slate-750 dark:bg-slate-800 text-[9.5px]">
                         <tr>
                           <th className="py-2.5 px-3">#</th>
@@ -4024,36 +4032,101 @@ export function CustomerOrderManagementView() {
                           );
                         })}
                       </tbody>
+                      <tfoot className="border-t-2 border-slate-200 bg-slate-50/80 font-bold text-slate-700 dark:border-slate-750 dark:bg-slate-800/60 text-[11px]">
+                        <tr>
+                          <td colSpan={4} className="py-2.5 px-3 text-right uppercase tracking-wider text-[10px] text-slate-500 font-bold">
+                            {tt("total_summary_colon", "Total Summary:")}
+                          </td>
+                          <td className="py-2.5 px-3 text-right font-mono font-bold text-slate-900 dark:text-white">
+                            {totalPackages.toLocaleString()}
+                          </td>
+                          <td className="py-2.5 px-3"></td>
+                          <td className="py-2.5 px-3 text-right font-mono font-bold text-indigo-700 dark:text-indigo-400">
+                            {totalKg.toLocaleString()} kg
+                          </td>
+                          <td className="py-2.5 px-3 text-right font-mono font-bold text-purple-700 dark:text-purple-400">
+                            {totalMt} MT
+                          </td>
+                          <td colSpan={3}></td>
+                        </tr>
+                      </tfoot>
                     </table>
                   </div>
 
-                  {/* Grand Manifest Totals KPI Banner */}
-                  {(() => {
-                    const totalItems = (formData.goods_items || []).length;
-                    const totalPackages = (formData.goods_items || []).reduce((acc, it) => acc + (Number(it.quantity) || 0), 0);
-                    const totalKg = (formData.goods_items || []).reduce((acc, it) => acc + (Number(it.totalKg) || 0), 0);
-                    const totalMt = (totalKg / 1000).toFixed(3);
-                    return (
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-center text-xs pt-1">
-                        <div className="rounded-xl border border-blue-200/80 bg-blue-50/50 p-2.5 dark:border-blue-900/40 dark:bg-blue-950/30">
-                          <span className="text-[9px] font-bold uppercase text-slate-400 block">Total Items</span>
-                          <span className="text-base font-black text-slate-900 dark:text-white mt-0.5 block">{totalItems}</span>
+                  {/* Grand Manifest Totals Message Card (Corner Message Layout) */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 pt-2">
+                    {/* Left: Summary Note */}
+                    <div className="space-y-1 text-xs text-slate-500 dark:text-slate-400">
+                      <div className="flex items-center gap-1.5 font-bold text-slate-700 dark:text-slate-300">
+                        <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block"></span>
+                        <span>{tt("verified_manifest_summary", "Verified Cargo Manifest Summary")}</span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 dark:text-slate-500 max-w-sm">
+                        {tt("manifest_calc_note", "Cargo weights and packaging units are automatically calculated across all manifest line items.")}
+                      </p>
+                    </div>
+
+                    {/* Right Corner: Message Card (No Packets) */}
+                    <div className="w-full sm:w-80 rounded-xl border border-slate-200/90 bg-slate-50/70 p-3.5 dark:border-slate-800 dark:bg-slate-850/80 shadow-2xs space-y-2">
+                      <div className="flex items-center justify-between pb-1.5 border-b border-slate-200 dark:border-slate-750">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                          {tt("manifest_totals_summary", "MANIFEST TOTALS SUMMARY")}
+                        </span>
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800">
+                          {totalItems} {tt("goods_item", "Items")}
+                        </span>
+                      </div>
+
+                      <div className="space-y-1.5 text-xs">
+                        {/* 1. Total Entries / Items */}
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                            <span className="font-bold text-slate-400 font-mono text-[11px]">1.</span>
+                            <span className="font-medium">{tt("total_entries_label", "Total Entries / Items:")}</span>
+                          </span>
+                          <span className="font-bold text-slate-900 dark:text-white font-mono">
+                            {totalItems}
+                          </span>
                         </div>
-                        <div className="rounded-xl border border-emerald-200/80 bg-emerald-50/50 p-2.5 dark:border-emerald-900/40 dark:bg-emerald-950/30">
-                          <span className="text-[9px] font-bold uppercase text-slate-400 block">Total Packaging</span>
-                          <span className="text-base font-black text-emerald-700 dark:text-emerald-400 mt-0.5 block">{totalPackages.toLocaleString()} Units</span>
+
+                        {/* 2. Total Packaging */}
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                            <span className="font-bold text-slate-400 font-mono text-[11px]">2.</span>
+                            <span className="font-medium">{tt("total_packaging_label", "Total Packaging / Units:")}</span>
+                          </span>
+                          <span className="font-bold text-emerald-700 dark:text-emerald-400 font-mono">
+                            {totalPackages.toLocaleString()} {tt("unit", "Units")}
+                          </span>
                         </div>
-                        <div className="rounded-xl border border-indigo-200/80 bg-indigo-50/50 p-2.5 dark:border-indigo-900/40 dark:bg-indigo-950/30">
-                          <span className="text-[9px] font-bold uppercase text-slate-400 block">Total Gross Wt (KG)</span>
-                          <span className="text-base font-black text-indigo-700 dark:text-indigo-400 mt-0.5 block">{totalKg.toLocaleString()} kg</span>
+
+                        {/* 3. Total Gross Wt (KG) */}
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                            <span className="font-bold text-slate-400 font-mono text-[11px]">3.</span>
+                            <span className="font-medium">{tt("total_gross_wt_kg_label", "Total Gross Wt (KG):")}</span>
+                          </span>
+                          <span className="font-bold text-indigo-700 dark:text-indigo-400 font-mono">
+                            {totalKg.toLocaleString()} kg
+                          </span>
                         </div>
-                        <div className="rounded-xl border border-purple-200/80 bg-purple-50/50 p-2.5 dark:border-purple-900/40 dark:bg-purple-950/30">
-                          <span className="text-[9px] font-bold uppercase text-slate-400 block">Total Gross Wt (MT)</span>
-                          <span className="text-base font-black text-purple-700 dark:text-purple-400 mt-0.5 block">{totalMt} MT</span>
+
+                        {/* 4. Total Gross Wt (MT) */}
+                        <div className="flex items-center justify-between pt-1 border-t border-slate-200/80 dark:border-slate-750">
+                          <span className="text-slate-700 dark:text-slate-300 flex items-center gap-1.5 font-bold">
+                            <span className="font-bold text-slate-400 font-mono text-[11px]">4.</span>
+                            <span>{tt("total_gross_wt_mt_label", "Total Gross Wt (MT):")}</span>
+                          </span>
+                          <span className="font-black text-purple-700 dark:text-purple-400 font-mono text-sm">
+                            {totalMt} MT
+                          </span>
                         </div>
                       </div>
-                    );
-                  })()}
+                    </div>
+                  </div>
+                </>
+              );
+            })()}
                 </div>
               </div>
             </div>

@@ -8943,6 +8943,14 @@ export type UiKey =
   | "com.other_warehouse_title"
   | "com.third_party_yard_port"
   | "com.customer_registered_address"
+  | "com.total_entries_label"
+  | "com.total_packaging_label"
+  | "com.total_gross_wt_kg_label"
+  | "com.total_gross_wt_mt_label"
+  | "com.manifest_totals_summary"
+  | "com.verified_manifest_summary"
+  | "com.manifest_calc_note"
+  | "com.total_summary_colon"
   | "wh.create_warehouse_title"
   | "wh.edit_warehouse_title"
   | "wh.warehouse_details_title"
@@ -29213,6 +29221,14 @@ const en: Dict = {
   "com.other_warehouse_title": "Other Warehouse",
   "com.third_party_yard_port": "Third-Party Yard / Port",
   "com.customer_registered_address": "Customer Registered Address",
+  "com.total_entries_label": "Total Entries / Items:",
+  "com.total_packaging_label": "Total Packaging / Units:",
+  "com.total_gross_wt_kg_label": "Total Gross Wt (KG):",
+  "com.total_gross_wt_mt_label": "Total Gross Wt (MT):",
+  "com.manifest_totals_summary": "MANIFEST TOTALS SUMMARY",
+  "com.verified_manifest_summary": "Verified Cargo Manifest Summary",
+  "com.manifest_calc_note": "Cargo weights and packaging units are automatically calculated across all manifest line items.",
+  "com.total_summary_colon": "Total Summary:",
   "wh.create_warehouse_title": "Create Warehouse",
   "wh.edit_warehouse_title": "Edit Warehouse - {name}",
   "wh.warehouse_details_title": "Warehouse Details - {name}",
@@ -49475,6 +49491,14 @@ const ur: Dict = {
   "com.other_warehouse_title": "دیگر گودام",
   "com.third_party_yard_port": "تھرڈ پارٹی یارڈ / بندرگاہ",
   "com.customer_registered_address": "کسٹمر رجسٹرڈ پتہ",
+  "com.total_entries_label": "کل اندراجات / اشیاء:",
+  "com.total_packaging_label": "کل پیکیجنگ / یونٹس:",
+  "com.total_gross_wt_kg_label": "کل مجموعی وزن (کلوگرام):",
+  "com.total_gross_wt_mt_label": "کل مجموعی وزن (میٹرک ٹن):",
+  "com.manifest_totals_summary": "منشور کے کل خلاصے",
+  "com.verified_manifest_summary": "تصدیق شدہ کارگو منشور کا خلاصہ",
+  "com.manifest_calc_note": "کارگو وزن اور پیکیجنگ یونٹس تمام منشور آئٹمز سے خودکار شمار کیے جاتے ہیں۔",
+  "com.total_summary_colon": "کل خلاصہ:",
   "wh.create_warehouse_title": "گودام بنائیں",
   "wh.edit_warehouse_title": "گودام میں ترمیم کریں - {name}",
   "wh.warehouse_details_title": "گودام کی تفصیلات - {name}",
@@ -69790,6 +69814,14 @@ const ar: Dict = {
   "com.other_warehouse_title": "مستودع آخر",
   "com.third_party_yard_port": "ساحة / ميناء طرف ثالث",
   "com.customer_registered_address": "عنوان العميل المسجل",
+  "com.total_entries_label": "إجمالي المدخلات / الأصناف:",
+  "com.total_packaging_label": "إجمالي التعبئة / الوحدات:",
+  "com.total_gross_wt_kg_label": "إجمالي الوزن القائم (كجم):",
+  "com.total_gross_wt_mt_label": "إجمالي الوزن القائم (طن متري):",
+  "com.manifest_totals_summary": "ملخص إجماليات بيان الشحن",
+  "com.verified_manifest_summary": "ملخص بيان الشحن المعتمد",
+  "com.manifest_calc_note": "يتم حساب أوزان البضائع ووحدات التعبئة تلقائياً عبر جميع بنود بيان الشحن.",
+  "com.total_summary_colon": "الملخص الإجمالي:",
   "wh.create_warehouse_title": "إنشاء مستودع",
   "wh.edit_warehouse_title": "تعديل المستودع - {name}",
   "wh.warehouse_details_title": "تفاصيل المستودع - {name}",
@@ -90104,6 +90136,14 @@ const fa: Dict = {
   "com.other_warehouse_title": "انبار دیگر",
   "com.third_party_yard_port": "محوطه / بندر شخص ثالث",
   "com.customer_registered_address": "آدرس ثبت‌شده مشتری",
+  "com.total_entries_label": "مجموع ورودی‌ها / اقلام:",
+  "com.total_packaging_label": "مجموع بسته‌بندی / واحدها:",
+  "com.total_gross_wt_kg_label": "مجموع وزن ناخالص (کیلوگرم):",
+  "com.total_gross_wt_mt_label": "مجموع وزن ناخالص (تن متریک):",
+  "com.manifest_totals_summary": "خلاصه مجموع کل بارنامه",
+  "com.verified_manifest_summary": "خلاصه بارنامه تایید شده محموله",
+  "com.manifest_calc_note": "وزن‌های محموله و واحدهای بسته‌بندی به‌طور خودکار در تمام ردیف‌های بارنامه محاسبه می‌شوند.",
+  "com.total_summary_colon": "خلاصه کل:",
   "wh.create_warehouse_title": "ایجاد انبار",
   "wh.edit_warehouse_title": "ویرایش انبار - {name}",
   "wh.warehouse_details_title": "جزئیات انبار - {name}",
@@ -110425,6 +110465,14 @@ const ps: Dict = {
   "com.other_warehouse_title": "نور ګدام",
   "com.third_party_yard_port": "د دریمې ډلې پيليز / بندر",
   "com.customer_registered_address": "د پیرودونکي راجستر شوی پته",
+  "com.total_entries_label": "ټولې داخلې / توکي:",
+  "com.total_packaging_label": "ټول بسته بندي / واحدونه:",
+  "com.total_gross_wt_kg_label": "ټول ناخالص وزن (کیلوګرام):",
+  "com.total_gross_wt_mt_label": "ټول ناخالص وزن (میټریک ټن):",
+  "com.manifest_totals_summary": "د منشور د ټولو مجموعه",
+  "com.verified_manifest_summary": "د تایید شوي کارګو منشور لنډیز",
+  "com.manifest_calc_note": "د کارګو وزنونه او د بسته بندۍ واحدونه د منشور د ټولو توکو له مخې په اتوماتيک ډول حساب کیږي.",
+  "com.total_summary_colon": "ټول لنډیز:",
   "wh.create_warehouse_title": "ګدام جوړول",
   "wh.edit_warehouse_title": "ګدام سمول - {name}",
   "wh.warehouse_details_title": "د ګدام توضیحات - {name}",
