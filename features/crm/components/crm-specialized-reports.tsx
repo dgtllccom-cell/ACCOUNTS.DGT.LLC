@@ -112,16 +112,17 @@ export function CrmSpecializedReportView({ reportType }: SpecializedReportProps)
   const Icon = currentMeta.icon;
 
   const kpis = data?.c360?.kpis || {
-    totalCustomers: 1284,
-    activeCustomers: 892,
-    followUpsToday: 28,
-    receivableDue: 1245680,
+    totalCustomers: 0,
+    activeCustomers: 0,
+    followUpsToday: 0,
+    receivableDue: 0,
     receivableDueCurrency: "AED",
-    customerHealth: 78
+    customerHealth: 0
   };
 
   const customers = data?.c360?.customers || [];
   const actionItems = data?.dashboard?.actionItems || [];
+  const teamUsers = data?.c360?.filterOptions?.users || [];
 
   return (
     <div className={`w-full min-h-screen space-y-6 font-sans pb-12 ${isRtl ? "rtl" : "ltr"}`}>
@@ -286,20 +287,28 @@ export function CrmSpecializedReportView({ reportType }: SpecializedReportProps)
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {customers.slice(0, 6).map((c: any) => (
-                      <tr key={c.id} className="hover:bg-slate-50/60">
-                        <td className="p-3 font-mono font-bold text-blue-600">{c.customerCode}</td>
-                        <td className="p-3 font-bold text-slate-800">{c.companyName}</td>
-                        <td className="p-3">{c.countryFlag} {c.countryName}</td>
-                        <td className="p-3">{c.branchName}</td>
-                        <td className="p-3">{c.assignedUserName}</td>
-                        <td className="p-3 text-right">
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            {c.health}
-                          </span>
+                    {customers.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="p-4 text-center text-slate-500">
+                          No commercial accounts registered
                         </td>
                       </tr>
-                    ))}
+                    ) : (
+                      customers.slice(0, 6).map((c: any) => (
+                        <tr key={c.id} className="hover:bg-slate-50/60">
+                          <td className="p-3 font-mono font-bold text-blue-600">{c.customerCode}</td>
+                          <td className="p-3 font-bold text-slate-800">{c.companyName}</td>
+                          <td className="p-3">{c.countryFlag} {c.countryName}</td>
+                          <td className="p-3">{c.branchName}</td>
+                          <td className="p-3">{c.assignedUserName}</td>
+                          <td className="p-3 text-right">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              {c.health}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -314,43 +323,39 @@ export function CrmSpecializedReportView({ reportType }: SpecializedReportProps)
               Commercial Deal Pipeline by Stage
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              {/* Stage 1: New Inquiry */}
               <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-slate-700">1. New Lead</span>
-                  <Badge className="bg-blue-100 text-blue-700">18</Badge>
+                  <Badge className="bg-blue-100 text-blue-700">0</Badge>
                 </div>
-                <div className="text-sm font-black text-slate-900">AED 840,000</div>
+                <div className="text-sm font-black text-slate-900">AED 0</div>
                 <div className="text-[11px] text-slate-500">Initial requirements logged</div>
               </div>
 
-              {/* Stage 2: Proposal Sent */}
               <div className="p-4 rounded-2xl border border-purple-200 bg-purple-50/30 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-purple-800">2. Proposal Sent</span>
-                  <Badge className="bg-purple-100 text-purple-700">12</Badge>
+                  <Badge className="bg-purple-100 text-purple-700">0</Badge>
                 </div>
-                <div className="text-sm font-black text-slate-900">AED 1,420,000</div>
+                <div className="text-sm font-black text-slate-900">AED 0</div>
                 <div className="text-[11px] text-purple-600">Quotations pending review</div>
               </div>
 
-              {/* Stage 3: Negotiation */}
               <div className="p-4 rounded-2xl border border-amber-200 bg-amber-50/30 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-amber-800">3. Negotiation</span>
-                  <Badge className="bg-amber-100 text-amber-700">8</Badge>
+                  <Badge className="bg-amber-100 text-amber-700">0</Badge>
                 </div>
-                <div className="text-sm font-black text-slate-900">AED 980,000</div>
-                <div className="text-[11px] text-amber-600">Terms & payment condition</div>
+                <div className="text-sm font-black text-slate-900">AED 0</div>
+                <div className="text-[11px] text-amber-600">Terms &amp; payment condition</div>
               </div>
 
-              {/* Stage 4: Closed Contract */}
               <div className="p-4 rounded-2xl border border-emerald-200 bg-emerald-50/30 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-emerald-800">4. Confirmed Contract</span>
-                  <Badge className="bg-emerald-100 text-emerald-700">24</Badge>
+                  <Badge className="bg-emerald-100 text-emerald-700">0</Badge>
                 </div>
-                <div className="text-sm font-black text-slate-900">AED 2,860,000</div>
+                <div className="text-sm font-black text-slate-900">AED 0</div>
                 <div className="text-[11px] text-emerald-600">Sales order posted</div>
               </div>
             </div>
@@ -366,23 +371,23 @@ export function CrmSpecializedReportView({ reportType }: SpecializedReportProps)
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50/40">
                 <span className="text-xs font-bold text-emerald-800">Current (Not Overdue)</span>
-                <div className="text-xl font-black text-emerald-700 mt-1">AED 680,450</div>
-                <p className="text-[11px] text-emerald-600 mt-1">42 accounts on standard credit</p>
+                <div className="text-xl font-black text-emerald-700 mt-1">AED {Number(kpis.receivableDue || 0).toLocaleString()}</div>
+                <p className="text-[11px] text-emerald-600 mt-1">Pending recovery balances</p>
               </div>
               <div className="p-4 rounded-xl border border-amber-200 bg-amber-50/40">
                 <span className="text-xs font-bold text-amber-800">1 - 30 Days Due</span>
-                <div className="text-xl font-black text-amber-700 mt-1">AED 310,200</div>
-                <p className="text-[11px] text-amber-600 mt-1">16 active follow-ups assigned</p>
+                <div className="text-xl font-black text-amber-700 mt-1">AED 0</div>
+                <p className="text-[11px] text-amber-600 mt-1">0 active follow-ups</p>
               </div>
               <div className="p-4 rounded-xl border border-orange-200 bg-orange-50/40">
                 <span className="text-xs font-bold text-orange-800">31 - 60 Days Overdue</span>
-                <div className="text-xl font-black text-orange-700 mt-1">AED 165,030</div>
-                <p className="text-[11px] text-orange-600 mt-1">Promise dates committed</p>
+                <div className="text-xl font-black text-orange-700 mt-1">AED 0</div>
+                <p className="text-[11px] text-orange-600 mt-1">0 overdue accounts</p>
               </div>
               <div className="p-4 rounded-xl border border-rose-200 bg-rose-50/40">
                 <span className="text-xs font-bold text-rose-800">60+ Days Critical</span>
-                <div className="text-xl font-black text-rose-700 mt-1">AED 90,000</div>
-                <p className="text-[11px] text-rose-600 mt-1">Executive notice sent</p>
+                <div className="text-xl font-black text-rose-700 mt-1">AED 0</div>
+                <p className="text-[11px] text-rose-600 mt-1">0 critical accounts</p>
               </div>
             </div>
           </div>
@@ -398,28 +403,28 @@ export function CrmSpecializedReportView({ reportType }: SpecializedReportProps)
               <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-2">
                 <div className="flex items-center gap-2 font-bold text-slate-800">
                   <span className="text-lg">🇦🇪</span>
-                  <span>{t("uae", "United Arab Emirates")}</span>
+                  <span>United Arab Emirates</span>
                 </div>
-                <div className="text-xl font-black text-slate-900">AED 2,450,000</div>
-                <p className="text-xs text-slate-500">Dubai, Sharjah, Abu Dhabi branches</p>
+                <div className="text-xl font-black text-slate-900">AED {Number(kpis.receivableDue || 0).toLocaleString()}</div>
+                <p className="text-xs text-slate-500">Commercial operations</p>
               </div>
 
               <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-2">
                 <div className="flex items-center gap-2 font-bold text-slate-800">
                   <span className="text-lg">🇸🇦</span>
-                  <span>{t("saudiArabia", "Saudi Arabia")}</span>
+                  <span>Saudi Arabia</span>
                 </div>
-                <div className="text-xl font-black text-slate-900">SAR 1,820,000</div>
-                <p className="text-xs text-slate-500">Riyadh, Jeddah, Dammam branches</p>
+                <div className="text-xl font-black text-slate-900">SAR 0</div>
+                <p className="text-xs text-slate-500">Commercial operations</p>
               </div>
 
               <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-2">
                 <div className="flex items-center gap-2 font-bold text-slate-800">
                   <span className="text-lg">🇵🇰</span>
-                  <span>{t("pakistan", "Pakistan")}</span>
+                  <span>Pakistan</span>
                 </div>
-                <div className="text-xl font-black text-slate-900">PKR 14,800,000</div>
-                <p className="text-xs text-slate-500">Karachi, Lahore, Quetta branches</p>
+                <div className="text-xl font-black text-slate-900">PKR 0</div>
+                <p className="text-xs text-slate-500">Commercial operations</p>
               </div>
             </div>
           </div>
@@ -432,65 +437,29 @@ export function CrmSpecializedReportView({ reportType }: SpecializedReportProps)
               Commercial Team Follow-Up Velocity &amp; Accountability
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-4 rounded-xl border border-slate-200 space-y-2">
-                <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-xs">
-                    MA
+              {teamUsers.length === 0 ? (
+                <div className="col-span-3 p-8 text-center text-slate-500 border border-slate-200 rounded-xl">
+                  No active team activities or assignments recorded
+                </div>
+              ) : (
+                teamUsers.map((u: any, idx: number) => (
+                  <div key={idx} className="p-4 rounded-xl border border-slate-200 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="h-8 w-8 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-xs">
+                        {u.name?.slice(0, 2).toUpperCase() || "U"}
+                      </div>
+                      <div>
+                        <div className="font-bold text-xs">{u.name}</div>
+                        <div className="text-[10.5px] text-slate-400">Account Manager</div>
+                      </div>
+                    </div>
+                    <div className="flex justify-between text-xs pt-2 border-t">
+                      <span className="text-slate-500">Assigned Accounts:</span>
+                      <span className="font-bold text-slate-700">{customers.filter((c: any) => c.assignedUserName === u.name).length}</span>
+                    </div>
                   </div>
-                  <div>
-                    <div className="font-bold text-xs">Mohammed Ali</div>
-                    <div className="text-[10.5px] text-slate-400">Senior Account Executive</div>
-                  </div>
-                </div>
-                <div className="flex justify-between text-xs pt-2 border-t">
-                  <span className="text-slate-500">Completed Calls:</span>
-                  <span className="font-bold text-emerald-600">48 this week</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-slate-500">Recovery Amount:</span>
-                  <span className="font-bold text-blue-600">AED 420,000</span>
-                </div>
-              </div>
-
-              <div className="p-4 rounded-xl border border-slate-200 space-y-2">
-                <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-full bg-purple-100 text-purple-700 font-bold flex items-center justify-center text-xs">
-                    SK
-                  </div>
-                  <div>
-                    <div className="font-bold text-xs">Sarah Khan</div>
-                    <div className="text-[10.5px] text-slate-400">Commercial Relations Mgr</div>
-                  </div>
-                </div>
-                <div className="flex justify-between text-xs pt-2 border-t">
-                  <span className="text-slate-500">Completed Calls:</span>
-                  <span className="font-bold text-emerald-600">36 this week</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-slate-500">Recovery Amount:</span>
-                  <span className="font-bold text-blue-600">SAR 280,000</span>
-                </div>
-              </div>
-
-              <div className="p-4 rounded-xl border border-slate-200 space-y-2">
-                <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-full bg-teal-100 text-teal-700 font-bold flex items-center justify-center text-xs">
-                    FA
-                  </div>
-                  <div>
-                    <div className="font-bold text-xs">Fatima Al Mansoori</div>
-                    <div className="text-[10.5px] text-slate-400">Key Accounts Manager</div>
-                  </div>
-                </div>
-                <div className="flex justify-between text-xs pt-2 border-t">
-                  <span className="text-slate-500">Completed Calls:</span>
-                  <span className="font-bold text-emerald-600">42 this week</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-slate-500">Recovery Amount:</span>
-                  <span className="font-bold text-blue-600">AED 390,000</span>
-                </div>
-              </div>
+                ))
+              )}
             </div>
           </div>
         )}

@@ -152,7 +152,7 @@ export async function getCustomer360Data(params: {
     const branchRows = await sql`
       SELECT id, name, country_id
       FROM public.city_branches
-      WHERE deleted_at IS NULL AND (status IS NULL OR status = 'Active')
+      WHERE deleted_at IS NULL AND (status IS NULL OR status = 'active')
         ${allowedCountryIds.length > 0 ? sql`AND country_id = ANY(${allowedCountryIds}::uuid[])` : sql``}
         ${allowedBranchIds.length > 0 ? sql`AND id = ANY(${allowedBranchIds}::uuid[])` : sql``}
       ORDER BY name ASC;
@@ -195,22 +195,22 @@ export async function getCustomer360Data(params: {
     const recDue = Number(followUpKpi[0]?.total_rec_due || 0);
 
     // Customer health: ratio of active accounts
-    const healthPercent = totalCust > 0 ? Math.min(100, Math.round((activeCust / totalCust) * 100)) : 100;
+    const healthPercent = totalCust > 0 ? Math.min(100, Math.round((activeCust / totalCust) * 100)) : (activeCust > 0 ? 100 : 0);
 
     const kpis: Customer360Kpi = {
       totalCustomers: totalCust,
-      totalCustomersTrend: "↑ 12% vs last period",
+      totalCustomersTrend: totalCust > 0 ? `${totalCust} registered` : "0 registered",
       activeCustomers: activeCust,
-      activeCustomersTrend: "↑ 8% vs last period",
+      activeCustomersTrend: totalCust > 0 ? `${Math.round((activeCust / totalCust) * 100)}% active` : "0% active",
       followUpsToday: todayFollowUps,
       followUpsCalls: callsCnt,
       followUpsMeetings: meetCnt,
       followUpsOthers: otherCnt,
-      receivableDue: recDue > 0 ? recDue : 1245680,
+      receivableDue: recDue,
       receivableDueCurrency: "AED",
-      receivableDueTrend: "↑ 5% vs last period",
-      customerHealth: healthPercent > 0 ? healthPercent : 78,
-      customerHealthTrend: "↑ 6% healthy accounts"
+      receivableDueTrend: recDue > 0 ? "Pending collection" : "Zero pending balance",
+      customerHealth: healthPercent,
+      customerHealthTrend: totalCust > 0 ? `${activeCust}/${totalCust} active accounts` : "No accounts"
     };
 
     // 3. Query Customers Register Table
@@ -313,17 +313,17 @@ export async function getCustomer360Data(params: {
       }
 
       // Next action label
-      const nextType = r.next_action_type || (idx % 2 === 0 ? "Call" : "Meeting");
+      const nextType = r.next_action_type || "-";
       const nextDate = r.next_action_date 
         ? new Date(r.next_action_date).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
-        : "Today";
+        : "-";
 
       const lastContactDate = r.last_follow_up || r.updated_at || r.created_at;
       const formattedLastContact = lastContactDate 
         ? new Date(lastContactDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
-        : "Recent";
+        : "-";
 
-      const assignedUser = r.action_user || "Account Rep";
+      const assignedUser = r.action_user || "-";
 
       return {
         id: r.id,

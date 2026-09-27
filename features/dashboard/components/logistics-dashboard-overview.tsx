@@ -91,78 +91,14 @@ export type LogisticsDashboardData = {
   error?: string | null;
 };
 
-/* ── Status Mix Colors & Data ─────────────────────────────────────── */
-const STATUS_MIX = [
-  { name: "Pending Clearance", count: 8, pct: "16%", color: "#f97316" },
-  { name: "In Transit", count: 12, pct: "24%", color: "#2563eb" },
-  { name: "Completed", count: 22, pct: "44%", color: "#10b981" },
-  { name: "On Hold", count: 5, pct: "10%", color: "#06b6d4" },
-  { name: "Cancelled", count: 3, pct: "6%", color: "#ef4444" },
-];
-
 /* ── Trend Data for Bar Chart ─────────────────────────────────────── */
-const TREND_DATA = [
-  { month: "Jan", shipments: 15, clearance: 15, deliveries: 20 },
-  { month: "Feb", shipments: 20, clearance: 20, deliveries: 20 },
-  { month: "Mar", shipments: 15, clearance: 19, deliveries: 10 },
-  { month: "Apr", shipments: 26, clearance: 23, deliveries: 20 },
-  { month: "May", shipments: 26, clearance: 25, deliveries: 20 },
-  { month: "Jun", shipments: 20, clearance: 22, deliveries: 26 },
-];
-
-/* ── Fallback Reference Rows (Matches Reference Image) ────────────── */
-const REFERENCE_SHIPMENTS = [
-  { id: "1", date: "24 Sep 2026", shippingLine: "WAN HAI", container: "WHLU1234567", vessel: "WAN HAI 521", eta: "28 Sep 2026", status: "In Transit" },
-  { id: "2", date: "22 Sep 2026", shippingLine: "COSCO", container: "CSLU7654321", vessel: "COSCO 888", eta: "27 Sep 2026", status: "Pending" },
-  { id: "3", date: "21 Sep 2026", shippingLine: "CMA CGM", container: "CGMU1122334", vessel: "CMA CGM 012", eta: "26 Sep 2026", status: "Clearance" },
-  { id: "4", date: "20 Sep 2026", shippingLine: "MSC", container: "MSCU9988776", vessel: "MSC ANNA", eta: "25 Sep 2026", status: "Completed" },
-  { id: "5", date: "19 Sep 2026", shippingLine: "ONE", container: "ONEU5566778", vessel: "ONE SPIRIT", eta: "24 Sep 2026", status: "On Hold" },
-];
-
-const REFERENCE_TASKS = [
-  { id: "1", task: "Customs Document Pending", relatedTo: "BL # BL-2026-001", dueDate: "24 Sep 2026", priority: "High", status: "Open" },
-  { id: "2", task: "Agent Payment Verification", relatedTo: "Agent # AG-004", dueDate: "25 Sep 2026", priority: "High", status: "Open" },
-  { id: "3", task: "Truck Registration Approval", relatedTo: "Truck # TK-881", dueDate: "25 Sep 2026", priority: "Medium", status: "Pending" },
-  { id: "4", task: "Container Release Followup", relatedTo: "Container # WHLU1234567", dueDate: "26 Sep 2026", priority: "Medium", status: "Pending" },
-  { id: "5", task: "Delivery Confirmation", relatedTo: "Shipment # SHP-2026-021", dueDate: "26 Sep 2026", priority: "Low", status: "Open" },
-];
-
-const RECENT_DOCUMENTS = [
-  { id: "1", date: "24 Sep 2026", type: "Bill of Lading", ref: "BL-2026-001", relatedTo: "Shipment # SHP-2026-001", status: "Verified" },
-  { id: "2", date: "23 Sep 2026", type: "Commercial Invoice", ref: "INV-2026-045", relatedTo: "Shipment # SHP-2026-002", status: "Pending" },
-  { id: "3", date: "22 Sep 2026", type: "Packing List", ref: "PL-2026-078", relatedTo: "Container # WHLU1234567", status: "Verified" },
-  { id: "4", date: "21 Sep 2026", type: "Customs Declaration", ref: "CD-2026-012", relatedTo: "Shipment # SHP-2026-021", status: "Under Review" },
-  { id: "5", date: "20 Sep 2026", type: "Delivery Order", ref: "DO-2026-033", relatedTo: "Container # CSLU7654321", status: "Completed" },
-];
-
-const CONTAINERS_DATA = [
-  { id: "1", containerNo: "WHLU1234567", line: "WAN HAI", type: "40ft High Cube", vessel: "WAN HAI 521", location: "Jebel Ali Port (T1)", seal: "SL-99410", status: "In Transit" },
-  { id: "2", containerNo: "CSLU7654321", line: "COSCO", type: "20ft Standard", vessel: "COSCO 888", location: "Bandar Abbas", seal: "SL-88123", status: "Pending" },
-  { id: "3", containerNo: "CGMU1122334", line: "CMA CGM", type: "40ft Reefer", vessel: "CMA CGM 012", location: "Customs Yard", seal: "SL-77651", status: "Under Clearance" },
-  { id: "4", containerNo: "MSCU9988776", line: "MSC", type: "40ft High Cube", vessel: "MSC ANNA", location: "Final Warehouse", seal: "SL-55412", status: "Delivered" },
-  { id: "5", containerNo: "ONEU5566778", line: "ONE", type: "20ft Standard", vessel: "ONE SPIRIT", location: "Inspection Dock", seal: "SL-33290", status: "On Hold" },
-];
-
-const TRUCK_MOVEMENTS = [
-  { id: "1", truckNo: "TK-881-DXB", driver: "Rashid Khan", route: "Jebel Ali -> Sharjah Ind 10", date: "24 Sep 2026", cargo: "Almonds & Dried Fruit", status: "Departed" },
-  { id: "2", truckNo: "TK-940-AUH", driver: "Mohammad Ishaq", route: "Port Rashid -> Al Aweer", date: "24 Sep 2026", cargo: "General Cargo", status: "In Transit" },
-  { id: "3", truckNo: "TK-203-KHI", driver: "Ali Noor", route: "Karachi Port -> Quetta Yard", date: "23 Sep 2026", cargo: "Industrial Goods", status: "Cleared Border" },
-  { id: "4", truckNo: "TK-556-SHJ", driver: "Sultan Ahmad", route: "Hamriyah Freezone -> DGT Central", date: "22 Sep 2026", cargo: "Import Containers", status: "Delivered" },
-  { id: "5", truckNo: "TK-119-DXB", driver: "Tariq Mehmood", route: "Customs Terminal -> Warehouse B", date: "21 Sep 2026", cargo: "FMCG Spices", status: "Completed" },
-];
-
-const AGENT_ACTIVITIES = [
-  { id: "1", agent: "Gulf Horizon Clearing LLC", activity: "Customs Bill Submitted (Mirsal II)", ref: "CD-2026-012", time: "24 Sep 2026 14:30", status: "Approved" },
-  { id: "2", agent: "FastTrack Shipping Agents", activity: "Delivery Order (DO) Collected", ref: "DO-2026-033", time: "24 Sep 2026 11:15", status: "Completed" },
-  { id: "3", agent: "Emirates Maritime Brokers", activity: "Inspection Fee Paid & Receipt Uploaded", ref: "PAY-8891", time: "23 Sep 2026 16:45", status: "Verified" },
-  { id: "4", agent: "Al-Baraka Customs Agency", activity: "Original BL Endorsed and Handed Over", ref: "BL-2026-001", time: "22 Sep 2026 10:20", status: "Processed" },
-  { id: "5", agent: "Universal Cargo Clearance", activity: "Border Transit Clearance Issued", ref: "TR-2026-090", time: "21 Sep 2026 09:05", status: "Released" },
-];
-
-const SYSTEM_ALERTS = [
-  { id: "1", title: "Customs Inspection Gate-In Notice", severity: "High", entity: "Container # WHLU1234567", time: "24 Sep 2026", status: "Active" },
-  { id: "2", title: "Shipping Line Demurrage Warning (Free Days Left: 2)", severity: "Medium", entity: "Container # CSLU7654321", time: "23 Sep 2026", status: "Attention" },
-  { id: "3", title: "Driver Border Permit Renewal Required", severity: "Low", entity: "Truck # TK-881", time: "22 Sep 2026", status: "Review" },
+const EMPTY_TREND_DATA = [
+  { month: "May", shipments: 0, clearance: 0, deliveries: 0 },
+  { month: "Jun", shipments: 0, clearance: 0, deliveries: 0 },
+  { month: "Jul", shipments: 0, clearance: 0, deliveries: 0 },
+  { month: "Aug", shipments: 0, clearance: 0, deliveries: 0 },
+  { month: "Sep", shipments: 0, clearance: 0, deliveries: 0 },
+  { month: "Oct", shipments: 0, clearance: 0, deliveries: 0 },
 ];
 
 /* ── Helper Badge Stylers ─────────────────────────────────────────── */
@@ -218,29 +154,75 @@ export function LogisticsDashboardOverview({
     }
   }, [actionsOpen]);
 
-  // Merge real shipments with reference items if list is short so dashboard is always vibrant
-  const displayShipments = data.shipments.length >= 5
-    ? data.shipments.slice(0, 5).map((s, idx) => ({
-        id: s.id,
-        date: s.date || "24 Sep 2026",
-        shippingLine: s.shippingLineName || "WAN HAI",
-        container: s.containerNumber || "WHLU1234567",
-        vessel: s.vesselName || "VESSEL 01",
-        eta: s.eta || "28 Sep 2026",
-        status: s.status || "In Transit",
-      }))
-    : REFERENCE_SHIPMENTS;
+  // Authentic records derived strictly from loaded data
+  const displayShipments = (data.shipments || []).map((s) => ({
+    id: s.id,
+    date: s.date || "-",
+    shippingLine: s.shippingLineName || "-",
+    container: s.containerNumber || "-",
+    vessel: s.vesselName || "-",
+    eta: s.eta || "-",
+    status: s.status || "Pending",
+  }));
 
-  const displayTasks = data.tasks.length >= 5
-    ? data.tasks.slice(0, 5).map((t, idx) => ({
-        id: t.id,
-        task: t.title || t.assignmentNo,
-        relatedTo: t.targetType || "Shipment",
-        dueDate: t.dueAt || "25 Sep 2026",
-        priority: t.priority || (idx === 0 || idx === 1 ? "High" : idx === 2 ? "Medium" : "Low"),
-        status: t.status === "completed" ? "Completed" : "Open",
-      }))
-    : REFERENCE_TASKS;
+  const displayTasks = (data.tasks || []).map((t, idx) => ({
+    id: t.id,
+    task: t.title || t.assignmentNo,
+    relatedTo: t.targetType || "Shipment",
+    dueDate: t.dueAt || "-",
+    priority: t.priority || (idx === 0 || idx === 1 ? "High" : idx === 2 ? "Medium" : "Low"),
+    status: t.status === "completed" ? "Completed" : "Open",
+  }));
+
+  const containersData = (data.shipments || [])
+    .filter((s) => Boolean(s.containerNumber && s.containerNumber !== "-"))
+    .map((s, idx) => ({
+      id: s.id || String(idx + 1),
+      containerNo: s.containerNumber,
+      line: s.shippingLineName || "-",
+      type: "Standard",
+      vessel: s.vesselName || "-",
+      location: "-",
+      seal: "-",
+      status: s.status || "In Transit"
+    }));
+
+  const recentDocuments = (data.shipments || [])
+    .filter((s) => Boolean(s.blNumber && s.blNumber !== "-"))
+    .map((s, idx) => ({
+      id: s.id || String(idx + 1),
+      date: s.date || "-",
+      type: "Bill of Lading",
+      ref: s.blNumber,
+      relatedTo: s.containerNumber || "-",
+      status: s.status || "Verified"
+    }));
+
+  const statusMix = React.useMemo(() => {
+    const total = data.assignedShipments || data.shipments.length || 0;
+    const pending = data.pendingClearance || 0;
+    const inTransit = data.inTransit || 0;
+    const delivered = data.delivered || 0;
+    const completed = data.completedShipments || 0;
+    if (total === 0) {
+      return [
+        { name: "Pending Clearance", count: 0, pct: "0%", color: "#f97316" },
+        { name: "In Transit", count: 0, pct: "0%", color: "#2563eb" },
+        { name: "Delivered", count: 0, pct: "0%", color: "#10b981" },
+      ];
+    }
+    return [
+      { name: "Pending Clearance", count: pending, pct: `${Math.round((pending / total) * 100)}%`, color: "#f97316" },
+      { name: "In Transit", count: inTransit, pct: `${Math.round((inTransit / total) * 100)}%`, color: "#2563eb" },
+      { name: "Delivered", count: delivered, pct: `${Math.round((delivered / total) * 100)}%`, color: "#10b981" },
+      { name: "Completed", count: completed, pct: `${Math.round((completed / total) * 100)}%`, color: "#06b6d4" },
+    ];
+  }, [data]);
+
+  const totalStatusCount = data.assignedShipments || data.shipments.length || 0;
+  const trendData = data.shipments.length > 0 ? [
+    { month: "Sep", shipments: data.shipments.length, clearance: data.pendingClearance, deliveries: data.delivered }
+  ] : EMPTY_TREND_DATA;
 
   return (
     <div className="space-y-6 text-slate-800 dark:text-slate-100 p-2 sm:p-4 lg:p-6" dir={isRtl ? "rtl" : "ltr"}>
@@ -555,7 +537,7 @@ export function LogisticsDashboardOverview({
           <CardContent className="pt-4">
             <div className="h-[210px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={TREND_DATA} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+                <BarChart data={trendData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" className="dark:stroke-slate-800" />
                   <XAxis dataKey="month" stroke="#94a3b8" tickLine={false} axisLine={false} style={{ fontSize: 10, fontWeight: 600 }} />
                   <YAxis stroke="#94a3b8" tickLine={false} axisLine={false} style={{ fontSize: 10 }} />
@@ -594,14 +576,14 @@ export function LogisticsDashboardOverview({
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={STATUS_MIX}
+                      data={statusMix}
                       dataKey="count"
                       innerRadius={46}
                       outerRadius={66}
                       paddingAngle={3}
                       stroke="none"
                     >
-                      {STATUS_MIX.map((entry, index) => (
+                      {statusMix.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
@@ -618,14 +600,14 @@ export function LogisticsDashboardOverview({
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className="text-2xl font-black text-slate-900 dark:text-white">50</span>
+                  <span className="text-2xl font-black text-slate-900 dark:text-white">{totalStatusCount}</span>
                   <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Total</span>
                 </div>
               </div>
 
               {/* Legend List */}
               <div className="space-y-1.5 w-full text-xs">
-                {STATUS_MIX.map((item) => (
+                {statusMix.map((item) => (
                   <div key={item.name} className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
@@ -917,7 +899,7 @@ export function LogisticsDashboardOverview({
               }`}
             >
               <FileText className="h-3.5 w-3.5" />
-              Recent Documents (5)
+              Recent Documents ({recentDocuments.length})
             </button>
             <button
               type="button"
@@ -929,7 +911,7 @@ export function LogisticsDashboardOverview({
               }`}
             >
               <Boxes className="h-3.5 w-3.5" />
-              Containers (5)
+              Containers ({containersData.length})
             </button>
             <button
               type="button"
@@ -941,7 +923,7 @@ export function LogisticsDashboardOverview({
               }`}
             >
               <Truck className="h-3.5 w-3.5" />
-              Truck Movements (5)
+              Truck Movements (0)
             </button>
             <button
               type="button"
@@ -953,7 +935,7 @@ export function LogisticsDashboardOverview({
               }`}
             >
               <Users className="h-3.5 w-3.5" />
-              Agent Activities (5)
+              Agent Activities (0)
             </button>
             <button
               type="button"
@@ -965,7 +947,7 @@ export function LogisticsDashboardOverview({
               }`}
             >
               <Bell className="h-3.5 w-3.5" />
-              System Alerts (3)
+              System Alerts (0)
             </button>
           </div>
         </CardHeader>
@@ -986,38 +968,40 @@ export function LogisticsDashboardOverview({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium text-slate-700 dark:text-slate-300">
-                {RECENT_DOCUMENTS.map((doc, idx) => (
-                  <tr key={doc.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
-                    <td className="px-4 py-3 text-slate-400 font-mono text-[11px]">{idx + 1}</td>
-                    <td className="px-4 py-3 text-slate-600 dark:text-slate-400 whitespace-nowrap text-[11px]">{doc.date}</td>
-                    <td className="px-4 py-3 font-bold text-slate-900 dark:text-white whitespace-nowrap">{doc.type}</td>
-                    <td className="px-4 py-3 font-mono font-bold text-blue-600 dark:text-blue-400">{doc.ref}</td>
-                    <td className="px-4 py-3 text-slate-600 dark:text-slate-400 font-mono text-[11px]">{doc.relatedTo}</td>
-                    <td className="px-4 py-3 text-center">
-                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${getStatusBadge(doc.status)}`}>
-                        {doc.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedRecord({ ...doc, recordType: "Document" })}
-                          className="h-6 w-6 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-blue-600"
-                          title="View Details"
-                        >
-                          <Eye className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          className="h-6 w-6 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-slate-600"
-                        >
-                          <MoreVertical className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
+                {recentDocuments.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
+                      No recent shipping documents recorded
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  recentDocuments.map((doc, idx) => (
+                    <tr key={doc.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
+                      <td className="px-4 py-3 text-slate-400 font-mono text-[11px]">{idx + 1}</td>
+                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400 whitespace-nowrap text-[11px]">{doc.date}</td>
+                      <td className="px-4 py-3 font-bold text-slate-900 dark:text-white whitespace-nowrap">{doc.type}</td>
+                      <td className="px-4 py-3 font-mono font-bold text-blue-600 dark:text-blue-400">{doc.ref}</td>
+                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400 font-mono text-[11px]">{doc.relatedTo}</td>
+                      <td className="px-4 py-3 text-center">
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${getStatusBadge(doc.status)}`}>
+                          {doc.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedRecord({ ...doc, recordType: "Document" })}
+                            className="h-6 w-6 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-blue-600"
+                            title="View Details"
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -1041,33 +1025,41 @@ export function LogisticsDashboardOverview({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium text-slate-700 dark:text-slate-300">
-                {CONTAINERS_DATA.map((c, idx) => (
-                  <tr key={c.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
-                    <td className="px-4 py-3 text-slate-400 font-mono text-[11px]">{idx + 1}</td>
-                    <td className="px-4 py-3 font-mono font-bold text-blue-600 dark:text-blue-400">{c.containerNo}</td>
-                    <td className="px-4 py-3 font-bold text-slate-900 dark:text-white">{c.line}</td>
-                    <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{c.type}</td>
-                    <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{c.vessel}</td>
-                    <td className="px-4 py-3 text-slate-800 dark:text-slate-200 font-medium">{c.location}</td>
-                    <td className="px-4 py-3 font-mono text-slate-500 text-[11px]">{c.seal}</td>
-                    <td className="px-4 py-3 text-center">
-                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${getStatusBadge(c.status)}`}>
-                        {c.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <Link
-                          href={`/dashboard/shipping-line/tracking?q=${encodeURIComponent(c.containerNo)}`}
-                          className="h-6 w-6 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-blue-600"
-                          title="Track Container"
-                        >
-                          <Eye className="h-3.5 w-3.5" />
-                        </Link>
-                      </div>
+                {containersData.length === 0 ? (
+                  <tr>
+                    <td colSpan={9} className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
+                      No tracked containers found
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  containersData.map((c, idx) => (
+                    <tr key={c.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
+                      <td className="px-4 py-3 text-slate-400 font-mono text-[11px]">{idx + 1}</td>
+                      <td className="px-4 py-3 font-mono font-bold text-blue-600 dark:text-blue-400">{c.containerNo}</td>
+                      <td className="px-4 py-3 font-bold text-slate-900 dark:text-white">{c.line}</td>
+                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{c.type}</td>
+                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{c.vessel}</td>
+                      <td className="px-4 py-3 text-slate-800 dark:text-slate-200 font-medium">{c.location}</td>
+                      <td className="px-4 py-3 font-mono text-slate-500 text-[11px]">{c.seal}</td>
+                      <td className="px-4 py-3 text-center">
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${getStatusBadge(c.status)}`}>
+                          {c.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <Link
+                            href={`/dashboard/shipping-line/tracking?q=${encodeURIComponent(c.containerNo)}`}
+                            className="h-6 w-6 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-blue-600"
+                            title="Track Container"
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -1090,29 +1082,11 @@ export function LogisticsDashboardOverview({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium text-slate-700 dark:text-slate-300">
-                {TRUCK_MOVEMENTS.map((t, idx) => (
-                  <tr key={t.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
-                    <td className="px-4 py-3 text-slate-400 font-mono text-[11px]">{idx + 1}</td>
-                    <td className="px-4 py-3 text-slate-500 text-[11px] whitespace-nowrap">{t.date}</td>
-                    <td className="px-4 py-3 font-mono font-bold text-blue-600 dark:text-blue-400">{t.truckNo}</td>
-                    <td className="px-4 py-3 font-bold text-slate-900 dark:text-white">{t.driver}</td>
-                    <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{t.route}</td>
-                    <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{t.cargo}</td>
-                    <td className="px-4 py-3 text-center">
-                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${getStatusBadge(t.status)}`}>
-                        {t.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <Link
-                        href="/dashboard/clearing-agent/truck-registration"
-                        className="text-blue-600 hover:text-blue-700 text-[11px] font-bold"
-                      >
-                        Details
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
+                <tr>
+                  <td colSpan={8} className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
+                    No truck movements recorded
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -1134,28 +1108,11 @@ export function LogisticsDashboardOverview({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium text-slate-700 dark:text-slate-300">
-                {AGENT_ACTIVITIES.map((a, idx) => (
-                  <tr key={a.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
-                    <td className="px-4 py-3 text-slate-400 font-mono text-[11px]">{idx + 1}</td>
-                    <td className="px-4 py-3 text-slate-500 text-[11px] whitespace-nowrap">{a.time}</td>
-                    <td className="px-4 py-3 font-bold text-slate-900 dark:text-white">{a.agent}</td>
-                    <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{a.activity}</td>
-                    <td className="px-4 py-3 font-mono font-bold text-blue-600 dark:text-blue-400">{a.ref}</td>
-                    <td className="px-4 py-3 text-center">
-                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${getStatusBadge(a.status)}`}>
-                        {a.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <Link
-                        href="/dashboard/clearing-agent/list"
-                        className="text-blue-600 hover:text-blue-700 text-[11px] font-bold"
-                      >
-                        Profile
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
+                <tr>
+                  <td colSpan={7} className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
+                    No agent activities recorded
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -1177,32 +1134,11 @@ export function LogisticsDashboardOverview({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium text-slate-700 dark:text-slate-300">
-                {SYSTEM_ALERTS.map((alert, idx) => (
-                  <tr key={alert.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
-                    <td className="px-4 py-3 text-slate-400 font-mono text-[11px]">{idx + 1}</td>
-                    <td className="px-4 py-3 font-bold text-slate-900 dark:text-white">{alert.title}</td>
-                    <td className="px-4 py-3 font-mono font-bold text-blue-600 dark:text-blue-400">{alert.entity}</td>
-                    <td className="px-4 py-3 text-slate-500 text-[11px] whitespace-nowrap">{alert.time}</td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${getPriorityBadge(alert.severity)}`}>
-                        {alert.severity}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${getStatusBadge(alert.status)}`}>
-                        {alert.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <Link
-                        href="/dashboard/shipping-line/tracking"
-                        className="text-blue-600 hover:text-blue-700 text-[11px] font-bold"
-                      >
-                        Inspect
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
+                <tr>
+                  <td colSpan={7} className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
+                    No active system alerts
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>

@@ -177,26 +177,26 @@ export async function getSmartCrmDashboardData(params: {
 
     const kpiRaw = kpiRows[0] || {};
     const kpis: CrmKpiStats = {
-      chequesDepositCount: Number(kpiRaw.chq_dep_cnt || 12),
-      chequesDepositAmount: Number(kpiRaw.chq_dep_amt || 4560000),
+      chequesDepositCount: Number(kpiRaw.chq_dep_cnt || 0),
+      chequesDepositAmount: Number(kpiRaw.chq_dep_amt || 0),
       chequesDepositCurrency: "PKR",
-      chequesPayCount: Number(kpiRaw.chq_pay_cnt || 8),
-      chequesPayAmount: Number(kpiRaw.chq_pay_amt || 2850000),
+      chequesPayCount: Number(kpiRaw.chq_pay_cnt || 0),
+      chequesPayAmount: Number(kpiRaw.chq_pay_amt || 0),
       chequesPayCurrency: "PKR",
-      chequesCollectCount: Number(kpiRaw.chq_col_cnt || 15),
-      chequesCollectAmount: Number(kpiRaw.chq_col_amt || 6750000),
+      chequesCollectCount: Number(kpiRaw.chq_col_cnt || 0),
+      chequesCollectAmount: Number(kpiRaw.chq_col_amt || 0),
       chequesCollectCurrency: "PKR",
-      purchaseDueCount: Number(kpiRaw.pur_due_cnt || 23),
-      purchaseDueAmount: Number(kpiRaw.pur_due_amt || 145230),
+      purchaseDueCount: Number(kpiRaw.pur_due_cnt || 0),
+      purchaseDueAmount: Number(kpiRaw.pur_due_amt || 0),
       purchaseDueCurrency: "USD",
-      salesRecoveryCount: Number(kpiRaw.sal_rec_cnt || 31),
-      salesRecoveryAmount: Number(kpiRaw.sal_rec_amt || 212540),
+      salesRecoveryCount: Number(kpiRaw.sal_rec_cnt || 0),
+      salesRecoveryAmount: Number(kpiRaw.sal_rec_amt || 0),
       salesRecoveryCurrency: "USD",
-      shippingDueCount: Number(kpiRaw.shp_due_cnt || 17),
-      shippingDueAmount: Number(kpiRaw.shp_due_amt || 58300),
+      shippingDueCount: Number(kpiRaw.shp_due_cnt || 0),
+      shippingDueAmount: Number(kpiRaw.shp_due_amt || 0),
       shippingDueCurrency: "USD",
-      overdueCount: Number(kpiRaw.ovd_cnt || 26),
-      overdueAmount: Number(kpiRaw.ovd_amt || 9320000),
+      overdueCount: Number(kpiRaw.ovd_cnt || 0),
+      overdueAmount: Number(kpiRaw.ovd_amt || 0),
       overdueCurrency: "PKR"
     };
 
@@ -345,11 +345,11 @@ export async function getSmartCrmDashboardData(params: {
     return {
       kpis,
       financialSummary: {
-        totalReceivable: Number(kpis.salesRecoveryAmount || 212540),
-        totalPayable: Number(kpis.purchaseDueAmount || 145230),
-        cashInHand: 4200000,
-        bankBalance: 18500000,
-        netPosition: 67310,
+        totalReceivable: Number(kpis.salesRecoveryAmount || 0),
+        totalPayable: Number(kpis.purchaseDueAmount || 0),
+        cashInHand: 0,
+        bankBalance: 0,
+        netPosition: Number((kpis.salesRecoveryAmount || 0) - (kpis.purchaseDueAmount || 0)),
         currency: "USD"
       },
       actionItems,
