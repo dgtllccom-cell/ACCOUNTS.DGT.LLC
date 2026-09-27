@@ -78,6 +78,7 @@ export async function renderPaginatedPdf(opts: PaginatedPdfOptions): Promise<voi
       .pdf-page:last-child { page-break-after:auto; break-after:auto; }
       .pdf-marker { position:absolute; bottom:${Math.round(MARGIN / 2)}px; inset-inline-end:${MARGIN}px; font:700 10px sans-serif; color:#112b3d; direction:ltr; }
       tr { break-inside:avoid; page-break-inside:avoid; }
+      .page-number { display:none !important; }
     `;
     doc.head.appendChild(style);
 
