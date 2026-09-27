@@ -27,19 +27,19 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ id: str
     const variations = await withLocalPg(async (sql) => {
       return await sql`
         SELECT
-          id,
-          goods_id,
-          size,
-          brand,
-          variety,
-          grade,
-          extra_details,
-          is_active,
-          created_at
-        FROM public.goods_variations
-        WHERE goods_id = ${id}::uuid
-          AND deleted_at IS NULL
-        ORDER BY created_at ASC
+          v.id,
+          v.goods_id,
+          v.size,
+          v.brand,
+          v.variety,
+          (to_jsonb(v)->>'grade') AS grade,
+          v.extra_details,
+          v.is_active,
+          v.created_at
+        FROM public.goods_variations v
+        WHERE v.goods_id = ${id}::uuid
+          AND v.deleted_at IS NULL
+        ORDER BY v.created_at ASC
       `;
     });
 
