@@ -2834,6 +2834,22 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
       </div>
     );
   };
+  // "Close Form" shows this page's Sales Booking register (same pattern as the Purchase
+  // Booking wizard); "+ New Sales Booking" reopens the form in place.
+  if (isMounted && !isFormOpen) {
+    return (
+      <div className="space-y-6 text-foreground bg-background">
+        <SalesBookingJournalReportView
+          onNewBooking={() => {
+            handleReset();
+            setIsFormOpen(true);
+            setActiveTab("booking");
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div id="wizard-root-print" className="space-y-2 text-foreground bg-background mt-[-10px] max-w-[1500px] mx-auto">
       {activeHandover && (

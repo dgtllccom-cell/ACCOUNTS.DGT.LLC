@@ -50,7 +50,7 @@ type SalesReport = {
   };
 };
 
-export function SalesBookingJournalReportView() {
+export function SalesBookingJournalReportView({ onNewBooking }: { onNewBooking?: () => void } = {}) {
   const router = useRouter();
   const activeLang = useActiveLanguage();
   const erpScope = useErpScope();
@@ -302,7 +302,7 @@ export function SalesBookingJournalReportView() {
         }}
         primaryAction={{
           label: t(activeLang, "sales.new_sales_booking", "+ New Sales Booking"),
-          onClick: () => router.push("/dashboard/sales/new-sales-booking-order"),
+          onClick: () => (onNewBooking ? onNewBooking() : router.push("/dashboard/sales/new-sales-booking-order")),
         }}
         extraActions={[
           {
