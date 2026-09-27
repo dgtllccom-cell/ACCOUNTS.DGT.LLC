@@ -3489,7 +3489,10 @@ export function CustomerOrderManagementView() {
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-500 font-medium">{tt("route_corridor_type", "Route Corridor:")}</span>
+                          <span className="text-slate-500 font-medium flex items-center gap-1">
+                            <Route className="h-3 w-3 text-slate-400" />
+                            <span>{tt("route_via_colon", "Route Via:")}</span>
+                          </span>
                           <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[170px]" title={formData.route_name || "Direct Customs Corridor"}>
                             {formData.route_name || tt("direct_customs_corridor", "Direct Customs Corridor")}
                           </span>
@@ -3554,8 +3557,12 @@ export function CustomerOrderManagementView() {
                             {formData.transport_mode?.replace("by_", "By ") || "By Road"}
                           </span>
                         </div>
-                        <div className="text-[10.5px] text-slate-500 flex items-center gap-1.5 mt-0.5">
-                          <span>{tt("route_corridor_colon", "Route Corridor:")} <strong className="text-slate-700 dark:text-slate-300">{formData.route_name || tt("direct_customs_corridor", "Direct Customs Corridor")}</strong></span>
+                        <div className="text-[11px] text-slate-600 dark:text-slate-300 flex items-center gap-1.5 mt-1">
+                          <span className="text-slate-500 font-medium">{tt("route_via_colon", "Route Via:")}</span>
+                          <span className="inline-flex items-center gap-1 font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200/80 dark:border-emerald-800">
+                            <Route className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                            {formData.route_name || tt("direct_customs_corridor", "Direct Customs Corridor")}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -3658,8 +3665,11 @@ export function CustomerOrderManagementView() {
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-500 font-medium">{tt("corridor_colon", "Corridor:")}</span>
-                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[170px]">
+                          <span className="text-slate-500 font-medium flex items-center gap-1">
+                            <Route className="h-3 w-3 text-slate-400" />
+                            <span>{tt("route_via_colon", "Route Via:")}</span>
+                          </span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[170px]" title={formData.route_name || "Direct Customs Corridor"}>
                             {formData.route_name || tt("bonded_highway_fallback", "Bonded Highway")}
                           </span>
                         </div>
@@ -4684,8 +4694,8 @@ function Step1BookingCustomer({
             ) : null}
           </div>
 
-          {/* 2. Ship Mode & Movement Type Selectors */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* 2. Ship Mode, Movement Type & Route Via Selectors */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-1.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
               <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                 <Ship className="h-4 w-4 text-blue-600" />
@@ -4718,6 +4728,27 @@ function Step1BookingCustomer({
                 <option value="up_transit">Up Transit (Border Entry &rarr; Bonded Corridor)</option>
                 <option value="down_transit">Down Transit (Inland &rarr; Border Exit)</option>
               </select>
+            </div>
+
+            <div className="rounded-xl border border-emerald-200/90 bg-white dark:bg-slate-900 p-3 space-y-1.5 shadow-2xs dark:border-emerald-800/80 sm:col-span-2 lg:col-span-1">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                  <Route className="h-4 w-4 text-emerald-600" />
+                  <span>{tt("route_via_corridor", "Route Via / Corridor")}</span>
+                </label>
+                {formData.route_name ? (
+                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.2 rounded border border-emerald-200 dark:border-emerald-800 truncate max-w-[110px]" title={formData.route_name}>
+                    ✓ {formData.route_name}
+                  </span>
+                ) : null}
+              </div>
+              <input
+                type="text"
+                placeholder={tt("ph_route_via", "e.g. via Torkham / Chaman / Bandar Abbas / Port Qasim")}
+                value={formData.route_name}
+                onChange={(e) => setFormData((c) => ({ ...c, route_name: e.target.value }))}
+                className={inputClass}
+              />
             </div>
           </div>
 
@@ -4846,6 +4877,21 @@ function Step1BookingCustomer({
                   className={inputClass}
                 />
               </div>
+
+              {/* Row 5: Route Via / Corridor */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                  <Route className="h-3.5 w-3.5 text-sky-600" />
+                  <span>{tt("route_via_corridor", "Route Via / Transit Corridor")}</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder={tt("ph_route_via_import", "e.g. via Karachi Port / Bandar Abbas / Torkham")}
+                  value={formData.route_name}
+                  onChange={(e) => setFormData((c) => ({ ...c, route_name: e.target.value }))}
+                  className={inputClass}
+                />
+              </div>
             </div>
           )}
 
@@ -4961,6 +5007,21 @@ function Step1BookingCustomer({
                   </select>
                 </div>
               </div>
+
+              {/* Row 4: Route Via / Corridor */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                  <Route className="h-3.5 w-3.5 text-emerald-600" />
+                  <span>{tt("route_via_corridor", "Route Via / Transit Corridor")}</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder={tt("ph_route_via_export", "e.g. via Torkham / Chaman / Bandar Abbas / Spin Boldak")}
+                  value={formData.route_name}
+                  onChange={(e) => setFormData((c) => ({ ...c, route_name: e.target.value }))}
+                  className={inputClass}
+                />
+              </div>
             </div>
           )}
 
@@ -5001,8 +5062,9 @@ function Step1BookingCustomer({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {tt("transit_corridor_route", "Transit Corridor / Route Name")}
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                    <Route className="h-3.5 w-3.5 text-purple-600" />
+                    <span>{tt("route_via_corridor", "Route Via / Transit Corridor")}</span>
                   </label>
                   <input
                     type="text"
@@ -5129,6 +5191,15 @@ function Step1BookingCustomer({
               <span className="font-bold text-purple-700 dark:text-purple-300 capitalize">
                 {tt("movement_label_colon", "Movement:")} {formData.movement_type.replace("_", " ")}
               </span>
+              {formData.route_name ? (
+                <>
+                  <span className="text-slate-300 dark:text-slate-600">•</span>
+                  <span className="font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-1">
+                    <Route className="h-3 w-3 text-emerald-600" />
+                    <span>{tt("route_via_colon", "Via:")} {formData.route_name}</span>
+                  </span>
+                </>
+              ) : null}
             </div>
             <button
               type="button"
@@ -5371,6 +5442,7 @@ function Step1BookingCustomer({
               </span>
               <span className="font-bold text-slate-800 dark:text-slate-200">
                 {formData.customer_name} • {formData.transport_mode.replace("by_", "").toUpperCase()} • {formData.movement_type.toUpperCase()}
+                {formData.route_name ? ` • VIA: ${formData.route_name.toUpperCase()}` : ""}
               </span>
               <span className="text-slate-300 dark:text-slate-600">•</span>
               <span className="font-bold text-slate-600 dark:text-slate-400">
