@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
+import React, { Fragment, useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -3622,7 +3622,7 @@ export function CustomerOrderManagementView() {
                         {/* Visual Flow Chain (Pills with arrows) */}
                         <div className="flex flex-wrap items-center gap-1.5 py-1">
                           {liveRouteStops.map((stop, idx) => (
-                            <React.Fragment key={idx}>
+                            <Fragment key={idx}>
                               <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-emerald-200/90 dark:border-emerald-800/80 shadow-2xs text-xs font-bold text-slate-800 dark:text-slate-100">
                                 <span className="text-sm">{getRouteCountryFlag(stop)}</span>
                                 <span>{stop}</span>
@@ -3633,7 +3633,7 @@ export function CustomerOrderManagementView() {
                               {idx < liveRouteStops.length - 1 ? (
                                 <span className="text-emerald-600 dark:text-emerald-400 font-black text-sm px-0.5">➔</span>
                               ) : null}
-                            </React.Fragment>
+                            </Fragment>
                           ))}
                         </div>
 
