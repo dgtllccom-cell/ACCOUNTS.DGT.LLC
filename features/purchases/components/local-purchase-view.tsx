@@ -10,7 +10,7 @@ import {
   Trash2, Loader2, ArrowLeftRight, Check, Package,
   Building2, FileText, ArrowDownLeft, ArrowUpRight,
   Pin, X, Layers, Tag, Globe, Pencil, ShieldAlert,
-  CreditCard, Truck, Flag, UserCheck, ChevronDown,
+  CreditCard, Truck, Flag, UserCheck, ChevronDown, ChevronUp, ChevronRight,
   ArrowRight, ArrowLeft, Percent, Warehouse, MapPin, ListPlus,
   Printer, Send, FileSpreadsheet, Eye, MoreVertical, Edit3, Clock,
   RefreshCw, Share2, SlidersHorizontal, RotateCcw, Download, ShieldCheck,
@@ -79,11 +79,31 @@ function getCountryFlag(nameOrCode?: string): string {
   if (s.includes("EMIRATES") || s.includes("UAE") || s === "AE") return "🇦🇪";
   if (s.includes("PAKISTAN") || s === "PK") return "🇵🇰";
   if (s.includes("AFGHANISTAN") || s === "AF") return "🇦🇫";
-  if (s.includes("UNITED STATES") || s === "USA") return "🇺🇸";
+  if (s.includes("UNITED STATES") || s === "USA" || s === "US") return "🇺🇸";
   if (s.includes("CHINA") || s === "CN") return "🇨🇳";
   if (s.includes("INDIA") || s === "IN") return "🇮🇳";
   if (s.includes("IRAN") || s === "IR") return "🇮🇷";
+  if (s.includes("UZBEKISTAN") || s === "UZ") return "🇺🇿";
+  if (s.includes("OMAN") || s === "OM") return "🇴🇲";
   return "🌐";
+}
+
+function convertToUsd(amount: number, currency: string, exchangeRate?: number): number {
+  if (!amount || isNaN(amount)) return 0;
+  const curr = String(currency || "").toUpperCase().trim();
+  if (curr === "USD" || curr === "$") return amount;
+  if (exchangeRate && exchangeRate > 0) {
+    return exchangeRate > 1 ? Math.round(amount / exchangeRate) : Math.round(amount * exchangeRate);
+  }
+  if (curr === "AED") return Math.round(amount / 3.6725);
+  if (curr === "PKR") return Math.round(amount / 278);
+  if (curr === "AFN") return Math.round(amount / 70);
+  if (curr === "IRR") return Math.round(amount / 42000);
+  if (curr === "UZS") return Math.round(amount / 12600);
+  if (curr === "OMR") return Math.round(amount * 2.6);
+  if (curr === "CNY") return Math.round(amount / 7.2);
+  if (curr === "INR") return Math.round(amount / 84);
+  return Math.round(amount);
 }
 
 function money(value: unknown, currency?: string) {
@@ -291,6 +311,7 @@ export function LocalPurchaseView({
     session?.role === "super_admin"
   );
   const th = (x: string) => translateHeader(lang, x);
+  const tr = (x: string) => translateHeader(lang, x);
   const [goodsList, setGoodsList] = useState<any[]>(initialGoodsList);
   const [purchases, setPurchases] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
@@ -323,6 +344,8 @@ export function LocalPurchaseView({
   // Dual View Mode: "auto" (Super Admin with no country selected shows USD multi-country view; single country shows branch view) | "super_admin" | "single_country"
   const [viewScopeMode, setViewScopeMode] = useState<"auto" | "super_admin" | "single_country">("auto");
   const [showTableActionsMenu, setShowTableActionsMenu] = useState(false);
+  const [expandedCountryKey, setExpandedCountryKey] = useState<string | null>(null);
+  const [openActionRowId, setOpenActionRowId] = useState<string | null>(null);
   const [currentTimeFormatted, setCurrentTimeFormatted] = useState("25/09/2026 03:07 PM");
 
   useEffect(() => {
@@ -399,6 +422,7 @@ export function LocalPurchaseView({
       setActiveStatusDropdownId(null);
       setStatusMenuAnchor(null);
       setIsTopActionsOpen(false);
+      setOpenActionRowId(null);
     };
     const handleScroll = () => {
       if (activeActionMenuId) {
@@ -409,6 +433,7 @@ export function LocalPurchaseView({
         setActiveStatusDropdownId(null);
         setStatusMenuAnchor(null);
       }
+      setOpenActionRowId(null);
     };
     window.addEventListener("click", handleClickOutside);
     window.addEventListener("scroll", handleScroll, true);
@@ -1837,6 +1862,170 @@ export function LocalPurchaseView({
     return localPurchaseDashboard.countries.find((c: any) => String(c.id) === String(selectedCountryReportId)) || null;
   }, [selectedCountryReportId, localPurchaseDashboard.countries]);
 
+  const superAdminStats = useMemo(() => {
+    const totalPurchasesCount = purchases.length;
+    let totalUsdAmount = 0;
+    let totalUsdTax = 0;
+    let totalUsdFinal = 0;
+    let posted = 0;
+    let draft = 0;
+    let pending = 0;
+
+    purchases.forEach((p) => {
+      const st = String(p.status || p.bill_status || "").toLowerCase();
+      const curr = p.purchase_currency || p.localCurrency || p.local_currency || "AFN";
+      const exRate = Number(p.exchange_rate || p.exchangeRate || 1);
+      const cost = Number(p.purchase_cost || p.purchaseCost || 0);
+      const tax = Number(p.tax_amount || p.taxAmount || 0);
+      const finalCost = Number(p.final_cost || p.finalCost || cost + tax || 0);
+
+      totalUsdAmount += convertToUsd(cost, curr, exRate);
+      totalUsdTax += convertToUsd(tax, curr, exRate);
+      totalUsdFinal += convertToUsd(finalCost, curr, exRate);
+
+      if (["posted", "accepted", "transferred"].includes(st)) {
+        posted += 1;
+      } else if (st === "draft") {
+        draft += 1;
+      } else {
+        pending += 1;
+      }
+    });
+
+    return {
+      totalPurchasesCount,
+      totalUsdAmount,
+      totalUsdTax,
+      totalUsdFinal,
+      posted,
+      draft,
+      pending,
+    };
+  }, [purchases]);
+
+  const superAdminCountrySummary = useMemo(() => {
+    const standardCountries = [
+      { name: "UAE", code: "AED", currency: "AED" },
+      { name: "Pakistan", code: "PKR", currency: "PKR" },
+      { name: "Afghanistan", code: "AFN", currency: "AFN" },
+      { name: "Iran", code: "IRR", currency: "IRR" },
+      { name: "Uzbekistan", code: "UZS", currency: "UZS" },
+      { name: "Oman", code: "OMR", currency: "OMR" },
+    ];
+
+    const countryMap = new Map<string, any>();
+    standardCountries.forEach(sc => {
+      countryMap.set(sc.name.toLowerCase(), {
+        id: sc.name.toLowerCase(),
+        country: sc.name,
+        code: sc.code,
+        currency: sc.currency,
+        totalPurchases: 0,
+        totalAmountLocal: 0,
+        totalAmountUsd: 0,
+        paidAmount: 0,
+        remainingAmount: 0,
+        posted: 0,
+        draft: 0,
+        pending: 0,
+        branches: new Map<string, any>(),
+      });
+    });
+
+    countryOptions.forEach(opt => {
+      const lower = opt.name.toLowerCase();
+      let matchedKey = Array.from(countryMap.keys()).find(k => lower.includes(k) || k.includes(lower));
+      if (!matchedKey) {
+        matchedKey = lower;
+        countryMap.set(matchedKey, {
+          id: opt.id || lower,
+          country: opt.name,
+          code: opt.name.slice(0, 3).toUpperCase(),
+          currency: "USD",
+          totalPurchases: 0,
+          totalAmountLocal: 0,
+          totalAmountUsd: 0,
+          paidAmount: 0,
+          remainingAmount: 0,
+          posted: 0,
+          draft: 0,
+          pending: 0,
+          branches: new Map<string, any>(),
+        });
+      } else {
+        const existing = countryMap.get(matchedKey);
+        if (existing && opt.id) existing.id = opt.id;
+      }
+    });
+
+    countryBranches.forEach(b => {
+      const cName = (b.countryName || b.country_name || "").toLowerCase();
+      let matchedEntry = Array.from(countryMap.values()).find(c => cName.includes(c.country.toLowerCase()) || c.country.toLowerCase().includes(cName));
+      if (matchedEntry) {
+        matchedEntry.branches.set(b.id, {
+          id: b.id,
+          name: b.name || b.code || "Main Branch",
+          code: b.code || "—",
+          billsCount: 0,
+          totalAmount: 0,
+          paidAmount: 0,
+          remainingAmount: 0,
+        });
+      }
+    });
+
+    purchases.forEach((p) => {
+      const pCountry = String(p.country_name || p.countryName || "").toLowerCase();
+      const pBranchId = String(p.country_branch_id || p.countryBranchId || "");
+      const st = String(p.status || p.bill_status || "").toLowerCase();
+      const curr = p.purchase_currency || p.localCurrency || p.local_currency || "AFN";
+      const exRate = Number(p.exchange_rate || p.exchangeRate || 1);
+      const cost = Number(p.final_cost || p.finalCost || p.purchase_cost || 0);
+      const costUsd = convertToUsd(cost, curr, exRate);
+
+      let targetCountry = Array.from(countryMap.values()).find(c =>
+        pCountry.includes(c.country.toLowerCase()) || c.country.toLowerCase().includes(pCountry)
+      );
+
+      if (!targetCountry && countryMap.size > 0) {
+        targetCountry = countryMap.get("afghanistan") || Array.from(countryMap.values())[0];
+      }
+
+      if (targetCountry) {
+        targetCountry.totalPurchases += 1;
+        targetCountry.totalAmountLocal += cost;
+        targetCountry.totalAmountUsd += costUsd;
+
+        if (["posted", "accepted", "transferred"].includes(st)) {
+          targetCountry.posted += 1;
+          targetCountry.paidAmount += cost;
+        } else if (st === "draft") {
+          targetCountry.draft += 1;
+          targetCountry.remainingAmount += cost;
+        } else {
+          targetCountry.pending += 1;
+          targetCountry.remainingAmount += cost;
+        }
+
+        if (pBranchId && targetCountry.branches.has(pBranchId)) {
+          const br = targetCountry.branches.get(pBranchId);
+          br.billsCount += 1;
+          br.totalAmount += cost;
+          if (["posted", "accepted", "transferred"].includes(st)) {
+            br.paidAmount += cost;
+          } else {
+            br.remainingAmount += cost;
+          }
+        }
+      }
+    });
+
+    return Array.from(countryMap.values()).map(c => ({
+      ...c,
+      branchList: Array.from(c.branches.values()),
+    }));
+  }, [countryOptions, countryBranches, purchases]);
+
   return (
     <div className="w-full px-3 sm:px-6 py-4 space-y-6" dir={isRtl ? "rtl" : "ltr"}>
       {/* Top Header & Navigation */}
@@ -2053,34 +2242,6 @@ export function LocalPurchaseView({
                   <span>2. Super Admin View (USD)</span>
                 </button>
               </div>
-
-              {/* Search Input directly in header */}
-              <div className="relative w-48 sm:w-60 md:w-72">
-                <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={t(lang, "common.search", "Search by Voucher No, Supplier, Goods...")}
-                  className="h-9 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 ps-9 pe-3 text-xs font-medium text-slate-800 dark:text-slate-200 outline-none focus:border-blue-500 shadow-2xs transition"
-                />
-              </div>
-
-              {/* Filters Dropdown Button */}
-              <button
-                type="button"
-                onClick={() => setMoreFiltersOpen((prev) => !prev)}
-                className={cn(
-                  "h-9 px-3 rounded-xl border text-xs font-bold flex items-center gap-1.5 shadow-2xs transition cursor-pointer",
-                  moreFiltersOpen
-                    ? "bg-blue-50 border-blue-300 text-blue-700 dark:bg-blue-950/50 dark:border-blue-800 dark:text-blue-300"
-                    : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50"
-                )}
-              >
-                <Filter className="h-3.5 w-3.5 text-slate-500" />
-                <span>{t(lang, "common.filters", "Filters")}</span>
-                <ChevronDown className="h-3 w-3 text-slate-400" />
-              </button>
 
               {/* + New Purchase Split Button */}
               <div className="relative inline-flex items-center shadow-md shadow-blue-500/20 rounded-xl overflow-hidden shrink-0">
@@ -2386,23 +2547,19 @@ export function LocalPurchaseView({
                   <div className="flex justify-between items-center">
                     <span className="text-slate-400 font-medium">Total Purchases :</span>
                     <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                      {localPurchaseDashboard.totalBills > 0 ? localPurchaseDashboard.totalBills : 28}
+                      {localPurchaseDashboard.totalBills}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-slate-400 font-medium">Total Amount :</span>
                     <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                      {localPurchaseDashboard.totalPurchase > 0
-                        ? `${localCurrency} ${localPurchaseDashboard.totalPurchase.toLocaleString()}`
-                        : "AFN 1,250,000"}
+                      {localCurrency} {localPurchaseDashboard.totalPurchase.toLocaleString()}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-slate-400 font-medium">Total Tax :</span>
                     <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                      {localPurchaseDashboard.totalTax > 0
-                        ? `${localCurrency} ${localPurchaseDashboard.totalTax.toLocaleString()}`
-                        : "AFN 25,000"}
+                      {localCurrency} {localPurchaseDashboard.totalTax.toLocaleString()}
                     </span>
                   </div>
                 </>
@@ -2411,16 +2568,20 @@ export function LocalPurchaseView({
                   <div className="flex justify-between items-center">
                     <span className="text-slate-400 font-medium">Total Purchases :</span>
                     <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                      {purchases.length > 0 ? purchases.length : 156}
+                      {superAdminStats.totalPurchasesCount}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-slate-400 font-medium">Total Amount (USD) :</span>
-                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">$ 3,245,600</span>
+                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
+                      $ {superAdminStats.totalUsdAmount.toLocaleString()}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-slate-400 font-medium">Total Tax (USD) :</span>
-                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">$ 125,400</span>
+                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
+                      $ {superAdminStats.totalUsdTax.toLocaleString()}
+                    </span>
                   </div>
                 </>
               )}
@@ -2429,10 +2590,8 @@ export function LocalPurchaseView({
               <span className="text-slate-400 font-bold">{t(lang, "lp.total_final_amount", "Total Final Amount")} :</span>
               <span className="font-mono font-black text-emerald-600 dark:text-emerald-400">
                 {!isSuperAdminView
-                  ? (localPurchaseDashboard.totalFinal > 0
-                      ? `${localCurrency} ${localPurchaseDashboard.totalFinal.toLocaleString()}`
-                      : "AFN 1,275,000")
-                  : "$ 3,371,000"}
+                  ? `${localCurrency} ${localPurchaseDashboard.totalFinal.toLocaleString()}`
+                  : `$ ${superAdminStats.totalUsdFinal.toLocaleString()}`}
               </span>
             </div>
           </div>
@@ -2451,31 +2610,31 @@ export function LocalPurchaseView({
               <div className="flex justify-between items-center">
                 <span className="text-slate-400 font-medium">{t(lang, "lp.total_bills", "Total Bills")} :</span>
                 <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                  {!isSuperAdminView ? (localPurchaseDashboard.totalBills > 0 ? localPurchaseDashboard.totalBills : 24) : 142}
+                  {!isSuperAdminView ? localPurchaseDashboard.totalBills : superAdminStats.totalPurchasesCount}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-slate-400 font-medium">{t(lang, "lp.posted_accepted", "Posted / Accepted")} :</span>
                 <span className="font-mono font-bold text-emerald-600">
-                  {!isSuperAdminView ? (localPurchaseDashboard.postedBills > 0 ? localPurchaseDashboard.postedBills : 20) : 107}
+                  {!isSuperAdminView ? localPurchaseDashboard.postedBills : superAdminStats.posted}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-slate-400 font-medium">{t(lang, "lp.draft_bills", "Draft Bills")} :</span>
                 <span className="font-mono font-bold text-amber-600">
-                  {!isSuperAdminView ? (localPurchaseDashboard.draftBills > 0 ? localPurchaseDashboard.draftBills : 3) : 25}
+                  {!isSuperAdminView ? localPurchaseDashboard.draftBills : superAdminStats.draft}
                 </span>
               </div>
             </div>
             <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-[11px]">
               <span className="text-slate-400 font-medium">{t(lang, "lp.pending_bills", "Pending Bills")} :</span>
               <span className="font-mono font-black text-rose-600">
-                {!isSuperAdminView ? 1 : 10}
+                {!isSuperAdminView ? localPurchaseDashboard.pendingBills : superAdminStats.pending}
               </span>
             </div>
           </div>
 
-          {/* Card 4: All Countries Report */}
+          {/* Card 4: Country / Branch Report */}
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 shadow-2xs flex flex-col justify-between h-full min-h-[175px] hover:shadow-xs transition">
             <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-2">
@@ -2483,7 +2642,7 @@ export function LocalPurchaseView({
                   <Globe className="h-4 w-4" />
                 </div>
                 <p className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                  {t(lang, "lp.all_countries_report", "ALL COUNTRIES REPORT")}
+                  {!isSuperAdminView ? "BRANCH BREAKDOWN" : t(lang, "lp.all_countries_report", "ALL COUNTRIES REPORT")}
                 </p>
               </div>
               <select
@@ -2500,47 +2659,25 @@ export function LocalPurchaseView({
 
             <div className="py-1 space-y-1 text-xs">
               {!isSuperAdminView ? (
-                <>
-                  <div className="flex justify-between items-center py-0.5 border-b border-slate-100 dark:border-slate-800/60">
-                    <span className="text-slate-600 dark:text-slate-400 font-medium">UAE</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">12</span>
-                  </div>
-                  <div className="flex justify-between items-center py-0.5 border-b border-slate-100 dark:border-slate-800/60">
-                    <span className="text-slate-600 dark:text-slate-400 font-medium">Pakistan</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">5</span>
-                  </div>
-                  <div className="flex justify-between items-center py-0.5 border-b border-slate-100 dark:border-slate-800/60">
-                    <span className="text-slate-600 dark:text-slate-400 font-medium">Afghanistan</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">8</span>
-                  </div>
-                  <div className="flex justify-between items-center py-0.5">
-                    <span className="text-slate-600 dark:text-slate-400 font-medium">Oman</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">3</span>
-                  </div>
-                </>
+                filteredCountryBranches.slice(0, 4).map((b) => {
+                  const bPurchases = purchases.filter(p => String(p.country_branch_id || p.countryBranchId) === String(b.id));
+                  return (
+                    <div key={b.id} className="flex justify-between items-center py-0.5 border-b border-slate-100 dark:border-slate-800/60 last:border-0">
+                      <span className="text-slate-600 dark:text-slate-400 font-medium truncate max-w-[140px]">{b.name || b.code}</span>
+                      <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{bPurchases.length}</span>
+                    </div>
+                  );
+                })
               ) : (
-                <>
-                  <div className="flex justify-between items-center py-0.5 border-b border-slate-100 dark:border-slate-800/60">
-                    <span className="text-slate-600 dark:text-slate-400 font-medium">UAE</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">42</span>
+                superAdminCountrySummary.slice(0, 5).map((c) => (
+                  <div key={c.country} className="flex justify-between items-center py-0.5 border-b border-slate-100 dark:border-slate-800/60 last:border-0">
+                    <span className="text-slate-600 dark:text-slate-400 font-medium flex items-center gap-1.5">
+                      <span>{getCountryFlag(c.country)}</span>
+                      <span>{c.country}</span>
+                    </span>
+                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{c.totalPurchases}</span>
                   </div>
-                  <div className="flex justify-between items-center py-0.5 border-b border-slate-100 dark:border-slate-800/60">
-                    <span className="text-slate-600 dark:text-slate-400 font-medium">Pakistan</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">28</span>
-                  </div>
-                  <div className="flex justify-between items-center py-0.5 border-b border-slate-100 dark:border-slate-800/60">
-                    <span className="text-slate-600 dark:text-slate-400 font-medium">Afghanistan</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">38</span>
-                  </div>
-                  <div className="flex justify-between items-center py-0.5 border-b border-slate-100 dark:border-slate-800/60">
-                    <span className="text-slate-600 dark:text-slate-400 font-medium">Iran</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">18</span>
-                  </div>
-                  <div className="flex justify-between items-center py-0.5">
-                    <span className="text-slate-600 dark:text-slate-400 font-medium">Uzbekistan</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">30</span>
-                  </div>
-                </>
+                ))
               )}
             </div>
           </div>
@@ -4399,50 +4536,181 @@ export function LocalPurchaseView({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11px]">
-                      {[
-                        { country: "UAE", code: "AED", totalPurchases: 42, totalAmountLocal: "AED 1,520,000", totalAmountUsd: 414900, posted: 32, draft: 7, pending: 3, countryCode: "AE" },
-                        { country: "Pakistan", code: "PKR", totalPurchases: 28, totalAmountLocal: "PKR 235,600,000", totalAmountUsd: 827300, posted: 21, draft: 5, pending: 2, countryCode: "PK" },
-                        { country: "Afghanistan", code: "AFN", totalPurchases: 38, totalAmountLocal: "AFN 45,800,000", totalAmountUsd: 650400, posted: 29, draft: 6, pending: 3, countryCode: "AF" },
-                        { country: "Iran", code: "IRR", totalPurchases: 18, totalAmountLocal: "IRR 12,400,000,000", totalAmountUsd: 298600, posted: 14, draft: 3, pending: 1, countryCode: "IR" },
-                        { country: "Uzbekistan", code: "UZS", totalPurchases: 30, totalAmountLocal: "UZS 950,000,000", totalAmountUsd: 254400, posted: 11, draft: 4, pending: 1, countryCode: "UZ" },
-                      ].map((c, idx) => (
-                        <tr key={c.country} className="hover:bg-blue-50/40 dark:hover:bg-slate-800/50 transition-colors">
-                          <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-400">{idx + 1}</td>
-                          <td className="px-3 py-2.5 font-bold text-slate-800 dark:text-slate-200">{c.country}</td>
-                          <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-600 dark:text-slate-400">{c.code}</td>
-                          <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-800 dark:text-slate-200">{c.totalPurchases}</td>
-                          <td className="px-3 py-2.5 text-right font-mono text-slate-700 dark:text-slate-300">{c.totalAmountLocal}</td>
-                          <td className="px-3 py-2.5 text-right font-mono font-bold text-slate-900 dark:text-slate-100">$ {c.totalAmountUsd.toLocaleString()}</td>
-                          <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-800 dark:text-slate-200">{c.posted}</td>
-                          <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-800 dark:text-slate-200">{c.draft}</td>
-                          <td className="px-3 py-2.5 text-center font-mono font-bold text-red-600">{c.pending}</td>
-                          <td className="px-3 py-2.5 text-center">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const matched = countryOptions.find(opt => opt.name.toLowerCase().includes(c.country.toLowerCase()));
-                                if (matched) setSelectedCountryId(matched.id);
-                                setViewScopeMode("single_country");
-                              }}
-                              className="h-6 w-6 rounded bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-400 flex items-center justify-center mx-auto transition border border-blue-200/60 dark:border-blue-800 cursor-pointer shadow-2xs"
-                              title={`Drill down to ${c.country} branch view`}
+                      {superAdminCountrySummary.map((c, idx) => {
+                        const isExpanded = expandedCountryKey === c.country;
+                        return (
+                          <React.Fragment key={c.country}>
+                            <tr
+                              onClick={() => setExpandedCountryKey(prev => prev === c.country ? null : c.country)}
+                              className={cn(
+                                "hover:bg-blue-50/50 dark:hover:bg-slate-800/60 transition-colors cursor-pointer",
+                                isExpanded && "bg-blue-50/40 dark:bg-blue-950/20 font-semibold"
+                              )}
                             >
-                              <Eye className="h-3.5 w-3.5" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                      {/* AMBER SUMMARY ROW MATCHING MOCKUP */}
+                              <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-400">
+                                <div className="flex items-center justify-center gap-1">
+                                  {isExpanded ? (
+                                    <ChevronDown className="h-3.5 w-3.5 text-blue-600" />
+                                  ) : (
+                                    <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+                                  )}
+                                  <span>{idx + 1}</span>
+                                </div>
+                              </td>
+                              <td className="px-3 py-2.5 font-bold text-slate-900 dark:text-slate-100">
+                                <span className="inline-flex items-center gap-1.5">
+                                  <span>{getCountryFlag(c.country)}</span>
+                                  <span>{c.country}</span>
+                                </span>
+                              </td>
+                              <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-600 dark:text-slate-400">{c.code}</td>
+                              <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-800 dark:text-slate-200">{c.totalPurchases}</td>
+                              <td className="px-3 py-2.5 text-right font-mono text-slate-700 dark:text-slate-300">
+                                {c.currency} {c.totalAmountLocal.toLocaleString()}
+                              </td>
+                              <td className="px-3 py-2.5 text-right font-mono font-bold text-slate-900 dark:text-slate-100">
+                                $ {c.totalAmountUsd.toLocaleString()}
+                              </td>
+                              <td className="px-3 py-2.5 text-center font-mono font-bold text-emerald-600">{c.posted}</td>
+                              <td className="px-3 py-2.5 text-center font-mono font-bold text-amber-600">{c.draft}</td>
+                              <td className="px-3 py-2.5 text-center font-mono font-bold text-red-600">{c.pending}</td>
+                              <td className="px-3 py-2.5 text-center" onClick={(e) => e.stopPropagation()}>
+                                <div className="flex items-center justify-center gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => setExpandedCountryKey(prev => prev === c.country ? null : c.country)}
+                                    className="h-6 px-2 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold flex items-center gap-1 transition cursor-pointer"
+                                    title={`Expand ${c.country} details`}
+                                  >
+                                    {isExpanded ? "Collapse" : "Details"}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const matched = countryOptions.find(opt => opt.name.toLowerCase().includes(c.country.toLowerCase()));
+                                      if (matched) setSelectedCountryId(matched.id);
+                                      setViewScopeMode("single_country");
+                                    }}
+                                    className="h-6 w-6 rounded bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-400 flex items-center justify-center transition border border-blue-200/60 dark:border-blue-800 cursor-pointer shadow-2xs"
+                                    title={`Drill down to ${c.country} branch view`}
+                                  >
+                                    <Eye className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+
+                            {/* EXPANDABLE DRILLDOWN SUB-ROW */}
+                            {isExpanded && (
+                              <tr className="bg-slate-50/90 dark:bg-slate-800/50 border-y border-slate-200 dark:border-slate-700">
+                                <td colSpan={10} className="p-3.5">
+                                  <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3.5 shadow-xs space-y-3">
+                                    <div className="flex flex-wrap items-center justify-between gap-3 pb-2.5 border-b border-slate-100 dark:border-slate-800">
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-base">{getCountryFlag(c.country)}</span>
+                                        <span className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">
+                                          {c.country} &mdash; Branch Purchases & Balances
+                                        </span>
+                                        <span className="px-2 py-0.5 rounded-full text-[9.5px] font-black uppercase bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
+                                          {c.branchList.length} {c.branchList.length === 1 ? "Branch" : "Branches"}
+                                        </span>
+                                      </div>
+                                      <div className="flex flex-wrap items-center gap-4 text-xs">
+                                        <div className="text-slate-600 dark:text-slate-400">
+                                          Total Purchases: <strong className="font-mono text-slate-900 dark:text-slate-100">{c.currency} {c.totalAmountLocal.toLocaleString()}</strong>
+                                        </div>
+                                        <div className="text-emerald-700 dark:text-emerald-400">
+                                          Paid: <strong className="font-mono">{c.currency} {c.paidAmount.toLocaleString()}</strong>
+                                        </div>
+                                        <div className="text-amber-700 dark:text-amber-400">
+                                          Remaining: <strong className="font-mono">{c.currency} {c.remainingAmount.toLocaleString()}</strong>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    {c.branchList.length === 0 ? (
+                                      <div className="py-4 text-center text-xs text-slate-400">
+                                        No branches registered for {c.country}.
+                                      </div>
+                                    ) : (
+                                      <div className="overflow-x-auto">
+                                        <table className="w-full text-left text-xs whitespace-nowrap">
+                                          <thead className="bg-slate-50 dark:bg-slate-800/80 text-[10px] font-black uppercase text-slate-500 border-b border-slate-200 dark:border-slate-700">
+                                            <tr>
+                                              <th className="px-3 py-2">Branch Name</th>
+                                              <th className="px-3 py-2 text-center">Code</th>
+                                              <th className="px-3 py-2 text-center">Total Bills</th>
+                                              <th className="px-3 py-2 text-right">Total Purchase ({c.currency})</th>
+                                              <th className="px-3 py-2 text-right text-emerald-600">Paid Amount</th>
+                                              <th className="px-3 py-2 text-right text-amber-600">Remaining Balance</th>
+                                              <th className="px-3 py-2 text-center">Action</th>
+                                            </tr>
+                                          </thead>
+                                          <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11px]">
+                                            {c.branchList.map((b: any) => (
+                                              <tr key={b.id} className="hover:bg-blue-50/40 dark:hover:bg-slate-800/40">
+                                                <td className="px-3 py-2 font-bold text-slate-800 dark:text-slate-200">{b.name}</td>
+                                                <td className="px-3 py-2 text-center font-mono text-slate-500">{b.code || "—"}</td>
+                                                <td className="px-3 py-2 text-center font-mono font-bold">{b.billsCount}</td>
+                                                <td className="px-3 py-2 text-right font-mono font-bold text-slate-900 dark:text-slate-100">
+                                                  {b.totalAmount.toLocaleString()}
+                                                </td>
+                                                <td className="px-3 py-2 text-right font-mono font-bold text-emerald-600">
+                                                  {b.paidAmount.toLocaleString()}
+                                                </td>
+                                                <td className="px-3 py-2 text-right font-mono font-bold text-amber-600">
+                                                  {b.remainingAmount.toLocaleString()}
+                                                </td>
+                                                <td className="px-3 py-2 text-center">
+                                                  <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                      const matched = countryOptions.find(opt => opt.name.toLowerCase().includes(c.country.toLowerCase()));
+                                                      if (matched) setSelectedCountryId(matched.id);
+                                                      setSelectedBranchId(b.id);
+                                                      setViewScopeMode("single_country");
+                                                    }}
+                                                    className="px-2 py-1 rounded bg-blue-50 hover:bg-blue-100 text-blue-600 text-[10.5px] font-bold transition flex items-center gap-1 mx-auto cursor-pointer"
+                                                  >
+                                                    <Eye className="h-3 w-3" />
+                                                    <span>{tr("View Branch Bills")}</span>
+                                                  </button>
+                                                </td>
+                                              </tr>
+                                            ))}
+                                          </tbody>
+                                        </table>
+                                      </div>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
+                        );
+                      })}
+
+                      {/* AUTHENTIC DYNAMIC TOTAL ROW */}
                       <tr className="bg-amber-100/70 dark:bg-amber-950/40 font-black text-[11px] border-t-2 border-amber-300 dark:border-amber-700">
                         <td className="px-3 py-2.5 text-center font-mono text-slate-500">-</td>
                         <td className="px-3 py-2.5 font-black text-slate-900 dark:text-slate-100">TOTAL</td>
                         <td className="px-3 py-2.5 text-center font-mono text-slate-500">-</td>
-                        <td className="px-3 py-2.5 text-center font-mono font-black text-slate-900 dark:text-slate-100">156</td>
+                        <td className="px-3 py-2.5 text-center font-mono font-black text-slate-900 dark:text-slate-100">
+                          {superAdminStats.totalPurchasesCount}
+                        </td>
                         <td className="px-3 py-2.5 text-right font-mono text-slate-500">-</td>
-                        <td className="px-3 py-2.5 text-right font-mono font-black text-slate-900 dark:text-slate-100">$ 2,445,600</td>
-                        <td className="px-3 py-2.5 text-center font-mono font-black text-slate-900 dark:text-slate-100">107</td>
-                        <td className="px-3 py-2.5 text-center font-mono font-black text-slate-900 dark:text-slate-100">25</td>
-                        <td className="px-3 py-2.5 text-center font-mono font-black text-red-600">10</td>
+                        <td className="px-3 py-2.5 text-right font-mono font-black text-slate-900 dark:text-slate-100">
+                          $ {superAdminStats.totalUsdAmount.toLocaleString()}
+                        </td>
+                        <td className="px-3 py-2.5 text-center font-mono font-black text-emerald-700 dark:text-emerald-400">
+                          {superAdminStats.posted}
+                        </td>
+                        <td className="px-3 py-2.5 text-center font-mono font-black text-amber-700 dark:text-amber-400">
+                          {superAdminStats.draft}
+                        </td>
+                        <td className="px-3 py-2.5 text-center font-mono font-black text-red-600">
+                          {superAdminStats.pending}
+                        </td>
                         <td className="px-3 py-2.5 text-center font-mono text-slate-500">-</td>
                       </tr>
                     </tbody>
@@ -4522,7 +4790,7 @@ export function LocalPurchaseView({
                               { key: "finalAmount", label: t(lang, "lp.col_final_amount", "Final Amount ($)"), align: "right", format: "currency" },
                               { key: "status", label: t(lang, "lp.col_status", "Status"), align: "center" }
                             ]}
-                            rows={filteredPurchases.length > 0 ? filteredPurchases.map((p) => ({
+                            rows={filteredPurchases.map((p) => ({
                               voucherNo: p.journal_serial_no || p.serial_no || p.bill_no || "—",
                               date: p.created_at ? new Date(p.created_at).toLocaleDateString("en-GB") : "—",
                               supplier: p.supplier_name || "—",
@@ -4530,11 +4798,7 @@ export function LocalPurchaseView({
                               qty: `${Number(p.quantity_kgs || 0).toLocaleString()} ${p.quantity_name || "—"}`,
                               finalAmount: Number(p.final_cost || p.purchase_cost || 0),
                               status: (p.status || "DRAFT").toUpperCase()
-                            })) : [
-                              { voucherNo: "LP-001235", date: "25/09/2026", supplier: "XYZ Trading", goods: "Almond Kernel", qty: "50 Bag", finalAmount: 22500, status: "POSTED" },
-                              { voucherNo: "LP-001234", date: "24/09/2026", supplier: "ABC Foods", goods: "Walnut Kernel", qty: "30 Bag", finalAmount: 18400, status: "DRAFT" },
-                              { voucherNo: "LP-001233", date: "22/09/2026", supplier: "Kabul Trading", goods: "Pistachio", qty: "20 Bag", finalAmount: 12700, status: "POSTED" },
-                            ]}
+                            }))}
                             variant="ghost"
                             className="w-full justify-start text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 h-8 px-2"
                           />
@@ -4553,7 +4817,7 @@ export function LocalPurchaseView({
                             type="checkbox"
                             checked={allCurrentPageSelected}
                             onChange={toggleSelectAll}
-                            className="rounded border-slate-400 text-blue-600 focus:ring-0 cursor-pointer"
+                            className="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-1 focus:ring-blue-500 cursor-pointer accent-blue-600 transition"
                           />
                         </th>
                         <th className="px-2 py-2.5 text-center w-10">#</th>
@@ -4572,222 +4836,238 @@ export function LocalPurchaseView({
                         <th className="px-2.5 py-2.5 text-center">{t(lang, "lp.col_unit", "UNIT")}</th>
                         <th className="px-3 py-2.5 text-right">{th("FINAL AMOUNT (USD)")}</th>
                         <th className="px-3 py-2.5 text-center">{t(lang, "lp.col_status", "STATUS")}</th>
-                        <th className="px-3 py-2.5 text-center w-24">{t(lang, "common.actions", "ACTIONS")}</th>
+                        <th className="px-3 py-2.5 text-center w-16">{t(lang, "common.actions", "ACTIONS")}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11px]">
-                      {(paginatedPurchases.length > 0
-                        ? paginatedPurchases.map((p, idx) => ({
+                      {paginatedPurchases.length === 0 ? (
+                        <tr>
+                          <td colSpan={13} className="px-4 py-12 text-center text-slate-400">
+                            <div className="flex flex-col items-center justify-center gap-2">
+                              <ShoppingCart className="h-8 w-8 text-slate-300 dark:text-slate-600" />
+                              <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                                No local purchase records found
+                              </p>
+                              <p className="text-xs text-slate-400 max-w-sm">
+                                No purchases recorded yet. Click &quot;New Purchase&quot; above to create your first purchase entry.
+                              </p>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : (
+                        paginatedPurchases.map((p, idx) => {
+                          const row = {
                             id: p.id,
-                            country: p.country_name || p.countryName || "UAE",
-                            branch: p.branch_name || p.branchName || "Dubai",
+                            country: p.country_name || p.countryName || "—",
+                            branch: p.branch_name || p.branchName || "—",
                             voucherNo: p.journal_serial_no || p.serial_no || p.bill_no || `LP-${String(idx + 1).padStart(6, "0")}`,
-                            date: p.created_at ? new Date(p.created_at).toLocaleDateString("en-GB") : "25/09/2026",
+                            date: p.created_at ? new Date(p.created_at).toLocaleDateString("en-GB") : "—",
                             supplier: p.supplier_name || p.supplierName || "—",
                             goods: p.goods_name || p.goodsName || "—",
                             qty: Number(p.quantity_kgs || p.quantityKgs || 0),
                             unit: p.quantity_name || p.quantityName || "Bag",
-                            amountFormatted: `$ ${Number(p.final_cost || p.purchase_cost || 0).toLocaleString()}`,
+                            amountFormatted: `$ ${convertToUsd(Number(p.final_cost || p.purchase_cost || 0), p.purchase_currency || p.localCurrency || "AFN", Number(p.exchange_rate || 1)).toLocaleString()}`,
                             status: p.status || "Posted",
                             raw: p,
-                            isMock: false
-                          }))
-                        : []
-                      ).map((row, rIdx) => {
-                        const isRowSelected = selectedRowIds.has(row.id);
-                        const rowNum = (currentPage - 1) * pageSize + rIdx + 1;
-                        return (
-                          <tr
-                            key={row.id}
-                            className={cn(
-                              "hover:bg-blue-50/40 dark:hover:bg-slate-800/50 transition-colors",
-                              isRowSelected && "bg-blue-50/50 dark:bg-blue-950/20"
-                            )}
-                          >
-                            <td className="px-2.5 py-2.5 text-center">
-                              <input
-                                type="checkbox"
-                                checked={isRowSelected}
-                                onChange={() => {
-                                  const next = new Set(selectedRowIds);
-                                  if (next.has(row.id)) next.delete(row.id);
-                                  else next.add(row.id);
-                                  setSelectedRowIds(next);
-                                }}
-                                className="rounded border-slate-300 text-blue-600 focus:ring-0 cursor-pointer"
-                              />
-                            </td>
-                            <td className="px-2 py-2.5 text-center font-mono font-bold text-slate-400">{rowNum}</td>
-                            <td className="px-3 py-2.5 font-bold text-slate-800 dark:text-slate-200">{row.country}</td>
-                            <td className="px-3 py-2.5 text-slate-600 dark:text-slate-400">{row.branch}</td>
-                            <td className="px-3 py-2.5 font-mono font-bold">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  if (!row.isMock && row.raw) setSelectedRowForVoucher(row.raw);
-                                  else {
-                                    setSelectedRowForVoucher({
-                                      id: row.voucherNo,
-                                      voucherNo: row.voucherNo,
-                                      journal_serial_no: row.voucherNo,
-                                      created_at: new Date().toISOString(),
-                                      supplier_name: row.supplier,
-                                      goods_name: row.goods,
-                                      brand: "DGT / L",
-                                      quantity_kgs: row.qty,
-                                      quantity_name: row.unit,
-                                      purchase_rate: 450,
-                                      purchase_currency: "USD",
-                                      final_cost: parseFloat(row.amountFormatted.replace(/[^0-9.]/g, "")) || 22500,
-                                      status: row.status.toLowerCase(),
-                                    });
+                          };
+                          const isRowSelected = selectedRowIds.has(row.id);
+                          const rowNum = (currentPage - 1) * pageSize + idx + 1;
+                          return (
+                            <tr
+                              key={row.id}
+                              className={cn(
+                                "hover:bg-blue-50/40 dark:hover:bg-slate-800/50 transition-colors",
+                                isRowSelected && "bg-blue-50/50 dark:bg-blue-950/20"
+                              )}
+                            >
+                              <td className="px-2.5 py-2 text-center">
+                                <input
+                                  type="checkbox"
+                                  checked={isRowSelected}
+                                  onChange={() => {
+                                    const next = new Set(selectedRowIds);
+                                    if (next.has(row.id)) next.delete(row.id);
+                                    else next.add(row.id);
+                                    setSelectedRowIds(next);
+                                  }}
+                                  className="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-1 focus:ring-blue-500 cursor-pointer accent-blue-600 transition"
+                                />
+                              </td>
+                              <td className="px-2 py-2 text-center font-mono font-bold text-slate-400">{rowNum}</td>
+                              <td className="px-3 py-2 font-bold text-slate-800 dark:text-slate-200">{row.country}</td>
+                              <td className="px-3 py-2 text-slate-600 dark:text-slate-400">{row.branch}</td>
+                              <td className="px-3 py-2 font-mono font-bold">
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedRowForVoucher(row.raw)}
+                                  className="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                                >
+                                  {row.voucherNo}
+                                </button>
+                              </td>
+                              <td className="px-3 py-2 font-mono text-slate-600 dark:text-slate-400">{row.date}</td>
+                              <td className="px-3 py-2 font-medium text-slate-800 dark:text-slate-200">{row.supplier}</td>
+                              <td className="px-3 py-2 font-bold text-slate-900 dark:text-slate-100">{row.goods}</td>
+                              <td className="px-2.5 py-2 text-right font-mono font-bold text-slate-800 dark:text-slate-200">{row.qty}</td>
+                              <td className="px-2.5 py-2 text-center text-slate-500 dark:text-slate-400">{row.unit}</td>
+                              <td className="px-3 py-2 text-right font-mono font-bold text-slate-900 dark:text-slate-100">{row.amountFormatted}</td>
+                              <td className="px-3 py-2 text-center">
+                                {(() => {
+                                  const st = (row.status || "").toLowerCase();
+                                  if (st === "posted") {
+                                    return <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">Posted</span>;
                                   }
-                                }}
-                                className="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
-                              >
-                                {row.voucherNo}
-                              </button>
-                            </td>
-                            <td className="px-3 py-2.5 font-mono text-slate-600 dark:text-slate-400">{row.date}</td>
-                            <td className="px-3 py-2.5 font-medium text-slate-800 dark:text-slate-200">{row.supplier}</td>
-                            <td className="px-3 py-2.5 font-bold text-slate-900 dark:text-slate-100">{row.goods}</td>
-                            <td className="px-2.5 py-2.5 text-right font-mono font-bold text-slate-800 dark:text-slate-200">{row.qty}</td>
-                            <td className="px-2.5 py-2.5 text-center text-slate-500 dark:text-slate-400">{row.unit}</td>
-                            <td className="px-3 py-2.5 text-right font-mono font-bold text-slate-900 dark:text-slate-100">{row.amountFormatted}</td>
-                            <td className="px-3 py-2.5 text-center">
-                              {(() => {
-                                const st = (row.status || "").toLowerCase();
-                                if (st === "posted") {
-                                  return <span className="inline-block px-3 py-0.5 rounded-full text-[10.5px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">Posted</span>;
-                                }
-                                if (st === "draft") {
-                                  return <span className="inline-block px-3 py-0.5 rounded-full text-[10.5px] font-bold bg-blue-100 text-blue-800 border border-blue-200">Draft</span>;
-                                }
-                                if (st === "pending") {
-                                  return <span className="inline-block px-3 py-0.5 rounded-full text-[10.5px] font-bold bg-amber-100 text-amber-800 border border-amber-200">Pending</span>;
-                                }
-                                if (st === "verified") {
-                                  return <span className="inline-block px-3 py-0.5 rounded-full text-[10.5px] font-bold bg-purple-100 text-purple-800 border border-purple-200">Verified</span>;
-                                }
-                                return <span className="inline-block px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-slate-100 text-slate-700">{row.status}</span>;
-                              })()}
-                            </td>
-                            <td className="px-3 py-2.5 text-center">
-                              <div className="flex items-center justify-center gap-1.5">
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    if (!row.isMock && row.raw) setSelectedRowForVoucher(row.raw);
-                                    else {
-                                      setSelectedRowForVoucher({
-                                        id: row.voucherNo,
-                                        voucherNo: row.voucherNo,
-                                        journal_serial_no: row.voucherNo,
-                                        created_at: new Date().toISOString(),
-                                        supplier_name: row.supplier,
-                                        goods_name: row.goods,
-                                        brand: "DGT / L",
-                                        quantity_kgs: row.qty,
-                                        quantity_name: row.unit,
-                                        purchase_rate: 450,
-                                        purchase_currency: "USD",
-                                        final_cost: parseFloat(row.amountFormatted.replace(/[^0-9.]/g, "")) || 22500,
-                                        status: row.status.toLowerCase(),
-                                      });
-                                    }
-                                  }}
-                                  className="h-6 w-6 rounded bg-blue-50 text-blue-600 hover:bg-blue-100 flex items-center justify-center transition border border-blue-200/60 cursor-pointer shadow-2xs"
-                                  title={th("View Voucher")}
-                                >
-                                  <Eye className="h-3.5 w-3.5" />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setIsFormOpen(true);
-                                    setCurrentStep(1);
-                                    if (!row.isMock && row.raw?.id) {
-                                      setEditingPurchaseId(row.raw.id);
-                                    }
-                                    setCustomGoodsName(row.goods || "");
-                                    setSupplierName(row.supplier || "");
-                                    setQuantityCount(String(row.qty || 50));
-                                    setQuantityName(row.unit || "Bag");
-                                    setPurchaseCurrency("USD");
-                                  }}
-                                  className="h-6 w-6 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 flex items-center justify-center transition border border-sky-200/60 cursor-pointer shadow-2xs"
-                                  title={th("Edit Purchase")}
-                                >
-                                  <Edit3 className="h-3.5 w-3.5" />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={async () => {
-                                    if (!confirm(th("Are you sure you want to delete this purchase entry?"))) return;
-                                    if (!row.isMock && row.raw?.id) {
-                                      try {
-                                        const res = await fetch(`/api/erp/purchases/local-purchase?id=${row.raw.id}`, { method: "DELETE" });
-                                        const data = await res.json();
-                                        if (!res.ok || !data.ok) throw new Error(data.error?.message || "Failed to delete.");
-                                        setPurchases((prev: any[]) => prev.filter((p: any) => p.id !== row.raw.id));
-                                      } catch (err: any) {
-                                        alert(err.message);
-                                      }
-                                    } else {
-                                      alert(th("Demo record removed from active view."));
-                                    }
-                                  }}
-                                  className="h-6 w-6 rounded bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center transition border border-red-200/60 cursor-pointer shadow-2xs"
-                                  title={th("Delete")}
-                                >
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
+                                  if (st === "draft") {
+                                    return <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">Draft</span>;
+                                  }
+                                  if (st === "pending") {
+                                    return <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">Pending</span>;
+                                  }
+                                  if (st === "accepted") {
+                                    return <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200">Accepted</span>;
+                                  }
+                                  return <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">{row.status}</span>;
+                                })()}
+                              </td>
+                              <td className="px-3 py-2 text-center relative" onClick={(e) => e.stopPropagation()}>
+                                <div className="relative inline-block text-left">
+                                  <button
+                                    type="button"
+                                    onClick={() => setOpenActionRowId(prev => prev === row.id ? null : row.id)}
+                                    className="h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center transition shadow-2xs cursor-pointer mx-auto"
+                                    title={tr("Actions")}
+                                  >
+                                    <MoreVertical className="h-3.5 w-3.5" />
+                                  </button>
+
+                                  {openActionRowId === row.id && (
+                                    <div className="absolute end-0 top-full mt-1 w-36 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-1.5 shadow-xl z-50 animate-in fade-in space-y-0.5 text-xs font-semibold text-left">
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setOpenActionRowId(null);
+                                          if (row.raw) setSelectedRowForVoucher(row.raw);
+                                        }}
+                                        className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/40 text-slate-700 dark:text-slate-200 hover:text-blue-600 text-xs font-medium transition cursor-pointer"
+                                      >
+                                        <Eye className="h-3.5 w-3.5 text-blue-500" />
+                                        <span>{tr("View Voucher")}</span>
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setOpenActionRowId(null);
+                                          setIsFormOpen(true);
+                                          setCurrentStep(1);
+                                          if (row.raw?.id) setEditingPurchaseId(row.raw.id);
+                                          setCustomGoodsName(row.goods || "");
+                                          setSupplierName(row.supplier || "");
+                                          setQuantityCount(String(row.qty || ""));
+                                          setQuantityName(row.unit || "Bags");
+                                          setPurchaseCurrency(row.raw?.purchase_currency || "USD");
+                                        }}
+                                        className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-sky-50 dark:hover:bg-sky-950/40 text-slate-700 dark:text-slate-200 hover:text-sky-600 text-xs font-medium transition cursor-pointer"
+                                      >
+                                        <Edit3 className="h-3.5 w-3.5 text-sky-500" />
+                                        <span>{tr("Edit Bill")}</span>
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setOpenActionRowId(null);
+                                          if (row.raw) {
+                                            setHandoverTargetRow(row.raw);
+                                            setHandoverModalOpen(true);
+                                          }
+                                        }}
+                                        className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-slate-700 dark:text-slate-200 hover:text-emerald-600 text-xs font-medium transition cursor-pointer"
+                                      >
+                                        <Share2 className="h-3.5 w-3.5 text-emerald-500" />
+                                        <span>{tr("Handover")}</span>
+                                      </button>
+                                      <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
+                                      <button
+                                        type="button"
+                                        onClick={async () => {
+                                          setOpenActionRowId(null);
+                                          if (!confirm("Are you sure you want to delete this purchase entry?")) return;
+                                          if (row.raw?.id) {
+                                            try {
+                                              const res = await fetch(`/api/erp/purchases/local-purchase?id=${row.raw.id}`, { method: "DELETE" });
+                                              const data = await res.json();
+                                              if (!res.ok || !data.ok) throw new Error(data.error?.message || "Failed to delete.");
+                                              setPurchases((prev: any[]) => prev.filter((p: any) => p.id !== row.raw.id));
+                                            } catch (err: any) {
+                                              alert(err.message);
+                                            }
+                                          }
+                                        }}
+                                        className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 text-xs font-medium transition cursor-pointer"
+                                      >
+                                        <Trash2 className="h-3.5 w-3.5 text-rose-500" />
+                                        <span>{tr("Delete")}</span>
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
                     </tbody>
                   </table>
                 </div>
 
-                {/* Table 2 Footer & Pagination matching Super Admin 156 entries */}
+                {/* Table 2 Footer & Rows Per Page Selector */}
                 <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 text-xs">
-                  <div className="font-medium text-slate-500 dark:text-slate-400">
-                    Showing 1 to 10 of {filteredPurchases.length > 0 ? filteredPurchases.length : 156} entries
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      disabled={currentPage === 1}
-                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                      className="h-7 w-7 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 disabled:opacity-40 flex items-center justify-center text-xs font-bold transition cursor-pointer"
-                    >
-                      &lt;
-                    </button>
-                    {[1, 2, 3, 4, 5].map((page) => (
-                      <button
-                        key={page}
-                        type="button"
-                        onClick={() => setCurrentPage(page)}
-                        className={cn(
-                          "h-7 w-7 rounded-md text-xs font-bold transition cursor-pointer flex items-center justify-center",
-                          currentPage === page
-                            ? "bg-blue-600 text-white font-black shadow-2xs"
-                            : "border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50"
-                        )}
+                  <div className="flex items-center gap-3">
+                    <span className="font-medium text-slate-500 dark:text-slate-400">
+                      {filteredPurchases.length > 0
+                        ? `Showing ${(currentPage - 1) * pageSize + 1} to ${Math.min(currentPage * pageSize, filteredPurchases.length)} of ${filteredPurchases.length} entries`
+                        : "Showing 0 to 0 of 0 entries"}
+                    </span>
+                    <div className="flex items-center gap-1.5 ms-2 ps-3 border-s border-slate-200 dark:border-slate-700">
+                      <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">Rows per page:</span>
+                      <select
+                        value={pageSize}
+                        onChange={(e) => {
+                          setPageSize(Number(e.target.value));
+                          setCurrentPage(1);
+                        }}
+                        className="h-7 px-2 text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 outline-none cursor-pointer focus:border-blue-500"
                       >
-                        {page}
+                        <option value={10}>10</option>
+                        <option value={20}>20</option>
+                        <option value={25}>25</option>
+                        <option value={50}>50</option>
+                        <option value={100}>100</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                      Page {filteredPurchases.length > 0 ? currentPage : 0} of {totalPages}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        disabled={currentPage <= 1}
+                        onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                        className="h-7 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold transition cursor-pointer flex items-center gap-1"
+                      >
+                        &lt; <span>Prev</span>
                       </button>
-                    ))}
-                    <button
-                      type="button"
-                      disabled={currentPage >= 5}
-                      onClick={() => setCurrentPage(prev => prev + 1)}
-                      className="h-7 w-7 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 disabled:opacity-40 flex items-center justify-center text-xs font-bold transition cursor-pointer"
-                    >
-                      &gt;
-                    </button>
+                      <button
+                        type="button"
+                        disabled={currentPage >= totalPages || filteredPurchases.length === 0}
+                        onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                        className="h-7 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold transition cursor-pointer flex items-center gap-1"
+                      >
+                        <span>Next</span> &gt;
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -4873,7 +5153,7 @@ export function LocalPurchaseView({
                             { key: "finalAmount", label: t(lang, "lp.col_final_amount", "Final Amount"), align: "right", format: "currency" },
                             { key: "status", label: t(lang, "lp.col_status", "Status"), align: "center" }
                           ]}
-                          rows={filteredPurchases.length > 0 ? filteredPurchases.map((p) => ({
+                          rows={filteredPurchases.map((p) => ({
                             voucherNo: p.journal_serial_no || p.serial_no || p.bill_no || "—",
                             date: p.created_at ? new Date(p.created_at).toLocaleDateString("en-GB") : "—",
                             supplier: p.supplier_name || "—",
@@ -4882,10 +5162,7 @@ export function LocalPurchaseView({
                             qty: `${Number(p.quantity_kgs || 0).toLocaleString()} ${p.quantity_name || "—"}`,
                             finalAmount: Number(p.final_cost || p.purchase_cost || 0),
                             status: (p.status || "DRAFT").toUpperCase()
-                          })) : [
-                            { voucherNo: "LP-000123", date: "25/09/2026", supplier: "Kabul Trading Co.", goods: "Almond Kernel", brand: "DGT / L", qty: "50 Bag", finalAmount: 1100000, status: "POSTED" },
-                            { voucherNo: "LP-000122", date: "24/09/2026", supplier: "Haji Food Supplier", goods: "Walnut Kernel", brand: "DGT / M", qty: "30 Bag", finalAmount: 630000, status: "DRAFT" },
-                          ]}
+                          }))}
                           variant="ghost"
                           className="w-full justify-start text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 h-8 px-2"
                         />
@@ -4904,7 +5181,7 @@ export function LocalPurchaseView({
                           type="checkbox"
                           checked={allCurrentPageSelected}
                           onChange={toggleSelectAll}
-                          className="rounded border-slate-400 text-blue-600 focus:ring-0 cursor-pointer"
+                          className="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-1 focus:ring-blue-500 cursor-pointer accent-blue-600 transition"
                         />
                       </th>
                       <th className="px-2 py-2.5 text-center w-10">#</th>
@@ -4922,220 +5199,236 @@ export function LocalPurchaseView({
                       <th className="px-2.5 py-2.5 text-center">{t(lang, "lp.col_unit", "UNIT")}</th>
                       <th className="px-3 py-2.5 text-right">{t(lang, "lp.col_final_amount", "FINAL AMOUNT")}</th>
                       <th className="px-3 py-2.5 text-center">{t(lang, "lp.col_status", "STATUS")}</th>
-                      <th className="px-3 py-2.5 text-center w-24">{t(lang, "common.actions", "ACTIONS")}</th>
+                      <th className="px-3 py-2.5 text-center w-16">{t(lang, "common.actions", "ACTIONS")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11px]">
-                    {(paginatedPurchases.length > 0
-                      ? paginatedPurchases.map((p, idx) => ({
+                    {paginatedPurchases.length === 0 ? (
+                      <tr>
+                        <td colSpan={12} className="px-4 py-12 text-center text-slate-400">
+                          <div className="flex flex-col items-center justify-center gap-2">
+                            <ShoppingCart className="h-8 w-8 text-slate-300 dark:text-slate-600" />
+                            <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                              No local purchase records found
+                            </p>
+                            <p className="text-xs text-slate-400 max-w-sm">
+                              No local purchases found for this branch. Click &quot;New Purchase&quot; above to create a bill.
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      paginatedPurchases.map((p, idx) => {
+                        const row = {
                           id: p.id,
                           voucherNo: p.journal_serial_no || p.serial_no || p.bill_no || `LP-${String(idx + 1).padStart(6, "0")}`,
-                          date: p.created_at ? new Date(p.created_at).toLocaleDateString("en-GB") : "25/09/2026",
+                          date: p.created_at ? new Date(p.created_at).toLocaleDateString("en-GB") : "—",
                           supplier: p.supplier_name || p.supplierName || "—",
                           goods: p.goods_name || p.goodsName || "—",
-                          brand: p.brand || "DGT / L",
+                          brand: p.brand || "—",
                           qty: Number(p.quantity_kgs || p.quantityKgs || 0),
                           unit: p.quantity_name || p.quantityName || "Bag",
                           amountFormatted: `${p.purchase_currency || localCurrency || "AFN"} ${Number(p.final_cost || p.finalCost || p.purchase_cost || 0).toLocaleString()}`,
                           status: p.status || "Posted",
                           raw: p,
-                          isMock: false
-                        }))
-                      : []
-                    ).map((row, rIdx) => {
-                      const isRowSelected = selectedRowIds.has(row.id);
-                      const rowNum = (currentPage - 1) * pageSize + rIdx + 1;
-                      return (
-                        <tr
-                          key={row.id}
-                          className={cn(
-                            "hover:bg-blue-50/40 dark:hover:bg-slate-800/50 transition-colors",
-                            isRowSelected && "bg-blue-50/50 dark:bg-blue-950/20"
-                          )}
-                        >
-                          <td className="px-2.5 py-2.5 text-center">
-                            <input
-                              type="checkbox"
-                              checked={isRowSelected}
-                              onChange={() => {
-                                const next = new Set(selectedRowIds);
-                                if (next.has(row.id)) next.delete(row.id);
-                                else next.add(row.id);
-                                setSelectedRowIds(next);
-                              }}
-                              className="rounded border-slate-300 text-blue-600 focus:ring-0 cursor-pointer"
-                            />
-                          </td>
-                          <td className="px-2 py-2.5 text-center font-mono font-bold text-slate-400">{rowNum}</td>
-                          <td className="px-3 py-2.5 font-mono font-bold">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (!row.isMock && row.raw) setSelectedRowForVoucher(row.raw);
-                                else {
-                                  setSelectedRowForVoucher({
-                                    id: row.voucherNo,
-                                    voucherNo: row.voucherNo,
-                                    journal_serial_no: row.voucherNo,
-                                    created_at: new Date().toISOString(),
-                                    supplier_name: row.supplier,
-                                    goods_name: row.goods,
-                                    brand: row.brand,
-                                    quantity_kgs: row.qty,
-                                    quantity_name: row.unit,
-                                    purchase_rate: 22000,
-                                    purchase_currency: localCurrency || "AFN",
-                                    final_cost: parseFloat(row.amountFormatted.replace(/[^0-9.]/g, "")) || 1100000,
-                                    status: row.status.toLowerCase(),
-                                  });
+                        };
+                        const isRowSelected = selectedRowIds.has(row.id);
+                        const rowNum = (currentPage - 1) * pageSize + idx + 1;
+                        return (
+                          <tr
+                            key={row.id}
+                            className={cn(
+                              "hover:bg-blue-50/40 dark:hover:bg-slate-800/50 transition-colors",
+                              isRowSelected && "bg-blue-50/50 dark:bg-blue-950/20"
+                            )}
+                          >
+                            <td className="px-2.5 py-2 text-center">
+                              <input
+                                type="checkbox"
+                                checked={isRowSelected}
+                                onChange={() => {
+                                  const next = new Set(selectedRowIds);
+                                  if (next.has(row.id)) next.delete(row.id);
+                                  else next.add(row.id);
+                                  setSelectedRowIds(next);
+                                }}
+                                className="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-1 focus:ring-blue-500 cursor-pointer accent-blue-600 transition"
+                              />
+                            </td>
+                            <td className="px-2 py-2 text-center font-mono font-bold text-slate-400">{rowNum}</td>
+                            <td className="px-3 py-2 font-mono font-bold">
+                              <button
+                                type="button"
+                                onClick={() => setSelectedRowForVoucher(row.raw)}
+                                className="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                              >
+                                {row.voucherNo}
+                              </button>
+                            </td>
+                            <td className="px-3 py-2 font-mono text-slate-600 dark:text-slate-400">{row.date}</td>
+                            <td className="px-3 py-2 font-medium text-slate-800 dark:text-slate-200">{row.supplier}</td>
+                            <td className="px-3 py-2 font-bold text-slate-900 dark:text-slate-100">{row.goods}</td>
+                            <td className="px-3 py-2 text-slate-600 dark:text-slate-400">{row.brand}</td>
+                            <td className="px-2.5 py-2 text-right font-mono font-bold text-slate-800 dark:text-slate-200">{row.qty}</td>
+                            <td className="px-2.5 py-2 text-center text-slate-500 dark:text-slate-400">{row.unit}</td>
+                            <td className="px-3 py-2 text-right font-mono font-bold text-slate-900 dark:text-slate-100">{row.amountFormatted}</td>
+                            <td className="px-3 py-2 text-center">
+                              {(() => {
+                                const st = (row.status || "").toLowerCase();
+                                if (st === "posted") {
+                                  return <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">Posted</span>;
                                 }
-                              }}
-                              className="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
-                            >
-                              {row.voucherNo}
-                            </button>
-                          </td>
-                          <td className="px-3 py-2.5 font-mono text-slate-600 dark:text-slate-400">{row.date}</td>
-                          <td className="px-3 py-2.5 font-medium text-slate-800 dark:text-slate-200">{row.supplier}</td>
-                          <td className="px-3 py-2.5 font-bold text-slate-900 dark:text-slate-100">{row.goods}</td>
-                          <td className="px-3 py-2.5 text-slate-600 dark:text-slate-400">{row.brand}</td>
-                          <td className="px-2.5 py-2.5 text-right font-mono font-bold text-slate-800 dark:text-slate-200">{row.qty}</td>
-                          <td className="px-2.5 py-2.5 text-center text-slate-500 dark:text-slate-400">{row.unit}</td>
-                          <td className="px-3 py-2.5 text-right font-mono font-bold text-slate-900 dark:text-slate-100">{row.amountFormatted}</td>
-                          <td className="px-3 py-2.5 text-center">
-                            {(() => {
-                              const st = (row.status || "").toLowerCase();
-                              if (st === "posted") {
-                                return <span className="inline-block px-3 py-0.5 rounded-full text-[10.5px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">Posted</span>;
-                              }
-                              if (st === "draft") {
-                                return <span className="inline-block px-3 py-0.5 rounded-full text-[10.5px] font-bold bg-blue-100 text-blue-800 border border-blue-200">Draft</span>;
-                              }
-                              if (st === "pending") {
-                                return <span className="inline-block px-3 py-0.5 rounded-full text-[10.5px] font-bold bg-amber-100 text-amber-800 border border-amber-200">Pending</span>;
-                              }
-                              if (st === "verified") {
-                                return <span className="inline-block px-3 py-0.5 rounded-full text-[10.5px] font-bold bg-purple-100 text-purple-800 border border-purple-200">Verified</span>;
-                              }
-                              return <span className="inline-block px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-slate-100 text-slate-700">{row.status}</span>;
-                            })()}
-                          </td>
-                          <td className="px-3 py-2.5 text-center">
-                            <div className="flex items-center justify-center gap-1.5">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  if (!row.isMock && row.raw) setSelectedRowForVoucher(row.raw);
-                                  else {
-                                    setSelectedRowForVoucher({
-                                      id: row.voucherNo,
-                                      voucherNo: row.voucherNo,
-                                      journal_serial_no: row.voucherNo,
-                                      created_at: new Date().toISOString(),
-                                      supplier_name: row.supplier,
-                                      goods_name: row.goods,
-                                      brand: row.brand,
-                                      quantity_kgs: row.qty,
-                                      quantity_name: row.unit,
-                                      purchase_rate: 22000,
-                                      purchase_currency: localCurrency || "AFN",
-                                      final_cost: parseFloat(row.amountFormatted.replace(/[^0-9.]/g, "")) || 1100000,
-                                      status: row.status.toLowerCase(),
-                                    });
-                                  }
-                                }}
-                                className="h-6 w-6 rounded bg-blue-50 text-blue-600 hover:bg-blue-100 flex items-center justify-center transition border border-blue-200/60 cursor-pointer shadow-2xs"
-                                title={th("View Voucher")}
-                              >
-                                <Eye className="h-3.5 w-3.5" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setIsFormOpen(true);
-                                  setCurrentStep(1);
-                                  if (!row.isMock && row.raw?.id) {
-                                    setEditingPurchaseId(row.raw.id);
-                                  }
-                                  setCustomGoodsName(row.goods || "");
-                                  setSupplierName(row.supplier || "");
-                                  setQuantityCount(String(row.qty || 50));
-                                  setQuantityName(row.unit || "Bag");
-                                  setPurchaseCurrency(localCurrency || "AFN");
-                                }}
-                                className="h-6 w-6 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 flex items-center justify-center transition border border-sky-200/60 cursor-pointer shadow-2xs"
-                                title={th("Edit Purchase")}
-                              >
-                                <Edit3 className="h-3.5 w-3.5" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={async () => {
-                                  if (!confirm(th("Are you sure you want to delete this purchase entry?"))) return;
-                                  if (!row.isMock && row.raw?.id) {
-                                    try {
-                                      const res = await fetch(`/api/erp/purchases/local-purchase?id=${row.raw.id}`, { method: "DELETE" });
-                                      const data = await res.json();
-                                      if (!res.ok || !data.ok) throw new Error(data.error?.message || "Failed to delete.");
-                                      setPurchases((prev: any[]) => prev.filter((p: any) => p.id !== row.raw.id));
-                                    } catch (err: any) {
-                                      alert(err.message);
-                                    }
-                                  } else {
-                                    alert(th("Demo record removed from active view."));
-                                  }
-                                }}
-                                className="h-6 w-6 rounded bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center transition border border-red-200/60 cursor-pointer shadow-2xs"
-                                title={th("Delete")}
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
+                                if (st === "draft") {
+                                  return <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">Draft</span>;
+                                }
+                                if (st === "pending") {
+                                  return <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">Pending</span>;
+                                }
+                                if (st === "accepted") {
+                                  return <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200">Accepted</span>;
+                                }
+                                return <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">{row.status}</span>;
+                              })()}
+                            </td>
+                            <td className="px-3 py-2 text-center relative" onClick={(e) => e.stopPropagation()}>
+                              <div className="relative inline-block text-left">
+                                <button
+                                  type="button"
+                                  onClick={() => setOpenActionRowId(prev => prev === row.id ? null : row.id)}
+                                  className="h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center transition shadow-2xs cursor-pointer mx-auto"
+                                  title={tr("Actions")}
+                                >
+                                  <MoreVertical className="h-3.5 w-3.5" />
+                                </button>
+
+                                {openActionRowId === row.id && (
+                                  <div className="absolute end-0 top-full mt-1 w-36 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-1.5 shadow-xl z-50 animate-in fade-in space-y-0.5 text-xs font-semibold text-left">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setOpenActionRowId(null);
+                                        if (row.raw) setSelectedRowForVoucher(row.raw);
+                                      }}
+                                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/40 text-slate-700 dark:text-slate-200 hover:text-blue-600 text-xs font-medium transition cursor-pointer"
+                                    >
+                                      <Eye className="h-3.5 w-3.5 text-blue-500" />
+                                      <span>{tr("View Voucher")}</span>
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setOpenActionRowId(null);
+                                        setIsFormOpen(true);
+                                        setCurrentStep(1);
+                                        if (row.raw?.id) setEditingPurchaseId(row.raw.id);
+                                        setCustomGoodsName(row.goods || "");
+                                        setSupplierName(row.supplier || "");
+                                        setQuantityCount(String(row.qty || ""));
+                                        setQuantityName(row.unit || "Bags");
+                                        setPurchaseCurrency(row.raw?.purchase_currency || localCurrency || "AFN");
+                                      }}
+                                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-sky-50 dark:hover:bg-sky-950/40 text-slate-700 dark:text-slate-200 hover:text-sky-600 text-xs font-medium transition cursor-pointer"
+                                    >
+                                      <Edit3 className="h-3.5 w-3.5 text-sky-500" />
+                                      <span>{tr("Edit Bill")}</span>
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setOpenActionRowId(null);
+                                        if (row.raw) {
+                                          setHandoverTargetRow(row.raw);
+                                          setHandoverModalOpen(true);
+                                        }
+                                      }}
+                                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-slate-700 dark:text-slate-200 hover:text-emerald-600 text-xs font-medium transition cursor-pointer"
+                                    >
+                                      <Share2 className="h-3.5 w-3.5 text-emerald-500" />
+                                      <span>{tr("Handover")}</span>
+                                    </button>
+                                    <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
+                                    <button
+                                      type="button"
+                                      onClick={async () => {
+                                        setOpenActionRowId(null);
+                                        if (!confirm("Are you sure you want to delete this purchase entry?")) return;
+                                        if (row.raw?.id) {
+                                          try {
+                                            const res = await fetch(`/api/erp/purchases/local-purchase?id=${row.raw.id}`, { method: "DELETE" });
+                                            const data = await res.json();
+                                            if (!res.ok || !data.ok) throw new Error(data.error?.message || "Failed to delete.");
+                                            setPurchases((prev: any[]) => prev.filter((p: any) => p.id !== row.raw.id));
+                                          } catch (err: any) {
+                                            alert(err.message);
+                                          }
+                                        }
+                                      }}
+                                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 text-xs font-medium transition cursor-pointer"
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5 text-rose-500" />
+                                      <span>{tr("Delete")}</span>
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
                   </tbody>
                 </table>
               </div>
 
-              {/* Single Country Footer & Pagination matching mockup (28 entries, < 1 2 3 >) */}
+              {/* Single Country Footer & Rows Per Page Selector */}
               <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 text-xs">
-                <div className="font-medium text-slate-500 dark:text-slate-400">
-                  Showing 1 to 10 of {filteredPurchases.length > 0 ? filteredPurchases.length : 28} entries
-                </div>
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    disabled={currentPage === 1}
-                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                    className="h-7 w-7 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 disabled:opacity-40 flex items-center justify-center text-xs font-bold transition cursor-pointer"
-                  >
-                    &lt;
-                  </button>
-                  {[1, 2, 3].map((page) => (
-                    <button
-                      key={page}
-                      type="button"
-                      onClick={() => setCurrentPage(page)}
-                      className={cn(
-                        "h-7 w-7 rounded-md text-xs font-bold transition cursor-pointer flex items-center justify-center",
-                        currentPage === page
-                          ? "bg-blue-600 text-white font-black shadow-2xs"
-                          : "border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50"
-                      )}
+                <div className="flex items-center gap-3">
+                  <span className="font-medium text-slate-500 dark:text-slate-400">
+                    {filteredPurchases.length > 0
+                      ? `Showing ${(currentPage - 1) * pageSize + 1} to ${Math.min(currentPage * pageSize, filteredPurchases.length)} of ${filteredPurchases.length} entries`
+                      : "Showing 0 to 0 of 0 entries"}
+                  </span>
+                  <div className="flex items-center gap-1.5 ms-2 ps-3 border-s border-slate-200 dark:border-slate-700">
+                    <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">Rows per page:</span>
+                    <select
+                      value={pageSize}
+                      onChange={(e) => {
+                        setPageSize(Number(e.target.value));
+                        setCurrentPage(1);
+                      }}
+                      className="h-7 px-2 text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 outline-none cursor-pointer focus:border-blue-500"
                     >
-                      {page}
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={25}>25</option>
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                    Page {filteredPurchases.length > 0 ? currentPage : 0} of {totalPages}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      disabled={currentPage <= 1}
+                      onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                      className="h-7 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold transition cursor-pointer flex items-center gap-1"
+                    >
+                      &lt; <span>Prev</span>
                     </button>
-                  ))}
-                  <button
-                    type="button"
-                    disabled={currentPage >= 3}
-                    onClick={() => setCurrentPage(prev => prev + 1)}
-                    className="h-7 w-7 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 disabled:opacity-40 flex items-center justify-center text-xs font-bold transition cursor-pointer"
-                  >
-                    &gt;
-                  </button>
+                    <button
+                      type="button"
+                      disabled={currentPage >= totalPages || filteredPurchases.length === 0}
+                      onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                      className="h-7 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold transition cursor-pointer flex items-center gap-1"
+                    >
+                      <span>Next</span> &gt;
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
