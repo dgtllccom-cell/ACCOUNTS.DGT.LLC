@@ -1,5 +1,7 @@
 "use client";
 
+import { renderPaginatedPdf } from "@/lib/reports/pdf-paginate";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import React, { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { usePrintStore } from "@/lib/store/print-store";
@@ -114,6 +116,20 @@ export function PdfPreviewModal() {
     const filename = `${safeName}-${timestamp}.pdf`;
 
     try {
+      // Preferred path: paginate the report's data table into real A4 pages (all rows, repeated
+      // column header, PAGE x / N) — the raw iframe capture below clips to a single sheet.
+      try {
+        await renderPaginatedPdf({
+          html: sanitizedHtml,
+          orientation,
+          filename,
+          pageWord: translateHeader(previewLang, "PAGE"),
+          rtl: ["ur", "ar", "fa", "ps"].includes(previewLang),
+        });
+        return;
+      } catch (paginateError) {
+        console.warn("Paginated PDF failed, using legacy capture", paginateError);
+      }
       if (iframeRef.current?.contentDocument) {
           const element = iframeRef.current.contentDocument.body;
           // Match the PDF page orientation to the report's own @page rule so wide
@@ -227,7 +243,9 @@ export function PdfPreviewModal() {
     <style>
       @page {
         size: A4 ${orientation} !important;
-        margin: 0 !important;
+        /* Real printers cannot print edge-to-edge: keep the report's own page margins
+           (also required for the PAGE x / N margin boxes). */
+        margin: 6mm 6mm 11mm 6mm !important;
       }
       @media print {
         html, body {
