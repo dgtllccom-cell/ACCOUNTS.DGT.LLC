@@ -4,6 +4,15 @@ import { ERP_SESSION_COOKIE } from "@/lib/auth/session-cookie";
 import { readMobileProfileFromToken } from "@/lib/auth/edge-session";
 import { MOBILE_PROFILE_HOME, mobileProfileAllowsApi, mobileProfileAllowsPath } from "@/lib/permissions/mobile-profiles";
 
+function resolveRedirectUrl(targetPath: string, request: NextRequest): URL {
+  const forwardedHost = request.headers.get("x-forwarded-host") || request.headers.get("host");
+  const forwardedProto = request.headers.get("x-forwarded-proto") || (request.nextUrl.protocol ? request.nextUrl.protocol.replace(":", "") : "https");
+  if (forwardedHost && !forwardedHost.startsWith("0.0.0.0") && !forwardedHost.startsWith("127.0.0.1") && !forwardedHost.startsWith("localhost")) {
+    return new URL(targetPath, `${forwardedProto}://${forwardedHost}`);
+  }
+  return new URL(targetPath, request.url);
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -13,7 +22,7 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith("/dashboard")) {
     const sessionCookie = request.cookies.get(ERP_SESSION_COOKIE);
     if (!sessionCookie?.value) {
-      const loginUrl = new URL("/auth/login", request.url);
+      const loginUrl = resolveRedirectUrl("/auth/login", request);
       loginUrl.searchParams.set("redirectTo", pathname);
       return NextResponse.redirect(loginUrl);
     }
@@ -37,7 +46,7 @@ export async function middleware(request: NextRequest) {
             { status: 403 },
           );
         }
-        return NextResponse.redirect(new URL(MOBILE_PROFILE_HOME[mp], request.url));
+        return NextResponse.redirect(resolveRedirectUrl(MOBILE_PROFILE_HOME[mp], request));
       }
     }
   }

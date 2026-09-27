@@ -4595,7 +4595,7 @@ export function LocalPurchaseView({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11px]">
-                      {(filteredPurchases.length > 0
+                      {(paginatedPurchases.length > 0
                         ? paginatedPurchases.map((p, idx) => ({
                             id: p.id,
                             country: p.country_name || p.countryName || "—",
@@ -4973,7 +4973,7 @@ export function LocalPurchaseView({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11px]">
-                    {(filteredPurchases.length > 0
+                    {(paginatedPurchases.length > 0
                       ? paginatedPurchases.map((p, idx) => ({
                           id: p.id,
                           voucherNo: p.journal_serial_no || p.serial_no || p.bill_no || "—",

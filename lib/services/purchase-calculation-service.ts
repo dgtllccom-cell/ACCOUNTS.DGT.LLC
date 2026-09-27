@@ -681,16 +681,37 @@ export function resolveLoadingEligibility(
       };
     }
 
-    case "invoice":
-      // Invoice payment condition: loading allowed, full payment due on invoice
+    case "invoice": {
+      // Invoice condition: Invoice step must be completed before entering loading.
+      const orderAny = order as any;
+      const wf = getWorkflow(order);
+      const isInvoiceCompleted =
+        wf.invoiceStatus === "completed" ||
+        wf.currentStep === "payment_posted" ||
+        wf.currentStep === "purchase_loading" ||
+        toNum(orderAny.remaining_paid, 0) > 0 ||
+        paidFC > 0.01;
+
+      if (isInvoiceCompleted) {
+        return {
+          eligible: true,
+          reason: "Invoice payment step completed — loading eligible.",
+          paymentCondition: condition,
+          requiredAmountFC: amounts.totalPurchaseFC,
+          paidAmountFC: paidFC,
+          shortfallFC: Math.max(0, amounts.totalPurchaseFC - paidFC),
+        };
+      }
+
       return {
-        eligible: true,
-        reason: "Invoice payment condition — loading allowed, payment due on invoice.",
+        eligible: false,
+        reason: "Invoice payment step must be completed before loading.",
         paymentCondition: condition,
         requiredAmountFC: amounts.totalPurchaseFC,
         paidAmountFC: paidFC,
-        shortfallFC: Math.max(0, amounts.totalPurchaseFC - paidFC),
+        shortfallFC: amounts.totalPurchaseFC,
       };
+    }
 
     default: {
       // Unknown / not specified — eligible if any payment posted OR if order total is 0

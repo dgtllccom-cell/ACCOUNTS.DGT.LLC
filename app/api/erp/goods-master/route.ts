@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
               v.size,
               v.brand,
               v.variety,
-              v.grade,
+              (to_jsonb(v)->>'grade') AS grade,
               v.extra_details,
               v.is_active,
               v.created_at

@@ -355,6 +355,7 @@ export async function GET(request: NextRequest) {
             left join country_branches cb on cb.id = po.country_branch_id
             left join city_branches ci on ci.id = po.city_branch_id
             where po.deleted_at is null
+              and (po.status = 'transferred' or po.ledger_posting_status = 'posted' or coalesce(po.form_data->'workflow'->>'transferStatus', '') = 'transferred')
               ${query.cityBranchId ? sql`and po.city_branch_id = ${query.cityBranchId}::uuid`
                 : query.countryBranchId ? sql`and po.country_branch_id = ${query.countryBranchId}::uuid`
                 : query.countryId ? sql`and po.country_id = ${query.countryId}::uuid`
