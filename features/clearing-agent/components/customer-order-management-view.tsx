@@ -3991,96 +3991,6 @@ export function CustomerOrderManagementView() {
                     );
                   })()}
                 </div>
-
-                {/* Registered Customer Orders Mini-Table (Screenshots 1, 2, 3) */}
-                <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <h3 className="text-xs font-black text-slate-900 dark:text-white">
-                        {tt("registered_orders", "Registered Customer Orders")} ({orders.length})
-                      </h3>
-                      <p className="text-[9.5px] text-slate-400">
-                        {tt("recent_orders_hint", "Recent orders from this customer and related parties.")}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={handleExportCsv}
-                        className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-[10.5px] font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                        title={tt("export_csv", "Export to CSV")}
-                      >
-                        <Download className="h-3 w-3" />
-                        <span>CSV</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setIsFormOpen(false)}
-                        className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2 py-1 text-[10.5px] font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-300"
-                        title={tt("view_all", "View All in Table")}
-                      >
-                        <Filter className="h-3 w-3" />
-                        <span>{tt("full_table", "Full Registry")}</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Mini-table container */}
-                  <div className="overflow-x-auto rounded-xl border border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-900">
-                    <table className="w-full text-left text-[11px] border-collapse">
-                      <thead className="border-b border-slate-100 bg-slate-50/80 font-bold uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-800/60 text-[9.5px]">
-                        <tr>
-                          <th className="px-2.5 py-2">#</th>
-                          <th className="px-2.5 py-2">{tt("th_order_no", "Order No")}</th>
-                          <th className="px-2.5 py-2">{tt("th_party", "Customer")}</th>
-                          <th className="px-2.5 py-2">{tt("th_goods", "Goods")}</th>
-                          <th className="px-2.5 py-2">{tt("th_qty", "Qty")}</th>
-                          <th className="px-2.5 py-2">{tt("th_route", "Route / Ports")}</th>
-                          <th className="px-2.5 py-2">{tt("th_step_status", "Status")}</th>
-                          <th className="px-2.5 py-2 text-right">{tt("th_actions", "Actions")}</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                        {orders.slice(0, 5).map((order, oIdx) => (
-                          <tr key={order.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40">
-                            <td className="px-2.5 py-2 font-bold text-slate-400">{oIdx + 1}</td>
-                            <td className="px-2.5 py-2 font-mono font-bold text-blue-600 dark:text-blue-400">
-                              {order.order_no || `CL-${order.id.slice(0, 6)}`}
-                            </td>
-                            <td className="px-2.5 py-2 font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[100px]">
-                              {order.customer_name || "-"}
-                            </td>
-                            <td className="px-2.5 py-2 text-slate-700 dark:text-slate-300 truncate max-w-[90px]">
-                              {order.goods_name || "-"}
-                            </td>
-                            <td className="px-2.5 py-2 whitespace-nowrap text-slate-600 dark:text-slate-400">
-                              {order.goods_quantity ? `${order.goods_quantity} ${order.goods_unit || ""}` : "-"}
-                            </td>
-                            <td className="px-2.5 py-2 text-slate-500 truncate max-w-[100px]">
-                              {order.route_name || [order.loading_country_name, order.receiving_country_name].filter(Boolean).join(" → ") || "-"}
-                            </td>
-                            <td className="px-2.5 py-2">
-                              <span className="rounded-full bg-blue-50 px-1.5 py-0.5 text-[9px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-                                {order.status || "Draft"}
-                              </span>
-                            </td>
-                            <td className="px-2.5 py-2 text-right">
-                              <button
-                                type="button"
-                                onClick={() => loadEditOrder(order)}
-                                className="p-1 rounded text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40"
-                                title={tt("edit_resume_step", "Edit / Resume")}
-                              >
-                                <Pencil className="h-3 w-3" />
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
@@ -5332,13 +5242,16 @@ function Step1BookingCustomer({
             </div>
 
             {/* Goods Entry / Edit Input Form */}
-            <div className="rounded-xl border border-emerald-200/90 bg-emerald-50/30 p-3.5 space-y-3.5 dark:border-emerald-900/60 dark:bg-emerald-950/20">
+            <div className="rounded-xl border border-emerald-200/90 bg-emerald-50/30 p-2.5 space-y-2.5 dark:border-emerald-900/60 dark:bg-emerald-950/20">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5">
                   <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white text-[10px] font-black">
                     {editingGoodsIdx !== null ? editingGoodsIdx + 1 : (formData.goods_items || []).length + 1}
                   </span>
                   <span>{editingGoodsIdx !== null ? tt("edit_goods_item_num", "Edit Goods Item #{n}").replace("{n}", String(editingGoodsIdx + 1)) : tt("add_goods_item", "Add Goods Item")}</span>
+                </span>
+                <span className="text-[10px] text-slate-500 font-medium hidden sm:inline">
+                  {tt("goods_entry_flexible_hint", "Can be completed now or updated by warehouse / operations user later")}
                 </span>
                 {editingGoodsIdx !== null ? (
                   <button
@@ -5352,9 +5265,9 @@ function Step1BookingCustomer({
               </div>
 
               {/* Warehouse Location Dropdown */}
-              <div className="space-y-1.5">
+              <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <label className="text-[10.5px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                     <Warehouse className="h-3.5 w-3.5 text-blue-600" />
                     <span>{tt("warehouse_location_toggle_label", "Warehouse Location")} *</span>
                   </label>
@@ -5380,7 +5293,7 @@ function Step1BookingCustomer({
 
                 {/* Dynamic inputs based on selection */}
                 {draftGoodsItem.warehouseSourceType === "company_warehouse" && (
-                  <div className="mt-2">
+                  <div className="mt-1.5">
                     <SearchSelect
                       label={`${tt("select_company_warehouse", "Select Company Warehouse")} *`}
                       value={draftGoodsItem.warehouseId}
@@ -5404,14 +5317,14 @@ function Step1BookingCustomer({
                 )}
 
                 {draftGoodsItem.warehouseSourceType === "customer_warehouse" && (
-                  <div className="mt-2 p-2 rounded-lg border border-emerald-200 bg-emerald-50/50 dark:border-emerald-900/50 dark:bg-emerald-950/20 text-xs">
+                  <div className="mt-1.5 p-2 rounded-lg border border-emerald-200 bg-emerald-50/50 dark:border-emerald-900/50 dark:bg-emerald-950/20 text-xs">
                     <span className="font-bold text-emerald-900 dark:text-emerald-300">{tt("customer_facility", "Customer Facility")}: </span>
                     <span className="text-slate-700 dark:text-slate-300">{draftGoodsItem.warehouseAddressText || selectedCustomer?.address || tt("address_from_customer_account", "Address from customer account")}</span>
                   </div>
                 )}
 
                 {draftGoodsItem.warehouseSourceType === "other" && (
-                  <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="mt-1.5 grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <input
                       type="text"
                       placeholder={`${tt("other_warehouse_yard_name", "Other Warehouse / Yard Name")} *`}
@@ -5432,7 +5345,7 @@ function Step1BookingCustomer({
 
               {/* Row 1: Goods Master Selection */}
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-[10.5px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">
                   {tt("goods_name_from_master", "Goods Name (from Goods Master or New Item)")} *
                 </label>
                 <SearchSelect
@@ -5455,10 +5368,10 @@ function Step1BookingCustomer({
                 />
               </div>
 
-              {/* Row 2: Qty Unit, Quantity, KG Per Qty, Total KG */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              {/* Row 2: Qty Unit, Quantity, KG Per Qty, Total Gross Wt (KG & MT) */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-1">{tt("qty_unit", "Qty Unit")}</label>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("qty_unit", "Qty Unit")}</label>
                   <select
                     value={draftGoodsItem.unit}
                     onChange={(e) => handleDraftGoodsChange("unit", e.target.value)}
@@ -5477,7 +5390,7 @@ function Step1BookingCustomer({
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-1">Quantity *</label>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">Quantity *</label>
                   <input
                     type="number"
                     min="0"
@@ -5489,7 +5402,7 @@ function Step1BookingCustomer({
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-1">KG Per Qty *</label>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">KG / Unit *</label>
                   <input
                     type="number"
                     min="0"
@@ -5501,46 +5414,45 @@ function Step1BookingCustomer({
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-emerald-700 dark:text-emerald-400 mb-1">
-                    Total KG (Auto)
+                  <label className="block text-[10px] font-bold uppercase text-emerald-700 dark:text-emerald-400 mb-0.5">
+                    Gross Wt (KG & MT)
                   </label>
                   <input
                     type="text"
                     readOnly
-                    value={draftGoodsItem.totalKg || "0"}
-                    className="w-full rounded-xl border border-emerald-300 bg-emerald-50/80 px-3 py-2 text-xs font-mono font-bold text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 cursor-not-allowed"
+                    value={`${(parseFloat(draftGoodsItem.totalKg || "0") || 0).toLocaleString()} kg (${((parseFloat(draftGoodsItem.totalKg || "0") || 0) / 1000).toFixed(3)} MT)`}
+                    className="w-full rounded-xl border border-emerald-300 bg-emerald-50/80 px-2.5 py-2 text-xs font-mono font-bold text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 cursor-not-allowed truncate"
+                    title={tt("calc_gross_wt_title", "Calculated Gross Weight in KG and MT")}
                   />
                 </div>
               </div>
 
               {/* Quality / Inspection Photo Upload & Action Buttons */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-emerald-200/50 dark:border-emerald-900/40">
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-emerald-200/50 dark:border-emerald-900/40">
+                <div className="flex items-center gap-2">
+                  <label className="text-[10.5px] font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1">
                     <Sparkles className="h-3.5 w-3.5 text-blue-600" />
-                    <span>{tt("quality_loading_inspection_photo", "Quality / Loading Inspection Photo")}</span>
+                    <span>{tt("quality_loading_inspection_photo", "Inspection Photo")}:</span>
                   </label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleGoodsPhotoUpload}
-                      className="text-xs text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-950/40 dark:file:text-blue-300"
-                    />
-                    {draftGoodsItem.photoUrl ? (
-                      <span className="text-[10px] text-emerald-600 font-bold">✓ Attached</span>
-                    ) : null}
-                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleGoodsPhotoUpload}
+                    className="text-[11px] text-slate-500 file:mr-1.5 file:py-0.5 file:px-2 file:rounded-md file:border-0 file:text-[11px] file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-950/40 dark:file:text-blue-300"
+                  />
+                  {draftGoodsItem.photoUrl ? (
+                    <span className="text-[10px] text-emerald-600 font-bold">✓ Attached</span>
+                  ) : null}
                 </div>
 
-                <div className="flex items-end justify-end gap-2">
+                <div className="flex items-center gap-1.5 ml-auto">
                   <button
                     type="button"
                     onClick={handleSaveDraftGoods}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-sm shadow-emerald-600/25 hover:bg-emerald-700 transition"
+                    className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs shadow-emerald-600/25 hover:bg-emerald-700 transition"
                   >
-                    <Plus className="h-4 w-4" />
-                    <span>{editingGoodsIdx !== null ? "Update Goods Item" : "Add to Manifest Table"}</span>
+                    <Plus className="h-3.5 w-3.5" />
+                    <span>{editingGoodsIdx !== null ? "Update Item" : "Add to Manifest"}</span>
                   </button>
                 </div>
               </div>
