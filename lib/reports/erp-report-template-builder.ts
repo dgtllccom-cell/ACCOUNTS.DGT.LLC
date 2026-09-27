@@ -613,7 +613,8 @@ export function generateReportHtml(input: {
       width: 100%;
     }
 
-    .page-number::after { content: counter(page) " / " counter(pages); }
+    /* page x / N is printed by the @page margin box; an in-body counter(pages) renders "0 / 0" */
+    .page-number { display: none; }
     .report-scope-chip {
       display: inline-flex;
       align-items: center;

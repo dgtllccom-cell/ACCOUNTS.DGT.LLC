@@ -666,7 +666,8 @@ export function buildUniversalPrintHtml(input: UniversalPrintInput): string {
       font-size: 6.2pt;
       color: #64748b;
     }
-    .page-footer .page-counter::after { content: counter(page) " / " counter(pages); }
+    /* page x / N is printed by the @page margin box; an in-body counter(pages) renders "0 / 0" */
+    .page-footer .page-counter { display: none; }
 
     /* ── Journal Register standard (shared with erp-report-template-builder) ── */
     .report-table th { background: #112b3d; border-color: #112b3d; }
