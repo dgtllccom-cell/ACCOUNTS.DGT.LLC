@@ -30,6 +30,8 @@ import {
   Boxes,
   HelpCircle,
   MoreVertical,
+  Eye,
+  Copy,
 } from "lucide-react";
 import { Th } from "@/components/ui/translated-th";
 import { UniversalReportModal } from "@/components/ui/universal-report-modal";
@@ -107,6 +109,7 @@ function getCategoryBadgeClass(category?: string) {
 
 export function GoodsMasterRegistry() {
   const lang = useActiveLanguage();
+  const t = (key: string) => translateHeader(lang, key);
   const [goods, setGoods] = useState<GoodsRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -115,6 +118,8 @@ export function GoodsMasterRegistry() {
   const [expandedGoodsIds, setExpandedGoodsIds] = useState<Set<string>>(new Set());
   const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
   const [showReport, setShowReport] = useState(false);
+  const [viewingGoods, setViewingGoods] = useState<GoodsRecord | null>(null);
+  const [copiedDescription, setCopiedDescription] = useState(false);
 
   // Active sub-tab inside expanded row: goodsId -> "combinations" | "variety" | "size" | "brand" | "extra_details"
   const [expandedSubTab, setExpandedSubTab] = useState<
@@ -716,10 +721,10 @@ export function GoodsMasterRegistry() {
                     <Th className="p-3.5 text-left">{translateHeader(lang, "GOODS NAME")}</Th>
                     <Th className="p-3.5 text-left w-36">{translateHeader(lang, "HS / PCT CODE")}</Th>
                     <Th className="p-3.5 text-left w-36">{translateHeader(lang, "CATEGORY")}</Th>
-                    <Th className="p-3.5 text-left min-w-[220px]">{translateHeader(lang, "DESCRIPTION / COMMERCIAL SPECIFICATION")}</Th>
+                    <Th className="p-3.5 text-left w-64 max-w-[260px]">{translateHeader(lang, "DESCRIPTION / COMMERCIAL SPECIFICATION")}</Th>
                     <Th className="p-3.5 text-center w-32">{translateHeader(lang, "VARIANTS COUNT")}</Th>
                     <Th className="p-3.5 text-center w-24">{translateHeader(lang, "STATUS")}</Th>
-                    <Th className="p-3.5 text-center w-16">{translateHeader(lang, "ACTIONS")}</Th>
+                    <Th className="p-3.5 text-center w-24">{translateHeader(lang, "ACTIONS")}</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -800,15 +805,44 @@ export function GoodsMasterRegistry() {
                               </span>
                             </td>
 
-                            {/* 5. Description / Commercial Specification */}
-                            <td className="p-3.5">
+                            {/* 5. Description / Commercial Specification (Moderate width + Full hover preview) */}
+                            <td className="p-3.5 relative group max-w-[260px]">
                               {g.extra_details ? (
-                                <span
-                                  className="text-xs text-slate-700 dark:text-slate-300 font-medium line-clamp-2"
-                                  title={g.extra_details}
-                                >
-                                  {g.extra_details}
-                                </span>
+                                <div className="relative">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setViewingGoods(g);
+                                      if (!paramsByGoodsId[g.id]) {
+                                        loadGoodsParameters(g);
+                                      }
+                                    }}
+                                    className="text-left w-full text-xs text-slate-700 dark:text-slate-300 font-medium truncate block hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
+                                    title={t("CLICK TO VIEW FULL DETAILS")}
+                                  >
+                                    {g.extra_details}
+                                  </button>
+
+                                  {/* Floating Full Preview Card on Mouse Hover */}
+                                  <div className="pointer-events-none group-hover:pointer-events-auto invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 absolute left-0 top-full mt-1.5 z-50 w-80 sm:w-96 p-3.5 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 text-xs text-left">
+                                    <div className="flex items-center justify-between gap-2 pb-2 mb-2 border-b border-slate-100 dark:border-slate-800">
+                                      <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider text-[11px]">
+                                        <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                                        <span>{t("COMMERCIAL SPECIFICATION & REPORT")}</span>
+                                      </div>
+                                      <span className="text-[10px] text-slate-400 font-mono font-bold">
+                                        {g.chs_code || ""}
+                                      </span>
+                                    </div>
+                                    <p className="text-slate-700 dark:text-slate-200 leading-relaxed font-normal whitespace-pre-wrap max-h-56 overflow-y-auto pr-1">
+                                      {g.extra_details}
+                                    </p>
+                                    <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
+                                      <span className="font-semibold text-slate-600 dark:text-slate-300">{g.name}</span>
+                                      <span className="text-blue-600 dark:text-blue-400 font-medium">{t("CLICK TO VIEW FULL DETAILS")}</span>
+                                    </div>
+                                  </div>
+                                </div>
                               ) : (
                                 <span className="text-xs text-slate-300 dark:text-slate-600 font-mono">—</span>
                               )}
@@ -848,79 +882,114 @@ export function GoodsMasterRegistry() {
                               </span>
                             </td>
 
-                            {/* 8. Actions: Three-Dots Menu (⋮) */}
-                            <td className="p-3.5 text-center relative" onClick={(e) => e.stopPropagation()}>
-                              <div className="relative inline-block text-left">
+                            {/* 8. Actions: View (Eye) + Three-Dots Menu (⋮) */}
+                            <td className="p-3.5 text-center" onClick={(e) => e.stopPropagation()}>
+                              <div className="flex items-center justify-center gap-1">
                                 <button
                                   type="button"
-                                  onClick={() => setOpenActionMenuId(openActionMenuId === g.id ? null : g.id)}
-                                  className={cn(
-                                    "w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer",
-                                    openActionMenuId === g.id
-                                      ? "bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-sm"
-                                      : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
-                                  )}
-                                  title="Actions"
-                                  aria-label="Actions"
+                                  onClick={() => {
+                                    setViewingGoods(g);
+                                    if (!paramsByGoodsId[g.id]) {
+                                      loadGoodsParameters(g);
+                                    }
+                                  }}
+                                  className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-all cursor-pointer"
+                                  title={t("VIEW DETAILS")}
+                                  aria-label={t("VIEW DETAILS")}
                                 >
-                                  <MoreVertical className="w-4 h-4" />
+                                  <Eye className="w-4 h-4" />
                                 </button>
 
-                                {openActionMenuId === g.id && (
-                                  <div
-                                    className="absolute right-0 z-50 mt-1 w-48 rounded-lg bg-white dark:bg-slate-900 shadow-xl border border-slate-200 dark:border-slate-700 py-1.5 text-xs text-left animate-in fade-in zoom-in-95 duration-100"
+                                <div className="relative inline-block text-left">
+                                  <button
+                                    type="button"
+                                    onClick={() => setOpenActionMenuId(openActionMenuId === g.id ? null : g.id)}
+                                    className={cn(
+                                      "w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer",
+                                      openActionMenuId === g.id
+                                        ? "bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-sm"
+                                        : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                                    )}
+                                    title={t("ACTIONS")}
+                                    aria-label={t("ACTIONS")}
                                   >
-                                    {/* Option 1: Expand / View Variations */}
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setOpenActionMenuId(null);
-                                        toggleRowExpand(g);
-                                      }}
-                                      className="w-full flex items-center gap-2.5 px-3 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium transition-colors cursor-pointer"
-                                    >
-                                      {isExpanded ? (
-                                        <>
-                                          <Minus className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                                          <span>Collapse Variations</span>
-                                        </>
-                                      ) : (
-                                        <>
-                                          <Plus className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                                          <span>View Variations ({varCount})</span>
-                                        </>
-                                      )}
-                                    </button>
+                                    <MoreVertical className="w-4 h-4" />
+                                  </button>
 
-                                    {/* Option 2: Edit Goods Item */}
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setOpenActionMenuId(null);
-                                        openEditGoodsModal(g);
-                                      }}
-                                      className="w-full flex items-center gap-2.5 px-3 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium transition-colors cursor-pointer"
+                                  {openActionMenuId === g.id && (
+                                    <div
+                                      className="absolute right-0 z-50 mt-1 w-48 rounded-lg bg-white dark:bg-slate-900 shadow-xl border border-slate-200 dark:border-slate-700 py-1.5 text-xs text-left animate-in fade-in zoom-in-95 duration-100"
                                     >
-                                      <Edit2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                                      <span>Edit Goods Item</span>
-                                    </button>
+                                      {/* Option 0: View Details */}
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setOpenActionMenuId(null);
+                                          setViewingGoods(g);
+                                          if (!paramsByGoodsId[g.id]) {
+                                            loadGoodsParameters(g);
+                                          }
+                                        }}
+                                        className="w-full flex items-center gap-2.5 px-3 py-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 font-medium transition-colors cursor-pointer"
+                                      >
+                                        <Eye className="w-3.5 h-3.5 shrink-0" />
+                                        <span>{t("VIEW DETAILS")}</span>
+                                      </button>
 
-                                    <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+                                      <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
 
-                                    {/* Option 3: Delete Goods Item */}
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setOpenActionMenuId(null);
-                                        handleDeleteGoods(g);
-                                      }}
-                                      className="w-full flex items-center gap-2.5 px-3 py-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-medium transition-colors cursor-pointer"
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                                      <span>Delete Goods Item</span>
-                                    </button>
-                                  </div>
-                                )}
+                                      {/* Option 1: Expand / View Variations */}
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setOpenActionMenuId(null);
+                                          toggleRowExpand(g);
+                                        }}
+                                        className="w-full flex items-center gap-2.5 px-3 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium transition-colors cursor-pointer"
+                                      >
+                                        {isExpanded ? (
+                                          <>
+                                            <Minus className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                                            <span>{t("COLLAPSE VARIATIONS")}</span>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Plus className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                                            <span>{t("VIEW VARIATIONS")} ({varCount})</span>
+                                          </>
+                                        )}
+                                      </button>
+
+                                      {/* Option 2: Edit Goods Item */}
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setOpenActionMenuId(null);
+                                          openEditGoodsModal(g);
+                                        }}
+                                        className="w-full flex items-center gap-2.5 px-3 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium transition-colors cursor-pointer"
+                                      >
+                                        <Edit2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                                        <span>{t("EDIT GOODS ITEM")}</span>
+                                      </button>
+
+                                      <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+
+                                      {/* Option 3: Delete Goods Item */}
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setOpenActionMenuId(null);
+                                          handleDeleteGoods(g);
+                                        }}
+                                        className="w-full flex items-center gap-2.5 px-3 py-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-medium transition-colors cursor-pointer"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                                        <span>{t("DELETE GOODS ITEM")}</span>
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             </td>
                           </tr>
@@ -1951,6 +2020,353 @@ export function GoodsMasterRegistry() {
             <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 flex justify-end">
               <Button onClick={() => setIsParamModalOpen(false)} variant="outline" size="sm" className="h-8 text-xs">
                 Close Manager
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* VIEW GOODS DETAILS MODAL                                                  */}
+      {/* Top: Goods Name, HS / PCT (Chassis) Code, Category & Commercial Spec Report */}
+      {/* Bottom: Table of Configured Sizes, Brands, Varieties & Combinations        */}
+      {/* ========================================================================= */}
+      {viewingGoods && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-850">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-sm">
+                  <Package className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+                      {viewingGoods.name}
+                    </h3>
+                    <span className="text-xs px-2.5 py-0.5 rounded-full font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/70 dark:text-blue-300 dark:border-blue-800">
+                      HS: {viewingGoods.chs_code || "—"}
+                    </span>
+                    <span
+                      className={cn(
+                        "text-xs px-2.5 py-0.5 rounded-full font-bold border tracking-wide",
+                        getCategoryBadgeClass(viewingGoods.category)
+                      )}
+                    >
+                      {viewingGoods.category || "Dry Fruits"}
+                    </span>
+                    <span
+                      className={cn(
+                        "text-[11px] px-2.5 py-0.5 rounded-full font-bold tracking-wider",
+                        viewingGoods.is_active
+                          ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300"
+                          : "bg-rose-100 text-rose-800 dark:bg-rose-950/70 dark:text-rose-300"
+                      )}
+                    >
+                      {viewingGoods.is_active ? "ACTIVE" : "INACTIVE"}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    {translateHeader(lang, "GOODS DETAILS & SPECIFICATIONS")}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setViewingGoods(null)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                aria-label={t("CLOSE")}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Scrollable Modal Content */}
+            <div className="p-6 overflow-y-auto flex-1 space-y-6">
+              {/* Top Overview Cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">
+                    {t("GOODS NAME")}
+                  </span>
+                  <span className="text-sm font-bold text-slate-800 dark:text-slate-200 mt-0.5 block truncate">
+                    {viewingGoods.name}
+                  </span>
+                </div>
+
+                <div className="p-3 rounded-xl bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/60">
+                  <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider block">
+                    {t("HS / PCT CODE")}
+                  </span>
+                  <span className="text-sm font-mono font-bold text-blue-700 dark:text-blue-300 mt-0.5 block">
+                    {viewingGoods.chs_code || "—"}
+                  </span>
+                </div>
+
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">
+                    {t("CATEGORY")}
+                  </span>
+                  <span className="text-sm font-semibold text-slate-800 dark:text-slate-200 mt-0.5 block">
+                    {viewingGoods.category || "—"}
+                  </span>
+                </div>
+
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">
+                    {t("VARIANTS COUNT")}
+                  </span>
+                  <span className="text-sm font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-0.5 block">
+                    {(viewingGoods.variations || []).length} Variants
+                  </span>
+                </div>
+              </div>
+
+              {/* Commercial Specification & Report (Upper Highlighted Section) */}
+              <div className="rounded-xl border border-blue-200 dark:border-blue-900 bg-gradient-to-br from-blue-50/40 via-white to-slate-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-850 p-4 shadow-xs">
+                <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-blue-100 dark:border-slate-800">
+                  <div className="flex items-center gap-2 text-blue-700 dark:text-blue-400 font-bold uppercase tracking-wider text-xs">
+                    <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
+                    <span>{t("COMMERCIAL SPECIFICATION & REPORT")}</span>
+                  </div>
+                  {viewingGoods.extra_details && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(viewingGoods.extra_details || "");
+                        setCopiedDescription(true);
+                        setTimeout(() => setCopiedDescription(false), 2000);
+                      }}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 rounded-md border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+                      title={t("COPY DESCRIPTION")}
+                    >
+                      {copiedDescription ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          <span className="text-emerald-600 text-[11px]">{t("COPIED")}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5 text-slate-500" />
+                          <span className="text-[11px]">{t("COPY DESCRIPTION")}</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+
+                {viewingGoods.extra_details ? (
+                  <p className="text-sm text-slate-800 dark:text-slate-200 leading-relaxed font-normal whitespace-pre-wrap selection:bg-blue-100 dark:selection:bg-blue-900">
+                    {viewingGoods.extra_details}
+                  </p>
+                ) : (
+                  <p className="text-xs text-slate-400 italic">
+                    No commercial specification or description recorded for this item yet.
+                  </p>
+                )}
+              </div>
+
+              {/* Bottom Section: Sizes & Brands Table */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Boxes className="w-4 h-4 text-slate-500" />
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wide">
+                      {translateHeader(lang, "CONFIGURED SIZES & BRANDS")}
+                    </h4>
+                  </div>
+                  <span className="text-xs text-slate-500 font-mono">
+                    {(viewingGoods.variations || []).length} registered variation(s)
+                  </span>
+                </div>
+
+                {(viewingGoods.variations || []).length > 0 ? (
+                  <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-xs">
+                    <table className="w-full text-xs border-collapse">
+                      <thead>
+                        <tr className="bg-slate-100/80 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-[11px] text-slate-600 dark:text-slate-300 font-bold uppercase tracking-wider">
+                          <Th className="p-2.5 text-center w-12">#</Th>
+                          <Th className="p-2.5 text-left">{translateHeader(lang, "Brand")}</Th>
+                          <Th className="p-2.5 text-left">{translateHeader(lang, "Variety")}</Th>
+                          <Th className="p-2.5 text-left">{translateHeader(lang, "SIZE / GRADE")}</Th>
+                          <Th className="p-2.5 text-left">{translateHeader(lang, "EXTRA DETAILS / SPECIFICATION")}</Th>
+                          <Th className="p-2.5 text-center w-20">{translateHeader(lang, "Status")}</Th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                        {viewingGoods.variations.map((v, vIdx) => (
+                          <tr
+                            key={v.id || vIdx}
+                            className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors"
+                          >
+                            <td className="p-2.5 text-center text-slate-400 font-mono text-[11px]">
+                              {vIdx + 1}
+                            </td>
+                            <td className="p-2.5 font-bold text-slate-900 dark:text-slate-100">
+                              {v.brand || "—"}
+                            </td>
+                            <td className="p-2.5 text-slate-700 dark:text-slate-300 font-medium">
+                              {v.variety || "—"}
+                            </td>
+                            <td className="p-2.5">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded font-mono font-bold bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 text-[11px]">
+                                {v.size || "Standard"}
+                              </span>
+                            </td>
+                            <td className="p-2.5 text-slate-600 dark:text-slate-400">
+                              {v.extra_details || "—"}
+                            </td>
+                            <td className="p-2.5 text-center">
+                              <span
+                                className={cn(
+                                  "px-2 py-0.5 rounded-full text-[10px] font-bold",
+                                  v.is_active
+                                    ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+                                    : "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300"
+                                )}
+                              >
+                                {v.is_active ? "ACTIVE" : "INACTIVE"}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  (() => {
+                    const itemParams = paramsByGoodsId[viewingGoods.id] || [];
+                    const brandParams = itemParams.filter((p) => p.param_type === "brand");
+                    const sizeParams = itemParams.filter((p) => p.param_type === "size");
+                    const varietyParams = itemParams.filter((p) => p.param_type === "variety");
+
+                    if (itemParams.length > 0) {
+                      return (
+                        <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-4 bg-slate-50/50 dark:bg-slate-850/50 space-y-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            {/* Brands */}
+                            <div className="bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
+                              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wide block mb-1.5">
+                                Brands ({brandParams.length})
+                              </span>
+                              {brandParams.length > 0 ? (
+                                <div className="flex flex-wrap gap-1.5">
+                                  {brandParams.map((b) => (
+                                    <span
+                                      key={b.id}
+                                      className="px-2 py-0.5 bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 rounded text-xs font-semibold"
+                                    >
+                                      {b.param_value}
+                                    </span>
+                                  ))}
+                                </div>
+                              ) : (
+                                <span className="text-xs text-slate-400 italic">None defined</span>
+                              )}
+                            </div>
+
+                            {/* Sizes */}
+                            <div className="bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
+                              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wide block mb-1.5">
+                                Sizes / Grades ({sizeParams.length})
+                              </span>
+                              {sizeParams.length > 0 ? (
+                                <div className="flex flex-wrap gap-1.5">
+                                  {sizeParams.map((s) => (
+                                    <span
+                                      key={s.id}
+                                      className="px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 rounded text-xs font-mono font-semibold"
+                                    >
+                                      {s.param_value}
+                                    </span>
+                                  ))}
+                                </div>
+                              ) : (
+                                <span className="text-xs text-slate-400 italic">None defined</span>
+                              )}
+                            </div>
+
+                            {/* Varieties */}
+                            <div className="bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
+                              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wide block mb-1.5">
+                                Varieties ({varietyParams.length})
+                              </span>
+                              {varietyParams.length > 0 ? (
+                                <div className="flex flex-wrap gap-1.5">
+                                  {varietyParams.map((v) => (
+                                    <span
+                                      key={v.id}
+                                      className="px-2 py-0.5 bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 rounded text-xs font-semibold"
+                                    >
+                                      {v.param_value}
+                                    </span>
+                                  ))}
+                                </div>
+                              ) : (
+                                <span className="text-xs text-slate-400 italic">None defined</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="p-8 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-850/50">
+                        <Package className="w-8 h-8 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
+                        <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                          No sizes, brands, or variant combinations configured yet for this item.
+                        </p>
+                        <p className="text-[11px] text-slate-400 mt-1">
+                          You can configure brands, sizes, and combinations in the Goods Master Editor.
+                        </p>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            const item = viewingGoods;
+                            setViewingGoods(null);
+                            openEditGoodsModal(item);
+                          }}
+                          className="mt-3 text-xs h-8 text-blue-600 border-blue-200 hover:bg-blue-50 dark:border-blue-800 dark:hover:bg-blue-950 cursor-pointer"
+                        >
+                          <Plus className="w-3.5 h-3.5 mr-1" />
+                          {t("CONFIGURE SIZES & BRANDS")}
+                        </Button>
+                      </div>
+                    );
+                  })()
+                )}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-3.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 flex items-center justify-between">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const item = viewingGoods;
+                  setViewingGoods(null);
+                  openEditGoodsModal(item);
+                }}
+                className="text-xs h-8 text-slate-700 dark:text-slate-300 gap-1.5 cursor-pointer"
+              >
+                <Edit2 className="w-3.5 h-3.5 text-emerald-600" />
+                <span>{t("EDIT GOODS ITEM")}</span>
+              </Button>
+
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => setViewingGoods(null)}
+                className="text-xs h-8 bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200 cursor-pointer"
+              >
+                {t("CLOSE")}
               </Button>
             </div>
           </div>
