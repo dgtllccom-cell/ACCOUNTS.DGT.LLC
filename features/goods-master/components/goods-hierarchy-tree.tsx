@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import {
   Plus,
   Trash2,
@@ -11,6 +11,9 @@ import {
   Loader2,
   LayoutGrid,
   Pencil,
+  Pin,
+  MoreVertical,
+  ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -87,7 +90,6 @@ export function getCommercialSpecLines(raw?: string | null): string[] {
         const cleanLine = line.trim();
         if (!cleanLine) continue;
 
-        // If line already contains key:value or title is generic
         const titleLower = (d.title || "").toLowerCase();
         if (
           !d.title ||
@@ -103,7 +105,11 @@ export function getCommercialSpecLines(raw?: string | null): string[] {
           result.push(`${d.title}: ${cleanLine}`);
         }
       }
-    } else if (d.title && !d.title.toLowerCase().startsWith("spec") && !d.title.toLowerCase().startsWith("report")) {
+    } else if (
+      d.title &&
+      !d.title.toLowerCase().startsWith("spec") &&
+      !d.title.toLowerCase().startsWith("report")
+    ) {
       result.push(d.title.trim());
     }
   }
@@ -169,8 +175,22 @@ export function GoodsHierarchyTree({ goods, onRefresh }: GoodsHierarchyTreeProps
   const [searchTerm, setSearchTerm] = useState("");
   const [busy, setBusy] = useState(false);
 
-  // Toggle compact / expanded specifications display
-  const [isCompactSpecs, setIsCompactSpecs] = useState(false);
+  // Dropdown states for interactive popups
+  const [openSpecsDropdownId, setOpenSpecsDropdownId] = useState<string | null>(null);
+  const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
+
+  // Close dropdowns on outside click
+  const containerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setOpenSpecsDropdownId(null);
+        setOpenActionMenuId(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Edit variation modal state
   const [editingVariation, setEditingVariation] = useState<{
@@ -366,7 +386,10 @@ export function GoodsHierarchyTree({ goods, onRefresh }: GoodsHierarchyTreeProps
   }
 
   return (
-    <div className="p-3 sm:p-5 bg-white dark:bg-slate-900 border-t border-slate-200/80 dark:border-slate-800 text-xs">
+    <div
+      ref={containerRef}
+      className="p-3 sm:p-5 bg-white dark:bg-slate-900 border-t border-slate-200/80 dark:border-slate-800 text-xs"
+    >
       {/* ----------------------------------------------------------------- */}
       {/* 1. Header Toolbar (Commercial Specification View)                  */}
       {/* ----------------------------------------------------------------- */}
@@ -380,17 +403,17 @@ export function GoodsHierarchyTree({ goods, onRefresh }: GoodsHierarchyTreeProps
             </span>
 
             {/* HS Code Badge */}
-            <span className="font-mono text-[11px] px-2.5 py-0.5 rounded-md bg-[#e0f2fe] text-[#0284c7] dark:bg-sky-950/70 dark:text-sky-300 font-bold border border-sky-200/70 dark:border-sky-800">
+            <span className="font-mono text-[11px] px-2 py-0.5 rounded bg-[#e0f2fe] text-[#0284c7] dark:bg-sky-950/70 dark:text-sky-300 font-bold border border-sky-200/70 dark:border-sky-800">
               HS: {goods.chs_code || "N/A"}
             </span>
 
             {/* Varieties • Sizes • Brands Badge */}
-            <span className="text-[11px] px-2.5 py-0.5 rounded-md font-semibold bg-[#ecfdf5] text-[#059669] dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-800">
+            <span className="text-[11px] px-2 py-0.5 rounded font-semibold bg-[#ecfdf5] text-[#059669] dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-800">
               {stats.totalVarieties} Varieties • {stats.totalSizes} Sizes • {stats.totalBrands} Brands
             </span>
 
             {/* Commercial Specs Badge */}
-            <span className="text-[11px] px-2.5 py-0.5 rounded-md font-semibold bg-[#f3e8ff] text-[#7c3aed] dark:bg-purple-950/70 dark:text-purple-300 border border-purple-200/70 dark:border-purple-800">
+            <span className="text-[11px] px-2 py-0.5 rounded font-semibold bg-[#f3e8ff] text-[#7c3aed] dark:bg-purple-950/70 dark:text-purple-300 border border-purple-200/70 dark:border-purple-800">
               {stats.totalSpecs} Commercial Specs
             </span>
           </div>
@@ -415,15 +438,6 @@ export function GoodsHierarchyTree({ goods, onRefresh }: GoodsHierarchyTreeProps
             />
           </div>
 
-          {/* Collapse / Expand Specs */}
-          <button
-            type="button"
-            onClick={() => setIsCompactSpecs(!isCompactSpecs)}
-            className="h-8 px-3 text-xs font-semibold rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer shadow-2xs"
-          >
-            {isCompactSpecs ? "Expand Specs" : "Collapse Specs"}
-          </button>
-
           {/* + Variety */}
           <button
             type="button"
@@ -447,19 +461,19 @@ export function GoodsHierarchyTree({ goods, onRefresh }: GoodsHierarchyTreeProps
       </div>
 
       {/* ----------------------------------------------------------------- */}
-      {/* 2. Compact Table: Always rendered with 7 columns                  */}
+      {/* 2. Compact Table: Clean Typography, Dropdown Specs, 3-Dots Action  */}
       {/* ----------------------------------------------------------------- */}
-      <div className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden bg-white dark:bg-slate-900 shadow-2xs">
+      <div className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 shadow-2xs overflow-visible">
         <table className="w-full text-left text-xs border-collapse">
           <thead>
             <tr className="bg-[#f8fafc] dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold text-[11px]">
-              <th className="py-2.5 px-4 w-12 text-center">#</th>
-              <th className="py-2.5 px-4 w-40">Variety</th>
-              <th className="py-2.5 px-4 w-28">Size</th>
-              <th className="py-2.5 px-4 w-28">Grade</th>
-              <th className="py-2.5 px-4 w-32">Brand</th>
-              <th className="py-2.5 px-4">Description / Commercial Specification</th>
-              <th className="py-2.5 px-4 text-center w-28">Action</th>
+              <th className="py-2.5 px-3 w-10 text-center">#</th>
+              <th className="py-2.5 px-3 w-32">Variety</th>
+              <th className="py-2.5 px-3 w-24">Size</th>
+              <th className="py-2.5 px-3 w-28">Grade</th>
+              <th className="py-2.5 px-3 w-28">Brand</th>
+              <th className="py-2.5 px-3">Description / Commercial Specification</th>
+              <th className="py-2.5 px-3 text-center w-12">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -468,7 +482,9 @@ export function GoodsHierarchyTree({ goods, onRefresh }: GoodsHierarchyTreeProps
                 <td colSpan={7} className="py-10 text-center bg-slate-50/40 dark:bg-slate-900/40">
                   <div className="flex flex-col items-center justify-center gap-2.5">
                     <p className="text-slate-400 dark:text-slate-500 font-medium text-xs">
-                      {searchTerm ? `No variations matching "${searchTerm}".` : `No combinations recorded yet for ${goods.name}.`}
+                      {searchTerm
+                        ? `No variations matching "${searchTerm}".`
+                        : `No combinations recorded yet for ${goods.name}.`}
                     </p>
                     <button
                       type="button"
@@ -485,10 +501,8 @@ export function GoodsHierarchyTree({ goods, onRefresh }: GoodsHierarchyTreeProps
               filteredVariations.map((v, idx) => {
                 const specLines = getCommercialSpecLines(v.extra_details);
                 const rowNum = String(idx + 1).padStart(2, "0");
-
-                // If compact view, show first 2 and +N more
-                const visibleSpecs = isCompactSpecs ? specLines.slice(0, 2) : specLines;
-                const hiddenCount = isCompactSpecs ? Math.max(0, specLines.length - 2) : 0;
+                const isSpecsOpen = openSpecsDropdownId === v.id;
+                const isActionOpen = openActionMenuId === v.id;
 
                 return (
                   <tr
@@ -496,93 +510,160 @@ export function GoodsHierarchyTree({ goods, onRefresh }: GoodsHierarchyTreeProps
                     className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors"
                   >
                     {/* # */}
-                    <td className="py-3 px-4 font-mono text-slate-500 dark:text-slate-400 text-xs text-center">
+                    <td className="py-2.5 px-3 font-mono text-slate-400 dark:text-slate-500 text-xs text-center">
                       {rowNum}
                     </td>
 
-                    {/* Variety */}
-                    <td className="py-3 px-4">
-                      <div className="font-bold text-slate-900 dark:text-slate-100 text-xs">
-                        {v.variety || "Standard"}
-                      </div>
-                      <div className="text-[11px] text-slate-400 dark:text-slate-500 font-normal">
-                        {goods.name} Variety
-                      </div>
+                    {/* Variety (Clean text, no brackets/boxes) */}
+                    <td className="py-2.5 px-3 font-semibold text-slate-900 dark:text-slate-100 text-xs">
+                      {v.variety || "Standard"}
                     </td>
 
-                    {/* Size */}
-                    <td className="py-3 px-4">
-                      <span className="inline-block px-2.5 py-0.5 rounded-md font-semibold text-[11px] bg-[#f0f9ff] text-[#0284c7] border border-[#bae6fd] dark:bg-sky-950/50 dark:text-sky-300 dark:border-sky-800">
-                        {v.size || "Standard"}
-                      </span>
+                    {/* Size (Clean text, no brackets/boxes) */}
+                    <td className="py-2.5 px-3 font-medium text-slate-700 dark:text-slate-300 font-mono text-xs">
+                      {v.size || "Standard"}
                     </td>
 
-                    {/* Grade */}
-                    <td className="py-3 px-4">
-                      <span className="inline-block px-2.5 py-0.5 rounded-md font-semibold text-[11px] bg-[#faf5ff] text-[#9333ea] border border-[#e9d5ff] dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-800">
-                        {(v as any).grade || "Standard"}
-                      </span>
+                    {/* Grade (Clean text, no brackets/boxes) */}
+                    <td className="py-2.5 px-3 font-medium text-slate-700 dark:text-slate-300 text-xs">
+                      {(v as any).grade || "Standard"}
                     </td>
 
-                    {/* Brand */}
-                    <td className="py-3 px-4 font-bold text-[#059669] dark:text-emerald-400 text-xs tracking-wide">
+                    {/* Brand (Clean text, no brackets/boxes) */}
+                    <td className="py-2.5 px-3 font-semibold text-[#059669] dark:text-emerald-400 text-xs tracking-wide">
                       {v.brand || "Default"}
                     </td>
 
-                    {/* Description / Commercial Specification (Displayed Directly On The Table) */}
-                    <td className="py-3 px-4">
+                    {/* Description / Commercial Specification (One main pill + Pin/Dropdown for full specs) */}
+                    <td className="py-2.5 px-3 relative">
                       {specLines.length === 0 ? (
                         <span className="text-slate-400 dark:text-slate-500 italic text-[11px]">
                           — No specifications set —
                         </span>
                       ) : (
-                        <div className="flex flex-wrap items-center gap-1.5 py-0.5">
-                          {visibleSpecs.map((spec, sIdx) => (
-                            <span
-                              key={sIdx}
-                              className="inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-medium bg-[#f5f3ff] text-[#7c3aed] border border-[#ddd6fe] dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-800 shadow-2xs"
-                            >
-                              {spec}
-                            </span>
-                          ))}
-                          {hiddenCount > 0 && (
-                            <button
-                              type="button"
-                              onClick={() => setIsCompactSpecs(false)}
-                              className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition-colors"
-                            >
-                              +{hiddenCount} more
-                            </button>
+                        <div className="relative inline-flex items-center gap-1.5 flex-wrap">
+                          {/* 1st Specification displayed cleanly */}
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-[#f5f3ff] text-[#7c3aed] border border-[#ddd6fe] dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-800">
+                            {specLines[0]}
+                          </span>
+
+                          {/* Pin / Dropdown indicator if more specs exist */}
+                          {specLines.length > 1 && (
+                            <div className="relative inline-block">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setOpenSpecsDropdownId(isSpecsOpen ? null : v.id)
+                                }
+                                className={cn(
+                                  "inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold transition-colors cursor-pointer",
+                                  isSpecsOpen
+                                    ? "bg-purple-200 text-purple-900 dark:bg-purple-900 dark:text-purple-100"
+                                    : "bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 dark:bg-purple-950/60 dark:hover:bg-purple-900/60 dark:text-purple-300 dark:border-purple-800"
+                                )}
+                                title="Click to view all commercial specifications"
+                              >
+                                <Pin className="w-2.5 h-2.5 text-purple-600 rotate-45" />
+                                <span>+{specLines.length - 1} more</span>
+                                <ChevronDown className="w-3 h-3 text-purple-600" />
+                              </button>
+
+                              {/* Dropdown Popover showing all specifications */}
+                              {isSpecsOpen && (
+                                <div className="absolute left-0 top-full z-40 mt-1.5 w-72 rounded-lg bg-white dark:bg-slate-800 shadow-xl border border-slate-200 dark:border-slate-700 p-3 text-xs animate-in fade-in zoom-in-95 duration-100">
+                                  <div className="flex items-center justify-between pb-1.5 mb-2 border-b border-slate-100 dark:border-slate-700">
+                                    <span className="text-[11px] font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                                      <Pin className="w-3 h-3 text-purple-600" />
+                                      Commercial Specifications
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() => setOpenSpecsDropdownId(null)}
+                                      className="w-4 h-4 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center justify-center rounded"
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </button>
+                                  </div>
+
+                                  <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                                    {specLines.map((spec, sIdx) => (
+                                      <div
+                                        key={sIdx}
+                                        className="px-2 py-1 rounded bg-[#faf5ff] dark:bg-slate-900/60 border border-purple-100 dark:border-purple-900/60 text-slate-700 dark:text-slate-200 text-[11px] font-medium flex items-center gap-2"
+                                      >
+                                        <span className="w-1.5 h-1.5 rounded-full bg-purple-500 shrink-0" />
+                                        <span>{spec}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+
+                                  <div className="pt-2 mt-2 border-t border-slate-100 dark:border-slate-700 flex justify-end">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setOpenSpecsDropdownId(null);
+                                        handleOpenEdit(v);
+                                      }}
+                                      className="text-[11px] text-purple-700 dark:text-purple-300 hover:underline font-semibold"
+                                    >
+                                      Edit Specifications
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           )}
                         </div>
                       )}
                     </td>
 
-                    {/* Action */}
-                    <td className="py-3 px-4 text-center">
-                      <div className="flex items-center justify-center gap-1.5">
+                    {/* Action (Three Dots Menu '...') */}
+                    <td className="py-2.5 px-3 text-center relative">
+                      <div className="relative inline-block text-left">
                         <button
                           type="button"
-                          onClick={() => handleOpenEdit(v)}
-                          className="px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-medium text-xs flex items-center gap-1 transition-colors shadow-2xs cursor-pointer"
-                          title="Edit this combination"
+                          onClick={() => setOpenActionMenuId(isActionOpen ? null : v.id)}
+                          className={cn(
+                            "w-7 h-7 rounded-md flex items-center justify-center transition-colors cursor-pointer",
+                            isActionOpen
+                              ? "bg-slate-200 text-slate-900 dark:bg-slate-700 dark:text-white"
+                              : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                          )}
+                          title="Actions menu"
                         >
-                          <Pencil className="w-3 h-3 text-slate-500" />
-                          Edit
+                          <MoreVertical className="w-4 h-4" />
                         </button>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            handleDeleteVariation(
-                              v.id,
-                              `${v.variety || "Std"} / ${v.size} / ${v.brand}`
-                            )
-                          }
-                          className="w-6 h-6 rounded-md hover:bg-rose-50 dark:hover:bg-rose-950/50 text-slate-400 hover:text-rose-600 flex items-center justify-center transition-colors cursor-pointer"
-                          title="Delete this combination"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
+
+                        {/* Three-dots Dropdown Menu */}
+                        {isActionOpen && (
+                          <div className="absolute right-0 top-full z-40 mt-1 w-32 rounded-md bg-white dark:bg-slate-800 shadow-xl border border-slate-200 dark:border-slate-700 py-1 text-xs animate-in fade-in zoom-in-95 duration-75">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setOpenActionMenuId(null);
+                                handleOpenEdit(v);
+                              }}
+                              className="w-full px-3 py-1.5 text-left text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/60 flex items-center gap-2 cursor-pointer font-medium"
+                            >
+                              <Pencil className="w-3.5 h-3.5 text-slate-500" />
+                              <span>Edit</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setOpenActionMenuId(null);
+                                handleDeleteVariation(
+                                  v.id,
+                                  `${v.variety || "Std"} / ${v.size} / ${v.brand}`
+                                );
+                              }}
+                              className="w-full px-3 py-1.5 text-left text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center gap-2 cursor-pointer font-medium"
+                            >
+                              <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                              <span>Delete</span>
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </td>
                   </tr>
