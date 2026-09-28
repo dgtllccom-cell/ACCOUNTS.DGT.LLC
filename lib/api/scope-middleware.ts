@@ -322,6 +322,54 @@ export function postgrestHierarchyScope(session: ErpSession): string | null {
   return parts.length ? parts.join(",") : "id.eq.00000000-0000-0000-0000-000000000000";
 }
 
+/**
+ * True when the record sits exactly at one of the caller's own assignment levels (a main-branch
+ * admin's main-branch-level row, a country admin's country-level row). Complements
+ * {@link recordInSessionScope}, whose resolved scope for a main-branch admin is its city branches.
+ */
+export function recordAtOwnAssignmentLevel(
+  session: ErpSession,
+  rec: { country_id?: string | null; country_branch_id?: string | null; city_branch_id?: string | null } | null | undefined
+): boolean {
+  if (!rec) return false;
+  return (session.assignments ?? []).some((a) =>
+    a.cityBranchId
+      ? a.cityBranchId === rec.city_branch_id
+      : a.countryBranchId
+        ? !rec.city_branch_id && a.countryBranchId === rec.country_branch_id
+        : a.countryId
+          ? !rec.city_branch_id && !rec.country_branch_id && a.countryId === rec.country_id
+          : false
+  );
+}
+
+/** SQL twin of {@link recordAtOwnAssignmentLevel} for one side (prefix) of a row. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function sqlOwnAssignmentLevelCondition(sql: any, session: ErpSession, alias: string, prefix = "") {
+  const col = (c: string) => sql.unsafe(`${alias ? alias + "." : ""}${prefix}${c}`);
+  const as = session.assignments ?? [];
+  const cb = as.filter((a) => !a.cityBranchId && a.countryBranchId).map((a) => a.countryBranchId as string);
+  const c = as.filter((a) => !a.cityBranchId && !a.countryBranchId && a.countryId).map((a) => a.countryId as string);
+  return sql`(
+    (${col("city_branch_id")} is null and ${col("country_branch_id")} = any(${cb}::uuid[]))
+    or (${col("city_branch_id")} is null and ${col("country_branch_id")} is null and ${col("country_id")} = any(${c}::uuid[]))
+  )`;
+}
+
+/**
+ * Org-structure lookup lists (rows of countries / country_branches / city_branches) trimmed to
+ * the caller's hierarchy: own branch plus its parent levels, never a sibling or another country.
+ */
+export function orgRowInSessionScope(
+  session: ErpSession,
+  level: "country" | "countryBranch" | "cityBranch",
+  row: { id: string; country_id?: string | null; country_branch_id?: string | null }
+): boolean {
+  if (level === "country") return recordInHierarchyScope(session, { country_id: row.id });
+  if (level === "countryBranch") return recordInHierarchyScope(session, { country_id: row.country_id, country_branch_id: row.id });
+  return recordInHierarchyScope(session, { country_id: row.country_id, country_branch_id: row.country_branch_id, city_branch_id: row.id });
+}
+
 /** In-app twin of {@link sqlHierarchyScopeCondition} for already-loaded master rows. */
 export function recordInHierarchyScope(
   session: ErpSession,

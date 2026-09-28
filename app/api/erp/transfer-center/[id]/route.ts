@@ -11,7 +11,7 @@ import type { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiOk, handleApiError, ApiClientError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
-import { authorizeApiScope } from "@/lib/api/scope-middleware";
+import { authorizeApiScope, recordInSessionScope, recordAtOwnAssignmentLevel } from "@/lib/api/scope-middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import {
   acceptHandover,
@@ -68,16 +68,12 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: s
       // Either side of the record is an acceptable scope match for these actions —
       // approximate with an OR by trying source, falling back to destination.
     });
-    const inSource =
-      session.isSuperAdmin ||
-      (row.source_city_branch_id && (session.cityBranchIds ?? []).includes(row.source_city_branch_id)) ||
-      (row.source_country_branch_id && (session.countryBranchIds ?? []).includes(row.source_country_branch_id)) ||
-      (row.source_country_id && (session.countryIds ?? []).includes(row.source_country_id));
-    const inDest =
-      session.isSuperAdmin ||
-      (row.dest_city_branch_id && (session.cityBranchIds ?? []).includes(row.dest_city_branch_id)) ||
-      (row.dest_country_branch_id && (session.countryBranchIds ?? []).includes(row.dest_country_branch_id)) ||
-      (row.dest_country_id && (session.countryIds ?? []).includes(row.dest_country_id));
+    // One scope rule per side (the parent-country OR here used to let a branch user act on a
+    // sibling branch's transfer).
+    const src = { country_id: row.source_country_id, country_branch_id: row.source_country_branch_id, city_branch_id: row.source_city_branch_id };
+    const dst = { country_id: row.dest_country_id, country_branch_id: row.dest_country_branch_id, city_branch_id: row.dest_city_branch_id };
+    const inSource = recordInSessionScope(session, src) || recordAtOwnAssignmentLevel(session, src);
+    const inDest = recordInSessionScope(session, dst) || recordAtOwnAssignmentLevel(session, dst);
     if (!inSource && !inDest) {
       throw new ApiClientError("Neither the source nor destination scope of this record is allowed for this user.", { status: 403 });
     }

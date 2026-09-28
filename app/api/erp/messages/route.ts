@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { orgRowInSessionScope } from "@/lib/api/scope-middleware";
 import { z } from "zod";
 import { apiCreated, apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
@@ -832,7 +833,10 @@ export async function GET(request: NextRequest) {
 
     const emailAccounts = accountsData || [];
     const branchEmailsDashboardList: any[] = [];
-    const activeCityBranches = cityBranchesRes.data || [];
+    // Org lookup lists and the per-branch mailbox dashboard follow the caller's scope: a branch or
+    // country user sees its own branches' mailboxes, not every country's addresses/SMTP status.
+    const scopedCountries = (countriesRes.data || []).filter((c: any) => orgRowInSessionScope(session, "country", c));
+    const activeCityBranches = (cityBranchesRes.data || []).filter((b: any) => orgRowInSessionScope(session, "cityBranch", b));
     
     for (const city of activeCityBranches) {
       const country = countryLookup.get(city.country_id);
@@ -897,8 +901,8 @@ export async function GET(request: NextRequest) {
       filters: { companies, branches, providers, labels },
       rows: filtered,
       branchEmailsDashboardList,
-      countries: countriesRes.data || [],
-      cityBranches: cityBranchesRes.data || [],
+      countries: scopedCountries,
+      cityBranches: activeCityBranches,
       generatedAt: new Date().toISOString()
     });
   } catch (error) {

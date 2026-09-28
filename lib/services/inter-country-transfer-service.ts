@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { sessionSqlScope, sqlScopeCondition, recordInSessionScope, sqlOwnAssignmentLevelCondition, recordAtOwnAssignmentLevel } from "@/lib/api/scope-middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { postRoznamchaWithErpSession } from "@/app/api/erp/roznamcha/posting";
 import type { ErpSession } from "@/lib/auth/session";
@@ -733,13 +734,11 @@ function assertSessionCanReachScope(
   cityBranchId?: string | null
 ) {
   if (session.isSuperAdmin) return;
-  const inCountry = !countryId || (session.countryIds ?? []).includes(countryId);
-  const inCountryBranch = !countryBranchId || (session.countryBranchIds ?? []).includes(countryBranchId);
-  const inCityBranch = !cityBranchId || (session.cityBranchIds ?? []).includes(cityBranchId);
-  // A caller must own at least ONE of the levels they're claiming as "theirs" —
-  // scope inheritance (city -> country-branch -> country) is already baked
-  // into session.countryIds/countryBranchIds/cityBranchIds by resolveHierarchyScopes().
-  if (!(inCountry || inCountryBranch || inCityBranch)) {
+  // The claimed sending scope must be the caller's own: inside its scope under the one rule, or
+  // exactly one of its own assignment levels (e.g. a main-branch admin sending as the main
+  // branch). Owning the parent country no longer lets a branch user send as a sibling branch.
+  const claimed = { country_id: countryId, country_branch_id: countryBranchId ?? null, city_branch_id: cityBranchId ?? null };
+  if (!recordInSessionScope(session, claimed) && !recordAtOwnAssignmentLevel(session, claimed)) {
     throw new Error("You do not have access to the requested source or destination scope.");
   }
 }
@@ -1012,42 +1011,37 @@ export async function listTransferCenterItems(filters: {
   const offset = filters.offset || 0;
 
   return (await withLocalPg(async (sql) => {
-    const countryIds = session.countryIds ?? [];
-    const countryBranchIds = session.countryBranchIds ?? [];
-    const cityBranchIds = session.cityBranchIds ?? [];
+    // One scope rule (sessionSqlScope), applied to each side of the transfer: the sending side
+    // or the receiving side must be in the caller's scope (or the caller is the named
+    // sender/receiver/creator). The old OR over session.countryIds let a branch user — whose
+    // session also carries its parent country — see every sibling branch's transfers.
+    const sqlScope = sessionSqlScope(session);
+    const isGlobal = sqlScope.kind === "all";
+    const srcSide = sql`(${sqlScopeCondition(sql, sqlScope, "t", { prefix: "source_" })} or ${sqlOwnAssignmentLevelCondition(sql, session, "t", "source_")})`;
+    const dstSide = sql`(${sqlScopeCondition(sql, sqlScope, "t", { prefix: "dest_" })} or ${sqlOwnAssignmentLevelCondition(sql, session, "t", "dest_")})`;
 
-    const scopeClause = session.isSuperAdmin
+    const scopeClause = isGlobal
       ? sql`true`
       : sql`(
-          t.source_country_id = any(${countryIds}::uuid[]) or t.dest_country_id = any(${countryIds}::uuid[])
-          or t.source_country_branch_id = any(${countryBranchIds}::uuid[]) or t.dest_country_branch_id = any(${countryBranchIds}::uuid[])
-          or t.source_city_branch_id = any(${cityBranchIds}::uuid[]) or t.dest_city_branch_id = any(${cityBranchIds}::uuid[])
+          ${srcSide} or ${dstSide}
           or t.created_by = ${session.userId}::uuid
           or t.receiver_user_id = ${session.userId}::uuid
           or t.sender_user_id = ${session.userId}::uuid
         )`;
 
-    const destInScope = session.isSuperAdmin
+    const destInScope = isGlobal
       ? sql`true`
       : sql`(
           t.receiver_user_id = ${session.userId}::uuid
-          or (t.receiver_user_id is null and (
-             t.dest_country_id = any(${countryIds}::uuid[])
-             or t.dest_country_branch_id = any(${countryBranchIds}::uuid[])
-             or t.dest_city_branch_id = any(${cityBranchIds}::uuid[])
-          ))
+          or (t.receiver_user_id is null and ${dstSide})
         )`;
 
-    const sourceInScope = session.isSuperAdmin
+    const sourceInScope = isGlobal
       ? sql`true`
       : sql`(
           t.sender_user_id = ${session.userId}::uuid
           or t.created_by = ${session.userId}::uuid
-          or (t.sender_user_id is null and (
-             t.source_country_id = any(${countryIds}::uuid[])
-             or t.source_country_branch_id = any(${countryBranchIds}::uuid[])
-             or t.source_city_branch_id = any(${cityBranchIds}::uuid[])
-          ))
+          or (t.sender_user_id is null and ${srcSide})
         )`;
 
     const typeClause =

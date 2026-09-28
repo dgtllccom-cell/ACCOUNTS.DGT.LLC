@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { recordInHierarchyScope } from "@/lib/api/scope-middleware";
+import { recordInHierarchyScope, orgRowInSessionScope } from "@/lib/api/scope-middleware";
 import { z } from "zod";
 import { apiOk, apiCreated, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
@@ -175,9 +175,10 @@ export async function GET(_request: NextRequest) {
     return apiOk({
       accounts: rows,
       summary,
-      countries: countriesRes.data || [],
-      countryBranches: countryBranchesRes.data || [],
-      cityBranches: cityBranchesRes.data || [],
+      // Lookup lists follow the caller's hierarchy (account writes are Super Admin only anyway).
+      countries: (countriesRes.data || []).filter((c: any) => orgRowInSessionScope(session, "country", c)),
+      countryBranches: (countryBranchesRes.data || []).filter((b: any) => orgRowInSessionScope(session, "countryBranch", b)),
+      cityBranches: (cityBranchesRes.data || []).filter((b: any) => orgRowInSessionScope(session, "cityBranch", b)),
       companies: companiesRes.data || []
     });
   } catch (error) {
