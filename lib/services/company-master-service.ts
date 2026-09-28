@@ -13,7 +13,7 @@
 import type { ErpSession } from "@/lib/auth/session";
 import { withLocalPg, withReadPg } from "@/lib/db/local-postgres";
 import { ApiClientError } from "@/lib/api/response";
-import { hasRolePermission } from "@/lib/permissions/middleware";
+import { hasRolePermission, isCountryRoleFor } from "@/lib/permissions/middleware";
 import { sessionSqlScope, sqlScopeCondition } from "@/lib/api/scope-middleware";
 import { writeRecordChangeHistory } from "@/lib/api/record-change-history";
 import { effectiveCompanyType } from "@/lib/repositories/companies-repository";
@@ -87,18 +87,23 @@ export async function findCompanyDuplicates(
   const reg = (input.registrationNumber ?? "").trim().toLowerCase();
   const tax = (input.taxNumber ?? "").trim().toLowerCase();
   if (!name && !reg && !tax) return [];
+  // Normalised in SQL the same way as norm(): lower-case, non-alphanumerics → single space.
   const rows = ((await withReadPg((sql) => sql`
-    SELECT id, company_code, name, legal_name, owner_name, owner_person_id, country_id, country_name,
-           registration_number, tax_number
-    FROM public.companies
-    WHERE deleted_at IS NULL
-      AND (${input.excludeId ?? null}::uuid IS NULL OR id <> ${input.excludeId ?? null}::uuid)
-      AND (
-        (${reg} <> '' AND lower(registration_number) = ${reg})
-        OR (${tax} <> '' AND lower(tax_number) = ${tax})
-        OR (${name} <> '' AND (${input.countryId ?? null}::uuid IS NULL OR country_id = ${input.countryId ?? null}::uuid)
-            AND lower(coalesce(legal_name, name)) LIKE ${"%" + (name.split(" ").find((w) => w.length > 2) ?? name) + "%"})
-      )
+    WITH c AS (
+      SELECT id, company_code, name, legal_name, owner_name, owner_person_id, country_id, country_name,
+             registration_number, tax_number,
+             btrim(regexp_replace(lower(coalesce(legal_name, name)), '[^[:alnum:]]+', ' ', 'g')) AS nlegal,
+             btrim(regexp_replace(lower(name), '[^[:alnum:]]+', ' ', 'g')) AS nname
+      FROM public.companies
+      WHERE deleted_at IS NULL
+        AND (${input.excludeId ?? null}::uuid IS NULL OR id <> ${input.excludeId ?? null}::uuid)
+    )
+    SELECT * FROM c
+    WHERE (${reg} <> '' AND lower(registration_number) = ${reg})
+       OR (${tax} <> '' AND lower(tax_number) = ${tax})
+       OR (${name} <> '' AND (nlegal = ${name} OR nname = ${name})
+           AND (${input.countryId ?? null}::uuid IS NULL OR country_id = ${input.countryId ?? null}::uuid))
+    ORDER BY (${reg} <> '' AND lower(registration_number) = ${reg}) DESC, (${tax} <> '' AND lower(tax_number) = ${tax}) DESC
     LIMIT 50
   `)) ?? []) as any[];
   const out: CompanyDuplicate[] = [];
@@ -144,11 +149,14 @@ export async function setCompanyBranchLinks(
   companyId: string,
   input: { countryBranchIds?: string[]; cityBranchIds?: string[] }
 ) {
-  if (!session.isSuperAdmin && !hasRolePermission(session, "branches", "update") && !hasRolePermission(session, "companies", "update")) {
-    throw new ApiClientError("You do not have permission to link branches to a company.", { status: 403, code: "FORBIDDEN" });
-  }
   const company = await loadCompanyScopeRow(companyId);
   if (!company) throw new ApiClientError("Company not found", { status: 404, code: "NOT_FOUND" });
+  // Which branches operate under a legal entity is a country-level structure decision:
+  // Super Admin, or a Country Admin / Country User of the company's own country — never a
+  // branch user (even one who may edit the company's legal details).
+  if (!session.isSuperAdmin && !isCountryRoleFor(session, company.country_id)) {
+    throw new ApiClientError("Only Super Admin or the Country Admin can link branches to a legal company.", { status: 403, code: "FORBIDDEN" });
+  }
   const cb = [...new Set(input.countryBranchIds ?? [])];
   const cty = [...new Set(input.cityBranchIds ?? [])];
   const scope = sessionSqlScope(session);
