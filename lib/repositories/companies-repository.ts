@@ -2,7 +2,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import postgres from "postgres";
 import { searchRecordIdsByTranslation } from "@/lib/i18n/localize-records";
 import { allocateFormSerials } from "@/lib/services/form-serials";
-import { withLocalPg } from "@/lib/db/local-postgres";
+import { withLocalPg, getSharedPg } from "@/lib/db/local-postgres";
 
 function getDbUrl(): string {
   if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
@@ -298,7 +298,9 @@ export class CompaniesRepository {
       : [];
 
     if (localDbUrl) {
-      const localSql = postgres(localDbUrl, { max: 1, prepare: false });
+      // Read path borrows the process-lifetime pool (a fresh connection per call cost ~2–5 s).
+      const localSql = getSharedPg() ?? postgres(localDbUrl, { max: 1, prepare: false });
+      const pooled = localSql === getSharedPg();
       try {
         let whereClause = localSql`deleted_at IS NULL`;
         if (q) {
@@ -330,7 +332,7 @@ export class CompaniesRepository {
       } catch (err) {
         console.error("Direct postgres search companies error:", err);
       } finally {
-        await localSql.end({ timeout: 5 });
+        if (!pooled) await localSql.end({ timeout: 5 });
       }
     }
 
@@ -367,7 +369,9 @@ export class CompaniesRepository {
   async getById(id: string) {
     const localDbUrl = getDbUrl();
     if (localDbUrl) {
-      const localSql = postgres(localDbUrl, { max: 1, prepare: false });
+      // Read path borrows the process-lifetime pool (a fresh connection per call cost ~2–5 s).
+      const localSql = getSharedPg() ?? postgres(localDbUrl, { max: 1, prepare: false });
+      const pooled = localSql === getSharedPg();
       try {
         const rows = await localSql`
           SELECT * FROM public.companies WHERE id = ${id}::uuid AND deleted_at IS NULL LIMIT 1
@@ -378,7 +382,7 @@ export class CompaniesRepository {
       } catch (err) {
         console.error("Direct postgres getById error:", err);
       } finally {
-        await localSql.end({ timeout: 5 });
+        if (!pooled) await localSql.end({ timeout: 5 });
       }
     }
 

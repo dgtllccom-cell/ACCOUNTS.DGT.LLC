@@ -11,7 +11,7 @@
  *   through the existing city_branches.company_id / country_branches.company_id columns.
  */
 import type { ErpSession } from "@/lib/auth/session";
-import { withLocalPg } from "@/lib/db/local-postgres";
+import { withLocalPg, withReadPg } from "@/lib/db/local-postgres";
 import { ApiClientError } from "@/lib/api/response";
 import { hasRolePermission } from "@/lib/permissions/middleware";
 import { sessionSqlScope, sqlScopeCondition } from "@/lib/api/scope-middleware";
@@ -42,7 +42,7 @@ export function companyInSessionScope(session: ErpSession, company: CompanyScope
 }
 
 export async function loadCompanyScopeRow(id: string): Promise<CompanyScopeRow | null> {
-  const rows = (await withLocalPg((sql) => sql`
+  const rows = (await withReadPg((sql) => sql`
     SELECT id, country_id, country_branch_id, city_branch_id FROM public.companies WHERE id = ${id}::uuid AND deleted_at IS NULL LIMIT 1
   `)) as any[] | null;
   return rows?.[0] ?? null;
@@ -87,7 +87,7 @@ export async function findCompanyDuplicates(
   const reg = (input.registrationNumber ?? "").trim().toLowerCase();
   const tax = (input.taxNumber ?? "").trim().toLowerCase();
   if (!name && !reg && !tax) return [];
-  const rows = ((await withLocalPg((sql) => sql`
+  const rows = ((await withReadPg((sql) => sql`
     SELECT id, company_code, name, legal_name, owner_name, owner_person_id, country_id, country_name,
            registration_number, tax_number
     FROM public.companies
@@ -201,72 +201,74 @@ export async function getCompany360(session: ErpSession, companyId: string) {
   await assertCompanyAccess(session, companyId);
   const scope = sessionSqlScope(session);
   const canSeeAccounts = session.isSuperAdmin || hasRolePermission(session, "accounts", "read") || hasRolePermission(session, "ledgers", "read");
-  return withLocalPg(async (sql) => {
+  return withReadPg(async (sql) => {
     const [company] = (await sql`SELECT * FROM public.companies WHERE id = ${companyId}::uuid AND deleted_at IS NULL`) as any[];
-    const owner = company.owner_person_id
+    // Independent read lookups run in parallel on the shared read pool.
+    const [owner, sisters, branches, bankMaster, accounts, documents, purchaseOrders, invoices, clearingOrders, inquiries, taxEntities, history] = await Promise.all([
+      (async () => company.owner_person_id
       ? ((await sql`SELECT id, customer_name, person_code, mobile, whatsapp, email FROM public.customers WHERE id = ${company.owner_person_id}::uuid LIMIT 1`) as any[])[0] ?? null
-      : null;
-    const sisters = company.owner_person_id
+      : null)(),
+      (async () => company.owner_person_id
       ? ((await sql`
           SELECT id, company_code, name, legal_name, country_id, country_name, registration_number, tax_number, company_status, company_type, is_branch_operative, owner_person_id
           FROM public.companies WHERE owner_person_id = ${company.owner_person_id}::uuid AND id <> ${companyId}::uuid AND deleted_at IS NULL ORDER BY name
         `) as any[]).filter((c) => companyInSessionScope(session, c))
-      : [];
-    const branches = (await sql`
+      : [])(),
+      (async () => (await sql`
       SELECT 'country_branch' AS level, cb.id, cb.name, cb.code, cb.country_id, NULL::text AS city_name FROM public.country_branches cb WHERE cb.company_id = ${companyId}::uuid AND cb.deleted_at IS NULL
       UNION ALL
       SELECT 'city_branch', c.id, c.name, c.code, c.country_id, c.city_name FROM public.city_branches c WHERE c.company_id = ${companyId}::uuid AND c.deleted_at IS NULL
       ORDER BY 1, 3
-    `) as any[];
-    const bankMaster = (await sql`
+    `) as any[])(),
+      (async () => (await sql`
       SELECT id, bank_name, branch_name, account_title, currency FROM public.banks WHERE owner_company_id = ${companyId}::uuid AND (is_active IS NULL OR is_active = true) ORDER BY bank_name LIMIT 50
-    `) as any[];
-    const accounts = canSeeAccounts
+    `) as any[])(),
+      (async () => canSeeAccounts
       ? ((await sql`
           SELECT ea.id, ea.code, ea.name, ea.currency, ea.scope, ea.status
           FROM public.enterprise_accounts ea
           WHERE ea.company_id = ${companyId}::uuid AND ea.deleted_at IS NULL AND ${sqlScopeCondition(sql, scope, "ea")}
           ORDER BY ea.code LIMIT 100
         `)) as any[]
-      : [];
-    const documents = (await sql`
+      : [])(),
+      (async () => (await sql`
       SELECT id, title, file_name, document_type, category, created_at FROM public.office_documents
       WHERE company_id = ${companyId}::uuid AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 50
-    `) as any[];
-    const purchaseOrders = (await sql`
+    `) as any[])(),
+      (async () => (await sql`
       SELECT po.id, po.purchase_order_no, po.purchase_contract_no, po.created_at, po.order_total, po.currency_code, po.status
       FROM public.purchase_orders po
       WHERE po.supplier_company_id = ${companyId}::uuid AND po.deleted_at IS NULL AND ${sqlScopeCondition(sql, scope, "po")}
       ORDER BY po.created_at DESC LIMIT 50
-    `) as any[];
-    const invoices = (await sql`
+    `) as any[])(),
+      (async () => (await sql`
       SELECT bi.id, bi.invoice_no, bi.document_date, bi.document_total_value, bi.document_currency, bi.status
       FROM public.business_edit_invoices bi
       WHERE bi.company_id = ${companyId}::uuid AND bi.deleted_at IS NULL AND ${sqlScopeCondition(sql, scope, "bi")}
       ORDER BY bi.created_at DESC LIMIT 50
-    `) as any[];
-    const clearingOrders = (await sql`
+    `) as any[])(),
+      (async () => (await sql`
       SELECT DISTINCT o.id, o.order_no, o.created_at, o.status
       FROM public.clearing_customer_order_parties p
       JOIN public.clearing_customer_orders o ON o.id = p.order_id
       WHERE p.party_company_id = ${companyId}::uuid AND o.deleted_at IS NULL AND ${sqlScopeCondition(sql, scope, "o")}
       ORDER BY o.created_at DESC LIMIT 50
-    `) as any[];
-    const inquiries = (await sql`
+    `) as any[])(),
+      (async () => (await sql`
       SELECT ci.id, ci.inquiry_no, ci.status, ci.inquiry_date, ci.created_at
       FROM public.customer_inquiries ci
       WHERE ci.company_id = ${companyId}::uuid AND ci.deleted_at IS NULL AND ${sqlScopeCondition(sql, scope, "ci")}
       ORDER BY ci.created_at DESC LIMIT 50
-    `) as any[];
-    const taxEntities = (await sql`
+    `) as any[])(),
+      (async () => (await sql`
       SELECT id, trn, legal_name, registration_date, filing_frequency, is_active FROM public.uae_tax_entities WHERE company_id = ${companyId}::uuid AND deleted_at IS NULL LIMIT 10
-    `) as any[];
-    const history = (await sql`
+    `) as any[])(),
+      (async () => (await sql`
       SELECT h.action, h.created_at, p.full_name AS actor_name FROM public.record_change_history h
       LEFT JOIN public.profiles p ON p.id = h.actor_id
       WHERE h.record_table = 'companies' AND h.record_id = ${companyId}::uuid ORDER BY h.created_at DESC LIMIT 20
-    `) as any[];
-
+    `) as any[])(),
+    ]);
     const expiryDays = days(company.license_expiry_date ? String(company.license_expiry_date instanceof Date ? company.license_expiry_date.toISOString().slice(0, 10) : company.license_expiry_date).slice(0, 10) : null);
     const compliance: Array<{ code: string; severity: "critical" | "needs_review" | "reminder" }> = [];
     if (expiryDays !== null && expiryDays < 0) compliance.push({ code: "license_expired", severity: "critical" });
