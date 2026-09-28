@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { recordInSessionScope } from "@/lib/api/scope-middleware";
 import { requireErpSession } from "@/lib/auth/session";
 import { localizeRecordNames, wantsRawRecord } from "@/lib/i18n/localize-records";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
@@ -14,10 +15,10 @@ import type { ErpSession } from "@/lib/auth/session";
 
 async function assertEmployeeInScope(session: ErpSession, employeeId: string) {
   if (session.isSuperAdmin) return;
-  const rows = await withLocalPg(async (sql) => sql`SELECT country_id FROM public.employees WHERE id = ${employeeId}::uuid AND deleted_at IS NULL LIMIT 1`);
-  const cid = rows?.[0]?.country_id;
+  const rows = await withLocalPg(async (sql) => sql`SELECT country_id, country_branch_id, city_branch_id FROM public.employees WHERE id = ${employeeId}::uuid AND deleted_at IS NULL LIMIT 1`);
   if (!rows?.[0]) throw Object.assign(new Error("Employee not found."), { status: 404 });
-  if (!cid || !(session.countryIds ?? []).includes(cid)) throw Object.assign(new Error("This employee is outside your authorised country."), { status: 403 });
+  // One scope rule: country roles → their country, branch users → their own branch.
+  if (!recordInSessionScope(session, rows[0] as any)) throw Object.assign(new Error("This employee is outside your authorised scope."), { status: 403 });
 }
 
 export async function GET(request: NextRequest, props: { params: Promise<{ id: string }> }) {

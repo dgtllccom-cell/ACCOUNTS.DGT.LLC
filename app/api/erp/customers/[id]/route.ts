@@ -25,6 +25,14 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     if (!data?.customer) {
       throw new ApiClientError("Customer not found", { status: 404, code: "NOT_FOUND" });
     }
+    // Object-level scope = list scope: customers are country master data, so a non-global
+    // caller may open only customers of its own country(ies).
+    if (!session.isSuperAdmin && !session.roles?.includes("super_admin_reports")) {
+      const cid = (data.customer as any).country_id as string | null;
+      if (!cid || !session.countryIds.includes(cid)) {
+        throw new ApiClientError("Customer not found", { status: 404, code: "NOT_FOUND" });
+      }
+    }
     const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
     // Always resolve — even when lang === "en" — because the base column holds whatever
     // script the record was originally typed in. If that was Urdu/Arabic/etc, skipping

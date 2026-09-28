@@ -27,13 +27,20 @@ async function localizeCompany(company: any, lang: ReturnType<typeof normalizeLa
 
 export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
-    await requireErpSession();
+    const session = await requireErpSession();
 
     const params = await context.params;
     const id = uuidSchema.parse(params.id);
     const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
 
     let company = await companiesService.getById(id);
+    // Object-level scope = list scope: companies are country master data.
+    if (!session.isSuperAdmin && !session.roles?.includes("super_admin_reports")) {
+      const cid = (company as any)?.country_id as string | null | undefined;
+      if (!cid || !session.countryIds.includes(cid)) {
+        throw new ApiClientError("Company not found", { status: 404, code: "NOT_FOUND" });
+      }
+    }
     // ?raw=1 → edit form: return the untranslated original (never overwrite source text).
     if (!wantsRawRecord(request)) company = await localizeCompany(company, lang);
     return apiOk({ company });

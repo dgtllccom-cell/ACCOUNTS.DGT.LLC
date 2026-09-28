@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { ErpPermissionError } from "@/lib/permissions/middleware";
+import { recordInSessionScope } from "@/lib/api/scope-middleware";
 import { NextRequest } from "next/server";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
@@ -58,6 +60,13 @@ export async function GET(
 
     if (!transfer) {
       throw new Error("Inter-country transfer record not found");
+    }
+    const t: any = transfer;
+    if (
+      !recordInSessionScope(session, { country_id: t.source_country_id, country_branch_id: t.source_country_branch_id, city_branch_id: t.source_city_branch_id }) &&
+      !recordInSessionScope(session, { country_id: t.dest_country_id, country_branch_id: t.dest_country_branch_id, city_branch_id: t.dest_city_branch_id })
+    ) {
+      throw new ErpPermissionError("This transfer is outside your authorized scope.");
     }
 
     // ONE transfer record → the READER'S language. The sender may have created it in
