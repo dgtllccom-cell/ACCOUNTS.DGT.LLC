@@ -2,8 +2,8 @@
 
 import React, { useState, useMemo } from "react";
 import {
-  ChevronRight,
   ChevronDown,
+  ChevronUp,
   Plus,
   Edit2,
   Trash2,
@@ -11,18 +11,14 @@ import {
   X,
   Layers,
   Sparkles,
-  Tag,
-  SlidersHorizontal,
   Award,
   Package,
   FileText,
-  ListTree,
   Search,
-  Filter,
-  CheckCircle2,
   Loader2,
-  CornerDownRight,
-  MoreVertical,
+  LayoutGrid,
+  Pencil,
+  FileCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,8 +27,7 @@ import { apiPost, apiPatch, apiDelete } from "@/lib/api/client";
 import type { GoodsRecord, GoodsVariation } from "./goods-master-registry";
 
 // =========================================================================
-// Data Models for Hierarchy
-// Goods → Variety → Size → Grade → Brand → Extra Details → Detail Lines
+// Data Models for Extra Reports / Specifications
 // =========================================================================
 
 export type DetailItem = {
@@ -41,30 +36,7 @@ export type DetailItem = {
   lines: string[];
 };
 
-export type BrandNode = {
-  brandName: string;
-  variationId: string;
-  isActive: boolean;
-  extraDetails: DetailItem[];
-  rawVariation: GoodsVariation;
-};
-
-export type GradeNode = {
-  gradeName: string;
-  brands: BrandNode[];
-};
-
-export type SizeNode = {
-  sizeName: string;
-  grades: GradeNode[];
-};
-
-export type VarietyNode = {
-  varietyName: string;
-  sizes: SizeNode[];
-};
-
-// Parser for Extra Details (supports JSON and legacy text)
+// Parser for Extra Details (supports JSON array, delimited text, or key-value pairs)
 export function parseExtraDetails(raw?: string | null): DetailItem[] {
   if (!raw || !raw.trim()) return [];
   const trimmed = raw.trim();
@@ -76,7 +48,7 @@ export function parseExtraDetails(raw?: string | null): DetailItem[] {
       if (Array.isArray(parsed)) {
         return parsed.map((item, idx) => ({
           id: item.id || `ed-${idx + 1}`,
-          title: item.title || item.name || `Detail #${idx + 1}`,
+          title: item.title || item.name || `Report #${idx + 1}`,
           lines: Array.isArray(item.lines)
             ? item.lines.map(String).filter((l: string) => l.trim().length > 0)
             : item.lines
@@ -94,7 +66,6 @@ export function parseExtraDetails(raw?: string | null): DetailItem[] {
   if (parts.length === 0) return [];
 
   return parts.map((part, idx) => {
-    // Check if line contains a colon e.g. "Kernel Yield: 50%" or "Packaging: 25kg"
     const colonIdx = part.indexOf(":");
     if (colonIdx > 0 && colonIdx < part.length - 1) {
       const title = part.substring(0, colonIdx).trim();
@@ -118,6 +89,42 @@ export function serializeExtraDetails(items: DetailItem[]): string {
   return JSON.stringify(items);
 }
 
+// Format detail items into human-readable text for edit textareas
+function detailItemsToText(items: DetailItem[]): string {
+  if (!items || items.length === 0) return "";
+  const lines: string[] = [];
+  for (const item of items) {
+    if (item.lines && item.lines.length > 0) {
+      for (const line of item.lines) {
+        if (line.includes(":") || item.title.startsWith("Report") || item.title === line) {
+          lines.push(line);
+        } else {
+          lines.push(`${item.title}: ${line}`);
+        }
+      }
+    } else if (item.title) {
+      lines.push(item.title);
+    }
+  }
+  return lines.join("\n");
+}
+
+function textToDetailItems(text: string, defaultTitle = "Specification"): DetailItem[] {
+  const lines = text
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+  if (lines.length === 0) return [];
+
+  return [
+    {
+      id: `ed-${Date.now()}`,
+      title: defaultTitle,
+      lines,
+    },
+  ];
+}
+
 interface GoodsHierarchyTreeProps {
   goods: GoodsRecord;
   onRefresh: () => Promise<void>;
@@ -127,480 +134,164 @@ export function GoodsHierarchyTree({ goods, onRefresh }: GoodsHierarchyTreeProps
   const [searchTerm, setSearchTerm] = useState("");
   const [busy, setBusy] = useState(false);
 
-  // Expansion state sets
-  const [expandedVarieties, setExpandedVarieties] = useState<Set<string>>(new Set());
-  const [expandedSizes, setExpandedSizes] = useState<Set<string>>(new Set());
-  const [expandedGrades, setExpandedGrades] = useState<Set<string>>(new Set());
-  const [expandedBrands, setExpandedBrands] = useState<Set<string>>(new Set());
-  const [expandedDetails, setExpandedDetails] = useState<Set<string>>(new Set());
+  // Expanded extra reports row IDs
+  const [expandedReportRows, setExpandedReportRows] = useState<Set<string>>(new Set());
 
-  // Compact Inline Edit State
-  const [editState, setEditState] = useState<{
-    type: "variety" | "size" | "grade" | "brand" | "extraDetail" | "detailLine";
-    variety?: string;
-    size?: string;
-    grade?: string;
-    brand?: string;
-    variationId?: string;
-    detailId?: string;
-    lineIndex?: number;
-    initialValue: string;
-    currentValue: string;
+  // Edit variation modal state
+  const [editingVariation, setEditingVariation] = useState<{
+    id: string;
+    variety: string;
+    size: string;
+    grade: string;
+    brand: string;
+    extraDetailsText: string;
   } | null>(null);
 
-  // Quick Add Child Modal / State
-  const [quickAddState, setQuickAddState] = useState<{
-    level: "variety" | "size" | "grade" | "brand" | "extraDetail" | "detailLine";
-    variety?: string;
-    size?: string;
-    grade?: string;
-    brand?: string;
-    variationId?: string;
-    detailId?: string;
-    name: string;
-    subValue?: string; // used for initial detail line
-  } | null>(null);
-
-  // Full combination modal
+  // Add combination modal state
   const [showAddComboModal, setShowAddComboModal] = useState(false);
   const [comboForm, setComboForm] = useState({
     variety: "",
     size: "",
-    grade: "Premium Grade",
+    grade: "Standard",
     brand: "DGT",
-    detailTitle: "Premium Quality",
+    detailTitle: "Quality Specs",
     detailLines: "Moisture: max 5%\nForeign Material: max 0.05%",
   });
 
-  // Build the hierarchical tree from goods.variations
-  const tree: VarietyNode[] = useMemo(() => {
-    const rawVariations = goods.variations || [];
-    const varietyMap = new Map<string, Map<string, Map<string, BrandNode[]>>>();
+  // Add single variety modal state
+  const [showAddVarietyModal, setShowAddVarietyModal] = useState(false);
+  const [varietyInput, setVarietyInput] = useState("");
+
+  const rawVariations = goods.variations || [];
+
+  // Summary counts
+  const stats = useMemo(() => {
+    const varieties = new Set<string>();
+    const sizes = new Set<string>();
+    const brands = new Set<string>();
+    let totalReports = 0;
 
     for (const v of rawVariations) {
-      const varietyKey = (v.variety || "").trim() || "Standard Variety";
-      const sizeKey = (v.size || "").trim() || "Standard Size";
-      const gradeKey = ((v as any).grade || "").trim() || "Standard Grade";
-      const brandKey = (v.brand || "").trim() || "Default Brand";
+      if (v.variety) varieties.add(v.variety.trim().toLowerCase());
+      if (v.size) sizes.add(v.size.trim().toLowerCase());
+      if (v.brand) brands.add(v.brand.trim().toLowerCase());
 
-      if (!varietyMap.has(varietyKey)) {
-        varietyMap.set(varietyKey, new Map());
-      }
-      const sizeMap = varietyMap.get(varietyKey)!;
-
-      if (!sizeMap.has(sizeKey)) {
-        sizeMap.set(sizeKey, new Map());
-      }
-      const gradeMap = sizeMap.get(sizeKey)!;
-
-      if (!gradeMap.has(gradeKey)) {
-        gradeMap.set(gradeKey, []);
-      }
-      const brandList = gradeMap.get(gradeKey)!;
-
-      brandList.push({
-        brandName: brandKey,
-        variationId: v.id,
-        isActive: v.is_active,
-        extraDetails: parseExtraDetails(v.extra_details),
-        rawVariation: v,
-      });
-    }
-
-    const result: VarietyNode[] = [];
-    varietyMap.forEach((sizeMap, varietyName) => {
-      const sizes: SizeNode[] = [];
-      sizeMap.forEach((gradeMap, sizeName) => {
-        const grades: GradeNode[] = [];
-        gradeMap.forEach((brands, gradeName) => {
-          grades.push({ gradeName, brands });
-        });
-        sizes.push({ sizeName, grades });
-      });
-      result.push({ varietyName, sizes });
-    });
-
-    return result;
-  }, [goods.variations]);
-
-  // Total counts for stats bar
-  const stats = useMemo(() => {
-    let totalVarieties = tree.length;
-    let totalSizes = 0;
-    let totalGrades = 0;
-    let totalBrands = 0;
-    let totalExtraDetails = 0;
-    let totalDetailLines = 0;
-
-    for (const v of tree) {
-      totalSizes += v.sizes.length;
-      for (const s of v.sizes) {
-        totalGrades += s.grades.length;
-        for (const gr of s.grades) {
-          totalBrands += gr.brands.length;
-          for (const b of gr.brands) {
-            totalExtraDetails += b.extraDetails.length;
-            for (const ed of b.extraDetails) {
-              totalDetailLines += ed.lines.length;
-            }
-          }
-        }
+      const details = parseExtraDetails(v.extra_details);
+      for (const d of details) {
+        totalReports += d.lines.length || 1;
       }
     }
 
     return {
-      totalVarieties,
-      totalSizes,
-      totalGrades,
-      totalBrands,
-      totalExtraDetails,
-      totalDetailLines,
-      totalCombinations: (goods.variations || []).length,
+      totalVarieties: varieties.size || (rawVariations.length > 0 ? 1 : 0),
+      totalSizes: sizes.size || (rawVariations.length > 0 ? 1 : 0),
+      totalBrands: brands.size || (rawVariations.length > 0 ? 1 : 0),
+      totalReports: totalReports,
+      totalCombinations: rawVariations.length,
     };
-  }, [tree, goods.variations]);
+  }, [rawVariations]);
 
-  // Expand first variety on load if none expanded
-  React.useEffect(() => {
-    if (tree.length > 0 && expandedVarieties.size === 0) {
-      setExpandedVarieties(new Set([tree[0].varietyName]));
-      if (tree[0].sizes.length > 0) {
-        const firstSizeKey = `${tree[0].varietyName}:::${tree[0].sizes[0].sizeName}`;
-        setExpandedSizes(new Set([firstSizeKey]));
-        if (tree[0].sizes[0].grades.length > 0) {
-          const firstGradeKey = `${firstSizeKey}:::${tree[0].sizes[0].grades[0].gradeName}`;
-          setExpandedGrades(new Set([firstGradeKey]));
-        }
+  // Filtered rows
+  const filteredVariations = useMemo(() => {
+    if (!searchTerm.trim()) return rawVariations;
+    const q = searchTerm.toLowerCase().trim();
+
+    return rawVariations.filter((v) => {
+      const variety = (v.variety || "").toLowerCase();
+      const size = (v.size || "").toLowerCase();
+      const grade = ((v as any).grade || "").toLowerCase();
+      const brand = (v.brand || "").toLowerCase();
+      const extra = (v.extra_details || "").toLowerCase();
+      return (
+        variety.includes(q) ||
+        size.includes(q) ||
+        grade.includes(q) ||
+        brand.includes(q) ||
+        extra.includes(q)
+      );
+    });
+  }, [rawVariations, searchTerm]);
+
+  // Toggle single extra report row
+  function toggleReportRow(variationId: string) {
+    setExpandedReportRows((prev) => {
+      const next = new Set(prev);
+      if (next.has(variationId)) {
+        next.delete(variationId);
+      } else {
+        next.add(variationId);
       }
-    }
-  }, [tree]);
+      return next;
+    });
+  }
 
-  // Expand / Collapse All
-  function toggleExpandAll() {
-    if (expandedVarieties.size > 0) {
-      // Collapse all
-      setExpandedVarieties(new Set());
-      setExpandedSizes(new Set());
-      setExpandedGrades(new Set());
-      setExpandedBrands(new Set());
-      setExpandedDetails(new Set());
+  // Toggle Collapse / Expand All reports
+  function toggleExpandAllReports() {
+    if (expandedReportRows.size > 0) {
+      setExpandedReportRows(new Set());
     } else {
-      // Expand all
-      const allV = new Set<string>();
-      const allS = new Set<string>();
-      const allG = new Set<string>();
-      const allB = new Set<string>();
-      const allD = new Set<string>();
-
-      for (const v of tree) {
-        allV.add(v.varietyName);
-        for (const s of v.sizes) {
-          const sKey = `${v.varietyName}:::${s.sizeName}`;
-          allS.add(sKey);
-          for (const gr of s.grades) {
-            const gKey = `${sKey}:::${gr.gradeName}`;
-            allG.add(gKey);
-            for (const b of gr.brands) {
-              const bKey = `${gKey}:::${b.brandName}`;
-              allB.add(bKey);
-              for (const ed of b.extraDetails) {
-                allD.add(ed.id);
-              }
-            }
-          }
-        }
-      }
-      setExpandedVarieties(allV);
-      setExpandedSizes(allS);
-      setExpandedGrades(allG);
-      setExpandedBrands(allB);
-      setExpandedDetails(allD);
+      const allIds = new Set(rawVariations.map((v) => v.id));
+      setExpandedReportRows(allIds);
     }
   }
 
-  // Toggle helpers
-  function toggleVariety(name: string) {
-    setExpandedVarieties((prev) => {
-      const next = new Set(prev);
-      next.has(name) ? next.delete(name) : next.add(name);
-      return next;
+  // Open Edit Modal for a row
+  function handleOpenEdit(v: GoodsVariation) {
+    const details = parseExtraDetails(v.extra_details);
+    setEditingVariation({
+      id: v.id,
+      variety: v.variety || "",
+      size: v.size || "",
+      grade: (v as any).grade || "Standard",
+      brand: v.brand || "",
+      extraDetailsText: detailItemsToText(details),
     });
   }
 
-  function toggleSize(vName: string, sName: string) {
-    const key = `${vName}:::${sName}`;
-    setExpandedSizes((prev) => {
-      const next = new Set(prev);
-      next.has(key) ? next.delete(key) : next.add(key);
-      return next;
-    });
-  }
-
-  function toggleGrade(vName: string, sName: string, grName: string) {
-    const key = `${vName}:::${sName}:::${grName}`;
-    setExpandedGrades((prev) => {
-      const next = new Set(prev);
-      next.has(key) ? next.delete(key) : next.add(key);
-      return next;
-    });
-  }
-
-  function toggleBrand(vName: string, sName: string, grName: string, bName: string) {
-    const key = `${vName}:::${sName}:::${grName}:::${bName}`;
-    setExpandedBrands((prev) => {
-      const next = new Set(prev);
-      next.has(key) ? next.delete(key) : next.add(key);
-      return next;
-    });
-  }
-
-  function toggleDetail(detailId: string) {
-    setExpandedDetails((prev) => {
-      const next = new Set(prev);
-      next.has(detailId) ? next.delete(detailId) : next.add(detailId);
-      return next;
-    });
-  }
-
-  // =========================================================================
-  // Save Inline Edit (Variety, Size, Grade, Brand, Extra Detail, Detail Line)
-  // =========================================================================
-  async function handleSaveEdit() {
-    if (!editState) return;
-    const newVal = editState.currentValue.trim();
-    if (!newVal) {
-      alert("Value cannot be blank.");
-      return;
-    }
+  // Save Edit Variation
+  async function handleSaveEdit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingVariation) return;
 
     setBusy(true);
     try {
-      if (editState.type === "variety") {
-        await apiPost(`/api/erp/goods-master/${goods.id}/hierarchy`, {
-          action: "renameVariety",
-          oldVariety: editState.initialValue,
-          newVariety: newVal,
-        });
-      } else if (editState.type === "size") {
-        await apiPost(`/api/erp/goods-master/${goods.id}/hierarchy`, {
-          action: "renameSize",
-          variety: editState.variety,
-          oldSize: editState.initialValue,
-          newSize: newVal,
-        });
-      } else if (editState.type === "grade") {
-        await apiPost(`/api/erp/goods-master/${goods.id}/hierarchy`, {
-          action: "renameGrade",
-          variety: editState.variety,
-          size: editState.size!,
-          oldGrade: editState.initialValue,
-          newGrade: newVal,
-        });
-      } else if (editState.type === "brand") {
-        await apiPost(`/api/erp/goods-master/${goods.id}/hierarchy`, {
-          action: "renameBrand",
-          variety: editState.variety,
-          size: editState.size!,
-          grade: editState.grade,
-          oldBrand: editState.initialValue,
-          newBrand: newVal,
-        });
-      } else if (editState.type === "extraDetail") {
-        // Find variation and update detail item title
-        const variation = (goods.variations || []).find((v) => v.id === editState.variationId);
-        if (variation) {
-          const details = parseExtraDetails(variation.extra_details);
-          const target = details.find((d) => d.id === editState.detailId);
-          if (target) {
-            target.title = newVal;
-            await apiPatch(`/api/erp/goods-master/variations/${variation.id}`, {
-              extraDetails: serializeExtraDetails(details),
-            });
-          }
-        }
-      } else if (editState.type === "detailLine") {
-        // Find variation and update specific line
-        const variation = (goods.variations || []).find((v) => v.id === editState.variationId);
-        if (variation) {
-          const details = parseExtraDetails(variation.extra_details);
-          const target = details.find((d) => d.id === editState.detailId);
-          if (target && editState.lineIndex !== undefined) {
-            target.lines[editState.lineIndex] = newVal;
-            await apiPatch(`/api/erp/goods-master/variations/${variation.id}`, {
-              extraDetails: serializeExtraDetails(details),
-            });
-          }
-        }
-      }
+      const details = textToDetailItems(editingVariation.extraDetailsText);
+      await apiPatch(`/api/erp/goods-master/variations/${editingVariation.id}`, {
+        variety: editingVariation.variety.trim(),
+        size: editingVariation.size.trim(),
+        grade: editingVariation.grade.trim() || "Standard",
+        brand: editingVariation.brand.trim(),
+        extraDetails: serializeExtraDetails(details),
+      });
 
-      setEditState(null);
+      setEditingVariation(null);
       await onRefresh();
     } catch (err: any) {
-      alert(`Failed to update value: ${err.message}`);
+      alert(`Failed to save variation: ${err.message}`);
     } finally {
       setBusy(false);
     }
   }
 
-  // =========================================================================
-  // Save Quick Add Child
-  // =========================================================================
-  async function handleSaveQuickAdd() {
-    if (!quickAddState) return;
-    const name = quickAddState.name.trim();
-    if (!name) {
-      alert("Name / value is required.");
-      return;
-    }
+  // Delete Variation
+  async function handleDeleteVariation(variationId: string, label: string) {
+    if (!window.confirm(`Delete variation "${label}"? This action cannot be undone.`)) return;
 
     setBusy(true);
     try {
-      if (quickAddState.level === "variety") {
-        await apiPost(`/api/erp/goods-master/${goods.id}/hierarchy`, {
-          action: "addNode",
-          level: "variety",
-          variety: name,
-          size: "Standard Size",
-          grade: "Standard Grade",
-          brand: "Default Brand",
-        });
-        setExpandedVarieties((prev) => new Set([...prev, name]));
-      } else if (quickAddState.level === "size") {
-        await apiPost(`/api/erp/goods-master/${goods.id}/hierarchy`, {
-          action: "addNode",
-          level: "size",
-          variety: quickAddState.variety,
-          size: name,
-          grade: "Standard Grade",
-          brand: "Default Brand",
-        });
-        const sKey = `${quickAddState.variety}:::${name}`;
-        setExpandedSizes((prev) => new Set([...prev, sKey]));
-      } else if (quickAddState.level === "grade") {
-        await apiPost(`/api/erp/goods-master/${goods.id}/hierarchy`, {
-          action: "addNode",
-          level: "grade",
-          variety: quickAddState.variety,
-          size: quickAddState.size,
-          grade: name,
-          brand: "Default Brand",
-        });
-        const gKey = `${quickAddState.variety}:::${quickAddState.size}:::${name}`;
-        setExpandedGrades((prev) => new Set([...prev, gKey]));
-      } else if (quickAddState.level === "brand") {
-        await apiPost(`/api/erp/goods-master/${goods.id}/hierarchy`, {
-          action: "addNode",
-          level: "brand",
-          variety: quickAddState.variety,
-          size: quickAddState.size,
-          grade: quickAddState.grade,
-          brand: name,
-        });
-        const bKey = `${quickAddState.variety}:::${quickAddState.size}:::${quickAddState.grade}:::${name}`;
-        setExpandedBrands((prev) => new Set([...prev, bKey]));
-      } else if (quickAddState.level === "extraDetail") {
-        // Add new Extra Detail item to variation
-        const variation = (goods.variations || []).find((v) => v.id === quickAddState.variationId);
-        if (variation) {
-          const details = parseExtraDetails(variation.extra_details);
-          const newId = `ed-${Date.now()}`;
-          const initialLines = quickAddState.subValue
-            ? quickAddState.subValue.split("\n").map((l) => l.trim()).filter(Boolean)
-            : [];
-          details.push({
-            id: newId,
-            title: name,
-            lines: initialLines.length > 0 ? initialLines : ["Specification standard"],
-          });
-          await apiPatch(`/api/erp/goods-master/variations/${variation.id}`, {
-            extraDetails: serializeExtraDetails(details),
-          });
-          setExpandedDetails((prev) => new Set([...prev, newId]));
-        }
-      } else if (quickAddState.level === "detailLine") {
-        // Append detail line to extra detail item
-        const variation = (goods.variations || []).find((v) => v.id === quickAddState.variationId);
-        if (variation) {
-          const details = parseExtraDetails(variation.extra_details);
-          const target = details.find((d) => d.id === quickAddState.detailId);
-          if (target) {
-            target.lines.push(name);
-            await apiPatch(`/api/erp/goods-master/variations/${variation.id}`, {
-              extraDetails: serializeExtraDetails(details),
-            });
-          }
-        }
+      await apiDelete(`/api/erp/goods-master/variations/${variationId}`);
+      if (editingVariation?.id === variationId) {
+        setEditingVariation(null);
       }
-
-      setQuickAddState(null);
       await onRefresh();
     } catch (err: any) {
-      alert(`Failed to add: ${err.message}`);
+      alert(`Failed to delete variation: ${err.message}`);
     } finally {
       setBusy(false);
     }
   }
 
-  // =========================================================================
-  // Delete Node (Variety, Size, Grade, Brand, Extra Detail, Detail Line)
-  // =========================================================================
-  async function handleDeleteNode(
-    level: "variety" | "size" | "grade" | "brand" | "extraDetail" | "detailLine",
-    payload: {
-      variety?: string;
-      size?: string;
-      grade?: string;
-      brand?: string;
-      variationId?: string;
-      detailId?: string;
-      lineIndex?: number;
-      label: string;
-    }
-  ) {
-    if (!window.confirm(`Delete ${level} "${payload.label}"?`)) return;
-
-    setBusy(true);
-    try {
-      if (level === "variety" || level === "size" || level === "grade" || level === "brand") {
-        await apiPost(`/api/erp/goods-master/${goods.id}/hierarchy`, {
-          action: "deleteNode",
-          level,
-          variety: payload.variety,
-          size: payload.size,
-          grade: payload.grade,
-          brand: payload.brand,
-        });
-      } else if (level === "extraDetail") {
-        const variation = (goods.variations || []).find((v) => v.id === payload.variationId);
-        if (variation) {
-          const details = parseExtraDetails(variation.extra_details).filter((d) => d.id !== payload.detailId);
-          await apiPatch(`/api/erp/goods-master/variations/${variation.id}`, {
-            extraDetails: serializeExtraDetails(details),
-          });
-        }
-      } else if (level === "detailLine") {
-        const variation = (goods.variations || []).find((v) => v.id === payload.variationId);
-        if (variation) {
-          const details = parseExtraDetails(variation.extra_details);
-          const target = details.find((d) => d.id === payload.detailId);
-          if (target && payload.lineIndex !== undefined) {
-            target.lines.splice(payload.lineIndex, 1);
-            await apiPatch(`/api/erp/goods-master/variations/${variation.id}`, {
-              extraDetails: serializeExtraDetails(details),
-            });
-          }
-        }
-      }
-      await onRefresh();
-    } catch (err: any) {
-      alert(`Failed to delete: ${err.message}`);
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  // =========================================================================
-  // Add Full Variant Combination Modal Submit
-  // =========================================================================
+  // Add Combination Submit
   async function handleAddFullCombo(e: React.FormEvent) {
     e.preventDefault();
     if (!comboForm.variety.trim() || !comboForm.size.trim() || !comboForm.brand.trim()) {
@@ -626,7 +317,7 @@ export function GoodsHierarchyTree({ goods, onRefresh }: GoodsHierarchyTreeProps
       await apiPost(`/api/erp/goods-master/${goods.id}/variations`, {
         variety: comboForm.variety.trim(),
         size: comboForm.size.trim(),
-        grade: comboForm.grade.trim() || "Standard Grade",
+        grade: comboForm.grade.trim() || "Standard",
         brand: comboForm.brand.trim(),
         extraDetails: serializeExtraDetails(extraDetailsArray),
       });
@@ -635,9 +326,9 @@ export function GoodsHierarchyTree({ goods, onRefresh }: GoodsHierarchyTreeProps
       setComboForm({
         variety: "",
         size: "",
-        grade: "Premium Grade",
+        grade: "Standard",
         brand: "DGT",
-        detailTitle: "Premium Quality",
+        detailTitle: "Quality Specs",
         detailLines: "Moisture: max 5%\nForeign Material: max 0.05%",
       });
       await onRefresh();
@@ -648,890 +339,461 @@ export function GoodsHierarchyTree({ goods, onRefresh }: GoodsHierarchyTreeProps
     }
   }
 
-  // Filtered Tree (Search)
-  const filteredTree = useMemo(() => {
-    if (!searchTerm.trim()) return tree;
-    const q = searchTerm.toLowerCase().trim();
+  // Add Variety Submit
+  async function handleAddVariety(e: React.FormEvent) {
+    e.preventDefault();
+    if (!varietyInput.trim()) {
+      alert("Variety name is required.");
+      return;
+    }
 
-    return tree
-      .map((v) => {
-        const vMatches = v.varietyName.toLowerCase().includes(q);
-        const filteredSizes = v.sizes
-          .map((s) => {
-            const sMatches = s.sizeName.toLowerCase().includes(q);
-            const filteredGrades = s.grades
-              .map((gr) => {
-                const grMatches = gr.gradeName.toLowerCase().includes(q);
-                const filteredBrands = gr.brands.filter(
-                  (b) =>
-                    b.brandName.toLowerCase().includes(q) ||
-                    b.extraDetails.some(
-                      (ed) =>
-                        ed.title.toLowerCase().includes(q) ||
-                        ed.lines.some((l) => l.toLowerCase().includes(q))
-                    )
-                );
-                if (grMatches || filteredBrands.length > 0) {
-                  return { ...gr, brands: filteredBrands.length > 0 ? filteredBrands : gr.brands };
-                }
-                return null;
-              })
-              .filter(Boolean) as GradeNode[];
+    setBusy(true);
+    try {
+      await apiPost(`/api/erp/goods-master/${goods.id}/hierarchy`, {
+        action: "addNode",
+        level: "variety",
+        variety: varietyInput.trim(),
+        size: "Standard Size",
+        grade: "Standard",
+        brand: "DGT",
+      });
 
-            if (sMatches || filteredGrades.length > 0) {
-              return { ...s, grades: filteredGrades.length > 0 ? filteredGrades : s.grades };
-            }
-            return null;
-          })
-          .filter(Boolean) as SizeNode[];
-
-        if (vMatches || filteredSizes.length > 0) {
-          return { ...v, sizes: filteredSizes.length > 0 ? filteredSizes : v.sizes };
-        }
-        return null;
-      })
-      .filter(Boolean) as VarietyNode[];
-  }, [tree, searchTerm]);
+      setShowAddVarietyModal(false);
+      setVarietyInput("");
+      await onRefresh();
+    } catch (err: any) {
+      alert(`Failed to add variety: ${err.message}`);
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
-    <div className="p-3 sm:p-5 bg-gradient-to-b from-slate-50/95 via-white to-slate-50/80 dark:from-slate-900/90 dark:via-slate-950 dark:to-slate-900/80 border-t border-slate-200 dark:border-slate-800 text-xs">
+    <div className="p-3 sm:p-5 bg-white dark:bg-slate-900 border-t border-slate-200/80 dark:border-slate-800 text-xs">
       {/* ----------------------------------------------------------------- */}
-      {/* 1. Header Toolbar: Summary Badges & Quick Action Buttons          */}
+      {/* 1. Header Toolbar (Matches Reference HTML v4)                     */}
       {/* ----------------------------------------------------------------- */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 mb-3 border-b border-slate-200 dark:border-slate-800">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 mb-3 border-b border-slate-200/70 dark:border-slate-800">
         <div>
+          {/* Goods Title & Badges */}
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-black text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-              <ListTree className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            <span className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+              <LayoutGrid className="w-4 h-4 text-slate-700 dark:text-slate-300" />
               {goods.name}
             </span>
-            <span className="font-mono text-[11px] px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/70 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 font-semibold">
+
+            {/* HS Code Badge */}
+            <span className="font-mono text-[11px] px-2.5 py-0.5 rounded-md bg-[#e0f2fe] text-[#0284c7] dark:bg-sky-950/70 dark:text-sky-300 font-bold border border-sky-200/70 dark:border-sky-800">
               HS: {goods.chs_code || "N/A"}
             </span>
-            <span className="text-[11px] px-2 py-0.5 rounded font-semibold bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300">
+
+            {/* Varieties • Sizes • Brands Badge */}
+            <span className="text-[11px] px-2.5 py-0.5 rounded-md font-semibold bg-[#ecfdf5] text-[#059669] dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-800">
               {stats.totalVarieties} Varieties • {stats.totalSizes} Sizes • {stats.totalBrands} Brands
             </span>
-            <span className="text-[11px] px-2 py-0.5 rounded font-semibold bg-purple-50 dark:bg-purple-950/70 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300">
-              {stats.totalExtraDetails} Extra Details • {stats.totalDetailLines} Detail Lines
+
+            {/* Reports Badge */}
+            <span className="text-[11px] px-2.5 py-0.5 rounded-md font-semibold bg-[#f3e8ff] text-[#7c3aed] dark:bg-purple-950/70 dark:text-purple-300 border border-purple-200/70 dark:border-purple-800">
+              {stats.totalReports} Reports
             </span>
           </div>
 
-          <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-500 font-mono">
-            <span>Hierarchy:</span>
-            <span className="text-amber-600 dark:text-amber-400 font-semibold">Variety</span>
-            <span>→</span>
-            <span className="text-sky-600 dark:text-sky-400 font-semibold">Size</span>
-            <span>→</span>
-            <span className="text-purple-600 dark:text-purple-400 font-semibold">Grade</span>
-            <span>→</span>
-            <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Brand</span>
-            <span>→</span>
-            <span className="text-rose-600 dark:text-rose-400 font-semibold">Extra Details</span>
-            <span>→</span>
-            <span className="text-slate-700 dark:text-slate-300 font-semibold">Detail Lines</span>
+          {/* Breadcrumb Subtitle */}
+          <div className="mt-1 text-[11px] text-slate-500 font-normal">
+            Hierarchy: Variety → Size → Grade → Brand → Extra Reports
           </div>
         </div>
 
         {/* Action Controls */}
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Quick Tree Search Filter */}
-          <div className="relative w-44 sm:w-56">
+          {/* Search Filter */}
+          <div className="relative w-36 sm:w-44">
             <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <Input
               type="text"
-              placeholder="Search tree..."
+              placeholder="Search..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-7.5 pl-8 pr-2.5 text-xs bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700"
+              className="h-8 pl-8 pr-2.5 text-xs bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-md"
             />
           </div>
 
-          {/* Expand/Collapse All */}
+          {/* Collapse / Expand All */}
           <button
             type="button"
-            onClick={toggleExpandAll}
-            className="h-7.5 px-2.5 text-[11px] font-semibold rounded bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-colors"
+            onClick={toggleExpandAllReports}
+            className="h-8 px-3 text-xs font-semibold rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer shadow-2xs"
           >
-            {expandedVarieties.size > 0 ? "Collapse All" : "Expand All"}
+            {expandedReportRows.size > 0 ? "Collapse All" : "Expand All"}
           </button>
 
-          {/* + Add Variety */}
+          {/* + Variety */}
           <button
             type="button"
-            onClick={() => setQuickAddState({ level: "variety", name: "" })}
-            className="h-7.5 px-2.5 text-[11px] font-bold rounded bg-amber-600 hover:bg-amber-700 text-white flex items-center gap-1 shadow-xs transition-colors"
-            title="Add a new Variety under this Good"
+            onClick={() => setShowAddVarietyModal(true)}
+            className="h-8 px-3 text-xs font-bold rounded-md bg-[#d97706] hover:bg-[#b45309] text-white flex items-center gap-1 transition-colors shadow-2xs cursor-pointer"
           >
-            <Plus className="w-3 h-3 stroke-[2.5]" />
+            <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
             Variety
           </button>
 
-          {/* + Add Full Combination */}
+          {/* + Combination */}
           <button
             type="button"
             onClick={() => setShowAddComboModal(true)}
-            className="h-7.5 px-3 text-[11px] font-bold rounded bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1 shadow-xs transition-colors"
-            title="Add full Variety → Size → Grade → Brand combination"
+            className="h-8 px-3 text-xs font-bold rounded-md bg-[#059669] hover:bg-[#047857] text-white flex items-center gap-1 transition-colors shadow-2xs cursor-pointer"
           >
-            <Plus className="w-3 h-3 stroke-[2.5]" />
+            <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
             Combination
           </button>
         </div>
       </div>
 
       {/* ----------------------------------------------------------------- */}
-      {/* 2. Hierarchical Tree Nodes                                        */}
+      {/* 2. Compact Table (Matches Reference HTML v4)                      */}
       {/* ----------------------------------------------------------------- */}
-      {filteredTree.length === 0 ? (
-        <div className="p-8 text-center bg-white dark:bg-slate-900/60 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
-          <p className="text-slate-500 font-medium">No variations recorded yet for {goods.name}.</p>
-          <div className="mt-2 flex justify-center gap-2">
-            <Button
-              size="sm"
-              onClick={() => setQuickAddState({ level: "variety", name: "" })}
-              className="bg-amber-600 hover:bg-amber-700 text-white h-7.5 text-xs font-semibold"
-            >
-              <Plus className="w-3.5 h-3.5 mr-1" />
-              Add First Variety
-            </Button>
+      {rawVariations.length === 0 ? (
+        <div className="p-8 text-center bg-slate-50/50 dark:bg-slate-900/50 rounded-lg border border-dashed border-slate-200 dark:border-slate-800">
+          <p className="text-slate-500 font-medium text-xs">No variations recorded yet for {goods.name}.</p>
+          <div className="mt-3 flex justify-center gap-2">
             <Button
               size="sm"
               onClick={() => setShowAddComboModal(true)}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white h-7.5 text-xs font-semibold"
+              className="bg-[#059669] hover:bg-[#047857] text-white h-8 text-xs font-bold"
             >
               <Plus className="w-3.5 h-3.5 mr-1" />
-              Add Full Combination
+              Add First Combination
             </Button>
           </div>
         </div>
       ) : (
-        <div className="space-y-2">
-          {filteredTree.map((variety) => {
-            const isVExpanded = expandedVarieties.has(variety.varietyName);
-            const totalVarCombos = variety.sizes.reduce(
-              (acc, s) => acc + s.grades.reduce((gAcc, gr) => gAcc + gr.brands.length, 0),
-              0
-            );
+        <div className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden bg-white dark:bg-slate-900">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr className="bg-[#f8fafc] dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold text-[11px]">
+                <th className="py-2.5 px-4 w-14">#</th>
+                <th className="py-2.5 px-4">Variety</th>
+                <th className="py-2.5 px-4">Size</th>
+                <th className="py-2.5 px-4">Grade</th>
+                <th className="py-2.5 px-4">Brand</th>
+                <th className="py-2.5 px-4">Extra Reports</th>
+                <th className="py-2.5 px-4 text-center w-28">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+              {filteredVariations.map((v, idx) => {
+                const details = parseExtraDetails(v.extra_details);
+                const reportLineCount = details.reduce((acc, d) => acc + (d.lines.length || 1), 0);
+                const isReportsExpanded = expandedReportRows.has(v.id);
+                const rowNum = String(idx + 1).padStart(2, "0");
 
-            return (
-              <div
-                key={variety.varietyName}
-                className="rounded-lg border border-amber-200/80 dark:border-amber-900/50 bg-white dark:bg-slate-900 shadow-2xs overflow-hidden"
-              >
-                {/* ---------------- Level 1: Variety Node ---------------- */}
-                <div className="flex items-center justify-between px-3 py-2 bg-gradient-to-r from-amber-50/80 via-white to-amber-50/40 dark:from-amber-950/40 dark:via-slate-900 dark:to-amber-950/20 hover:bg-amber-50 transition-colors">
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => toggleVariety(variety.varietyName)}
-                      className="w-5 h-5 flex items-center justify-center rounded text-amber-700 dark:text-amber-400 hover:bg-amber-200/50 transition-colors"
-                    >
-                      {isVExpanded ? (
-                        <ChevronDown className="w-4 h-4" />
-                      ) : (
-                        <ChevronRight className="w-4 h-4" />
-                      )}
-                    </button>
+                return (
+                  <React.Fragment key={v.id}>
+                    {/* Main Row */}
+                    <tr className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
+                      {/* # */}
+                      <td className="py-3 px-4 font-mono text-slate-500 dark:text-slate-400 text-xs">
+                        {rowNum}
+                      </td>
 
-                    <Tag className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                    <span className="font-bold text-amber-900 dark:text-amber-300 text-xs tracking-wide">
-                      {variety.varietyName}
-                    </span>
+                      {/* Variety */}
+                      <td className="py-3 px-4">
+                        <div className="font-bold text-slate-900 dark:text-slate-100 text-xs">
+                          {v.variety || "Standard"}
+                        </div>
+                        <div className="text-[11px] text-slate-400 dark:text-slate-500 font-normal">
+                          {goods.name} Variety
+                        </div>
+                      </td>
 
-                    {/* Small inline pencil icon directly beside Variety */}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setEditState({
-                          type: "variety",
-                          initialValue: variety.varietyName,
-                          currentValue: variety.varietyName,
-                        })
-                      }
-                      className="w-5 h-5 flex items-center justify-center rounded hover:bg-amber-200/60 text-amber-700 dark:text-amber-400 transition-colors"
-                      title="Edit Variety Name"
-                    >
-                      <Edit2 className="w-3 h-3 stroke-[2.2]" />
-                    </button>
+                      {/* Size */}
+                      <td className="py-3 px-4">
+                        <span className="inline-block px-2.5 py-0.5 rounded-md font-semibold text-[11px] bg-[#f0f9ff] text-[#0284c7] border border-[#bae6fd] dark:bg-sky-950/50 dark:text-sky-300 dark:border-sky-800">
+                          {v.size || "Standard"}
+                        </span>
+                      </td>
 
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 border border-amber-300 dark:border-amber-800 text-amber-800 dark:text-amber-300 font-semibold font-mono">
-                      {variety.sizes.length} {variety.sizes.length === 1 ? "Size" : "Sizes"} • {totalVarCombos} {totalVarCombos === 1 ? "Combo" : "Combos"}
-                    </span>
-                  </div>
+                      {/* Grade */}
+                      <td className="py-3 px-4">
+                        <span className="inline-block px-2.5 py-0.5 rounded-md font-semibold text-[11px] bg-[#faf5ff] text-[#9333ea] border border-[#e9d5ff] dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-800">
+                          {(v as any).grade || "Standard"}
+                        </span>
+                      </td>
 
-                  {/* Actions for Variety: + Add Size, Delete Variety */}
-                  <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setQuickAddState({
-                          level: "size",
-                          variety: variety.varietyName,
-                          name: "",
-                        })
-                      }
-                      className="px-2 py-0.5 rounded bg-sky-50 dark:bg-sky-950 text-sky-700 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-900 border border-sky-200 dark:border-sky-800 font-bold text-[10px] flex items-center gap-0.5 transition-colors"
-                      title="Add Size under this Variety"
-                    >
-                      <Plus className="w-2.5 h-2.5 stroke-[2.5]" />
-                      Size
-                    </button>
+                      {/* Brand */}
+                      <td className="py-3 px-4 font-bold text-[#059669] dark:text-emerald-400 text-xs tracking-wide">
+                        {v.brand || "Default"}
+                      </td>
 
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handleDeleteNode("variety", {
-                          variety: variety.varietyName,
-                          label: variety.varietyName,
-                        })
-                      }
-                      className="w-5 h-5 flex items-center justify-center rounded text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-950 transition-colors"
-                      title="Delete this Variety and its variants"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
-                  </div>
-                </div>
+                      {/* Extra Reports */}
+                      <td className="py-3 px-4">
+                        <button
+                          type="button"
+                          onClick={() => toggleReportRow(v.id)}
+                          className={cn(
+                            "px-2.5 py-1 rounded-md text-[11px] font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer",
+                            reportLineCount > 0
+                              ? "bg-[#f5f3ff] hover:bg-[#ede9fe] text-[#7c3aed] border border-[#ddd6fe] dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800"
+                              : "bg-slate-100 text-slate-400 border border-slate-200 dark:bg-slate-800 dark:text-slate-500 dark:border-slate-700"
+                          )}
+                          title="Click to view/hide report details"
+                        >
+                          <span>
+                            {reportLineCount > 0
+                              ? `${reportLineCount} ${reportLineCount === 1 ? "Report" : "Reports"}`
+                              : "No Reports"}
+                          </span>
+                          {isReportsExpanded ? (
+                            <ChevronUp className="w-3 h-3 text-[#7c3aed]" />
+                          ) : (
+                            <ChevronDown className="w-3 h-3 text-[#7c3aed]" />
+                          )}
+                        </button>
+                      </td>
 
-                {/* ---------------- Level 2: Sizes under Variety ---------------- */}
-                {isVExpanded && (
-                  <div className="pl-5 pr-2.5 py-2 space-y-2 border-t border-amber-100 dark:border-amber-950/60 bg-amber-50/20 dark:bg-slate-950/30">
-                    {variety.sizes.length === 0 ? (
-                      <p className="text-slate-400 text-[11px] italic py-1 pl-3">
-                        No sizes under this variety. Click "+ Size" above to add one.
-                      </p>
-                    ) : (
-                      variety.sizes.map((size) => {
-                        const sizeKey = `${variety.varietyName}:::${size.sizeName}`;
-                        const isSExpanded = expandedSizes.has(sizeKey);
-
-                        return (
-                          <div
-                            key={size.sizeName}
-                            className="rounded border border-sky-200/80 dark:border-sky-900/50 bg-white dark:bg-slate-900 overflow-hidden"
+                      {/* Action */}
+                      <td className="py-3 px-4 text-center">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEdit(v)}
+                            className="px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-medium text-xs flex items-center gap-1 transition-colors shadow-2xs cursor-pointer"
+                            title="Edit this combination"
                           >
-                            {/* Size Row */}
-                            <div className="flex items-center justify-between px-2.5 py-1.5 bg-gradient-to-r from-sky-50/80 to-white dark:from-sky-950/40 dark:to-slate-900 hover:bg-sky-50 transition-colors">
-                              <div className="flex items-center gap-2">
-                                <button
-                                  type="button"
-                                  onClick={() => toggleSize(variety.varietyName, size.sizeName)}
-                                  className="w-4.5 h-4.5 flex items-center justify-center rounded text-sky-700 dark:text-sky-400 hover:bg-sky-200/50"
-                                >
-                                  {isSExpanded ? (
-                                    <ChevronDown className="w-3.5 h-3.5" />
-                                  ) : (
-                                    <ChevronRight className="w-3.5 h-3.5" />
-                                  )}
-                                </button>
+                            <Pencil className="w-3 h-3 text-slate-500" />
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleDeleteVariation(
+                                v.id,
+                                `${v.variety || "Std"} / ${v.size} / ${v.brand}`
+                              )
+                            }
+                            className="w-6 h-6 rounded-md hover:bg-rose-50 dark:hover:bg-rose-950/50 text-slate-400 hover:text-rose-600 flex items-center justify-center transition-colors cursor-pointer"
+                            title="Delete this combination"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
 
-                                <SlidersHorizontal className="w-3 h-3 text-sky-600 dark:text-sky-400" />
-                                <span className="font-bold text-sky-900 dark:text-sky-300 font-mono text-[11px]">
-                                  {size.sizeName}
-                                </span>
-
-                                {/* Small inline pencil icon directly beside Size */}
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    setEditState({
-                                      type: "size",
-                                      variety: variety.varietyName,
-                                      initialValue: size.sizeName,
-                                      currentValue: size.sizeName,
-                                    })
-                                  }
-                                  className="w-4.5 h-4.5 flex items-center justify-center rounded hover:bg-sky-200/60 text-sky-700 dark:text-sky-400 transition-colors"
-                                  title="Edit Size"
-                                >
-                                  <Edit2 className="w-2.5 h-2.5 stroke-[2.2]" />
-                                </button>
-
-                                <span className="text-[10px] px-1.5 py-0.2 rounded bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300 font-medium">
-                                  {size.grades.length} {size.grades.length === 1 ? "Grade" : "Grades"}
-                                </span>
-                              </div>
-
-                              {/* Size actions: + Add Grade, Delete Size */}
-                              <div className="flex items-center gap-1">
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    setQuickAddState({
-                                      level: "grade",
-                                      variety: variety.varietyName,
-                                      size: size.sizeName,
-                                      name: "",
-                                    })
-                                  }
-                                  className="px-2 py-0.5 rounded bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900 border border-purple-200 dark:border-purple-800 font-bold text-[10px] flex items-center gap-0.5"
-                                  title="Add Grade under this Size"
-                                >
-                                  <Plus className="w-2.5 h-2.5 stroke-[2.5]" />
-                                  Grade
-                                </button>
-
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    handleDeleteNode("size", {
-                                      variety: variety.varietyName,
-                                      size: size.sizeName,
-                                      label: size.sizeName,
-                                    })
-                                  }
-                                  className="w-4.5 h-4.5 flex items-center justify-center rounded text-rose-500 hover:bg-rose-100"
-                                  title="Delete this Size"
-                                >
-                                  <Trash2 className="w-2.5 h-2.5" />
-                                </button>
-                              </div>
+                    {/* Expandable Extra Reports Sub-row */}
+                    {isReportsExpanded && (
+                      <tr className="bg-[#faf5ff]/40 dark:bg-purple-950/20 border-b border-purple-100 dark:border-purple-900/40">
+                        <td colSpan={7} className="px-6 py-3">
+                          <div className="flex items-start gap-4">
+                            <div className="flex items-center gap-1.5 text-[#7c3aed] font-semibold text-xs min-w-32 pt-0.5">
+                              <FileCheck className="w-3.5 h-3.5" />
+                              <span>Extra Reports & Specs:</span>
                             </div>
 
-                            {/* ---------------- Level 3: Grades under Size ---------------- */}
-                            {isSExpanded && (
-                              <div className="pl-5 pr-2 py-1.5 space-y-1.5 border-t border-sky-100 dark:border-sky-950/60 bg-sky-50/20 dark:bg-slate-950/20">
-                                {size.grades.length === 0 ? (
-                                  <p className="text-slate-400 text-[11px] italic pl-2">
-                                    No grades under this size.
-                                  </p>
-                                ) : (
-                                  size.grades.map((grade) => {
-                                    const gradeKey = `${variety.varietyName}:::${size.sizeName}:::${grade.gradeName}`;
-                                    const isGrExpanded = expandedGrades.has(gradeKey);
+                            <div className="flex-1 flex flex-wrap gap-2">
+                              {details.length === 0 ? (
+                                <span className="text-slate-400 italic text-[11px]">
+                                  No specification lines attached. Click Edit to add specs.
+                                </span>
+                              ) : (
+                                details.map((detail) => (
+                                  <div
+                                    key={detail.id}
+                                    className="bg-white dark:bg-slate-900 border border-purple-200/80 dark:border-purple-800 rounded-md p-2 shadow-2xs text-xs"
+                                  >
+                                    <div className="font-bold text-purple-900 dark:text-purple-300 text-[11px] mb-1">
+                                      {detail.title}
+                                    </div>
+                                    <ul className="space-y-0.5">
+                                      {detail.lines.map((line, lIdx) => (
+                                        <li
+                                          key={lIdx}
+                                          className="text-slate-600 dark:text-slate-300 text-[11px] flex items-center gap-1.5"
+                                        >
+                                          <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
+                                          <span>{line}</span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                ))
+                              )}
+                            </div>
 
-                                    return (
-                                      <div
-                                        key={grade.gradeName}
-                                        className="rounded border border-purple-200/80 dark:border-purple-900/50 bg-white dark:bg-slate-900 overflow-hidden"
-                                      >
-                                        {/* Grade Row */}
-                                        <div className="flex items-center justify-between px-2 py-1 bg-gradient-to-r from-purple-50/80 to-white dark:from-purple-950/40 dark:to-slate-900 hover:bg-purple-50 transition-colors">
-                                          <div className="flex items-center gap-2">
-                                            <button
-                                              type="button"
-                                              onClick={() =>
-                                                toggleGrade(
-                                                  variety.varietyName,
-                                                  size.sizeName,
-                                                  grade.gradeName
-                                                )
-                                              }
-                                              className="w-4 h-4 flex items-center justify-center rounded text-purple-700 dark:text-purple-400 hover:bg-purple-200/50"
-                                            >
-                                              {isGrExpanded ? (
-                                                <ChevronDown className="w-3 h-3" />
-                                              ) : (
-                                                <ChevronRight className="w-3 h-3" />
-                                              )}
-                                            </button>
-
-                                            <Award className="w-3 h-3 text-purple-600 dark:text-purple-400" />
-                                            <span className="font-semibold text-purple-900 dark:text-purple-300 text-[11px]">
-                                              {grade.gradeName}
-                                            </span>
-
-                                            {/* Small inline pencil icon directly beside Grade */}
-                                            <button
-                                              type="button"
-                                              onClick={() =>
-                                                setEditState({
-                                                  type: "grade",
-                                                  variety: variety.varietyName,
-                                                  size: size.sizeName,
-                                                  initialValue: grade.gradeName,
-                                                  currentValue: grade.gradeName,
-                                                })
-                                              }
-                                              className="w-4 h-4 flex items-center justify-center rounded hover:bg-purple-200/60 text-purple-700 dark:text-purple-400"
-                                              title="Edit Grade"
-                                            >
-                                              <Edit2 className="w-2.5 h-2.5 stroke-[2.2]" />
-                                            </button>
-
-                                            <span className="text-[9.5px] px-1.5 py-0.2 rounded bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 font-medium">
-                                              {grade.brands.length} {grade.brands.length === 1 ? "Brand" : "Brands"}
-                                            </span>
-                                          </div>
-
-                                          {/* Grade actions: + Add Brand, Delete Grade */}
-                                          <div className="flex items-center gap-1">
-                                            <button
-                                              type="button"
-                                              onClick={() =>
-                                                setQuickAddState({
-                                                  level: "brand",
-                                                  variety: variety.varietyName,
-                                                  size: size.sizeName,
-                                                  grade: grade.gradeName,
-                                                  name: "",
-                                                })
-                                              }
-                                              className="px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900 border border-emerald-200 dark:border-emerald-800 font-bold text-[10px] flex items-center gap-0.5"
-                                              title="Add Brand under this Grade"
-                                            >
-                                              <Plus className="w-2.5 h-2.5 stroke-[2.5]" />
-                                              Brand
-                                            </button>
-
-                                            <button
-                                              type="button"
-                                              onClick={() =>
-                                                handleDeleteNode("grade", {
-                                                  variety: variety.varietyName,
-                                                  size: size.sizeName,
-                                                  grade: grade.gradeName,
-                                                  label: grade.gradeName,
-                                                })
-                                              }
-                                              className="w-4 h-4 flex items-center justify-center rounded text-rose-500 hover:bg-rose-100"
-                                              title="Delete this Grade"
-                                            >
-                                              <Trash2 className="w-2.5 h-2.5" />
-                                            </button>
-                                          </div>
-                                        </div>
-
-                                        {/* ---------------- Level 4: Brands under Grade ---------------- */}
-                                        {isGrExpanded && (
-                                          <div className="pl-4 pr-1.5 py-1.5 space-y-1.5 border-t border-purple-100 dark:border-purple-950/60 bg-purple-50/20 dark:bg-slate-950/20">
-                                            {grade.brands.length === 0 ? (
-                                              <p className="text-slate-400 text-[10px] italic pl-2">
-                                                No brands under this grade.
-                                              </p>
-                                            ) : (
-                                              grade.brands.map((brand) => {
-                                                const brandKey = `${variety.varietyName}:::${size.sizeName}:::${grade.gradeName}:::${brand.brandName}`;
-                                                const isBExpanded = expandedBrands.has(brandKey);
-
-                                                return (
-                                                  <div
-                                                    key={brand.variationId}
-                                                    className="rounded border border-emerald-200/80 dark:border-emerald-900/50 bg-white dark:bg-slate-900 overflow-hidden"
-                                                  >
-                                                    {/* Brand Row */}
-                                                    <div className="flex items-center justify-between px-2 py-1 bg-gradient-to-r from-emerald-50/80 to-white dark:from-emerald-950/40 dark:to-slate-900 hover:bg-emerald-50 transition-colors">
-                                                      <div className="flex items-center gap-2">
-                                                        <button
-                                                          type="button"
-                                                          onClick={() =>
-                                                            toggleBrand(
-                                                              variety.varietyName,
-                                                              size.sizeName,
-                                                              grade.gradeName,
-                                                              brand.brandName
-                                                            )
-                                                          }
-                                                          className="w-4 h-4 flex items-center justify-center rounded text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200/50"
-                                                        >
-                                                          {isBExpanded ? (
-                                                            <ChevronDown className="w-3 h-3" />
-                                                          ) : (
-                                                            <ChevronRight className="w-3 h-3" />
-                                                          )}
-                                                        </button>
-
-                                                        <Package className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                                                        <span className="font-bold text-emerald-900 dark:text-emerald-300 text-[11px]">
-                                                          {brand.brandName}
-                                                        </span>
-
-                                                        {/* Small inline pencil icon directly beside Brand */}
-                                                        <button
-                                                          type="button"
-                                                          onClick={() =>
-                                                            setEditState({
-                                                              type: "brand",
-                                                              variety: variety.varietyName,
-                                                              size: size.sizeName,
-                                                              grade: grade.gradeName,
-                                                              initialValue: brand.brandName,
-                                                              currentValue: brand.brandName,
-                                                            })
-                                                          }
-                                                          className="w-4 h-4 flex items-center justify-center rounded hover:bg-emerald-200/60 text-emerald-700 dark:text-emerald-400"
-                                                          title="Edit Brand"
-                                                        >
-                                                          <Edit2 className="w-2.5 h-2.5 stroke-[2.2]" />
-                                                        </button>
-
-                                                        <span className="text-[9.5px] px-1.5 py-0.2 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-semibold font-mono">
-                                                          {brand.extraDetails.length} {brand.extraDetails.length === 1 ? "Detail" : "Extra Details"}
-                                                        </span>
-                                                      </div>
-
-                                                      {/* Brand Actions: + Add Extra Detail, Delete Brand */}
-                                                      <div className="flex items-center gap-1">
-                                                        <button
-                                                          type="button"
-                                                          onClick={() =>
-                                                            setQuickAddState({
-                                                              level: "extraDetail",
-                                                              variationId: brand.variationId,
-                                                              name: "",
-                                                              subValue: "",
-                                                            })
-                                                          }
-                                                          className="px-2 py-0.5 rounded bg-rose-50 dark:bg-rose-950 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900 border border-rose-200 dark:border-rose-800 font-bold text-[10px] flex items-center gap-0.5"
-                                                          title="Add Extra Detail under this Brand"
-                                                        >
-                                                          <Plus className="w-2.5 h-2.5 stroke-[2.5]" />
-                                                          Extra Detail
-                                                        </button>
-
-                                                        <button
-                                                          type="button"
-                                                          onClick={() =>
-                                                            handleDeleteNode("brand", {
-                                                              variety: variety.varietyName,
-                                                              size: size.sizeName,
-                                                              grade: grade.gradeName,
-                                                              brand: brand.brandName,
-                                                              label: brand.brandName,
-                                                            })
-                                                          }
-                                                          className="w-4 h-4 flex items-center justify-center rounded text-rose-500 hover:bg-rose-100"
-                                                          title="Delete this Brand"
-                                                        >
-                                                          <Trash2 className="w-2.5 h-2.5" />
-                                                        </button>
-                                                      </div>
-                                                    </div>
-
-                                                    {/* ---------------- Level 5 & 6: Extra Details & Detail Lines ---------------- */}
-                                                    {isBExpanded && (
-                                                      <div className="pl-4 pr-1.5 py-1.5 space-y-1.5 border-t border-emerald-100 dark:border-emerald-950/60 bg-emerald-50/20 dark:bg-slate-950/20">
-                                                        {brand.extraDetails.length === 0 ? (
-                                                          <p className="text-slate-400 text-[10px] italic pl-2">
-                                                            No Extra Details recorded. Click "+ Extra Detail" above to add specifications.
-                                                          </p>
-                                                        ) : (
-                                                          brand.extraDetails.map((detail) => {
-                                                            const isDExpanded = expandedDetails.has(detail.id);
-
-                                                            return (
-                                                              <div
-                                                                key={detail.id}
-                                                                className="rounded border border-rose-200/80 dark:border-rose-900/50 bg-white dark:bg-slate-900 overflow-hidden"
-                                                              >
-                                                                {/* Level 5: Extra Detail Row */}
-                                                                <div className="flex items-center justify-between px-2 py-1 bg-gradient-to-r from-rose-50/80 to-white dark:from-rose-950/40 dark:to-slate-900 hover:bg-rose-50 transition-colors">
-                                                                  <div className="flex items-center gap-2">
-                                                                    <button
-                                                                      type="button"
-                                                                      onClick={() => toggleDetail(detail.id)}
-                                                                      className="w-3.5 h-3.5 flex items-center justify-center rounded text-rose-700 dark:text-rose-400 hover:bg-rose-200/50"
-                                                                    >
-                                                                      {isDExpanded ? (
-                                                                        <ChevronDown className="w-3 h-3" />
-                                                                      ) : (
-                                                                        <ChevronRight className="w-3 h-3" />
-                                                                      )}
-                                                                    </button>
-
-                                                                    <FileText className="w-3 h-3 text-rose-600 dark:text-rose-400" />
-                                                                    <span className="font-semibold text-rose-900 dark:text-rose-300 text-[10.5px]">
-                                                                      {detail.title}
-                                                                    </span>
-
-                                                                    {/* Small inline pencil icon directly beside Extra Detail */}
-                                                                    <button
-                                                                      type="button"
-                                                                      onClick={() =>
-                                                                        setEditState({
-                                                                          type: "extraDetail",
-                                                                          variationId: brand.variationId,
-                                                                          detailId: detail.id,
-                                                                          initialValue: detail.title,
-                                                                          currentValue: detail.title,
-                                                                        })
-                                                                      }
-                                                                      className="w-3.5 h-3.5 flex items-center justify-center rounded hover:bg-rose-200/60 text-rose-700 dark:text-rose-400"
-                                                                      title="Edit Extra Detail Title"
-                                                                    >
-                                                                      <Edit2 className="w-2.5 h-2.5 stroke-[2.2]" />
-                                                                    </button>
-
-                                                                    <span className="text-[9px] px-1.5 py-0.2 rounded bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300 font-medium">
-                                                                      {detail.lines.length} {detail.lines.length === 1 ? "Line" : "Lines"}
-                                                                    </span>
-                                                                  </div>
-
-                                                                  {/* Extra Detail Actions: + Add Detail Line, Delete Detail */}
-                                                                  <div className="flex items-center gap-1">
-                                                                    <button
-                                                                      type="button"
-                                                                      onClick={() =>
-                                                                        setQuickAddState({
-                                                                          level: "detailLine",
-                                                                          variationId: brand.variationId,
-                                                                          detailId: detail.id,
-                                                                          name: "",
-                                                                        })
-                                                                      }
-                                                                      className="px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 font-bold text-[9.5px] flex items-center gap-0.5"
-                                                                      title="Add Detail Line under this Extra Detail"
-                                                                    >
-                                                                      <Plus className="w-2 h-2 stroke-[2.5]" />
-                                                                      Line
-                                                                    </button>
-
-                                                                    <button
-                                                                      type="button"
-                                                                      onClick={() =>
-                                                                        handleDeleteNode("extraDetail", {
-                                                                          variationId: brand.variationId,
-                                                                          detailId: detail.id,
-                                                                          label: detail.title,
-                                                                        })
-                                                                      }
-                                                                      className="w-3.5 h-3.5 flex items-center justify-center rounded text-rose-500 hover:bg-rose-100"
-                                                                      title="Delete this Extra Detail"
-                                                                    >
-                                                                      <Trash2 className="w-2.5 h-2.5" />
-                                                                    </button>
-                                                                  </div>
-                                                                </div>
-
-                                                                {/* ---------------- Level 6: Detail Lines ---------------- */}
-                                                                {isDExpanded && (
-                                                                  <div className="pl-6 pr-2 py-1 space-y-1 border-t border-rose-100 dark:border-rose-950/60 bg-rose-50/15 dark:bg-slate-950/15">
-                                                                    {detail.lines.length === 0 ? (
-                                                                      <p className="text-slate-400 text-[10px] italic">
-                                                                        No detail lines.
-                                                                      </p>
-                                                                    ) : (
-                                                                      detail.lines.map((line, lIdx) => (
-                                                                        <div
-                                                                          key={lIdx}
-                                                                          className="flex items-center justify-between gap-2 py-0.5 text-[10.5px] text-slate-700 dark:text-slate-300 group"
-                                                                        >
-                                                                          <div className="flex items-center gap-1.5">
-                                                                            <span className="w-1.5 h-1.5 rounded-full bg-rose-400 shrink-0" />
-                                                                            <span>{line}</span>
-
-                                                                            {/* Small inline pencil icon directly beside Detail Line */}
-                                                                            <button
-                                                                              type="button"
-                                                                              onClick={() =>
-                                                                                setEditState({
-                                                                                  type: "detailLine",
-                                                                                  variationId: brand.variationId,
-                                                                                  detailId: detail.id,
-                                                                                  lineIndex: lIdx,
-                                                                                  initialValue: line,
-                                                                                  currentValue: line,
-                                                                                })
-                                                                              }
-                                                                              className="w-3.5 h-3.5 flex items-center justify-center rounded opacity-60 group-hover:opacity-100 hover:bg-slate-200 dark:hover:bg-slate-800 text-blue-600 dark:text-blue-400 transition-opacity"
-                                                                              title="Edit this Detail Line"
-                                                                            >
-                                                                              <Edit2 className="w-2.5 h-2.5 stroke-[2.2]" />
-                                                                            </button>
-                                                                          </div>
-
-                                                                          <button
-                                                                            type="button"
-                                                                            onClick={() =>
-                                                                              handleDeleteNode("detailLine", {
-                                                                                variationId: brand.variationId,
-                                                                                detailId: detail.id,
-                                                                                lineIndex: lIdx,
-                                                                                label: line,
-                                                                              })
-                                                                            }
-                                                                            className="w-3.5 h-3.5 flex items-center justify-center rounded text-rose-400 hover:text-rose-600 opacity-60 group-hover:opacity-100 transition-opacity"
-                                                                            title="Delete this Detail Line"
-                                                                          >
-                                                                            <Trash2 className="w-2.5 h-2.5" />
-                                                                          </button>
-                                                                        </div>
-                                                                      ))
-                                                                    )}
-                                                                  </div>
-                                                                )}
-                                                              </div>
-                                                            );
-                                                          })
-                                                        )}
-                                                      </div>
-                                                    )}
-                                                  </div>
-                                                );
-                                              })
-                                            )}
-                                          </div>
-                                        )}
-                                      </div>
-                                    );
-                                  })
-                                )}
-                              </div>
-                            )}
+                            <div>
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEdit(v)}
+                                className="px-2 py-1 text-[11px] font-medium text-purple-700 bg-purple-100/70 hover:bg-purple-200/80 dark:bg-purple-900/50 dark:text-purple-300 rounded transition-colors"
+                              >
+                                Edit Specs
+                              </button>
+                            </div>
                           </div>
-                        );
-                      })
+                        </td>
+                      </tr>
                     )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                  </React.Fragment>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
 
       {/* ----------------------------------------------------------------- */}
-      {/* 3. Small Modal / Popover: Compact Edit (Pencil Click)             */}
+      {/* 3. Modal: Edit Combination                                        */}
       {/* ----------------------------------------------------------------- */}
-      {editState && (
+      {editingVariation && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-2xs flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl w-full max-w-sm p-4 animate-in fade-in zoom-in-95 duration-100">
-            <div className="flex items-center justify-between pb-2 mb-3 border-b border-slate-200 dark:border-slate-800">
-              <span className="font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                <Edit2 className="w-3.5 h-3.5 text-blue-600" />
-                Edit {editState.type === "extraDetail" ? "Extra Detail Title" : editState.type === "detailLine" ? "Detail Line" : editState.type}
-              </span>
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl w-full max-w-md p-5 animate-in fade-in zoom-in-95 duration-100">
+            <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-200 dark:border-slate-800">
+              <div>
+                <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                  <Pencil className="w-4 h-4 text-[#059669]" />
+                  Edit Combination — {goods.name}
+                </h4>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Update variety, size, grade, brand, and extra reports
+                </p>
+              </div>
               <button
                 type="button"
-                onClick={() => setEditState(null)}
-                className="w-5 h-5 flex items-center justify-center rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700"
+                onClick={() => setEditingVariation(null)}
+                className="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700"
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSaveEdit();
-              }}
-              className="space-y-3"
-            >
-              <div>
-                <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                  Existing Value:
-                </label>
-                <Input
-                  type="text"
-                  autoFocus
-                  value={editState.currentValue}
-                  onChange={(e) => setEditState({ ...editState, currentValue: e.target.value })}
-                  className="text-xs h-8 bg-slate-50 dark:bg-slate-800 font-medium"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-1">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setEditState(null)}
-                  className="h-7 text-xs px-2.5"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  size="sm"
-                  disabled={busy}
-                  className="h-7 text-xs px-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold"
-                >
-                  {busy ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Check className="w-3 h-3 mr-1" />}
-                  Save Changes
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ----------------------------------------------------------------- */}
-      {/* 4. Small Modal / Popover: Quick Add Child                         */}
-      {/* ----------------------------------------------------------------- */}
-      {quickAddState && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-2xs flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl w-full max-w-sm p-4 animate-in fade-in zoom-in-95 duration-100">
-            <div className="flex items-center justify-between pb-2 mb-3 border-b border-slate-200 dark:border-slate-800">
-              <span className="font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                <Plus className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
-                Add New {quickAddState.level === "extraDetail" ? "Extra Detail" : quickAddState.level === "detailLine" ? "Detail Line" : quickAddState.level}
-              </span>
-              <button
-                type="button"
-                onClick={() => setQuickAddState(null)}
-                className="w-5 h-5 flex items-center justify-center rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSaveQuickAdd();
-              }}
-              className="space-y-3"
-            >
-              <div>
-                <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                  {quickAddState.level === "variety"
-                    ? "Variety / Cultivar Name (e.g. IMPAX, NONPAREIL):"
-                    : quickAddState.level === "size"
-                    ? "Size / Caliber (e.g. 18–20, 20–22, 23–25):"
-                    : quickAddState.level === "grade"
-                    ? "Grade / Quality (e.g. Premium Grade, Supreme):"
-                    : quickAddState.level === "brand"
-                    ? "Brand / Label (e.g. DGT, OGT ONE):"
-                    : quickAddState.level === "extraDetail"
-                    ? "Extra Detail Title (e.g. Premium Quality, Packaging):"
-                    : "Detail Line Text (e.g. Moisture: max 5%):"}
-                </label>
-                <Input
-                  type="text"
-                  autoFocus
-                  placeholder={`Enter ${quickAddState.level} name...`}
-                  value={quickAddState.name}
-                  onChange={(e) => setQuickAddState({ ...quickAddState, name: e.target.value })}
-                  className="text-xs h-8 bg-slate-50 dark:bg-slate-800 font-medium"
-                />
-              </div>
-
-              {quickAddState.level === "extraDetail" && (
+            <form onSubmit={handleSaveEdit} className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                {/* Variety */}
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                    Initial Detail Lines (one per line, optional):
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Variety
                   </label>
-                  <textarea
-                    rows={2}
-                    placeholder="Moisture: max 5%&#10;Foreign material: max 0.05%"
-                    value={quickAddState.subValue || ""}
+                  <Input
+                    type="text"
+                    required
+                    value={editingVariation.variety}
                     onChange={(e) =>
-                      setQuickAddState({ ...quickAddState, subValue: e.target.value })
+                      setEditingVariation({ ...editingVariation, variety: e.target.value })
                     }
-                    className="w-full text-xs p-2 rounded-md border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800"
+                    className="h-8 text-xs font-semibold"
                   />
                 </div>
-              )}
 
-              <div className="flex justify-end gap-2 pt-1">
+                {/* Size */}
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Size
+                  </label>
+                  <Input
+                    type="text"
+                    required
+                    value={editingVariation.size}
+                    onChange={(e) =>
+                      setEditingVariation({ ...editingVariation, size: e.target.value })
+                    }
+                    className="h-8 text-xs font-semibold font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                {/* Grade */}
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Grade
+                  </label>
+                  <Input
+                    type="text"
+                    value={editingVariation.grade}
+                    onChange={(e) =>
+                      setEditingVariation({ ...editingVariation, grade: e.target.value })
+                    }
+                    className="h-8 text-xs font-semibold"
+                  />
+                </div>
+
+                {/* Brand */}
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Brand
+                  </label>
+                  <Input
+                    type="text"
+                    required
+                    value={editingVariation.brand}
+                    onChange={(e) =>
+                      setEditingVariation({ ...editingVariation, brand: e.target.value })
+                    }
+                    className="h-8 text-xs font-semibold"
+                  />
+                </div>
+              </div>
+
+              {/* Extra Reports / Specifications */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Extra Reports / Specifications (one per line)
+                </label>
+                <textarea
+                  rows={4}
+                  placeholder="Moisture: max 5%&#10;Foreign Material: max 0.05%&#10;Kernel Yield: 50%"
+                  value={editingVariation.extraDetailsText}
+                  onChange={(e) =>
+                    setEditingVariation({
+                      ...editingVariation,
+                      extraDetailsText: e.target.value,
+                    })
+                  }
+                  className="w-full text-xs p-2.5 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 focus:outline-none focus:ring-1 focus:ring-[#059669] font-mono"
+                />
+              </div>
+
+              <div className="flex justify-between items-center pt-2 border-t border-slate-200 dark:border-slate-800">
                 <Button
                   type="button"
                   size="sm"
-                  variant="outline"
-                  onClick={() => setQuickAddState(null)}
-                  className="h-7 text-xs px-2.5"
+                  variant="ghost"
+                  onClick={() =>
+                    handleDeleteVariation(
+                      editingVariation.id,
+                      `${editingVariation.variety} / ${editingVariation.size} / ${editingVariation.brand}`
+                    )
+                  }
+                  className="h-8 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40"
                 >
-                  Cancel
+                  <Trash2 className="w-3.5 h-3.5 mr-1" />
+                  Delete
                 </Button>
-                <Button
-                  type="submit"
-                  size="sm"
-                  disabled={busy}
-                  className="h-7 text-xs px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
-                >
-                  {busy ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Plus className="w-3 h-3 mr-1" />}
-                  Add Node
-                </Button>
+
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setEditingVariation(null)}
+                    className="h-8 text-xs px-3"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    size="sm"
+                    disabled={busy}
+                    className="h-8 text-xs px-4 bg-[#059669] hover:bg-[#047857] text-white font-bold"
+                  >
+                    {busy ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
+                    ) : (
+                      <Check className="w-3.5 h-3.5 mr-1.5" />
+                    )}
+                    Save Changes
+                  </Button>
+                </div>
               </div>
             </form>
           </div>
@@ -1539,7 +801,7 @@ export function GoodsHierarchyTree({ goods, onRefresh }: GoodsHierarchyTreeProps
       )}
 
       {/* ----------------------------------------------------------------- */}
-      {/* 5. Modal: Add Full Variant Combination                            */}
+      {/* 4. Modal: Add Full Variant Combination                            */}
       {/* ----------------------------------------------------------------- */}
       {showAddComboModal && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-2xs flex items-center justify-center p-4">
@@ -1547,11 +809,11 @@ export function GoodsHierarchyTree({ goods, onRefresh }: GoodsHierarchyTreeProps
             <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-200 dark:border-slate-800">
               <div>
                 <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-emerald-600" />
-                  Add Variant Combination for {goods.name}
+                  <Sparkles className="w-4 h-4 text-[#059669]" />
+                  Add Combination — {goods.name}
                 </h4>
                 <p className="text-[11px] text-slate-400 mt-0.5">
-                  Internal structure: Variety → Size → Grade → Brand → Extra Details → Detail Lines
+                  Create a new Variety → Size → Grade → Brand combination
                 </p>
               </div>
               <button
@@ -1573,10 +835,10 @@ export function GoodsHierarchyTree({ goods, onRefresh }: GoodsHierarchyTreeProps
                   <Input
                     type="text"
                     required
-                    placeholder="e.g. IMPAX, NONPAREIL, CARMEL"
+                    placeholder="e.g. NPEX, IMPAX, CARMEL"
                     value={comboForm.variety}
                     onChange={(e) => setComboForm({ ...comboForm, variety: e.target.value })}
-                    className="h-8 text-xs font-medium"
+                    className="h-8 text-xs font-semibold"
                   />
                 </div>
 
@@ -1588,10 +850,10 @@ export function GoodsHierarchyTree({ goods, onRefresh }: GoodsHierarchyTreeProps
                   <Input
                     type="text"
                     required
-                    placeholder="e.g. 18–20, 20–22, 23–25"
+                    placeholder="e.g. 23 / 25, 18 / 20"
                     value={comboForm.size}
                     onChange={(e) => setComboForm({ ...comboForm, size: e.target.value })}
-                    className="h-8 text-xs font-mono font-medium"
+                    className="h-8 text-xs font-mono font-semibold"
                   />
                 </div>
 
@@ -1602,25 +864,25 @@ export function GoodsHierarchyTree({ goods, onRefresh }: GoodsHierarchyTreeProps
                   </label>
                   <Input
                     type="text"
-                    placeholder="e.g. Premium Grade, Supreme"
+                    placeholder="e.g. Standard, Premium, A Grade"
                     value={comboForm.grade}
                     onChange={(e) => setComboForm({ ...comboForm, grade: e.target.value })}
-                    className="h-8 text-xs font-medium"
+                    className="h-8 text-xs font-semibold"
                   />
                 </div>
 
                 {/* 4. Brand */}
                 <div>
                   <label className="block text-[11px] font-bold text-emerald-700 dark:text-emerald-400 mb-1">
-                    4. Brand / Packing Label *
+                    4. Brand / Label *
                   </label>
                   <Input
                     type="text"
                     required
-                    placeholder="e.g. DGT, OGT ONE, DEFAULT"
+                    placeholder="e.g. DGT.LLC, DGT, DADI HEALTHY"
                     value={comboForm.brand}
                     onChange={(e) => setComboForm({ ...comboForm, brand: e.target.value })}
-                    className="h-8 text-xs font-medium"
+                    className="h-8 text-xs font-semibold"
                   />
                 </div>
               </div>
@@ -1628,11 +890,11 @@ export function GoodsHierarchyTree({ goods, onRefresh }: GoodsHierarchyTreeProps
               {/* 5. Extra Detail Title */}
               <div>
                 <label className="block text-[11px] font-bold text-rose-700 dark:text-rose-400 mb-1">
-                  5. Extra Detail / Specification Title
+                  5. Specification Title
                 </label>
                 <Input
                   type="text"
-                  placeholder="e.g. Premium Quality, Export Specs, Packaging"
+                  placeholder="e.g. Quality Specs, Export Standard"
                   value={comboForm.detailTitle}
                   onChange={(e) => setComboForm({ ...comboForm, detailTitle: e.target.value })}
                   className="h-8 text-xs font-medium"
@@ -1642,14 +904,14 @@ export function GoodsHierarchyTree({ goods, onRefresh }: GoodsHierarchyTreeProps
               {/* 6. Detail Lines */}
               <div>
                 <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  6. Detail Lines (one per line)
+                  6. Extra Reports / Detail Lines (one per line)
                 </label>
                 <textarea
                   rows={3}
                   placeholder="Moisture: max 5%&#10;Foreign Material: max 0.05%&#10;Kernel Yield: 50%"
                   value={comboForm.detailLines}
                   onChange={(e) => setComboForm({ ...comboForm, detailLines: e.target.value })}
-                  className="w-full text-xs p-2.5 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono"
+                  className="w-full text-xs p-2.5 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 focus:outline-none focus:ring-1 focus:ring-[#059669] font-mono"
                 />
               </div>
 
@@ -1667,10 +929,79 @@ export function GoodsHierarchyTree({ goods, onRefresh }: GoodsHierarchyTreeProps
                   type="submit"
                   size="sm"
                   disabled={busy}
-                  className="h-8 text-xs px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+                  className="h-8 text-xs px-4 bg-[#059669] hover:bg-[#047857] text-white font-bold"
                 >
-                  {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <Plus className="w-3.5 h-3.5 mr-1.5 stroke-[2.5]" />}
+                  {busy ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
+                  ) : (
+                    <Plus className="w-3.5 h-3.5 mr-1.5 stroke-[2.5]" />
+                  )}
                   Add Combination
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ----------------------------------------------------------------- */}
+      {/* 5. Modal: Add Single Variety                                      */}
+      {/* ----------------------------------------------------------------- */}
+      {showAddVarietyModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-2xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl w-full max-w-sm p-5 animate-in fade-in zoom-in-95 duration-100">
+            <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-200 dark:border-slate-800">
+              <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <Plus className="w-4 h-4 text-[#d97706]" />
+                Add Variety to {goods.name}
+              </h4>
+              <button
+                type="button"
+                onClick={() => setShowAddVarietyModal(false)}
+                className="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddVariety} className="space-y-3">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Variety Name *
+                </label>
+                <Input
+                  type="text"
+                  required
+                  placeholder="e.g. NPEX, IMPAX, CARMEL"
+                  value={varietyInput}
+                  onChange={(e) => setVarietyInput(e.target.value)}
+                  className="h-8 text-xs font-semibold"
+                  autoFocus
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowAddVarietyModal(false)}
+                  className="h-8 text-xs px-3"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={busy}
+                  className="h-8 text-xs px-4 bg-[#d97706] hover:bg-[#b45309] text-white font-bold"
+                >
+                  {busy ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
+                  ) : (
+                    <Plus className="w-3.5 h-3.5 mr-1.5 stroke-[2.5]" />
+                  )}
+                  Add Variety
                 </Button>
               </div>
             </form>
