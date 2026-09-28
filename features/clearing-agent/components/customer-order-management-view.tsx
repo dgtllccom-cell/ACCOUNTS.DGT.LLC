@@ -85,7 +85,6 @@ import {
 import { CustomerOrderActivityTimelineModal } from "@/features/clearing-agent/components/customer-order-activity-timeline-modal";
 import { CustomerOrderReturnCorrectionModal } from "@/features/clearing-agent/components/customer-order-return-correction-modal";
 import { CustomerOrderStageAssignmentModal } from "@/features/clearing-agent/components/customer-order-stage-assignment-modal";
-import { CustomerOrderRouteBuilder } from "@/features/clearing-agent/components/customer-order-route-builder";
 
 type TransportMode = "by_sea" | "by_road" | "by_air" | "by_rail";
 type MovementType = "import" | "export" | "transit" | "up_transit" | "down_transit" | "domestic";
@@ -5402,80 +5401,53 @@ function Step1BookingCustomer({
             </div>
           )}
 
-          {/* ROW 1: Customer Account & Route Via / Corridor (Side-by-Side) */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            {/* 1. Customer Account SearchSelect */}
-            <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-2xs flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                    <Users className="h-4 w-4 text-blue-600" />
-                    <span>{tt("customer_account_label", "Customer Account")} *</span>
-                  </label>
-                  {formData.customer_name ? (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
-                      ✓ {formData.customer_name}
-                    </span>
-                  ) : null}
-                </div>
-
-                <SearchSelect
-                  label=""
-                  value={formData.customer_id}
-                  options={customerOptions}
-                  placeholder={tt("select_customer_account_ph", "Select Customer Account...")}
-                  onValueChange={handleCustomerSelection}
-                  disabled={loading}
-                  searchPlaceholder="Search customer by name, code or mobile..."
-                  emptyLabel="No matching customers found"
-                />
+          {/* Customer Account SearchSelect */}
+          <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                  <Users className="h-4 w-4 text-blue-600" />
+                  <span>{tt("customer_account_label", "Customer Account")} *</span>
+                </label>
+                {formData.customer_name ? (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                    ✓ {formData.customer_name}
+                  </span>
+                ) : null}
               </div>
 
-              {/* Tag summary underneath input */}
-              {selectedCustomer || selectedAccount ? (
-                <div className="flex flex-wrap items-center gap-2 pt-2 text-xs text-slate-600 dark:text-slate-300 border-t border-slate-100 dark:border-slate-800/60 mt-1">
-                  <span className="font-bold text-slate-900 dark:text-white">
-                    {selectedCustomer?.customer_name || selectedAccount?.name}
-                  </span>
-                  <span className="text-slate-300 dark:text-slate-600">•</span>
-                  <span className="font-mono text-slate-500">
-                    Code: {selectedAccount?.code || selectedCustomer?.person_code || "—"}
-                  </span>
-                  <span className="text-slate-300 dark:text-slate-600">•</span>
-                  <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                    Bal: {selectedAccount?.currency || "USD"} {Number(selectedAccount?.current_balance || 0).toLocaleString()}
-                  </span>
-                  <span className="text-slate-300 dark:text-slate-600">•</span>
-                  <span className="text-slate-500">
-                    {selectedCustomer?.city_name ? `${selectedCustomer.city_name}, ` : ""}{selectedCustomer?.country_name || ""}
-                  </span>
-                </div>
-              ) : null}
-            </div>
-
-            {/* 2. Sequenced Multi-Leg Route & Transit Corridor Pathway Builder */}
-            <div className="rounded-xl border border-emerald-200/90 bg-white dark:bg-slate-900 p-2.5 shadow-2xs dark:border-emerald-800/80">
-              <CustomerOrderRouteBuilder
-                routeName={formData.route_name}
-                transportMode={formData.transport_mode}
-                loadingCountryId={formData.loading_country_id}
-                loadingCountryName={formData.loading_country_name}
-                receivingCountryId={formData.receiving_country_id}
-                receivingCountryName={formData.receiving_country_name}
-                loadingCityName={formData.loading_city_name}
-                destinationCityName={formData.destination_city}
-                legs={formData.legs || []}
-                onChange={(routeName, legs) => {
-                  setFormData((c) => ({
-                    ...c,
-                    route_name: routeName,
-                    legs: legs
-                  }));
-                }}
-                countries={countries}
-                lang={lang}
+              <SearchSelect
+                label=""
+                value={formData.customer_id}
+                options={customerOptions}
+                placeholder={tt("select_customer_account_ph", "Select Customer Account...")}
+                onValueChange={handleCustomerSelection}
+                disabled={loading}
+                searchPlaceholder="Search customer by name, code or mobile..."
+                emptyLabel="No matching customers found"
               />
             </div>
+
+            {/* Tag summary underneath input */}
+            {selectedCustomer || selectedAccount ? (
+              <div className="flex flex-wrap items-center gap-2 pt-2 text-xs text-slate-600 dark:text-slate-300 border-t border-slate-100 dark:border-slate-800/60 mt-1">
+                <span className="font-bold text-slate-900 dark:text-white">
+                  {selectedCustomer?.customer_name || selectedAccount?.name}
+                </span>
+                <span className="text-slate-300 dark:text-slate-600">•</span>
+                <span className="font-mono text-slate-500">
+                  Code: {selectedAccount?.code || selectedCustomer?.person_code || "—"}
+                </span>
+                <span className="text-slate-300 dark:text-slate-600">•</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                  Bal: {selectedAccount?.currency || "USD"} {Number(selectedAccount?.current_balance || 0).toLocaleString()}
+                </span>
+                <span className="text-slate-300 dark:text-slate-600">•</span>
+                <span className="text-slate-500">
+                  {selectedCustomer?.city_name ? `${selectedCustomer.city_name}, ` : ""}{selectedCustomer?.country_name || ""}
+                </span>
+              </div>
+            ) : null}
           </div>
 
           {/* ROW 2: Shipping / Transport Mode & Movement Type (Wider 2-Column Grid) */}
