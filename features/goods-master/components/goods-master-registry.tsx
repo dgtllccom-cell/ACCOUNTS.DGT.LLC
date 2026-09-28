@@ -29,6 +29,7 @@ import {
   FileText,
   Boxes,
   HelpCircle,
+  MoreVertical,
 } from "lucide-react";
 import { Th } from "@/components/ui/translated-th";
 import { UniversalReportModal } from "@/components/ui/universal-report-modal";
@@ -112,6 +113,7 @@ export function GoodsMasterRegistry() {
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [summary, setSummary] = useState({ total: 0, active: 0, inactive: 0 });
   const [expandedGoodsIds, setExpandedGoodsIds] = useState<Set<string>>(new Set());
+  const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
   const [showReport, setShowReport] = useState(false);
 
   // Active sub-tab inside expanded row: goodsId -> "combinations" | "variety" | "size" | "brand" | "extra_details"
@@ -256,6 +258,15 @@ export function GoodsMasterRegistry() {
     loadMasterParameters();
   }, [statusFilter, lang]);
 
+  useEffect(() => {
+    if (!openActionMenuId) return;
+    function handleClickOutside() {
+      setOpenActionMenuId(null);
+    }
+    window.addEventListener("click", handleClickOutside);
+    return () => window.removeEventListener("click", handleClickOutside);
+  }, [openActionMenuId]);
+
   // Toggle Row Expansion
   function toggleRowExpand(goodsItem: GoodsRecord) {
     setExpandedGoodsIds((prev) => {
@@ -351,6 +362,7 @@ export function GoodsMasterRegistry() {
           category: masterForm.category.trim() || null,
           originCountry: masterForm.originCountry.trim() || null,
           originCountryId: masterForm.originCountryId || null,
+          extraDetails: masterForm.description.trim() || null,
           isActive: masterForm.isActive,
         });
 
@@ -360,6 +372,7 @@ export function GoodsMasterRegistry() {
           chs_code: masterForm.chsCode.trim().toUpperCase(),
           category: masterForm.category.trim(),
           origin_country: masterForm.originCountry.trim(),
+          extra_details: masterForm.description.trim(),
           is_active: masterForm.isActive,
         };
         setActiveModalGoods(updated);
@@ -701,17 +714,18 @@ export function GoodsMasterRegistry() {
                   <tr className="bg-slate-50/80 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300 font-bold uppercase tracking-wider">
                     <Th className="p-3.5 text-center w-14">#</Th>
                     <Th className="p-3.5 text-left">{translateHeader(lang, "GOODS NAME")}</Th>
-                    <Th className="p-3.5 text-left w-40">{translateHeader(lang, "HS / PCT CODE")}</Th>
-                    <Th className="p-3.5 text-left w-44">{translateHeader(lang, "CATEGORY")}</Th>
-                    <Th className="p-3.5 text-center w-36">{translateHeader(lang, "VARIANTS COUNT")}</Th>
-                    <Th className="p-3.5 text-center w-28">{translateHeader(lang, "STATUS")}</Th>
-                    <Th className="p-3.5 text-center w-36">{translateHeader(lang, "ACTIONS")}</Th>
+                    <Th className="p-3.5 text-left w-36">{translateHeader(lang, "HS / PCT CODE")}</Th>
+                    <Th className="p-3.5 text-left w-36">{translateHeader(lang, "CATEGORY")}</Th>
+                    <Th className="p-3.5 text-left min-w-[220px]">{translateHeader(lang, "DESCRIPTION / COMMERCIAL SPECIFICATION")}</Th>
+                    <Th className="p-3.5 text-center w-32">{translateHeader(lang, "VARIANTS COUNT")}</Th>
+                    <Th className="p-3.5 text-center w-24">{translateHeader(lang, "STATUS")}</Th>
+                    <Th className="p-3.5 text-center w-16">{translateHeader(lang, "ACTIONS")}</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {filteredGoods.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="p-12 text-center text-slate-400">
+                      <td colSpan={8} className="p-12 text-center text-slate-400">
                         <Package className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-700 mb-2" />
                         <p className="text-sm font-medium">No goods items found.</p>
                         <p className="text-xs text-slate-400 mt-1">
@@ -746,12 +760,32 @@ export function GoodsMasterRegistry() {
 
                             {/* 2. Goods Name (Clean title) */}
                             <td className="p-3.5 font-semibold text-slate-900 dark:text-slate-100">
-                              <span className="text-base font-bold">{g.name}</span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-base font-bold">{g.name}</span>
+                                {varCount > 0 && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      toggleRowExpand(g);
+                                    }}
+                                    className="text-slate-400 hover:text-blue-600 transition-colors p-0.5 rounded cursor-pointer"
+                                    title={isExpanded ? "Collapse variations" : "Expand variations"}
+                                  >
+                                    <ChevronDown
+                                      className={cn(
+                                        "w-4 h-4 transition-transform duration-200",
+                                        isExpanded && "rotate-180 text-blue-600"
+                                      )}
+                                    />
+                                  </button>
+                                )}
+                              </div>
                             </td>
 
                             {/* 3. HS / PCT Code */}
                             <td className="p-3.5 font-mono font-bold text-blue-600 dark:text-blue-400 text-sm">
-                              {g.chs_code || "-"}
+                              {g.chs_code || "—"}
                             </td>
 
                             {/* 4. Category */}
@@ -766,21 +800,41 @@ export function GoodsMasterRegistry() {
                               </span>
                             </td>
 
-                            {/* 5. Variants Count */}
+                            {/* 5. Description / Commercial Specification */}
+                            <td className="p-3.5">
+                              {g.extra_details ? (
+                                <span
+                                  className="text-xs text-slate-700 dark:text-slate-300 font-medium line-clamp-2"
+                                  title={g.extra_details}
+                                >
+                                  {g.extra_details}
+                                </span>
+                              ) : (
+                                <span className="text-xs text-slate-300 dark:text-slate-600 font-mono">—</span>
+                              )}
+                            </td>
+
+                            {/* 6. Variants Count */}
                             <td className="p-3.5 text-center">
-                              <span
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleRowExpand(g);
+                                }}
                                 className={cn(
-                                  "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold font-mono tracking-wide border",
+                                  "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold font-mono tracking-wide border cursor-pointer hover:opacity-85 transition-opacity",
                                   varCount > 0
                                     ? "bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/70 dark:text-emerald-300 dark:border-emerald-800"
                                     : "bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700"
                                 )}
+                                title={varCount > 0 ? "Click to toggle variations" : "No variants"}
                               >
                                 {varCount} {varCount === 1 ? "Variant" : "Variants"}
-                              </span>
+                              </button>
                             </td>
 
-                            {/* 6. Status Badge */}
+                            {/* 7. Status Badge */}
                             <td className="p-3.5 text-center">
                               <span
                                 className={cn(
@@ -794,47 +848,79 @@ export function GoodsMasterRegistry() {
                               </span>
                             </td>
 
-                            {/* 7. Actions: Plus (+) expand, Edit, Delete */}
-                            <td className="p-3.5 text-center">
-                              <div className="flex items-center justify-center gap-2">
-                                {/* Circular + or - Button */}
+                            {/* 8. Actions: Three-Dots Menu (⋮) */}
+                            <td className="p-3.5 text-center relative" onClick={(e) => e.stopPropagation()}>
+                              <div className="relative inline-block text-left">
                                 <button
                                   type="button"
-                                  onClick={() => toggleRowExpand(g)}
+                                  onClick={() => setOpenActionMenuId(openActionMenuId === g.id ? null : g.id)}
                                   className={cn(
-                                    "w-7 h-7 rounded-full flex items-center justify-center text-white transition-all shadow-sm shrink-0",
-                                    isExpanded
-                                      ? "bg-blue-600 hover:bg-blue-700 ring-2 ring-blue-300 dark:ring-blue-900"
-                                      : "bg-blue-600 hover:bg-blue-700"
+                                    "w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer",
+                                    openActionMenuId === g.id
+                                      ? "bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-sm"
+                                      : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
                                   )}
-                                  title={isExpanded ? "Collapse hierarchy panel" : "Click '+' to open Parent → Child hierarchy"}
+                                  title="Actions"
+                                  aria-label="Actions"
                                 >
-                                  {isExpanded ? (
-                                    <Minus className="w-4 h-4 stroke-[2.5]" />
-                                  ) : (
-                                    <Plus className="w-4 h-4 stroke-[2.5]" />
-                                  )}
+                                  <MoreVertical className="w-4 h-4" />
                                 </button>
 
-                                {/* Blue Edit Icon Button */}
-                                <button
-                                  type="button"
-                                  onClick={() => openEditGoodsModal(g)}
-                                  className="w-7 h-7 rounded bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center transition-colors shadow-xs"
-                                  title="Edit Goods Master Item"
-                                >
-                                  <Edit2 className="w-3.5 h-3.5" />
-                                </button>
+                                {openActionMenuId === g.id && (
+                                  <div
+                                    className="absolute right-0 z-50 mt-1 w-48 rounded-lg bg-white dark:bg-slate-900 shadow-xl border border-slate-200 dark:border-slate-700 py-1.5 text-xs text-left animate-in fade-in zoom-in-95 duration-100"
+                                  >
+                                    {/* Option 1: Expand / View Variations */}
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setOpenActionMenuId(null);
+                                        toggleRowExpand(g);
+                                      }}
+                                      className="w-full flex items-center gap-2.5 px-3 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium transition-colors cursor-pointer"
+                                    >
+                                      {isExpanded ? (
+                                        <>
+                                          <Minus className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                                          <span>Collapse Variations</span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Plus className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                                          <span>View Variations ({varCount})</span>
+                                        </>
+                                      )}
+                                    </button>
 
-                                {/* Red Trash Icon Button */}
-                                <button
-                                  type="button"
-                                  onClick={() => handleDeleteGoods(g)}
-                                  className="w-7 h-7 rounded bg-rose-500 hover:bg-rose-600 text-white flex items-center justify-center transition-colors shadow-xs"
-                                  title="Delete Goods Master Item"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
+                                    {/* Option 2: Edit Goods Item */}
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setOpenActionMenuId(null);
+                                        openEditGoodsModal(g);
+                                      }}
+                                      className="w-full flex items-center gap-2.5 px-3 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium transition-colors cursor-pointer"
+                                    >
+                                      <Edit2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                                      <span>Edit Goods Item</span>
+                                    </button>
+
+                                    <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+
+                                    {/* Option 3: Delete Goods Item */}
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setOpenActionMenuId(null);
+                                        handleDeleteGoods(g);
+                                      }}
+                                      className="w-full flex items-center gap-2.5 px-3 py-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-medium transition-colors cursor-pointer"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                                      <span>Delete Goods Item</span>
+                                    </button>
+                                  </div>
+                                )}
                               </div>
                             </td>
                           </tr>
@@ -845,7 +931,7 @@ export function GoodsMasterRegistry() {
                           {/* ========================================================================= */}
                           {isExpanded && (
                             <tr className="bg-slate-50/70 dark:bg-slate-900/60">
-                              <td colSpan={7} className="p-0 border-b border-slate-200 dark:border-slate-800">
+                              <td colSpan={8} className="p-0 border-b border-slate-200 dark:border-slate-800">
                                 <GoodsHierarchyTree goods={g} onRefresh={() => loadGoods(g.id)} />
                               </td>
                             </tr>
