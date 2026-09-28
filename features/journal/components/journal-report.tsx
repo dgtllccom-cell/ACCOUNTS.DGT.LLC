@@ -347,7 +347,7 @@ export default function JournalReport({
       r.currentStatus,
       r.nextStep
     ]);
-    const csvContent = "data:text/csv;charset=utf-8,"
+    const csvContent = "data:text/csv;charset=utf-8,\uFEFF"
       + [headers.join(","), ...rows.map(e => e.map(val => `"${val}"`).join(","))].join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");

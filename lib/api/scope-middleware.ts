@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import type { ErpSession } from "@/lib/auth/session";
 import { requireErpSession } from "@/lib/auth/session";
-import { authorize, canAccessCityBranch, canAccessCountry, canAccessCountryBranch, hasRolePermission, ErpPermissionError, type PermissionCheck } from "@/lib/permissions/middleware";
+import { authorize, isCountryRoleFor, canAccessCityBranch, canAccessCountry, canAccessCountryBranch, hasRolePermission, ErpPermissionError, type PermissionCheck } from "@/lib/permissions/middleware";
 
 export type ApiScope = {
   countryId?: string | null;
@@ -64,6 +64,7 @@ export function authorizeApiScopeEither(
   if (session.isSuperAdmin) return;
 
   const matchesScope = (scope: ApiScope) => {
+    if (isCountryRoleFor(session, scope.countryId)) return true;
     if (scope.cityBranchId) return canAccessCityBranch(session, scope.cityBranchId);
     if (scope.countryBranchId) return canAccessCountryBranch(session, scope.countryBranchId);
     if (scope.countryId) return canAccessCountry(session, scope.countryId);
@@ -84,6 +85,7 @@ export function authorizeApiScopeEither(
 export function isDestinationScopeUser(session: ErpSession, destination: ApiScope | null | undefined) {
   if (session.isSuperAdmin) return true;
   if (!destination || (!destination.cityBranchId && !destination.countryBranchId && !destination.countryId)) return false;
+  if (isCountryRoleFor(session, destination.countryId)) return true;
   if (destination.cityBranchId) return canAccessCityBranch(session, destination.cityBranchId);
   if (destination.countryBranchId) return canAccessCountryBranch(session, destination.countryBranchId);
   if (destination.countryId) return canAccessCountry(session, destination.countryId);
@@ -233,14 +235,20 @@ export type SqlScope =
   | { kind: "none" }
   | { kind: "country"; ids: string[] }
   | { kind: "countryBranch"; ids: string[] }
-  | { kind: "cityBranch"; ids: string[] };
+  // ownCountryBranchIds: main branches the caller is assigned to AT main-branch level. Their
+  // resolved scope is their city branches, so rows saved at main-branch level (no city branch)
+  // would otherwise be invisible to the main branch's own admin.
+  | { kind: "cityBranch"; ids: string[]; ownCountryBranchIds?: string[] };
 
 export function sessionSqlScope(session: ErpSession): SqlScope {
   if (session.isSuperAdmin || session.roles?.includes("super_admin_reports")) return { kind: "all" };
   const isCountryRole = session.roles.some((r) => r === "country_admin" || r === "country_user");
   if (session.cityBranchIds.length > 0) {
     if (isCountryRole && session.countryIds.length > 0) return { kind: "country", ids: session.countryIds };
-    return { kind: "cityBranch", ids: session.cityBranchIds };
+    const ownCountryBranchIds = [
+      ...new Set((session.assignments ?? []).filter((a) => !a.cityBranchId && a.countryBranchId).map((a) => a.countryBranchId as string))
+    ];
+    return { kind: "cityBranch", ids: session.cityBranchIds, ownCountryBranchIds };
   }
   if (session.countryBranchIds.length > 0) return { kind: "countryBranch", ids: session.countryBranchIds };
   if (session.countryIds.length > 0) return { kind: "country", ids: session.countryIds };
@@ -263,6 +271,9 @@ export function sqlScopeCondition(sql: any, scope: SqlScope, alias: string, opts
     case "countryBranch":
       return sql`${col("country_branch_id")} = ANY(${scope.ids}::uuid[])`;
     case "cityBranch":
+      if (scope.ownCountryBranchIds?.length && opts.hasCountryBranchCol !== false) {
+        return sql`(${col("city_branch_id")} = ANY(${scope.ids}::uuid[]) OR (${col("city_branch_id")} IS NULL AND ${col("country_branch_id")} = ANY(${scope.ownCountryBranchIds}::uuid[])))`;
+      }
       return sql`${col("city_branch_id")} = ANY(${scope.ids}::uuid[])`;
   }
 }
@@ -285,6 +296,7 @@ export function recordInSessionScope(
   if (!rec || scope.kind === "none") return false;
   if (scope.kind === "country") return !!rec.country_id && scope.ids.includes(rec.country_id);
   if (scope.kind === "countryBranch") return !!rec.country_branch_id && scope.ids.includes(rec.country_branch_id);
+  if (!rec.city_branch_id && rec.country_branch_id && scope.ownCountryBranchIds?.includes(rec.country_branch_id)) return true;
   return !!rec.city_branch_id && scope.ids.includes(rec.city_branch_id);
 }
 

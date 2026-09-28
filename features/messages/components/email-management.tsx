@@ -132,7 +132,7 @@ function formatDateTime(value: string) {
 }
 
 function downloadText(filename: string, content: string, mimeType = "text/plain;charset=utf-8") {
-  const blob = new Blob([content], { type: mimeType });
+  const blob = new Blob([(mimeType.includes("csv") ? "\uFEFF" : "") + content], { type: mimeType });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;

@@ -116,6 +116,15 @@ export function assertMobileProfile(session: ErpSession, resource: string, actio
   }
 }
 
+/** A Country Admin / Country User owns its whole country — including branches that were later
+ *  deactivated (those drop out of session.cityBranchIds). Branch users never qualify, even though
+ *  their session also carries the parent country id. */
+export function isCountryRoleFor(session: ErpSession, countryId?: string | null): boolean {
+  if (!countryId) return false;
+  const isCountryRole = (session.roles ?? []).some((r) => r === "country_admin" || r === "country_user");
+  return isCountryRole && session.countryIds.includes(countryId);
+}
+
 export function authorize(session: ErpSession, check: PermissionCheck) {
   assertResourceDomain(session, check.resource);
   assertMobileProfile(session, check.resource, check.action);
@@ -128,11 +137,13 @@ export function authorize(session: ErpSession, check: PermissionCheck) {
     throw new ErpPermissionError(`Country scope is not allowed for this user. Required: ${check.countryId}`);
   }
 
-  if (check.countryBranchId && !canAccessCountryBranch(session, check.countryBranchId)) {
+  const countryRoleCovers = isCountryRoleFor(session, check.countryId);
+
+  if (check.countryBranchId && !countryRoleCovers && !canAccessCountryBranch(session, check.countryBranchId)) {
     throw new ErpPermissionError(`Main branch scope is not allowed for this user. Required: ${check.countryBranchId}`);
   }
 
-  if (check.cityBranchId && !canAccessCityBranch(session, check.cityBranchId)) {
+  if (check.cityBranchId && !countryRoleCovers && !canAccessCityBranch(session, check.cityBranchId)) {
     throw new ErpPermissionError("City branch scope is not allowed for this user");
   }
 

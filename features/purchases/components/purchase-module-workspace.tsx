@@ -219,7 +219,7 @@ function exportCsv(rows: PurchaseOrderRow[], title: string) {
       poNumber(row), soNumber(row), date(row.created_at), country(row), branch(row), supplier(row), product(row), String(quantity(row)), String(weight(row)), String(containers(row)), currency(row), String(amount(row)), String(advance(row)), String(remaining(row)), status(row)
     ].map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
   ].join("\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;

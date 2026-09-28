@@ -72,7 +72,7 @@ function exportToExcel(data: Record<string, any>[], columns: GenericReportColumn
   const bodyRows = data
     .map((row) => `<tr>${columns.map((column) => `<td>${htmlCell(getColumnValue(row, column.key))}</td>`).join("")}</tr>`)
     .join("");
-  const html = `<!doctype html><html><head><meta charset="utf-8" /></head><body><table><thead><tr>${headerRow}</tr></thead><tbody>${bodyRows}</tbody></table></body></html>`;
+  const html = `<!doctype html><html dir="${typeof document !== "undefined" && document.documentElement.dir === "rtl" ? "rtl" : "ltr"}"><head><meta charset="utf-8" /></head><body><table dir="${typeof document !== "undefined" && document.documentElement.dir === "rtl" ? "rtl" : "ltr"}"><thead><tr>${headerRow}</tr></thead><tbody>${bodyRows}</tbody></table></body></html>`;
   const blob = new Blob([html], { type: "application/vnd.ms-excel;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");

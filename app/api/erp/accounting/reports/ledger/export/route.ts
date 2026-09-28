@@ -1,4 +1,5 @@
 import { assertNotShippingOnly } from "@/lib/permissions/shipping-explicit-gate";
+import { getRequestLanguage } from "@/lib/i18n/server";
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiOk, handleApiError } from "@/lib/api/response";
@@ -122,6 +123,7 @@ export async function GET(request: NextRequest) {
       {
         dateRange: { from: fromDate, to: toDate },
         ...(companyName ? { company: companyName } : {}),
+        lang: await getRequestLanguage(request.nextUrl.searchParams.get("lang")),
       }
     );
 

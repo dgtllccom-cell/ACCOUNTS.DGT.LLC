@@ -175,7 +175,7 @@ export function UniversalReportModal<T extends Record<string, any> = Record<stri
 
   const handleExportExcel = () => {
     // Generate styled HTML Table as XLS download
-    let html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">`;
+    let html = `<html dir="${typeof document !== "undefined" && document.documentElement.dir === "rtl" ? "rtl" : "ltr"}" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">`;
     html += `<head><meta charset="utf-8"/><style>
       table { border-collapse: collapse; width: 100%; font-family: Arial; }
       th { background-color: #1e293b; color: #ffffff; font-weight: bold; border: 1px solid #334155; padding: 8px; }

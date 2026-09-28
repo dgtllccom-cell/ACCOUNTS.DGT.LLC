@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { getRequestLanguage } from "@/lib/i18n/server";
 import { z } from "zod";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { uuidSchema } from "@/lib/api/erp-validation";
@@ -44,6 +45,7 @@ export async function GET(request: NextRequest) {
       action: "read",
     });
 
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
     const fromDate = query.fromDate ?? monthStartIso();
     const toDate = query.toDate ?? todayIso();
 
@@ -54,7 +56,7 @@ export async function GET(request: NextRequest) {
       fromDate,
       toDate,
       limit: 5000,
-      language: "en",
+      language: lang,
     });
 
     const totalDebit = lines.reduce((t, l) => t + Number(l.debit || 0), 0);
@@ -102,6 +104,7 @@ export async function GET(request: NextRequest) {
         dateRange: { from: fromDate, to: toDate },
         company: brandCompany,
         subtitle: `${accountCode} - ${accountName}`,
+        lang,
       }
     );
 

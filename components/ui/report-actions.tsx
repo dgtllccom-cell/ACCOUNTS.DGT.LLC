@@ -133,7 +133,7 @@ export function ReportActions({
     const head = columns.map((c) => `"${c.label.replace(/"/g, '""')}"`).join(",");
     const body = rows.map((r) => columns.map((c) => `"${cell(r[c.key]).replace(/"/g, '""')}"`).join(",")).join("\n");
     const csv = "﻿" + head + "\n" + body; // BOM for Excel UTF-8
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url; a.download = `${base}_${new Date().toISOString().slice(0, 10)}.csv`;

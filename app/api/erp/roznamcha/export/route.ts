@@ -1,8 +1,9 @@
 import { NextRequest } from "next/server";
+import { getRequestLanguage } from "@/lib/i18n/server";
 import { z } from "zod";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
-import { authorizeApiScope, getScopeFromSearchParams } from "@/lib/api/scope-middleware";
+import { authorizeApiScope, getScopeFromSearchParams, sessionSqlScope, sqlScopeCondition } from "@/lib/api/scope-middleware";
 import {
   buildProfessionalReportLayout,
   reportLayoutToHtml,
@@ -48,14 +49,14 @@ export async function GET(request: NextRequest) {
     const fromDate = query.fromDate ?? monthStartIso();
     const toDate = query.toDate ?? todayIso();
 
-    // Real Roznamcha data — from roznamcha_entries + roznamcha_lines, scope-enforced.
-    const cityIds = [...new Set(session.assignments.map((a) => a.cityBranchId).filter(Boolean))] as string[];
-    const countryBranchIds = [...new Set(session.assignments.map((a) => a.countryBranchId).filter(Boolean))] as string[];
-    const countryIds = [...new Set(session.assignments.map((a) => a.countryId).filter(Boolean))] as string[];
+    // Real Roznamcha data — from roznamcha_entries + roznamcha_lines, scope-enforced with the one
+    // scope rule (an OR over every assignment level widened a branch user to its whole country).
+    const sqlScope = sessionSqlScope(session);
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
     const safeSearch = query.search ? query.search.replace(/[%,]/g, "") : null;
 
     const rows = (await withLocalPg(async (sql) => {
-      if (!session.isSuperAdmin && cityIds.length === 0 && countryBranchIds.length === 0 && countryIds.length === 0) {
+      if (sqlScope.kind === "none") {
         return [] as any[];
       }
       return sql`
@@ -71,9 +72,7 @@ export async function GET(request: NextRequest) {
           and (${scope.countryId ? sql`e.country_id = ${scope.countryId}` : sql`true`})
           and (${scope.countryBranchId ? sql`e.country_branch_id = ${scope.countryBranchId}` : sql`true`})
           and (${scope.cityBranchId ? sql`e.city_branch_id = ${scope.cityBranchId}` : sql`true`})
-          and (${session.isSuperAdmin
-            ? sql`true`
-            : sql`(e.city_branch_id = any(${cityIds}) or e.country_branch_id = any(${countryBranchIds}) or e.country_id = any(${countryIds}))`})
+          and ${sqlScopeCondition(sql, sqlScope, "e")}
           and e.entry_date >= ${fromDate}
           and e.entry_date <= ${toDate}
           and (${safeSearch ? sql`(e.narration ilike ${"%" + safeSearch + "%"} or l.description ilike ${"%" + safeSearch + "%"} or e.journal_no ilike ${"%" + safeSearch + "%"})` : sql`true`})
@@ -139,6 +138,7 @@ export async function GET(request: NextRequest) {
         dateRange: { from: fromDate, to: toDate },
         company: "",
         subtitle: "Daily Journal & Cash Entry with Exchange Rates",
+        lang,
       }
     );
 

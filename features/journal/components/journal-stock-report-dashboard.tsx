@@ -369,7 +369,7 @@ export default function JournalStockReportDashboard({
       ].map(val => `"${String(val).replace(/"/g, '""')}"`).join(","))
     ].join("\n");
 
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
@@ -950,7 +950,7 @@ export default function JournalStockReportDashboard({
                         r.finalCurrencyAdvance || r.purchasePayment, r.purchaseCurrencyRemaining || 0, r.finalCurrencyRemaining || r.remainingPayment
                       ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(","))
                     ].join("\n");
-                    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+                    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
                     const url = URL.createObjectURL(blob);
                     const link = document.createElement("a");
                     link.setAttribute("href", url);

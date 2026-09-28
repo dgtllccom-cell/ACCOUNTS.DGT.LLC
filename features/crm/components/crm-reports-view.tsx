@@ -103,7 +103,7 @@ export function CrmReportsView({ session }: CrmReportsViewProps) {
         `"${r.responsibleUser}"`
       ].join(","));
     });
-    const blob = new Blob([csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const blob = new Blob(["\uFEFF" + csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;

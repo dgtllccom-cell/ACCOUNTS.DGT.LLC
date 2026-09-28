@@ -1060,7 +1060,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
       ...rows.map((row) => row.map((cell) => `"${(cell || "").replace(/"/g, '""')}"`).join(","))
     ].join("\n");
 
-    const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
+    const blob = new Blob(["\uFEFF" + content], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);

@@ -91,7 +91,7 @@ export function CommunicationReportsView({ lang }: Props) {
   const handleExportCsv = () => {
     const headers = "ID,Date,User,Action,Channel,Recipient,Status\n";
     const rows = auditLogs.map((l) => `${l.id},${l.date},${l.user},${l.action},${l.channel},${l.recipient},${l.status}`).join("\n");
-    const blob = new Blob([headers + rows], { type: "text/csv" });
+    const blob = new Blob(["\uFEFF" + headers + rows], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;

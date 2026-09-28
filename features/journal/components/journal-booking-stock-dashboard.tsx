@@ -250,7 +250,7 @@ export function JournalBookingStockDashboard({ session }: { session: any }) {
         `${r.purchaseAccountNo} - ${r.purchaseAccount}`, `${r.salesAccountNo} - ${r.salesAccount}`, r.importExport
       ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(","))
     ];
-    const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
+    const blob = new Blob(["\uFEFF" + csvRows.join("\n")], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = "journal-booking-stock.csv"; a.click();
     URL.revokeObjectURL(url);

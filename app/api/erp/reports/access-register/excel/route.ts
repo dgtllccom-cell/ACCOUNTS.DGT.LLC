@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { translateHeader } from "@/lib/i18n/table-headers";
+import { getRequestLanguage } from "@/lib/i18n/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorize } from "@/lib/permissions/middleware";
 import { getAccessRegisterData } from "@/lib/repositories/access-register-repository";
@@ -12,6 +14,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Super Admin access required for Access Register export" }, { status: 403 });
     }
     const COUNTRY_BRANCH_ACCESS_REGISTER = await getAccessRegisterData();
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
     const headers = [
       "Country",
       "Main Branch",
@@ -35,7 +38,7 @@ export async function GET(request: NextRequest) {
     };
 
     const csvRows = [
-      headers.map(h => escapeCsv(h)).join(","),
+      headers.map(h => escapeCsv(translateHeader(lang, h))).join(","),
       ...COUNTRY_BRANCH_ACCESS_REGISTER.map(row => [
         escapeCsv(row.country),
         escapeCsv(row.mainBranch),

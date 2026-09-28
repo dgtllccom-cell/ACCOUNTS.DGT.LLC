@@ -68,7 +68,7 @@ function csvEscape(value: string) {
 }
 
 function downloadTextFile(filename: string, contents: string, mime = "text/plain") {
-  const blob = new Blob([contents], { type: `${mime};charset=utf-8` });
+  const blob = new Blob([(mime.includes("csv") ? "\uFEFF" : "") + contents], { type: `${mime};charset=utf-8` });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -354,7 +354,7 @@ export function RoznamchaReportView({
       .map((r) => r.map((c) => csvEscape(String(c ?? ""))).join(","))
       .join("\r\n");
 
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);

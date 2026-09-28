@@ -177,7 +177,7 @@ export function ComprehensiveDailyReportView() {
 
     if (dataToExport.length === 0) return;
     const keys = Object.keys(dataToExport[0]);
-    const csv = "data:text/csv;charset=utf-8," + [keys.join(","), ...dataToExport.map(row => keys.map(k => `"${String((row as any)[k]).replace(/"/g, '""')}"`).join(","))].join("\n");
+    const csv = "data:text/csv;charset=utf-8,\uFEFF" + [keys.join(","), ...dataToExport.map(row => keys.map(k => `"${String((row as any)[k]).replace(/"/g, '""')}"`).join(","))].join("\n");
     
     const link = document.createElement("a");
     link.setAttribute("href", encodeURI(csv));

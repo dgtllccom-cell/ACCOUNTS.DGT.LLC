@@ -206,7 +206,7 @@ export default function TranslationsManagementPage() {
       `"${(t.arabicText || "").replace(/"/g, '""')}"`
     ]);
 
-    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
+    const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
     const downloadAnchor = document.createElement("a");
     downloadAnchor.setAttribute("href", encodeURI(csvContent));
     downloadAnchor.setAttribute("download", `erp-translations-local-${new Date().toISOString().slice(0, 10)}.csv`);

@@ -122,7 +122,7 @@ function csvEscape(value: string) {
 
 function downloadCsv(filename: string, rows: string[][]) {
   const csv = rows.map((row) => row.map((cell) => csvEscape(cell)).join(",")).join("\r\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -881,7 +881,7 @@ export function UserJournalReport() {
                   ["Branch Code", viewUser.branchCode || "-"],
                   ["Status", viewUser.status]
                 ];
-                const csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
+                const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + rows.map(e => e.join(",")).join("\n");
                 const encodedUri = encodeURI(csvContent);
                 const link = document.createElement("a");
                 link.setAttribute("href", encodedUri);

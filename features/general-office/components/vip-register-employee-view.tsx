@@ -653,7 +653,7 @@ export function VipRegisterEmployeeView() {
               size="sm"
               onClick={() => {
                 const csvContent =
-                  "data:text/csv;charset=utf-8," +
+                  "data:text/csv;charset=utf-8,\uFEFF" +
                   ["ID,Name,Country,Branch,Department,Designation,Mobile,JoinDate,Status"]
                     .concat(
                       filteredEmployees.map(

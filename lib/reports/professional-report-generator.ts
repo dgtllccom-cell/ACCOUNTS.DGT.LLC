@@ -1,4 +1,5 @@
 import type { ErpSession } from "@/lib/auth/session";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 export type ProfessionalReportLayout = {
   title: string;
@@ -24,6 +25,10 @@ export type ProfessionalReportLayout = {
     rows: (string | number)[][];
     summary?: Record<string, string | number>;
   };
+  /** Report language + direction; every visible label below is already translated. */
+  lang?: string;
+  dir?: "ltr" | "rtl";
+  labels?: { company: string; scope: string; generated: string; user: string; period: string; to: string };
   pageInfo?: {
     currentPage?: number;
     totalPages?: number;
@@ -45,6 +50,9 @@ export function buildProfessionalReportLayout(
     company?: string;
     branchCode?: string;
     subtitle?: string;
+    /** ERP language (en/ur/ar/fa/ps). Headers, title and summary labels are translated through the
+     *  central header dictionary; data values are left as they are. */
+    lang?: string;
     currentPage?: number;
     totalPages?: number;
   }
@@ -75,9 +83,21 @@ export function buildProfessionalReportLayout(
     }
   }
 
+  const lang = options.lang || "en";
+  const tr = (x: string) => translateHeader(lang, x);
+  const dir: "ltr" | "rtl" = ["ur", "ar", "fa", "ps"].includes(lang) ? "rtl" : "ltr";
+  data = {
+    headers: data.headers.map(tr),
+    rows: data.rows,
+    summary: data.summary ? Object.fromEntries(Object.entries(data.summary).map(([k, v]) => [tr(k), v])) : undefined,
+  };
+
   return {
-    title,
-    subtitle: options.subtitle,
+    lang,
+    dir,
+    labels: { company: tr("Company"), scope: tr("Scope"), generated: tr("Generated"), user: tr("User"), period: tr("Period"), to: tr("to") },
+    title: tr(title),
+    subtitle: options.subtitle ? tr(options.subtitle) : undefined,
     company: {
       name: options.company || "",
       branchCode: options.branchCode,
@@ -86,7 +106,7 @@ export function buildProfessionalReportLayout(
       country: session.countryIds?.[0],
       branch: session.cityBranchIds?.[0],
       user: session.fullName || session.email || undefined,
-      level: (scope as "Global" | "Country" | "Branch") || "Global",
+      level: (tr(scope) as "Global" | "Country" | "Branch") || "Global",
     },
     dateRange: options.dateRange,
     generatedAt,
@@ -106,7 +126,7 @@ export function buildProfessionalReportLayout(
  */
 export function reportLayoutToHtml(report: ProfessionalReportLayout): string {
   const dateRangeText = report.dateRange
-    ? `<tr><td colspan="2"><strong>Period:</strong> ${report.dateRange.from} to ${report.dateRange.to}</td></tr>`
+    ? `<tr><td colspan="2"><strong>${(report.labels ?? { company: "Company", scope: "Scope", generated: "Generated", user: "User", period: "Period", to: "to" }).period}:</strong> ${report.dateRange.from} ${(report.labels ?? { company: "Company", scope: "Scope", generated: "Generated", user: "User", period: "Period", to: "to" }).to} ${report.dateRange.to}</td></tr>`
     : "";
 
   const summaryRows = report.data.summary
@@ -139,7 +159,7 @@ export function reportLayoutToHtml(report: ProfessionalReportLayout): string {
 
   return `
     <!DOCTYPE html>
-    <html>
+    <html lang="${report.lang ?? "en"}" dir="${report.dir ?? "ltr"}">
     <head>
       <meta charset="UTF-8">
       <style>
@@ -210,10 +230,10 @@ export function reportLayoutToHtml(report: ProfessionalReportLayout): string {
 
       <table class="info-table">
         <tr>
-          <td><strong>Scope:</strong> ${report.scope.level}</td>
-          <td><strong>Generated:</strong> ${report.generatedAt}</td>
+          <td><strong>${(report.labels ?? { company: "Company", scope: "Scope", generated: "Generated", user: "User", period: "Period", to: "to" }).scope}:</strong> ${report.scope.level}</td>
+          <td><strong>${(report.labels ?? { company: "Company", scope: "Scope", generated: "Generated", user: "User", period: "Period", to: "to" }).generated}:</strong> ${report.generatedAt}</td>
         </tr>
-        ${report.scope.user ? `<tr><td colspan="2"><strong>User:</strong> ${report.scope.user}</td></tr>` : ""}
+        ${report.scope.user ? `<tr><td colspan="2"><strong>${(report.labels ?? { company: "Company", scope: "Scope", generated: "Generated", user: "User", period: "Period", to: "to" }).user}:</strong> ${report.scope.user}</td></tr>` : ""}
         ${dateRangeText}
       </table>
 
@@ -251,12 +271,13 @@ export function reportLayoutToCsv(report: ProfessionalReportLayout): string {
   lines.push("");
 
   // Metadata
-  lines.push(`"Scope","${report.scope.level}"`);
-  lines.push(`"Generated","${report.generatedAt}"`);
-  if (report.scope.user) lines.push(`"User","${report.scope.user}"`);
+  const lb = (report.labels ?? { company: "Company", scope: "Scope", generated: "Generated", user: "User", period: "Period", to: "to" });
+  lines.push(`"${lb.scope}","${report.scope.level}"`);
+  lines.push(`"${lb.generated}","${report.generatedAt}"`);
+  if (report.scope.user) lines.push(`"${lb.user}","${report.scope.user}"`);
   if (report.dateRange) {
     lines.push(
-      `"Period","${report.dateRange.from} to ${report.dateRange.to}"`
+      `"${lb.period}","${report.dateRange.from} ${lb.to} ${report.dateRange.to}"`
     );
   }
   lines.push("");
@@ -278,9 +299,10 @@ export function reportLayoutToCsv(report: ProfessionalReportLayout): string {
   }
 
   lines.push("");
-  lines.push(`"Generated: ${report.generatedAt}"`);
+  lines.push(`"${lb.generated}: ${report.generatedAt}"`);
 
-  return lines.join("\n");
+  // UTF-8 BOM so Excel opens Urdu / Arabic / Farsi / Pashto text correctly.
+  return "\uFEFF" + lines.join("\n");
 }
 
 /**
@@ -296,7 +318,7 @@ export function reportLayoutToExcelHtml(
     .replace(/-/g, "");
 
   return `
-    <html xmlns:x="urn:schemas-microsoft-com:office:excel">
+    <html xmlns:x="urn:schemas-microsoft-com:office:excel" lang="${report.lang ?? "en"}" dir="${report.dir ?? "ltr"}">
     <head>
       <meta charset="UTF-8">
       <style>
@@ -310,13 +332,13 @@ export function reportLayoutToExcelHtml(
       <div class="header">${report.title}</div>
       <table>
         <tr>
-          <td colspan="2"><strong>Company:</strong> ${report.company.name}</td>
+          <td colspan="2"><strong>${(report.labels ?? { company: "Company", scope: "Scope", generated: "Generated", user: "User", period: "Period", to: "to" }).company}:</strong> ${report.company.name}</td>
         </tr>
         <tr>
-          <td><strong>Scope:</strong> ${report.scope.level}</td>
-          <td><strong>Generated:</strong> ${report.generatedAt}</td>
+          <td><strong>${(report.labels ?? { company: "Company", scope: "Scope", generated: "Generated", user: "User", period: "Period", to: "to" }).scope}:</strong> ${report.scope.level}</td>
+          <td><strong>${(report.labels ?? { company: "Company", scope: "Scope", generated: "Generated", user: "User", period: "Period", to: "to" }).generated}:</strong> ${report.generatedAt}</td>
         </tr>
-        ${report.dateRange ? `<tr><td colspan="2"><strong>Period:</strong> ${report.dateRange.from} to ${report.dateRange.to}</td></tr>` : ""}
+        ${report.dateRange ? `<tr><td colspan="2"><strong>${(report.labels ?? { company: "Company", scope: "Scope", generated: "Generated", user: "User", period: "Period", to: "to" }).period}:</strong> ${report.dateRange.from} ${(report.labels ?? { company: "Company", scope: "Scope", generated: "Generated", user: "User", period: "Period", to: "to" }).to} ${report.dateRange.to}</td></tr>` : ""}
       </table>
       <br/>
       <table>

@@ -111,245 +111,36 @@ function getEffectiveVariationsForGoods(
   g: GoodsRecord,
   itemParams: MasterParamRecord[] = []
 ): { variations: GoodsVariation[]; isCustom: boolean } {
-  // 1. If explicit variations already exist in the database, return them
+  // Real data only: saved variations first, otherwise the combinations of the brand/size
+  // parameters actually configured for this item. Nothing is invented — an item with neither
+  // shows an empty table (the earlier category "standard specifications" were fabricated rows).
   if (g.variations && g.variations.length > 0) {
     return { variations: g.variations, isCustom: true };
   }
-
-  // 2. If custom parameters were configured for this item in goods_master_parameters
-  const brandParams = itemParams.filter((p) => p.param_type === "brand" && p.is_active);
-  const sizeParams = itemParams.filter((p) => p.param_type === "size" && p.is_active);
-  const varietyParams = itemParams.filter((p) => p.param_type === "variety" && p.is_active);
-  const reportParams = itemParams.filter((p) => p.param_type === "extra_details" && p.is_active);
-
-  if (brandParams.length > 0 || sizeParams.length > 0) {
-    const list: GoodsVariation[] = [];
-    const brands = brandParams.length > 0 ? brandParams.map((p) => p.param_value) : ["DAMAAN PREMIUM", "DGT LLC"];
-    const sizes = sizeParams.length > 0 ? sizeParams.map((p) => p.param_value) : ["Standard Commercial", "Bulk Wholesale"];
-    const varieties = varietyParams.length > 0 ? varietyParams.map((p) => p.param_value) : [g.variety || "Commercial Grade"];
-    const reports = reportParams.length > 0 ? reportParams.map((p) => p.param_value) : [g.extra_details || "Standard Trade Specifications"];
-
+  const active = (type: string) => itemParams.filter((p) => p.param_type === type && p.is_active).map((p) => p.param_value);
+  const brands = active("brand");
+  const sizes = active("size");
+  const varieties = active("variety");
+  const reports = active("extra_details");
+  const list: GoodsVariation[] = [];
+  if (brands.length > 0 || sizes.length > 0) {
     let idx = 0;
-    for (const b of brands) {
-      for (const s of sizes) {
+    for (const b of brands.length > 0 ? brands : [""]) {
+      for (const sz of sizes.length > 0 ? sizes : [""]) {
         list.push({
           id: `param-gen-${g.id}-${idx}`,
           goods_id: g.id,
           brand: b,
-          variety: varieties[idx % varieties.length] || undefined,
-          extra_details: reports[idx % reports.length] || g.extra_details || undefined,
+          size: sz,
+          variety: varieties.length > 0 ? varieties[idx % varieties.length] : g.variety || undefined,
+          extra_details: reports.length > 0 ? reports[idx % reports.length] : g.extra_details || undefined,
           is_active: true,
         });
         idx++;
       }
     }
-    return { variations: list, isCustom: true };
   }
-
-  // 3. Category standard specifications (Ensures table is always populated for all goods)
-  const cat = (g.category || "").toLowerCase();
-  const baseReport = g.extra_details || "Standard commercial trade packaging and grade specification.";
-
-  if (cat.includes("spice")) {
-    return {
-      variations: [
-        {
-          id: `std-spice-1-${g.id}`,
-          goods_id: g.id,
-          brand: "DAMAAN PREMIUM",
-          variety: g.variety || "Selected Pure / Single Source",
-          size: "25 KG Master Bag",
-          extra_details: baseReport,
-          is_active: true,
-        },
-        {
-          id: `std-spice-2-${g.id}`,
-          goods_id: g.id,
-          brand: "DGT LLC",
-          variety: "Commercial Grade A",
-          size: "10 KG Carton",
-          extra_details: "Wholesale export bulk packaging, dry moisture controlled, high purity",
-          is_active: true,
-        },
-        {
-          id: `std-spice-3-${g.id}`,
-          goods_id: g.id,
-          brand: "COMMERCIAL STANDARD",
-          variety: "Standard Trade",
-          size: "1 KG Pouch",
-          extra_details: "Foodservice wholesale distribution pack, sealed freshness barrier",
-          is_active: true,
-        },
-        {
-          id: `std-spice-4-${g.id}`,
-          goods_id: g.id,
-          brand: "SELECT QUALITY",
-          variety: "Ground / Whole Retail",
-          size: "500 G Pack",
-          extra_details: "Consumer retail shelf pack, sortex cleaned and moisture tested",
-          is_active: true,
-        },
-      ],
-      isCustom: false,
-    };
-  }
-
-  if (cat.includes("fruit")) {
-    return {
-      variations: [
-        {
-          id: `std-fruit-1-${g.id}`,
-          goods_id: g.id,
-          brand: "DAMAAN PREMIUM",
-          variety: g.variety || "First Choice / Hand Picked",
-          size: "10 KG Master Carton",
-          extra_details: baseReport,
-          is_active: true,
-        },
-        {
-          id: `std-fruit-2-${g.id}`,
-          goods_id: g.id,
-          brand: "CALIFORNIA GOLD",
-          variety: "Supreme Grade",
-          size: "5 KG Vacuum Pack",
-          extra_details: "Vacuum sealed preservation packaging, high uniformity and freshness",
-          is_active: true,
-        },
-        {
-          id: `std-fruit-3-${g.id}`,
-          goods_id: g.id,
-          brand: "DGT LLC",
-          variety: "Commercial Select",
-          size: "1 KG Pouch",
-          extra_details: "Wholesale distribution pouch, quality verified export standard",
-          is_active: true,
-        },
-        {
-          id: `std-fruit-4-${g.id}`,
-          goods_id: g.id,
-          brand: "SELECT QUALITY",
-          variety: "Standard Commercial",
-          size: "500 G Pack",
-          extra_details: "Retail packaging standard, sortex cleaned prime dry fruit",
-          is_active: true,
-        },
-      ],
-      isCustom: false,
-    };
-  }
-
-  if (cat.includes("pulse") || cat.includes("grain")) {
-    return {
-      variations: [
-        {
-          id: `std-pulse-1-${g.id}`,
-          goods_id: g.id,
-          brand: "DAMAAN QUALITY",
-          variety: g.variety || "Sortex Cleaned 99.5%",
-          size: "50 KG PP Bag",
-          extra_details: baseReport,
-          is_active: true,
-        },
-        {
-          id: `std-pulse-2-${g.id}`,
-          goods_id: g.id,
-          brand: "DGT LLC",
-          variety: "Machine Cleaned Grade A",
-          size: "25 KG Woven Bag",
-          extra_details: "Wholesale commodity distribution packaging, machine polished",
-          is_active: true,
-        },
-        {
-          id: `std-pulse-3-${g.id}`,
-          goods_id: g.id,
-          brand: "IMPORT STANDARD",
-          variety: "Standard Commercial",
-          size: "5 KG Poly Pack",
-          extra_details: "Commercial foodservice and wholesale distribution pack",
-          is_active: true,
-        },
-        {
-          id: `std-pulse-4-${g.id}`,
-          goods_id: g.id,
-          brand: "SELECT QUALITY",
-          variety: "Consumer Grade",
-          size: "1 KG Consumer Pack",
-          extra_details: "Retail shelf-ready packaging, double cleaned",
-          is_active: true,
-        },
-      ],
-      isCustom: false,
-    };
-  }
-
-  if (cat.includes("root")) {
-    return {
-      variations: [
-        {
-          id: `std-root-1-${g.id}`,
-          goods_id: g.id,
-          brand: "DAMAAN NATURAL",
-          variety: g.variety || "Raw Natural Roots",
-          size: "50 KG Bale / Bag",
-          extra_details: baseReport,
-          is_active: true,
-        },
-        {
-          id: `std-root-2-${g.id}`,
-          goods_id: g.id,
-          brand: "DGT LLC",
-          variety: "Cleaned Root Grade A",
-          size: "25 KG Bag",
-          extra_details: "Wholesale herbal and industrial processing grade root",
-          is_active: true,
-        },
-        {
-          id: `std-root-3-${g.id}`,
-          goods_id: g.id,
-          brand: "COMMERCIAL STANDARD",
-          variety: "Standard Commercial",
-          size: "10 KG Box",
-          extra_details: "Distributor pack, moisture controlled preservation packaging",
-          is_active: true,
-        },
-      ],
-      isCustom: false,
-    };
-  }
-
-  // Fallback generic commodity standards
-  return {
-    variations: [
-      {
-        id: `std-gen-1-${g.id}`,
-        goods_id: g.id,
-        brand: "DAMAAN PREMIUM",
-        variety: g.variety || "Standard Commercial Grade",
-        size: "25 KG Master Bag",
-        extra_details: baseReport,
-        is_active: true,
-      },
-      {
-        id: `std-gen-2-${g.id}`,
-        goods_id: g.id,
-        brand: "DGT LLC",
-        variety: "Commercial Grade A",
-        size: "10 KG Carton",
-        extra_details: "Standard distributor packaging, quality verified commodity",
-        is_active: true,
-      },
-      {
-        id: `std-gen-3-${g.id}`,
-        goods_id: g.id,
-        brand: "SELECT QUALITY",
-        variety: "Retail Grade",
-        size: "1 KG Pack",
-        extra_details: "Standard retail packaging, sealed freshness barrier",
-        is_active: true,
-      },
-    ],
-    isCustom: false,
-  };
+  return { variations: list, isCustom: true };
 }
 
 export function GoodsMasterRegistry() {
@@ -2479,6 +2270,13 @@ export function GoodsMasterRegistry() {
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                            {effectiveVars.length === 0 && (
+                              <tr>
+                                <td colSpan={6} className="p-4 text-center text-slate-500 dark:text-slate-400">
+                                  {translateHeader(lang, "NO RECORDS FOUND")}
+                                </td>
+                              </tr>
+                            )}
                             {effectiveVars.map((v, vIdx) => (
                               <tr
                                 key={v.id || vIdx}
@@ -2493,11 +2291,11 @@ export function GoodsMasterRegistry() {
                                   </span>
                                 </td>
                                 <td className="p-2.5 text-slate-700 dark:text-slate-300 font-medium">
-                                  {v.variety || "Standard Grade"}
+                                  {v.variety || "—"}
                                 </td>
                                 <td className="p-2.5">
                                   <span className="inline-flex items-center px-2 py-0.5 rounded font-mono font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800 text-[11px]">
-                                    {v.size || "Standard"}
+                                    {v.size || "—"}
                                   </span>
                                 </td>
                                 <td className="p-2.5 text-slate-600 dark:text-slate-400 leading-relaxed font-normal">
