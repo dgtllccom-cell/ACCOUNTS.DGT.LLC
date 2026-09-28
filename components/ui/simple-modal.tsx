@@ -14,7 +14,7 @@ export function SimpleModal({
   isOpen,
   maxWidth
 }: {
-  title: string;
+  title: React.ReactNode;
   children: React.ReactNode;
   onClose: () => void;
   className?: string;

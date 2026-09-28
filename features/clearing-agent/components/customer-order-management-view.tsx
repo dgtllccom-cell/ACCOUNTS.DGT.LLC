@@ -48,7 +48,11 @@ import {
   Hash,
   Train,
   User,
-  ArrowRightLeft
+  ArrowRightLeft,
+  Clock,
+  RotateCcw,
+  Activity,
+  AlertTriangle
 } from "lucide-react";
 
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
@@ -78,6 +82,10 @@ import {
   type BranchScopeCountryBranch,
   type BranchScopeCityBranch
 } from "@/features/purchases/components/branch-scope-dropdown";
+import { CustomerOrderActivityTimelineModal } from "@/features/clearing-agent/components/customer-order-activity-timeline-modal";
+import { CustomerOrderReturnCorrectionModal } from "@/features/clearing-agent/components/customer-order-return-correction-modal";
+import { CustomerOrderStageAssignmentModal } from "@/features/clearing-agent/components/customer-order-stage-assignment-modal";
+import { CustomerOrderRouteBuilder } from "@/features/clearing-agent/components/customer-order-route-builder";
 
 type TransportMode = "by_sea" | "by_road" | "by_air" | "by_rail";
 type MovementType = "import" | "export" | "transit" | "up_transit" | "down_transit" | "domestic";
@@ -258,10 +266,20 @@ export type CustomerOrderGoodsItem = {
   goodsChsCode?: string;
   goodsVariationId?: string;
   goodsVariationLabel?: string;
+  size?: string;
+  brandQuality?: string;
+  originCountry?: string;
   unit: string;
   quantity: string;
   kgPerQty: string;
   totalKg: string;
+  grossWeight?: string;
+  emptyWeight?: string;
+  netWeight?: string;
+  currency?: string;
+  rate?: string;
+  finalAmount?: string;
+  qualityReport?: string;
   warehouseSourceType: "same" | "company_warehouse" | "customer_warehouse" | "other";
   warehouseType?: "company" | "customer" | "other" | string;
   warehouseId: string;
@@ -289,10 +307,20 @@ export function defaultGoodsItem(): CustomerOrderGoodsItem {
     goodsChsCode: "",
     goodsVariationId: "",
     goodsVariationLabel: "",
+    size: "",
+    brandQuality: "",
+    originCountry: "",
     unit: "Bags",
     quantity: "1",
     kgPerQty: "50",
     totalKg: "50",
+    grossWeight: "50",
+    emptyWeight: "0",
+    netWeight: "50",
+    currency: "AED",
+    rate: "",
+    finalAmount: "",
+    qualityReport: "",
     warehouseSourceType: "company_warehouse",
     warehouseId: "",
     warehouseName: "",
@@ -365,6 +393,13 @@ const EMPTY_FORM = {
   truck_transport_company: "",
   truck_po_ref: "",
   truck_details: "",
+  truck_vehicle_type: "Container Trailer",
+  truck_arrival_time: "",
+  truck_loading_location: "",
+  truck_status: "Pending",
+  truck_photo_url: "",
+  truck_photo_name: "",
+  current_stage: "1A",
 
   // 1B Dates
   planned_pickup_date: "",
@@ -437,12 +472,14 @@ const EMPTY_FORM = {
   loading_state_province_id: "",
   loading_district_id: "",
   loading_city_id: "",
+  loading_city_name: "",
   loading_area_id: "",
   receiving_country_id: "",
   receiving_country_name: "",
   receiving_state_province_id: "",
   receiving_district_id: "",
   receiving_city_id: "",
+  receiving_city_name: "",
   receiving_area_id: "",
   route_name: "",
   customs_point_text: "",
@@ -854,6 +891,24 @@ export function CustomerOrderManagementView() {
     cityBranchId: ""
   });
 
+  // User Queues
+  const [queueTab, setQueueTab] = useState<
+    "all" | "assigned_to_me" | "pending_with_me" | "completed_by_me" | "sent_to_another" | "returned"
+  >("all");
+
+  // Activity Timeline Modal State
+  const [timelineModalOpen, setTimelineModalOpen] = useState(false);
+  const [timelineOrder, setTimelineOrder] = useState<{ id: string; orderNo: string } | null>(null);
+
+  // Return For Correction Modal State
+  const [returnModalOpen, setReturnModalOpen] = useState(false);
+  const [returnOrderInfo, setReturnOrderInfo] = useState<{ id: string; orderNo: string; stage: "1B" | "1C" } | null>(null);
+
+  // Stage Assignment Modal State (1A -> 1B or 1B -> 1C)
+  const [assignmentModalOpen, setAssignmentModalOpen] = useState(false);
+  const [assignmentModalStage, setAssignmentModalStage] = useState<"1A_TO_1B" | "1B_TO_1C">("1A_TO_1B");
+  const [assignmentTruckData, setAssignmentTruckData] = useState<Record<string, any> | null>(null);
+
   // Table filters
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [modeFilter, setModeFilter] = useState<string>("all");
@@ -1244,22 +1299,58 @@ export function CustomerOrderManagementView() {
       list = list.filter((o: any) => o.country_id === branchScope.countryId || o.countryId === branchScope.countryId || o.loading_country_id === branchScope.countryId);
     }
 
-    // 2. Status filter
+    // 2. Queue filter
+    const currentUserId = userContext.context?.userId;
+    if (queueTab === "assigned_to_me") {
+      list = list.filter(
+        (o: any) =>
+          (o.latest_handover?.receiver_user_id === currentUserId && o.latest_handover?.status === "pending") ||
+          (o.responsible_user_id === currentUserId && o.status !== "completed")
+      );
+    } else if (queueTab === "pending_with_me") {
+      list = list.filter(
+        (o: any) =>
+          (o.latest_handover?.receiver_user_id === currentUserId && o.latest_handover?.status === "pending") ||
+          (o.created_by === currentUserId && (o.current_stage === "returned_for_correction" || o.status === "draft" || o.current_stage === "1a_draft"))
+      );
+    } else if (queueTab === "completed_by_me") {
+      list = list.filter(
+        (o: any) =>
+          (o.created_by === currentUserId && (o.status === "completed" || o.current_stage === "goods_completed" || o.current_stage === "completed")) ||
+          (o.latest_handover?.receiver_user_id === currentUserId && o.latest_handover?.status === "completed")
+      );
+    } else if (queueTab === "sent_to_another") {
+      list = list.filter(
+        (o: any) =>
+          o.latest_handover?.sender_user_id === currentUserId &&
+          o.latest_handover?.receiver_user_id !== currentUserId &&
+          o.latest_handover?.status === "pending"
+      );
+    } else if (queueTab === "returned") {
+      list = list.filter(
+        (o: any) =>
+          o.current_stage === "returned_for_correction" ||
+          o.status === "returned" ||
+          o.latest_handover?.status === "returned"
+      );
+    }
+
+    // 3. Status filter
     if (statusFilter && statusFilter !== "all") {
       list = list.filter((o) => (o.status || "pending").toLowerCase() === statusFilter.toLowerCase());
     }
 
-    // 3. Transport mode filter
+    // 4. Transport mode filter
     if (modeFilter && modeFilter !== "all") {
       list = list.filter((o) => (o.transport_mode || "").toLowerCase() === modeFilter.toLowerCase());
     }
 
-    // 4. Movement type filter
+    // 5. Movement type filter
     if (movementFilter && movementFilter !== "all") {
       list = list.filter((o) => (o.movement_type || "").toLowerCase() === movementFilter.toLowerCase());
     }
 
-    // 5. Search query
+    // 6. Search query
     const query = normalize(searchQuery || filterState.query);
     if (query) {
       list = list.filter((order) => {
@@ -1293,7 +1384,41 @@ export function CustomerOrderManagementView() {
     }
 
     return list;
-  }, [orders, branchScope, statusFilter, modeFilter, movementFilter, searchQuery, filterState]);
+  }, [orders, branchScope, queueTab, userContext.context?.userId, statusFilter, modeFilter, movementFilter, searchQuery, filterState]);
+
+  const queueCounts = useMemo(() => {
+    const currentUserId = userContext.context?.userId;
+    const assignedToMe = orders.filter(
+      (o: any) =>
+        (o.latest_handover?.receiver_user_id === currentUserId && o.latest_handover?.status === "pending") ||
+        (o.responsible_user_id === currentUserId && o.status !== "completed")
+    ).length;
+    const pendingWithMe = orders.filter(
+      (o: any) =>
+        (o.latest_handover?.receiver_user_id === currentUserId && o.latest_handover?.status === "pending") ||
+        (o.created_by === currentUserId && (o.current_stage === "returned_for_correction" || o.status === "draft" || o.current_stage === "1a_draft"))
+    ).length;
+    const completedByMe = orders.filter(
+      (o: any) =>
+        (o.created_by === currentUserId && (o.status === "completed" || o.current_stage === "goods_completed" || o.current_stage === "completed")) ||
+        (o.latest_handover?.receiver_user_id === currentUserId && o.latest_handover?.status === "completed")
+    ).length;
+    const sentToAnother = orders.filter(
+      (o: any) =>
+        o.latest_handover?.sender_user_id === currentUserId &&
+        o.latest_handover?.receiver_user_id !== currentUserId &&
+        o.latest_handover?.status === "pending"
+    ).length;
+    const returned = orders.filter(
+      (o: any) =>
+        o.current_stage === "returned_for_correction" ||
+        o.status === "returned" ||
+        o.latest_handover?.status === "returned"
+    ).length;
+    const all = orders.length;
+
+    return { assignedToMe, pendingWithMe, completedByMe, sentToAnother, returned, all };
+  }, [orders, userContext.context?.userId]);
 
   const orderCounts = useMemo(() => {
     const total = orders.length;
@@ -1377,7 +1502,17 @@ export function CustomerOrderManagementView() {
   const loadEditOrder = (order: ClearingCustomerOrderRow) => {
     const o = order as Record<string, any>;
     setEditingOrderId(order.id);
-    setStep1SubStep("1A");
+    const currentStageVal = o.current_stage || "1A";
+    if (currentStageVal === "1B" || currentStageVal === "truck_confirmation_required") {
+      setStep1SubStep("1B");
+      setCurrentStep(2);
+    } else if (currentStageVal === "1C" || currentStageVal === "goods_entry_required" || currentStageVal === "truck_confirmed") {
+      setStep1SubStep("1C");
+      setCurrentStep(3);
+    } else {
+      setStep1SubStep("1A");
+      setCurrentStep(1);
+    }
     setIsFormOpen(true);
 
     // Reconstruct goods items
@@ -1395,10 +1530,20 @@ export function CustomerOrderManagementView() {
               goodsChsCode: idx === 0 ? (order.goods_chs_code || "") : "",
               goodsVariationId: idx === 0 ? (order.goods_variation_id || "") : "",
               goodsVariationLabel: idx === 0 ? (order.goods_variation_label || "") : "",
+              size: row.size || "",
+              brandQuality: row.brand_quality || row.brandQuality || "",
+              originCountry: row.origin_country || row.originCountry || "",
               unit: row.unit || order.goods_unit || "Bags",
               quantity: q,
               kgPerQty: k,
               totalKg: tot,
+              grossWeight: row.gross_weight != null ? String(row.gross_weight) : tot,
+              emptyWeight: row.empty_weight != null ? String(row.empty_weight) : "0",
+              netWeight: row.net_weight != null ? String(row.net_weight) : tot,
+              currency: row.currency || "AED",
+              rate: row.rate != null ? String(row.rate) : "",
+              finalAmount: row.final_amount != null ? String(row.final_amount) : "",
+              qualityReport: row.quality_report || "",
               warehouseSourceType: (row.warehouse_id ? "company_warehouse" : "other") as any,
               warehouseId: row.warehouse_id || "",
               warehouseName: row.warehouse_name || "",
@@ -1488,6 +1633,7 @@ export function CustomerOrderManagementView() {
       country_serial: o.country_serial || "",
       branch_serial: o.branch_serial || "",
       entry_serial: o.entry_serial || "",
+      current_stage: currentStageVal,
       truck_assignment_mode: (o.truck_id ? "permanent" : o.truck_number === "TO BE ASSIGNED" ? "later" : o.truck_number ? "hired" : "permanent") as any,
       truck_registration_type: (o.truck_registration_type as "registered" | "temporary") || "registered",
       truck_id: o.truck_id || "",
@@ -1497,6 +1643,12 @@ export function CustomerOrderManagementView() {
       truck_owner_name: o.truck_owner_name || "",
       truck_transport_company: o.truck_transport_company || "",
       truck_po_ref: o.truck_po_ref || "",
+      truck_vehicle_type: o.truck_vehicle_type || (o.truck_details && typeof o.truck_details === "object" ? o.truck_details.vehicleType : "Container Trailer") || "Container Trailer",
+      truck_arrival_time: o.truck_arrival_time || (o.truck_details && typeof o.truck_details === "object" ? o.truck_details.arrivalTime : "") || "",
+      truck_loading_location: o.truck_loading_location || (o.truck_details && typeof o.truck_details === "object" ? o.truck_details.loadingLocation : "") || "",
+      truck_status: o.truck_status || (o.truck_details && typeof o.truck_details === "object" ? o.truck_details.truckStatus : "Pending") || "Pending",
+      truck_photo_url: o.truck_photo_url || (o.truck_details && typeof o.truck_details === "object" && Array.isArray(o.truck_details.truckPhotos) ? o.truck_details.truckPhotos[0] : "") || "",
+      truck_photo_name: o.truck_photo_name || "",
       truck_details: o.truck_details ? (typeof o.truck_details === "string" ? o.truck_details : JSON.stringify(o.truck_details)) : "",
       planned_pickup_date: o.planned_pickup_date || (o.expected_loading_date ? o.expected_loading_date.split("T")[0] : ""),
       actual_pickup_date: o.actual_pickup_date || "",
@@ -1967,6 +2119,7 @@ export function CustomerOrderManagementView() {
           customerName: partySelections.supplier.customerName || formData.customer_name || null
         });
       }
+      return savedOrder;
     } catch (error: any) {
       alert(`${tt("err_save_failed", "Save failed")}: ${error?.message || error}`);
     } finally {
@@ -2057,6 +2210,144 @@ export function CustomerOrderManagementView() {
       addressText: cust?.address || "",
       addressSource: "customer"
     });
+  };
+
+  // Unified Operational Stage Workflow Handlers (1A -> 1B -> 1C)
+  const handleAssignStage1A = async () => {
+    let orderId = editingOrderId;
+    if (!orderId) {
+      const saved = await handleSaveProgress(false);
+      if (!saved?.id) return;
+      orderId = saved.id;
+    }
+    setAssignmentModalStage("1A_TO_1B");
+    setAssignmentTruckData(null);
+    setAssignmentModalOpen(true);
+  };
+
+  const handleConfirmTruckContinueMyself = async () => {
+    if (!formData.truck_number && formData.truck_assignment_mode !== "later") {
+      alert("Please enter or select a Truck Number before confirming.");
+      return;
+    }
+    setSaving(true);
+    try {
+      let orderId = editingOrderId;
+      if (!orderId) {
+        const saved = await handleSaveProgress(false);
+        if (!saved?.id) return;
+        orderId = saved.id;
+      } else {
+        await handleSaveProgress(false);
+      }
+      const res = await fetch(`/api/erp/clearing-agent/customer-order/${orderId}/workflow`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "confirm_truck",
+          truckNumber: formData.truck_number || "TO BE ASSIGNED",
+          truckDriverName: formData.truck_driver_name,
+          truckDriverMobile: formData.truck_driver_mobile,
+          vehicleType: formData.truck_vehicle_type || "Container Trailer",
+          truckRegistrationType: formData.truck_registration_type || "temporary",
+          truckTransportCompany: formData.truck_transport_company,
+          arrivalTime: formData.truck_arrival_time,
+          loadingLocation: formData.truck_loading_location,
+          truckStatus: formData.truck_status || "Pending",
+          continueMyself: true
+        })
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || "Failed to confirm truck");
+      setSuccessMessage("Truck confirmed! Proceeding to Stage 1C (Goods Entry).");
+      setStep1SubStep("1C");
+      setCurrentStep(3);
+      await fetchInitialData();
+    } catch (err: any) {
+      alert(err.message || "Failed to confirm truck");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleConfirmTruckAssignGoods = async () => {
+    if (!formData.truck_number && formData.truck_assignment_mode !== "later") {
+      alert("Please enter or select a Truck Number before confirming.");
+      return;
+    }
+    let orderId = editingOrderId;
+    if (!orderId) {
+      const saved = await handleSaveProgress(false);
+      if (!saved?.id) return;
+      orderId = saved.id;
+    } else {
+      await handleSaveProgress(false);
+    }
+    setAssignmentModalStage("1B_TO_1C");
+    setAssignmentTruckData({
+      truckNumber: formData.truck_number || "TO BE ASSIGNED",
+      truckDriverName: formData.truck_driver_name,
+      truckDriverMobile: formData.truck_driver_mobile,
+      vehicleType: formData.truck_vehicle_type || "Container Trailer",
+      truckRegistrationType: formData.truck_registration_type || "temporary",
+      truckTransportCompany: formData.truck_transport_company,
+      arrivalTime: formData.truck_arrival_time,
+      loadingLocation: formData.truck_loading_location,
+      truckStatus: formData.truck_status || "Pending"
+    });
+    setAssignmentModalOpen(true);
+  };
+
+  const handleTriggerReturnModal = (stage: "1B" | "1C") => {
+    if (!editingOrderId) {
+      alert("Please save the order before returning for correction.");
+      return;
+    }
+    setReturnOrderInfo({
+      id: editingOrderId,
+      orderNo: formData.order_no || "Draft",
+      stage
+    });
+    setReturnModalOpen(true);
+  };
+
+  const handleCompleteGoodsEntry = async () => {
+    const validItems = (formData.goods_items || []).filter((g) => g.goodsName || g.quantity);
+    if (validItems.length === 0) {
+      alert("Please add at least one goods item to the manifest.");
+      return;
+    }
+    setSaving(true);
+    try {
+      let orderId = editingOrderId;
+      if (!orderId) {
+        const saved = await handleSaveProgress(false);
+        if (!saved?.id) return;
+        orderId = saved.id;
+      } else {
+        await handleSaveProgress(false);
+      }
+      const totalNet = validItems.reduce((acc, g) => acc + (Number(g.netWeight || g.totalKg) || 0), 0);
+      const res = await fetch(`/api/erp/clearing-agent/customer-order/${orderId}/workflow`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "complete_goods",
+          goodsItems: validItems,
+          totalItems: validItems.length,
+          totalNetWeight: totalNet
+        })
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || "Failed to complete goods entry");
+      setSuccessMessage(`Goods Entry completed successfully for Order ${formData.order_no}!`);
+      setIsFormOpen(false);
+      await fetchInitialData();
+    } catch (err: any) {
+      alert(err.message || "Failed to complete goods entry");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const stepsList = [
@@ -2204,11 +2495,62 @@ export function CustomerOrderManagementView() {
           defaultTask={tt("handover_default_task", "Please continue this customer order to the next step.")}
           sourceCountryId={justCompletedOrder.countryId}
           domain="business"
-          customerPartyName={justCompletedOrder.customerName}
           onSuccess={() => { setHandoffModalOpen(false); setJustCompletedOrder(null); resetForm(); }}
           lang={lang}
         />
       ) : null}
+
+      {/* Complete Activity Timeline & Audit Trail Modal */}
+      <CustomerOrderActivityTimelineModal
+        isOpen={timelineModalOpen}
+        orderId={timelineOrder?.id || null}
+        orderNo={timelineOrder?.orderNo || null}
+        onClose={() => {
+          setTimelineModalOpen(false);
+          setTimelineOrder(null);
+        }}
+        lang={lang}
+      />
+
+      {/* Return for Correction Modal */}
+      {returnOrderInfo ? (
+        <CustomerOrderReturnCorrectionModal
+          isOpen={returnModalOpen}
+          orderId={returnOrderInfo.id}
+          orderNo={returnOrderInfo.orderNo}
+          currentStage={returnOrderInfo.stage}
+          onClose={() => {
+            setReturnModalOpen(false);
+            setReturnOrderInfo(null);
+          }}
+          onSuccess={async (reason) => {
+            setSuccessMessage(`Order ${returnOrderInfo.orderNo} returned for correction: "${reason}".`);
+            await fetchInitialData();
+          }}
+          lang={lang}
+        />
+      ) : null}
+
+      {/* Stage Assignment Modal (1A -> 1B or 1B -> 1C) */}
+      <CustomerOrderStageAssignmentModal
+        isOpen={assignmentModalOpen}
+        orderId={editingOrderId || ""}
+        orderNo={formData.order_no || "Draft"}
+        stage={assignmentModalStage}
+        truckData={assignmentTruckData}
+        countries={countries}
+        countryBranches={countryBranches}
+        cityBranches={cityBranches}
+        assignableUsers={assignableUsers}
+        onClose={() => setAssignmentModalOpen(false)}
+        onSuccess={async (userName) => {
+          setSuccessMessage(`Order assigned to ${userName} successfully!`);
+          setAssignmentModalOpen(false);
+          setIsFormOpen(false);
+          await fetchInitialData();
+        }}
+        lang={lang}
+      />
 
       {!isFormOpen ? (
         /* ========================================================================= */
@@ -2464,6 +2806,100 @@ export function CustomerOrderManagementView() {
             </div>
           </div>
 
+          {/* User Operational Queues Tabs */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-2 shadow-2xs">
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 text-xs font-bold">
+              <button
+                type="button"
+                onClick={() => setQueueTab("all")}
+                className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shrink-0 ${
+                  queueTab === "all"
+                    ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-xs"
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200/70"
+                }`}
+              >
+                <span>{tt("queue_all_orders", "All Orders")}</span>
+                <span className="font-mono text-[10px] opacity-80">({queueCounts.all})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setQueueTab("assigned_to_me")}
+                className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shrink-0 ${
+                  queueTab === "assigned_to_me"
+                    ? "bg-blue-600 text-white shadow-xs"
+                    : "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100"
+                }`}
+              >
+                <User className="h-3 w-3" />
+                <span>{tt("queue_assigned_to_me", "Assigned to Me")}</span>
+                <span className="font-mono text-[10px] font-black rounded-full bg-blue-700 text-white px-1.5 py-0.2">
+                  {queueCounts.assignedToMe}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setQueueTab("pending_with_me")}
+                className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shrink-0 ${
+                  queueTab === "pending_with_me"
+                    ? "bg-indigo-600 text-white shadow-xs"
+                    : "bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100"
+                }`}
+              >
+                <Clock className="h-3 w-3" />
+                <span>{tt("queue_pending_with_me", "Pending with Me")}</span>
+                <span className="font-mono text-[10px] font-black rounded-full bg-indigo-700 text-white px-1.5 py-0.2">
+                  {queueCounts.pendingWithMe}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setQueueTab("completed_by_me")}
+                className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shrink-0 ${
+                  queueTab === "completed_by_me"
+                    ? "bg-emerald-600 text-white shadow-xs"
+                    : "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100"
+                }`}
+              >
+                <CheckCircle2 className="h-3 w-3" />
+                <span>{tt("queue_completed_by_me", "Completed by Me")}</span>
+                <span className="font-mono text-[10px] opacity-80">({queueCounts.completedByMe})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setQueueTab("sent_to_another")}
+                className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shrink-0 ${
+                  queueTab === "sent_to_another"
+                    ? "bg-purple-600 text-white shadow-xs"
+                    : "bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 hover:bg-purple-100"
+                }`}
+              >
+                <ArrowRightLeft className="h-3 w-3" />
+                <span>{tt("queue_sent_to_another", "Sent to Another User")}</span>
+                <span className="font-mono text-[10px] opacity-80">({queueCounts.sentToAnother})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setQueueTab("returned")}
+                className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shrink-0 ${
+                  queueTab === "returned"
+                    ? "bg-rose-600 text-white shadow-xs"
+                    : "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 hover:bg-rose-100"
+                }`}
+              >
+                <AlertTriangle className="h-3 w-3 text-rose-500" />
+                <span>{tt("queue_returned_for_correction", "Returned for Correction")}</span>
+                <span className="font-mono text-[10px] font-black rounded-full bg-rose-700 text-white px-1.5 py-0.2">
+                  {queueCounts.returned}
+                </span>
+              </button>
+            </div>
+          </div>
+
           {/* Smart Filter Bar — Local Purchase Aesthetic */}
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-2.5 shadow-2xs space-y-2">
             <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
@@ -2635,20 +3071,18 @@ export function CustomerOrderManagementView() {
                     <Th className="px-3.5 py-3">{tt("th_order_no", "Order No")}</Th>
                     <Th className="px-3.5 py-3">{tt("th_date", "Date")}</Th>
                     <Th className="px-3.5 py-3">{tt("th_party", "Customer / Account")}</Th>
-                    <Th className="px-3.5 py-3">{tt("th_shipper", "Shipper / Exporter")}</Th>
-                    <Th className="px-3.5 py-3">{tt("th_buyer", "Buyer / Importer")}</Th>
+                    <Th className="px-3.5 py-3">{tt("th_stage_lifecycle", "Stage Lifecycle (1A / 1B / 1C)")}</Th>
                     <Th className="px-3.5 py-3">{tt("th_goods", "Goods & Qty")}</Th>
                     <Th className="px-3.5 py-3">{tt("th_route", "Route / Ports")}</Th>
-                    <Th className="px-3.5 py-3">{tt("th_movement", "Mode & Movement")}</Th>
-                    <Th className="px-3.5 py-3">{tt("th_step_status", "Status")}</Th>
-                    <Th className="px-3.5 py-3">{tt("th_branch", "Branch / Agent")}</Th>
+                    <Th className="px-3.5 py-3">{tt("th_responsible_user", "Responsible User & Branch")}</Th>
+                    <Th className="px-3.5 py-3">{tt("th_next_action", "Next Required Action")}</Th>
                     <Th className="px-3.5 py-3 text-right">{tt("th_actions", "Actions")}</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {visibleOrders.length === 0 ? (
                     <tr>
-                      <td colSpan={12} className="px-4 py-12 text-center text-slate-400">
+                      <td colSpan={10} className="px-4 py-12 text-center text-slate-400">
                         <div className="mx-auto max-w-sm space-y-3">
                           <Route className="mx-auto h-8 w-8 text-slate-300 dark:text-slate-600" />
                           <p className="text-sm font-bold text-slate-600 dark:text-slate-300">
@@ -2670,9 +3104,10 @@ export function CustomerOrderManagementView() {
                     </tr>
                   ) : (
                     visibleOrders.map((order, index) => {
-                      const prog = getOrderProgress(order);
                       const isSelected = editingOrderId === order.id;
                       const dateText = order.created_at ? new Date(order.created_at).toLocaleDateString() : "-";
+                      const currentUserId = userContext.context?.userId;
+
                       return (
                         <tr
                           key={order.id}
@@ -2697,66 +3132,180 @@ export function CustomerOrderManagementView() {
                               <div className="text-[10px] text-slate-400 font-mono">ID: {order.customer_id.slice(0, 8)}</div>
                             ) : null}
                           </td>
-                          <td className="px-3.5 py-3 text-slate-700 dark:text-slate-300 font-medium">
-                            {order.exporter_name || "-"}
+
+                          {/* Stage Lifecycle (1A / 1B / 1C) */}
+                          <td className="px-3.5 py-3">
+                            <div className="flex flex-col gap-1 min-w-[130px]">
+                              {/* 1A */}
+                              <div className="flex items-center gap-1.5 text-[10px]">
+                                <span className="font-bold text-slate-400">1A:</span>
+                                <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.2 bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 font-bold">
+                                  <CheckCircle2 className="h-2.5 w-2.5" /> Setup Complete
+                                </span>
+                              </div>
+                              {/* 1B */}
+                              <div className="flex items-center gap-1.5 text-[10px]">
+                                <span className="font-bold text-slate-400">1B:</span>
+                                {order.truck_number && order.truck_number !== "TO BE ASSIGNED" ? (
+                                  <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.2 bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 font-bold truncate max-w-[110px]" title={order.truck_number}>
+                                    <Truck className="h-2.5 w-2.5 shrink-0" /> {order.truck_number}
+                                  </span>
+                                ) : order.current_stage === "truck_confirmation_required" ? (
+                                  <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.2 bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 font-bold">
+                                    <Clock className="h-2.5 w-2.5 shrink-0" /> Assigned / Pending
+                                  </span>
+                                ) : order.current_stage === "returned_for_correction" ? (
+                                  <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.2 bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 font-bold">
+                                    <AlertTriangle className="h-2.5 w-2.5 shrink-0" /> Returned
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.2 bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 font-medium">
+                                    ○ Pending
+                                  </span>
+                                )}
+                              </div>
+                              {/* 1C */}
+                              <div className="flex items-center gap-1.5 text-[10px]">
+                                <span className="font-bold text-slate-400">1C:</span>
+                                {order.current_stage === "goods_completed" || order.status === "completed" || (order.goods_gross_weight && Number(order.goods_gross_weight) > 0) ? (
+                                  <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.2 bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 font-bold">
+                                    <CheckCircle2 className="h-2.5 w-2.5 shrink-0" /> Goods Verified
+                                  </span>
+                                ) : order.current_stage === "goods_entry_required" || order.current_stage === "truck_confirmed" ? (
+                                  <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.2 bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 font-bold">
+                                    <Clock className="h-2.5 w-2.5 shrink-0" /> Assigned / Entry
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.2 bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 font-medium">
+                                    ○ Pending
+                                  </span>
+                                )}
+                              </div>
+                            </div>
                           </td>
-                          <td className="px-3.5 py-3 text-slate-700 dark:text-slate-300 font-medium">
-                            {order.buyer_name || order.importer_name || "-"}
-                          </td>
+
+                          {/* Goods & Qty */}
                           <td className="px-3.5 py-3">
                             <div className="font-semibold text-slate-900 dark:text-slate-100">{order.goods_name || "-"}</div>
                             <div className="text-[10px] text-slate-500 font-bold">
                               {order.goods_quantity ? `${order.goods_quantity} ${order.goods_unit || ""}` : ""}
+                              {order.goods_gross_weight ? ` • Gross: ${order.goods_gross_weight} kg` : ""}
                               {order.goods_chs_code ? ` • CHS: ${order.goods_chs_code}` : ""}
                             </div>
                           </td>
+
+                          {/* Route / Ports */}
                           <td className="px-3.5 py-3 text-slate-600 dark:text-slate-400">
                             <div>{order.route_name || [order.loading_country_name, order.receiving_country_name].filter(Boolean).join(" → ") || "-"}</div>
-                            {(order.loading_port_name || order.destination_port_name) ? (
-                              <div className="text-[10px] text-slate-400">
-                                {[order.loading_port_name, order.destination_port_name].filter(Boolean).join(" → ")}
-                              </div>
-                            ) : null}
-                          </td>
-                          <td className="px-3.5 py-3">
-                            <div className="flex flex-wrap gap-1">
-                              <span className="capitalize rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                            <div className="flex flex-wrap gap-1 mt-0.5">
+                              <span className="capitalize rounded bg-slate-100 px-1 py-0.2 text-[9px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                                 {order.movement_type || "-"}
                               </span>
-                              <span className="capitalize rounded-md bg-blue-50 px-1.5 py-0.5 text-[10px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                              <span className="capitalize rounded bg-blue-50 px-1 py-0.2 text-[9px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
                                 {order.transport_mode?.replace("_", " ") || "-"}
                               </span>
                             </div>
                           </td>
-                          <td className="px-3.5 py-3">
-                            <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold border ${prog.color}`}>
-                              {tt(prog.labelKey, "Progress")}
-                            </span>
-                            {order.status === "approved" || order.status === "rejected" || order.status === "pending_approval" ? (
-                              <div className="mt-1">
-                                <span
-                                  className={`inline-block px-1.5 py-0.5 rounded-md text-[9px] font-bold border ${
-                                    order.status === "approved"
-                                      ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300"
-                                      : order.status === "rejected"
-                                      ? "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950 dark:text-rose-300"
-                                      : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300"
-                                  }`}
-                                >
-                                  {order.status === "approved"
-                                    ? t(lang, "comv.approval_approved", "Approved")
-                                    : order.status === "rejected"
-                                    ? t(lang, "comv.approval_rejected", "Rejected")
-                                    : t(lang, "comv.approval_pending", "Pending Approval")}
-                                </span>
-                              </div>
-                            ) : null}
-                          </td>
+
+                          {/* Responsible User & Branch */}
                           <td className="px-3.5 py-3 text-slate-600 dark:text-slate-400">
-                            <div className="font-semibold">{order.branch_name || userContext.context?.branchName || "-"}</div>
+                            <div className="space-y-0.5">
+                              <div className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1 text-[11px]">
+                                <User className="h-3 w-3 text-blue-600" />
+                                <span>{order.latest_handover?.receiver_name || order.created_by_name || "Responsible Desk"}</span>
+                              </div>
+                              <div className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                                <Building2 className="h-2.5 w-2.5" />
+                                <span>{order.latest_handover?.dest_branch_name || order.branch_name || userContext.context?.branchName || "-"}</span>
+                              </div>
+                            </div>
                           </td>
+
+                          {/* Next Required Action */}
+                          <td className="px-3.5 py-3">
+                            <div>
+                              {order.current_stage === "returned_for_correction" ? (
+                                <span
+                                  className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-1 text-[10px] font-bold text-rose-700 border border-rose-200 dark:bg-rose-950/50 dark:border-rose-800 dark:text-rose-300 shadow-2xs"
+                                  title={order.rejected_reason || "Correction required"}
+                                >
+                                  <AlertTriangle className="h-3 w-3 shrink-0" />
+                                  <span className="truncate max-w-[120px]">Fix: {order.rejected_reason || "Correction"}</span>
+                                </span>
+                              ) : order.current_stage === "truck_confirmation_required" || (!order.truck_number || order.truck_number === "TO BE ASSIGNED") ? (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    loadEditOrder(order);
+                                    setStep1SubStep("1B");
+                                    setCurrentStep(2);
+                                  }}
+                                  className="inline-flex items-center gap-1 rounded-full bg-amber-50 hover:bg-amber-100 px-2.5 py-1 text-[10px] font-bold text-amber-800 border border-amber-200 dark:bg-amber-950/50 dark:border-amber-800 dark:text-amber-300 shadow-2xs transition"
+                                >
+                                  <Truck className="h-3 w-3 shrink-0 text-amber-600" />
+                                  <span>{tt("btn_confirm_truck", "Confirm Truck")}</span>
+                                </button>
+                              ) : order.current_stage === "goods_entry_required" || order.current_stage === "truck_confirmed" || (!order.goods_gross_weight && order.status !== "completed") ? (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    loadEditOrder(order);
+                                    setStep1SubStep("1C");
+                                    setCurrentStep(3);
+                                  }}
+                                  className="inline-flex items-center gap-1 rounded-full bg-blue-50 hover:bg-blue-100 px-2.5 py-1 text-[10px] font-bold text-blue-800 border border-blue-200 dark:bg-blue-950/50 dark:border-blue-800 dark:text-blue-300 shadow-2xs transition"
+                                >
+                                  <Boxes className="h-3 w-3 shrink-0 text-blue-600" />
+                                  <span>{tt("btn_enter_goods", "Enter Goods")}</span>
+                                </button>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-800 border border-emerald-200 dark:bg-emerald-950/50 dark:border-emerald-800 dark:text-emerald-300 shadow-2xs">
+                                  <CheckCircle2 className="h-3 w-3 shrink-0" />
+                                  <span>{tt("status_completed", "Completed")}</span>
+                                </span>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* Actions */}
                           <td className="px-3.5 py-3 text-right">
-                            <div className="relative inline-block text-left">
+                            <div className="flex items-center justify-end gap-1.5">
+                              {/* Quick Timeline Button */}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setTimelineOrder({ id: order.id, orderNo: order.order_no || `CL-${order.id.slice(0, 6)}` });
+                                  setTimelineModalOpen(true);
+                                }}
+                                className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 transition shadow-2xs"
+                                title={tt("view_activity_timeline", "View Activity Timeline & Audit Trail")}
+                              >
+                                <Activity className="h-3.5 w-3.5 text-blue-600" />
+                              </button>
+
+                              {/* Quick Edit / Resume Button */}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  loadEditOrder(order);
+                                  if (order.current_stage === "truck_confirmation_required") {
+                                    setStep1SubStep("1B");
+                                    setCurrentStep(2);
+                                  } else if (order.current_stage === "goods_entry_required" || order.current_stage === "truck_confirmed") {
+                                    setStep1SubStep("1C");
+                                    setCurrentStep(3);
+                                  } else {
+                                    setStep1SubStep("1A");
+                                    setCurrentStep(1);
+                                  }
+                                }}
+                                className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 transition shadow-2xs"
+                                title={tt("edit_order", "Edit Order")}
+                              >
+                                <Pencil className="h-3.5 w-3.5 text-slate-600 dark:text-slate-300" />
+                              </button>
+
+                              {/* More Actions Dropdown */}
                               <button
                                 type="button"
                                 onClick={(e) => {
@@ -2775,10 +3324,10 @@ export function CustomerOrderManagementView() {
                                     });
                                   }
                                 }}
-                                className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 transition"
+                                className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 transition shadow-2xs"
                                 title={tt("th_actions", "Actions")}
                               >
-                                <MoreVertical className="h-4 w-4" />
+                                <MoreVertical className="h-3.5 w-3.5" />
                               </button>
                             </div>
                           </td>
@@ -2867,6 +3416,34 @@ export function CustomerOrderManagementView() {
                   >
                     <Printer className="h-3.5 w-3.5 text-amber-600" />
                     <span>{tt("print", "Print Voucher")}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTimelineOrder({ id: targetOrder.id, orderNo: targetOrder.order_no || `CL-${targetOrder.id.slice(0, 6)}` });
+                      setTimelineModalOpen(true);
+                      setActiveActionMenuId(null);
+                    }}
+                    className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                  >
+                    <Activity className="h-3.5 w-3.5 text-blue-600" />
+                    <span>{tt("view_activity_timeline", "Activity Timeline & Audit")}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReturnOrderInfo({
+                        id: targetOrder.id,
+                        orderNo: targetOrder.order_no || `CL-${targetOrder.id.slice(0, 6)}`,
+                        stage: targetOrder.current_stage === "goods_entry_required" ? "1C" : "1B"
+                      });
+                      setReturnModalOpen(true);
+                      setActiveActionMenuId(null);
+                    }}
+                    className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                  >
+                    <AlertTriangle className="h-3.5 w-3.5 text-rose-500" />
+                    <span>{tt("return_for_correction_btn", "Return for Correction")}</span>
                   </button>
                 </div>
 
@@ -3213,6 +3790,11 @@ export function CustomerOrderManagementView() {
                       }}
                       onConfirmSave={() => void handleSaveProgress(true)}
                       onSaveDraft={() => void handleSaveProgress(false)}
+                      onAssignStage1A={handleAssignStage1A}
+                      onConfirmTruckContinueMyself={handleConfirmTruckContinueMyself}
+                      onConfirmTruckAssignGoods={handleConfirmTruckAssignGoods}
+                      onReturnForCorrection={handleTriggerReturnModal}
+                      onCompleteGoodsEntry={handleCompleteGoodsEntry}
                       saving={saving}
                     />
                   )}
@@ -4419,6 +5001,11 @@ function Step1BookingCustomer({
   onAdvanceToStep3,
   onConfirmSave,
   onSaveDraft,
+  onAssignStage1A,
+  onConfirmTruckContinueMyself,
+  onConfirmTruckAssignGoods,
+  onReturnForCorrection,
+  onCompleteGoodsEntry,
   saving
 }: {
   lang: ReturnType<typeof useActiveLanguage>;
@@ -4454,6 +5041,11 @@ function Step1BookingCustomer({
   onAdvanceToStep3?: () => void;
   onConfirmSave?: () => void;
   onSaveDraft?: () => void;
+  onAssignStage1A?: () => void;
+  onConfirmTruckContinueMyself?: () => void;
+  onConfirmTruckAssignGoods?: () => void;
+  onReturnForCorrection?: (stage: "1B" | "1C") => void;
+  onCompleteGoodsEntry?: () => void;
   saving?: boolean;
 }) {
   const ctx = userContext.context;
@@ -4550,7 +5142,7 @@ function Step1BookingCustomer({
     });
   };
 
-  // Step 1B Goods Draft & Edit State (Voice note: enter once, save to table, repeat)
+  // Step 1C Goods Draft & Edit State (Voice note: enter once, save to table, repeat)
   const [draftGoodsItem, setDraftGoodsItem] = useState<CustomerOrderGoodsItem>(defaultGoodsItem());
   const [editingGoodsIdx, setEditingGoodsIdx] = useState<number | null>(null);
 
@@ -4560,7 +5152,22 @@ function Step1BookingCustomer({
       if (field === "quantity" || field === "kgPerQty") {
         const q = Number(field === "quantity" ? value : updated.quantity) || 0;
         const k = Number(field === "kgPerQty" ? value : updated.kgPerQty) || 0;
-        updated.totalKg = String(q * k);
+        const tot = String(q * k);
+        updated.totalKg = tot;
+        updated.grossWeight = tot;
+        const empty = Number(updated.emptyWeight) || 0;
+        updated.netWeight = String(Math.max(0, (q * k) - empty));
+      }
+      if (field === "grossWeight" || field === "emptyWeight") {
+        const gross = Number(field === "grossWeight" ? value : updated.grossWeight) || 0;
+        const empty = Number(field === "emptyWeight" ? value : updated.emptyWeight) || 0;
+        updated.totalKg = String(gross);
+        updated.netWeight = String(Math.max(0, gross - empty));
+      }
+      if (field === "quantity" || field === "rate") {
+        const q = Number(field === "quantity" ? value : updated.quantity) || 0;
+        const r = Number(field === "rate" ? value : updated.rate) || 0;
+        updated.finalAmount = String(q * r);
       }
       return updated;
     });
@@ -4588,13 +5195,22 @@ function Step1BookingCustomer({
     }
     const qty = Number(draftGoodsItem.quantity) || 1;
     const kg = Number(draftGoodsItem.kgPerQty) || 50;
-    const total = String(qty * kg);
+    const gross = Number(draftGoodsItem.grossWeight) || (qty * kg);
+    const empty = Number(draftGoodsItem.emptyWeight) || 0;
+    const net = Math.max(0, gross - empty);
+    const rate = Number(draftGoodsItem.rate) || 0;
+    const finalAmt = String(qty * rate);
+
     const itemToSave: CustomerOrderGoodsItem = {
       ...draftGoodsItem,
       goodsName: draftGoodsItem.goodsName || "Goods Item",
       quantity: String(qty),
       kgPerQty: String(kg),
-      totalKg: total
+      totalKg: String(gross),
+      grossWeight: String(gross),
+      emptyWeight: String(empty),
+      netWeight: String(net),
+      finalAmount: finalAmt
     };
 
     setFormData((current) => {
@@ -4610,7 +5226,9 @@ function Step1BookingCustomer({
         }
       }
       const totalQty = updatedItems.reduce((sum, g) => sum + (Number(g.quantity) || 0), 0);
-      const totalGrossKg = updatedItems.reduce((sum, g) => sum + (Number(g.totalKg) || 0), 0);
+      const totalGrossKg = updatedItems.reduce((sum, g) => sum + (Number(g.grossWeight || g.totalKg) || 0), 0);
+      const totalEmptyKg = updatedItems.reduce((sum, g) => sum + (Number(g.emptyWeight) || 0), 0);
+      const totalNetKg = updatedItems.reduce((sum, g) => sum + (Number(g.netWeight || g.totalKg) || 0), 0);
       const first = updatedItems[0];
       return {
         ...current,
@@ -4620,7 +5238,8 @@ function Step1BookingCustomer({
         goods_unit: first?.unit || "Bags",
         goods_quantity: String(totalQty),
         goods_gross_weight: String(totalGrossKg),
-        goods_net_weight: String(totalGrossKg)
+        goods_empty_weight: String(totalEmptyKg),
+        goods_net_weight: String(totalNetKg)
       };
     });
 
@@ -4652,7 +5271,9 @@ function Step1BookingCustomer({
       const items = filtered.length > 0 ? filtered : [defaultGoodsItem()];
       const first = items[0];
       const totalQty = items.reduce((sum, g) => sum + (Number(g.quantity) || 0), 0);
-      const totalKg = items.reduce((sum, g) => sum + (Number(g.totalKg) || 0), 0);
+      const totalGrossKg = items.reduce((sum, g) => sum + (Number(g.grossWeight || g.totalKg) || 0), 0);
+      const totalEmptyKg = items.reduce((sum, g) => sum + (Number(g.emptyWeight) || 0), 0);
+      const totalNetKg = items.reduce((sum, g) => sum + (Number(g.netWeight || g.totalKg) || 0), 0);
 
       return {
         ...current,
@@ -4661,8 +5282,9 @@ function Step1BookingCustomer({
         goods_name: items.map((g) => g.goodsName).filter(Boolean).join(", "),
         goods_unit: first?.unit || "Bags",
         goods_quantity: String(totalQty),
-        goods_gross_weight: String(totalKg),
-        goods_net_weight: String(totalKg)
+        goods_gross_weight: String(totalGrossKg),
+        goods_empty_weight: String(totalEmptyKg),
+        goods_net_weight: String(totalNetKg)
       };
     });
     if (editingGoodsIdx === idx) {
@@ -4684,11 +5306,24 @@ function Step1BookingCustomer({
     () => (formData.goods_items || []).reduce((sum, g) => sum + (Number(g.quantity) || 0), 0),
     [formData.goods_items]
   );
-  const totalGoodsKg = useMemo(
-    () => (formData.goods_items || []).reduce((sum, g) => sum + (Number(g.totalKg) || 0), 0),
+  const totalGoodsGrossKg = useMemo(
+    () => (formData.goods_items || []).reduce((sum, g) => sum + (Number(g.grossWeight || g.totalKg) || 0), 0),
     [formData.goods_items]
   );
-  const totalGoodsMt = useMemo(() => (totalGoodsKg / 1000).toFixed(2), [totalGoodsKg]);
+  const totalGoodsEmptyKg = useMemo(
+    () => (formData.goods_items || []).reduce((sum, g) => sum + (Number(g.emptyWeight) || 0), 0),
+    [formData.goods_items]
+  );
+  const totalGoodsNetKg = useMemo(
+    () => (formData.goods_items || []).reduce((sum, g) => sum + (Number(g.netWeight || g.totalKg) || 0), 0),
+    [formData.goods_items]
+  );
+  const totalGoodsAmount = useMemo(
+    () => (formData.goods_items || []).reduce((sum, g) => sum + (Number(g.finalAmount) || 0), 0),
+    [formData.goods_items]
+  );
+  const totalGoodsGrossMt = useMemo(() => (totalGoodsGrossKg / 1000).toFixed(2), [totalGoodsGrossKg]);
+  const totalGoodsNetMt = useMemo(() => (totalGoodsNetKg / 1000).toFixed(2), [totalGoodsNetKg]);
 
   const selectSub = (sub: "1A" | "1B" | "1C") => {
     if (onSelectSubStep) {
@@ -4818,147 +5453,28 @@ function Step1BookingCustomer({
               ) : null}
             </div>
 
-            {/* 2. Route Via / Transit Corridor Pathway Builder */}
-            <div className="rounded-xl border border-emerald-200/90 bg-white dark:bg-slate-900 p-3 space-y-2 shadow-2xs dark:border-emerald-800/80 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                    <Route className="h-4 w-4 text-emerald-600" />
-                    <span>{tt("route_via_corridor", "Route Via / Corridor")}</span>
-                  </label>
-                  <div className="flex items-center gap-1.5">
-                    {routeStops.length > 0 && (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
-                        {routeStops.length} {tt("route_stops_count", "Stops")}
-                      </span>
-                    )}
-                    {formData.route_name ? (
-                      <button
-                        type="button"
-                        onClick={handleClearRoute}
-                        className="text-[10px] font-semibold text-slate-400 hover:text-rose-500 transition-colors"
-                        title={tt("btn_clear", "Clear")}
-                      >
-                        {tt("btn_clear", "Clear")}
-                      </button>
-                    ) : null}
-                  </div>
-                </div>
-
-                {/* Preset & Add Country Dropdowns */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
-                  <select
-                    value=""
-                    onChange={(e) => {
-                      if (e.target.value) {
-                        setFormData((c) => ({ ...c, route_name: e.target.value }));
-                      }
-                    }}
-                    className="w-full rounded-lg border border-slate-200 bg-slate-50/70 px-2.5 py-1.5 text-xs font-medium text-slate-700 focus:border-emerald-500 focus:bg-white focus:outline-none dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-200"
-                  >
-                    <option value="">{tt("corridor_presets_ph", "⚡ Corridor Presets ▾")}</option>
-                    <option value="Dubai ➔ Iran ➔ Afghanistan ➔ Uzbekistan ➔ India">🇦🇪 Dubai ➔ 🇮🇷 Iran ➔ 🇦🇫 Afghan ➔ 🇺🇿 Uzbek ➔ 🇮🇳 India</option>
-                    <option value="Dubai ➔ Iran ➔ Afghanistan ➔ Uzbekistan">🇦🇪 Dubai ➔ 🇮🇷 Iran ➔ 🇦🇫 Afghan ➔ 🇺🇿 Uzbekistan</option>
-                    <option value="Dubai ➔ Iran ➔ Afghanistan">🇦🇪 Dubai ➔ 🇮🇷 Iran ➔ 🇦🇫 Afghanistan</option>
-                    <option value="Dubai ➔ Bandar Abbas ➔ Dogharoun ➔ Islam Qala ➔ Herat">🇦🇪 Dubai ➔ 🇮🇷 Bandar Abbas ➔ 🇦🇫 Islam Qala ➔ Herat</option>
-                    <option value="Karachi ➔ Torkham ➔ Jalalabad ➔ Kabul">🇵🇰 Karachi ➔ 🇦🇫 Torkham ➔ Jalalabad ➔ Kabul</option>
-                    <option value="Karachi ➔ Chaman ➔ Spin Boldak ➔ Kandahar">🇵🇰 Karachi ➔ 🇦🇫 Chaman ➔ Spin Boldak ➔ Kandahar</option>
-                    <option value="Dubai ➔ Karachi ➔ Chaman ➔ Afghanistan">🇦🇪 Dubai ➔ 🇵🇰 Karachi ➔ 🇦🇫 Afghanistan</option>
-                    <option value="China ➔ Khunjerab ➔ Sost ➔ Pakistan">🇨🇳 China ➔ 🇵🇰 Khunjerab ➔ Sost ➔ Pakistan</option>
-                  </select>
-
-                  <select
-                    value=""
-                    onChange={(e) => {
-                      if (e.target.value) {
-                        handleAddRouteStop(e.target.value);
-                      }
-                    }}
-                    className="w-full rounded-lg border border-slate-200 bg-slate-50/70 px-2.5 py-1.5 text-xs font-medium text-slate-700 focus:border-emerald-500 focus:bg-white focus:outline-none dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-200"
-                  >
-                    <option value="">{tt("add_country_hub_ph", "➕ Add Country / Hub ▾")}</option>
-                    <optgroup label={tt("popular_trade_corridors", "Popular Trade Corridors")}>
-                      <option value="Dubai">🇦🇪 Dubai (UAE)</option>
-                      <option value="Jebel Ali">🇦🇪 Jebel Ali Port</option>
-                      <option value="Iran">🇮🇷 Iran</option>
-                      <option value="Bandar Abbas">🇮🇷 Bandar Abbas Port</option>
-                      <option value="Chabahar">🇮🇷 Chabahar Port</option>
-                      <option value="Dogharoun">🇮🇷 Dogharoun Border</option>
-                      <option value="Afghanistan">🇦🇫 Afghanistan</option>
-                      <option value="Islam Qala">🇦🇫 Islam Qala Border</option>
-                      <option value="Torkham">🇦🇫 Torkham Border</option>
-                      <option value="Spin Boldak">🇦🇫 Spin Boldak Border</option>
-                      <option value="Kabul">🇦🇫 Kabul</option>
-                      <option value="Herat">🇦🇫 Herat</option>
-                      <option value="Kandahar">🇦🇫 Kandahar</option>
-                      <option value="Mazar-i-Sharif">🇦🇫 Mazar-i-Sharif</option>
-                      <option value="Uzbekistan">🇺🇿 Uzbekistan</option>
-                      <option value="Hairatan">🇺🇿 Hairatan Border</option>
-                      <option value="Tashkent">🇺🇿 Tashkent</option>
-                      <option value="India">🇮🇳 India</option>
-                      <option value="Nhava Sheva">🇮🇳 Nhava Sheva (JNPT)</option>
-                      <option value="Mundra">🇮🇳 Mundra Port</option>
-                      <option value="Pakistan">🇵🇰 Pakistan</option>
-                      <option value="Karachi">🇵🇰 Karachi Port</option>
-                      <option value="Port Qasim">🇵🇰 Port Qasim</option>
-                      <option value="Gwadar">🇵🇰 Gwadar Port</option>
-                      <option value="Chaman">🇵🇰 Chaman Border</option>
-                      <option value="China">🇨🇳 China</option>
-                      <option value="Turkey">🇹🇷 Turkey</option>
-                      <option value="Turkmenistan">🇹🇲 Turkmenistan</option>
-                      <option value="Tajikistan">🇹🇯 Tajikistan</option>
-                      <option value="Oman">🇴🇲 Oman</option>
-                    </optgroup>
-                  </select>
-                </div>
-
-                {/* Removable Route Stop Tags */}
-                {routeStops.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-1.5 p-2 bg-slate-50/80 dark:bg-slate-950/50 rounded-lg border border-slate-200/80 dark:border-slate-800/80 mb-2">
-                    {routeStops.map((stop, sIdx) => {
-                      const flag = getRouteCountryFlag(stop);
-                      const isOrigin = sIdx === 0;
-                      const isDest = sIdx === routeStops.length - 1 && routeStops.length > 1;
-                      return (
-                        <div key={sIdx} className="flex items-center gap-1">
-                          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-bold border shadow-2xs ${
-                            isOrigin 
-                              ? "bg-blue-50 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800" 
-                              : isDest 
-                              ? "bg-purple-50 dark:bg-purple-950/50 text-purple-800 dark:text-purple-300 border-purple-200 dark:border-purple-800" 
-                              : "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700"
-                          }`}>
-                            <span>{flag}</span>
-                            <span>{stop}</span>
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveRouteStop(sIdx)}
-                              className="ml-1 text-slate-400 hover:text-rose-500 rounded p-0.5 transition-colors"
-                              title={`Remove ${stop}`}
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </span>
-                          {sIdx < routeStops.length - 1 && (
-                            <span className="text-slate-400 font-bold text-[10px]">➔</span>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              {/* Text Input for Custom or Fine-Tuning */}
-              <div>
-                <input
-                  type="text"
-                  placeholder={tt("ph_route_via", "e.g. Dubai ➔ Iran ➔ Afghanistan ➔ Uzbekistan ➔ India")}
-                  value={formData.route_name}
-                  onChange={(e) => setFormData((c) => ({ ...c, route_name: e.target.value }))}
-                  className={inputClass}
-                />
-              </div>
+            {/* 2. Sequenced Multi-Leg Route & Transit Corridor Pathway Builder */}
+            <div className="rounded-xl border border-emerald-200/90 bg-white dark:bg-slate-900 p-2.5 shadow-2xs dark:border-emerald-800/80">
+              <CustomerOrderRouteBuilder
+                routeName={formData.route_name}
+                transportMode={formData.transport_mode}
+                loadingCountryId={formData.loading_country_id}
+                loadingCountryName={formData.loading_country_name}
+                receivingCountryId={formData.receiving_country_id}
+                receivingCountryName={formData.receiving_country_name}
+                loadingCityName={formData.loading_city_name}
+                destinationCityName={formData.destination_city}
+                legs={formData.legs || []}
+                onChange={(routeName, legs) => {
+                  setFormData((c) => ({
+                    ...c,
+                    route_name: routeName,
+                    legs: legs
+                  }));
+                }}
+                countries={countries}
+                lang={lang}
+              />
             </div>
           </div>
 
@@ -5394,24 +5910,40 @@ function Step1BookingCustomer({
           )}
 
           {/* 1A Action Footer */}
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
             <button
               type="button"
-              onClick={() => {
-                setFormData((curr) => ({
-                  ...curr,
-                  customer_id: "",
-                  customer_name: "",
-                  movement_type: "import",
-                  transport_mode: "by_sea"
-                }));
-              }}
-              className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 underline"
+              onClick={onSaveDraft}
+              disabled={saving}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 shadow-2xs transition"
             >
-              <RefreshCw className="h-3 w-3" />
-              <span>{tt("reset_1a_form", "Reset 1A Form")}</span>
+              <Save className="h-3.5 w-3.5 text-slate-500" />
+              <span>{t(lang, "comv.save_draft", "Save Draft")}</span>
             </button>
-            <span className="text-[10px] text-slate-400 font-medium">1A: Customer & Route</span>
+
+            <div className="flex items-center gap-2">
+              {onAssignStage1A && (
+                <button
+                  type="button"
+                  onClick={onAssignStage1A}
+                  disabled={saving}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-blue-300 bg-blue-50 px-3.5 py-2 text-xs font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950/60 dark:text-blue-300 shadow-2xs transition"
+                >
+                  <Users className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                  <span>{tt("assign_to_another_user", "Assign to Another User")}</span>
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={onAdvanceToStep2}
+                disabled={saving}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-700 shadow-xs shadow-blue-600/25 transition"
+              >
+                <span>Continue Myself (Go to 1B)</span>
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -5602,76 +6134,174 @@ function Step1BookingCustomer({
                 </div>
               )}
             </div>
-          </div>
 
-          {/* Step 1B Handover & Execution Assignment */}
-          <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-1.5 dark:border-slate-800">
-              <div className="flex items-center gap-2">
-                <Users className="h-3.5 w-3.5 text-blue-600" />
-                <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                  {tt("com.step1b_execution_assignment", "Step 1B (Truck & Fleet) Handover & Execution")}
-                </span>
+            {/* Additional Fleet & Operational Parameters */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 pt-3 border-t border-slate-100 dark:border-slate-800">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                  Vehicle Type *
+                </label>
+                <select
+                  value={formData.truck_vehicle_type || "Container Trailer"}
+                  onChange={(e) => setFormData((c) => ({ ...c, truck_vehicle_type: e.target.value }))}
+                  className={selectClass}
+                >
+                  <option value="Container Trailer">{tt("vehicle_type_container", "Container Trailer (40ft / 20ft)")}</option>
+                  <option value="Flatbed Truck">{tt("vehicle_type_flatbed", "Flatbed Truck (Open Body)")}</option>
+                  <option value="Box Truck">{tt("vehicle_type_box_truck", "Box Truck / Covered Van")}</option>
+                  <option value="Tanker">{tt("vehicle_type_tanker", "Liquid Tanker")}</option>
+                  <option value="Lowbed Trailer">{tt("vehicle_type_lowbed", "Lowbed Heavy Equipment Trailer")}</option>
+                  <option value="Reefer">{tt("vehicle_type_reefer", "Refrigerated (Reefer) Truck")}</option>
+                  <option value="Pickup">{tt("vehicle_type_pickup", "Pickup / Light Commercial Vehicle")}</option>
+                  <option value="Other">{tt("vehicle_type_other", "Other Specialized Transport")}</option>
+                </select>
               </div>
-              <span className="text-[10px] font-bold text-slate-400">{tt("workflow_role", "Workflow Role")}</span>
-            </div>
 
-            <div className="space-y-2">
-              <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400">
-                {tt("com.assign_other_user", "Assign to Other User / Team Member")}
-              </label>
-              <select
-                value={formData.step1b_assignee_id || ""}
-                onChange={(e) => {
-                  const uid = e.target.value;
-                  const u = (assignableUsers || []).find((usr) => usr.id === uid);
-                  setFormData((c) => ({
-                    ...c,
-                    step1b_assignee_id: uid,
-                    step1b_assignee_name: u?.name || ""
-                  }));
-                }}
-                className={selectClass}
-              >
-                <option value="">{tt("self_execution_option", "Complete this step myself (Default)")}</option>
-                {(assignableUsers || []).map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} (Fleet / Transport Operator)
-                  </option>
-                ))}
-              </select>
+              <div>
+                <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                  Transport Co / Contractor
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Al-Fatah Goods Transport"
+                  value={formData.truck_transport_company || ""}
+                  onChange={(e) => setFormData((c) => ({ ...c, truck_transport_company: e.target.value }))}
+                  className={inputClass}
+                />
+              </div>
 
-              {formData.step1b_assignee_id ? (
-                <div className="space-y-1.5 animate-in fade-in duration-150">
-                  <input
-                    type="text"
-                    value={formData.step1b_handover_notes || ""}
-                    onChange={(e) => setFormData((c) => ({ ...c, step1b_handover_notes: e.target.value }))}
-                    placeholder={tt("com.handover_notes_optional", "Handover Instructions / Dispatch Note (Optional)")}
-                    className={inputClass}
-                  />
-                  <div className="rounded-lg bg-blue-50/70 p-2 text-[11px] text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 flex items-center gap-1.5">
-                    <CheckCircle2 className="h-3 w-3 shrink-0 text-blue-600" />
-                    <span>
-                      {tt("com.step_handover_success", "Step successfully handed over to {name}.").replace("{name}", formData.step1b_assignee_name || "Team Member")}
-                    </span>
-                  </div>
-                </div>
-              ) : null}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                  Arrival Date & Time
+                </label>
+                <input
+                  type="datetime-local"
+                  value={formData.truck_arrival_time || ""}
+                  onChange={(e) => setFormData((c) => ({ ...c, truck_arrival_time: e.target.value }))}
+                  className={inputClass}
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                  Loading Location / Terminal
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Jebel Ali Gate 4 / Karachi Terminal Yard"
+                  value={formData.truck_loading_location || ""}
+                  onChange={(e) => setFormData((c) => ({ ...c, truck_loading_location: e.target.value }))}
+                  className={inputClass}
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                  Truck Operational Status
+                </label>
+                <select
+                  value={formData.truck_status || "Pending"}
+                  onChange={(e) => setFormData((c) => ({ ...c, truck_status: e.target.value }))}
+                  className={selectClass}
+                >
+                  <option value="Pending">{tt("truck_status_pending", "Pending Assignment")}</option>
+                  <option value="At Gate">{tt("truck_status_at_gate", "At Gate / Terminal")}</option>
+                  <option value="In Transit">{tt("truck_status_in_transit", "In Transit")}</option>
+                  <option value="Loading">{tt("truck_status_loading", "Loading Cargo")}</option>
+                  <option value="Dispatched">{tt("truck_status_dispatched", "Dispatched / Released")}</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1 flex items-center gap-1.5">
+                  <FileText className="h-3.5 w-3.5 text-blue-600" />
+                  <span>{tt("truck_document_photos", "Truck Document / Photos")}</span>
+                </label>
+                <input
+                  type="file"
+                  accept="image/*,.pdf"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                      setFormData((c) => ({
+                        ...c,
+                        truck_photo_url: reader.result as string,
+                        truck_photo_name: file.name
+                      }));
+                    };
+                    reader.readAsDataURL(file);
+                  }}
+                  className="text-[11px] text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-[11px] file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-950/40 dark:file:text-blue-300"
+                />
+                {formData.truck_photo_name ? (
+                  <span className="text-[10px] text-emerald-600 font-bold block mt-1">✓ {formData.truck_photo_name} attached</span>
+                ) : null}
+              </div>
             </div>
           </div>
 
           {/* 1B Action Footer */}
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-            <button
-              type="button"
-              onClick={() => selectSub("1A")}
-              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-            >
-              <ChevronLeft className="h-3 w-3" />
-              <span>Back to 1A</span>
-            </button>
-            <span className="text-[10px] text-slate-400 font-medium">1B: Truck & Fleet</span>
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => selectSub("1A")}
+                className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 shadow-2xs"
+              >
+                <ChevronLeft className="h-3.5 w-3.5" />
+                <span>Back to 1A</span>
+              </button>
+
+              {onReturnForCorrection && (
+                <button
+                  type="button"
+                  onClick={() => onReturnForCorrection("1B")}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300 shadow-2xs transition"
+                  title={tt("return_to_1a_title", "Return back to Stage 1A with mandatory correction reason")}
+                >
+                  <AlertTriangle className="h-3.5 w-3.5 text-rose-600" />
+                  <span>{tt("return_for_correction", "Return for Correction")}</span>
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onSaveDraft}
+                disabled={saving}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 shadow-2xs transition"
+              >
+                <Save className="h-3.5 w-3.5 text-slate-500" />
+                <span>{tt("save_draft", "Save Draft")}</span>
+              </button>
+
+              {onConfirmTruckAssignGoods && (
+                <button
+                  type="button"
+                  onClick={onConfirmTruckAssignGoods}
+                  disabled={saving}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-blue-300 bg-blue-50 px-3.5 py-2 text-xs font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950/60 dark:text-blue-300 shadow-2xs transition"
+                >
+                  <Users className="h-3.5 w-3.5 text-blue-600" />
+                  <span>{tt("confirm_truck_assign_goods", "Confirm Truck & Assign Goods Entry")}</span>
+                </button>
+              )}
+
+              {onConfirmTruckContinueMyself && (
+                <button
+                  type="button"
+                  onClick={onConfirmTruckContinueMyself}
+                  disabled={saving}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-700 shadow-xs shadow-blue-600/25 transition"
+                >
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  <span>{tt("confirm_truck_continue_myself", "Confirm Truck & Continue Myself")}</span>
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -5681,41 +6311,70 @@ function Step1BookingCustomer({
       {/* ========================================================================= */}
       {step1SubStep === "1C" && (
         <div className="space-y-4 animate-in fade-in duration-150">
+          {/* Prominent Stage 1C Notification Banner */}
+          <div className="flex items-center justify-between gap-3 rounded-2xl border border-emerald-300 bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 p-3.5 shadow-xs dark:border-emerald-800/80 dark:from-emerald-950/40 dark:via-teal-950/30 dark:to-emerald-950/40">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-md shadow-emerald-600/30">
+                <Truck className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
+                    🚚 Truck Confirmed — Goods Entry Assigned to You
+                  </span>
+                  <span className="rounded-full bg-emerald-200/80 px-2 py-0.5 text-[10px] font-black text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200">
+                    Stage 1C Active
+                  </span>
+                </div>
+                <p className="text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
+                  {tt("stage_1c_notification_desc", "Truck logistics verified. Record cargo manifest, size, weights, origin country, warehouse, and rate.")}
+                </p>
+              </div>
+            </div>
+            {formData.truck_number ? (
+              <div className="hidden sm:flex flex-col items-end text-xs font-bold text-slate-700 dark:text-slate-300">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Assigned Truck</span>
+                <span className="font-mono text-emerald-700 dark:text-emerald-400 font-black">{formData.truck_number}</span>
+              </div>
+            ) : null}
+          </div>
+
           {/* Read-Only 1A & 1B Summary Badge Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50/70 p-2.5 text-xs dark:border-slate-800 dark:bg-slate-850">
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50/80 p-2.5 text-xs dark:border-slate-800 dark:bg-slate-850">
             <div className="flex flex-wrap items-center gap-2">
               <span className="rounded-md bg-blue-600 px-2 py-0.5 text-[10px] font-black uppercase text-white">
                 1A & 1B Summary
               </span>
               <span className="font-bold text-slate-800 dark:text-slate-200">
-                {formData.customer_name} • {formData.transport_mode.replace("by_", "").toUpperCase()} • {formData.movement_type.toUpperCase()}
+                {formData.customer_name || "Customer"} • {formData.transport_mode.replace("by_", "").toUpperCase()} • {formData.movement_type.toUpperCase()}
                 {formData.route_name ? ` • VIA: ${formData.route_name.toUpperCase()}` : ""}
               </span>
               <span className="text-slate-300 dark:text-slate-600">•</span>
               <span className="font-bold text-slate-600 dark:text-slate-400">
-                Truck: {formData.truck_number || "Later"}
+                Truck: <span className="font-mono font-bold text-blue-700 dark:text-blue-400">{formData.truck_number || "Later"}</span>
+                {formData.truck_driver_name ? ` (${formData.truck_driver_name})` : ""}
               </span>
             </div>
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => selectSub("1A")}
-                className="text-[11px] font-bold text-blue-600 underline"
+                className="text-[11px] font-bold text-blue-600 hover:text-blue-700 underline"
               >
                 [Edit 1A]
               </button>
               <button
                 type="button"
                 onClick={() => selectSub("1B")}
-                className="text-[11px] font-bold text-blue-600 underline"
+                className="text-[11px] font-bold text-blue-600 hover:text-blue-700 underline"
               >
                 [Edit 1B]
               </button>
             </div>
           </div>
 
-          {/* Multiple Goods Section with Save-to-Table & Manifest Grid */}
-          <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-3 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+          {/* Multiple Goods Section with Save-to-Table & Live Compact Manifest */}
+          <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-3.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
             <div className="flex items-center justify-between border-b border-slate-100 pb-2 dark:border-slate-800">
               <div className="flex items-center gap-2">
                 <Boxes className="h-4 w-4 text-emerald-600" />
@@ -5737,7 +6396,7 @@ function Step1BookingCustomer({
             </div>
 
             {/* Goods Entry / Edit Input Form */}
-            <div className="rounded-xl border border-emerald-200/90 bg-emerald-50/30 p-2.5 space-y-2.5 dark:border-emerald-900/60 dark:bg-emerald-950/20">
+            <div className="rounded-xl border border-emerald-200/90 bg-emerald-50/30 p-3 space-y-3 dark:border-emerald-900/60 dark:bg-emerald-950/20">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5">
                   <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white text-[10px] font-black">
@@ -5746,7 +6405,7 @@ function Step1BookingCustomer({
                   <span>{editingGoodsIdx !== null ? tt("edit_goods_item_num", "Edit Goods Item #{n}").replace("{n}", String(editingGoodsIdx + 1)) : tt("add_goods_item", "Add Goods Item")}</span>
                 </span>
                 <span className="text-[10px] text-slate-500 font-medium hidden sm:inline">
-                  {tt("goods_entry_flexible_hint", "Can be completed now or updated by warehouse / operations user later")}
+                  {tt("goods_entry_flexible_hint", "Complete cargo manifest with weights, warehouse, size, origin and pricing")}
                 </span>
                 {editingGoodsIdx !== null ? (
                   <button
@@ -5759,7 +6418,7 @@ function Step1BookingCustomer({
                 ) : null}
               </div>
 
-              {/* Warehouse Location Dropdown */}
+              {/* Warehouse Location Selection */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
                   <label className="text-[10.5px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
@@ -5863,8 +6522,51 @@ function Step1BookingCustomer({
                 />
               </div>
 
-              {/* Row 2: Qty Unit, Quantity, KG Per Qty, Total Gross Wt (KG & MT) */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {/* Row 2: Size / Dimensions, Brand / Quality, Origin Country */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
+                    {tt("goods_size_dim", "Size / Dimension")}
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 40mm / 12x12 / Standard"
+                    value={draftGoodsItem.size || ""}
+                    onChange={(e) => handleDraftGoodsChange("size", e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
+                    {tt("goods_brand_quality", "Brand / Quality")}
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Grade A / Premium / Export Quality"
+                    value={draftGoodsItem.brandQuality || ""}
+                    onChange={(e) => handleDraftGoodsChange("brandQuality", e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
+                    {tt("origin_country", "Origin Country")}
+                  </label>
+                  <select
+                    value={draftGoodsItem.originCountry || ""}
+                    onChange={(e) => handleDraftGoodsChange("originCountry", e.target.value)}
+                    className={selectClass}
+                  >
+                    <option value="">— {tt("select_origin_country", "Select Origin")} —</option>
+                    {countries.map((c) => (
+                      <option key={c.id} value={c.name}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Row 3: Qty Unit, Quantity, KG Per Qty, Gross, Empty, Net Wt (Auto) */}
+              <div className="grid grid-cols-2 sm:grid-cols-6 gap-2">
                 <div>
                   <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("qty_unit", "Qty Unit")}</label>
                   <select
@@ -5909,20 +6611,93 @@ function Step1BookingCustomer({
                 </div>
 
                 <div>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
+                    Gross Wt (KG) *
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={draftGoodsItem.grossWeight || draftGoodsItem.totalKg}
+                    onChange={(e) => handleDraftGoodsChange("grossWeight", e.target.value)}
+                    className={inputClass}
+                    placeholder="50"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
+                    Empty / Tare (KG)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={draftGoodsItem.emptyWeight || "0"}
+                    onChange={(e) => handleDraftGoodsChange("emptyWeight", e.target.value)}
+                    className={inputClass}
+                    placeholder="0"
+                  />
+                </div>
+
+                <div>
                   <label className="block text-[10px] font-bold uppercase text-emerald-700 dark:text-emerald-400 mb-0.5">
-                    Gross Wt (KG & MT)
+                    Net Wt (Auto) *
+                  </label>
+                  <div className="flex items-center gap-1 rounded-xl border border-emerald-300 bg-emerald-50/90 px-2.5 py-2 text-xs font-mono font-black text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 truncate" title="Gross - Empty Weight">
+                    <Scale className="h-3 w-3 text-emerald-600 shrink-0" />
+                    <span>{(Number(draftGoodsItem.netWeight) || 0).toLocaleString()} kg</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Row 4: Pricing / Valuation & Inspection Photo */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
+                    {tt("currency", "Currency")}
+                  </label>
+                  <select
+                    value={draftGoodsItem.currency || "AED"}
+                    onChange={(e) => handleDraftGoodsChange("currency", e.target.value)}
+                    className={selectClass}
+                  >
+                    <option value="AED">AED</option>
+                    <option value="USD">USD</option>
+                    <option value="PKR">PKR</option>
+                    <option value="EUR">EUR</option>
+                    <option value="CNY">CNY</option>
+                    <option value="AFN">AFN</option>
+                    <option value="IRR">IRR</option>
+                    <option value="SAR">SAR</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
+                    {tt("rate_per_unit", "Rate / Unit")}
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={draftGoodsItem.rate || ""}
+                    onChange={(e) => handleDraftGoodsChange("rate", e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
+                    {tt("final_amount", "Final Amount")}
                   </label>
                   <input
                     type="text"
                     readOnly
-                    value={`${(parseFloat(draftGoodsItem.totalKg || "0") || 0).toLocaleString()} kg (${((parseFloat(draftGoodsItem.totalKg || "0") || 0) / 1000).toFixed(3)} MT)`}
-                    className="w-full rounded-xl border border-emerald-300 bg-emerald-50/80 px-2.5 py-2 text-xs font-mono font-bold text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 cursor-not-allowed truncate"
-                    title={tt("calc_gross_wt_title", "Calculated Gross Weight in KG and MT")}
+                    value={`${draftGoodsItem.currency || "AED"} ${(Number(draftGoodsItem.finalAmount) || 0).toLocaleString()}`}
+                    className="w-full rounded-xl border border-slate-200 bg-slate-100/80 px-2.5 py-2 text-xs font-mono font-bold text-slate-800 dark:border-slate-800 dark:bg-slate-850 dark:text-slate-200 cursor-not-allowed truncate"
                   />
                 </div>
               </div>
 
-              {/* Quality / Inspection Photo Upload & Action Buttons */}
+              {/* Photo Upload & Add/Update Buttons */}
               <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-emerald-200/50 dark:border-emerald-900/40">
                 <div className="flex items-center gap-2">
                   <label className="text-[10.5px] font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1">
@@ -5941,97 +6716,242 @@ function Step1BookingCustomer({
                 </div>
 
                 <div className="flex items-center gap-1.5 ml-auto">
+                  {editingGoodsIdx !== null ? (
+                    <button
+                      type="button"
+                      onClick={handleCancelEditGoods}
+                      className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 transition"
+                    >
+                      <span>{tt("cancel", "Cancel")}</span>
+                    </button>
+                  ) : null}
                   <button
                     type="button"
                     onClick={handleSaveDraftGoods}
-                    className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs shadow-emerald-600/25 hover:bg-emerald-700 transition"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-xs shadow-emerald-600/25 hover:bg-emerald-700 transition"
                   >
                     <Plus className="h-3.5 w-3.5" />
-                    <span>{editingGoodsIdx !== null ? "Update Item" : "Add to Manifest"}</span>
+                    <span>{editingGoodsIdx !== null ? tt("update_goods_item", "Update Item") : tt("add_to_manifest", "Add to Manifest")}</span>
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* Total Goods Weights Bar */}
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3 dark:border-emerald-900/60 dark:bg-emerald-950/30 flex flex-wrap items-center justify-between gap-2 text-xs">
-              <span className="font-bold text-emerald-800 dark:text-emerald-300">
-                Total Quantity: <span className="font-black font-mono">{totalGoodsQuantity}</span>
-              </span>
-              <span className="font-bold text-emerald-800 dark:text-emerald-300">
-                Total Gross Weight: <span className="font-black font-mono">{totalGoodsKg.toLocaleString()} KG</span> ({totalGoodsMt} MT)
-              </span>
-            </div>
-          </div>
-
-          {/* Step 1C Handover & Execution Assignment */}
-          <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-1.5 dark:border-slate-800">
-              <div className="flex items-center gap-2">
-                <Users className="h-3.5 w-3.5 text-emerald-600" />
-                <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                  {tt("com.step1c_execution_assignment", "Step 1C (Goods & Warehouse) Handover & Execution")}
-                </span>
+            {/* Live Compact Manifest Table */}
+            <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-200 bg-slate-50/90 text-[10px] font-black uppercase tracking-wider text-slate-600 dark:border-slate-800 dark:bg-slate-850 dark:text-slate-300">
+                      <th className="py-2.5 px-3">#</th>
+                      <th className="py-2.5 px-3">{tt("goods_name_chs", "Goods Name & CHS")}</th>
+                      <th className="py-2.5 px-3">{tt("size_brand_origin", "Size / Brand / Origin")}</th>
+                      <th className="py-2.5 px-3">{tt("warehouse", "Warehouse")}</th>
+                      <th className="py-2.5 px-3 text-right">{tt("qty_unit", "Qty & Unit")}</th>
+                      <th className="py-2.5 px-3 text-right">{tt("gross_wt", "Gross Wt")}</th>
+                      <th className="py-2.5 px-3 text-right">{tt("empty_wt", "Empty Wt")}</th>
+                      <th className="py-2.5 px-3 text-right text-emerald-700 dark:text-emerald-400">{tt("net_wt", "Net Wt")}</th>
+                      <th className="py-2.5 px-3 text-right">{tt("rate_amount", "Rate & Amount")}</th>
+                      <th className="py-2.5 px-2 text-center">{tt("photo", "Photo")}</th>
+                      <th className="py-2.5 px-3 text-center">{tt("actions", "Actions")}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900">
+                    {(formData.goods_items || []).filter((g) => g.goodsName || g.quantity).length === 0 ? (
+                      <tr>
+                        <td colSpan={11} className="py-6 text-center text-slate-400 dark:text-slate-500 text-xs">
+                          {tt("no_goods_added_yet", "No goods items added to manifest yet. Enter details above and click 'Add to Manifest'.")}
+                        </td>
+                      </tr>
+                    ) : (
+                      (formData.goods_items || [])
+                        .filter((g) => g.goodsName || g.quantity)
+                        .map((item, idx) => {
+                          const gross = Number(item.grossWeight || item.totalKg) || 0;
+                          const empty = Number(item.emptyWeight) || 0;
+                          const net = Number(item.netWeight) || Math.max(0, gross - empty);
+                          const amt = Number(item.finalAmount) || ((Number(item.quantity) || 0) * (Number(item.rate) || 0));
+                          return (
+                            <tr
+                              key={idx}
+                              className={`hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition ${
+                                editingGoodsIdx === idx ? "bg-emerald-50/40 dark:bg-emerald-950/20" : ""
+                              }`}
+                            >
+                              <td className="py-2.5 px-3 font-mono text-[11px] font-bold text-slate-500">
+                                {idx + 1}
+                              </td>
+                              <td className="py-2.5 px-3 font-bold text-slate-800 dark:text-slate-100">
+                                <div className="truncate max-w-[150px]">{item.goodsName || "General Goods"}</div>
+                                {item.goodsChsCode ? (
+                                  <span className="text-[10px] font-mono text-slate-400">CHS: {item.goodsChsCode}</span>
+                                ) : null}
+                              </td>
+                              <td className="py-2.5 px-3 text-[11px] text-slate-600 dark:text-slate-300">
+                                <div>{item.size || "—"}</div>
+                                <div className="text-[10px] text-slate-400">
+                                  {[item.brandQuality, item.originCountry].filter(Boolean).join(" • ") || "—"}
+                                </div>
+                              </td>
+                              <td className="py-2.5 px-3 text-[11px] text-slate-600 dark:text-slate-300">
+                                <div className="truncate max-w-[140px] font-medium">{item.warehouseName || "Warehouse"}</div>
+                                <div className="text-[10px] text-slate-400 truncate max-w-[140px]">{item.warehouseAddressText || "—"}</div>
+                              </td>
+                              <td className="py-2.5 px-3 text-right font-mono font-bold text-slate-800 dark:text-slate-200">
+                                {(Number(item.quantity) || 0).toLocaleString()} <span className="text-[10px] text-slate-500 font-normal">{item.unit || "Bags"}</span>
+                              </td>
+                              <td className="py-2.5 px-3 text-right font-mono text-slate-700 dark:text-slate-300">
+                                {gross.toLocaleString()} kg
+                              </td>
+                              <td className="py-2.5 px-3 text-right font-mono text-slate-500 dark:text-slate-400">
+                                {empty.toLocaleString()} kg
+                              </td>
+                              <td className="py-2.5 px-3 text-right font-mono font-black text-emerald-700 dark:text-emerald-400">
+                                {net.toLocaleString()} kg
+                              </td>
+                              <td className="py-2.5 px-3 text-right font-mono text-slate-800 dark:text-slate-200">
+                                {amt > 0 ? (
+                                  <>
+                                    <span className="text-[10px] text-slate-400 mr-1">{item.currency || "AED"}</span>
+                                    <span className="font-bold">{amt.toLocaleString()}</span>
+                                  </>
+                                ) : (
+                                  <span className="text-slate-400">—</span>
+                                )}
+                              </td>
+                              <td className="py-2.5 px-2 text-center">
+                                {item.photoUrl ? (
+                                  <a
+                                    href={item.photoUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-block"
+                                    title={tt("view_attached_photo", "View attached photo")}
+                                  >
+                                    <img
+                                      src={item.photoUrl}
+                                      alt={tt("goods_inspection", "Goods inspection")}
+                                      className="h-6 w-6 rounded-md object-cover border border-slate-200 dark:border-slate-700 hover:scale-110 transition shadow-2xs mx-auto"
+                                    />
+                                  </a>
+                                ) : (
+                                  <span className="text-slate-300 dark:text-slate-600 text-[10px]">—</span>
+                                )}
+                              </td>
+                              <td className="py-2.5 px-3 text-center">
+                                <div className="flex items-center justify-center gap-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleEditGoodsRow(idx)}
+                                    className="p-1 rounded text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition"
+                                    title={tt("edit_item", "Edit Item")}
+                                  >
+                                    <Pencil className="h-3.5 w-3.5" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => removeGoodsItem(idx)}
+                                    className="p-1 rounded text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition"
+                                    title={tt("remove_item", "Remove Item")}
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })
+                    )}
+                  </tbody>
+                  {/* Totals Row */}
+                  <tfoot className="border-t-2 border-slate-200 bg-slate-50/90 font-bold text-slate-800 dark:border-slate-800 dark:bg-slate-850 dark:text-slate-200 text-xs">
+                    <tr>
+                      <td colSpan={4} className="py-2.5 px-3 text-right uppercase tracking-wider text-[10px] text-slate-500 font-bold">
+                        {tt("manifest_totals", "Manifest Totals:")}
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-mono font-black text-slate-900 dark:text-white">
+                        {totalGoodsQuantity.toLocaleString()}
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-mono font-bold text-slate-700 dark:text-slate-300">
+                        {totalGoodsGrossKg.toLocaleString()} kg
+                        <div className="text-[9.5px] text-slate-400 font-normal">({totalGoodsGrossMt} MT)</div>
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-mono font-bold text-slate-500 dark:text-slate-400">
+                        {totalGoodsEmptyKg.toLocaleString()} kg
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-mono font-black text-emerald-700 dark:text-emerald-400 text-[13px]">
+                        {totalGoodsNetKg.toLocaleString()} kg
+                        <div className="text-[9.5px] font-bold text-emerald-600 dark:text-emerald-400">({totalGoodsNetMt} MT)</div>
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-mono font-black text-blue-700 dark:text-blue-400">
+                        {totalGoodsAmount > 0 ? (
+                          <>
+                            <span className="text-[10px] text-slate-400 mr-1">Total</span>
+                            {totalGoodsAmount.toLocaleString()}
+                          </>
+                        ) : "—"}
+                      </td>
+                      <td colSpan={2}></td>
+                    </tr>
+                  </tfoot>
+                </table>
               </div>
-              <span className="text-[10px] font-bold text-slate-400">{tt("cargo_officer", "Cargo Officer")}</span>
-            </div>
-
-            <div className="space-y-2">
-              <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400">
-                {tt("com.assign_other_user", "Assign to Other User / Team Member")}
-              </label>
-              <select
-                value={formData.step1c_assignee_id || ""}
-                onChange={(e) => {
-                  const uid = e.target.value;
-                  const u = (assignableUsers || []).find((usr) => usr.id === uid);
-                  setFormData((c) => ({
-                    ...c,
-                    step1c_assignee_id: uid,
-                    step1c_assignee_name: u?.name || ""
-                  }));
-                }}
-                className={selectClass}
-              >
-                <option value="">{tt("self_execution_option", "Complete this step myself (Default)")}</option>
-                {(assignableUsers || []).map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} (Warehouse / Cargo Inspection Officer)
-                  </option>
-                ))}
-              </select>
-
-              {formData.step1c_assignee_id ? (
-                <div className="space-y-1.5 animate-in fade-in duration-150">
-                  <input
-                    type="text"
-                    value={formData.step1c_handover_notes || ""}
-                    onChange={(e) => setFormData((c) => ({ ...c, step1c_handover_notes: e.target.value }))}
-                    placeholder={tt("com.handover_notes_optional", "Handover Instructions / Dispatch Note (Optional)")}
-                    className={inputClass}
-                  />
-                  <div className="rounded-lg bg-emerald-50/70 p-2 text-[11px] text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 flex items-center gap-1.5">
-                    <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-600" />
-                    <span>
-                      {tt("com.step_handover_success", "Step successfully handed over to {name}.").replace("{name}", formData.step1c_assignee_name || "Team Member")}
-                    </span>
-                  </div>
-                </div>
-              ) : null}
             </div>
           </div>
 
-          {/* 1C Action Footer */}
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-            <button
-              type="button"
-              onClick={() => selectSub("1B")}
-              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-            >
-              <ChevronLeft className="h-3 w-3" />
-              <span>Back to 1B</span>
-            </button>
-            <span className="text-[10px] text-slate-400 font-medium">1C: Goods & Warehouse</span>
+          {/* Stage 1C Action Footer (4 Operational Choices) */}
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => selectSub("1B")}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 transition"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                <span>{tt("back_to_1b", "Back to 1B (Truck)")}</span>
+              </button>
+              <button
+                type="button"
+                onClick={onSaveDraft}
+                disabled={saving}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-3.5 py-2 text-xs font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300 transition shadow-2xs"
+              >
+                {saving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                <span>{tt("save_draft", "Save Draft")}</span>
+              </button>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {onReturnForCorrection ? (
+                <button
+                  type="button"
+                  onClick={() => onReturnForCorrection("1C")}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50 px-3.5 py-2 text-xs font-bold text-amber-800 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300 transition shadow-2xs"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  <span>{tt("return_to_truck_user", "Return to Truck User")}</span>
+                </button>
+              ) : null}
+
+              <button
+                type="button"
+                onClick={addGoodsItem}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 px-3.5 py-2 text-xs font-bold text-emerald-800 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 transition shadow-2xs"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>{tt("add_item", "+ Add Item")}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={onCompleteGoodsEntry}
+                disabled={saving}
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-xs font-black text-white shadow-md shadow-emerald-600/30 hover:from-emerald-700 hover:to-teal-700 transition"
+              >
+                {saving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                <span>{tt("complete_goods_entry", "Complete Goods Entry")}</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

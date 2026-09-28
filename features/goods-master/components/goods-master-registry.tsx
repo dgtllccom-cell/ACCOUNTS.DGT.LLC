@@ -136,6 +136,7 @@ function getEffectiveVariationsForGoods(
           id: `param-gen-${g.id}-${idx}`,
           goods_id: g.id,
           brand: b,
+          size: s,
           variety: varieties[idx % varieties.length] || undefined,
           extra_details: reports[idx % reports.length] || g.extra_details || undefined,
           is_active: true,
