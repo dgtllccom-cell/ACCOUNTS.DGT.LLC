@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { z } from "zod";
 import { requireErpSession } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
@@ -19,6 +20,7 @@ export async function PATCH(
 ) {
   try {
     const session = await requireErpSession();
+    authorizeApiScope(session, { resource: "accounts", action: "update" });
     const { id } = await params;
     const body = await request.json();
     const parsed = updateCategorySchema.parse(body);
@@ -73,7 +75,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireErpSession();
+    const session = await requireErpSession();
+    authorizeApiScope(session, { resource: "accounts", action: "delete" });
     const { id } = await params;
 
     await withLocalPg(async (sql) => {

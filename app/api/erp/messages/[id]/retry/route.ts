@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { recordInSessionScope } from "@/lib/api/scope-middleware";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -32,6 +33,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     if (fetchErr) throw new Error(fetchErr.message);
     if (!email) {
       return NextResponse.json({ success: false, error: "Email message not found." }, { status: 404 });
+    }
+
+    // Only the sender, or a user whose scope covers the message's branch, may resend it.
+    const senderId = (email as any).sender_user_id ?? (email as any).created_by ?? null;
+    if (!session.isSuperAdmin && senderId !== session.userId && !recordInSessionScope(session, email as any)) {
+      return NextResponse.json({ success: false, error: "This message is outside your authorized scope." }, { status: 403 });
     }
 
     if (email.delivery_status !== "failed") {

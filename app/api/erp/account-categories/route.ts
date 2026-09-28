@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { z } from "zod";
 import { requireErpSession, sessionInDomain } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -59,6 +60,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    authorizeApiScope(session, { resource: "accounts", action: "create" });
     const body = await request.json();
     const parsed = createCategorySchema.parse(body);
 

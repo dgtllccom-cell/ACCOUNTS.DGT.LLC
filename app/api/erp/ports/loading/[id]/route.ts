@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { auditApiAction } from "@/lib/api/audit";
 import { requireErpSession } from "@/lib/auth/session";
@@ -35,6 +36,7 @@ export async function PATCH(
 ) {
   try {
     const session = await requireErpSession();
+    authorizeApiScope(session, { resource: "ports", action: "update" });
     const { id } = await params;
     const body = portUpdateSchema.parse(await request.json());
 
@@ -58,7 +60,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireErpSession();
+    const session = await requireErpSession();
+    authorizeApiScope(session, { resource: "ports", action: "delete" });
     const { id } = await params;
     await loadingPortsService.softDelete(id);
 

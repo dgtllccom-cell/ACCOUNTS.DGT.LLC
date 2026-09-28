@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { apiCreated, apiOk, handleApiError } from "@/lib/api/response";
 import { auditApiAction } from "@/lib/api/audit";
 import { requireErpSession } from "@/lib/auth/session";
@@ -41,6 +42,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    authorizeApiScope(session, { resource: "ports", action: "create" });
     const body = portCreateSchema.parse(await request.json());
 
     const portId = await receivedPortsService.create(

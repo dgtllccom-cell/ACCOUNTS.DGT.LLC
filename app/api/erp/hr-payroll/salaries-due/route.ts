@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requireErpSession } from "@/lib/auth/session";
 import { guardHr } from "@/lib/services/hr-api";
+import { ErpPermissionError } from "@/lib/permissions/middleware";
 import { assertExplicitScopeAllowed, recordInSessionScope } from "@/lib/api/scope-middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
@@ -47,7 +48,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ records: rows });
   } catch (err: any) {
     rethrowIfNextControlFlow(err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: err.message }, { status: err instanceof ErpPermissionError ? 403 : 500 });
   }
 }
 
@@ -158,6 +159,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: `Successfully generated ${generatedCount} salary due records`, count: generatedCount });
   } catch (err: any) {
     rethrowIfNextControlFlow(err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: err.message }, { status: err instanceof ErpPermissionError ? 403 : 500 });
   }
 }

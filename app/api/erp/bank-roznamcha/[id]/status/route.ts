@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { recordInSessionScope } from "@/lib/api/scope-middleware";
+import { ErpPermissionError, hasRolePermission } from "@/lib/permissions/middleware";
 import { NextRequest } from "next/server";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
@@ -13,6 +15,9 @@ export async function POST(
 ) {
   try {
     const session = await requireErpSession();
+    if (!hasRolePermission(session, "roznamcha", "post") && !hasRolePermission(session, "roznamcha", "create")) {
+      throw new ErpPermissionError("Missing permission: roznamcha:post");
+    }
     const { id } = await params;
     const body = await request.json();
 
@@ -26,7 +31,8 @@ export async function POST(
     const result = await withLocalPg(async (sql) => {
       // 1. Fetch current transaction record
       const rows = await sql`
-        SELECT id, status, audit_trail, debit, credit, ledger_id, counter_ledger_id, particulars
+        SELECT id, status, audit_trail, debit, credit, ledger_id, counter_ledger_id, particulars,
+               country_id, country_branch_id, city_branch_id
         FROM public.bank_cheque_transactions
         WHERE id = ${id} AND deleted_at IS NULL
         LIMIT 1
@@ -35,6 +41,10 @@ export async function POST(
         throw new Error("Bank cheque transaction not found");
       }
       const current = rows[0];
+      // Status changes are limited to cheques inside the caller's own scope.
+      if (!recordInSessionScope(session, current as any)) {
+        throw new ErpPermissionError("This cheque is outside your authorized scope.");
+      }
 
       let newStatus = current.status;
       let clearedAt = null;

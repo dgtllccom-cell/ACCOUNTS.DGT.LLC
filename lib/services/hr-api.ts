@@ -93,3 +93,30 @@ export function canRunPayroll(session: ErpSession): boolean {
   const roles: string[] = session.roles ?? [];
   return roles.some((r) => ["country_admin", "main_branch_admin", "accountant", "payroll_officer", "hr_admin", "hr_manager"].includes(r));
 }
+
+/** Throws ErpPermissionError unless the employee sits inside the caller's scope (one rule: sessionSqlScope). */
+export async function assertEmployeeAccess(session: ErpSession, employeeId: string | null | undefined): Promise<void> {
+  if (session.isSuperAdmin) return;
+  if (!employeeId) throw new ErpPermissionError("Employee is outside your authorized scope.");
+  const { withLocalPg } = await import("@/lib/db/local-postgres");
+  const { recordInSessionScope } = await import("@/lib/api/scope-middleware");
+  const rows = await withLocalPg(async (sql) =>
+    sql`SELECT country_id, country_branch_id, city_branch_id FROM public.employees WHERE id = ${employeeId}::uuid LIMIT 1`
+  );
+  if (!rows?.[0] || !recordInSessionScope(session, rows[0] as any)) {
+    throw new ErpPermissionError("Employee is outside your authorized scope.");
+  }
+}
+
+/** Keeps only the rows whose employee_id is inside the caller's scope. */
+export async function filterRowsByEmployeeScope<T extends { employee_id?: string | null }>(session: ErpSession, rows: T[]): Promise<T[]> {
+  if (session.isSuperAdmin || rows.length === 0) return rows;
+  const { withLocalPg } = await import("@/lib/db/local-postgres");
+  const { recordInSessionScope } = await import("@/lib/api/scope-middleware");
+  const ids = [...new Set(rows.map((r) => r.employee_id).filter(Boolean))] as string[];
+  const emp = await withLocalPg(async (sql) =>
+    sql`SELECT id, country_id, country_branch_id, city_branch_id FROM public.employees WHERE id = ANY(${ids}::uuid[])`
+  );
+  const byId = new Map((emp || []).map((e: any) => [e.id, e]));
+  return rows.filter((r) => r.employee_id && recordInSessionScope(session, byId.get(r.employee_id)));
+}

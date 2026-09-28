@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requireErpSession } from "@/lib/auth/session";
+import { guardHr, assertEmployeeAccess, filterRowsByEmployeeScope } from "@/lib/services/hr-api";
+import { ErpPermissionError } from "@/lib/permissions/middleware";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   try {
-    await requireErpSession();
+    const { session } = await guardHr("read");
     const supabase = createSupabaseAdminClient();
 
     const searchParams = request.nextUrl.searchParams;
@@ -26,16 +28,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    return NextResponse.json({ records: records || [] });
+    return NextResponse.json({ records: await filterRowsByEmployeeScope(session, Array.isArray(records) ? records : []) });
   } catch (err: any) {
     rethrowIfNextControlFlow(err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: err.message }, { status: err instanceof ErpPermissionError ? 403 : 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await requireErpSession();
+    const { session } = await guardHr("write");
     const supabase = createSupabaseAdminClient();
     const body = await request.json();
 
@@ -56,6 +58,7 @@ export async function POST(request: NextRequest) {
     if (!employeeId || !type || !amount || !paymentDate || !paymentAccountId) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
+    await assertEmployeeAccess(session, employeeId);
 
     // 1. Fetch employee to check ledger setup — via the same SECURITY DEFINER RPC the
     // employees routes use, rather than a direct .from("employees").select().single().
@@ -157,6 +160,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ record });
   } catch (err: any) {
     rethrowIfNextControlFlow(err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: err.message }, { status: err instanceof ErpPermissionError ? 403 : 500 });
   }
 }
