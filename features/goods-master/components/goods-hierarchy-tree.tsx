@@ -447,38 +447,42 @@ export function GoodsHierarchyTree({ goods, onRefresh }: GoodsHierarchyTreeProps
       </div>
 
       {/* ----------------------------------------------------------------- */}
-      {/* 2. Compact Table: Specs displayed directly on the table           */}
+      {/* 2. Compact Table: Always rendered with 7 columns                  */}
       {/* ----------------------------------------------------------------- */}
-      {rawVariations.length === 0 ? (
-        <div className="p-8 text-center bg-slate-50/50 dark:bg-slate-900/50 rounded-lg border border-dashed border-slate-200 dark:border-slate-800">
-          <p className="text-slate-500 font-medium text-xs">No variations recorded yet for {goods.name}.</p>
-          <div className="mt-3 flex justify-center gap-2">
-            <Button
-              size="sm"
-              onClick={() => setShowAddComboModal(true)}
-              className="bg-[#059669] hover:bg-[#047857] text-white h-8 text-xs font-bold"
-            >
-              <Plus className="w-3.5 h-3.5 mr-1" />
-              Add First Combination
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <div className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden bg-white dark:bg-slate-900">
-          <table className="w-full text-left text-xs border-collapse">
-            <thead>
-              <tr className="bg-[#f8fafc] dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold text-[11px]">
-                <th className="py-2.5 px-4 w-12 text-center">#</th>
-                <th className="py-2.5 px-4 w-40">Variety</th>
-                <th className="py-2.5 px-4 w-28">Size</th>
-                <th className="py-2.5 px-4 w-28">Grade</th>
-                <th className="py-2.5 px-4 w-32">Brand</th>
-                <th className="py-2.5 px-4">Description / Commercial Specification</th>
-                <th className="py-2.5 px-4 text-center w-28">Action</th>
+      <div className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden bg-white dark:bg-slate-900 shadow-2xs">
+        <table className="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr className="bg-[#f8fafc] dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold text-[11px]">
+              <th className="py-2.5 px-4 w-12 text-center">#</th>
+              <th className="py-2.5 px-4 w-40">Variety</th>
+              <th className="py-2.5 px-4 w-28">Size</th>
+              <th className="py-2.5 px-4 w-28">Grade</th>
+              <th className="py-2.5 px-4 w-32">Brand</th>
+              <th className="py-2.5 px-4">Description / Commercial Specification</th>
+              <th className="py-2.5 px-4 text-center w-28">Action</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+            {filteredVariations.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="py-10 text-center bg-slate-50/40 dark:bg-slate-900/40">
+                  <div className="flex flex-col items-center justify-center gap-2.5">
+                    <p className="text-slate-400 dark:text-slate-500 font-medium text-xs">
+                      {searchTerm ? `No variations matching "${searchTerm}".` : `No combinations recorded yet for ${goods.name}.`}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddComboModal(true)}
+                      className="h-8 px-3.5 text-xs font-bold rounded-md bg-[#059669] hover:bg-[#047857] text-white flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                      Add First Combination
+                    </button>
+                  </div>
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-              {filteredVariations.map((v, idx) => {
+            ) : (
+              filteredVariations.map((v, idx) => {
                 const specLines = getCommercialSpecLines(v.extra_details);
                 const rowNum = String(idx + 1).padStart(2, "0");
 
@@ -583,11 +587,11 @@ export function GoodsHierarchyTree({ goods, onRefresh }: GoodsHierarchyTreeProps
                     </td>
                   </tr>
                 );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
 
       {/* ----------------------------------------------------------------- */}
       {/* 3. Modal: Edit Combination                                        */}
