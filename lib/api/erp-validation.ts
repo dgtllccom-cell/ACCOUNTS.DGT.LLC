@@ -589,6 +589,11 @@ export const shippingBlRecordUpdateSchema = scopeSchema.extend({
   debit: z.coerce.number().finite().min(0).optional(),
   credit: z.coerce.number().finite().min(0).optional(),
   currencyCode: currencyCodeSchema.optional(),
+  importer: z.string().trim().max(200).optional(),
+  exporter: z.string().trim().max(200).optional(),
+  notifyParty: z.string().trim().max(200).nullable().optional(),
+  remarks: z.string().trim().nullable().optional(),
+  reportPayload: z.record(z.any()).optional(),
 }).partial().refine(
   (data) => {
     if (data.eta && data.etd) {

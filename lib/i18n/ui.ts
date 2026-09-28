@@ -7516,6 +7516,39 @@ export type UiKey =
   | "ble.csv_shipment_status" | "ble.csv_debit" | "ble.csv_credit" | "ble.gt_sr"
   | "ble.gt_good_name" | "ble.gt_qty_no" | "ble.gt_total_gross_kg" | "ble.gt_empty_bag_kg"
   | "ble.gt_total_empty_kg" | "ble.gt_net_weight_kg" | "ble.gt_container_no" | "ble.gt_seal_no"
+  | "ble.lbl_price_type"
+  | "ble.lbl_divide_type"
+  | "ble.lbl_currency_1"
+  | "ble.lbl_rate_1"
+  | "ble.lbl_op"
+  | "ble.lbl_currency_2"
+  | "ble.lbl_rate_2"
+  | "ble.lbl_w_acc"
+  | "ble.lbl_truck_no"
+  | "ble.lbl_truck_details"
+  | "ble.lbl_bl_details"
+  | "ble.lbl_parties"
+  | "ble.lbl_final_amount"
+  | "ble.lbl_grand_final_amount"
+  | "ble.lbl_total_qty_kgs"
+  | "ble.lbl_net_kgs"
+  | "ble.lbl_tons"
+  | "ble.lbl_goods_container_report"
+  | "ble.lbl_live_bl_report"
+  | "ble.lbl_tracking_doc"
+  | "ble.lbl_primary_cur"
+  | "ble.lbl_secondary_cur"
+  | "ble.btn_submit_item"
+  | "ble.btn_update_item"
+  | "ble.act_view"
+  | "ble.act_edit"
+  | "ble.act_delete"
+  | "ble.err_select_good"
+  | "ble.err_invalid_qty"
+  | "ble.err_negative_net_weight"
+  | "ble.err_duplicate_good"
+  | "ble.confirm_delete_item"
+  | "ble.confirm_delete_record"
   | "cbr.new_entry" | "cbr.title" | "cbr.subtitle" | "cbr.btn_back" | "cbr.btn_download_pdf"
   | "cbr.step_label" | "cbr.step_branch_title" | "cbr.step_branch_sub"
   | "cbr.step_permissions_title" | "cbr.step_permissions_sub"
@@ -17779,6 +17812,39 @@ const en: Dict = {
   "ble.gt_net_weight_kg": "Net Weight KG",
   "ble.gt_container_no": "Container No",
   "ble.gt_seal_no": "Seal No",
+    "ble.lbl_price_type": "Price Type",
+    "ble.lbl_divide_type": "Divide Type",
+    "ble.lbl_currency_1": "Currency 1",
+    "ble.lbl_rate_1": "Rate 1",
+    "ble.lbl_op": "OP",
+    "ble.lbl_currency_2": "Currency 2",
+    "ble.lbl_rate_2": "Rate 2",
+    "ble.lbl_w_acc": "W.Acc",
+    "ble.lbl_truck_no": "Truck No",
+    "ble.lbl_truck_details": "Truck Details",
+    "ble.lbl_bl_details": "BL Details",
+    "ble.lbl_parties": "Parties",
+    "ble.lbl_final_amount": "Final Amount",
+    "ble.lbl_grand_final_amount": "Grand Final Amount",
+    "ble.lbl_total_qty_kgs": "Total Qty KGS",
+    "ble.lbl_net_kgs": "NET KGS",
+    "ble.lbl_tons": "Tons",
+    "ble.lbl_goods_container_report": "Goods Container Report",
+    "ble.lbl_live_bl_report": "Live BL Report",
+    "ble.lbl_tracking_doc": "Tracking & Documentation",
+    "ble.lbl_primary_cur": "Primary Cur",
+    "ble.lbl_secondary_cur": "Secondary Cur",
+    "ble.btn_submit_item": "Submit",
+    "ble.btn_update_item": "Update Item",
+    "ble.act_view": "View",
+    "ble.act_edit": "Edit",
+    "ble.act_delete": "Delete",
+    "ble.err_select_good": "Please select a good item.",
+    "ble.err_invalid_qty": "Quantity No and Quantity KGS must be greater than zero.",
+    "ble.err_negative_net_weight": "Net weight cannot be negative. Empty packing weight exceeds total weight.",
+    "ble.err_duplicate_good": "This good is already added to the container report.",
+    "ble.confirm_delete_item": "Are you sure you want to remove this item from the container report?",
+    "ble.confirm_delete_record": "Are you sure you want to delete this Bill of Lading record? This will soft-delete the record.",
   "cbr.new_entry": "New Entry",
   "cbr.title": "City Branch Registration Wizard",
   "cbr.subtitle": "Create a city branch with location hierarchy, permissions, branch admin login, AI communication and PDF-style review.",
@@ -38290,6 +38356,39 @@ const ur: Dict = {
   "ble.gt_net_weight_kg": "خالص وزن کلوگرام",
   "ble.gt_container_no": "کنٹینر نمبر",
   "ble.gt_seal_no": "سیل نمبر",
+    "ble.lbl_price_type": "قیمت کی قسم",
+    "ble.lbl_divide_type": "تقسیم کی قسم",
+    "ble.lbl_currency_1": "کرنسی 1",
+    "ble.lbl_rate_1": "ریٹ 1",
+    "ble.lbl_op": "آپریٹر",
+    "ble.lbl_currency_2": "کرنسی 2",
+    "ble.lbl_rate_2": "ریٹ 2",
+    "ble.lbl_w_acc": "گودام کھاتہ",
+    "ble.lbl_truck_no": "ٹرک نمبر",
+    "ble.lbl_truck_details": "ٹرک کی تفصیلات",
+    "ble.lbl_bl_details": "بی ایل تفصیلات",
+    "ble.lbl_parties": "فریقین",
+    "ble.lbl_final_amount": "حتمی رقم",
+    "ble.lbl_grand_final_amount": "کل حتمی رقم",
+    "ble.lbl_total_qty_kgs": "کل مقدار کلوگرام",
+    "ble.lbl_net_kgs": "خالص کلوگرام",
+    "ble.lbl_tons": "ٹن",
+    "ble.lbl_goods_container_report": "مال و کنٹینر رپورٹ",
+    "ble.lbl_live_bl_report": "لائیو بی ایل رپورٹ",
+    "ble.lbl_tracking_doc": "ٹریکنگ اور دستاویزات",
+    "ble.lbl_primary_cur": "بنیادی کرنسی",
+    "ble.lbl_secondary_cur": "ثانوی کرنسی",
+    "ble.btn_submit_item": "شامل کریں",
+    "ble.btn_update_item": "آئٹم اپ ڈیٹ کریں",
+    "ble.act_view": "دیکھیں",
+    "ble.act_edit": "تبدیل کریں",
+    "ble.act_delete": "حذف کریں",
+    "ble.err_select_good": "براہ کرم مال / آئٹم منتخب کریں۔",
+    "ble.err_invalid_qty": "تعداد اور کلوگرام مقدار صفر سے زیادہ ہونی چاہیے۔",
+    "ble.err_negative_net_weight": "خالص وزن منفی نہیں ہو سکتا، خالی پیکنگ کا وزن کل وزن سے زیادہ ہے۔",
+    "ble.err_duplicate_good": "یہ آئٹم پہلے سے کنٹینر رپورٹ میں شامل ہے۔",
+    "ble.confirm_delete_item": "کیا آپ واقعی اس آئٹم کو کنٹینر رپورٹ سے حذف کرنا چاہتے ہیں؟",
+    "ble.confirm_delete_record": "کیا آپ واقعی یہ بی ایل ریکارڈ حذف کرنا چاہتے ہیں؟",
   "cbr.new_entry": "نئی اندراج",
   "cbr.title": "شہر شاخہ رجسٹریشن وزرڈ",
   "cbr.subtitle": "مقام درجہ بندی، اجازتوں، شاخہ ایڈمن لاگ ان، AI مواصلات اور PDF جائزہ کے ساتھ شہر شاخہ بنائیں۔",
@@ -58570,6 +58669,39 @@ const ar: Dict = {
   "ble.gt_net_weight_kg": "الوزن الصافي كجم",
   "ble.gt_container_no": "رقم الحاوية",
   "ble.gt_seal_no": "رقم الختم",
+    "ble.lbl_price_type": "نوع السعر",
+    "ble.lbl_divide_type": "نوع التقسيم",
+    "ble.lbl_currency_1": "العملة 1",
+    "ble.lbl_rate_1": "السعر 1",
+    "ble.lbl_op": "المعامل",
+    "ble.lbl_currency_2": "العملة 2",
+    "ble.lbl_rate_2": "السعر 2",
+    "ble.lbl_w_acc": "حساب المستودع",
+    "ble.lbl_truck_no": "رقم الشاحنة",
+    "ble.lbl_truck_details": "تفاصيل الشاحنة",
+    "ble.lbl_bl_details": "تفاصيل بوليصة الشحن",
+    "ble.lbl_parties": "الأطراف",
+    "ble.lbl_final_amount": "المبلغ النهائي",
+    "ble.lbl_grand_final_amount": "المبلغ الإجمالي النهائي",
+    "ble.lbl_total_qty_kgs": "إجمالي الكمية كجم",
+    "ble.lbl_net_kgs": "صافي كجم",
+    "ble.lbl_tons": "أطنان",
+    "ble.lbl_goods_container_report": "تقرير بضائع الحاويات",
+    "ble.lbl_live_bl_report": "تقرير بوليصة الشحن المباشر",
+    "ble.lbl_tracking_doc": "التتبع والتوثيق",
+    "ble.lbl_primary_cur": "العملة الأساسية",
+    "ble.lbl_secondary_cur": "العملة الثانوية",
+    "ble.btn_submit_item": "إضافة",
+    "ble.btn_update_item": "تحديث الصنف",
+    "ble.act_view": "عرض",
+    "ble.act_edit": "تعديل",
+    "ble.act_delete": "حذف",
+    "ble.err_select_good": "يرجى تحديد الصنف.",
+    "ble.err_invalid_qty": "يجب أن تكون الكمية والوزن بالكيلوجرام أكبر من صفر.",
+    "ble.err_negative_net_weight": "لا يمكن أن يكون الوزن الصافي سلبيًا. وزن التعبئة الفارغ يتجاوز الوزن الإجمالي.",
+    "ble.err_duplicate_good": "تمت إضافة هذا الصنف بالفعل إلى تقرير الحاوية.",
+    "ble.confirm_delete_item": "هل أنت متأكد من رغبتك في إزالة هذا الصنف من تقرير الحاوية؟",
+    "ble.confirm_delete_record": "هل أنت متأكد من حذف سجل بوليصة الشحن هذا؟",
 
   "cbr.new_entry": "إدخال جديد",
   "cbr.title": "معالج تسجيل فرع المدينة",
@@ -78902,6 +79034,39 @@ const fa: Dict = {
   "ble.gt_net_weight_kg": "وزن خالص کیلوگرم",
   "ble.gt_container_no": "شماره کانتینر",
   "ble.gt_seal_no": "شماره پلمب",
+    "ble.lbl_price_type": "نوع قیمت",
+    "ble.lbl_divide_type": "نوع تقسیم",
+    "ble.lbl_currency_1": "ارز 1",
+    "ble.lbl_rate_1": "نرخ 1",
+    "ble.lbl_op": "عملگر",
+    "ble.lbl_currency_2": "ارز 2",
+    "ble.lbl_rate_2": "نرخ 2",
+    "ble.lbl_w_acc": "حساب انبار",
+    "ble.lbl_truck_no": "شماره موتر",
+    "ble.lbl_truck_details": "جزئیات موتر",
+    "ble.lbl_bl_details": "جزئیات بی ال",
+    "ble.lbl_parties": "طرفین",
+    "ble.lbl_final_amount": "مبلغ نهایی",
+    "ble.lbl_grand_final_amount": "مجموع نهایی کل",
+    "ble.lbl_total_qty_kgs": "مجموع مقدار کیلوگرم",
+    "ble.lbl_net_kgs": "خالص کیلوگرم",
+    "ble.lbl_tons": "تن",
+    "ble.lbl_goods_container_report": "گزارش اجناس کانتینر",
+    "ble.lbl_live_bl_report": "گزارش زنده بی ال",
+    "ble.lbl_tracking_doc": "ردیابی و اسناد",
+    "ble.lbl_primary_cur": "ارز اولیه",
+    "ble.lbl_secondary_cur": "ارز ثانویه",
+    "ble.btn_submit_item": "ثبت",
+    "ble.btn_update_item": "بروزرسانی قلم",
+    "ble.act_view": "مشاهده",
+    "ble.act_edit": "ویرایش",
+    "ble.act_delete": "حذف",
+    "ble.err_select_good": "لطفاً کالا را انتخاب کنید.",
+    "ble.err_invalid_qty": "تعداد و وزن کیلوگرم باید بیشتر از صفر باشد.",
+    "ble.err_negative_net_weight": "وزن خالص نمی‌تواند منفی باشد. وزن بسته‌بندی خالی از وزن کل بیشتر است.",
+    "ble.err_duplicate_good": "این جنس قبلاً به گزارش کانتینر اضافه شده است.",
+    "ble.confirm_delete_item": "آیا مطمئن هستید که می‌خواهید این قلم را از گزارش کانتینر حذف کنید؟",
+    "ble.confirm_delete_record": "آیا مطمئن هستید که می‌خواهید این رکورد بارنامه را حذف کنید؟",
 
   "cbr.new_entry": "ثبت جدید",
   "cbr.title": "دستیار ثبت شعبه شهر",
@@ -99232,6 +99397,39 @@ const ps: Dict = {
   "ble.gt_net_weight_kg": "خالص وزن کیلوګرام",
   "ble.gt_container_no": "د کانټینر نمبر",
   "ble.gt_seal_no": "د مهر نمبر",
+    "ble.lbl_price_type": "د قیمت ډول",
+    "ble.lbl_divide_type": "د ویش ډول",
+    "ble.lbl_currency_1": "اسعار 1",
+    "ble.lbl_rate_1": "نرخ 1",
+    "ble.lbl_op": "عملګر",
+    "ble.lbl_currency_2": "اسعار 2",
+    "ble.lbl_rate_2": "نرخ 2",
+    "ble.lbl_w_acc": "د ګودام حساب",
+    "ble.lbl_truck_no": "د لارۍ شمېره",
+    "ble.lbl_truck_details": "د لارۍ جزئیات",
+    "ble.lbl_bl_details": "د بی ایل جزئیات",
+    "ble.lbl_parties": "اړخونه",
+    "ble.lbl_final_amount": "وروستی رقم",
+    "ble.lbl_grand_final_amount": "ټولټال وروستی رقم",
+    "ble.lbl_total_qty_kgs": "ټول مقدار کیلوګرامه",
+    "ble.lbl_net_kgs": "خالص کیلوګرامه",
+    "ble.lbl_tons": "ټنه",
+    "ble.lbl_goods_container_report": "د کانتینر مالونو راپور",
+    "ble.lbl_live_bl_report": "ژوندی بی ایل راپور",
+    "ble.lbl_tracking_doc": "تعقیب او اسناد",
+    "ble.lbl_primary_cur": "لومړنۍ اسعار",
+    "ble.lbl_secondary_cur": "دویمه اسعار",
+    "ble.btn_submit_item": "شامل کړئ",
+    "ble.btn_update_item": "توکی نوی کړئ",
+    "ble.act_view": "کتل",
+    "ble.act_edit": "سمون",
+    "ble.act_delete": "ړنګول",
+    "ble.err_select_good": "مهرباني وکړئ مال وټاکئ.",
+    "ble.err_invalid_qty": "شمېر او د کیلوګرام مقدار باید له صفر څخه ډېر وي.",
+    "ble.err_negative_net_weight": "خالص وزن نشي کولی منفي وي. تش وزن له ټول وزن څخه زیات دی.",
+    "ble.err_duplicate_good": "دا مال دمخه د کانتینر راپور ته اضافه شوی.",
+    "ble.confirm_delete_item": "ایا تاسو ډاډه یاست چې غواړئ دا توکی له راپور څخه لرې کړئ؟",
+    "ble.confirm_delete_record": "ایا تاسو ډاډه یاست چې غواړئ دغه بی ایل ریکارډ ړنګ کړئ؟",
 
   "cbr.new_entry": "نوی ننوت",
   "cbr.title": "د ښار د څانګې ثبت ویزارډ",
