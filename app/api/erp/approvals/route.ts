@@ -6,6 +6,7 @@ import { createApiSupabaseClient } from "@/lib/api/supabase";
 import { SupabaseApprovalsRepository } from "@/lib/api/approval-repository";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorize } from "@/lib/permissions/middleware";
+import { enforceScopeFilter } from "@/lib/api/scope-middleware";
 import { ApprovalService } from "@/lib/services/approval-service";
 
 export async function GET() {
@@ -24,12 +25,8 @@ export async function GET() {
     // createApiSupabaseClient() returns a service-role client in production
     // (bypasses RLS) — scope must be enforced here explicitly for anyone who
     // isn't a Super Admin, matching can_approve_erp_scope's DB-side rule.
-    if (!session.isSuperAdmin) {
-      if (session.countryIds.length === 0) {
-        return apiOk({ approvals: [], limit: 50 });
-      }
-      query = query.in("country_id", session.countryIds);
-    }
+    // One scope rule (enforceScopeFilter): branch users only see their own branch's approvals.
+    query = enforceScopeFilter(query, session);
 
     const { data, error } = await query.order("created_at", { ascending: false }).limit(50);
 

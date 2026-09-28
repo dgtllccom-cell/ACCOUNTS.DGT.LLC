@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
+import { assertExplicitScopeAllowed, recordInSessionScope, sessionSqlScope, sqlScopeCondition } from "@/lib/api/scope-middleware";
+import { ErpPermissionError } from "@/lib/permissions/middleware";
 
 /**
  * User-activity report. There is no `users` table — identity lives in
@@ -21,13 +23,13 @@ export async function GET(request: NextRequest) {
     const month = searchParams.get("month") ? Number(searchParams.get("month")) : new Date().getMonth() + 1;
     let countryId = searchParams.get("countryId");
 
-    // Non-global roles are pinned to their own country.
-    if (!session.isSuperAdmin && !session.roles.includes("super_admin_reports")) {
-      if (session.countryIds.length > 0) countryId = session.countryIds[0];
-    }
+    // One scope rule (sessionSqlScope): branch users see only their own branch's users,
+    // country roles their country; an explicit countryId outside that scope is refused.
+    assertExplicitScopeAllowed(session, { countryId });
+    const sqlScope = sessionSqlScope(session);
 
     const data = await withLocalPg(async (sql) => {
-      const countryFilter = countryId ? sql`AND ura.country_id = ${countryId}` : sql``;
+      const countryFilter = sql`AND ${sqlScopeCondition(sql, sqlScope, "ura", { hasCountryBranchCol: false })} ${countryId ? sql`AND ura.country_id = ${countryId}` : sql``}`;
 
       // ---- 1. Deep breakdown for one user -----------------------------------
       if (userId) {
@@ -59,6 +61,10 @@ export async function GET(request: NextRequest) {
         `;
         const user = userRows[0];
         if (!user) throw new Error("User not found.");
+        // The deep breakdown is only for users inside the caller's scope.
+        if (!recordInSessionScope(session, { country_id: user.country_id, city_branch_id: user.city_branch_id })) {
+          throw new ErpPermissionError("This user is outside your authorized scope.");
+        }
 
         const purchasesCreated = await sql`
           SELECT id, purchase_order_no AS reference, order_total, created_at, payment_status AS status
@@ -159,7 +165,7 @@ export async function GET(request: NextRequest) {
     rethrowIfNextControlFlow(error);
     return NextResponse.json(
       { error: error?.message || "Failed to fetch user activity." },
-      { status: 500 },
+      { status: error instanceof ErpPermissionError ? 403 : 500 },
     );
   }
 }

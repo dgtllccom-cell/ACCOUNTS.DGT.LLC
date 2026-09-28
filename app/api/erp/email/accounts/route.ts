@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { recordInHierarchyScope } from "@/lib/api/scope-middleware";
 import { z } from "zod";
 import { apiOk, apiCreated, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
@@ -99,13 +100,9 @@ export async function GET(_request: NextRequest) {
       return "DGT LLC";
     }
 
-    const filteredAccounts = (accounts || []).filter((acc: any) => {
-      if (session.isSuperAdmin) return true;
-      const matchCountry = acc.country_id && (session.countryIds || []).includes(acc.country_id);
-      const matchCityBranch = acc.city_branch_id && (session.cityBranchIds || []).includes(acc.city_branch_id);
-      const matchCountryBranch = acc.country_branch_id && (session.countryBranchIds || []).includes(acc.country_branch_id);
-      return Boolean(matchCountry || matchCityBranch || matchCountryBranch);
-    });
+    // One scope rule (hierarchy form): own branch mailbox + shared main-branch / country mailboxes,
+    // never a sibling branch's (the old OR on the parent country matched every branch).
+    const filteredAccounts = (accounts || []).filter((acc: any) => recordInHierarchyScope(session, acc));
 
     const rows = (filteredAccounts || []).map((acc: any) => {
       const settings = acc.settings || {};

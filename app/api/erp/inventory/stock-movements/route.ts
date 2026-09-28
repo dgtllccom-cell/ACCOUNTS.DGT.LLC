@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
-import { authorizeApiScope } from "@/lib/api/scope-middleware";
+import { authorizeApiScope, sqlHierarchyScopeCondition } from "@/lib/api/scope-middleware";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
       `;
 
       if (!session.isSuperAdmin && session.countryIds && session.countryIds.length > 0) {
-        query = sql`${query} AND (sm.country_id IS NULL OR sm.country_id = ANY(${session.countryIds}::uuid[]))`;
+        query = sql`${query} AND (sm.country_id IS NULL OR ${sqlHierarchyScopeCondition(sql, session, "sm")})`;
       }
 
       if (movementType) {
@@ -121,7 +121,7 @@ export async function GET(request: NextRequest) {
         LEFT JOIN public.goods g ON g.id = sm.goods_id
         LEFT JOIN public.warehouses w ON w.id = sm.warehouse_id
         WHERE sm.deleted_at IS NULL
-        ${!session.isSuperAdmin && session.countryIds && session.countryIds.length > 0 ? sql`AND (sm.country_id IS NULL OR sm.country_id = ANY(${session.countryIds}::uuid[]))` : sql``}
+        ${!session.isSuperAdmin && session.countryIds && session.countryIds.length > 0 ? sql`AND (sm.country_id IS NULL OR ${sqlHierarchyScopeCondition(sql, session, "sm")})` : sql``}
         ${movementType ? sql`AND sm.movement_type = ${movementType}` : sql``}
         ${warehouseId ? sql`AND sm.warehouse_id = ${warehouseId}::uuid` : sql``}
         ${goodsId ? sql`AND sm.goods_id = ${goodsId}::uuid` : sql``}

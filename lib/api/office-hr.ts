@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { sessionSqlScope, sqlScopeCondition } from "@/lib/api/scope-middleware";
 import { requireErpSession, ErpAuthError, type ErpSession } from "@/lib/auth/session";
 
 const MANAGEMENT_ROLES = ["country_admin", "main_branch_admin", "city_branch_admin"];
@@ -18,17 +19,12 @@ export async function requireOfficeSession(write: boolean): Promise<ErpSession> 
  * country / city branch is within their assigned scope (or records they created).
  */
 export function officeScopeWhere(sql: any, session: ErpSession, alias?: string) {
-  if (session.isSuperAdmin) return sql`true`;
-  const cids = session.countryIds || [];
-  const ccids = session.cityBranchIds || [];
-  // qualify the columns when the caller's query joins other tables that also
-  // have country_id / city_branch_id / created_by (employees, customers …)
-  const co = alias ? sql(`${alias}.country_id`) : sql`country_id`;
-  const city = alias ? sql(`${alias}.city_branch_id`) : sql`city_branch_id`;
+  // One scope rule (sessionSqlScope): country roles → their country, branch users → their
+  // city branch only (session.countryIds also carries a branch user's parent country, so
+  // matching on it widened branch users to the whole country), plus the caller's own rows.
+  const scope = sessionSqlScope(session);
+  if (scope.kind === "all") return sql`true`;
   const cb = alias ? sql(`${alias}.created_by`) : sql`created_by`;
-  return sql`(
-    (${cids.length > 0} and ${co} = any(${cids}))
-    or (${ccids.length > 0} and ${city} = any(${ccids}))
-    or ${cb} = ${session.userId}
-  )`;
+  const inScope = sqlScopeCondition(sql, scope, alias || "", { hasCountryBranchCol: false });
+  return sql`(${inScope} or ${cb} = ${session.userId})`;
 }

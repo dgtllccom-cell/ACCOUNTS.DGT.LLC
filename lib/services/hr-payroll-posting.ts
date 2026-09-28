@@ -1,5 +1,5 @@
 import { withLocalPg } from "@/lib/db/local-postgres";
-import type { HrScope } from "@/lib/services/hr-api";
+import { type HrScope, hrBranch } from "@/lib/services/hr-api";
 
 /**
  * HRM Phase 5/7 — payroll accounting posting.
@@ -21,7 +21,7 @@ async function assertRunInScope(sql: Sql, runId: string, scope: HrScope) {
   if (scope.countryIds === null) return;
   const r = await sql`SELECT 1 FROM public.hr_payroll_runs r
     WHERE r.id = ${runId} AND r.deleted_at IS NULL
-      AND (r.country_id = ANY(${scope.countryIds}) OR r.country_id IS NULL) LIMIT 1`;
+      AND (r.country_id = ANY(${scope.countryIds}) OR r.country_id IS NULL) AND ${hrBranch(sql, scope, "r")} LIMIT 1`;
   if (!r?.length) throw new Error("Payroll run not found in your scope.");
 }
 

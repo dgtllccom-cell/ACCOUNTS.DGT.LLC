@@ -1,5 +1,5 @@
 import { withLocalPg } from "@/lib/db/local-postgres";
-import type { HrScope } from "@/lib/services/hr-api";
+import { type HrScope, hrBranch } from "@/lib/services/hr-api";
 
 /**
  * HRM Phase 8 — gratuity & final settlement.
@@ -15,14 +15,14 @@ async function assertEmployeeInScope(sql: Sql, employeeId: string, scope: HrScop
   if (scope.countryIds === null) return;
   const r = await sql`SELECT 1 FROM public.employees e
     WHERE e.id = ${employeeId} AND e.deleted_at IS NULL
-      AND (e.country_id = ANY(${scope.countryIds}) OR e.country_id IS NULL) LIMIT 1`;
+      AND (e.country_id = ANY(${scope.countryIds}) OR e.country_id IS NULL) AND ${hrBranch(sql, scope, "e")} LIMIT 1`;
   if (!r?.length) throw new Error("Employee not found in your scope.");
 }
 
 export class HrGratuityService {
   async list(scope: HrScope, filters: { status?: string; search?: string } = {}) {
     const rows = await withLocalPg(async (sql) => {
-      const where: any[] = [scope.countryIds === null ? sql`TRUE` : sql`(s.country_id = ANY(${scope.countryIds}) OR s.country_id IS NULL)`];
+      const where: any[] = [scope.countryIds === null ? sql`TRUE` : sql`(s.country_id = ANY(${scope.countryIds}) OR s.country_id IS NULL) AND ${hrBranch(sql, scope, "s")}`];
       if (filters.status) where.push(sql`s.status = ${filters.status}`);
       if (filters.search) where.push(sql`(s.employee_name ILIKE ${"%" + filters.search + "%"} OR s.employee_code ILIKE ${"%" + filters.search + "%"})`);
       const w = where.reduce((a, p, i) => (i === 0 ? p : sql`${a} AND ${p}`));

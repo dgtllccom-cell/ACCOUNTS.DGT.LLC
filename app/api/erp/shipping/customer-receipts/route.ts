@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession, sessionInDomain } from "@/lib/auth/session";
-import { authorizeApiScope } from "@/lib/api/scope-middleware";
+import { authorizeApiScope, sessionSqlScope, sqlScopeCondition } from "@/lib/api/scope-middleware";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { getRequestLanguage } from "@/lib/i18n/server";
@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
         FROM public.customer_receipts r
         WHERE r.deleted_at IS NULL
           AND (${customerId ? sql`r.customer_id = ${customerId}` : sql`true`})
-          AND (${session.isSuperAdmin ? sql`true` : sql`r.country_id = ANY(${session.countryIds})`})
+          AND ${sqlScopeCondition(sql, sessionSqlScope(session), "r")}
         ORDER BY r.created_at DESC
         LIMIT 500
       `;

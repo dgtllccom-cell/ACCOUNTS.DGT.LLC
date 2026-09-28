@@ -356,6 +356,8 @@ async function buildAccountsReportViaLocalPg(session: Awaited<ReturnType<typeof 
           )
           or (
             ea.code in ('PAK-CORP-GEN-001', 'AFG-CORP-GEN-001', 'IND-CORP-GEN-001', '0005-IND-HUB', 'UAE-CORP-GEN-001', 'CT-INTER-PK', 'CT-INTER-AF', 'CT-INTER-IN', 'CT-INTER-AE')
+            -- a report shows balances: another country's clearing ledger is Super Admin only
+            and (${session.isSuperAdmin} or ea.country_id = any(${session.countryIds ?? []}::uuid[]))
           )
         )
         ${statusWhere}
@@ -422,6 +424,7 @@ async function buildAccountsReportViaLocalPg(session: Awaited<ReturnType<typeof 
       where l.deleted_at is null
         and l.is_active = true
         and l.code in ('PAK-CORP-GEN-001', 'AFG-CORP-GEN-001', 'IND-CORP-GEN-001', '0005-IND-HUB', 'UAE-CORP-GEN-001', 'CT-INTER-PK', 'CT-INTER-AF', 'CT-INTER-IN', 'CT-INTER-AE')
+        and (${session.isSuperAdmin} or l.country_id = any(${session.countryIds ?? []}::uuid[]))
       order by l.created_at asc
       limit 20
     `;

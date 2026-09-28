@@ -1,4 +1,5 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { sqlHierarchyScopeCondition } from "@/lib/api/scope-middleware";
 import { withReadPg } from "@/lib/db/local-postgres";
 import type { ErpSession } from "@/lib/auth/session";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
@@ -244,11 +245,8 @@ export class LedgerReportService {
     const limit = Math.max(1, Math.min(input.limit ?? 250, 3000));
     const { session } = input;
 
-    const scopeCond = session.isSuperAdmin
-      ? sql`true`
-      : (session.cityBranchIds?.length || session.countryBranchIds?.length || session.countryIds?.length)
-        ? sql`(city_branch_id = ANY(${session.cityBranchIds ?? []}::uuid[]) OR country_branch_id = ANY(${session.countryBranchIds ?? []}::uuid[]) OR country_id = ANY(${session.countryIds ?? []}::uuid[]))`
-        : sql`false`;
+    // One scope rule (sessionSqlScope) — see journal-report-service for why the OR form leaked.
+    const scopeCond = sqlHierarchyScopeCondition(sql, session, "");
 
     const ledgerIdList = input.ledgerId ? (Array.isArray(input.ledgerId) ? input.ledgerId : [input.ledgerId]) : null;
 

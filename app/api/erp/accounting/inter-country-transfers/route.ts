@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { recordInSessionScope } from "@/lib/api/scope-middleware";
 import { NextRequest } from "next/server";
 import { apiCreated, apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
@@ -39,6 +40,15 @@ export async function GET(request: NextRequest) {
       limit,
       offset,
     });
+
+    // One scope rule, dual form: a non-global caller sees a transfer only when its scope contains the
+    // sending side or the receiving side (country roles: the country; branch users: their branch).
+    if (!session.isSuperAdmin && Array.isArray((data as any)?.transfers)) {
+      (data as any).transfers = (data as any).transfers.filter((t: any) =>
+        recordInSessionScope(session, { country_id: t.source_country_id, country_branch_id: t.source_country_branch_id, city_branch_id: t.source_city_branch_id }) ||
+        recordInSessionScope(session, { country_id: t.dest_country_id, country_branch_id: t.dest_country_branch_id, city_branch_id: t.dest_city_branch_id })
+      );
+    }
 
     // Every transfer row → the reader's language (sender & receiver see the same
     // record; only the presentation follows the viewer). Amounts / numbers untouched.

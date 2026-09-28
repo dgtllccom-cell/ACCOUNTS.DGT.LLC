@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requireErpSession } from "@/lib/auth/session";
+import { guardHr } from "@/lib/services/hr-api";
+import { assertExplicitScopeAllowed, recordInSessionScope } from "@/lib/api/scope-middleware";
+import { withLocalPg } from "@/lib/db/local-postgres";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   try {
-    await requireErpSession();
+    const { session } = await guardHr("read");
     const supabase = createSupabaseAdminClient();
-    
+
     const searchParams = request.nextUrl.searchParams;
     const month = searchParams.get("month"); // e.g. '2026-07'
     const countryId = searchParams.get("countryId");
@@ -29,7 +32,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    return NextResponse.json({ records: records || [] });
+    // The RPC only honours an optional country filter — clamp to the caller's scope using
+    // each employee's own country / branch (one rule: sessionSqlScope / recordInSessionScope).
+    let rows: any[] = Array.isArray(records) ? records : [];
+    if (!session.isSuperAdmin && rows.length) {
+      const ids = [...new Set(rows.map((r: any) => r.employee_id).filter(Boolean))];
+      const empScope = await withLocalPg(async (sql) =>
+        sql`SELECT id, country_id, country_branch_id, city_branch_id FROM public.employees WHERE id = ANY(${ids}::uuid[])`
+      );
+      const byId = new Map((empScope || []).map((e: any) => [e.id, e]));
+      rows = rows.filter((r: any) => recordInSessionScope(session, byId.get(r.employee_id)));
+    }
+
+    return NextResponse.json({ records: rows });
   } catch (err: any) {
     rethrowIfNextControlFlow(err);
     return NextResponse.json({ error: err.message }, { status: 500 });
@@ -38,11 +53,12 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await requireErpSession();
+    const { session } = await guardHr("write");
     const supabase = createSupabaseAdminClient();
     const body = await request.json();
 
     const { salaryMonth, countryId, countryBranchId } = body;
+    assertExplicitScopeAllowed(session, { countryId, countryBranchId });
 
     if (!salaryMonth) {
       return NextResponse.json({ error: "Salary Month (YYYY-MM) is required" }, { status: 400 });
@@ -55,14 +71,16 @@ export async function POST(request: NextRequest) {
     });
     if (empError) throw empError;
 
-    if (!employees || employees.length === 0) {
+    // Only employees inside the caller's own scope can have dues generated.
+    const scopedEmployees = (employees || []).filter((e: any) => recordInSessionScope(session, e));
+    if (scopedEmployees.length === 0) {
       return NextResponse.json({ message: "No active employees found in selected scope", count: 0 });
     }
 
     let generatedCount = 0;
     const dueDate = `${salaryMonth}-28`; // Default due date on 28th of the month
 
-    for (const emp of employees) {
+    for (const emp of scopedEmployees) {
       // Check if due record already exists for this employee and month
       const { data: alreadyExists, error: existError } = await (supabase as any).rpc("salary_due_exists", {
         p_employee_id: emp.id,

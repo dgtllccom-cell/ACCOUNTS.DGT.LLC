@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { sessionSqlScope } from "@/lib/api/scope-middleware";
 import { requireErpSession } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
@@ -14,13 +15,15 @@ export async function GET(request: NextRequest) {
     let cityBranchId = searchParams.get("cityBranchId");
 
     // Scope check
-    if (!session.isSuperAdmin && !session.roles.includes("super_admin_reports")) {
-      if (session.countryIds.length > 0) {
-        countryId = session.countryIds[0];
-      }
-      if (session.cityBranchIds.length > 0) {
-        cityBranchId = session.cityBranchIds[0];
-      }
+    // One scope rule (sessionSqlScope): country roles → their country (all its branches);
+    // branch users → their own branch (an explicit other branch is ignored).
+    const sqlScope = sessionSqlScope(session);
+    if (sqlScope.kind === "country") {
+      if (!countryId || !sqlScope.ids.includes(countryId)) countryId = sqlScope.ids[0];
+      if (cityBranchId && !session.cityBranchIds.includes(cityBranchId)) cityBranchId = null;
+    } else if (sqlScope.kind === "cityBranch" || sqlScope.kind === "countryBranch" || sqlScope.kind === "none") {
+      countryId = session.countryIds[0] ?? null;
+      cityBranchId = sqlScope.kind === "cityBranch" && cityBranchId && sqlScope.ids.includes(cityBranchId) ? cityBranchId : (session.cityBranchIds[0] ?? "00000000-0000-0000-0000-000000000000");
     }
 
     const data = await withLocalPg(async (sql) => {

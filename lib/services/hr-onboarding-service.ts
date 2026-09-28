@@ -1,19 +1,19 @@
 import { withLocalPg } from "@/lib/db/local-postgres";
-import type { HrScope } from "@/lib/services/hr-api";
+import { type HrScope, hrBranch } from "@/lib/services/hr-api";
 
 /** HRM Phase 10 — onboarding / offboarding checklists. Scope repeated in WHERE. */
 
 async function assertEmployeeInScope(sql: any, employeeId: string, scope: HrScope) {
   if (scope.countryIds === null) return;
   const r = await sql`SELECT 1 FROM public.employees e WHERE e.id = ${employeeId} AND e.deleted_at IS NULL
-    AND (e.country_id = ANY(${scope.countryIds}) OR e.country_id IS NULL) LIMIT 1`;
+    AND (e.country_id = ANY(${scope.countryIds}) OR e.country_id IS NULL) AND ${hrBranch(sql, scope, "e")} LIMIT 1`;
   if (!r?.length) throw new Error("Employee not found in your scope.");
 }
 
 export class HrOnboardingService {
   async list(scope: HrScope, filters: { phase?: string; employeeId?: string; status?: string } = {}) {
     const rows = await withLocalPg(async (sql) => {
-      const where: any[] = [scope.countryIds === null ? sql`TRUE` : sql`(ec.country_id = ANY(${scope.countryIds}) OR ec.country_id IS NULL)`];
+      const where: any[] = [scope.countryIds === null ? sql`TRUE` : sql`(ec.country_id = ANY(${scope.countryIds}) OR ec.country_id IS NULL) AND ${hrBranch(sql, scope, "ec")}`];
       if (filters.phase) where.push(sql`ec.phase = ${filters.phase}`);
       if (filters.employeeId) where.push(sql`ec.employee_id = ${filters.employeeId}`);
       if (filters.status) where.push(sql`ec.status = ${filters.status}`);
@@ -27,7 +27,7 @@ export class HrOnboardingService {
   /** Progress summary per employee+phase. */
   async summary(scope: HrScope, phase?: string) {
     const rows = await withLocalPg(async (sql) => {
-      const where: any[] = [scope.countryIds === null ? sql`TRUE` : sql`(ec.country_id = ANY(${scope.countryIds}) OR ec.country_id IS NULL)`];
+      const where: any[] = [scope.countryIds === null ? sql`TRUE` : sql`(ec.country_id = ANY(${scope.countryIds}) OR ec.country_id IS NULL) AND ${hrBranch(sql, scope, "ec")}`];
       if (phase) where.push(sql`ec.phase = ${phase}`);
       const w = where.reduce((a, p, i) => (i === 0 ? p : sql`${a} AND ${p}`));
       return sql`

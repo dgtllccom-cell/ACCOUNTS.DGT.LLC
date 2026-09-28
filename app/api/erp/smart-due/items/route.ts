@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { sessionSqlScope, sqlScopeCondition } from "@/lib/api/scope-middleware";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
@@ -61,23 +62,13 @@ export async function GET(request: NextRequest) {
     const result = await withLocalPg(async (sql) => {
       // Scope WHERE fragment reused across count sub-queries (no JOINs, so bare column names are safe).
       // For the main rows query, use mkScopeWhere(alias) to avoid ambiguous column refs in JOINed CTEs.
-      const scopeWhere = session.isSuperAdmin
-        ? sql`true`
-        : sql`(
-            city_branch_id = ANY(${scopeCityBranchIds}::uuid[])
-            OR country_branch_id = ANY(${scopeCountryBranchIds}::uuid[])
-            OR country_id = ANY(${scopeCountryIds}::uuid[])
-          )`;
+      // One scope rule (sessionSqlScope): branch users → own city branch, country roles → country.
+      const sqlScope = sessionSqlScope(session);
+      const scopeWhere = sqlScopeCondition(sql, sqlScope, "");
 
       // Qualified scope WHERE for JOINed CTEs (table alias prefix prevents ambiguous column references
       // when joined tables like country_branches also have a country_id column).
-      const mkScopeWhere = (tableAlias: string) => session.isSuperAdmin
-        ? sql`true`
-        : sql`(
-            ${sql.unsafe(tableAlias + ".city_branch_id")} = ANY(${scopeCityBranchIds}::uuid[])
-            OR ${sql.unsafe(tableAlias + ".country_branch_id")} = ANY(${scopeCountryBranchIds}::uuid[])
-            OR ${sql.unsafe(tableAlias + ".country_id")} = ANY(${scopeCountryIds}::uuid[])
-          )`;
+      const mkScopeWhere = (tableAlias: string) => sqlScopeCondition(sql, sqlScope, tableAlias);
 
       // Explicit scope narrow (from query params)
       const explicitWhere = cityBranchId

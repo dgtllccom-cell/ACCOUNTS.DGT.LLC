@@ -1,6 +1,7 @@
 import { requireErpSession } from "@/lib/auth/session";
 import type { ErpSession } from "@/lib/auth/session";
 import { ErpPermissionError } from "@/lib/permissions/middleware";
+import { sessionSqlScope } from "@/lib/api/scope-middleware";
 
 /**
  * Shared guard for the HRM / Office-Management routes (departments, designations,
@@ -37,11 +38,25 @@ const HR_WRITE_ROLES = new Set([
   "payroll_officer",
 ]);
 
-export type HrScope = { countryIds: string[] | null; cityBranchIds: string[] | null; countryBranchIds: string[] | null };
+export type HrScope = {
+  countryIds: string[] | null;
+  cityBranchIds: string[] | null;
+  countryBranchIds: string[] | null;
+  /** Set for branch-level users (sessionSqlScope kind "cityBranch"): employee-level HR records
+   *  are limited to these city branches. null = country-level or global access. */
+  branchCityIds: string[] | null;
+};
+
+/** Branch restriction for an HR record alias whose table carries city_branch_id. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function hrBranch(sql: any, scope: HrScope, alias: string) {
+  if (!scope.branchCityIds) return sql`TRUE`;
+  return sql`${sql(alias + ".city_branch_id")} = ANY(${scope.branchCityIds})`;
+}
 
 export function hrScopeFromSession(session: ErpSession): HrScope {
   if (session.isSuperAdmin || session.roles?.includes("super_admin_reports")) {
-    return { countryIds: null, cityBranchIds: null, countryBranchIds: null };
+    return { countryIds: null, cityBranchIds: null, countryBranchIds: null, branchCityIds: null };
   }
   // A real city/branch-admin assignment carries country_id + country_branch_id +
   // city_branch_id, but getAssignmentRoots() only keeps the deepest level as the
@@ -57,6 +72,8 @@ export function hrScopeFromSession(session: ErpSession): HrScope {
     countryIds,
     cityBranchIds: session.cityBranchIds.length ? session.cityBranchIds : null,
     countryBranchIds: session.countryBranchIds.length ? session.countryBranchIds : null,
+    // One scope rule (sessionSqlScope): branch users see only their own branch's HR records.
+    branchCityIds: (() => { const sc = sessionSqlScope(session); return sc.kind === "cityBranch" ? sc.ids : null; })(),
   };
 }
 

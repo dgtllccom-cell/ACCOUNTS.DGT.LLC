@@ -1,4 +1,5 @@
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { sessionSqlScope, sqlScopeCondition } from "@/lib/api/scope-middleware";
 import type { ErpSession } from "@/lib/auth/session";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { localizeRecordGroups } from "@/lib/i18n/localize-records";
@@ -135,17 +136,11 @@ export class JournalReportService {
     // postgres.js fragments are built against a fixed column reference and the two source
     // queries below alias their tables differently (re./lpb.) — not a parallel scope system,
     // the same rule, just re-anchored to each query's own alias.
-    const hasScope = Boolean(session.cityBranchIds?.length || session.countryBranchIds?.length || session.countryIds?.length);
-    const scopeCondRoz = session.isSuperAdmin
-      ? sql`true`
-      : hasScope
-        ? sql`(re.city_branch_id = ANY(${session.cityBranchIds ?? []}::uuid[]) OR re.country_branch_id = ANY(${session.countryBranchIds ?? []}::uuid[]) OR re.country_id = ANY(${session.countryIds ?? []}::uuid[]))`
-        : sql`false`;
-    const scopeCondLpb = session.isSuperAdmin
-      ? sql`true`
-      : hasScope
-        ? sql`(lpb.city_branch_id = ANY(${session.cityBranchIds ?? []}::uuid[]) OR lpb.country_branch_id = ANY(${session.countryBranchIds ?? []}::uuid[]) OR lpb.country_id = ANY(${session.countryIds ?? []}::uuid[]))`
-        : sql`false`;
+    // One scope rule (sessionSqlScope): the old OR over city/country-branch/country ids widened a
+    // branch user to the whole country (their session also carries the parent country id).
+    const sqlScope = sessionSqlScope(session);
+    const scopeCondRoz = sqlScopeCondition(sql, sqlScope, "re");
+    const scopeCondLpb = sqlScopeCondition(sql, sqlScope, "lpb");
 
     // reportScope tab clamp — mirrors ledger-report-service.ts's scopeTabCond.
     const scopeTabRoz =

@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { ApiClientError, apiCreated, apiOk, handleApiError } from "@/lib/api/response";
 import { enterpriseAccountCreateSchema } from "@/lib/api/erp-validation";
-import { authorizeApiScope, getScopeFromSearchParams } from "@/lib/api/scope-middleware";
+import { authorizeApiScope, getScopeFromSearchParams, sqlHierarchyScopeCondition, postgrestHierarchyScope } from "@/lib/api/scope-middleware";
 import { requireErpSession, sessionInDomain } from "@/lib/auth/session";
 import { createApiSupabaseClient } from "@/lib/api/supabase";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -106,12 +106,8 @@ async function buildAccountListViaLocalPg(
         ${isShippingDomainOnly(session) ? sql`and ea.operational_domain in ('shipping','both')` : sql``}
         and (
           (
-            (
-              ${session.isSuperAdmin}
-              or ea.country_id = any(${session.countryIds ?? []}::uuid[])
-              or ea.country_branch_id = any(${session.countryBranchIds ?? []}::uuid[])
-              or ea.city_branch_id = any(${session.cityBranchIds ?? []}::uuid[])
-            )
+            -- one scope rule (hierarchy form): own branch + parent-level accounts, never a sibling branch's
+            ${sqlHierarchyScopeCondition(sql, session, "ea")}
             ${scope.countryId ? sql`and (ea.country_id = ${scope.countryId}::uuid or ea.country_id is null)` : sql``}
             ${
               scope.cityBranchId && scope.countryBranchId
@@ -395,15 +391,9 @@ export async function GET(request: NextRequest) {
       // populated), regardless of `scope`, leaking accounts from unrelated
       // countries/branches to any non-super-admin caller.
       const conditions: string[] = ["and(country_id.is.null,scope.eq.super_admin)"];
-      if (session.cityBranchIds && session.cityBranchIds.length > 0) {
-        conditions.push(`city_branch_id.in.(${session.cityBranchIds.join(",")})`);
-      }
-      if (session.countryBranchIds && session.countryBranchIds.length > 0) {
-        conditions.push(`country_branch_id.in.(${session.countryBranchIds.join(",")})`);
-      }
-      if (session.countryIds && session.countryIds.length > 0) {
-        conditions.push(`country_id.in.(${session.countryIds.join(",")})`);
-      }
+      // One scope rule (hierarchy form) — own branch + parent-level accounts, never a sibling branch's.
+      const hierarchy = postgrestHierarchyScope(session);
+      if (hierarchy) conditions.push(hierarchy);
       conditions.push("code.in.(PAK-CORP-GEN-001,AFG-CORP-GEN-001,IND-CORP-GEN-001,0005-IND-HUB,UAE-CORP-GEN-001,CT-INTER-PK,CT-INTER-AF,CT-INTER-IN,CT-INTER-AE)");
       conditions.push("name.ilike.%Inter-Country%");
       conditions.push("name.ilike.%Central Clearing%");

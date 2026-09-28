@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { apiCreated, apiOk, handleApiError } from "@/lib/api/response";
 import { ledgerPostingSchema } from "@/lib/api/erp-validation";
 import { createApiSupabaseClient } from "@/lib/api/supabase";
-import { authorizeApiScope, getScopeFromSearchParams } from "@/lib/api/scope-middleware";
+import { authorizeApiScope, getScopeFromSearchParams, sqlHierarchyScopeCondition } from "@/lib/api/scope-middleware";
 import { requireErpSession } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
                  opening_balance, current_balance, debit_total, credit_total, is_active, created_at, updated_at
           from public.ledgers
           where deleted_at is null
-            and (city_branch_id = any(${cityIds}) or country_branch_id = any(${countryBranchIds}) or country_id = any(${countryIds}))
+            and ${sqlHierarchyScopeCondition(sql, session, "")}
             and (${scope.countryId ? sql`country_id = ${scope.countryId}` : sql`true`})
             and (${scope.countryBranchId ? sql`country_branch_id = ${scope.countryBranchId}` : sql`true`})
             and (${scope.cityBranchId ? sql`city_branch_id = ${scope.cityBranchId}` : sql`true`})

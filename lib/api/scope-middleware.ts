@@ -248,8 +248,11 @@ export function sessionSqlScope(session: ErpSession): SqlScope {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function sqlScopeCondition(sql: any, scope: SqlScope, alias: string) {
-  const col = (c: string) => sql.unsafe(`${alias}.${c}`);
+export function sqlScopeCondition(sql: any, scope: SqlScope, alias: string, opts: { hasCountryBranchCol?: boolean; prefix?: string } = {}) {
+  // prefix "dest_" matches the destination triple (dest_country_id / dest_country_branch_id / dest_city_branch_id)
+  const col = (c: string) => sql.unsafe(alias ? `${alias}.${opts.prefix ?? ""}${c}` : `${opts.prefix ?? ""}${c}`);
+  // Tables without country_branch_id cannot be matched at main-branch level → deny rather than widen.
+  if (scope.kind === "countryBranch" && opts.hasCountryBranchCol === false) return sql`FALSE`;
   switch (scope.kind) {
     case "all":
       return sql`TRUE`;
@@ -270,4 +273,65 @@ export function assertExplicitScopeAllowed(session: ErpSession, scope: ApiScope)
   if (scope.cityBranchId && !canAccessCityBranch(session, scope.cityBranchId)) throw new ErpPermissionError("This branch is outside your authorized scope.");
   if (scope.countryBranchId && !canAccessCountryBranch(session, scope.countryBranchId)) throw new ErpPermissionError("This branch is outside your authorized scope.");
   if (scope.countryId && !canAccessCountry(session, scope.countryId)) throw new ErpPermissionError("This country is outside your authorized scope.");
+}
+
+/** In-app twin of {@link sqlScopeCondition} for rows already loaded (e.g. from an RPC). */
+export function recordInSessionScope(
+  session: ErpSession,
+  rec: { country_id?: string | null; country_branch_id?: string | null; city_branch_id?: string | null } | null | undefined
+): boolean {
+  const scope = sessionSqlScope(session);
+  if (scope.kind === "all") return true;
+  if (!rec || scope.kind === "none") return false;
+  if (scope.kind === "country") return !!rec.country_id && scope.ids.includes(rec.country_id);
+  if (scope.kind === "countryBranch") return !!rec.country_branch_id && scope.ids.includes(rec.country_branch_id);
+  return !!rec.city_branch_id && scope.ids.includes(rec.city_branch_id);
+}
+
+/**
+ * Hierarchy-inclusive variant for MASTER data that is defined at several levels (accounts,
+ * ledgers): a branch user sees its own city branch's rows plus the parent-level rows that have
+ * no city branch (its main branch's, then its country's) — never a sibling branch's rows.
+ * Country roles see their countries; Super Admin everything; no assignment nothing.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function sqlHierarchyScopeCondition(sql: any, session: ErpSession, alias: string) {
+  const scope = sessionSqlScope(session);
+  const col = (c: string) => sql.unsafe(alias ? `${alias}.${c}` : c);
+  if (scope.kind === "all") return sql`TRUE`;
+  if (scope.kind === "none") return sql`FALSE`;
+  if (scope.kind === "country") return sql`${col("country_id")} = ANY(${scope.ids}::uuid[])`;
+  const cityIds = scope.kind === "cityBranch" ? scope.ids : [];
+  return sql`(
+    ${col("city_branch_id")} = ANY(${cityIds}::uuid[])
+    OR (${col("city_branch_id")} IS NULL AND ${col("country_branch_id")} = ANY(${session.countryBranchIds}::uuid[]))
+    OR (${col("city_branch_id")} IS NULL AND ${col("country_branch_id")} IS NULL AND ${col("country_id")} = ANY(${session.countryIds}::uuid[]))
+  )`;
+}
+
+/** PostgREST `.or()` expression for {@link sqlHierarchyScopeCondition} (Supabase query paths). */
+export function postgrestHierarchyScope(session: ErpSession): string | null {
+  const scope = sessionSqlScope(session);
+  if (scope.kind === "all") return null;
+  if (scope.kind === "none") return "id.eq.00000000-0000-0000-0000-000000000000";
+  if (scope.kind === "country") return `country_id.in.(${scope.ids.join(",")})`;
+  const parts: string[] = [];
+  if (scope.kind === "cityBranch" && scope.ids.length) parts.push(`city_branch_id.in.(${scope.ids.join(",")})`);
+  if (session.countryBranchIds.length) parts.push(`and(city_branch_id.is.null,country_branch_id.in.(${session.countryBranchIds.join(",")}))`);
+  if (session.countryIds.length) parts.push(`and(city_branch_id.is.null,country_branch_id.is.null,country_id.in.(${session.countryIds.join(",")}))`);
+  return parts.length ? parts.join(",") : "id.eq.00000000-0000-0000-0000-000000000000";
+}
+
+/** In-app twin of {@link sqlHierarchyScopeCondition} for already-loaded master rows. */
+export function recordInHierarchyScope(
+  session: ErpSession,
+  rec: { country_id?: string | null; country_branch_id?: string | null; city_branch_id?: string | null } | null | undefined
+): boolean {
+  const scope = sessionSqlScope(session);
+  if (scope.kind === "all") return true;
+  if (!rec || scope.kind === "none") return false;
+  if (scope.kind === "country") return !!rec.country_id && scope.ids.includes(rec.country_id);
+  if (rec.city_branch_id) return scope.kind === "cityBranch" && scope.ids.includes(rec.city_branch_id);
+  if (rec.country_branch_id) return session.countryBranchIds.includes(rec.country_branch_id);
+  return !!rec.country_id && session.countryIds.includes(rec.country_id);
 }

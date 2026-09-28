@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic";
 
+import { sessionSqlScope, sqlScopeCondition } from "@/lib/api/scope-middleware";
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiOk, handleApiError } from "@/lib/api/response";
@@ -53,6 +54,7 @@ export async function GET(request: NextRequest) {
     const term = query.q ? query.q.trim().replace(/[%_]/g, "") : null;
     const like = term ? `%${term}%` : null;
 
+    const sqlScope = sessionSqlScope(session);
     const rows = await withLocalPg(async (sql) => {
       return sql`
         select
@@ -92,6 +94,8 @@ export async function GET(request: NextRequest) {
         left join country_branches dcb on dcb.id = po.dest_country_branch_id
         where po.deleted_at is null
           and po.dest_country_id is not null
+          -- one scope rule, dual form: the caller's scope must contain the source OR the destination side
+          and (${sqlScopeCondition(sql, sqlScope, "po")} or ${sqlScopeCondition(sql, sqlScope, "po", { prefix: "dest_" })})
           ${query.countryId ? sql`and po.country_id = ${query.countryId}::uuid` : sql``}
           ${query.countryBranchId ? sql`and po.country_branch_id = ${query.countryBranchId}::uuid` : sql``}
           ${query.destCountryId ? sql`and po.dest_country_id = ${query.destCountryId}::uuid` : sql``}

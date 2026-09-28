@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { uuidSchema } from "@/lib/api/erp-validation";
-import { authorizeApiScope } from "@/lib/api/scope-middleware";
+import { authorizeApiScope, enforceScopeFilter, sessionSqlScope, sqlScopeCondition } from "@/lib/api/scope-middleware";
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { withLocalPg } from "@/lib/db/local-postgres";
@@ -193,7 +193,8 @@ export async function GET(request: NextRequest) {
         WHERE so.deleted_at IS NULL
           AND (${query.id ? sql`so.id = ${query.id}::uuid` : sql`true`})
           AND (${query.salesOrderNo ? sql`so.sales_order_no = ${query.salesOrderNo}` : sql`true`})
-          AND (${query.countryId ? sql`so.country_id = ${query.countryId}::uuid` : !session.isSuperAdmin && session.countryIds.length ? sql`so.country_id = any(${session.countryIds}::uuid[])` : sql`true`})
+          AND ${sqlScopeCondition(sql, sessionSqlScope(session), "so")}
+          AND (${query.countryId ? sql`so.country_id = ${query.countryId}::uuid` : sql`true`})
           AND (${query.countryBranchId ? sql`so.country_branch_id = ${query.countryBranchId}::uuid` : sql`true`})
           AND (${query.cityBranchId ? sql`so.city_branch_id = ${query.cityBranchId}::uuid` : sql`true`})
           AND (${query.dateFrom ? sql`so.order_date >= ${query.dateFrom}` : sql`true`})
@@ -232,10 +233,10 @@ export async function GET(request: NextRequest) {
       if (query.salesOrderNo) {
         recordsQuery = recordsQuery.eq("sales_order_no", query.salesOrderNo);
       }
+      // One scope rule: branch users → own branch, country roles → country (enforceScopeFilter).
+      recordsQuery = enforceScopeFilter(recordsQuery, session);
       if (query.countryId) {
         recordsQuery = recordsQuery.eq("country_id", query.countryId);
-      } else if (!session.isSuperAdmin && session.countryIds.length) {
-        recordsQuery = recordsQuery.in("country_id", session.countryIds);
       }
       if (query.countryBranchId) {
         recordsQuery = recordsQuery.eq("country_branch_id", query.countryBranchId);

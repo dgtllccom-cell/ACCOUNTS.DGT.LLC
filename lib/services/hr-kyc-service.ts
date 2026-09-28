@@ -1,5 +1,5 @@
 import { withLocalPg } from "@/lib/db/local-postgres";
-import type { HrScope } from "@/lib/services/hr-api";
+import { type HrScope, hrBranch } from "@/lib/services/hr-api";
 
 /**
  * HRM employee KYC / QVC service.
@@ -11,7 +11,7 @@ import type { HrScope } from "@/lib/services/hr-api";
 
 function scopeWhere(sql: any, scope: HrScope, col = "v.country_id") {
   if (scope.countryIds === null) return sql`TRUE`;
-  return sql`(${sql(col)} = ANY(${scope.countryIds}) OR ${sql(col)} IS NULL)`;
+  return sql`(${sql(col)} = ANY(${scope.countryIds}) OR ${sql(col)} IS NULL) AND ${hrBranch(sql, scope, col.split(".")[0])}`;
 }
 
 async function assertEmployeeInScope(employeeId: string, scope: HrScope) {
@@ -19,7 +19,7 @@ async function assertEmployeeInScope(employeeId: string, scope: HrScope) {
   const ok = await withLocalPg(async (sql) => {
     const r = await sql`SELECT 1 FROM public.employees e
       WHERE e.id = ${employeeId} AND e.deleted_at IS NULL
-        AND (e.country_id = ANY(${scope.countryIds}) OR e.country_id IS NULL) LIMIT 1`;
+        AND (e.country_id = ANY(${scope.countryIds}) OR e.country_id IS NULL) AND ${hrBranch(sql, scope, "e")} LIMIT 1`;
     return (r?.length ?? 0) > 0;
   });
   if (!ok) throw new Error("Employee not found in your scope.");

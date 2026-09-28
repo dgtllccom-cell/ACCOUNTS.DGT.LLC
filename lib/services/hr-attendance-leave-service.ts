@@ -1,5 +1,5 @@
 import { withLocalPg } from "@/lib/db/local-postgres";
-import type { HrScope } from "@/lib/services/hr-api";
+import { type HrScope, hrBranch } from "@/lib/services/hr-api";
 
 /**
  * HRM Phase 4 service — shifts, holidays, leave types, leave balances,
@@ -16,7 +16,7 @@ async function assertEmployeeInScope(employeeId: string, scope: HrScope) {
   const ok = await withLocalPg(async (sql) => {
     const r = await sql`SELECT 1 FROM public.employees e
       WHERE e.id = ${employeeId} AND e.deleted_at IS NULL
-        AND (e.country_id = ANY(${scope.countryIds}) OR e.country_id IS NULL) LIMIT 1`;
+        AND (e.country_id = ANY(${scope.countryIds}) OR e.country_id IS NULL) AND ${hrBranch(sql, scope, "e")} LIMIT 1`;
     return (r?.length ?? 0) > 0;
   });
   if (!ok) throw new Error("Employee not found in your scope.");
@@ -168,7 +168,7 @@ export class HrAttendanceLeaveService {
   // ── leave balances ─────────────────────────────────────────────────────
   async listBalances(scope: HrScope, opts: { year?: number; employeeId?: string; search?: string } = {}) {
     const rows = await withLocalPg(async (sql) => {
-      const where = [scopeCol(sql, scope, "country_id")];
+      const where = [scopeCol(sql, scope, "country_id"), hrBranch(sql, scope, "hr_employee_leave_balances_v")];
       if (opts.year) where.push(sql`year = ${opts.year}`);
       if (opts.employeeId) where.push(sql`employee_id = ${opts.employeeId}`);
       if (opts.search) where.push(sql`(employee_name ILIKE ${"%" + opts.search + "%"} OR employee_code ILIKE ${"%" + opts.search + "%"})`);
@@ -181,7 +181,7 @@ export class HrAttendanceLeaveService {
   /** Create/refresh balances for every in-scope employee for a year from leave-type entitlements. */
   async initializeYear(year: number, actorId: string, scope: HrScope) {
     const n = await withLocalPg(async (sql) => {
-      const scoped = scope.countryIds === null ? sql`TRUE` : sql`(e.country_id = ANY(${scope.countryIds}) OR e.country_id IS NULL)`;
+      const scoped = scope.countryIds === null ? sql`TRUE` : sql`(e.country_id = ANY(${scope.countryIds}) OR e.country_id IS NULL) AND ${hrBranch(sql, scope, "e")}`;
       const res = await sql`
         INSERT INTO public.hr_employee_leave_balances (employee_id, leave_type_id, year, entitled_days, country_id, city_branch_id, updated_by)
         SELECT e.id, lt.id, ${year}, lt.annual_entitlement_days, e.country_id, e.city_branch_id, ${actorId}
@@ -200,7 +200,7 @@ export class HrAttendanceLeaveService {
   /** Recompute taken / pending days from office_leave_requests for a year. */
   async recomputeBalances(year: number, scope: HrScope) {
     const n = await withLocalPg(async (sql) => {
-      const scoped = scope.countryIds === null ? sql`TRUE` : sql`(b.country_id = ANY(${scope.countryIds}) OR b.country_id IS NULL)`;
+      const scoped = scope.countryIds === null ? sql`TRUE` : sql`(b.country_id = ANY(${scope.countryIds}) OR b.country_id IS NULL) AND ${hrBranch(sql, scope, "b")}`;
       const res = await sql`
         WITH agg AS (
           SELECT l.employee_id, lt.id AS leave_type_id,
@@ -235,7 +235,7 @@ export class HrAttendanceLeaveService {
   // ── attendance corrections ─────────────────────────────────────────────
   async listCorrections(scope: HrScope, opts: { status?: string; employeeId?: string } = {}) {
     const rows = await withLocalPg(async (sql) => {
-      const where = [scopeCol(sql, scope, "x.country_id")];
+      const where = [scopeCol(sql, scope, "x.country_id"), hrBranch(sql, scope, "x")];
       if (opts.status) where.push(sql`x.status = ${opts.status}`);
       if (opts.employeeId) where.push(sql`x.employee_id = ${opts.employeeId}`);
       const w = where.reduce((a, p, i) => (i === 0 ? p : sql`${a} AND ${p}`));

@@ -1,5 +1,5 @@
 import { withLocalPg } from "@/lib/db/local-postgres";
-import type { HrScope } from "@/lib/services/hr-api";
+import { type HrScope, hrBranch } from "@/lib/services/hr-api";
 
 /**
  * HRM Phase 5 — Payroll run engine.
@@ -18,14 +18,14 @@ type Sql = any;
 
 function runScopeWhere(sql: Sql, scope: HrScope, alias = "r") {
   if (scope.countryIds === null) return sql`TRUE`;
-  return sql`(${sql(alias + ".country_id")} = ANY(${scope.countryIds}) OR ${sql(alias + ".country_id")} IS NULL)`;
+  return sql`(${sql(alias + ".country_id")} = ANY(${scope.countryIds}) OR ${sql(alias + ".country_id")} IS NULL) AND ${hrBranch(sql, scope, alias)}`;
 }
 
 async function assertRunInScope(sql: Sql, runId: string, scope: HrScope) {
   if (scope.countryIds === null) return;
   const r = await sql`SELECT 1 FROM public.hr_payroll_runs r
     WHERE r.id = ${runId} AND r.deleted_at IS NULL
-      AND (r.country_id = ANY(${scope.countryIds}) OR r.country_id IS NULL) LIMIT 1`;
+      AND (r.country_id = ANY(${scope.countryIds}) OR r.country_id IS NULL) AND ${hrBranch(sql, scope, "r")} LIMIT 1`;
   if (!r?.length) throw new Error("Payroll run not found in your scope.");
 }
 
@@ -109,7 +109,7 @@ export class HrPayrollService {
         run.city_branch_id ? sql`e.city_branch_id = ${run.city_branch_id}`
         : run.country_branch_id ? sql`e.country_branch_id = ${run.country_branch_id}`
         : run.country_id ? sql`e.country_id = ${run.country_id}`
-        : (scope.countryIds === null ? sql`TRUE` : sql`e.country_id = ANY(${scope.countryIds})`);
+        : (scope.countryIds === null ? sql`TRUE` : sql`e.country_id = ANY(${scope.countryIds}) AND ${hrBranch(sql, scope, "e")}`);
 
       const employees = await sql`
         SELECT e.*, COALESCE(c.customer_name, c.company_name, e.employee_code) AS employee_name

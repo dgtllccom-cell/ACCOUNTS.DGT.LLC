@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { sessionSqlScope } from "@/lib/api/scope-middleware";
 import { getCurrentErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { canAccessCityBranch } from "@/lib/permissions/middleware";
@@ -189,6 +190,13 @@ export async function GET(req: Request) {
     const limit = Number(searchParams.get("limit") || 50);
     const category = searchParams.get("category");
 
+    // One scope rule: expense bills are keyed by their city branch (branch_id). The session's
+    // city-branch list is already expanded downward (country admin → every branch of the
+    // country, branch user → own branch), so it expresses exactly the sessionSqlScope rule.
+    const sqlScope = sessionSqlScope(session);
+    const allowedBranchIds: string[] | null = sqlScope.kind === "all" ? null : sqlScope.kind === "none" ? [] : session.cityBranchIds;
+    if (allowedBranchIds && allowedBranchIds.length === 0) return NextResponse.json({ bills: [] });
+
     // Try direct PostgreSQL first for resilience and performance
     const viaPg = await withLocalPg(async (sql) => {
       const rows = await sql`
@@ -210,6 +218,7 @@ export async function GET(req: Request) {
         left join public.countries c on c.id = cb.country_id
         where b.deleted_at is null
           and (${category}::text is null or b.bill_title = ${category})
+          and ${allowedBranchIds ? sql`b.branch_id = ANY(${allowedBranchIds}::uuid[])` : sql`true`}
         order by b.created_at desc
         limit ${limit}
       `;
@@ -231,6 +240,9 @@ export async function GET(req: Request) {
 
     if (category) {
       query = query.eq("bill_title", category);
+    }
+    if (allowedBranchIds) {
+      query = query.in("branch_id", allowedBranchIds);
     }
 
     const { data: bills, error: billsError } = await query;

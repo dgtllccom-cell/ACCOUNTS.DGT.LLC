@@ -1,5 +1,5 @@
 import { withLocalPg } from "@/lib/db/local-postgres";
-import type { HrScope } from "@/lib/services/hr-api";
+import { hrBranch, type HrScope } from "@/lib/services/hr-api";
 
 /**
  * HRM reports service — one scoped dataset per report type. Every WHERE repeats
@@ -30,7 +30,7 @@ export type HrReportFilters = {
 
 function empScope(sql: any, scope: HrScope, col = "e.country_id") {
   if (scope.countryIds === null) return sql`TRUE`;
-  return sql`(${sql(col)} = ANY(${scope.countryIds}) OR ${sql(col)} IS NULL)`;
+  return sql`(${sql(col)} = ANY(${scope.countryIds}) OR ${sql(col)} IS NULL) AND ${hrBranch(sql, scope, col.split(".")[0])}`;
 }
 
 export class HrReportsService {
@@ -95,7 +95,7 @@ export class HrReportsService {
 
   private async attendance(f: HrReportFilters, scope: HrScope) {
     const rows = await withLocalPg(async (sql) => {
-      const where: any[] = [sql`a.deleted_at IS NULL`, scope.countryIds === null ? sql`TRUE` : sql`(a.country_id = ANY(${scope.countryIds}) OR a.country_id IS NULL)`];
+      const where: any[] = [sql`a.deleted_at IS NULL`, scope.countryIds === null ? sql`TRUE` : sql`(a.country_id = ANY(${scope.countryIds}) OR a.country_id IS NULL) AND ${hrBranch(sql, scope, "e")}`];
       if (f.from) where.push(sql`a.attendance_date >= ${f.from}`);
       if (f.to) where.push(sql`a.attendance_date <= ${f.to}`);
       if (f.employeeId) where.push(sql`a.employee_id = ${f.employeeId}`);
@@ -121,7 +121,7 @@ export class HrReportsService {
 
   private async leave(f: HrReportFilters, scope: HrScope) {
     const rows = await withLocalPg(async (sql) => {
-      const where: any[] = [sql`l.deleted_at IS NULL`, scope.countryIds === null ? sql`TRUE` : sql`(l.country_id = ANY(${scope.countryIds}) OR l.country_id IS NULL)`];
+      const where: any[] = [sql`l.deleted_at IS NULL`, scope.countryIds === null ? sql`TRUE` : sql`(l.country_id = ANY(${scope.countryIds}) OR l.country_id IS NULL) AND ${hrBranch(sql, scope, "e")}`];
       if (f.from) where.push(sql`l.to_date >= ${f.from}`);
       if (f.to) where.push(sql`l.from_date <= ${f.to}`);
       if (f.employeeId) where.push(sql`l.employee_id = ${f.employeeId}`);
@@ -147,7 +147,7 @@ export class HrReportsService {
 
   private async overtime(f: HrReportFilters, scope: HrScope) {
     const rows = await withLocalPg(async (sql) => {
-      const where: any[] = [sql`a.deleted_at IS NULL`, sql`a.overtime_hours > 0`, scope.countryIds === null ? sql`TRUE` : sql`(a.country_id = ANY(${scope.countryIds}) OR a.country_id IS NULL)`];
+      const where: any[] = [sql`a.deleted_at IS NULL`, sql`a.overtime_hours > 0`, scope.countryIds === null ? sql`TRUE` : sql`(a.country_id = ANY(${scope.countryIds}) OR a.country_id IS NULL) AND ${hrBranch(sql, scope, "e")}`];
       if (f.from) where.push(sql`a.attendance_date >= ${f.from}`);
       if (f.to) where.push(sql`a.attendance_date <= ${f.to}`);
       if (f.employeeId) where.push(sql`a.employee_id = ${f.employeeId}`);
@@ -177,7 +177,7 @@ export class HrReportsService {
 
   private async payrollRegister(f: HrReportFilters, scope: HrScope) {
     const rows = await withLocalPg(async (sql) => {
-      const where: any[] = [sql`r.deleted_at IS NULL`, scope.countryIds === null ? sql`TRUE` : sql`(r.country_id = ANY(${scope.countryIds}) OR r.country_id IS NULL)`];
+      const where: any[] = [sql`r.deleted_at IS NULL`, scope.countryIds === null ? sql`TRUE` : sql`(r.country_id = ANY(${scope.countryIds}) OR r.country_id IS NULL) AND ${hrBranch(sql, scope, "e")}`];
       if (f.periodMonth) where.push(sql`r.period_month = ${f.periodMonth}`);
       if (f.countryId) where.push(sql`r.country_id = ${f.countryId}`);
       const w = where.reduce((a, p, i) => (i === 0 ? p : sql`${a} AND ${p}`));
@@ -213,7 +213,7 @@ export class HrReportsService {
     const empId: string = f.employeeId;
     const period: string = f.periodMonth;
     const rows = await withLocalPg(async (sql) => {
-      const inScope = scope.countryIds === null ? sql`TRUE` : sql`(e.country_id = ANY(${scope.countryIds}) OR e.country_id IS NULL)`;
+      const inScope = scope.countryIds === null ? sql`TRUE` : sql`(e.country_id = ANY(${scope.countryIds}) OR e.country_id IS NULL) AND ${hrBranch(sql, scope, "e")}`;
       return sql`
         SELECT e.employee_code, COALESCE(c.customer_name, c.company_name, e.employee_code) AS employee_name,
                e.designation, e.department, co.name AS country,
@@ -261,7 +261,7 @@ export class HrReportsService {
     if (!f.employeeId) throw new Error("Employee ledger needs employeeId.");
     const empId: string = f.employeeId;
     const rows = await withLocalPg(async (sql) => {
-      const inScope = scope.countryIds === null ? sql`TRUE` : sql`(e.country_id = ANY(${scope.countryIds}) OR e.country_id IS NULL)`;
+      const inScope = scope.countryIds === null ? sql`TRUE` : sql`(e.country_id = ANY(${scope.countryIds}) OR e.country_id IS NULL) AND ${hrBranch(sql, scope, "e")}`;
       const salaries = await sql`
         SELECT d.salary_month AS ref, d.due_date AS entry_date, 'Salary' AS kind,
                d.net_salary AS amount, d.currency, d.status
@@ -288,7 +288,7 @@ export class HrReportsService {
   private async expiringDocuments(f: HrReportFilters, scope: HrScope) {
     const rows = await withLocalPg(async (sql) => {
       const days = f.to ? sql`${f.to}::date` : sql`current_date + 60`;
-      const where: any[] = [sql`d.deleted_at IS NULL`, sql`d.expiry_date IS NOT NULL`, sql`d.expiry_date <= ${days}`, scope.countryIds === null ? sql`TRUE` : sql`(d.country_id = ANY(${scope.countryIds}) OR d.country_id IS NULL)`];
+      const where: any[] = [sql`d.deleted_at IS NULL`, sql`d.expiry_date IS NOT NULL`, sql`d.expiry_date <= ${days}`, scope.countryIds === null ? sql`TRUE` : sql`(d.country_id = ANY(${scope.countryIds}) OR d.country_id IS NULL) AND ${hrBranch(sql, scope, "e")}`];
       if (f.employeeId) where.push(sql`d.employee_id = ${f.employeeId}`);
       const w = where.reduce((a, p, i) => (i === 0 ? p : sql`${a} AND ${p}`));
       return sql`
@@ -312,7 +312,7 @@ export class HrReportsService {
 
   private async gratuity(f: HrReportFilters, scope: HrScope) {
     const rows = await withLocalPg(async (sql) => {
-      const where: any[] = [scope.countryIds === null ? sql`TRUE` : sql`(s.country_id = ANY(${scope.countryIds}) OR s.country_id IS NULL)`];
+      const where: any[] = [scope.countryIds === null ? sql`TRUE` : sql`(s.country_id = ANY(${scope.countryIds}) OR s.country_id IS NULL) AND ${hrBranch(sql, scope, "s")}`];
       if (f.status) where.push(sql`s.status = ${f.status}`);
       const w = where.reduce((a, p, i) => (i === 0 ? p : sql`${a} AND ${p}`));
       return sql`
@@ -335,7 +335,7 @@ export class HrReportsService {
 
   private async auditHistory(f: HrReportFilters, scope: HrScope) {
     const rows = await withLocalPg(async (sql) => {
-      const cf = scope.countryIds === null ? sql`TRUE` : sql`(x.country_id = ANY(${scope.countryIds}) OR x.country_id IS NULL)`;
+      const cf = scope.countryIds === null ? sql`TRUE` : sql`(x.country_id = ANY(${scope.countryIds}) OR x.country_id IS NULL) AND ${hrBranch(sql, scope, "e")}`;
       const pos = await sql`
         SELECT 'Position Event' AS area, x.event_type AS action, x.status, x.effective_date AS on_date, x.reason,
                e.employee_code, COALESCE(c.customer_name, c.company_name, e.employee_code) AS employee_name, x.created_at
@@ -355,7 +355,7 @@ export class HrReportsService {
                NULL AS employee_code, r.run_no AS employee_name, ev.created_at
         FROM public.hr_payroll_run_events ev
         JOIN public.hr_payroll_runs r ON r.id = ev.run_id
-        WHERE ${scope.countryIds === null ? sql`TRUE` : sql`(r.country_id = ANY(${scope.countryIds}) OR r.country_id IS NULL)`}`;
+        WHERE ${scope.countryIds === null ? sql`TRUE` : sql`(r.country_id = ANY(${scope.countryIds}) OR r.country_id IS NULL) AND ${hrBranch(sql, scope, "r")}`}`;
       return [...(pos ?? []), ...(sep ?? []), ...(pay ?? [])].sort((x, y) => String(y.created_at).localeCompare(String(x.created_at))).slice(0, 500);
     });
     return {

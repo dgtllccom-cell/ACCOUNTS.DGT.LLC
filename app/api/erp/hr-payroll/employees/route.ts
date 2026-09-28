@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { recordInSessionScope } from "@/lib/api/scope-middleware";
 import { requireErpSession } from "@/lib/auth/session";
 import { allocateFormSerials } from "@/lib/services/form-serials";
 import { ensureEmployeesTable } from "@/lib/services/ensure-employees-table";
@@ -183,11 +184,15 @@ export async function GET(request: NextRequest) {
     // server client can carry a service role). Employees outside the caller's authorised
     // countries are never returned; records with no country are visible to Super Admin only.
     if (!session.isSuperAdmin) {
-      const allowed = new Set(session.countryIds ?? []);
-      employees = employees.filter((e: any) => {
-        const cid = e.country_id ?? e.country?.id ?? null;
-        return cid ? allowed.has(cid) : false;
-      });
+      // Same rule as every other module: country roles → their country, branch users → their
+      // own city branch (session.countryIds alone also matched a branch user's whole country).
+      employees = employees.filter((e: any) =>
+        recordInSessionScope(session, {
+          country_id: e.country_id ?? e.country?.id ?? null,
+          country_branch_id: e.country_branch_id ?? e.country_branch?.id ?? null,
+          city_branch_id: e.city_branch_id ?? e.city_branch?.id ?? null,
+        })
+      );
     }
     let filtered = employees || [];
     if (search) {

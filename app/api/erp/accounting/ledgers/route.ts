@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { apiCreated, apiOk, handleApiError } from "@/lib/api/response";
 import { enterpriseLedgerCreateSchema } from "@/lib/api/erp-validation";
 import { createApiSupabaseClient } from "@/lib/api/supabase";
-import { authorizeApiScope, getScopeFromSearchParams } from "@/lib/api/scope-middleware";
+import { authorizeApiScope, getScopeFromSearchParams, sqlHierarchyScopeCondition, postgrestHierarchyScope } from "@/lib/api/scope-middleware";
 import { requireErpSession } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
           where deleted_at is null
             and (
               (
-                (city_branch_id = any(${cityIds}) or country_branch_id = any(${countryBranchIds}) or country_id = any(${countryIds}))
+                ${sqlHierarchyScopeCondition(sql, session, "")}
                 and (${scope.countryId ? sql`country_id = ${scope.countryId}` : sql`true`})
                 and (${scope.countryBranchId ? sql`country_branch_id = ${scope.countryBranchId}` : sql`true`})
                 and (${scope.cityBranchId ? sql`city_branch_id = ${scope.cityBranchId}` : sql`true`})
@@ -91,15 +91,8 @@ export async function GET(request: NextRequest) {
 
       if (!session.isSuperAdmin) {
         const conditions: string[] = [];
-        if (session.cityBranchIds && session.cityBranchIds.length > 0) {
-          conditions.push(`city_branch_id.in.(${session.cityBranchIds.join(",")})`);
-        }
-        if (session.countryBranchIds && session.countryBranchIds.length > 0) {
-          conditions.push(`country_branch_id.in.(${session.countryBranchIds.join(",")})`);
-        }
-        if (session.countryIds && session.countryIds.length > 0) {
-          conditions.push(`country_id.in.(${session.countryIds.join(",")})`);
-        }
+        const hierarchy = postgrestHierarchyScope(session);
+        if (hierarchy) conditions.push(hierarchy);
         conditions.push("code.in.(PAK-CORP-GEN-001,AFG-CORP-GEN-001,IND-CORP-GEN-001,0005-IND-HUB,UAE-CORP-GEN-001,CT-INTER-PK,CT-INTER-AF,CT-INTER-IN,CT-INTER-AE)");
         query = query.or(conditions.join(","));
       }

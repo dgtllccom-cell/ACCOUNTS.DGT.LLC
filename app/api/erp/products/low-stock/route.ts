@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
-import { authorizeApiScope } from "@/lib/api/scope-middleware";
+import { authorizeApiScope, sqlHierarchyScopeCondition } from "@/lib/api/scope-middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
       `;
 
       if (!session.isSuperAdmin && session.countryIds && session.countryIds.length > 0) {
-        query = sql`${query} AND (v.country_id IS NULL OR v.country_id = ANY(${session.countryIds}::uuid[]))`;
+        query = sql`${query} AND (v.country_id IS NULL OR ${sqlHierarchyScopeCondition(sql, session, "v")})`;
       }
       if (countryId) query = sql`${query} AND v.country_id = ${countryId}::uuid`;
       if (countryBranchId) query = sql`${query} AND v.country_branch_id = ${countryBranchId}::uuid`;
@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
         FROM public.product_low_stock_v
         ${
           !session.isSuperAdmin && session.countryIds && session.countryIds.length > 0
-            ? sql`WHERE (country_id IS NULL OR country_id = ANY(${session.countryIds}::uuid[]))`
+            ? sql`WHERE (country_id IS NULL OR ${sqlHierarchyScopeCondition(sql, session, "")})`
             : sql``
         }
       `;

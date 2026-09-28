@@ -6,7 +6,7 @@ import { assertNotShippingOnly } from "@/lib/permissions/shipping-explicit-gate"
 
 /**
  * One access rule for every Settlement & Reconciliation API (business accounting):
- *  - reads need transactions:read, writes need transactions:create;
+ *  - reads need transactions:read or ledgers:read, writes need transactions:create or ledgers:post;
  *  - Shipping-only sessions are blocked (business ledgers);
  *  - results are always clamped to the caller's scope (sessionSqlScope), and explicit
  *    country / branch filters outside that scope are rejected with 403.
@@ -16,9 +16,14 @@ export async function requireSettlementAccess(
   explicit: ApiScope = {}
 ): Promise<{ session: ErpSession; scope: SqlScope }> {
   const session = await requireErpSession();
-  const action = mode === "read" ? "read" : "create";
-  if (!hasRolePermission(session, "transactions", action)) {
-    throw new ErpPermissionError(`Missing permission: transactions:${action}`);
+  // Settlement is derived from ledger / roznamcha postings, so ledger rights also qualify
+  // (Country Admin holds ledgers:* but no transactions:*). Scope is clamped below either way.
+  const allowed =
+    mode === "read"
+      ? hasRolePermission(session, "transactions", "read") || hasRolePermission(session, "ledgers", "read")
+      : hasRolePermission(session, "transactions", "create") || hasRolePermission(session, "ledgers", "post");
+  if (!allowed) {
+    throw new ErpPermissionError(mode === "read" ? "Missing permission: transactions:read or ledgers:read" : "Missing permission: transactions:create or ledgers:post");
   }
   assertNotShippingOnly(session, "Settlement & Reconciliation");
   assertExplicitScopeAllowed(session, explicit);
