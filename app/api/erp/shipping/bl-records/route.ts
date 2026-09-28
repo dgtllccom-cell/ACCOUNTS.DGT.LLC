@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { apiCreated, apiOk, handleApiError } from "@/lib/api/response";
 import { shippingBlRecordCreateSchema, uuidSchema } from "@/lib/api/erp-validation";
-import { authorizeApiScope } from "@/lib/api/scope-middleware";
+import { authorizeApiScope, postgrestHierarchyScope } from "@/lib/api/scope-middleware";
 import { requireSupabaseData, writeAuditLog } from "@/lib/api/supabase";
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -154,7 +154,8 @@ async function loadFilterOptions(session: Session) {
     .select("id, scope, country_id, country_branch_id, city_branch_id, enterprise_account_id, code, name, currency, current_balance, is_active")
     .is("deleted_at", null)
     .order("code", { ascending: true });
-  if (!session.isSuperAdmin && session.countryIds.length) ledgersQuery = ledgersQuery.in("country_id", session.countryIds);
+  // Ledger options follow the hierarchy scope (own branch + parent-level ledgers, never a sibling branch's).
+  { const h = postgrestHierarchyScope(session); if (h) ledgersQuery = ledgersQuery.or(h); }
 
   const [countries, countryBranches, cityBranches, ledgers] = await Promise.all([
     withTimeout<any>(countriesQuery.limit(20), "countries"),

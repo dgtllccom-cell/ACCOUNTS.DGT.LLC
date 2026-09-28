@@ -799,8 +799,11 @@ export async function GET(request: NextRequest) {
         .limit(20);
 
       const existingCodes = new Set(accountRows.map((r) => r.code));
+      // A report carries balances: another country's clearing ledger is Super Admin only.
+      const ownCountry = (cid: string | null | undefined) => session.isSuperAdmin || (!!cid && session.countryIds.includes(cid));
       if (coreCountryData && coreCountryData.length > 0) {
         for (const coreAcc of coreCountryData as EnterpriseAccountRow[]) {
+          if (!ownCountry(coreAcc.country_id)) continue;
           if (!existingCodes.has(coreAcc.code)) {
             accountRows.push(coreAcc);
             existingCodes.add(coreAcc.code);
@@ -818,6 +821,7 @@ export async function GET(request: NextRequest) {
 
       if (standaloneLedgers && standaloneLedgers.length > 0) {
         for (const sled of standaloneLedgers) {
+          if (!ownCountry(sled.country_id)) continue;
           if (!existingCodes.has(sled.code)) {
             const syntheticAcc: EnterpriseAccountRow = {
               id: sled.id,

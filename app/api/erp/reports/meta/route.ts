@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { recordInHierarchyScope, recordInSessionScope } from "@/lib/api/scope-middleware";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { resolveReportScope } from "@/lib/permissions/middleware";
@@ -181,6 +182,22 @@ export async function GET(request: NextRequest) {
         if (!projectMap.has(key)) {
           projectMap.set(key, { id: key, name, country_id: (row as any).country_id, country_branch_id: (row as any).country_branch_id, city_branch_id: (row as any).city_branch_id });
         }
+      }
+      // One scope rule for the report filter lookups: a non-global caller only receives the
+      // countries / branches / users / projects inside its own scope (hierarchy form for places,
+      // strict form for transactional project names).
+      if (!session.isSuperAdmin && !session.roles?.includes("super_admin_reports")) {
+        const inPlace = (r: any) => recordInHierarchyScope(session, r);
+        const scopedAssignments = assignments.filter((a: any) => inPlace(a) || recordInSessionScope(session, a));
+        const allowedUsers = new Set(scopedAssignments.map((a: any) => a.user_id));
+        return {
+          countries: (countries as any[]).filter((c: any) => session.countryIds.includes(c.id)),
+          mainBranches: (mainBranches as any[]).filter((b: any) => inPlace({ country_id: b.country_id, country_branch_id: b.id })),
+          cityBranches: (cityBranches as any[]).filter((b: any) => inPlace({ country_id: b.country_id, country_branch_id: b.country_branch_id, city_branch_id: b.id })),
+          assignments: scopedAssignments,
+          users: users.filter((u: any) => allowedUsers.has(u.id)),
+          projects: [...projectMap.values()].filter((p: any) => recordInSessionScope(session, p))
+        };
       }
       return {
         countries,
