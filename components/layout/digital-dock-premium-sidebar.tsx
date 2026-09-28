@@ -98,6 +98,8 @@ export type SidebarDeepChild = {
   /** RBAC: when set, the item shows only to a user holding one of these enterprise roles.
    *  Omit to keep the current behaviour (visible to everyone; the page still enforces access). */
   roles?: string[];
+  /** Strengthened by the current ERP upgrade project — renders the green UPGRADED marker. */
+  upgraded?: boolean;
 };
 
 export type SidebarSubItem = {
@@ -108,6 +110,8 @@ export type SidebarSubItem = {
   children?: SidebarDeepChild[];
   roles?: string[];
   tone?: "red" | "default";
+  /** Strengthened by the current ERP upgrade project — renders the green UPGRADED marker. */
+  upgraded?: boolean;
 };
 
 export type SidebarMenuItem = {
@@ -120,6 +124,8 @@ export type SidebarMenuItem = {
   roles?: string[];
   tone?: "red" | "default";
   badge?: string;
+  /** Strengthened by the current ERP upgrade project — renders the green UPGRADED marker. */
+  upgraded?: boolean;
 };
 
 /* ---------------- Menu Items Exactly As In Specification ---------------- */
@@ -654,6 +660,25 @@ export const CRM_REPORT_CENTER_OPTIONS = [
   { key: "team-performance", label: nt("Team Performance"), href: "/dashboard/crm?report=team-performance", icon: Award },
   { key: "reports", label: nt("Universal Reports Hub"), href: "/dashboard/crm/reports", icon: FileText },
 ];
+
+/* ---------------- UPGRADED marker ---------------- */
+/** True when the item itself, or anything under it, carries `upgraded`. A parent group shows the
+ *  marker when one of its screens was strengthened, so the owner can find every change. */
+function hasUpgraded(item: SidebarMenuItem | SidebarSubItem | SidebarDeepChild): boolean {
+  if (item.upgraded) return true;
+  return "children" in item && Array.isArray(item.children) ? item.children.some((c) => hasUpgraded(c)) : false;
+}
+
+function UpgradedMark({ lang }: { lang: string }) {
+  return (
+    <span
+      className="ms-1.5 inline-flex shrink-0 items-center rounded px-1 py-px text-[8.5px] font-bold uppercase leading-none tracking-wider bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200 dark:bg-emerald-950/70 dark:text-emerald-300 dark:ring-emerald-800"
+      title={tUi(lang as never, "nav.upgraded_hint", "Strengthened in the latest ERP upgrade")}
+    >
+      {tUi(lang as never, "nav.upgraded", "Upgraded")}
+    </span>
+  );
+}
 
 /* ---------------- Helper to check path matches ---------------- */
 function isPathActive(href: string | undefined, currentPath: string): boolean {
@@ -1270,6 +1295,7 @@ export function DigitalDockPremiumSidebar({
                       <span className={`truncate text-left tracking-tight ${isRed ? "text-red-600 font-bold" : ""}`}>
                         {tr(item.label)}
                       </span>
+                      {hasUpgraded(item) && <UpgradedMark lang={lang} />}
                     </div>
 
                     {item.badge && (
@@ -1333,6 +1359,7 @@ export function DigitalDockPremiumSidebar({
                                   <span className="truncate text-left tracking-tight">
                                     {tr(sub.label)}
                                   </span>
+                                  {hasUpgraded(sub) && <UpgradedMark lang={lang} />}
                                 </div>
                                 {isSubOpen ? (
                                   <ChevronDown className={`h-3.5 w-3.5 shrink-0 ${isRed ? "text-red-600" : "text-[#2563eb]"}`} />
@@ -1380,6 +1407,7 @@ export function DigitalDockPremiumSidebar({
                                         <span className="truncate tracking-tight">
                                           {tr(leaf.label)}
                                         </span>
+                                        {leaf.upgraded && <UpgradedMark lang={lang} />}
                                       </Link>
                                     );
                                   })}
@@ -1413,6 +1441,7 @@ export function DigitalDockPremiumSidebar({
                             <span className="truncate tracking-tight">
                               {tr(sub.label)}
                             </span>
+                            {sub.upgraded && <UpgradedMark lang={lang} />}
                           </Link>
                         );
                       })}
@@ -1453,6 +1482,7 @@ export function DigitalDockPremiumSidebar({
                       <span className="truncate text-left tracking-tight">
                         {tr(item.label)}
                       </span>
+                      {hasUpgraded(item) && <UpgradedMark lang={lang} />}
                     </div>
 
                     <ChevronRight className={`h-4 w-4 shrink-0 transition-transform duration-200 ${
@@ -1490,6 +1520,7 @@ export function DigitalDockPremiumSidebar({
                   <span className={`truncate tracking-tight flex-1 ${isRed ? "text-red-600 font-bold" : ""}`}>
                     {tr(item.label)}
                   </span>
+                  {item.upgraded && <UpgradedMark lang={lang} />}
                   {item.badge && (
                     <span className={`px-1.5 py-0.5 text-[10px] font-extrabold rounded uppercase tracking-wider ${
                       isRed ? "bg-red-600 text-white" : "bg-blue-100 text-blue-700"

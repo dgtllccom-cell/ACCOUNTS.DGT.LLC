@@ -324,6 +324,15 @@ export function DocumentManager() {
   // Lookup Options
   const [companyOptions, setCompanyOptions] = useState<SearchSelectOption[]>([]);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
+  // Deep link from Company Master / Company 360: /dashboard/documents?companyId=<id>
+  useEffect(() => {
+    try {
+      const cid = new URLSearchParams(window.location.search).get("companyId");
+      if (cid && /^[0-9a-f-]{36}$/i.test(cid)) setSelectedCompanyId(cid);
+    } catch {
+      /* no deep link */
+    }
+  }, []);
   const [selectedCompanyCode, setSelectedCompanyCode] = useState<string>("");
   const [selectedCompanyName, setSelectedCompanyName] = useState<string>("");
 

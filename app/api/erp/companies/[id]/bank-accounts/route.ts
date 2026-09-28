@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { assertCompanyAccess } from "@/lib/services/company-master-service";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
@@ -22,6 +23,8 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
 
     const { id: rawId } = await context.params;
     const id = uuidSchema.parse(rawId);
+    // Object-level scope: another country's company bank details are not readable by id.
+    await assertCompanyAccess(session, id);
 
     let rows: any[] = [];
     try {

@@ -130,9 +130,9 @@ export function Party360Modal({
                     name: summary?.companies?.[0]?.name || displayName,
                     legalName: summary?.companies?.[0]?.legalName || summary?.companies?.[0]?.name || displayName,
                     nameUrdu: urduName,
-                    businessType: summary?.companies?.[0]?.businessType || "LLC",
-                    countryName: summary?.countryName || "United Arab Emirates",
-                    cityName: summary?.cityName || "Dubai",
+                    businessType: summary?.companies?.[0]?.businessType || null,
+                    countryName: summary?.countryName || null,
+                    cityName: summary?.cityName || null,
                     address: summary?.address || "—",
                     phone: summary?.mobile || summary?.phone || "—",
                     email: summary?.email || "—"

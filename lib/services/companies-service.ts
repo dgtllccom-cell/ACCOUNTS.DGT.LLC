@@ -1,4 +1,4 @@
-import { companiesRepository, type CompanyContact, type CompanyRegistration } from "@/lib/repositories/companies-repository";
+import { companiesRepository, type CompanyContact, type CompanyRegistration, type CompanyLegalProfileInput } from "@/lib/repositories/companies-repository";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 import { writeRecordChangeHistory } from "@/lib/api/record-change-history";
@@ -31,7 +31,17 @@ export type CompanyInput = {
   contacts?: CompanyContact[];
   registrations?: CompanyRegistration[];
   ownerIds?: CompanyRegistration[];
-};
+} & CompanyLegalProfileInput;
+
+const LEGAL_KEYS: Array<keyof CompanyLegalProfileInput> = [
+  "companyType", "tradeName", "legalStructure", "natureOfBusiness", "registrationType", "registrationNumber",
+  "taxNumber", "incorporationDate", "licenseExpiryDate", "companyStatus", "countryBranchId", "cityBranchId", "isBranchOperative",
+];
+function pickLegal(input: Partial<CompanyInput>): CompanyLegalProfileInput {
+  const out: Record<string, unknown> = {};
+  for (const k of LEGAL_KEYS) if (k in input && (input as any)[k] !== undefined) out[k] = (input as any)[k] === "" ? null : (input as any)[k];
+  return out as CompanyLegalProfileInput;
+}
 
 export class CompaniesService {
   async search(input: { query?: string | null; limit?: number; ownerPersonId?: string | null; countryId?: string | null; countryBranchId?: string | null; cityBranchId?: string | null; isBranchOperative?: boolean }) {
@@ -76,6 +86,10 @@ export class CompaniesService {
       contacts: input.contacts ?? [],
       registrations: input.registrations ?? [],
       ownerIds: input.ownerIds ?? []
+    });
+    await companiesRepository.updateLegalProfile(companyId, {
+      companyStatus: "active",
+      ...pickLegal(input),
     });
 
     await translateMasterRecord(
@@ -122,6 +136,7 @@ export class CompaniesService {
       areaLocationId: "areaLocationId" in input ? input.areaLocationId : before?.area_location_id ?? null,
     });
     await companiesRepository.update(id, input);
+    await companiesRepository.updateLegalProfile(id, pickLegal(input));
     const after = await companiesRepository.getById(id);
 
     await writeRecordChangeHistory({

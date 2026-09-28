@@ -1,9 +1,10 @@
 import { NextRequest } from "next/server";
+import { assertCompanyAccess, assertCompanyTypeRules, findCompanyDuplicates, setCompanyBranchLinks } from "@/lib/services/company-master-service";
 import { apiOk, handleApiError, ApiClientError } from "@/lib/api/response";
 import { requireErpSession, sessionInDomain } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
-import { uuidSchema } from "@/lib/api/erp-validation";
+import { uuidSchema, companyUpdateSchema } from "@/lib/api/erp-validation";
 import { companiesService } from "@/lib/services/companies-service";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
 import { getRequestLanguage } from "@/lib/i18n/server";
@@ -33,14 +34,9 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     const id = uuidSchema.parse(params.id);
     const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
 
-    let company = await companiesService.getById(id);
     // Object-level scope = list scope: companies are country master data.
-    if (!session.isSuperAdmin && !session.roles?.includes("super_admin_reports")) {
-      const cid = (company as any)?.country_id as string | null | undefined;
-      if (!cid || !session.countryIds.includes(cid)) {
-        throw new ApiClientError("Company not found", { status: 404, code: "NOT_FOUND" });
-      }
-    }
+    await assertCompanyAccess(session, id);
+    let company = await companiesService.getById(id);
     // ?raw=1 → edit form: return the untranslated original (never overwrite source text).
     if (!wantsRawRecord(request)) company = await localizeCompany(company, lang);
     return apiOk({ company });
@@ -55,8 +51,10 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
 
     const params = await context.params;
     const id = uuidSchema.parse(params.id);
-    const body = await request.json();
+    // Validated + whitelisted (the raw body used to be passed straight to update()).
+    const body = companyUpdateSchema.parse(await request.json());
     const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
+    const existing = await assertCompanyAccess(session, id);
 
     authorizeApiScope(session, {
       resource: "companies",
@@ -90,7 +88,27 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       }
     }
 
-    await companiesService.update(id, body, session.userId);
+    const current: any = await companiesService.getById(id);
+    const merged = {
+      companyType: body.companyType !== undefined ? body.companyType : current.company_type ?? current.effective_company_type,
+      ownerPersonId: body.ownerPersonId !== undefined ? body.ownerPersonId : current.owner_person_id,
+      countryId: body.countryId !== undefined ? body.countryId : existing.country_id,
+    };
+    assertCompanyTypeRules(merged);
+    const identityChanged = ["name", "legalName", "registrationNumber", "taxNumber"].some((k) => (body as any)[k] !== undefined);
+    if (identityChanged && !body.acknowledgeDuplicates) {
+      const dups = await findCompanyDuplicates(session, {
+        name: body.name ?? current.name, legalName: body.legalName ?? current.legal_name,
+        registrationNumber: body.registrationNumber ?? current.registration_number, taxNumber: body.taxNumber ?? current.tax_number,
+        ownerPersonId: merged.ownerPersonId, countryId: merged.countryId, excludeId: id,
+      });
+      if (dups.length) throw new ApiClientError("Possible duplicate company", { status: 409, code: "POSSIBLE_DUPLICATE", details: { candidates: dups } });
+    }
+    const { linkedCountryBranchIds, linkedCityBranchIds, acknowledgeDuplicates: _ack, ...updateInput } = body;
+    await companiesService.update(id, updateInput as any, session.userId);
+    if (linkedCountryBranchIds !== undefined || linkedCityBranchIds !== undefined) {
+      await setCompanyBranchLinks(session, id, { countryBranchIds: linkedCountryBranchIds ?? [], cityBranchIds: linkedCityBranchIds ?? [] });
+    }
     let company = await companiesService.getById(id);
     // ?raw=1 → edit form: return the untranslated original (never overwrite source text).
     if (!wantsRawRecord(request)) company = await localizeCompany(company, lang);
@@ -109,6 +127,9 @@ export async function DELETE(_request: NextRequest, context: { params: Promise<{
     const session = await requireErpSession();
     const params = await context.params;
     const id = uuidSchema.parse(params.id);
+    // Was completely unguarded: any logged-in user could soft-delete any company.
+    authorizeApiScope(session, { resource: "companies", action: "delete" });
+    await assertCompanyAccess(session, id);
 
     await companiesService.softDelete(id, session.userId);
     return apiOk({ success: true, id });

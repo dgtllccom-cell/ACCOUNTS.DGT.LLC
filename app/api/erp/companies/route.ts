@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { assertCompanyTypeRules, findCompanyDuplicates, setCompanyBranchLinks } from "@/lib/services/company-master-service";
 import { apiCreated, apiOk, handleApiError, ApiClientError } from "@/lib/api/response";
 import { auditApiAction } from "@/lib/api/audit";
 import { requireErpSession, sessionInDomain } from "@/lib/auth/session";
@@ -74,6 +75,7 @@ export async function POST(request: NextRequest) {
 
     const raw = await request.json();
     const body = companyCreateSchema.parse(raw);
+    assertCompanyTypeRules(body);
 
     authorizeApiScope(session, {
       resource: "companies",
@@ -109,6 +111,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Duplicate protection — never silent: a likely duplicate returns 409 with the candidates;
+    // the form shows them and only re-submits with acknowledgeDuplicates after the user chooses.
+    if (!body.acknowledgeDuplicates) {
+      const dups = await findCompanyDuplicates(session, {
+        name: body.name, legalName: body.legalName, registrationNumber: body.registrationNumber, taxNumber: body.taxNumber,
+        ownerPersonId: body.ownerPersonId, countryId: body.countryId,
+      });
+      if (dups.length) throw new ApiClientError("Possible duplicate company", { status: 409, code: "POSSIBLE_DUPLICATE", details: { candidates: dups } });
+    }
+
     const companyId = await companiesService.create(
       {
         name: body.name,
@@ -136,10 +148,26 @@ export async function POST(request: NextRequest) {
         address: body.address ?? null,
         contacts: body.contacts ?? [],
         registrations: body.registrations ?? [],
-        ownerIds: body.ownerIds ?? []
+        ownerIds: body.ownerIds ?? [],
+        companyType: body.companyType ?? null,
+        tradeName: body.tradeName ?? null,
+        legalStructure: body.legalStructure ?? null,
+        natureOfBusiness: body.natureOfBusiness ?? null,
+        registrationType: body.registrationType ?? null,
+        registrationNumber: body.registrationNumber ?? null,
+        taxNumber: body.taxNumber ?? null,
+        incorporationDate: body.incorporationDate || null,
+        licenseExpiryDate: body.licenseExpiryDate || null,
+        companyStatus: body.companyStatus ?? "active",
       },
       session.userId
     );
+    if (body.companyType === "internal" && (body.linkedCountryBranchIds?.length || body.linkedCityBranchIds?.length)) {
+      await setCompanyBranchLinks(session, companyId, {
+        countryBranchIds: body.linkedCountryBranchIds ?? [],
+        cityBranchIds: body.linkedCityBranchIds ?? [],
+      });
+    }
 
     try {
       await auditApiAction(request, {

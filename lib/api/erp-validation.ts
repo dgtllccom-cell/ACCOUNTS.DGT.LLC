@@ -426,7 +426,23 @@ export const companyCreateSchema = z.object({
   address: z.string().trim().max(1000).nullable().optional(),
   contacts: z.array(companyContactSchema).default([]),
   registrations: z.array(companyRegistrationSchema).default([]),
-  ownerIds: z.array(companyRegistrationSchema).default([])
+  ownerIds: z.array(companyRegistrationSchema).default([]),
+  // Legal profile (migration 20261212) — all optional so existing callers keep working.
+  companyType: z.enum(["customer", "internal"]).nullable().optional(),
+  tradeName: z.string().trim().max(240).nullable().optional(),
+  legalStructure: z.string().trim().max(60).nullable().optional(),
+  natureOfBusiness: z.string().trim().max(300).nullable().optional(),
+  registrationType: z.string().trim().max(60).nullable().optional(),
+  registrationNumber: z.string().trim().max(80).nullable().optional(),
+  taxNumber: z.string().trim().max(40).nullable().optional(),
+  incorporationDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional().or(z.literal("")),
+  licenseExpiryDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional().or(z.literal("")),
+  companyStatus: z.enum(["active", "expired", "suspended", "closed"]).nullable().optional(),
+  // Internal / Branch company: the branches operating under this legal entity.
+  linkedCountryBranchIds: z.array(uuidSchema).max(50).optional(),
+  linkedCityBranchIds: z.array(uuidSchema).max(200).optional(),
+  // The user saw the duplicate warning and chose to continue (never silent).
+  acknowledgeDuplicates: z.boolean().optional()
 });
 
 export const companyUpdateSchema = companyCreateSchema.partial();

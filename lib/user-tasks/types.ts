@@ -61,6 +61,11 @@ export const RELATED_MODULES = [
   "reports",
   "customer_inquiry",
   "ai_calls",
+  "company_master",
+  "tax_compliance",
+  "dgt_mail",
+  "whatsapp",
+  "performance",
   "other",
 ] as const;
 export type RelatedModule = (typeof RELATED_MODULES)[number];

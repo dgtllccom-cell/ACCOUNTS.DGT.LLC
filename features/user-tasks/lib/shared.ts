@@ -98,5 +98,10 @@ export const RELATED_MODULE_ROUTES: Record<string, string> = {
   reports: "/dashboard/reports",
   customer_inquiry: "/dashboard/customer-inquiries",
   ai_calls: "/dashboard/customer-inquiries/calls",
+  company_master: "/dashboard/settings/company-setup",
+  tax_compliance: "/dashboard/tax-einvoicing/uae/corporate-tax",
+  dgt_mail: "/dashboard/messages/email",
+  whatsapp: "/dashboard/messages/whatsapp",
+  performance: "/dashboard/general-office/performance",
   other: "",
 };

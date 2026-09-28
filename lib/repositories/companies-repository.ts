@@ -2,6 +2,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import postgres from "postgres";
 import { searchRecordIdsByTranslation } from "@/lib/i18n/localize-records";
 import { allocateFormSerials } from "@/lib/services/form-serials";
+import { withLocalPg } from "@/lib/db/local-postgres";
 
 function getDbUrl(): string {
   if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
@@ -67,6 +68,36 @@ export type CompanyRow = {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  // Legal / registration profile (migration 20261212). company_type is NULL on legacy rows —
+  // effective_company_type derives it: branch-operative → internal, has an owner → customer.
+  company_type: "customer" | "internal" | null;
+  effective_company_type: "customer" | "internal" | null;
+  trade_name: string | null;
+  legal_structure: string | null;
+  nature_of_business: string | null;
+  registration_type: string | null;
+  registration_number: string | null;
+  tax_number: string | null;
+  incorporation_date: string | null;
+  license_expiry_date: string | null;
+  company_status: "active" | "expired" | "suspended" | "closed" | null;
+};
+
+/** Fields written by {@link CompaniesRepository.updateLegalProfile} with explicit SET (can clear). */
+export type CompanyLegalProfileInput = {
+  companyType?: "customer" | "internal" | null;
+  tradeName?: string | null;
+  legalStructure?: string | null;
+  natureOfBusiness?: string | null;
+  registrationType?: string | null;
+  registrationNumber?: string | null;
+  taxNumber?: string | null;
+  incorporationDate?: string | null;
+  licenseExpiryDate?: string | null;
+  companyStatus?: "active" | "expired" | "suspended" | "closed" | null;
+  countryBranchId?: string | null;
+  cityBranchId?: string | null;
+  isBranchOperative?: boolean;
 };
 
 export type CompanyWriteInput = {
@@ -128,7 +159,17 @@ const COMPANY_SELECT = [
   "owner_ids",
   "is_active",
   "created_at",
-  "updated_at"
+  "updated_at",
+  "company_type",
+  "trade_name",
+  "legal_structure",
+  "nature_of_business",
+  "registration_type",
+  "registration_number",
+  "tax_number",
+  "incorporation_date",
+  "license_expiry_date",
+  "company_status"
 ].join(",");
 
 function cleanQuery(value: string) {
@@ -187,8 +228,33 @@ function mapRawRow(r: any): CompanyRow {
     owner_ids: parseJsonField(r.owner_ids),
     is_active: r.is_active ?? true,
     created_at: String(r.created_at || new Date().toISOString()),
-    updated_at: String(r.updated_at || new Date().toISOString())
+    updated_at: String(r.updated_at || new Date().toISOString()),
+    company_type: r.company_type ?? null,
+    effective_company_type: effectiveCompanyType(r),
+    trade_name: r.trade_name ?? null,
+    legal_structure: r.legal_structure ?? null,
+    nature_of_business: r.nature_of_business ?? null,
+    registration_type: r.registration_type ?? null,
+    registration_number: r.registration_number ?? null,
+    tax_number: r.tax_number ?? null,
+    incorporation_date: dateOnly(r.incorporation_date),
+    license_expiry_date: dateOnly(r.license_expiry_date),
+    company_status: r.company_status ?? null
   };
+}
+
+function dateOnly(v: unknown): string | null {
+  if (!v) return null;
+  if (v instanceof Date) return v.toISOString().slice(0, 10);
+  return String(v).slice(0, 10);
+}
+
+/** Legacy rows have no company_type — derive it without writing anything back. */
+export function effectiveCompanyType(r: { company_type?: string | null; is_branch_operative?: boolean | null; owner_person_id?: string | null }): "customer" | "internal" | null {
+  if (r.company_type === "customer" || r.company_type === "internal") return r.company_type;
+  if (r.is_branch_operative) return "internal";
+  if (r.owner_person_id) return "customer";
+  return null;
 }
 
 function toPayload(input: Partial<CompanyWriteInput>) {
@@ -473,6 +539,40 @@ export class CompaniesRepository {
     const patch: Record<string, unknown> = { ...payload, updated_at: now };
     const { error } = await supabase.from("companies").update(patch).eq("id", id).is("deleted_at", null);
     if (error) throw new Error(error.message);
+  }
+
+  /**
+   * Explicit-SET update of the legal profile + branch link columns (only keys present in the
+   * input are written, and they CAN be cleared — the legacy update() uses COALESCE and never
+   * touched country_branch_id / city_branch_id / is_branch_operative on its SQL path).
+   */
+  async updateLegalProfile(id: string, input: CompanyLegalProfileInput) {
+    const map: Record<string, keyof CompanyLegalProfileInput> = {
+      company_type: "companyType",
+      trade_name: "tradeName",
+      legal_structure: "legalStructure",
+      nature_of_business: "natureOfBusiness",
+      registration_type: "registrationType",
+      registration_number: "registrationNumber",
+      tax_number: "taxNumber",
+      incorporation_date: "incorporationDate",
+      license_expiry_date: "licenseExpiryDate",
+      company_status: "companyStatus",
+      country_branch_id: "countryBranchId",
+      city_branch_id: "cityBranchId",
+      is_branch_operative: "isBranchOperative",
+    };
+    const patch: Record<string, unknown> = {};
+    for (const [col, key] of Object.entries(map)) {
+      if (!(key in input)) continue;
+      const v = input[key];
+      patch[col] = typeof v === "string" ? (v.trim() ? v.trim() : null) : v ?? null;
+    }
+    if (!Object.keys(patch).length) return;
+    patch.updated_at = new Date().toISOString();
+    await withLocalPg(async (sql) => {
+      await sql`UPDATE public.companies SET ${sql(patch)} WHERE id = ${id}::uuid AND deleted_at IS NULL`;
+    });
   }
 
   async softDelete(id: string) {

@@ -1,65 +1,34 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+/**
+ * Company Master — create / edit one legal company in the ONE `companies` master.
+ *
+ * Two flows on the same master:
+ *   • Customer Company  — a registered company owned by an existing Customer / Owner (sister
+ *     companies of the same owner stay separate records with their own registration & TRN).
+ *   • Internal / Branch Company — our own legal entity; the branches that operate under it are
+ *     linked through the existing city_branches.company_id / country_branches.company_id.
+ *
+ * This form never creates bank accounts, ledgers or postings (Bank Master → New Account →
+ * Roznamcha/Journal). Duplicates are never silent: the API answers 409 with candidates and the
+ * user decides. An AI Document Intake draft (Scan / Upload) only pre-fills — the user saves.
+ */
+
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Route } from "next";
-import {
-  Building2,
-  CheckCircle2,
-  Plus,
-  Save,
-  Trash2,
-  RefreshCcw,
-  X,
-  User,
-  Users,
-  Phone,
-  Mail,
-  MapPin,
-  FileText,
-  Eye,
-  ShieldCheck,
-  Building,
-  Landmark,
-  CreditCard,
-  Briefcase,
-  Layers,
-  ArrowRight,
-  ArrowLeft,
-  Settings,
-  Globe,
-  Check,
-  Sparkles,
-  Printer,
-  Compass,
-  Hash,
-  Award,
-  FileSpreadsheet,
-  Link2,
-  Lock,
-  Copy,
-  MessageSquare,
-  ExternalLink,
-  Smartphone,
-  Edit2,
-  Search,
-  ChevronDown,
-  Box
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { SimpleModal } from "@/components/ui/simple-modal";
-import { apiPost, apiGet, apiPatch } from "@/lib/api/client";
-import { useActiveLanguage } from "@/lib/i18n/use-active-language";
-import { t } from "@/lib/i18n/ui";
-import { transliterateProperNoun } from "@/lib/i18n/transliteration";
-import { openCompany360Report } from "@/lib/reports/open-company-360-report-window";
+import { Building2, Link2, Loader2, Plus, Search, ShieldCheck, Trash2, UserRound, AlertTriangle, FileText, ScanLine } from "lucide-react";
+import { apiGet } from "@/lib/api/client";
+import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
-import { cn } from "@/lib/utils";
 import { CompanyDuplicateWarningModal, type CompanyDuplicateCandidate } from "@/components/erp/company-duplicate-warning-modal";
-import { nameMatches } from "@/lib/utils/person-duplicate-match";
+import {
+  COMPANY_TYPES,
+  LEGAL_STRUCTURE_OPTIONS,
+  REGISTRATION_TYPE_OPTIONS,
+  COMPANY_STATUS_OPTIONS,
+} from "@/features/companies/company-labels";
+import { cn } from "@/lib/utils";
 
 export type CompanyContactItem = {
   id: string;
@@ -71,10 +40,7 @@ export type CompanyContactItem = {
   whatsapp: string;
 };
 
-export type CompanyRegistrationEntry = {
-  type: string;
-  value: string;
-};
+export type CompanyRegistrationEntry = { type: string; value: string };
 
 export type CompanyIncorporationData = {
   id?: string;
@@ -95,12 +61,33 @@ export type CompanyIncorporationData = {
   address: string;
 };
 
+type OwnerOption = { id: string; name: string; code: string | null; mobile: string | null; email: string | null };
+type SisterCompany = { id: string; name: string; company_code: string | null; registration_number: string | null; country_name: string | null };
+type BranchOption = { id: string; name: string; code: string | null; city_name?: string | null; company_id: string | null };
+type DupCandidate = CompanyDuplicateCandidate & { reasons?: string[]; registrationNumber?: string | null; taxNumber?: string | null };
+
+const CURRENCIES = ["AED", "PKR", "AFN", "INR", "CNY", "USD", "EUR", "GBP", "SAR", "IRR", "TRY", "OMR", "QAR"];
+const CONTACT_TYPES = [
+  { value: "main", key: "contact_main", en: "Main Contact" },
+  { value: "authorized", key: "contact_authorized", en: "Authorized Person" },
+  { value: "accounts", key: "contact_accounts", en: "Accounts" },
+  { value: "operations", key: "contact_operations", en: "Operations" },
+] as const;
+
+const field = "h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100";
+const label = "mb-1 block text-xs font-semibold text-slate-700 dark:text-slate-300";
+const card = "rounded-2xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900 sm:p-5";
+
+function newContact(): CompanyContactItem {
+  return { id: `c-${Math.random().toString(36).slice(2, 9)}`, type: "main", name: "", designation: "", email: "", phone: "", whatsapp: "" };
+}
+
 export function CompanyIncorporationForm({
   mode = "standalone",
   initialCompanyId,
   initialOwnerPersonId,
   onSave,
-  onClose
+  onClose,
 }: {
   mode?: "standalone" | "embedded";
   initialCompanyId?: string;
@@ -109,1475 +96,769 @@ export function CompanyIncorporationForm({
   onClose?: () => void;
 }) {
   const router = useRouter();
-  const lang = useActiveLanguage();
-  const isRtl = lang === "ur" || lang === "ar" || lang === "fa" || lang === "ps";
-
-  // Step Tracker (1: Owner Selection, 2: Company Info, 3: Contacts & Contracts, 4: Review & Save)
-  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(2);
-
-  // --- Owner / Account Selection State ---
-  const [ownerPersonId, setOwnerPersonId] = useState(initialOwnerPersonId || "");
-  const [ownerName, setOwnerName] = useState("");
-  const [ownerAccountCode, setOwnerAccountCode] = useState("");
-  const [ownerEmail, setOwnerEmail] = useState("");
-  const [ownerPhone, setOwnerPhone] = useState("");
-  const [ownerCountry, setOwnerCountry] = useState("");
-  const [ownerMainBranch, setOwnerMainBranch] = useState("");
-  const [ownerLinkedCompaniesCount, setOwnerLinkedCompaniesCount] = useState(0);
-  const [ownerSearchQuery, setOwnerSearchQuery] = useState("");
-  const [ownerDropdownOpen, setOwnerDropdownOpen] = useState(false);
-
-  // Available owners list — populated only from the real customers/parties API
-  // below (never seeded with fake people: a hardcoded "default" owner here
-  // would let a company get silently registered under the wrong party).
-  const [availableOwners, setAvailableOwners] = useState<any[]>([]);
-
-  // Existing Sister Companies under this Owner — populated once a real owner
-  // is selected and their real companies are fetched (see handleSelectOwner).
-  const [existingCompaniesForOwner, setExistingCompaniesForOwner] = useState<any[]>([]);
-
-  // Mini Stats — reflect the real selected owner once known; never fake counts.
-  const [statCompanies, setStatCompanies] = useState(0);
-  const [statBanks, setStatBanks] = useState(0);
-  const [statEmployees, setStatEmployees] = useState(0);
-  const [statSerials, setStatSerials] = useState(0);
-
-  // --- Right Form: New Company Fields ---
-  const [companyNameEn, setCompanyNameEn] = useState("");
-  const [companyNameLocal, setCompanyNameLocal] = useState("");
-  const [legalStructure, setLegalStructure] = useState("");
-  const [baseCurrency, setBaseCurrency] = useState("");
-  // Real master-data IDs (was: two hardcoded, disconnected name lists — see the
-  // countries/cityBranches fetch below). selectedCountry/selectedMainBranch keep
-  // the display names shown in the read-only preview panel.
-  const [countryId, setCountryId] = useState("");
-  const [selectedCountry, setSelectedCountry] = useState("");
-  const [cityBranchId, setCityBranchId] = useState("");
-  const [selectedMainBranch, setSelectedMainBranch] = useState("");
-  const [natureOfBusiness, setNatureOfBusiness] = useState("");
-  const [countryOptions, setCountryOptions] = useState<{ id: string; name: string }[]>([]);
-  const [cityBranchOptions, setCityBranchOptions] = useState<{ id: string; name: string; city_name?: string | null }[]>([]);
-
-  // Registration IDs
-  const [regPan, setRegPan] = useState("");
-  const [regCin, setRegCin] = useState("");
-  const [regGstin, setRegGstin] = useState("");
-
-  // --- Contacts & Contact Methods --- (starts empty; the user adds real contacts)
-  const [contacts, setContacts] = useState<CompanyContactItem[]>([]);
-
-  // Modal for Adding / Editing a Contact
-  const [contactModalOpen, setContactModalOpen] = useState(false);
-  const [editingContactId, setEditingContactId] = useState<string | null>(null);
-  const [contactFormType, setContactFormType] = useState("Main Contact");
-  const [contactFormName, setContactFormName] = useState("");
-  const [contactFormDesignation, setContactFormDesignation] = useState("");
-  const [contactFormEmail, setContactFormEmail] = useState("");
-  const [contactFormPhone, setContactFormPhone] = useState("");
-  const [contactFormWhatsapp, setContactFormWhatsapp] = useState("");
-
-  // Share Link State
-  const shareLinkUrl = ownerAccountCode ? `https://app.dgt.ae/register?acc=${ownerAccountCode}` : "";
-  const [copiedLink, setCopiedLink] = useState(false);
-  const [linkGenerated, setLinkGenerated] = useState(true);
-
-  // Saving / Status
-  const [saving, setSaving] = useState(false);
-  const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(null);
-
-  // Duplicate-company warning before a fresh (non-edit) company registration
-  const [dupCandidates, setDupCandidates] = useState<CompanyDuplicateCandidate[]>([]);
-  const [dupSearchedName, setDupSearchedName] = useState("");
-  const [pendingSaveIsDraft, setPendingSaveIsDraft] = useState(false);
-
-  // AI Document intake draft
+  const s = useErpScreen("cmf");
+  const tt = s.tGlobal;
   const intake = useIntakeDraft("companies");
 
-  // Load real customers/parties from DB to enrich owners list
+  const [loading, setLoading] = useState(Boolean(initialCompanyId));
+  const [companyType, setCompanyType] = useState<"customer" | "internal">("customer");
+  // owner (customer company)
+  const [owner, setOwner] = useState<OwnerOption | null>(null);
+  const [ownerQuery, setOwnerQuery] = useState("");
+  const [ownerResults, setOwnerResults] = useState<OwnerOption[]>([]);
+  const [ownerSearching, setOwnerSearching] = useState(false);
+  const [sisters, setSisters] = useState<SisterCompany[]>([]);
+  // legal identity
+  const [legalName, setLegalName] = useState("");
+  const [tradeName, setTradeName] = useState("");
+  const [legalStructure, setLegalStructure] = useState("");
+  const [natureOfBusiness, setNatureOfBusiness] = useState("");
+  const [registrationType, setRegistrationType] = useState("trade_license");
+  const [registrationNumber, setRegistrationNumber] = useState("");
+  const [taxNumber, setTaxNumber] = useState("");
+  const [incorporationDate, setIncorporationDate] = useState("");
+  const [licenseExpiryDate, setLicenseExpiryDate] = useState("");
+  const [companyStatus, setCompanyStatus] = useState("active");
+  const [baseCurrency, setBaseCurrency] = useState("");
+  // location
+  const [countries, setCountries] = useState<Array<{ id: string; name: string; currency_code?: string | null }>>([]);
+  const [countryId, setCountryId] = useState("");
+  const [stateName, setStateName] = useState("");
+  const [cityName, setCityName] = useState("");
+  const [address, setAddress] = useState("");
+  const [zipCode, setZipCode] = useState("");
+  // internal company → branches
+  const [mainBranches, setMainBranches] = useState<BranchOption[]>([]);
+  const [cityBranches, setCityBranches] = useState<BranchOption[]>([]);
+  const [linkedMain, setLinkedMain] = useState<string[]>([]);
+  const [linkedCity, setLinkedCity] = useState<string[]>([]);
+  // contacts
+  const [contacts, setContacts] = useState<CompanyContactItem[]>([]);
+  // save / duplicates
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [savedId, setSavedId] = useState<string | null>(initialCompanyId ?? null);
+  const [savedCode, setSavedCode] = useState<string | null>(null);
+  const [justSaved, setJustSaved] = useState(false);
+  const [liveDups, setLiveDups] = useState<DupCandidate[]>([]);
+  const [dupModal, setDupModal] = useState<DupCandidate[] | null>(null);
+  const prefilled = useRef(false);
+
+  const reasonLabel = useCallback(
+    (r: string) =>
+      ({
+        same_name: s.t("dup_same_name", "Same company name"),
+        same_registration_number: s.t("dup_same_reg", "Same registration / license number"),
+        same_tax_number: s.t("dup_same_trn", "Same TRN / tax number"),
+        same_owner_same_name: s.t("dup_same_owner", "Same owner and same name"),
+      })[r] ?? r,
+    [s]
+  );
+
+  // ── reference data ─────────────────────────────────────────────────────────
   useEffect(() => {
-    (async () => {
-      try {
-        const res: any = await apiGet("/api/erp/customers?limit=20");
-        const list = res?.customers || res?.data?.customers || [];
-        if (list.length > 0) {
-          const mapped = list.map((c: any) => ({
-            id: c.id,
-            name: c.customer_name || [c.first_name, c.last_name].filter(Boolean).join(" ") || "Account",
-            code: c.customer_code || c.person_code || `ACC-${c.id.slice(0, 4).toUpperCase()}`,
-            email: c.email || "owner@dgt.ae",
-            phone: c.mobile || c.phone || "+91 98765 43210",
-            country: c.country_name || "India",
-            countryFlag: c.country_name?.includes("Emirates") || c.country_name?.includes("UAE") ? "🇦🇪" : c.country_name?.includes("Pakistan") ? "🇵🇰" : "🇮🇳",
-            branch: c.city_name ? `${c.city_name} Branch` : "Main Branch",
-            companiesCount: 3
-          }));
-          setAvailableOwners((prev) => {
-            const combined = [...prev];
-            for (const item of mapped) {
-              if (!combined.some((x) => x.id === item.id)) {
-                combined.push(item);
-              }
-            }
-            return combined;
-          });
-        }
-      } catch {}
-    })();
+    apiGet<any>("/api/branch-management/countries")
+      .then((r) => setCountries((r?.countries ?? []).map((c: any) => ({ id: c.id, name: c.name, currency_code: c.currency_code ?? null }))))
+      .catch(() => setCountries([]));
   }, []);
 
-  // Real Country / Main Branch-City master data — the Country and Main Branch/City
-  // selects were hardcoded 8- and 5-item name lists with no connection to the real
-  // countries/city_branches tables, so a value picked here could never resolve to a
-  // real countryId/cityBranchId and was silently dropped from the save payload (see
-  // saveCompanyNow below). Wired to the same endpoints the rest of the ERP uses.
   useEffect(() => {
-    (async () => {
-      try {
-        const res: any = await apiGet("/api/branch-management/countries");
-        setCountryOptions((res?.countries || []).map((c: any) => ({ id: c.id, name: c.name })));
-      } catch {
-        setCountryOptions([]);
-      }
-    })();
-  }, []);
-
-  useEffect(() => {
-    if (!countryId) { setCityBranchOptions([]); return; }
-    (async () => {
-      try {
-        const res: any = await apiGet(`/api/branch-management/city-branches?countryId=${encodeURIComponent(countryId)}`);
-        setCityBranchOptions((res?.cityBranches || []).map((b: any) => ({ id: b.id, name: b.name, city_name: b.city_name })));
-      } catch {
-        setCityBranchOptions([]);
-      }
-    })();
-  }, [countryId]);
-
-  // Sync English to Local Language automatically
-  useEffect(() => {
-    if (companyNameEn && !companyNameLocal) {
-      try {
-        setCompanyNameLocal(transliterateProperNoun(companyNameEn, "ur"));
-      } catch {}
+    if (!countryId) {
+      setMainBranches([]);
+      setCityBranches([]);
+      return;
     }
-  }, [companyNameEn]);
+    const q = encodeURIComponent(countryId);
+    Promise.all([
+      apiGet<any>(`/api/branch-management/country-branches?countryId=${q}`).catch(() => null),
+      apiGet<any>(`/api/branch-management/city-branches?countryId=${q}`).catch(() => null),
+    ]).then(([m, c]) => {
+      const mb: BranchOption[] = (m?.countryBranches ?? []).map((b: any) => ({ id: b.id, name: b.name, code: b.code ?? null, company_id: b.company_id ?? null }));
+      const cb: BranchOption[] = (c?.cityBranches ?? []).map((b: any) => ({ id: b.id, name: b.name, code: b.code ?? null, city_name: b.city_name ?? null, company_id: b.company_id ?? null }));
+      setMainBranches(mb);
+      setCityBranches(cb);
+      if (savedId) {
+        setLinkedMain(mb.filter((b) => b.company_id === savedId).map((b) => b.id));
+        setLinkedCity(cb.filter((b) => b.company_id === savedId).map((b) => b.id));
+      }
+    });
+  }, [countryId, savedId]);
 
-  // Handle owner selection
-  function handleSelectOwner(owner: any) {
-    setOwnerPersonId(owner.id);
-    setOwnerName(owner.name);
-    setOwnerAccountCode(owner.code);
-    setOwnerEmail(owner.email);
-    setOwnerPhone(owner.phone);
-    setOwnerCountry(owner.country);
-    setOwnerMainBranch(owner.branch);
-    setOwnerLinkedCompaniesCount(owner.companiesCount || 3);
-    setOwnerSearchQuery(`${owner.name} (${owner.code})`);
-    setOwnerDropdownOpen(false);
+  useEffect(() => {
+    if (!baseCurrency && countryId) {
+      const c = countries.find((x) => x.id === countryId);
+      if (c?.currency_code) setBaseCurrency(c.currency_code);
+    }
+  }, [countryId, countries, baseCurrency]);
 
-    // Also fetch sister companies for this owner if in DB
-    apiGet(`/api/erp/companies?ownerPersonId=${encodeURIComponent(owner.id)}&limit=10`)
-      .then((res: any) => {
-        const comps = res?.companies || res?.data?.companies || [];
-        if (comps.length > 0) {
-          setExistingCompaniesForOwner(
-            comps.map((c: any) => ({
+  // ── owner search (existing Customer Master — no new customer is created here) ──
+  useEffect(() => {
+    const q = ownerQuery.trim();
+    if (q.length < 2 || (owner && ownerQuery === owner.name)) {
+      setOwnerResults([]);
+      return;
+    }
+    setOwnerSearching(true);
+    const h = setTimeout(() => {
+      apiGet<any>(`/api/erp/customers?q=${encodeURIComponent(q)}&limit=15&lang=${s.lang}`)
+        .then((r) =>
+          setOwnerResults(
+            (r?.customers ?? []).map((c: any) => ({
               id: c.id,
-              name: c.name,
-              license: c.license_number || "REG-2024-001",
-              structure: c.business_type || "Pvt Ltd",
-              status: "Active"
+              name: c.customer_name || [c.first_name, c.last_name].filter(Boolean).join(" ") || c.company_name || "—",
+              code: c.person_code || c.entry_serial || null,
+              mobile: c.mobile || null,
+              email: c.email || null,
             }))
-          );
-          setStatCompanies(comps.length);
-        }
-      })
-      .catch(() => {});
-  }
-
-  // Open Contact Modal
-  function handleOpenAddContact() {
-    setEditingContactId(null);
-    setContactFormType("Contact");
-    setContactFormName("");
-    setContactFormDesignation("");
-    setContactFormEmail("");
-    setContactFormPhone("");
-    setContactFormWhatsapp("");
-    setContactModalOpen(true);
-  }
-
-  function handleOpenEditContact(cnt: CompanyContactItem) {
-    setEditingContactId(cnt.id);
-    setContactFormType(cnt.type);
-    setContactFormName(cnt.name);
-    setContactFormDesignation(cnt.designation);
-    setContactFormEmail(cnt.email);
-    setContactFormPhone(cnt.phone);
-    setContactFormWhatsapp(cnt.whatsapp);
-    setContactModalOpen(true);
-  }
-
-  function handleSaveContactModal() {
-    if (!contactFormName.trim()) return;
-
-    if (editingContactId) {
-      setContacts((prev) =>
-        prev.map((c) =>
-          c.id === editingContactId
-            ? {
-                ...c,
-                type: contactFormType,
-                name: contactFormName.trim(),
-                designation: contactFormDesignation.trim(),
-                email: contactFormEmail.trim(),
-                phone: contactFormPhone.trim(),
-                whatsapp: contactFormWhatsapp.trim()
-              }
-            : c
+          )
         )
-      );
-    } else {
-      const newContact: CompanyContactItem = {
-        id: `cnt-${Date.now()}`,
-        type: contactFormType,
-        name: contactFormName.trim(),
-        designation: contactFormDesignation.trim(),
-        email: contactFormEmail.trim(),
-        phone: contactFormPhone.trim(),
-        whatsapp: contactFormWhatsapp.trim()
-      };
-      setContacts((prev) => [...prev, newContact]);
+        .catch(() => setOwnerResults([]))
+        .finally(() => setOwnerSearching(false));
+    }, 300);
+    return () => clearTimeout(h);
+  }, [ownerQuery, owner, s.lang]);
+
+  const loadOwner = useCallback(async (id: string) => {
+    try {
+      const r = await apiGet<any>(`/api/erp/customers/${encodeURIComponent(id)}`);
+      const c = r?.customer ?? r;
+      if (c?.id) {
+        const o = { id: c.id, name: c.customer_name || c.company_name || "—", code: c.person_code || null, mobile: c.mobile || null, email: c.email || null };
+        setOwner(o);
+        setOwnerQuery(o.name);
+      }
+    } catch {
+      /* owner outside scope or removed — leave unselected */
     }
-    setContactModalOpen(false);
-  }
+  }, []);
 
-  function handleDeleteContact(id: string) {
-    setContacts((prev) => prev.filter((c) => c.id !== id));
-  }
+  useEffect(() => {
+    if (!owner) {
+      setSisters([]);
+      return;
+    }
+    apiGet<any>(`/api/erp/companies?ownerPersonId=${encodeURIComponent(owner.id)}&limit=50&lang=${s.lang}`)
+      .then((r) =>
+        setSisters(
+          (r?.companies ?? [])
+            .filter((c: any) => c.id !== savedId)
+            .map((c: any) => ({ id: c.id, name: c.name, company_code: c.company_code ?? null, registration_number: c.registration_number ?? null, country_name: c.country_name ?? null }))
+        )
+      )
+      .catch(() => setSisters([]));
+  }, [owner, savedId, s.lang]);
 
-  // Copy link
-  function handleCopyShareLink() {
-    navigator.clipboard.writeText(shareLinkUrl);
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2500);
-  }
+  useEffect(() => {
+    if (initialOwnerPersonId && !initialCompanyId) void loadOwner(initialOwnerPersonId);
+  }, [initialOwnerPersonId, initialCompanyId, loadOwner]);
 
-  // Send WhatsApp
-  function handleSendWhatsApp() {
-    const text = encodeURIComponent(
-      `Hello ${ownerName}, please review and complete your company registration on DGT LLC:\n${shareLinkUrl}`
-    );
-    window.open(`https://api.whatsapp.com/send?text=${text}`, "_blank");
-  }
+  // ── edit: load the existing company (raw, untranslated source values) ─────
+  useEffect(() => {
+    if (!initialCompanyId) return;
+    let alive = true;
+    (async () => {
+      try {
+        const r = await apiGet<any>(`/api/erp/companies/${encodeURIComponent(initialCompanyId)}?raw=1`);
+        const c = r?.company;
+        if (!alive || !c) return;
+        setCompanyType((c.company_type || c.effective_company_type || "customer") as "customer" | "internal");
+        setLegalName(c.legal_name || c.name || "");
+        setTradeName(c.trade_name || "");
+        setLegalStructure(c.legal_structure || "");
+        setNatureOfBusiness(c.nature_of_business || (!c.legal_structure ? c.business_type || "" : ""));
+        setRegistrationType(c.registration_type || "trade_license");
+        setRegistrationNumber(c.registration_number || "");
+        setTaxNumber(c.tax_number || "");
+        setIncorporationDate(c.incorporation_date || "");
+        setLicenseExpiryDate(c.license_expiry_date || "");
+        setCompanyStatus(c.company_status || "active");
+        setBaseCurrency(c.base_currency || "");
+        setCountryId(c.country_id || "");
+        setStateName(c.state_name || "");
+        setCityName(c.city_name || "");
+        setAddress(c.address || "");
+        setZipCode(c.zip_code || "");
+        setSavedCode(c.company_code || null);
+        setContacts(
+          (Array.isArray(c.contacts) ? c.contacts : []).map((x: any) => ({
+            id: x.id || `c-${Math.random().toString(36).slice(2, 9)}`,
+            type: x.type || "main",
+            name: x.name || x.value || "",
+            designation: x.designation || "",
+            email: x.email || "",
+            phone: x.phone || "",
+            whatsapp: x.whatsapp || "",
+          }))
+        );
+        if (c.owner_person_id) await loadOwner(c.owner_person_id);
+      } catch (e: any) {
+        if (alive) setError(e?.message || s.t("load_failed", "The company could not be loaded."));
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialCompanyId, loadOwner]);
 
-  // Send SMS
-  function handleSendSms() {
-    const text = encodeURIComponent(
-      `DGT Company Registration Link for ${ownerName}: ${shareLinkUrl}`
-    );
-    window.open(`sms:${ownerPhone}?body=${text}`, "_blank");
-  }
+  // ── AI Document Intake draft → pre-fill only (the user reviews and saves) ─
+  useEffect(() => {
+    if (prefilled.current || !intake.draft) return;
+    prefilled.current = true;
+    const p = intake.payload || {};
+    if (p.companyName) setLegalName(String(p.companyName));
+    if (p.legalStructure) {
+      const v = String(p.legalStructure).toLowerCase();
+      const hit = LEGAL_STRUCTURE_OPTIONS.find((o) => v.includes(o.value.replace(/_/g, " ")) || v.includes(o.value));
+      if (hit) setLegalStructure(hit.value);
+    }
+    if (p.natureOfBusiness) setNatureOfBusiness(String(p.natureOfBusiness));
+    if (p.registrationNumber) setRegistrationNumber(String(p.registrationNumber));
+    if (p.taxRegistrationNumber) setTaxNumber(String(p.taxRegistrationNumber));
+    if (p.incorporationDate && /^\d{4}-\d{2}-\d{2}/.test(String(p.incorporationDate))) setIncorporationDate(String(p.incorporationDate).slice(0, 10));
+    if (p.licenseExpiryDate && /^\d{4}-\d{2}-\d{2}/.test(String(p.licenseExpiryDate))) setLicenseExpiryDate(String(p.licenseExpiryDate).slice(0, 10));
+    if (p.address) setAddress(String(p.address));
+    if (p.baseCurrency && /^[A-Z]{3}$/.test(String(p.baseCurrency))) setBaseCurrency(String(p.baseCurrency));
+    if (p.phone || p.email) setContacts((prev) => (prev.length ? prev : [{ ...newContact(), name: String(p.ownerName || ""), phone: String(p.phone || ""), email: String(p.email || "") }]));
+  }, [intake.draft, intake.payload]);
 
-  // Save / Submit
-  async function handleSaveCompany(isDraft = false) {
-    // The required (*) fields on screen were previously decorative — nothing stopped a
-    // final save with them left blank (or, before this fix, left at their old hardcoded
-    // fake defaults). A draft may still be incomplete; a final save may not.
-    if (!isDraft) {
-      const missing: string[] = [];
-      if (!companyNameEn.trim()) missing.push(t(lang, "cinc.f_company_name", "Company Name"));
-      if (!legalStructure) missing.push(t(lang, "cinc.f_legal_structure", "Legal Structure"));
-      if (!baseCurrency) missing.push(t(lang, "cinc.f_base_currency", "Base Currency"));
-      if (!countryId) missing.push(t(lang, "common.country", "Country"));
-      if (!cityBranchId) missing.push(t(lang, "cinc.f_main_branch_city", "Main Branch / City"));
-      if (!natureOfBusiness) missing.push(t(lang, "cinc.f_nature_of_business", "Business Type / Nature of Business"));
-      if (!ownerName.trim()) missing.push(t(lang, "cinc.f_owner", "Owner"));
-      if (missing.length > 0) {
-        alert(`${t(lang, "cinc.err_required_fields", "Please complete the required fields before saving:")} ${missing.join(", ")}.`);
+  // ── live duplicate check (same rule the API enforces) ──────────────────────
+  useEffect(() => {
+    const name = legalName.trim();
+    if (name.length < 3 && !registrationNumber.trim() && !taxNumber.trim()) {
+      setLiveDups([]);
+      return;
+    }
+    const h = setTimeout(() => {
+      const qp = new URLSearchParams();
+      if (name) qp.set("legalName", name);
+      if (registrationNumber.trim()) qp.set("registrationNumber", registrationNumber.trim());
+      if (taxNumber.trim()) qp.set("taxNumber", taxNumber.trim());
+      if (owner?.id) qp.set("ownerPersonId", owner.id);
+      if (countryId) qp.set("countryId", countryId);
+      if (savedId) qp.set("excludeId", savedId);
+      apiGet<any>(`/api/erp/companies/duplicates?${qp.toString()}`)
+        .then((r) => setLiveDups(r?.candidates ?? []))
+        .catch(() => setLiveDups([]));
+    }, 450);
+    return () => clearTimeout(h);
+  }, [legalName, registrationNumber, taxNumber, owner, countryId, savedId]);
+
+  const validation = useMemo(() => {
+    const issues: string[] = [];
+    if (legalName.trim().length < 2) issues.push(s.t("v_legal_name", "Company legal name is required."));
+    if (companyType === "customer" && !owner) issues.push(s.t("v_owner", "Select the existing Customer / Owner of this company."));
+    if (!countryId) issues.push(s.t("v_country", "Country is required."));
+    if (!baseCurrency) issues.push(s.t("v_currency", "Base currency is required."));
+    if (incorporationDate && licenseExpiryDate && licenseExpiryDate < incorporationDate) issues.push(s.t("v_dates", "License expiry cannot be before the registration date."));
+    return issues;
+  }, [legalName, companyType, owner, countryId, baseCurrency, incorporationDate, licenseExpiryDate, s]);
+
+  async function save(acknowledgeDuplicates = false) {
+    setError(null);
+    setJustSaved(false);
+    if (validation.length) {
+      setError(validation[0]);
+      return;
+    }
+    setSaving(true);
+    const country = countries.find((c) => c.id === countryId);
+    const payload: Record<string, unknown> = {
+      name: tradeName.trim() || legalName.trim(),
+      legalName: legalName.trim(),
+      tradeName: tradeName.trim() || null,
+      companyType,
+      ownerPersonId: companyType === "customer" ? owner?.id ?? null : null,
+      ownerName: companyType === "customer" ? owner?.name ?? null : null,
+      legalStructure: legalStructure || null,
+      natureOfBusiness: natureOfBusiness.trim() || null,
+      businessType: natureOfBusiness.trim() || null,
+      registrationType: registrationType || null,
+      registrationNumber: registrationNumber.trim() || null,
+      taxNumber: taxNumber.trim() || null,
+      incorporationDate: incorporationDate || null,
+      licenseExpiryDate: licenseExpiryDate || null,
+      companyStatus,
+      baseCurrency,
+      countryId,
+      countryName: country?.name ?? null,
+      stateName: stateName.trim() || null,
+      cityName: cityName.trim() || null,
+      address: address.trim() || null,
+      zipCode: zipCode.trim() || null,
+      isBranchOperative: companyType === "internal",
+      originalLanguage: s.lang,
+      contacts: contacts
+        .filter((c) => c.name.trim() || c.phone.trim() || c.email.trim())
+        .map((c) => ({ id: c.id, type: c.type, name: c.name.trim(), designation: c.designation.trim(), email: c.email.trim(), phone: c.phone.trim(), whatsapp: c.whatsapp.trim(), value: c.phone.trim() || c.email.trim() })),
+      registrations: [
+        registrationNumber.trim() ? { type: registrationType || "registration", value: registrationNumber.trim() } : null,
+        taxNumber.trim() ? { type: "trn", value: taxNumber.trim() } : null,
+      ].filter(Boolean),
+      acknowledgeDuplicates,
+    };
+    if (companyType === "internal") {
+      payload.linkedCountryBranchIds = linkedMain;
+      payload.linkedCityBranchIds = linkedCity;
+    }
+    try {
+      const res = await fetch(savedId ? `/api/erp/companies/${encodeURIComponent(savedId)}` : "/api/erp/companies", {
+        method: savedId ? "PATCH" : "POST",
+        credentials: "include",
+        headers: { "content-type": "application/json", "x-erp-lang": s.lang },
+        body: JSON.stringify(payload),
+      });
+      const body = await res.json().catch(() => null);
+      if (res.status === 409 && body?.error?.code === "POSSIBLE_DUPLICATE") {
+        setDupModal(body.error.details?.candidates ?? []);
         return;
       }
-    }
-
-    // Duplicate check before creating a BRAND NEW company master row — search existing
-    // companies by the typed name and warn if a close match already exists, instead of
-    // silently re-registering the same company under a second row. Editing an existing
-    // company (initialCompanyId set) never needs this check.
-    const trimmedName = companyNameEn.trim();
-    if (!initialCompanyId && trimmedName) {
-      setSaving(true);
-      try {
-        const res: any = await apiGet(`/api/erp/companies?q=${encodeURIComponent(trimmedName)}&limit=10`);
-        const matches = ((res?.companies ?? []) as any[]).filter((c) => nameMatches(c.name, trimmedName));
-        if (matches.length > 0) {
-          setDupCandidates(matches.map((c) => ({
-            id: c.id,
-            companyCode: c.company_code,
-            name: c.name,
-            legalName: c.legal_name,
-            ownerName: c.owner_name
-          })));
-          setDupSearchedName(trimmedName);
-          setPendingSaveIsDraft(isDraft);
-          setSaving(false);
-          return;
+      if (!res.ok || body?.ok === false) throw new Error(body?.error?.message || s.t("save_failed", "The company could not be saved."));
+      const id: string = savedId ?? body?.data?.companyId;
+      if (!savedId && id) {
+        setSavedId(id);
+        if (intake.draft) await intake.consume(id).catch(() => undefined);
+        try {
+          const r = await apiGet<any>(`/api/erp/companies/${encodeURIComponent(id)}?raw=1`);
+          setSavedCode(r?.company?.company_code ?? null);
+        } catch {
+          /* code is shown after the next load */
         }
-      } catch {
-        // If the duplicate-check search itself fails, fall through to save — never block
-        // registration on a search-availability issue.
       }
-      setSaving(false);
-    }
-    await saveCompanyNow(isDraft);
-  }
-
-  async function saveCompanyNow(isDraft = false) {
-    setSaving(true);
-    setSaveSuccessMessage(null);
-    try {
-      const payload = {
-        name: companyNameEn.trim(),
-        legalName: companyNameEn.trim(),
-        ownerName: ownerName.trim(),
-        ownerPersonId: ownerPersonId || undefined,
-        // companies has one businessType text column — Legal Structure and Nature of
-        // Business are both validated as required on screen but there's no separate
-        // column for the latter, so both are combined rather than one being dropped.
-        businessType: [legalStructure, natureOfBusiness].filter(Boolean).join(" — "),
-        registrationType: "PAN / CIN / GSTIN",
-        licenseNumber: regGstin || regPan || regCin,
-        baseCurrency: baseCurrency ? baseCurrency.split(" - ")[0] : undefined,
-        countryId: countryId || undefined,
-        countryName: selectedCountry || undefined,
-        cityBranchId: cityBranchId || undefined,
-        address: selectedMainBranch,
-        contacts: contacts.map((c) => ({
-          type: `${c.type} (${c.designation})`,
-          name: c.name,
-          email: c.email,
-          phone: c.phone,
-          whatsapp: c.whatsapp
-        })),
-        registrations: [
-          { type: "PAN", value: regPan },
-          { type: "CIN", value: regCin },
-          { type: "GSTIN", value: regGstin }
-        ]
-      };
-
-      if (initialCompanyId) {
-        await apiPatch(`/api/erp/companies/${encodeURIComponent(initialCompanyId)}`, payload);
-      } else {
-        await apiPost("/api/erp/companies", payload);
-      }
-
-      setSaveSuccessMessage(
-        isDraft
-          ? "Company saved as draft successfully."
-          : "Company registration saved and finalized successfully!"
-      );
-
-      if (onSave) {
-        setTimeout(() => {
-          onSave(payload as any);
-        }, 1000);
-      }
-    } catch (err: any) {
-      setSaveSuccessMessage(err?.message || "Saved successfully!");
+      setJustSaved(true);
+      onSave?.({
+        id,
+        ownerName: owner?.name ?? "",
+        companyName: legalName.trim(),
+        businessName: tradeName.trim(),
+        natureOfBusiness,
+        countryId,
+        isBranchOperative: companyType === "internal",
+        country: country?.name ?? "",
+        state: stateName,
+        city: cityName,
+        address,
+      });
+    } catch (e: any) {
+      setError(e?.message || s.t("save_failed", "The company could not be saved."));
     } finally {
       setSaving(false);
     }
   }
 
+  const branchLinkedElsewhere = (b: BranchOption) => Boolean(b.company_id && b.company_id !== savedId);
+
+  if (loading) {
+    return (
+      <div dir={s.dir} className="flex items-center gap-2 p-8 text-sm text-slate-500">
+        <Loader2 className="h-4 w-4 animate-spin" /> {s.t("loading", "Loading company…")}
+      </div>
+    );
+  }
+
   return (
-    <div className="w-full space-y-5 font-sans" dir={isRtl ? "rtl" : "ltr"}>
-      {/* ── 1. HEADER BANNER WITH STEP PROGRESS TRACKER ── */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 lg:p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
-        {/* Left: Section Title */}
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm shrink-0">
-            <Building className="h-5 w-5" />
+    <div dir={s.dir} className={cn("w-full space-y-4 font-sans", mode === "embedded" ? "" : "mx-auto max-w-5xl")}>
+      {/* Header */}
+      <div className={cn(card, "flex flex-wrap items-center justify-between gap-3")}>
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white">
+            <Building2 className="h-5 w-5" />
           </div>
-          <div>
-            <h2 className="text-base font-black text-slate-900 dark:text-white tracking-tight">
-              Company Registration &amp; Corporate Setup
+          <div className="min-w-0">
+            <h2 className="truncate text-base font-bold text-slate-900 dark:text-white">
+              {savedId ? s.t("title_edit", "Edit Company — Company Master") : s.t("title_new", "New Company — Company Master")}
             </h2>
-            <p className="text-xs text-slate-500 font-medium">
-              Select an existing owner account, then add company details, contacts and contracts.
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {s.t("subtitle", "One legal company record. Accounts are opened in New Account; postings go through Roznamcha / Journal.")}
             </p>
           </div>
         </div>
-
-        {/* Right: 4-Step Progress Indicator */}
-        <div className="flex items-center gap-2 text-xs font-bold">
-          {/* Step 1 */}
-          <div
-            onClick={() => setCurrentStep(1)}
-            className={cn(
-              "flex items-center gap-2 cursor-pointer transition-all",
-              currentStep === 1
-                ? "text-blue-600 dark:text-blue-400"
-                : "text-slate-500 hover:text-slate-800"
-            )}
-          >
-            <span
-              className={cn(
-                "flex h-6 w-6 items-center justify-center rounded-full text-xs font-black",
-                currentStep === 1
-                  ? "bg-blue-600 text-white shadow-xs"
-                  : "bg-slate-100 text-slate-600 dark:bg-slate-800"
-              )}
-            >
-              1
-            </span>
-            <span className="hidden md:inline font-bold">Owner / Account Selection</span>
-          </div>
-
-          <div className="w-6 h-0.5 bg-slate-200 dark:bg-slate-700" />
-
-          {/* Step 2 */}
-          <div
-            onClick={() => setCurrentStep(2)}
-            className={cn(
-              "flex items-center gap-2 cursor-pointer transition-all",
-              currentStep === 2
-                ? "text-blue-600 dark:text-blue-400"
-                : "text-slate-500 hover:text-slate-800"
-            )}
-          >
-            <span
-              className={cn(
-                "flex h-6 w-6 items-center justify-center rounded-full text-xs font-black",
-                currentStep === 2
-                  ? "bg-blue-600 text-white shadow-xs"
-                  : "bg-slate-100 text-slate-600 dark:bg-slate-800"
-              )}
-            >
-              2
-            </span>
-            <span className="hidden md:inline font-bold">Company Info</span>
-          </div>
-
-          <div className="w-6 h-0.5 bg-slate-200 dark:bg-slate-700" />
-
-          {/* Step 3 */}
-          <div
-            onClick={() => setCurrentStep(3)}
-            className={cn(
-              "flex items-center gap-2 cursor-pointer transition-all",
-              currentStep === 3
-                ? "text-blue-600 dark:text-blue-400"
-                : "text-slate-500 hover:text-slate-800"
-            )}
-          >
-            <span
-              className={cn(
-                "flex h-6 w-6 items-center justify-center rounded-full text-xs font-black",
-                currentStep === 3
-                  ? "bg-blue-600 text-white shadow-xs"
-                  : "bg-slate-100 text-slate-600 dark:bg-slate-800"
-              )}
-            >
-              3
-            </span>
-            <span className="hidden md:inline font-bold">Contacts &amp; Contracts</span>
-          </div>
-
-          <div className="w-6 h-0.5 bg-slate-200 dark:bg-slate-700" />
-
-          {/* Step 4 */}
-          <div
-            onClick={() => setCurrentStep(4)}
-            className={cn(
-              "flex items-center gap-2 cursor-pointer transition-all",
-              currentStep === 4
-                ? "text-blue-600 dark:text-blue-400"
-                : "text-slate-500 hover:text-slate-800"
-            )}
-          >
-            <span
-              className={cn(
-                "flex h-6 w-6 items-center justify-center rounded-full text-xs font-black",
-                currentStep === 4
-                  ? "bg-blue-600 text-white shadow-xs"
-                  : "bg-slate-100 text-slate-600 dark:bg-slate-800"
-              )}
-            >
-              4
-            </span>
-            <span className="hidden md:inline font-bold">Review &amp; Save</span>
-          </div>
-        </div>
+        {savedCode && (
+          <span data-testid="company-code" className="rounded-lg bg-slate-100 px-2.5 py-1 font-mono text-xs font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-200">{savedCode}</span>
+        )}
       </div>
 
-      {saveSuccessMessage && (
-        <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs font-bold flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-            <span>{saveSuccessMessage}</span>
-          </div>
-          <button onClick={() => setSaveSuccessMessage(null)} className="text-emerald-600 hover:text-emerald-800">
-            <X className="h-4 w-4" />
-          </button>
+      {intake.draft && (
+        <div className="flex items-start gap-2 rounded-xl border border-violet-200 bg-violet-50 p-3 text-xs text-violet-900 dark:border-violet-900 dark:bg-violet-950/40 dark:text-violet-200">
+          <ScanLine className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>
+            {s.t("prefilled", "Pre-filled from a reviewed document draft")} — <b className="font-mono">{(intake.draft as any).draftNo ?? (intake.draft as any).draft_no ?? ""}</b>.{" "}
+            {s.t("prefilled_hint", "Check every value against the document before saving.")}
+          </span>
         </div>
       )}
 
-      {/* ── 2. TWO-COLUMN LAYOUT (LEFT: OWNER SUMMARY, RIGHT: REGISTRATION FORM) ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-        {/* ════════ LEFT COLUMN (lg:col-span-5) ════════ */}
-        <div className="lg:col-span-5 space-y-4">
-          {/* Card 1: Select Existing Account / Owner */}
-          <Card className="border-slate-200 dark:border-slate-800 shadow-xs rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
-            <CardContent className="p-4 space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <User className="h-4 w-4 text-blue-600" />
-                  <Label className="text-xs font-black text-slate-800 dark:text-slate-200">
-                    Select Existing Account / Owner
-                  </Label>
-                </div>
-                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200">
-                  Required
-                </span>
+      {/* 1. Company type */}
+      <section className={card}>
+        <h3 className="mb-3 text-sm font-bold text-slate-900 dark:text-white">{s.t("sec_type", "1. Company Type")}</h3>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {COMPANY_TYPES.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              data-testid={`company-type-${opt.value}`}
+              onClick={() => setCompanyType(opt.value)}
+              className={cn(
+                "rounded-xl border p-3 text-start transition-colors",
+                companyType === opt.value
+                  ? "border-blue-500 bg-blue-50 ring-2 ring-blue-500/20 dark:border-blue-500 dark:bg-blue-950/40"
+                  : "border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
+              )}
+            >
+              <div className="text-sm font-bold text-slate-900 dark:text-white">{tt(opt.key, opt.en)}</div>
+              <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                {opt.value === "customer"
+                  ? s.t("type_customer_hint", "A legally registered company owned by an existing customer. One owner can own several sister companies.")
+                  : s.t("type_internal_hint", "Our own registered legal entity. Link the branches that operate under it — branches stay branches.")}
               </div>
+            </button>
+          ))}
+        </div>
+      </section>
 
-              {/* Searchable Combobox Input */}
-              <div className="relative">
-                <div
-                  onClick={() => setOwnerDropdownOpen(!ownerDropdownOpen)}
-                  className="flex items-center justify-between w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-bold text-slate-900 dark:text-slate-100 cursor-pointer hover:border-blue-400 transition"
-                >
-                  <div className="flex items-center gap-2 truncate">
-                    <Search className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                    <span className="truncate">{ownerSearchQuery}</span>
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0 text-slate-400">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setOwnerSearchQuery("");
-                      }}
-                      className="hover:text-slate-600 p-0.5"
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                    <ChevronDown className="h-4 w-4" />
-                  </div>
-                </div>
-
-                {/* Dropdown Options */}
-                {ownerDropdownOpen && (
-                  <div className="absolute z-30 left-0 right-0 top-11 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg max-h-56 overflow-y-auto p-1 text-xs">
-                    {availableOwners.map((owner) => (
-                      <div
-                        key={owner.id}
-                        onClick={() => handleSelectOwner(owner)}
-                        className="p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg cursor-pointer flex items-center justify-between"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span>{owner.countryFlag || "🇮🇳"}</span>
-                          <span className="font-bold text-slate-800 dark:text-slate-200">{owner.name}</span>
-                          <span className="font-mono text-slate-400">({owner.code})</span>
-                        </div>
-                        <span className="text-[10px] text-slate-500 font-semibold">{owner.branch}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Card 2: Selected Owner / Account Summary */}
-          <Card className="border-slate-200 dark:border-slate-800 shadow-xs rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
-            <CardHeader className="bg-slate-50/70 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 p-3.5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-300">
-                    <User className="h-4 w-4" />
-                  </span>
-                  <CardTitle className="text-xs font-black text-slate-800 dark:text-slate-200">
-                    Selected Owner / Account Summary
-                  </CardTitle>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200">
-                    Owner Account
-                  </span>
+      {/* 2. Owner (customer company) */}
+      {companyType === "customer" && (
+        <section className={card}>
+          <h3 className="mb-3 flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white">
+            <UserRound className="h-4 w-4 text-blue-600" /> {s.t("sec_owner", "2. Customer / Owner")}
+          </h3>
+          <div className="relative">
+            <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              data-testid="owner-search"
+              className={cn(field, "ps-9")}
+              value={ownerQuery}
+              placeholder={s.t("owner_search_ph", "Search existing customer by name, code or mobile…")}
+              onChange={(e) => {
+                setOwnerQuery(e.target.value);
+                if (owner && e.target.value !== owner.name) setOwner(null);
+              }}
+            />
+            {ownerSearching && <Loader2 className="absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-slate-400" />}
+            {ownerResults.length > 0 && !owner && (
+              <div className="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900">
+                {ownerResults.map((o) => (
                   <button
+                    key={o.id}
                     type="button"
+                    data-testid="owner-option"
+                    className="flex w-full flex-col items-start px-3 py-2 text-start hover:bg-slate-50 dark:hover:bg-slate-800"
                     onClick={() => {
-                      if (ownerPersonId) {
-                        router.push(`/dashboard/parties/360?partyId=${ownerPersonId}` as Route);
-                      }
+                      setOwner(o);
+                      setOwnerQuery(o.name);
+                      setOwnerResults([]);
                     }}
-                    className="text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline flex items-center gap-0.5 cursor-pointer"
                   >
-                    <span>View Full Profile</span>
-                    <ArrowRight className="h-3 w-3" />
+                    <span className="text-sm font-semibold text-slate-900 dark:text-white">{o.name}</span>
+                    <span className="text-xs text-slate-500">{[o.code, o.mobile, o.email].filter(Boolean).join(" · ") || "—"}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          {owner ? (
+            <div data-testid="owner-card" className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs dark:border-slate-700 dark:bg-slate-800/50">
+              <div className="font-bold text-slate-900 dark:text-white">{owner.name}</div>
+              <div className="text-slate-500">{[owner.code, owner.mobile, owner.email].filter(Boolean).join(" · ") || "—"}</div>
+              <div className="mt-2 font-semibold text-slate-700 dark:text-slate-300">
+                {s.t("sister_companies", "Sister companies of this owner")} ({sisters.length})
+              </div>
+              {sisters.length === 0 ? (
+                <div className="text-slate-500">{s.t("no_sisters", "No other registered company for this owner yet.")}</div>
+              ) : (
+                <ul className="mt-1 space-y-1">
+                  {sisters.map((c) => (
+                    <li key={c.id} className="flex flex-wrap items-center gap-2">
+                      <Link2 className="h-3 w-3 text-slate-400" />
+                      <span className="font-medium">{c.name}</span>
+                      {c.company_code && <span className="font-mono text-[11px] text-slate-500">{c.company_code}</span>}
+                      {c.registration_number && <span className="text-slate-500">· {c.registration_number}</span>}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <div className="mt-2 text-[11px] text-slate-500">{s.t("sister_separate", "Each company keeps its own registration, TRN, documents, contracts, orders and invoices — nothing is merged.")}</div>
+            </div>
+          ) : (
+            <p className="mt-2 text-xs text-slate-500">{s.t("owner_hint", "Pick an existing customer. A new customer is created in Customer Management, never here.")}</p>
+          )}
+        </section>
+      )}
+
+      {/* Legal identity */}
+      <section className={card}>
+        <h3 className="mb-3 text-sm font-bold text-slate-900 dark:text-white">
+          {companyType === "customer" ? s.t("sec_legal_3", "3. Legal Identity & Registration") : s.t("sec_legal_2", "2. Legal Identity & Registration")}
+        </h3>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div>
+            <label className={label}>{s.t("legal_name", "Company Legal Name")} *</label>
+            <input data-testid="legal-name" className={field} value={legalName} onChange={(e) => setLegalName(e.target.value)} />
+          </div>
+          <div>
+            <label className={label}>{s.t("trade_name", "Trade / Business Name")}</label>
+            <input data-testid="trade-name" className={field} value={tradeName} onChange={(e) => setTradeName(e.target.value)} />
+          </div>
+          <div>
+            <label className={label}>{s.t("legal_structure", "Legal Structure")}</label>
+            <select data-testid="legal-structure" className={field} value={legalStructure} onChange={(e) => setLegalStructure(e.target.value)}>
+              <option value="">{s.t("select", "— Select —")}</option>
+              {LEGAL_STRUCTURE_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{tt(o.key, o.en)}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className={label}>{s.t("nature_of_business", "Nature of Business")}</label>
+            <input className={field} value={natureOfBusiness} onChange={(e) => setNatureOfBusiness(e.target.value)} />
+          </div>
+          <div>
+            <label className={label}>{s.t("registration_type", "Registration Type")}</label>
+            <select className={field} value={registrationType} onChange={(e) => setRegistrationType(e.target.value)}>
+              {REGISTRATION_TYPE_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{tt(o.key, o.en)}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className={label}>{s.t("registration_number", "Registration / License Number")}</label>
+            <input data-testid="registration-number" className={field} value={registrationNumber} onChange={(e) => setRegistrationNumber(e.target.value)} />
+          </div>
+          <div>
+            <label className={label}>{s.t("tax_number", "TRN / Tax Number")}</label>
+            <input data-testid="tax-number" className={field} value={taxNumber} onChange={(e) => setTaxNumber(e.target.value)} />
+          </div>
+          <div>
+            <label className={label}>{s.t("base_currency", "Base Currency")} *</label>
+            <select data-testid="base-currency" className={field} value={baseCurrency} onChange={(e) => setBaseCurrency(e.target.value)}>
+              <option value="">{s.t("select", "— Select —")}</option>
+              {[...new Set([baseCurrency, ...CURRENCIES].filter(Boolean))].map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className={label}>{s.t("incorporation_date", "Registration / Incorporation Date")}</label>
+            <input type="date" className={field} value={incorporationDate} onChange={(e) => setIncorporationDate(e.target.value)} />
+          </div>
+          <div>
+            <label className={label}>{s.t("license_expiry", "License / Registration Expiry Date")}</label>
+            <input type="date" data-testid="license-expiry" className={field} value={licenseExpiryDate} onChange={(e) => setLicenseExpiryDate(e.target.value)} />
+          </div>
+          <div>
+            <label className={label}>{s.t("status", "Company Status")}</label>
+            <select data-testid="company-status" className={field} value={companyStatus} onChange={(e) => setCompanyStatus(e.target.value)}>
+              {COMPANY_STATUS_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{tt(o.key, o.en)}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {liveDups.length > 0 && (
+          <div data-testid="dup-warning" className="mt-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+            <div className="mb-1 flex items-center gap-1.5 font-bold">
+              <AlertTriangle className="h-4 w-4" /> {s.t("dup_live_title", "Possible existing company — check before saving")}
+            </div>
+            <ul className="space-y-1">
+              {liveDups.slice(0, 5).map((d) => (
+                <li key={d.id}>
+                  <b>{d.legalName || d.name}</b> {d.companyCode && <span className="font-mono">({d.companyCode})</span>} — {(d.reasons ?? []).map(reasonLabel).join(", ")}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </section>
+
+      {/* Country, address and (internal) branches */}
+      <section className={card}>
+        <h3 className="mb-3 text-sm font-bold text-slate-900 dark:text-white">{s.t("sec_location", "Country, Address & Branches")}</h3>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div>
+            <label className={label}>{s.t("country", "Country")} *</label>
+            <select
+              data-testid="country"
+              className={field}
+              value={countryId}
+              onChange={(e) => {
+                setCountryId(e.target.value);
+                setLinkedMain([]);
+                setLinkedCity([]);
+              }}
+            >
+              <option value="">{s.t("select", "— Select —")}</option>
+              {countries.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className={label}>{s.t("state", "State / Province")}</label>
+            <input className={field} value={stateName} onChange={(e) => setStateName(e.target.value)} />
+          </div>
+          <div>
+            <label className={label}>{s.t("city", "City")}</label>
+            <input className={field} value={cityName} onChange={(e) => setCityName(e.target.value)} />
+          </div>
+          <div>
+            <label className={label}>{s.t("zip", "Postal Code")}</label>
+            <input className={field} value={zipCode} onChange={(e) => setZipCode(e.target.value)} />
+          </div>
+          <div className="sm:col-span-2">
+            <label className={label}>{s.t("address", "Registered Address")}</label>
+            <textarea className={cn(field, "h-20 py-2")} value={address} onChange={(e) => setAddress(e.target.value)} />
+          </div>
+        </div>
+
+        {companyType === "internal" && (
+          <div className="mt-4">
+            <div className="mb-1 text-xs font-bold text-slate-800 dark:text-slate-200">{s.t("linked_branches", "Branches operating under this legal company")}</div>
+            <p className="mb-2 text-[11px] text-slate-500">{s.t("linked_branches_hint", "Company = registered legal entity; Branch = operational unit. Linking does not create a company per branch.")}</p>
+            {!countryId ? (
+              <div className="text-xs text-slate-500">{s.t("pick_country_first", "Select the country first.")}</div>
+            ) : mainBranches.length + cityBranches.length === 0 ? (
+              <div className="text-xs text-slate-500">{s.t("no_branches", "No branches found in this country for your access.")}</div>
+            ) : (
+              <div className="grid gap-1.5 sm:grid-cols-2">
+                {[...mainBranches.map((b) => ({ ...b, lvl: "main" as const })), ...cityBranches.map((b) => ({ ...b, lvl: "city" as const }))].map((b) => {
+                  const checked = b.lvl === "main" ? linkedMain.includes(b.id) : linkedCity.includes(b.id);
+                  const toggle = () =>
+                    b.lvl === "main"
+                      ? setLinkedMain((p) => (p.includes(b.id) ? p.filter((x) => x !== b.id) : [...p, b.id]))
+                      : setLinkedCity((p) => (p.includes(b.id) ? p.filter((x) => x !== b.id) : [...p, b.id]));
+                  return (
+                    <label key={b.id} className="flex cursor-pointer items-start gap-2 rounded-lg border border-slate-200 p-2 text-xs hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800">
+                      <input type="checkbox" data-testid="branch-link" data-branch-id={b.id} className="mt-0.5" checked={checked} onChange={toggle} />
+                      <span className="min-w-0">
+                        <span className="font-semibold text-slate-900 dark:text-white">{b.name}</span>
+                        <span className="ms-1 text-slate-500">
+                          {b.lvl === "main" ? s.t("main_branch", "Main Branch") : s.t("city_branch", "City Branch")}
+                          {b.code ? ` · ${b.code}` : ""}
+                        </span>
+                        {branchLinkedElsewhere(b) && (
+                          <span className="block text-amber-700 dark:text-amber-300">{s.t("branch_other_company", "Currently linked to another company — saving moves it here.")}</span>
+                        )}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </section>
+
+      {/* Contacts */}
+      <section className={card}>
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white">{s.t("sec_contacts", "Contacts & Authorized Persons")}</h3>
+          <button type="button" onClick={() => setContacts((p) => [...p, newContact()])} className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs font-semibold hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800">
+            <Plus className="h-3.5 w-3.5" /> {s.t("add_contact", "Add Contact")}
+          </button>
+        </div>
+        {contacts.length === 0 ? (
+          <div className="text-xs text-slate-500">{s.t("no_contacts", "No contacts added.")}</div>
+        ) : (
+          <div className="space-y-2">
+            {contacts.map((c, i) => (
+              <div key={c.id} className="grid gap-2 rounded-xl border border-slate-200 p-2 dark:border-slate-700 sm:grid-cols-6">
+                <select className={field} value={c.type} onChange={(e) => setContacts((p) => p.map((x, j) => (j === i ? { ...x, type: e.target.value } : x)))}>
+                  {CONTACT_TYPES.map((o) => (
+                    <option key={o.value} value={o.value}>{s.t(o.key, o.en)}</option>
+                  ))}
+                </select>
+                <input className={field} placeholder={s.t("c_name", "Name")} value={c.name} onChange={(e) => setContacts((p) => p.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} />
+                <input className={field} placeholder={s.t("c_designation", "Designation")} value={c.designation} onChange={(e) => setContacts((p) => p.map((x, j) => (j === i ? { ...x, designation: e.target.value } : x)))} />
+                <input className={field} placeholder={s.t("c_phone", "Phone")} value={c.phone} onChange={(e) => setContacts((p) => p.map((x, j) => (j === i ? { ...x, phone: e.target.value } : x)))} />
+                <input className={field} placeholder={s.t("c_email", "Email")} value={c.email} onChange={(e) => setContacts((p) => p.map((x, j) => (j === i ? { ...x, email: e.target.value } : x)))} />
+                <div className="flex gap-2">
+                  <input className={field} placeholder={s.t("c_whatsapp", "WhatsApp")} value={c.whatsapp} onChange={(e) => setContacts((p) => p.map((x, j) => (j === i ? { ...x, whatsapp: e.target.value } : x)))} />
+                  <button type="button" aria-label={s.t("remove", "Remove")} onClick={() => setContacts((p) => p.filter((_, j) => j !== i))} className="rounded-lg px-2 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40">
+                    <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
               </div>
-            </CardHeader>
-
-            <CardContent className="p-4 space-y-4">
-              {/* Profile Identity (Initials + Name + Sub details) */}
-              <div className="flex items-center gap-3.5">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 font-black text-lg shadow-2xs">
-                  {ownerName
-                    ? ownerName
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")
-                        .slice(0, 2)
-                        .toUpperCase()
-                    : "AA"}
-                </div>
-                <div className="min-w-0">
-                  <h3 className="text-sm font-black text-slate-900 dark:text-white truncate">
-                    {ownerName}
-                  </h3>
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-slate-500 font-medium mt-0.5">
-                    <span>Account Code: <b className="font-mono text-slate-700 dark:text-slate-300">{ownerAccountCode}</b></span>
-                    <span>Email: <b className="text-slate-700 dark:text-slate-300">{ownerEmail}</b></span>
-                    <span>Phone: <b className="text-slate-700 dark:text-slate-300" dir="ltr">{ownerPhone}</b></span>
-                  </div>
-                </div>
-              </div>
-
-              {/* 3 Meta Badges (Country, Main Branch, Linked Companies) */}
-              <div className="grid grid-cols-3 gap-2.5 text-xs font-semibold">
-                <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 flex items-center gap-2">
-                  <span className="text-base shrink-0">🇮🇳</span>
-                  <div className="min-w-0">
-                    <span className="text-[9px] font-bold text-slate-400 block leading-tight">Country</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200 truncate block">{ownerCountry}</span>
-                  </div>
-                </div>
-
-                <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 flex items-center gap-2">
-                  <Building2 className="h-4 w-4 text-blue-600 shrink-0" />
-                  <div className="min-w-0">
-                    <span className="text-[9px] font-bold text-slate-400 block leading-tight">Main Branch</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200 truncate block">{ownerMainBranch}</span>
-                  </div>
-                </div>
-
-                <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 flex items-center gap-2">
-                  <Users className="h-4 w-4 text-blue-600 shrink-0" />
-                  <div className="min-w-0">
-                    <span className="text-[9px] font-bold text-slate-400 block leading-tight">Linked Companies</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200 truncate block">{ownerLinkedCompaniesCount} Companies</span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Card 3: Existing Registered Companies Under This Owner */}
-          <Card className="border-slate-200 dark:border-slate-800 shadow-xs rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
-            <CardHeader className="bg-slate-50/70 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 p-3.5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-300">
-                    <Building2 className="h-4 w-4" />
-                  </span>
-                  <CardTitle className="text-xs font-black text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                    <span>Existing Registered Companies Under This Owner</span>
-                    <span className="h-4 w-4 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 text-[10px] font-black inline-flex items-center justify-center">
-                      {existingCompaniesForOwner.length}
-                    </span>
-                  </CardTitle>
-                </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 text-xs font-bold text-blue-600 hover:text-blue-700 px-2 cursor-pointer"
-                  onClick={() => router.push("/dashboard/settings/company-setup" as Route)}
-                >
-                  View All
-                </Button>
-              </div>
-            </CardHeader>
-
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-50/70 dark:bg-slate-800/40 text-slate-500 font-bold border-b border-slate-100 dark:border-slate-800 text-[11px]">
-                    <tr>
-                      <th className="px-3 py-2">#</th>
-                      <th className="px-3 py-2">Company Name</th>
-                      <th className="px-3 py-2">Trade License</th>
-                      <th className="px-3 py-2">Structure</th>
-                      <th className="px-3 py-2 text-center">Status</th>
-                      <th className="px-3 py-2 text-center">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                    {existingCompaniesForOwner.map((comp, idx) => (
-                      <tr key={comp.id || idx} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
-                        <td className="px-3 py-2.5 font-bold text-slate-400 text-xs">{idx + 1}</td>
-                        <td className="px-3 py-2.5 font-bold text-slate-900 dark:text-slate-100 text-xs">{comp.name}</td>
-                        <td className="px-3 py-2.5 font-mono text-[11px] text-slate-600 dark:text-slate-400">{comp.license}</td>
-                        <td className="px-3 py-2.5 text-xs text-slate-700 dark:text-slate-300 font-medium">{comp.structure}</td>
-                        <td className="px-3 py-2.5 text-center">
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200">
-                            {comp.status || "Active"}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2.5 text-center">
-                          <button
-                            type="button"
-                            className="p-1 text-slate-400 hover:text-blue-600 rounded transition"
-                            title="View Details"
-                          >
-                            <Eye className="h-3.5 w-3.5" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Section 4: 4 Stat Mini-Cards in 4 Columns */}
-          <div className="grid grid-cols-4 gap-2.5">
-            {/* Stat 1: Companies */}
-            <div className="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center gap-3">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-300 shrink-0">
-                <Building2 className="h-4 w-4" />
-              </span>
-              <div>
-                <span className="text-base font-black text-slate-900 dark:text-white block leading-none">
-                  {statCompanies}
-                </span>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mt-0.5">
-                  Companies
-                </span>
-              </div>
-            </div>
-
-            {/* Stat 2: Banks */}
-            <div className="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center gap-3">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-300 shrink-0">
-                <Landmark className="h-4 w-4" />
-              </span>
-              <div>
-                <span className="text-base font-black text-slate-900 dark:text-white block leading-none">
-                  {statBanks}
-                </span>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mt-0.5">
-                  Banks
-                </span>
-              </div>
-            </div>
-
-            {/* Stat 3: Employees */}
-            <div className="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center gap-3">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-950 dark:text-purple-300 shrink-0">
-                <Users className="h-4 w-4" />
-              </span>
-              <div>
-                <span className="text-base font-black text-slate-900 dark:text-white block leading-none">
-                  {statEmployees}
-                </span>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mt-0.5">
-                  Employees
-                </span>
-              </div>
-            </div>
-
-            {/* Stat 4: Serials / Items */}
-            <div className="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center gap-3">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-300 shrink-0">
-                <Box className="h-4 w-4" />
-              </span>
-              <div>
-                <span className="text-base font-black text-slate-900 dark:text-white block leading-none">
-                  {statSerials}
-                </span>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mt-0.5">
-                  Serials / Items
-                </span>
-              </div>
-            </div>
+            ))}
           </div>
-        </div>
+        )}
+      </section>
 
-        {/* ════════ RIGHT COLUMN (lg:col-span-7) ════════ */}
-        <div className="lg:col-span-7 space-y-5">
-          {/* Card: New Company Registration (Step 2 of 4) */}
-          <Card className="border-slate-200 dark:border-slate-800 shadow-xs rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
-            <CardHeader className="bg-slate-50/70 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-xs shrink-0">
-                    <Building className="h-4 w-4" />
-                  </span>
-                  <div>
-                    <CardTitle className="text-sm font-black text-slate-900 dark:text-white">
-                      {t(lang, "cinc.title", "New Company Registration")}
-                    </CardTitle>
-                    <p className="text-xs text-slate-500 font-medium">
-                      {t(lang, "cinc.subtitle", "Enter the new company information under the selected owner account.")}
-                    </p>
-                  </div>
-                </div>
-                <span className="px-3 py-1 rounded-xl text-xs font-bold text-blue-600 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-900">
-                  {t(lang, "cinc.step_2_of_4", "Step 2 of 4")}
-                </span>
-              </div>
-            </CardHeader>
+      {/* Documents — existing Document Management, no second storage */}
+      <section className={card}>
+        <h3 className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white">
+          <FileText className="h-4 w-4 text-blue-600" /> {s.t("sec_documents", "Company Documents")}
+        </h3>
+        <p className="text-xs text-slate-500">
+          {s.t("documents_hint", "Trade license, registration / TRN certificates, establishment card and other legal documents are kept in Document Management and linked to this company.")}
+        </p>
+        {savedId ? (
+          <button
+            type="button"
+            data-testid="open-documents"
+            onClick={() => router.push(`/dashboard/documents?companyId=${encodeURIComponent(savedId)}` as Route)}
+            className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-blue-300 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-950/40"
+          >
+            <FileText className="h-3.5 w-3.5" /> {s.t("open_documents", "Open company documents")}
+          </button>
+        ) : (
+          <p className="mt-2 text-xs text-slate-500">{s.t("documents_after_save", "Save the company first, then attach its documents.")}</p>
+        )}
+      </section>
 
-            <CardContent className="p-5 space-y-4">
-              {/* Row 1: Company Names (English & Local Language) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-black text-slate-700 dark:text-slate-300">
-                    {t(lang, "cinc.f_company_name_en", "Company Name (English)")} <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    value={companyNameEn}
-                    onChange={(e) => setCompanyNameEn(e.target.value)}
-                    placeholder="e.g. Damaan Logistics India Pvt Ltd"
-                    className="h-10 text-xs font-bold bg-white dark:bg-slate-950"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-black text-slate-700 dark:text-slate-300">
-                    {t(lang, "cinc.f_company_name_local", "Company Name (Local Language)")}
-                  </Label>
-                  <Input
-                    value={companyNameLocal}
-                    onChange={(e) => setCompanyNameLocal(e.target.value)}
-                    placeholder="दामाआन लॉजिस्टिक्स इंडिया प्रा. लि."
-                    className="h-10 text-xs font-bold bg-white dark:bg-slate-950"
-                  />
-                </div>
-              </div>
-
-              {/* Row 2: Legal Structure & Base Currency */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-black text-slate-700 dark:text-slate-300">
-                    {t(lang, "cinc.f_legal_structure", "Legal Structure")} <span className="text-red-500">*</span>
-                  </Label>
-                  <select
-                    value={legalStructure}
-                    onChange={(e) => setLegalStructure(e.target.value)}
-                    className="h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">{t(lang, "cinc.select_legal_structure", "— Select Legal Structure —")}</option>
-                    <option value="Private Limited Company (Pvt Ltd)">{t(lang, "cinc.ls_pvt_ltd", "Private Limited Company (Pvt Ltd)")}</option>
-                    <option value="Limited Liability Company (LLC)">{t(lang, "cinc.ls_llc", "Limited Liability Company (LLC)")}</option>
-                    <option value="Sole Proprietorship">{t(lang, "cinc.ls_sole_prop", "Sole Proprietorship")}</option>
-                    <option value="Partnership / LLP">{t(lang, "cinc.ls_partnership", "Partnership / LLP")}</option>
-                    <option value="Freezone Company">{t(lang, "cinc.ls_freezone", "Freezone Company")}</option>
-                    <option value="Public Limited Company">{t(lang, "cinc.ls_public_ltd", "Public Limited Company")}</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-black text-slate-700 dark:text-slate-300">
-                    {t(lang, "cinc.f_base_currency", "Base Currency")} <span className="text-red-500">*</span>
-                  </Label>
-                  <select
-                    value={baseCurrency}
-                    onChange={(e) => setBaseCurrency(e.target.value)}
-                    className="h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">{t(lang, "cinc.select_base_currency", "— Select Base Currency —")}</option>
-                    <option value="INR - Indian Rupee (₹)">INR - Indian Rupee (₹)</option>
-                    <option value="USD - US Dollar ($)">USD - US Dollar ($)</option>
-                    <option value="AED - UAE Dirham (د.إ)">AED - UAE Dirham (د.إ)</option>
-                    <option value="PKR - Pakistani Rupee (Rs)">PKR - Pakistani Rupee (Rs)</option>
-                    <option value="SAR - Saudi Riyal (﷼)">SAR - Saudi Riyal (﷼)</option>
-                    <option value="AFN - Afghan Afghani (؋)">AFN - Afghan Afghani (؋)</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Row 3: Country & Main Branch / City */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-black text-slate-700 dark:text-slate-300">
-                    {t(lang, "common.country", "Country")} <span className="text-red-500">*</span>
-                  </Label>
-                  <div className="relative">
-                    <select
-                      value={countryId}
-                      onChange={(e) => {
-                        const id = e.target.value;
-                        setCountryId(id);
-                        setSelectedCountry(countryOptions.find((c) => c.id === id)?.name || "");
-                        setCityBranchId("");
-                        setSelectedMainBranch("");
-                      }}
-                      className="h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">{t(lang, "cinc.select_country", "— Select Country —")}</option>
-                      {countryOptions.map((c) => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-black text-slate-700 dark:text-slate-300">
-                    {t(lang, "cinc.f_main_branch_city", "Main Branch / City")} <span className="text-red-500">*</span>
-                  </Label>
-                  <div className="relative">
-                    <select
-                      value={cityBranchId}
-                      onChange={(e) => {
-                        const id = e.target.value;
-                        setCityBranchId(id);
-                        const found = cityBranchOptions.find((b) => b.id === id);
-                        setSelectedMainBranch(found ? [found.name, found.city_name].filter(Boolean).join(" - ") : "");
-                      }}
-                      disabled={!countryId}
-                      className="h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-                    >
-                      <option value="">{t(lang, "cinc.select_branch", "— Select Main Branch / City —")}</option>
-                      {cityBranchOptions.map((b) => (
-                        <option key={b.id} value={b.id}>{[b.name, b.city_name].filter(Boolean).join(" - ")}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Row 4: Business Type / Nature & Country Business Rules (Callout Card) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 items-stretch">
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-1.5">
-                    <Briefcase className="h-3.5 w-3.5 text-red-500" />
-                    <Label className="text-xs font-black text-slate-700 dark:text-slate-300">
-                      {t(lang, "cinc.f_nature_of_business", "Business Type / Nature of Business")} <span className="text-red-500">*</span>
-                    </Label>
-                  </div>
-                  <select
-                    value={natureOfBusiness}
-                    onChange={(e) => setNatureOfBusiness(e.target.value)}
-                    className="h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">{t(lang, "cinc.select_business_type", "— Select Business Type —")}</option>
-                    <option value="Logistics / Transportation">{t(lang, "cinc.bt_logistics", "Logistics / Transportation")}</option>
-                    <option value="Trading & General Order Supplier">{t(lang, "cinc.bt_trading", "Trading & General Order Supplier")}</option>
-                    <option value="Retail & Wholesale">{t(lang, "cinc.bt_retail", "Retail & Wholesale")}</option>
-                    <option value="Import & Export">{t(lang, "cinc.bt_import_export", "Import & Export")}</option>
-                    <option value="Manufacturing">{t(lang, "cinc.bt_manufacturing", "Manufacturing")}</option>
-                    <option value="Services & Consultancy">{t(lang, "cinc.bt_services", "Services & Consultancy")}</option>
-                  </select>
-                </div>
-
-                {/* Country Business Rules Callout Box */}
-                <div className="p-3 rounded-xl bg-orange-50/60 dark:bg-orange-950/20 border border-orange-100 dark:border-orange-900/40 text-xs flex items-start gap-2.5">
-                  <span className="text-lg shrink-0 mt-0.5">🇮🇳</span>
-                  <div className="space-y-0.5">
-                    <h5 className="font-extrabold text-blue-900 dark:text-blue-200 text-xs">
-                      India Business Rules (Required)
-                    </h5>
-                    <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-snug">
-                      For companies registered in India, please select the nature of business. This helps in applying correct tax rules, compliance and reporting (GST, IEC, etc.).
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Row 5: Registration IDs (PAN, CIN, GSTIN) */}
-              <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                <div className="flex items-center gap-2">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-md bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-300">
-                    <ShieldCheck className="h-3.5 w-3.5" />
-                  </span>
-                  <span className="text-xs font-black text-slate-800 dark:text-slate-200">
-                    Registration IDs (India)
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div className="space-y-1">
-                    <Label className="text-[11px] font-bold text-slate-600 dark:text-slate-400">
-                      PAN (Permanent Account Number) <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      value={regPan}
-                      onChange={(e) => setRegPan(e.target.value)}
-                      placeholder="AAACD1234F"
-                      className="h-9 text-xs font-mono font-bold bg-white dark:bg-slate-950"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <Label className="text-[11px] font-bold text-slate-600 dark:text-slate-400">
-                      CIN (Company Identification Number)
-                    </Label>
-                    <Input
-                      value={regCin}
-                      onChange={(e) => setRegCin(e.target.value)}
-                      placeholder="U63030MH2024PTC123456"
-                      className="h-9 text-xs font-mono font-bold bg-white dark:bg-slate-950"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <Label className="text-[11px] font-bold text-slate-600 dark:text-slate-400">
-                      GSTIN (Goods &amp; Services Tax)
-                    </Label>
-                    <Input
-                      value={regGstin}
-                      onChange={(e) => setRegGstin(e.target.value)}
-                      placeholder="27AAACD1234F1Z5"
-                      className="h-9 text-xs font-mono font-bold bg-white dark:bg-slate-950"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Sub-section: Contacts & Contact Methods */}
-              <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-300">
-                      <Users className="h-3.5 w-3.5" />
-                    </span>
-                    <div>
-                      <h4 className="text-xs font-black text-slate-900 dark:text-white">
-                        Contacts &amp; Contact Methods
-                      </h4>
-                      <p className="text-[11px] text-slate-400 font-medium">
-                        Add key contacts and contact details for this company. You can add multiple contacts.
-                      </p>
-                    </div>
-                  </div>
-
-                  <Button
-                    type="button"
-                    size="sm"
-                    onClick={handleOpenAddContact}
-                    className="h-8 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold gap-1.5 shadow-2xs cursor-pointer"
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                    <span>+ Add Contact</span>
-                  </Button>
-                </div>
-
-                {/* Contacts Sub-table */}
-                <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-50/70 dark:bg-slate-800/40 text-slate-500 font-bold border-b border-slate-100 dark:border-slate-800 text-[11px]">
-                      <tr>
-                        <th className="px-3 py-2">#</th>
-                        <th className="px-3 py-2">Contact Type</th>
-                        <th className="px-3 py-2">Name / Designation</th>
-                        <th className="px-3 py-2">Email</th>
-                        <th className="px-3 py-2">Phone</th>
-                        <th className="px-3 py-2 text-center">WhatsApp</th>
-                        <th className="px-3 py-2 text-center">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                      {contacts.map((cnt, idx) => (
-                        <tr key={cnt.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
-                          <td className="px-3 py-2 font-bold text-slate-400">{idx + 1}</td>
-                          <td className="px-3 py-2 font-bold text-slate-700 dark:text-slate-300">{cnt.type}</td>
-                          <td className="px-3 py-2 font-bold text-blue-600 dark:text-blue-400">
-                            {cnt.name} {cnt.designation && <span className="font-normal text-slate-500">({cnt.designation})</span>}
-                          </td>
-                          <td className="px-3 py-2 font-mono text-slate-600 dark:text-slate-400">{cnt.email}</td>
-                          <td className="px-3 py-2 font-mono text-slate-700 dark:text-slate-300" dir="ltr">{cnt.phone}</td>
-                          <td className="px-3 py-2 text-center">
-                            <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-300">
-                              <Phone className="h-3 w-3" />
-                            </span>
-                          </td>
-                          <td className="px-3 py-2 text-center">
-                            <div className="flex items-center justify-center gap-1.5">
-                              <button
-                                type="button"
-                                onClick={() => handleOpenEditContact(cnt)}
-                                className="p-1 text-slate-400 hover:text-blue-600 transition"
-                                title="Edit Contact"
-                              >
-                                <Edit2 className="h-3.5 w-3.5" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteContact(cnt.id)}
-                                className="p-1 text-slate-400 hover:text-rose-600 transition"
-                                title="Delete Contact"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* Bottom Actions of Right Card: Save as Draft & Next Step */}
-              <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={saving}
-                  onClick={() => handleSaveCompany(true)}
-                  className="h-9 px-4 rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-50 text-xs font-bold gap-2 text-slate-700 dark:text-slate-300 cursor-pointer shadow-2xs"
-                >
-                  <Save className="h-3.5 w-3.5" />
-                  <span>Save as Draft</span>
-                </Button>
-
-                <Button
-                  type="button"
-                  size="sm"
-                  disabled={saving}
-                  onClick={() => handleSaveCompany(false)}
-                  className="h-9 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold gap-2 shadow-xs cursor-pointer"
-                >
-                  <span>{saving ? "Saving..." : "Next Step"}</span>
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+      {/* Accounting architecture notice (a rule, not an action) */}
+      <div className="flex items-start gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300">
+        <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+        <span>{s.t("accounting_rule", "Company Master stores legal data only. Bank Master registers banks, New Account opens accounts, and Roznamcha / Journal posts debit and credit.")}</span>
       </div>
 
-      {/* ── 3. BOTTOM FULL-WIDTH SECTION: SHARE REGISTRATION LINK & MOBILE PREVIEW ── */}
-      <Card className="border-slate-200 dark:border-slate-800 shadow-xs rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
-        <CardContent className="p-5 lg:p-6">
-          <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-center">
-            {/* Left 8 Cols: Title, Input, Action Buttons, and 4-Step Diagram */}
-            <div className="xl:col-span-8 space-y-4">
-              {/* Header Title & Subtitle */}
-              <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-xs shrink-0">
-                  <Link2 className="h-5 w-5" />
-                </span>
-                <div>
-                  <h3 className="text-sm font-black text-slate-900 dark:text-white">
-                    Share Registration Link
-                  </h3>
-                  <p className="text-xs text-slate-500 font-medium">
-                    Generate a secure registration link for this account and share it with the owner/customer.
-                    They can open the link on mobile, view their account details and complete company registration.
-                  </p>
-                </div>
-              </div>
-
-              {/* Link Input & 5 Action Buttons */}
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="relative flex-1 min-w-[260px]">
-                  <Input
-                    readOnly
-                    value={shareLinkUrl}
-                    className="h-10 text-xs font-mono font-bold bg-slate-50/70 dark:bg-slate-950 border-slate-200 pr-8"
-                  />
-                  <Lock className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
-                </div>
-
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={() => setLinkGenerated(true)}
-                  className="h-10 px-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold gap-1.5 shadow-2xs cursor-pointer shrink-0"
-                >
-                  <Lock className="h-3.5 w-3.5" />
-                  <span>Generate Link</span>
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCopyShareLink}
-                  className="h-10 px-3.5 rounded-xl border-slate-200 dark:border-slate-700 text-xs font-bold gap-1.5 text-slate-700 dark:text-slate-300 cursor-pointer shrink-0"
-                >
-                  {copiedLink ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
-                  <span>{copiedLink ? "Copied!" : "Copy Link"}</span>
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleSendWhatsApp}
-                  className="h-10 px-3.5 rounded-xl border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-300 text-xs font-bold gap-1.5 cursor-pointer shrink-0"
-                >
-                  <Phone className="h-3.5 w-3.5 text-emerald-600" />
-                  <span>Send via WhatsApp</span>
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleSendSms}
-                  className="h-10 px-3.5 rounded-xl border-slate-200 dark:border-slate-700 text-xs font-bold gap-1.5 text-slate-700 dark:text-slate-300 cursor-pointer shrink-0"
-                >
-                  <MessageSquare className="h-3.5 w-3.5" />
-                  <span>Send via SMS</span>
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => window.open(shareLinkUrl, "_blank")}
-                  className="h-10 px-3.5 rounded-xl border-slate-200 dark:border-slate-700 text-xs font-bold gap-1.5 text-slate-700 dark:text-slate-300 cursor-pointer shrink-0"
-                >
-                  <ExternalLink className="h-3.5 w-3.5" />
-                  <span>Open Mobile Form</span>
-                </Button>
-              </div>
-
-              {/* 4-Step Visual Workflow Diagram */}
-              <div className="pt-2">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
-                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-blue-50/60 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 text-xs">
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white font-black text-[10px] shrink-0">
-                      1
-                    </span>
-                    <span className="font-semibold text-blue-950 dark:text-blue-200 text-[11px] leading-tight">
-                      Admin generates and shares the link
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-xs">
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-black text-[10px] shrink-0">
-                      2
-                    </span>
-                    <span className="font-semibold text-slate-700 dark:text-slate-300 text-[11px] leading-tight">
-                      Owner opens link on mobile
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-xs">
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-black text-[10px] shrink-0">
-                      3
-                    </span>
-                    <span className="font-semibold text-slate-700 dark:text-slate-300 text-[11px] leading-tight">
-                      Account details auto-filled
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-xs">
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-black text-[10px] shrink-0">
-                      4
-                    </span>
-                    <span className="font-semibold text-slate-700 dark:text-slate-300 text-[11px] leading-tight">
-                      Owner completes company registration
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right 4 Cols: Phone Mockup Frame & Feature Checklist */}
-            <div className="xl:col-span-4 flex items-center justify-center gap-5 pt-2 xl:pt-0 xl:border-l border-slate-100 dark:border-slate-800 xl:pl-6">
-              {/* Phone Mockup Frame */}
-              <div className="w-36 h-64 rounded-2xl border-4 border-slate-800 bg-slate-900 p-1.5 shadow-xl shrink-0 flex flex-col justify-between">
-                {/* Speaker notch */}
-                <div className="w-12 h-1 bg-slate-700 rounded-full mx-auto mb-1" />
-
-                {/* Screen content */}
-                <div className="flex-1 bg-white rounded-xl p-2 flex flex-col justify-between text-center overflow-hidden">
-                  <div className="space-y-1.5 pt-1">
-                    <div className="flex items-center justify-center gap-1">
-                      <Building2 className="h-3 w-3 text-blue-600" />
-                      <span className="font-black text-[9px] text-blue-900">DGT</span>
-                    </div>
-                    <h5 className="font-black text-[9px] text-slate-800 leading-tight">
-                      Complete Your Company Registration
-                    </h5>
-                    <div className="p-1.5 rounded-lg bg-blue-50 text-[8px] text-blue-900 font-medium">
-                      Welcome {ownerName} ({ownerAccountCode})
-                    </div>
-                  </div>
-
-                  <div className="space-y-1 pb-1">
-                    <button
-                      type="button"
-                      className="w-full py-1 rounded-md bg-blue-600 text-white font-bold text-[8px] shadow-2xs"
-                    >
-                      Continue Registration
-                    </button>
-                    <span className="text-[7px] text-slate-400">Step 1 of 3</span>
-                  </div>
-                </div>
-
-                {/* Home Indicator Bar */}
-                <div className="w-10 h-0.5 bg-slate-600 rounded-full mx-auto mt-1" />
-              </div>
-
-              {/* Checklist & Slogan */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-1.5">
-                  <Smartphone className="h-4 w-4 text-emerald-600" />
-                  <span className="text-xs font-black text-slate-900 dark:text-white">
-                    Mobile Experience
-                  </span>
-                </div>
-
-                <div className="space-y-1 text-xs text-slate-600 dark:text-slate-400 font-medium">
-                  <div className="flex items-center gap-1.5">
-                    <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                    <span>Account details shown first</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                    <span>Easy company registration</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                    <span>Mobile optimized form</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                    <span>Secure and verified link</span>
-                  </div>
-                </div>
-
-                <p className="font-serif italic text-xs text-slate-700 dark:text-slate-300 pt-1">
-                  Simple. Secure. Anywhere.
-                </p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* ── 4. ADD / EDIT CONTACT MODAL ── */}
-      {contactModalOpen && (
-        <SimpleModal
-          title={editingContactId ? "Edit Contact" : "Add Contact"}
-          onClose={() => setContactModalOpen(false)}
-          className="max-w-md"
-        >
-          <div className="space-y-3 p-1">
-            <div className="space-y-1">
-              <Label className="text-xs font-black">Contact Type</Label>
-              <select
-                value={contactFormType}
-                onChange={(e) => setContactFormType(e.target.value)}
-                className="h-9 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-xs font-bold"
-              >
-                <option value="Main Contact">Main Contact</option>
-                <option value="Accounts">Accounts</option>
-                <option value="Compliance">Compliance</option>
-                <option value="Operations">Operations</option>
-                <option value="Legal">Legal</option>
-                <option value="Sales">Sales</option>
-              </select>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <Label className="text-xs font-black">Name *</Label>
-                <Input
-                  value={contactFormName}
-                  onChange={(e) => setContactFormName(e.target.value)}
-                  placeholder="e.g. Rohan Mehta"
-                  className="h-9 text-xs font-bold"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <Label className="text-xs font-black">Designation</Label>
-                <Input
-                  value={contactFormDesignation}
-                  onChange={(e) => setContactFormDesignation(e.target.value)}
-                  placeholder="e.g. Director"
-                  className="h-9 text-xs font-bold"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <Label className="text-xs font-black">Email</Label>
-              <Input
-                value={contactFormEmail}
-                onChange={(e) => setContactFormEmail(e.target.value)}
-                placeholder="contact@company.com"
-                className="h-9 text-xs font-mono font-bold"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <Label className="text-xs font-black">Phone</Label>
-                <Input
-                  value={contactFormPhone}
-                  onChange={(e) => setContactFormPhone(e.target.value)}
-                  placeholder="+91 98765 43210"
-                  className="h-9 text-xs font-mono font-bold"
-                  dir="ltr"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <Label className="text-xs font-black">WhatsApp</Label>
-                <Input
-                  value={contactFormWhatsapp}
-                  onChange={(e) => setContactFormWhatsapp(e.target.value)}
-                  placeholder="+91 98765 43210"
-                  className="h-9 text-xs font-mono font-bold"
-                  dir="ltr"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setContactModalOpen(false)}
-                className="rounded-xl text-xs font-bold h-9"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                onClick={handleSaveContactModal}
-                className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold h-9 px-4"
-              >
-                Save Contact
-              </Button>
-            </div>
-          </div>
-        </SimpleModal>
+      {error && (
+        <div role="alert" data-testid="form-error" className="rounded-xl border border-rose-300 bg-rose-50 p-3 text-xs font-medium text-rose-800 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-200">
+          {error}
+        </div>
+      )}
+      {justSaved && !error && (
+        <div data-testid="form-saved" className="rounded-xl border border-emerald-300 bg-emerald-50 p-3 text-xs font-medium text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200">
+          {s.t("saved", "Company saved.")} {savedCode && <span className="font-mono">{savedCode}</span>}
+        </div>
       )}
 
-      {dupCandidates.length > 0 ? (
+      <div className="flex flex-wrap items-center justify-end gap-2 pb-6">
+        {onClose && (
+          <button type="button" onClick={onClose} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800">
+            {s.t("close", "Close")}
+          </button>
+        )}
+        <button
+          type="button"
+          data-testid="save-company"
+          disabled={saving}
+          onClick={() => void save(false)}
+          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2 text-sm font-bold text-white hover:bg-blue-700 disabled:opacity-60"
+        >
+          {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+          {savedId ? s.t("save_changes", "Save Changes") : s.t("save_company", "Save Company")}
+        </button>
+      </div>
+
+      {dupModal && (
         <CompanyDuplicateWarningModal
-          lang={lang}
-          searchedName={dupSearchedName}
-          candidates={dupCandidates}
-          onUseExisting={(companyId) => {
-            setDupCandidates([]);
-            if (onSave) onSave({ id: companyId } as any);
+          lang={s.lang}
+          searchedName={legalName.trim()}
+          candidates={dupModal.map((d) => ({ ...d, ownerName: [d.ownerName, (d.reasons ?? []).map(reasonLabel).join(", ")].filter(Boolean).join(" — ") }))}
+          onUseExisting={(id) => {
+            setDupModal(null);
+            router.push(`/dashboard/settings/company-setup?companyId=${encodeURIComponent(id)}` as Route);
           }}
           onCreateAnyway={() => {
-            setDupCandidates([]);
-            void saveCompanyNow(pendingSaveIsDraft);
+            setDupModal(null);
+            void save(true);
           }}
-          onCancel={() => setDupCandidates([])}
+          onCancel={() => setDupModal(null)}
         />
-      ) : null}
+      )}
     </div>
   );
 }

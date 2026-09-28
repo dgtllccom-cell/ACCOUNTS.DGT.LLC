@@ -3246,6 +3246,12 @@ export const HEADER_TRANSLATIONS: Record<string, Row> = {
   "ACTIVE LEDGERS": { ur: "فعال لیجرز", ar: "الدفاتر النشطة", fa: "دفترهای فعال", ps: "فعال لیجرونه" },
   "DAILY JOURNAL & CASH ENTRY WITH EXCHANGE RATES": { ur: "روزانہ جرنل اور کیش اندراج مع شرح تبادلہ", ar: "اليومية والقيود النقدية مع أسعار الصرف", fa: "دفتر روزنامه و ثبت نقدی با نرخ ارز", ps: "ورځنی ژورنال او نغدي ثبت د تبادلې نرخونو سره" },
   "CASH ENTRY / ROZNAMCHA REPORT": { ur: "کیش اندراج / روزنامچہ رپورٹ", ar: "تقرير القيود النقدية / روزنامچه", fa: "گزارش ثبت نقدی / روزنامچه", ps: "د نغدي ثبت / روزنامچې راپور" },
+  "COMPANY CODE": { ur: "کمپنی کوڈ", ar: "رمز الشركة", fa: "کد شرکت", ps: "د شرکت کوډ" },
+  "COMPANY TYPE": { ur: "کمپنی کی قسم", ar: "نوع الشركة", fa: "نوع شرکت", ps: "د شرکت ډول" },
+  "TRN": { ur: "TRN / ٹیکس نمبر", ar: "الرقم الضريبي", fa: "شماره مالیاتی", ps: "مالیه شمېره" },
+  "LICENSE EXPIRY": { ur: "لائسنس کی میعاد", ar: "انتهاء الرخصة", fa: "انقضای مجوز", ps: "د جواز پای" },
+  "IN PROGRESS": { ur: "جاری", ar: "قيد التنفيذ", fa: "در حال انجام", ps: "روان" },
+  "NEW": { ur: "نیا", ar: "جديد", fa: "جدید", ps: "نوی" },
 };
 
 /** Normalize an English header for lookup: trim, collapse whitespace, uppercase. */

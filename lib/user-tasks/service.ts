@@ -238,6 +238,7 @@ const RELATED_TABLE_WHITELIST: Record<string, { ref: string; date?: string; amou
   documents: { ref: "id" },
   ai_calls: { ref: "from_e164", date: "started_at" },
   customer_inquiries: { ref: "inquiry_no", date: "inquiry_date", party: "customer_name" },
+  companies: { ref: "company_code", date: "license_expiry_date", party: "name" },
 };
 
 async function projectRelatedRecord(sql: any, table: string, id: string) {
