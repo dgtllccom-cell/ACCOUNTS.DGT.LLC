@@ -380,11 +380,13 @@ export async function GET(request: NextRequest) {
         `)
         .is("deleted_at", null);
 
-      if (parsed.countryId && parsed.countryId !== "all") {
-        localQuery = localQuery.eq("country_id", parsed.countryId);
+      // Same enforced scope as the purchase-order half above — filtering on the raw request
+      // params let "all" return every country's local purchases to country/branch users.
+      if (effectiveCountryId) {
+        localQuery = localQuery.eq("country_id", effectiveCountryId);
       }
-      if (parsed.branchId && parsed.branchId !== "all") {
-        localQuery = localQuery.eq("city_branch_id", parsed.branchId);
+      if (effectiveBranchId) {
+        localQuery = localQuery.eq("city_branch_id", effectiveBranchId);
       }
       if (parsed.salesmanId && parsed.salesmanId !== "all") {
         localQuery = localQuery.eq("created_by", parsed.salesmanId);
