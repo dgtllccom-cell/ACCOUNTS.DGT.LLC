@@ -2,23 +2,15 @@
 
 import React, { useState, useMemo } from "react";
 import {
-  ChevronDown,
-  ChevronUp,
   Plus,
-  Edit2,
   Trash2,
   Check,
   X,
-  Layers,
   Sparkles,
-  Award,
-  Package,
-  FileText,
   Search,
   Loader2,
   LayoutGrid,
   Pencil,
-  FileCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,7 +19,7 @@ import { apiPost, apiPatch, apiDelete } from "@/lib/api/client";
 import type { GoodsRecord, GoodsVariation } from "./goods-master-registry";
 
 // =========================================================================
-// Data Models for Extra Reports / Specifications
+// Data Models for Commercial Specifications / Description
 // =========================================================================
 
 export type DetailItem = {
@@ -48,7 +40,7 @@ export function parseExtraDetails(raw?: string | null): DetailItem[] {
       if (Array.isArray(parsed)) {
         return parsed.map((item, idx) => ({
           id: item.id || `ed-${idx + 1}`,
-          title: item.title || item.name || `Report #${idx + 1}`,
+          title: item.title || item.name || `Spec #${idx + 1}`,
           lines: Array.isArray(item.lines)
             ? item.lines.map(String).filter((l: string) => l.trim().length > 0)
             : item.lines
@@ -61,7 +53,7 @@ export function parseExtraDetails(raw?: string | null): DetailItem[] {
     }
   }
 
-  // Legacy delimiter split: "|" or newlines
+  // Delimiter split: "|" or newlines
   const parts = trimmed.split(/\s*\|\s*|\n+/).map((p) => p.trim()).filter(Boolean);
   if (parts.length === 0) return [];
 
@@ -84,6 +76,41 @@ export function parseExtraDetails(raw?: string | null): DetailItem[] {
   });
 }
 
+// Convert parsed details to individual specification lines for table tags
+export function getCommercialSpecLines(raw?: string | null): string[] {
+  const details = parseExtraDetails(raw);
+  const result: string[] = [];
+
+  for (const d of details) {
+    if (d.lines && d.lines.length > 0) {
+      for (const line of d.lines) {
+        const cleanLine = line.trim();
+        if (!cleanLine) continue;
+
+        // If line already contains key:value or title is generic
+        const titleLower = (d.title || "").toLowerCase();
+        if (
+          !d.title ||
+          titleLower.startsWith("report") ||
+          titleLower.startsWith("spec") ||
+          titleLower === "quality specs" ||
+          titleLower === "description" ||
+          cleanLine.includes(":") ||
+          cleanLine.toLowerCase().startsWith(titleLower)
+        ) {
+          result.push(cleanLine);
+        } else {
+          result.push(`${d.title}: ${cleanLine}`);
+        }
+      }
+    } else if (d.title && !d.title.toLowerCase().startsWith("spec") && !d.title.toLowerCase().startsWith("report")) {
+      result.push(d.title.trim());
+    }
+  }
+
+  return result;
+}
+
 export function serializeExtraDetails(items: DetailItem[]): string {
   if (!items || items.length === 0) return "";
   return JSON.stringify(items);
@@ -96,7 +123,15 @@ function detailItemsToText(items: DetailItem[]): string {
   for (const item of items) {
     if (item.lines && item.lines.length > 0) {
       for (const line of item.lines) {
-        if (line.includes(":") || item.title.startsWith("Report") || item.title === line) {
+        const titleLower = (item.title || "").toLowerCase();
+        if (
+          line.includes(":") ||
+          titleLower.startsWith("spec") ||
+          titleLower.startsWith("report") ||
+          titleLower === "description" ||
+          titleLower === "commercial specification" ||
+          item.title === line
+        ) {
           lines.push(line);
         } else {
           lines.push(`${item.title}: ${line}`);
@@ -109,7 +144,7 @@ function detailItemsToText(items: DetailItem[]): string {
   return lines.join("\n");
 }
 
-function textToDetailItems(text: string, defaultTitle = "Specification"): DetailItem[] {
+function textToDetailItems(text: string, defaultTitle = "Commercial Specification"): DetailItem[] {
   const lines = text
     .split("\n")
     .map((l) => l.trim())
@@ -134,8 +169,8 @@ export function GoodsHierarchyTree({ goods, onRefresh }: GoodsHierarchyTreeProps
   const [searchTerm, setSearchTerm] = useState("");
   const [busy, setBusy] = useState(false);
 
-  // Expanded extra reports row IDs
-  const [expandedReportRows, setExpandedReportRows] = useState<Set<string>>(new Set());
+  // Toggle compact / expanded specifications display
+  const [isCompactSpecs, setIsCompactSpecs] = useState(false);
 
   // Edit variation modal state
   const [editingVariation, setEditingVariation] = useState<{
@@ -154,7 +189,6 @@ export function GoodsHierarchyTree({ goods, onRefresh }: GoodsHierarchyTreeProps
     size: "",
     grade: "Standard",
     brand: "DGT",
-    detailTitle: "Quality Specs",
     detailLines: "Moisture: max 5%\nForeign Material: max 0.05%",
   });
 
@@ -169,24 +203,22 @@ export function GoodsHierarchyTree({ goods, onRefresh }: GoodsHierarchyTreeProps
     const varieties = new Set<string>();
     const sizes = new Set<string>();
     const brands = new Set<string>();
-    let totalReports = 0;
+    let totalSpecs = 0;
 
     for (const v of rawVariations) {
       if (v.variety) varieties.add(v.variety.trim().toLowerCase());
       if (v.size) sizes.add(v.size.trim().toLowerCase());
       if (v.brand) brands.add(v.brand.trim().toLowerCase());
 
-      const details = parseExtraDetails(v.extra_details);
-      for (const d of details) {
-        totalReports += d.lines.length || 1;
-      }
+      const specLines = getCommercialSpecLines(v.extra_details);
+      totalSpecs += specLines.length;
     }
 
     return {
       totalVarieties: varieties.size || (rawVariations.length > 0 ? 1 : 0),
       totalSizes: sizes.size || (rawVariations.length > 0 ? 1 : 0),
       totalBrands: brands.size || (rawVariations.length > 0 ? 1 : 0),
-      totalReports: totalReports,
+      totalSpecs: totalSpecs,
       totalCombinations: rawVariations.length,
     };
   }, [rawVariations]);
@@ -211,29 +243,6 @@ export function GoodsHierarchyTree({ goods, onRefresh }: GoodsHierarchyTreeProps
       );
     });
   }, [rawVariations, searchTerm]);
-
-  // Toggle single extra report row
-  function toggleReportRow(variationId: string) {
-    setExpandedReportRows((prev) => {
-      const next = new Set(prev);
-      if (next.has(variationId)) {
-        next.delete(variationId);
-      } else {
-        next.add(variationId);
-      }
-      return next;
-    });
-  }
-
-  // Toggle Collapse / Expand All reports
-  function toggleExpandAllReports() {
-    if (expandedReportRows.size > 0) {
-      setExpandedReportRows(new Set());
-    } else {
-      const allIds = new Set(rawVariations.map((v) => v.id));
-      setExpandedReportRows(allIds);
-    }
-  }
 
   // Open Edit Modal for a row
   function handleOpenEdit(v: GoodsVariation) {
@@ -301,25 +310,14 @@ export function GoodsHierarchyTree({ goods, onRefresh }: GoodsHierarchyTreeProps
 
     setBusy(true);
     try {
-      const lines = comboForm.detailLines
-        .split("\n")
-        .map((l) => l.trim())
-        .filter(Boolean);
-
-      const extraDetailsArray: DetailItem[] = [
-        {
-          id: `ed-${Date.now()}`,
-          title: comboForm.detailTitle.trim() || "Quality Specs",
-          lines: lines.length > 0 ? lines : ["Standard specification"],
-        },
-      ];
+      const details = textToDetailItems(comboForm.detailLines, "Commercial Specification");
 
       await apiPost(`/api/erp/goods-master/${goods.id}/variations`, {
         variety: comboForm.variety.trim(),
         size: comboForm.size.trim(),
         grade: comboForm.grade.trim() || "Standard",
         brand: comboForm.brand.trim(),
-        extraDetails: serializeExtraDetails(extraDetailsArray),
+        extraDetails: serializeExtraDetails(details),
       });
 
       setShowAddComboModal(false);
@@ -328,7 +326,6 @@ export function GoodsHierarchyTree({ goods, onRefresh }: GoodsHierarchyTreeProps
         size: "",
         grade: "Standard",
         brand: "DGT",
-        detailTitle: "Quality Specs",
         detailLines: "Moisture: max 5%\nForeign Material: max 0.05%",
       });
       await onRefresh();
@@ -371,7 +368,7 @@ export function GoodsHierarchyTree({ goods, onRefresh }: GoodsHierarchyTreeProps
   return (
     <div className="p-3 sm:p-5 bg-white dark:bg-slate-900 border-t border-slate-200/80 dark:border-slate-800 text-xs">
       {/* ----------------------------------------------------------------- */}
-      {/* 1. Header Toolbar (Matches Reference HTML v4)                     */}
+      {/* 1. Header Toolbar (Commercial Specification View)                  */}
       {/* ----------------------------------------------------------------- */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 mb-3 border-b border-slate-200/70 dark:border-slate-800">
         <div>
@@ -392,15 +389,15 @@ export function GoodsHierarchyTree({ goods, onRefresh }: GoodsHierarchyTreeProps
               {stats.totalVarieties} Varieties • {stats.totalSizes} Sizes • {stats.totalBrands} Brands
             </span>
 
-            {/* Reports Badge */}
+            {/* Commercial Specs Badge */}
             <span className="text-[11px] px-2.5 py-0.5 rounded-md font-semibold bg-[#f3e8ff] text-[#7c3aed] dark:bg-purple-950/70 dark:text-purple-300 border border-purple-200/70 dark:border-purple-800">
-              {stats.totalReports} Reports
+              {stats.totalSpecs} Commercial Specs
             </span>
           </div>
 
           {/* Breadcrumb Subtitle */}
           <div className="mt-1 text-[11px] text-slate-500 font-normal">
-            Hierarchy: Variety → Size → Grade → Brand → Extra Reports
+            Hierarchy: Variety → Size → Grade → Brand → Commercial Specification
           </div>
         </div>
 
@@ -418,13 +415,13 @@ export function GoodsHierarchyTree({ goods, onRefresh }: GoodsHierarchyTreeProps
             />
           </div>
 
-          {/* Collapse / Expand All */}
+          {/* Collapse / Expand Specs */}
           <button
             type="button"
-            onClick={toggleExpandAllReports}
+            onClick={() => setIsCompactSpecs(!isCompactSpecs)}
             className="h-8 px-3 text-xs font-semibold rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer shadow-2xs"
           >
-            {expandedReportRows.size > 0 ? "Collapse All" : "Expand All"}
+            {isCompactSpecs ? "Expand Specs" : "Collapse Specs"}
           </button>
 
           {/* + Variety */}
@@ -450,7 +447,7 @@ export function GoodsHierarchyTree({ goods, onRefresh }: GoodsHierarchyTreeProps
       </div>
 
       {/* ----------------------------------------------------------------- */}
-      {/* 2. Compact Table (Matches Reference HTML v4)                      */}
+      {/* 2. Compact Table: Specs displayed directly on the table           */}
       {/* ----------------------------------------------------------------- */}
       {rawVariations.length === 0 ? (
         <div className="p-8 text-center bg-slate-50/50 dark:bg-slate-900/50 rounded-lg border border-dashed border-slate-200 dark:border-slate-800">
@@ -471,169 +468,120 @@ export function GoodsHierarchyTree({ goods, onRefresh }: GoodsHierarchyTreeProps
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="bg-[#f8fafc] dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold text-[11px]">
-                <th className="py-2.5 px-4 w-14">#</th>
-                <th className="py-2.5 px-4">Variety</th>
-                <th className="py-2.5 px-4">Size</th>
-                <th className="py-2.5 px-4">Grade</th>
-                <th className="py-2.5 px-4">Brand</th>
-                <th className="py-2.5 px-4">Extra Reports</th>
+                <th className="py-2.5 px-4 w-12 text-center">#</th>
+                <th className="py-2.5 px-4 w-40">Variety</th>
+                <th className="py-2.5 px-4 w-28">Size</th>
+                <th className="py-2.5 px-4 w-28">Grade</th>
+                <th className="py-2.5 px-4 w-32">Brand</th>
+                <th className="py-2.5 px-4">Description / Commercial Specification</th>
                 <th className="py-2.5 px-4 text-center w-28">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
               {filteredVariations.map((v, idx) => {
-                const details = parseExtraDetails(v.extra_details);
-                const reportLineCount = details.reduce((acc, d) => acc + (d.lines.length || 1), 0);
-                const isReportsExpanded = expandedReportRows.has(v.id);
+                const specLines = getCommercialSpecLines(v.extra_details);
                 const rowNum = String(idx + 1).padStart(2, "0");
 
+                // If compact view, show first 2 and +N more
+                const visibleSpecs = isCompactSpecs ? specLines.slice(0, 2) : specLines;
+                const hiddenCount = isCompactSpecs ? Math.max(0, specLines.length - 2) : 0;
+
                 return (
-                  <React.Fragment key={v.id}>
-                    {/* Main Row */}
-                    <tr className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
-                      {/* # */}
-                      <td className="py-3 px-4 font-mono text-slate-500 dark:text-slate-400 text-xs">
-                        {rowNum}
-                      </td>
+                  <tr
+                    key={v.id}
+                    className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors"
+                  >
+                    {/* # */}
+                    <td className="py-3 px-4 font-mono text-slate-500 dark:text-slate-400 text-xs text-center">
+                      {rowNum}
+                    </td>
 
-                      {/* Variety */}
-                      <td className="py-3 px-4">
-                        <div className="font-bold text-slate-900 dark:text-slate-100 text-xs">
-                          {v.variety || "Standard"}
-                        </div>
-                        <div className="text-[11px] text-slate-400 dark:text-slate-500 font-normal">
-                          {goods.name} Variety
-                        </div>
-                      </td>
+                    {/* Variety */}
+                    <td className="py-3 px-4">
+                      <div className="font-bold text-slate-900 dark:text-slate-100 text-xs">
+                        {v.variety || "Standard"}
+                      </div>
+                      <div className="text-[11px] text-slate-400 dark:text-slate-500 font-normal">
+                        {goods.name} Variety
+                      </div>
+                    </td>
 
-                      {/* Size */}
-                      <td className="py-3 px-4">
-                        <span className="inline-block px-2.5 py-0.5 rounded-md font-semibold text-[11px] bg-[#f0f9ff] text-[#0284c7] border border-[#bae6fd] dark:bg-sky-950/50 dark:text-sky-300 dark:border-sky-800">
-                          {v.size || "Standard"}
+                    {/* Size */}
+                    <td className="py-3 px-4">
+                      <span className="inline-block px-2.5 py-0.5 rounded-md font-semibold text-[11px] bg-[#f0f9ff] text-[#0284c7] border border-[#bae6fd] dark:bg-sky-950/50 dark:text-sky-300 dark:border-sky-800">
+                        {v.size || "Standard"}
+                      </span>
+                    </td>
+
+                    {/* Grade */}
+                    <td className="py-3 px-4">
+                      <span className="inline-block px-2.5 py-0.5 rounded-md font-semibold text-[11px] bg-[#faf5ff] text-[#9333ea] border border-[#e9d5ff] dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-800">
+                        {(v as any).grade || "Standard"}
+                      </span>
+                    </td>
+
+                    {/* Brand */}
+                    <td className="py-3 px-4 font-bold text-[#059669] dark:text-emerald-400 text-xs tracking-wide">
+                      {v.brand || "Default"}
+                    </td>
+
+                    {/* Description / Commercial Specification (Displayed Directly On The Table) */}
+                    <td className="py-3 px-4">
+                      {specLines.length === 0 ? (
+                        <span className="text-slate-400 dark:text-slate-500 italic text-[11px]">
+                          — No specifications set —
                         </span>
-                      </td>
+                      ) : (
+                        <div className="flex flex-wrap items-center gap-1.5 py-0.5">
+                          {visibleSpecs.map((spec, sIdx) => (
+                            <span
+                              key={sIdx}
+                              className="inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-medium bg-[#f5f3ff] text-[#7c3aed] border border-[#ddd6fe] dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-800 shadow-2xs"
+                            >
+                              {spec}
+                            </span>
+                          ))}
+                          {hiddenCount > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => setIsCompactSpecs(false)}
+                              className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition-colors"
+                            >
+                              +{hiddenCount} more
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </td>
 
-                      {/* Grade */}
-                      <td className="py-3 px-4">
-                        <span className="inline-block px-2.5 py-0.5 rounded-md font-semibold text-[11px] bg-[#faf5ff] text-[#9333ea] border border-[#e9d5ff] dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-800">
-                          {(v as any).grade || "Standard"}
-                        </span>
-                      </td>
-
-                      {/* Brand */}
-                      <td className="py-3 px-4 font-bold text-[#059669] dark:text-emerald-400 text-xs tracking-wide">
-                        {v.brand || "Default"}
-                      </td>
-
-                      {/* Extra Reports */}
-                      <td className="py-3 px-4">
+                    {/* Action */}
+                    <td className="py-3 px-4 text-center">
+                      <div className="flex items-center justify-center gap-1.5">
                         <button
                           type="button"
-                          onClick={() => toggleReportRow(v.id)}
-                          className={cn(
-                            "px-2.5 py-1 rounded-md text-[11px] font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer",
-                            reportLineCount > 0
-                              ? "bg-[#f5f3ff] hover:bg-[#ede9fe] text-[#7c3aed] border border-[#ddd6fe] dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800"
-                              : "bg-slate-100 text-slate-400 border border-slate-200 dark:bg-slate-800 dark:text-slate-500 dark:border-slate-700"
-                          )}
-                          title="Click to view/hide report details"
+                          onClick={() => handleOpenEdit(v)}
+                          className="px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-medium text-xs flex items-center gap-1 transition-colors shadow-2xs cursor-pointer"
+                          title="Edit this combination"
                         >
-                          <span>
-                            {reportLineCount > 0
-                              ? `${reportLineCount} ${reportLineCount === 1 ? "Report" : "Reports"}`
-                              : "No Reports"}
-                          </span>
-                          {isReportsExpanded ? (
-                            <ChevronUp className="w-3 h-3 text-[#7c3aed]" />
-                          ) : (
-                            <ChevronDown className="w-3 h-3 text-[#7c3aed]" />
-                          )}
+                          <Pencil className="w-3 h-3 text-slate-500" />
+                          Edit
                         </button>
-                      </td>
-
-                      {/* Action */}
-                      <td className="py-3 px-4 text-center">
-                        <div className="flex items-center justify-center gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => handleOpenEdit(v)}
-                            className="px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-medium text-xs flex items-center gap-1 transition-colors shadow-2xs cursor-pointer"
-                            title="Edit this combination"
-                          >
-                            <Pencil className="w-3 h-3 text-slate-500" />
-                            Edit
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleDeleteVariation(
-                                v.id,
-                                `${v.variety || "Std"} / ${v.size} / ${v.brand}`
-                              )
-                            }
-                            className="w-6 h-6 rounded-md hover:bg-rose-50 dark:hover:bg-rose-950/50 text-slate-400 hover:text-rose-600 flex items-center justify-center transition-colors cursor-pointer"
-                            title="Delete this combination"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-
-                    {/* Expandable Extra Reports Sub-row */}
-                    {isReportsExpanded && (
-                      <tr className="bg-[#faf5ff]/40 dark:bg-purple-950/20 border-b border-purple-100 dark:border-purple-900/40">
-                        <td colSpan={7} className="px-6 py-3">
-                          <div className="flex items-start gap-4">
-                            <div className="flex items-center gap-1.5 text-[#7c3aed] font-semibold text-xs min-w-32 pt-0.5">
-                              <FileCheck className="w-3.5 h-3.5" />
-                              <span>Extra Reports & Specs:</span>
-                            </div>
-
-                            <div className="flex-1 flex flex-wrap gap-2">
-                              {details.length === 0 ? (
-                                <span className="text-slate-400 italic text-[11px]">
-                                  No specification lines attached. Click Edit to add specs.
-                                </span>
-                              ) : (
-                                details.map((detail) => (
-                                  <div
-                                    key={detail.id}
-                                    className="bg-white dark:bg-slate-900 border border-purple-200/80 dark:border-purple-800 rounded-md p-2 shadow-2xs text-xs"
-                                  >
-                                    <div className="font-bold text-purple-900 dark:text-purple-300 text-[11px] mb-1">
-                                      {detail.title}
-                                    </div>
-                                    <ul className="space-y-0.5">
-                                      {detail.lines.map((line, lIdx) => (
-                                        <li
-                                          key={lIdx}
-                                          className="text-slate-600 dark:text-slate-300 text-[11px] flex items-center gap-1.5"
-                                        >
-                                          <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
-                                          <span>{line}</span>
-                                        </li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                ))
-                              )}
-                            </div>
-
-                            <div>
-                              <button
-                                type="button"
-                                onClick={() => handleOpenEdit(v)}
-                                className="px-2 py-1 text-[11px] font-medium text-purple-700 bg-purple-100/70 hover:bg-purple-200/80 dark:bg-purple-900/50 dark:text-purple-300 rounded transition-colors"
-                              >
-                                Edit Specs
-                              </button>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleDeleteVariation(
+                              v.id,
+                              `${v.variety || "Std"} / ${v.size} / ${v.brand}`
+                            )
+                          }
+                          className="w-6 h-6 rounded-md hover:bg-rose-50 dark:hover:bg-rose-950/50 text-slate-400 hover:text-rose-600 flex items-center justify-center transition-colors cursor-pointer"
+                          title="Delete this combination"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
                 );
               })}
             </tbody>
@@ -654,7 +602,7 @@ export function GoodsHierarchyTree({ goods, onRefresh }: GoodsHierarchyTreeProps
                   Edit Combination — {goods.name}
                 </h4>
                 <p className="text-[11px] text-slate-400 mt-0.5">
-                  Update variety, size, grade, brand, and extra reports
+                  Update variety, size, grade, brand, and commercial specification
                 </p>
               </div>
               <button
@@ -734,14 +682,14 @@ export function GoodsHierarchyTree({ goods, onRefresh }: GoodsHierarchyTreeProps
                 </div>
               </div>
 
-              {/* Extra Reports / Specifications */}
+              {/* Description / Commercial Specification */}
               <div>
                 <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Extra Reports / Specifications (one per line)
+                  Description / Commercial Specification (one per line)
                 </label>
                 <textarea
                   rows={4}
-                  placeholder="Moisture: max 5%&#10;Foreign Material: max 0.05%&#10;Kernel Yield: 50%"
+                  placeholder="Moisture: max 5%&#10;Foreign Material: max 0.05%&#10;Kernel Yield: 50%&#10;Packaging: 25kg PP Bags"
                   value={editingVariation.extraDetailsText}
                   onChange={(e) =>
                     setEditingVariation({
@@ -813,7 +761,7 @@ export function GoodsHierarchyTree({ goods, onRefresh }: GoodsHierarchyTreeProps
                   Add Combination — {goods.name}
                 </h4>
                 <p className="text-[11px] text-slate-400 mt-0.5">
-                  Create a new Variety → Size → Grade → Brand combination
+                  Create a new Variety → Size → Grade → Brand combination with Commercial Specification
                 </p>
               </div>
               <button
@@ -887,28 +835,14 @@ export function GoodsHierarchyTree({ goods, onRefresh }: GoodsHierarchyTreeProps
                 </div>
               </div>
 
-              {/* 5. Extra Detail Title */}
-              <div>
-                <label className="block text-[11px] font-bold text-rose-700 dark:text-rose-400 mb-1">
-                  5. Specification Title
-                </label>
-                <Input
-                  type="text"
-                  placeholder="e.g. Quality Specs, Export Standard"
-                  value={comboForm.detailTitle}
-                  onChange={(e) => setComboForm({ ...comboForm, detailTitle: e.target.value })}
-                  className="h-8 text-xs font-medium"
-                />
-              </div>
-
-              {/* 6. Detail Lines */}
+              {/* 5. Description / Commercial Specification */}
               <div>
                 <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  6. Extra Reports / Detail Lines (one per line)
+                  5. Description / Commercial Specification (one per line)
                 </label>
                 <textarea
                   rows={3}
-                  placeholder="Moisture: max 5%&#10;Foreign Material: max 0.05%&#10;Kernel Yield: 50%"
+                  placeholder="Moisture: max 5%&#10;Foreign Material: max 0.05%&#10;Kernel Yield: 50%&#10;Packaging: 25kg PP Bags"
                   value={comboForm.detailLines}
                   onChange={(e) => setComboForm({ ...comboForm, detailLines: e.target.value })}
                   className="w-full text-xs p-2.5 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 focus:outline-none focus:ring-1 focus:ring-[#059669] font-mono"
