@@ -19,31 +19,37 @@ const dbUrl = process.env.DATABASE_URL || env.DATABASE_URL;
 const sql = postgres(dbUrl, { max: 1 });
 
 async function run() {
-  const [good] = await sql`SELECT id, name FROM public.goods WHERE name ILIKE '%Walnut Kernel%' AND deleted_at IS NULL LIMIT 1`;
+  const cols = await sql`
+    SELECT column_name, data_type 
+    FROM information_schema.columns 
+    WHERE table_name = 'goods_variations';
+  `;
+  console.log("goods_variations columns:", cols.map(c => c.column_name));
+
+  const [good] = await sql`
+    SELECT id, goods_name 
+    FROM public.goods 
+    WHERE goods_name ILIKE '%Walnut Kernel%' AND deleted_at IS NULL 
+    LIMIT 1;
+  `;
   console.log("Found good:", good);
 
-  if (!good) {
-    console.error("Good not found");
-    await sql.end();
-    return;
+  if (good) {
+    const [inserted] = await sql`
+      INSERT INTO public.goods_variations (goods_id, variety, size, grade, brand, extra_details, is_active)
+      VALUES (
+        ${good.id},
+        'Chandler',
+        '30-32 mm',
+        'Light Halves',
+        'DGT.LLC',
+        '[{"id":"ed-1","title":"Commercial Specification","lines":["Moisture: max 5%","Purity: 99.5%"]}]',
+        true
+      )
+      RETURNING id, variety, size, grade, brand, extra_details;
+    `;
+    console.log("✅ Inserted variation:", inserted);
   }
-
-  // Check if variation can be inserted with grade
-  const [variation] = await sql`
-    INSERT INTO public.goods_variations (goods_id, variety, size, grade, brand, extra_details, is_active)
-    VALUES (
-      ${good.id},
-      'Chandler',
-      '30-32 mm',
-      'Light Halves',
-      'DGT.LLC',
-      '[{"id":"ed-1","title":"Commercial Specification","lines":["Moisture: max 5%","Purity: 99.5%"]}]',
-      true
-    )
-    RETURNING id, variety, size, grade, brand, extra_details;
-  `;
-
-  console.log("✅ Successfully inserted test variation with grade:", variation);
   await sql.end();
 }
 
