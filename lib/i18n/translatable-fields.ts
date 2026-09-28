@@ -43,6 +43,19 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
   ledgers: [{ field: "name", mode: "transliterate" }],
   financial_periods: [{ field: "period_name", mode: "transliterate" }],
 
+  // ── Goods / Inventory Masters ──
+  goods: [
+    { field: "goods_name", mode: "translate" },
+    { field: "category", mode: "translate" },
+    { field: "extra_details", mode: "translate" },
+  ],
+  goods_variations: [
+    { field: "size", mode: "translate" },
+    { field: "brand", mode: "transliterate" },
+    { field: "variety", mode: "translate" },
+    { field: "extra_details", mode: "translate" },
+  ],
+
   // ── Locations (place names → transliterate) ──
   countries: [{ field: "name", mode: "transliterate" }],
   states_provinces: [{ field: "name", mode: "transliterate" }],

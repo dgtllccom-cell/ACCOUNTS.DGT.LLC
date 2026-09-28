@@ -505,7 +505,7 @@ export const goods = pgTable(
     deletedAt: timestamp("deleted_at", { withTimezone: true })
   },
   (table) => ({
-    chsCodeIdx: uniqueIndex("goods_chs_code_idx")
+    chsCodeIdx: index("goods_chs_code_idx")
       .on(table.chsCode)
       .where(sql`${table.deletedAt} is null`)
   })

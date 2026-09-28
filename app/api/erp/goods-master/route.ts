@@ -139,23 +139,37 @@ export async function GET(request: NextRequest) {
     }
 
     let nameById = new Map<string, string>();
+    let categoryById = new Map<string, string>();
+    let extraDetailsById = new Map<string, string>();
     try {
-      const synthetic = (rows ?? []).map((r: any) => ({ id: r.id, goods_name: r.name }));
-      const localizedNames = await localizeRecordFields<any>(synthetic, "goods", ["goods_name"], lang);
-      nameById = new Map(localizedNames.map((r: any) => [r.id, r.goods_name]));
+      const synthetic = (rows ?? []).map((r: any) => ({
+        id: r.id,
+        goods_name: r.name,
+        category: r.category,
+        extra_details: r.variation_extra_details || r.master_extra_details || "",
+      }));
+      const localizedRows = await localizeRecordFields<any>(
+        synthetic,
+        "goods",
+        ["goods_name", "category", "extra_details"],
+        lang
+      );
+      nameById = new Map(localizedRows.map((r: any) => [r.id, r.goods_name]));
+      categoryById = new Map(localizedRows.map((r: any) => [r.id, r.category]));
+      extraDetailsById = new Map(localizedRows.map((r: any) => [r.id, r.extra_details]));
     } catch {
-      // keep original names (map stays empty, falls back to r.name below)
+      // keep original names (map stays empty, falls back below)
     }
 
     const list = (rows ?? []).map((r: any) => ({
       id: r.id,
       chs_code: r.chs_code,
       name: nameById.get(r.id) ?? r.name,
-      category: r.category ?? "",
+      category: categoryById.get(r.id) ?? (r.category ?? ""),
       brand: r.brand ?? "",
       sizes: r.sizes ?? "",
       variety: r.variation_varieties || r.master_variety || "",
-      extra_details: r.variation_extra_details || r.master_extra_details || "",
+      extra_details: extraDetailsById.get(r.id) ?? (r.variation_extra_details || r.master_extra_details || ""),
       origin_country: r.origin_country ?? "",
       origin_country_id: r.origin_country_id ?? null,
       is_active: !!r.is_active,
