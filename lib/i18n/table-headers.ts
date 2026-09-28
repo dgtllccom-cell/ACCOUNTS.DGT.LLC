@@ -23,6 +23,8 @@ export const HEADER_TRANSLATIONS: Record<string, Row> = {
   "SIZE / GRADE": { ur: "سائز / گریڈ", ar: "المقاس / الدرجة", fa: "اندازه / درجه", ps: "اندازه / درجه" },
   "HS / PCT CODE": { ur: "ایچ ایس / پی سی ٹی کوڈ", ar: "رمز النظام المنسق / PCT", fa: "کد HS / PCT", ps: "د HS / PCT کوډ" },
   "CATEGORY": { ur: "زمرہ", ar: "الفئة", fa: "دسته‌بندی", ps: "کټګوري" },
+  "DESCRIPTION / COMMERCIAL SPECIFICATION": { ur: "تفصیل / تجارتی وضاحتیں", ar: "الوصف / المواصفات التجارية", fa: "توضیحات / مشخصات تجاری", ps: "توضیحات / سوداګریز مشخصات" },
+  "DESCRIPTION / COMMERCIAL SPECIFICATIONS": { ur: "تفصیل / تجارتی وضاحتیں", ar: "الوصف / المواصفات التجارية", fa: "توضیحات / مشخصات تجاری", ps: "توضیحات / سوداګریز مشخصات" },
   // ── Local Purchase Loading Queue — full 5-language coverage ──
   "LOCAL PURCHASE LOADING QUEUE": { ur: "لوکل پرچیز لوڈنگ قطار", ar: "قائمة انتظار تحميل المشتريات المحلية", fa: "صف بارگیری خرید محلی", ps: "د سیمه ییز پیرود بارولو قطار" },
   "TRANSACTION LOG & SEARCH REPORT (LOCAL PURCHASE LOADING)": { ur: "ٹرانزیکشن لاگ اور تلاش رپورٹ (لوکل پرچیز لوڈنگ)", ar: "سجل المعاملات وتقرير البحث (تحميل الشراء المحلي)", fa: "گزارش تراکنش‌ها و جستجو (بارگیری خرید محلی)", ps: "د راکړې ورکړې لاګ او لټون راپور (سیمه ییز پیرود بارول)" },

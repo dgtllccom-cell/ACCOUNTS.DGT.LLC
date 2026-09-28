@@ -13,6 +13,7 @@ const patchSchema = z.object({
   chsCode: z.string().trim().min(1).max(60).optional(),
   name: z.string().trim().min(1).max(200).optional(),
   category: z.string().trim().max(120).nullable().optional(),
+  extraDetails: z.string().trim().max(2000).nullable().optional(),
   originCountry: z.string().trim().max(120).nullable().optional(),
   originCountryId: z.string().uuid().nullable().optional(),
   isActive: z.boolean().optional(),
@@ -67,6 +68,12 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: s
     if (body.category !== undefined) {
       await withLocalPg(async (sql) => {
         await sql`UPDATE public.goods SET category = ${body.category ?? null}, updated_at = NOW() WHERE id = ${id}`;
+      });
+    }
+
+    if (body.extraDetails !== undefined) {
+      await withLocalPg(async (sql) => {
+        await sql`UPDATE public.goods SET extra_details = ${body.extraDetails ?? null}, updated_at = NOW() WHERE id = ${id}`;
       });
     }
 

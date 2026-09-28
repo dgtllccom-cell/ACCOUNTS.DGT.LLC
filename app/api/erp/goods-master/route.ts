@@ -86,7 +86,12 @@ export async function GET(request: NextRequest) {
             SELECT string_agg(DISTINCT NULLIF(btrim(v.extra_details), ''), ' | ')
             FROM public.goods_variations v
             WHERE v.goods_id = g.id AND v.deleted_at IS NULL
-          ) AS variation_extra_details
+          ) AS variation_extra_details,
+          (
+            SELECT string_agg(DISTINCT NULLIF(btrim(p.param_value), ''), ', ')
+            FROM public.goods_master_parameters p
+            WHERE p.goods_id = g.id AND p.deleted_at IS NULL AND p.param_type = 'extra_details' AND p.is_active = TRUE
+          ) AS param_extra_details
         FROM public.goods g
         LEFT JOIN public.countries co ON co.id = g.origin_country_id
         WHERE g.deleted_at IS NULL
@@ -146,7 +151,7 @@ export async function GET(request: NextRequest) {
         id: r.id,
         goods_name: r.name,
         category: r.category,
-        extra_details: r.variation_extra_details || r.master_extra_details || "",
+        extra_details: r.master_extra_details || r.param_extra_details || r.variation_extra_details || "",
       }));
       const localizedRows = await localizeRecordFields<any>(
         synthetic,
@@ -169,7 +174,7 @@ export async function GET(request: NextRequest) {
       brand: r.brand ?? "",
       sizes: r.sizes ?? "",
       variety: r.variation_varieties || r.master_variety || "",
-      extra_details: extraDetailsById.get(r.id) ?? (r.variation_extra_details || r.master_extra_details || ""),
+      extra_details: extraDetailsById.get(r.id) ?? (r.master_extra_details || r.param_extra_details || r.variation_extra_details || ""),
       origin_country: r.origin_country ?? "",
       origin_country_id: r.origin_country_id ?? null,
       is_active: !!r.is_active,
