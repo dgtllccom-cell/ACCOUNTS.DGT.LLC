@@ -621,7 +621,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     children: [
       { label: nt("System Settings Hub"), href: "/dashboard/settings", icon: Settings },
       { label: nt("Dashboard Settings"), href: "/dashboard/settings/dashboard-settings", icon: Sliders },
-      { label: nt("Company Setup"), href: "/dashboard/settings/company-setup", icon: Building2 },
+      { label: nt("Company Setup"), href: "/dashboard/settings/company-setup", icon: Building2, upgraded: true },
       { label: nt("Account Types Setup"), href: "/dashboard/settings/account-type", icon: BookOpen },
       { label: nt("Locations & Cities"), href: "/dashboard/settings/locations", icon: Globe2 },
       { label: nt("Country Tax & Currency"), href: "/dashboard/settings/tax", icon: Landmark },

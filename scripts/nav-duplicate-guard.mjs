@@ -27,7 +27,9 @@ const ALLOW_DUP_HREF = new Set([
 const fail = [];
 
 // 1. duplicate leaf href
-const hrefRe = /label:\s*"([^"]+)"\s*,\s*href:\s*"([^"]+)"/g;
+// label may be a plain string or wrapped in the nt("…") i18n marker, and other props
+// (icon, key) may sit between label and href — but never a nested object ({ or }).
+const hrefRe = /label:\s*(?:nt\()?"([^"]+)"\)?[^{}]*?href:\s*"([^"]+)"/g;
 const byHref = new Map();
 let m;
 while ((m = hrefRe.exec(src))) {
@@ -57,6 +59,13 @@ if (fail.length) {
   console.error(`\n✗ nav-duplicate-guard FAILED (${FILE}):\n${fail.map((f) => "  - " + f).join("\n")}\n`);
   console.error("  Keep ONE canonical main-menu entry per destination. A different");
   console.error("  ?tab= / filter is not a duplicate. See docs/main-menu-hierarchy.md.\n");
+  process.exit(1);
+}
+if (leafCount < 50) {
+  // The sidebar has ~140 links; near-zero means this parser no longer matches the file format.
+  console.error(`
+✗ nav-duplicate-guard FAILED: only ${leafCount} menu links parsed from ${FILE} — the guard's parser is out of date.
+`);
   process.exit(1);
 }
 console.log(`✓ nav-duplicate-guard passed — ${byHref.size} distinct destinations, ${leafCount} leaf links, no repeats.`);
