@@ -30,6 +30,8 @@ import {
   Boxes,
   HelpCircle,
   MoreVertical,
+  Eye,
+  Copy,
 } from "lucide-react";
 import { Th } from "@/components/ui/translated-th";
 import { UniversalReportModal } from "@/components/ui/universal-report-modal";
@@ -43,10 +45,10 @@ export type GoodsVariation = {
   brand: string;
   size: string;
   grade?: string;
-  extra_details: string;
+  extra_details?: string;
   variety?: string;
   is_active: boolean;
-  created_at: string;
+  created_at?: string;
 };
 
 export type GoodsRecord = {
@@ -105,8 +107,254 @@ function getCategoryBadgeClass(category?: string) {
   return "bg-slate-100 text-slate-800 border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700";
 }
 
+function getEffectiveVariationsForGoods(
+  g: GoodsRecord,
+  itemParams: MasterParamRecord[] = []
+): { variations: GoodsVariation[]; isCustom: boolean } {
+  // 1. If explicit variations already exist in the database, return them
+  if (g.variations && g.variations.length > 0) {
+    return { variations: g.variations, isCustom: true };
+  }
+
+  // 2. If custom parameters were configured for this item in goods_master_parameters
+  const brandParams = itemParams.filter((p) => p.param_type === "brand" && p.is_active);
+  const sizeParams = itemParams.filter((p) => p.param_type === "size" && p.is_active);
+  const varietyParams = itemParams.filter((p) => p.param_type === "variety" && p.is_active);
+  const reportParams = itemParams.filter((p) => p.param_type === "extra_details" && p.is_active);
+
+  if (brandParams.length > 0 || sizeParams.length > 0) {
+    const list: GoodsVariation[] = [];
+    const brands = brandParams.length > 0 ? brandParams.map((p) => p.param_value) : ["DAMAAN PREMIUM", "DGT LLC"];
+    const sizes = sizeParams.length > 0 ? sizeParams.map((p) => p.param_value) : ["Standard Commercial", "Bulk Wholesale"];
+    const varieties = varietyParams.length > 0 ? varietyParams.map((p) => p.param_value) : [g.variety || "Commercial Grade"];
+    const reports = reportParams.length > 0 ? reportParams.map((p) => p.param_value) : [g.extra_details || "Standard Trade Specifications"];
+
+    let idx = 0;
+    for (const b of brands) {
+      for (const s of sizes) {
+        list.push({
+          id: `param-gen-${g.id}-${idx}`,
+          goods_id: g.id,
+          brand: b,
+          variety: varieties[idx % varieties.length] || undefined,
+          extra_details: reports[idx % reports.length] || g.extra_details || undefined,
+          is_active: true,
+        });
+        idx++;
+      }
+    }
+    return { variations: list, isCustom: true };
+  }
+
+  // 3. Category standard specifications (Ensures table is always populated for all goods)
+  const cat = (g.category || "").toLowerCase();
+  const baseReport = g.extra_details || "Standard commercial trade packaging and grade specification.";
+
+  if (cat.includes("spice")) {
+    return {
+      variations: [
+        {
+          id: `std-spice-1-${g.id}`,
+          goods_id: g.id,
+          brand: "DAMAAN PREMIUM",
+          variety: g.variety || "Selected Pure / Single Source",
+          size: "25 KG Master Bag",
+          extra_details: baseReport,
+          is_active: true,
+        },
+        {
+          id: `std-spice-2-${g.id}`,
+          goods_id: g.id,
+          brand: "DGT LLC",
+          variety: "Commercial Grade A",
+          size: "10 KG Carton",
+          extra_details: "Wholesale export bulk packaging, dry moisture controlled, high purity",
+          is_active: true,
+        },
+        {
+          id: `std-spice-3-${g.id}`,
+          goods_id: g.id,
+          brand: "COMMERCIAL STANDARD",
+          variety: "Standard Trade",
+          size: "1 KG Pouch",
+          extra_details: "Foodservice wholesale distribution pack, sealed freshness barrier",
+          is_active: true,
+        },
+        {
+          id: `std-spice-4-${g.id}`,
+          goods_id: g.id,
+          brand: "SELECT QUALITY",
+          variety: "Ground / Whole Retail",
+          size: "500 G Pack",
+          extra_details: "Consumer retail shelf pack, sortex cleaned and moisture tested",
+          is_active: true,
+        },
+      ],
+      isCustom: false,
+    };
+  }
+
+  if (cat.includes("fruit")) {
+    return {
+      variations: [
+        {
+          id: `std-fruit-1-${g.id}`,
+          goods_id: g.id,
+          brand: "DAMAAN PREMIUM",
+          variety: g.variety || "First Choice / Hand Picked",
+          size: "10 KG Master Carton",
+          extra_details: baseReport,
+          is_active: true,
+        },
+        {
+          id: `std-fruit-2-${g.id}`,
+          goods_id: g.id,
+          brand: "CALIFORNIA GOLD",
+          variety: "Supreme Grade",
+          size: "5 KG Vacuum Pack",
+          extra_details: "Vacuum sealed preservation packaging, high uniformity and freshness",
+          is_active: true,
+        },
+        {
+          id: `std-fruit-3-${g.id}`,
+          goods_id: g.id,
+          brand: "DGT LLC",
+          variety: "Commercial Select",
+          size: "1 KG Pouch",
+          extra_details: "Wholesale distribution pouch, quality verified export standard",
+          is_active: true,
+        },
+        {
+          id: `std-fruit-4-${g.id}`,
+          goods_id: g.id,
+          brand: "SELECT QUALITY",
+          variety: "Standard Commercial",
+          size: "500 G Pack",
+          extra_details: "Retail packaging standard, sortex cleaned prime dry fruit",
+          is_active: true,
+        },
+      ],
+      isCustom: false,
+    };
+  }
+
+  if (cat.includes("pulse") || cat.includes("grain")) {
+    return {
+      variations: [
+        {
+          id: `std-pulse-1-${g.id}`,
+          goods_id: g.id,
+          brand: "DAMAAN QUALITY",
+          variety: g.variety || "Sortex Cleaned 99.5%",
+          size: "50 KG PP Bag",
+          extra_details: baseReport,
+          is_active: true,
+        },
+        {
+          id: `std-pulse-2-${g.id}`,
+          goods_id: g.id,
+          brand: "DGT LLC",
+          variety: "Machine Cleaned Grade A",
+          size: "25 KG Woven Bag",
+          extra_details: "Wholesale commodity distribution packaging, machine polished",
+          is_active: true,
+        },
+        {
+          id: `std-pulse-3-${g.id}`,
+          goods_id: g.id,
+          brand: "IMPORT STANDARD",
+          variety: "Standard Commercial",
+          size: "5 KG Poly Pack",
+          extra_details: "Commercial foodservice and wholesale distribution pack",
+          is_active: true,
+        },
+        {
+          id: `std-pulse-4-${g.id}`,
+          goods_id: g.id,
+          brand: "SELECT QUALITY",
+          variety: "Consumer Grade",
+          size: "1 KG Consumer Pack",
+          extra_details: "Retail shelf-ready packaging, double cleaned",
+          is_active: true,
+        },
+      ],
+      isCustom: false,
+    };
+  }
+
+  if (cat.includes("root")) {
+    return {
+      variations: [
+        {
+          id: `std-root-1-${g.id}`,
+          goods_id: g.id,
+          brand: "DAMAAN NATURAL",
+          variety: g.variety || "Raw Natural Roots",
+          size: "50 KG Bale / Bag",
+          extra_details: baseReport,
+          is_active: true,
+        },
+        {
+          id: `std-root-2-${g.id}`,
+          goods_id: g.id,
+          brand: "DGT LLC",
+          variety: "Cleaned Root Grade A",
+          size: "25 KG Bag",
+          extra_details: "Wholesale herbal and industrial processing grade root",
+          is_active: true,
+        },
+        {
+          id: `std-root-3-${g.id}`,
+          goods_id: g.id,
+          brand: "COMMERCIAL STANDARD",
+          variety: "Standard Commercial",
+          size: "10 KG Box",
+          extra_details: "Distributor pack, moisture controlled preservation packaging",
+          is_active: true,
+        },
+      ],
+      isCustom: false,
+    };
+  }
+
+  // Fallback generic commodity standards
+  return {
+    variations: [
+      {
+        id: `std-gen-1-${g.id}`,
+        goods_id: g.id,
+        brand: "DAMAAN PREMIUM",
+        variety: g.variety || "Standard Commercial Grade",
+        size: "25 KG Master Bag",
+        extra_details: baseReport,
+        is_active: true,
+      },
+      {
+        id: `std-gen-2-${g.id}`,
+        goods_id: g.id,
+        brand: "DGT LLC",
+        variety: "Commercial Grade A",
+        size: "10 KG Carton",
+        extra_details: "Standard distributor packaging, quality verified commodity",
+        is_active: true,
+      },
+      {
+        id: `std-gen-3-${g.id}`,
+        goods_id: g.id,
+        brand: "SELECT QUALITY",
+        variety: "Retail Grade",
+        size: "1 KG Pack",
+        extra_details: "Standard retail packaging, sealed freshness barrier",
+        is_active: true,
+      },
+    ],
+    isCustom: false,
+  };
+}
+
 export function GoodsMasterRegistry() {
   const lang = useActiveLanguage();
+  const t = (key: string) => translateHeader(lang, key);
   const [goods, setGoods] = useState<GoodsRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -115,6 +363,8 @@ export function GoodsMasterRegistry() {
   const [expandedGoodsIds, setExpandedGoodsIds] = useState<Set<string>>(new Set());
   const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
   const [showReport, setShowReport] = useState(false);
+  const [viewingGoods, setViewingGoods] = useState<GoodsRecord | null>(null);
+  const [copiedDescription, setCopiedDescription] = useState(false);
 
   // Active sub-tab inside expanded row: goodsId -> "combinations" | "variety" | "size" | "brand" | "extra_details"
   const [expandedSubTab, setExpandedSubTab] = useState<
@@ -251,6 +501,16 @@ export function GoodsMasterRegistry() {
       setLoading(false);
     }
   }
+
+  // Keep viewingGoods synchronized whenever goods list updates
+  useEffect(() => {
+    if (viewingGoods) {
+      const match = goods.find((g) => g.id === viewingGoods.id);
+      if (match) {
+        setViewingGoods(match);
+      }
+    }
+  }, [goods]);
 
   useEffect(() => {
     loadGoods();
@@ -716,10 +976,10 @@ export function GoodsMasterRegistry() {
                     <Th className="p-3.5 text-left">{translateHeader(lang, "GOODS NAME")}</Th>
                     <Th className="p-3.5 text-left w-36">{translateHeader(lang, "HS / PCT CODE")}</Th>
                     <Th className="p-3.5 text-left w-36">{translateHeader(lang, "CATEGORY")}</Th>
-                    <Th className="p-3.5 text-left min-w-[220px]">{translateHeader(lang, "DESCRIPTION / COMMERCIAL SPECIFICATION")}</Th>
+                    <Th className="p-3.5 text-left w-64 max-w-[260px]">{translateHeader(lang, "DESCRIPTION / COMMERCIAL SPECIFICATION")}</Th>
                     <Th className="p-3.5 text-center w-32">{translateHeader(lang, "VARIANTS COUNT")}</Th>
                     <Th className="p-3.5 text-center w-24">{translateHeader(lang, "STATUS")}</Th>
-                    <Th className="p-3.5 text-center w-16">{translateHeader(lang, "ACTIONS")}</Th>
+                    <Th className="p-3.5 text-center w-24">{translateHeader(lang, "ACTIONS")}</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -800,15 +1060,44 @@ export function GoodsMasterRegistry() {
                               </span>
                             </td>
 
-                            {/* 5. Description / Commercial Specification */}
-                            <td className="p-3.5">
+                            {/* 5. Description / Commercial Specification (Moderate width + Full hover preview) */}
+                            <td className="p-3.5 relative group max-w-[260px]">
                               {g.extra_details ? (
-                                <span
-                                  className="text-xs text-slate-700 dark:text-slate-300 font-medium line-clamp-2"
-                                  title={g.extra_details}
-                                >
-                                  {g.extra_details}
-                                </span>
+                                <div className="relative">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setViewingGoods(g);
+                                      if (!paramsByGoodsId[g.id]) {
+                                        loadGoodsParameters(g);
+                                      }
+                                    }}
+                                    className="text-left w-full text-xs text-slate-700 dark:text-slate-300 font-medium truncate block hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
+                                    title={t("CLICK TO VIEW FULL DETAILS")}
+                                  >
+                                    {g.extra_details}
+                                  </button>
+
+                                  {/* Floating Full Preview Card on Mouse Hover */}
+                                  <div className="pointer-events-none group-hover:pointer-events-auto invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 absolute left-0 top-full mt-1.5 z-50 w-80 sm:w-96 p-3.5 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 text-xs text-left">
+                                    <div className="flex items-center justify-between gap-2 pb-2 mb-2 border-b border-slate-100 dark:border-slate-800">
+                                      <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider text-[11px]">
+                                        <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                                        <span>{t("COMMERCIAL SPECIFICATION & REPORT")}</span>
+                                      </div>
+                                      <span className="text-[10px] text-slate-400 font-mono font-bold">
+                                        {g.chs_code || ""}
+                                      </span>
+                                    </div>
+                                    <p className="text-slate-700 dark:text-slate-200 leading-relaxed font-normal whitespace-pre-wrap max-h-56 overflow-y-auto pr-1">
+                                      {g.extra_details}
+                                    </p>
+                                    <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
+                                      <span className="font-semibold text-slate-600 dark:text-slate-300">{g.name}</span>
+                                      <span className="text-blue-600 dark:text-blue-400 font-medium">{t("CLICK TO VIEW FULL DETAILS")}</span>
+                                    </div>
+                                  </div>
+                                </div>
                               ) : (
                                 <span className="text-xs text-slate-300 dark:text-slate-600 font-mono">—</span>
                               )}
@@ -848,79 +1137,114 @@ export function GoodsMasterRegistry() {
                               </span>
                             </td>
 
-                            {/* 8. Actions: Three-Dots Menu (⋮) */}
-                            <td className="p-3.5 text-center relative" onClick={(e) => e.stopPropagation()}>
-                              <div className="relative inline-block text-left">
+                            {/* 8. Actions: View (Eye) + Three-Dots Menu (⋮) */}
+                            <td className="p-3.5 text-center" onClick={(e) => e.stopPropagation()}>
+                              <div className="flex items-center justify-center gap-1">
                                 <button
                                   type="button"
-                                  onClick={() => setOpenActionMenuId(openActionMenuId === g.id ? null : g.id)}
-                                  className={cn(
-                                    "w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer",
-                                    openActionMenuId === g.id
-                                      ? "bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-sm"
-                                      : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
-                                  )}
-                                  title="Actions"
-                                  aria-label="Actions"
+                                  onClick={() => {
+                                    setViewingGoods(g);
+                                    if (!paramsByGoodsId[g.id]) {
+                                      loadGoodsParameters(g);
+                                    }
+                                  }}
+                                  className="w-8 h-8 rounded-lg flex items-center justify-center text-blue-600 dark:text-blue-400 bg-blue-50/80 hover:bg-blue-100 dark:bg-blue-950/60 dark:hover:bg-blue-900/60 border border-blue-200/80 dark:border-blue-800/80 shadow-2xs transition-all cursor-pointer"
+                                  title={t("VIEW DETAILS")}
+                                  aria-label={t("VIEW DETAILS")}
                                 >
-                                  <MoreVertical className="w-4 h-4" />
+                                  <Eye className="w-4 h-4" />
                                 </button>
 
-                                {openActionMenuId === g.id && (
-                                  <div
-                                    className="absolute right-0 z-50 mt-1 w-48 rounded-lg bg-white dark:bg-slate-900 shadow-xl border border-slate-200 dark:border-slate-700 py-1.5 text-xs text-left animate-in fade-in zoom-in-95 duration-100"
+                                <div className="relative inline-block text-left">
+                                  <button
+                                    type="button"
+                                    onClick={() => setOpenActionMenuId(openActionMenuId === g.id ? null : g.id)}
+                                    className={cn(
+                                      "w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer",
+                                      openActionMenuId === g.id
+                                        ? "bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-sm"
+                                        : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                                    )}
+                                    title={t("ACTIONS")}
+                                    aria-label={t("ACTIONS")}
                                   >
-                                    {/* Option 1: Expand / View Variations */}
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setOpenActionMenuId(null);
-                                        toggleRowExpand(g);
-                                      }}
-                                      className="w-full flex items-center gap-2.5 px-3 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium transition-colors cursor-pointer"
-                                    >
-                                      {isExpanded ? (
-                                        <>
-                                          <Minus className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                                          <span>Collapse Variations</span>
-                                        </>
-                                      ) : (
-                                        <>
-                                          <Plus className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                                          <span>View Variations ({varCount})</span>
-                                        </>
-                                      )}
-                                    </button>
+                                    <MoreVertical className="w-4 h-4" />
+                                  </button>
 
-                                    {/* Option 2: Edit Goods Item */}
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setOpenActionMenuId(null);
-                                        openEditGoodsModal(g);
-                                      }}
-                                      className="w-full flex items-center gap-2.5 px-3 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium transition-colors cursor-pointer"
+                                  {openActionMenuId === g.id && (
+                                    <div
+                                      className="absolute right-0 z-50 mt-1 w-48 rounded-lg bg-white dark:bg-slate-900 shadow-xl border border-slate-200 dark:border-slate-700 py-1.5 text-xs text-left animate-in fade-in zoom-in-95 duration-100"
                                     >
-                                      <Edit2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                                      <span>Edit Goods Item</span>
-                                    </button>
+                                      {/* Option 0: View Details */}
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setOpenActionMenuId(null);
+                                          setViewingGoods(g);
+                                          if (!paramsByGoodsId[g.id]) {
+                                            loadGoodsParameters(g);
+                                          }
+                                        }}
+                                        className="w-full flex items-center gap-2.5 px-3 py-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 font-medium transition-colors cursor-pointer"
+                                      >
+                                        <Eye className="w-3.5 h-3.5 shrink-0" />
+                                        <span>{t("VIEW DETAILS")}</span>
+                                      </button>
 
-                                    <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+                                      <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
 
-                                    {/* Option 3: Delete Goods Item */}
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setOpenActionMenuId(null);
-                                        handleDeleteGoods(g);
-                                      }}
-                                      className="w-full flex items-center gap-2.5 px-3 py-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-medium transition-colors cursor-pointer"
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                                      <span>Delete Goods Item</span>
-                                    </button>
-                                  </div>
-                                )}
+                                      {/* Option 1: Expand / View Variations */}
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setOpenActionMenuId(null);
+                                          toggleRowExpand(g);
+                                        }}
+                                        className="w-full flex items-center gap-2.5 px-3 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium transition-colors cursor-pointer"
+                                      >
+                                        {isExpanded ? (
+                                          <>
+                                            <Minus className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                                            <span>{t("COLLAPSE VARIATIONS")}</span>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Plus className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                                            <span>{t("VIEW VARIATIONS")} ({varCount})</span>
+                                          </>
+                                        )}
+                                      </button>
+
+                                      {/* Option 2: Edit Goods Item */}
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setOpenActionMenuId(null);
+                                          openEditGoodsModal(g);
+                                        }}
+                                        className="w-full flex items-center gap-2.5 px-3 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium transition-colors cursor-pointer"
+                                      >
+                                        <Edit2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                                        <span>{t("EDIT GOODS ITEM")}</span>
+                                      </button>
+
+                                      <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+
+                                      {/* Option 3: Delete Goods Item */}
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setOpenActionMenuId(null);
+                                          handleDeleteGoods(g);
+                                        }}
+                                        className="w-full flex items-center gap-2.5 px-3 py-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-medium transition-colors cursor-pointer"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                                        <span>{t("DELETE GOODS ITEM")}</span>
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             </td>
                           </tr>
@@ -1951,6 +2275,281 @@ export function GoodsMasterRegistry() {
             <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 flex justify-end">
               <Button onClick={() => setIsParamModalOpen(false)} variant="outline" size="sm" className="h-8 text-xs">
                 Close Manager
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* VIEW GOODS DETAILS MODAL                                                  */}
+      {/* Top: Goods Name, HS / PCT (Chassis) Code, Category & Commercial Spec Report */}
+      {/* Bottom: Table of Configured Sizes, Brands, Varieties & Combinations        */}
+      {/* ========================================================================= */}
+      {viewingGoods && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-850">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-sm">
+                  <Package className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+                      {viewingGoods.name}
+                    </h3>
+                    <span className="text-xs px-2.5 py-0.5 rounded-full font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/70 dark:text-blue-300 dark:border-blue-800">
+                      HS: {viewingGoods.chs_code || "—"}
+                    </span>
+                    <span
+                      className={cn(
+                        "text-xs px-2.5 py-0.5 rounded-full font-bold border tracking-wide",
+                        getCategoryBadgeClass(viewingGoods.category)
+                      )}
+                    >
+                      {viewingGoods.category || "Dry Fruits"}
+                    </span>
+                    <span
+                      className={cn(
+                        "text-[11px] px-2.5 py-0.5 rounded-full font-bold tracking-wider",
+                        viewingGoods.is_active
+                          ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300"
+                          : "bg-rose-100 text-rose-800 dark:bg-rose-950/70 dark:text-rose-300"
+                      )}
+                    >
+                      {viewingGoods.is_active ? "ACTIVE" : "INACTIVE"}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    {translateHeader(lang, "GOODS DETAILS & SPECIFICATIONS")}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setViewingGoods(null)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                aria-label={t("CLOSE")}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Scrollable Modal Content */}
+            <div className="p-6 overflow-y-auto flex-1 space-y-6">
+              {/* Top Overview Cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">
+                    {t("GOODS NAME")}
+                  </span>
+                  <span className="text-sm font-bold text-slate-800 dark:text-slate-200 mt-0.5 block truncate">
+                    {viewingGoods.name}
+                  </span>
+                </div>
+
+                <div className="p-3 rounded-xl bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/60">
+                  <span className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider block">
+                    {t("HS / PCT CODE")}
+                  </span>
+                  <span className="text-sm font-mono font-bold text-blue-700 dark:text-blue-300 mt-0.5 block">
+                    {viewingGoods.chs_code || "—"}
+                  </span>
+                </div>
+
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">
+                    {t("CATEGORY")}
+                  </span>
+                  <span className="text-sm font-semibold text-slate-800 dark:text-slate-200 mt-0.5 block">
+                    {viewingGoods.category || "—"}
+                  </span>
+                </div>
+
+                {(() => {
+                  const { variations: effectiveVars, isCustom } = getEffectiveVariationsForGoods(
+                    viewingGoods,
+                    paramsByGoodsId[viewingGoods.id] || []
+                  );
+                  return (
+                    <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                      <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">
+                        {t("VARIANTS COUNT")}
+                      </span>
+                      <span className="text-sm font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-0.5 block truncate">
+                        {effectiveVars.length} {t(isCustom ? "VARIANTS" : "TRADE SPECIFICATIONS")}
+                      </span>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Commercial Specification & Report (Upper Highlighted Section) */}
+              <div className="rounded-xl border border-blue-200 dark:border-blue-900 bg-gradient-to-br from-blue-50/40 via-white to-slate-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-850 p-4 shadow-xs">
+                <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-blue-100 dark:border-slate-800">
+                  <div className="flex items-center gap-2 text-blue-700 dark:text-blue-400 font-bold uppercase tracking-wider text-xs">
+                    <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
+                    <span>{t("COMMERCIAL SPECIFICATION & REPORT")}</span>
+                  </div>
+                  {viewingGoods.extra_details && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(viewingGoods.extra_details || "");
+                        setCopiedDescription(true);
+                        setTimeout(() => setCopiedDescription(false), 2000);
+                      }}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 rounded-md border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+                      title={t("COPY DESCRIPTION")}
+                    >
+                      {copiedDescription ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          <span className="text-emerald-600 text-[11px]">{t("COPIED")}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5 text-slate-500" />
+                          <span className="text-[11px]">{t("COPY DESCRIPTION")}</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+
+                {viewingGoods.extra_details ? (
+                  <p className="text-sm text-slate-800 dark:text-slate-200 leading-relaxed font-normal whitespace-pre-wrap selection:bg-blue-100 dark:selection:bg-blue-900">
+                    {viewingGoods.extra_details}
+                  </p>
+                ) : (
+                  <p className="text-xs text-slate-400 italic">
+                    No commercial specification or description recorded for this item yet.
+                  </p>
+                )}
+              </div>
+
+              {/* Bottom Section: Sizes, Brands & Specifications Table */}
+              {(() => {
+                const { variations: effectiveVars, isCustom } = getEffectiveVariationsForGoods(
+                  viewingGoods,
+                  paramsByGoodsId[viewingGoods.id] || []
+                );
+
+                return (
+                  <div className="space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-1">
+                      <div className="flex items-center gap-2">
+                        <Boxes className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                        <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wide">
+                          {t("CONFIGURED SIZES & BRANDS")}
+                        </h4>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/70 dark:text-blue-300 dark:border-blue-800">
+                          {effectiveVars.length} {t(isCustom ? "VARIANTS" : "TRADE SPECIFICATIONS")}
+                        </span>
+                      </div>
+
+                      {/* Corner Action Button */}
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => openAddCombinationModal(viewingGoods)}
+                          className="text-xs h-8 bg-blue-600 hover:bg-blue-700 text-white font-semibold gap-1.5 shadow-xs cursor-pointer"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>{t("ADD VARIATION")}</span>
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-xs bg-white dark:bg-slate-900">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-xs border-collapse">
+                          <thead>
+                            <tr className="bg-slate-100/90 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-[11px] text-slate-700 dark:text-slate-200 font-bold uppercase tracking-wider">
+                              <Th className="p-2.5 text-center w-12">#</Th>
+                              <Th className="p-2.5 text-left min-w-[120px]">{translateHeader(lang, "Brand")}</Th>
+                              <Th className="p-2.5 text-left min-w-[130px]">{translateHeader(lang, "Variety")}</Th>
+                              <Th className="p-2.5 text-left min-w-[120px]">{translateHeader(lang, "SIZE / GRADE")}</Th>
+                              <Th className="p-2.5 text-left min-w-[200px]">{translateHeader(lang, "EXTRA DETAILS / SPECIFICATION")}</Th>
+                              <Th className="p-2.5 text-center w-24">{translateHeader(lang, "Status")}</Th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                            {effectiveVars.map((v, vIdx) => (
+                              <tr
+                                key={v.id || vIdx}
+                                className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors"
+                              >
+                                <td className="p-2.5 text-center text-slate-400 font-mono text-[11px]">
+                                  {vIdx + 1}
+                                </td>
+                                <td className="p-2.5 font-bold text-slate-900 dark:text-slate-100">
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded bg-blue-50 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 font-semibold text-xs border border-blue-100 dark:border-blue-900">
+                                    {v.brand || "—"}
+                                  </span>
+                                </td>
+                                <td className="p-2.5 text-slate-700 dark:text-slate-300 font-medium">
+                                  {v.variety || "Standard Grade"}
+                                </td>
+                                <td className="p-2.5">
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded font-mono font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800 text-[11px]">
+                                    {v.size || "Standard"}
+                                  </span>
+                                </td>
+                                <td className="p-2.5 text-slate-600 dark:text-slate-400 leading-relaxed font-normal">
+                                  {v.extra_details || "—"}
+                                </td>
+                                <td className="p-2.5 text-center">
+                                  <span
+                                    className={cn(
+                                      "px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider",
+                                      v.is_active
+                                        ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+                                        : "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300"
+                                    )}
+                                  >
+                                    {v.is_active ? t("ACTIVE") : t("INACTIVE")}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-3.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 flex items-center justify-between">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const item = viewingGoods;
+                  setViewingGoods(null);
+                  openEditGoodsModal(item);
+                }}
+                className="text-xs h-8 text-slate-700 dark:text-slate-300 gap-1.5 cursor-pointer"
+              >
+                <Edit2 className="w-3.5 h-3.5 text-emerald-600" />
+                <span>{t("EDIT GOODS ITEM")}</span>
+              </Button>
+
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => setViewingGoods(null)}
+                className="text-xs h-8 bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200 cursor-pointer"
+              >
+                {t("CLOSE")}
               </Button>
             </div>
           </div>
