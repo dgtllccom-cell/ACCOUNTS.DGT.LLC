@@ -17,16 +17,24 @@ function parseEnvFile(file) {
 const env = { ...parseEnvFile(".env"), ...parseEnvFile(".env.local") };
 const sql = postgres(env.DATABASE_URL, { max: 1, prepare: false });
 
-async function run() {
-  const cols = await sql`
-    SELECT column_name, data_type 
-    FROM information_schema.columns 
-    WHERE table_schema = 'public' AND table_name = 'goods'
+async function main() {
+  const trans = await sql`
+    SELECT record_id, original_text, english_text, urdu_text, arabic_text, persian_text, pashto_text
+    FROM record_translations
+    WHERE record_table = 'goods' AND field_name = 'extra_details'
+    ORDER BY created_at DESC
+    LIMIT 4;
   `;
-  console.log("Goods columns:", cols.map(c => c.column_name));
-  const rows = await sql`SELECT * FROM public.goods LIMIT 10`;
-  console.log("Goods sample rows:", rows);
+  console.log("Translations count in record_translations:", (await sql`SELECT count(*) FROM record_translations WHERE record_table = 'goods' AND field_name = 'extra_details'`)[0].count);
+  for (const t of trans) {
+    console.log("-----------------------------------------");
+    console.log("EN:", t.english_text?.slice(0, 60) + "...");
+    console.log("UR:", t.urdu_text?.slice(0, 60) + "...");
+    console.log("AR:", t.arabic_text?.slice(0, 60) + "...");
+    console.log("FA:", t.persian_text?.slice(0, 60) + "...");
+    console.log("PS:", t.pashto_text?.slice(0, 60) + "...");
+  }
   await sql.end();
 }
 
-run().catch(console.error);
+main().catch(console.error);
