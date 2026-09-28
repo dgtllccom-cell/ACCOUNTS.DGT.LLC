@@ -924,6 +924,17 @@ export function CustomerOrderManagementView() {
   const [viewOrder, setViewOrder] = useState<ClearingCustomerOrderRow | null>(null);
   const [partySelections, setPartySelections] = useState<Record<PartyRoleKey, PartySelection>>(emptyPartyState());
   const [formData, setFormData] = useState({ ...EMPTY_FORM });
+  const [draftGoodsItem, setDraftGoodsItem] = useState<CustomerOrderGoodsItem>(defaultGoodsItem());
+  const [editingGoodsIdx, setEditingGoodsIdx] = useState<number | null>(null);
+
+  const handleEditGoodsRow = (idx: number) => {
+    const item = formData.goods_items?.[idx];
+    if (!item) return;
+    setDraftGoodsItem({ ...item });
+    setEditingGoodsIdx(idx);
+    setStep1SubStep("1C");
+    setCurrentStep(3);
+  };
 
   const tt = (k: string, f: string) => t(lang, ("com." + k) as never, f);
   const refreshLabel = t(lang, "common.refresh", "Refresh");
@@ -1489,6 +1500,8 @@ export function CustomerOrderManagementView() {
     });
     setPartySelections(emptyPartyState());
     setEditingOrderId(null);
+    setDraftGoodsItem(defaultGoodsItem());
+    setEditingGoodsIdx(null);
     setCurrentStep(1);
     setStep1SubStep("1A");
   };
@@ -1501,6 +1514,8 @@ export function CustomerOrderManagementView() {
   const loadEditOrder = (order: ClearingCustomerOrderRow) => {
     const o = order as Record<string, any>;
     setEditingOrderId(order.id);
+    setDraftGoodsItem(defaultGoodsItem());
+    setEditingGoodsIdx(null);
     const currentStageVal = o.current_stage || "1A";
     if (currentStageVal === "1B" || currentStageVal === "truck_confirmation_required") {
       setStep1SubStep("1B");
@@ -3794,6 +3809,10 @@ export function CustomerOrderManagementView() {
                       onConfirmTruckAssignGoods={handleConfirmTruckAssignGoods}
                       onReturnForCorrection={handleTriggerReturnModal}
                       onCompleteGoodsEntry={handleCompleteGoodsEntry}
+                      draftGoodsItem={draftGoodsItem}
+                      setDraftGoodsItem={setDraftGoodsItem}
+                      editingGoodsIdx={editingGoodsIdx}
+                      setEditingGoodsIdx={setEditingGoodsIdx}
                       saving={saving}
                     />
                   )}
@@ -4696,10 +4715,7 @@ export function CustomerOrderManagementView() {
                                 <div className="inline-flex items-center justify-center gap-1">
                                   <button
                                     type="button"
-                                    onClick={() => {
-                                      setStep1SubStep("1C");
-                                      setCurrentStep(3);
-                                    }}
+                                    onClick={() => handleEditGoodsRow(idx)}
                                     className="p-1 text-blue-600 hover:text-blue-800 rounded hover:bg-blue-50 dark:hover:bg-blue-950/40"
                                     title={tt("edit_item", "Edit Item in Step 1C")}
                                   >
@@ -5005,6 +5021,10 @@ function Step1BookingCustomer({
   onConfirmTruckAssignGoods,
   onReturnForCorrection,
   onCompleteGoodsEntry,
+  draftGoodsItem: propsDraftGoodsItem,
+  setDraftGoodsItem: propsSetDraftGoodsItem,
+  editingGoodsIdx: propsEditingGoodsIdx,
+  setEditingGoodsIdx: propsSetEditingGoodsIdx,
   saving
 }: {
   lang: ReturnType<typeof useActiveLanguage>;
@@ -5045,6 +5065,10 @@ function Step1BookingCustomer({
   onConfirmTruckAssignGoods?: () => void;
   onReturnForCorrection?: (stage: "1B" | "1C") => void;
   onCompleteGoodsEntry?: () => void;
+  draftGoodsItem?: CustomerOrderGoodsItem;
+  setDraftGoodsItem?: React.Dispatch<React.SetStateAction<CustomerOrderGoodsItem>>;
+  editingGoodsIdx?: number | null;
+  setEditingGoodsIdx?: React.Dispatch<React.SetStateAction<number | null>>;
   saving?: boolean;
 }) {
   const ctx = userContext.context;
@@ -5142,8 +5166,13 @@ function Step1BookingCustomer({
   };
 
   // Step 1C Goods Draft & Edit State (Voice note: enter once, save to table, repeat)
-  const [draftGoodsItem, setDraftGoodsItem] = useState<CustomerOrderGoodsItem>(defaultGoodsItem());
-  const [editingGoodsIdx, setEditingGoodsIdx] = useState<number | null>(null);
+  const [internalDraftGoodsItem, setInternalDraftGoodsItem] = useState<CustomerOrderGoodsItem>(defaultGoodsItem());
+  const [internalEditingGoodsIdx, setInternalEditingGoodsIdx] = useState<number | null>(null);
+
+  const draftGoodsItem = propsDraftGoodsItem ?? internalDraftGoodsItem;
+  const setDraftGoodsItem = propsSetDraftGoodsItem ?? setInternalDraftGoodsItem;
+  const editingGoodsIdx = propsEditingGoodsIdx !== undefined ? propsEditingGoodsIdx : internalEditingGoodsIdx;
+  const setEditingGoodsIdx = propsSetEditingGoodsIdx ?? setInternalEditingGoodsIdx;
 
   const handleDraftGoodsChange = (field: keyof CustomerOrderGoodsItem, value: any) => {
     setDraftGoodsItem((curr) => {
@@ -5162,11 +5191,6 @@ function Step1BookingCustomer({
         const empty = Number(field === "emptyWeight" ? value : updated.emptyWeight) || 0;
         updated.totalKg = String(gross);
         updated.netWeight = String(Math.max(0, gross - empty));
-      }
-      if (field === "quantity" || field === "rate") {
-        const q = Number(field === "quantity" ? value : updated.quantity) || 0;
-        const r = Number(field === "rate" ? value : updated.rate) || 0;
-        updated.finalAmount = String(q * r);
       }
       return updated;
     });
@@ -5197,8 +5221,6 @@ function Step1BookingCustomer({
     const gross = Number(draftGoodsItem.grossWeight) || (qty * kg);
     const empty = Number(draftGoodsItem.emptyWeight) || 0;
     const net = Math.max(0, gross - empty);
-    const rate = Number(draftGoodsItem.rate) || 0;
-    const finalAmt = String(qty * rate);
 
     const itemToSave: CustomerOrderGoodsItem = {
       ...draftGoodsItem,
@@ -5209,7 +5231,9 @@ function Step1BookingCustomer({
       grossWeight: String(gross),
       emptyWeight: String(empty),
       netWeight: String(net),
-      finalAmount: finalAmt
+      currency: draftGoodsItem.currency || "AED",
+      rate: "",
+      finalAmount: ""
     };
 
     setFormData((current) => {
@@ -6299,16 +6323,29 @@ function Step1BookingCustomer({
                   </span>
                 </div>
                 <p className="text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
-                  {tt("stage_1c_notification_desc", "Truck logistics verified. Record cargo manifest, size, weights, origin country, warehouse, and rate.")}
+                  {tt("stage_1c_notification_desc_updated", "Truck logistics verified. Record cargo manifest, size, packaging, and gross/tare weights.")}
                 </p>
               </div>
             </div>
-            {formData.truck_number ? (
-              <div className="hidden sm:flex flex-col items-end text-xs font-bold text-slate-700 dark:text-slate-300">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Assigned Truck</span>
-                <span className="font-mono text-emerald-700 dark:text-emerald-400 font-black">{formData.truck_number}</span>
-              </div>
-            ) : null}
+            <div className="flex items-center gap-2">
+              {onReturnForCorrection && (
+                <button
+                  type="button"
+                  onClick={() => onReturnForCorrection("1C")}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-800 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300 transition shadow-2xs"
+                  title={tt("return_to_truck_user_title", "Return to Truck User for correction")}
+                >
+                  <RotateCcw className="h-3.5 w-3.5 text-amber-600" />
+                  <span>{tt("return_to_truck_user", "Return to Truck User")}</span>
+                </button>
+              )}
+              {formData.truck_number ? (
+                <div className="hidden sm:flex flex-col items-end text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{tt("assigned_truck", "Assigned Truck")}</span>
+                  <span className="font-mono text-emerald-700 dark:text-emerald-400 font-black">{formData.truck_number}</span>
+                </div>
+              ) : null}
+            </div>
           </div>
 
           {/* Read-Only 1A & 1B Summary Badge Bar */}
@@ -6469,33 +6506,59 @@ function Step1BookingCustomer({
                 )}
               </div>
 
-              {/* Row 1: Goods Master Selection */}
-              <div>
-                <label className="block text-[10.5px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">
-                  {tt("goods_name_from_master", "Goods Name (from Goods Master or New Item)")} *
-                </label>
-                <SearchSelect
-                  label=""
-                  value={draftGoodsItem.goodsId}
-                  placeholder={tt("select_search_goods_ph", "Select or search goods from master...")}
-                  options={(goodsMasterList || []).map((g: any) => ({
-                    value: g.id,
-                    label: `${g.goods_name || g.name} ${g.chs_code ? `[CHS: ${g.chs_code}]` : ""}`,
-                    keywords: [g.goods_name, g.chs_code, g.category, g.variety].filter(Boolean).join(" ")
-                  }))}
-                  onValueChange={(goodsId) => {
-                    const found = (goodsMasterList || []).find((g: any) => g.id === goodsId);
-                    handleDraftGoodsChange("goodsId", goodsId);
-                    handleDraftGoodsChange("goodsName", found?.goods_name || found?.name || draftGoodsItem.goodsName);
-                    handleDraftGoodsChange("goodsChsCode", found?.chs_code || "");
-                  }}
-                  searchPlaceholder="Search goods..."
-                  emptyLabel="No goods found in master"
-                />
+              {/* Row 1: Goods Master Selection, Goods Name, CHS Code (3 items in a row) */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
+                    {tt("select_goods_master", "Goods Master")}
+                  </label>
+                  <SearchSelect
+                    label=""
+                    value={draftGoodsItem.goodsId}
+                    placeholder={tt("select_search_goods_ph", "Select or search goods from master...")}
+                    options={(goodsMasterList || []).map((g: any) => ({
+                      value: g.id,
+                      label: `${g.goods_name || g.name} ${g.chs_code ? `[CHS: ${g.chs_code}]` : ""}`,
+                      keywords: [g.goods_name, g.chs_code, g.category, g.variety].filter(Boolean).join(" ")
+                    }))}
+                    onValueChange={(goodsId) => {
+                      const found = (goodsMasterList || []).find((g: any) => g.id === goodsId);
+                      handleDraftGoodsChange("goodsId", goodsId);
+                      handleDraftGoodsChange("goodsName", found?.goods_name || found?.name || draftGoodsItem.goodsName);
+                      handleDraftGoodsChange("goodsChsCode", found?.chs_code || "");
+                    }}
+                    searchPlaceholder={tt("search_goods_ph", "Search goods...")}
+                    emptyLabel={tt("no_goods_in_master", "No goods found in master")}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
+                    {tt("goods_name", "Goods Name")} *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Basmati Rice / Steel Coils"
+                    value={draftGoodsItem.goodsName || ""}
+                    onChange={(e) => handleDraftGoodsChange("goodsName", e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
+                    {tt("chs_code", "CHS / HS Code")}
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 1006.30 / 7208.51"
+                    value={draftGoodsItem.goodsChsCode || ""}
+                    onChange={(e) => handleDraftGoodsChange("goodsChsCode", e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
               </div>
 
               {/* Row 2: Size / Dimensions, Brand / Quality, Origin Country */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 <div>
                   <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
                     {tt("goods_size_dim", "Size / Dimension")}
@@ -6537,8 +6600,8 @@ function Step1BookingCustomer({
                 </div>
               </div>
 
-              {/* Row 3: Qty Unit, Quantity, KG Per Qty, Gross, Empty, Net Wt (Auto) */}
-              <div className="grid grid-cols-2 sm:grid-cols-6 gap-2">
+              {/* Row 3: Packaging & Unit Counts */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 <div>
                   <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("qty_unit", "Qty Unit")}</label>
                   <select
@@ -6559,7 +6622,7 @@ function Step1BookingCustomer({
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">Quantity *</label>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("quantity", "Quantity")} *</label>
                   <input
                     type="number"
                     min="0"
@@ -6571,7 +6634,7 @@ function Step1BookingCustomer({
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">KG / Unit *</label>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("kg_per_unit", "KG / Unit")} *</label>
                   <input
                     type="number"
                     min="0"
@@ -6581,10 +6644,13 @@ function Step1BookingCustomer({
                     placeholder="50"
                   />
                 </div>
+              </div>
 
+              {/* Row 4: Weight Metrics */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 <div>
                   <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
-                    Gross Wt (KG) *
+                    {tt("gross_wt_kg", "Gross Wt (KG)")} *
                   </label>
                   <input
                     type="number"
@@ -6598,7 +6664,7 @@ function Step1BookingCustomer({
 
                 <div>
                   <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
-                    Empty / Tare (KG)
+                    {tt("empty_tare_kg", "Empty / Tare (KG)")}
                   </label>
                   <input
                     type="number"
@@ -6612,65 +6678,17 @@ function Step1BookingCustomer({
 
                 <div>
                   <label className="block text-[10px] font-bold uppercase text-emerald-700 dark:text-emerald-400 mb-0.5">
-                    Net Wt (Auto) *
+                    {tt("net_wt_auto", "Net Wt (Auto)")} *
                   </label>
-                  <div className="flex items-center gap-1 rounded-xl border border-emerald-300 bg-emerald-50/90 px-2.5 py-2 text-xs font-mono font-black text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 truncate" title="Gross - Empty Weight">
-                    <Scale className="h-3 w-3 text-emerald-600 shrink-0" />
+                  <div className="flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50/90 px-2.5 py-2 text-xs font-mono font-black text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 truncate" title={tt("gross_minus_empty", "Gross - Empty Weight")}>
+                    <Scale className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
                     <span>{(Number(draftGoodsItem.netWeight) || 0).toLocaleString()} kg</span>
                   </div>
                 </div>
               </div>
 
-              {/* Row 4: Pricing / Valuation & Inspection Photo */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
-                    {tt("currency", "Currency")}
-                  </label>
-                  <select
-                    value={draftGoodsItem.currency || "AED"}
-                    onChange={(e) => handleDraftGoodsChange("currency", e.target.value)}
-                    className={selectClass}
-                  >
-                    <option value="AED">AED</option>
-                    <option value="USD">USD</option>
-                    <option value="PKR">PKR</option>
-                    <option value="EUR">EUR</option>
-                    <option value="CNY">CNY</option>
-                    <option value="AFN">AFN</option>
-                    <option value="IRR">IRR</option>
-                    <option value="SAR">SAR</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
-                    {tt("rate_per_unit", "Rate / Unit")}
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="0.00"
-                    value={draftGoodsItem.rate || ""}
-                    onChange={(e) => handleDraftGoodsChange("rate", e.target.value)}
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
-                    {tt("final_amount", "Final Amount")}
-                  </label>
-                  <input
-                    type="text"
-                    readOnly
-                    value={`${draftGoodsItem.currency || "AED"} ${(Number(draftGoodsItem.finalAmount) || 0).toLocaleString()}`}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-100/80 px-2.5 py-2 text-xs font-mono font-bold text-slate-800 dark:border-slate-800 dark:bg-slate-850 dark:text-slate-200 cursor-not-allowed truncate"
-                  />
-                </div>
-              </div>
-
               {/* Photo Upload & Add/Update Buttons */}
-              <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-emerald-200/50 dark:border-emerald-900/40">
+              <div className="flex flex-wrap items-center justify-between gap-2.5 pt-2.5 border-t border-emerald-200/50 dark:border-emerald-900/40">
                 <div className="flex items-center gap-2">
                   <label className="text-[10.5px] font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1">
                     <Sparkles className="h-3.5 w-3.5 text-blue-600" />
@@ -6683,7 +6701,7 @@ function Step1BookingCustomer({
                     className="text-[11px] text-slate-500 file:mr-1.5 file:py-0.5 file:px-2 file:rounded-md file:border-0 file:text-[11px] file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-950/40 dark:file:text-blue-300"
                   />
                   {draftGoodsItem.photoUrl ? (
-                    <span className="text-[10px] text-emerald-600 font-bold">✓ Attached</span>
+                    <span className="text-[10px] text-emerald-600 font-bold">✓ {tt("attached", "Attached")}</span>
                   ) : null}
                 </div>
 
@@ -6707,222 +6725,6 @@ function Step1BookingCustomer({
                   </button>
                 </div>
               </div>
-            </div>
-
-            {/* Live Compact Manifest Table */}
-            <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="border-b border-slate-200 bg-slate-50/90 text-[10px] font-black uppercase tracking-wider text-slate-600 dark:border-slate-800 dark:bg-slate-850 dark:text-slate-300">
-                      <th className="py-2.5 px-3">#</th>
-                      <th className="py-2.5 px-3">{tt("goods_name_chs", "Goods Name & CHS")}</th>
-                      <th className="py-2.5 px-3">{tt("size_brand_origin", "Size / Brand / Origin")}</th>
-                      <th className="py-2.5 px-3">{tt("warehouse", "Warehouse")}</th>
-                      <th className="py-2.5 px-3 text-right">{tt("qty_unit", "Qty & Unit")}</th>
-                      <th className="py-2.5 px-3 text-right">{tt("gross_wt", "Gross Wt")}</th>
-                      <th className="py-2.5 px-3 text-right">{tt("empty_wt", "Empty Wt")}</th>
-                      <th className="py-2.5 px-3 text-right text-emerald-700 dark:text-emerald-400">{tt("net_wt", "Net Wt")}</th>
-                      <th className="py-2.5 px-3 text-right">{tt("rate_amount", "Rate & Amount")}</th>
-                      <th className="py-2.5 px-2 text-center">{tt("photo", "Photo")}</th>
-                      <th className="py-2.5 px-3 text-center">{tt("actions", "Actions")}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900">
-                    {(formData.goods_items || []).filter((g) => g.goodsName || g.quantity).length === 0 ? (
-                      <tr>
-                        <td colSpan={11} className="py-6 text-center text-slate-400 dark:text-slate-500 text-xs">
-                          {tt("no_goods_added_yet", "No goods items added to manifest yet. Enter details above and click 'Add to Manifest'.")}
-                        </td>
-                      </tr>
-                    ) : (
-                      (formData.goods_items || [])
-                        .filter((g) => g.goodsName || g.quantity)
-                        .map((item, idx) => {
-                          const gross = Number(item.grossWeight || item.totalKg) || 0;
-                          const empty = Number(item.emptyWeight) || 0;
-                          const net = Number(item.netWeight) || Math.max(0, gross - empty);
-                          const amt = Number(item.finalAmount) || ((Number(item.quantity) || 0) * (Number(item.rate) || 0));
-                          return (
-                            <tr
-                              key={idx}
-                              className={`hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition ${
-                                editingGoodsIdx === idx ? "bg-emerald-50/40 dark:bg-emerald-950/20" : ""
-                              }`}
-                            >
-                              <td className="py-2.5 px-3 font-mono text-[11px] font-bold text-slate-500">
-                                {idx + 1}
-                              </td>
-                              <td className="py-2.5 px-3 font-bold text-slate-800 dark:text-slate-100">
-                                <div className="truncate max-w-[150px]">{item.goodsName || "General Goods"}</div>
-                                {item.goodsChsCode ? (
-                                  <span className="text-[10px] font-mono text-slate-400">CHS: {item.goodsChsCode}</span>
-                                ) : null}
-                              </td>
-                              <td className="py-2.5 px-3 text-[11px] text-slate-600 dark:text-slate-300">
-                                <div>{item.size || "—"}</div>
-                                <div className="text-[10px] text-slate-400">
-                                  {[item.brandQuality, item.originCountry].filter(Boolean).join(" • ") || "—"}
-                                </div>
-                              </td>
-                              <td className="py-2.5 px-3 text-[11px] text-slate-600 dark:text-slate-300">
-                                <div className="truncate max-w-[140px] font-medium">{item.warehouseName || "Warehouse"}</div>
-                                <div className="text-[10px] text-slate-400 truncate max-w-[140px]">{item.warehouseAddressText || "—"}</div>
-                              </td>
-                              <td className="py-2.5 px-3 text-right font-mono font-bold text-slate-800 dark:text-slate-200">
-                                {(Number(item.quantity) || 0).toLocaleString()} <span className="text-[10px] text-slate-500 font-normal">{item.unit || "Bags"}</span>
-                              </td>
-                              <td className="py-2.5 px-3 text-right font-mono text-slate-700 dark:text-slate-300">
-                                {gross.toLocaleString()} kg
-                              </td>
-                              <td className="py-2.5 px-3 text-right font-mono text-slate-500 dark:text-slate-400">
-                                {empty.toLocaleString()} kg
-                              </td>
-                              <td className="py-2.5 px-3 text-right font-mono font-black text-emerald-700 dark:text-emerald-400">
-                                {net.toLocaleString()} kg
-                              </td>
-                              <td className="py-2.5 px-3 text-right font-mono text-slate-800 dark:text-slate-200">
-                                {amt > 0 ? (
-                                  <>
-                                    <span className="text-[10px] text-slate-400 mr-1">{item.currency || "AED"}</span>
-                                    <span className="font-bold">{amt.toLocaleString()}</span>
-                                  </>
-                                ) : (
-                                  <span className="text-slate-400">—</span>
-                                )}
-                              </td>
-                              <td className="py-2.5 px-2 text-center">
-                                {item.photoUrl ? (
-                                  <a
-                                    href={item.photoUrl}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="inline-block"
-                                    title={tt("view_attached_photo", "View attached photo")}
-                                  >
-                                    <img
-                                      src={item.photoUrl}
-                                      alt={tt("goods_inspection", "Goods inspection")}
-                                      className="h-6 w-6 rounded-md object-cover border border-slate-200 dark:border-slate-700 hover:scale-110 transition shadow-2xs mx-auto"
-                                    />
-                                  </a>
-                                ) : (
-                                  <span className="text-slate-300 dark:text-slate-600 text-[10px]">—</span>
-                                )}
-                              </td>
-                              <td className="py-2.5 px-3 text-center">
-                                <div className="flex items-center justify-center gap-1">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleEditGoodsRow(idx)}
-                                    className="p-1 rounded text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition"
-                                    title={tt("edit_item", "Edit Item")}
-                                  >
-                                    <Pencil className="h-3.5 w-3.5" />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => removeGoodsItem(idx)}
-                                    className="p-1 rounded text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition"
-                                    title={tt("remove_item", "Remove Item")}
-                                  >
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        })
-                    )}
-                  </tbody>
-                  {/* Totals Row */}
-                  <tfoot className="border-t-2 border-slate-200 bg-slate-50/90 font-bold text-slate-800 dark:border-slate-800 dark:bg-slate-850 dark:text-slate-200 text-xs">
-                    <tr>
-                      <td colSpan={4} className="py-2.5 px-3 text-right uppercase tracking-wider text-[10px] text-slate-500 font-bold">
-                        {tt("manifest_totals", "Manifest Totals:")}
-                      </td>
-                      <td className="py-2.5 px-3 text-right font-mono font-black text-slate-900 dark:text-white">
-                        {totalGoodsQuantity.toLocaleString()}
-                      </td>
-                      <td className="py-2.5 px-3 text-right font-mono font-bold text-slate-700 dark:text-slate-300">
-                        {totalGoodsGrossKg.toLocaleString()} kg
-                        <div className="text-[9.5px] text-slate-400 font-normal">({totalGoodsGrossMt} MT)</div>
-                      </td>
-                      <td className="py-2.5 px-3 text-right font-mono font-bold text-slate-500 dark:text-slate-400">
-                        {totalGoodsEmptyKg.toLocaleString()} kg
-                      </td>
-                      <td className="py-2.5 px-3 text-right font-mono font-black text-emerald-700 dark:text-emerald-400 text-[13px]">
-                        {totalGoodsNetKg.toLocaleString()} kg
-                        <div className="text-[9.5px] font-bold text-emerald-600 dark:text-emerald-400">({totalGoodsNetMt} MT)</div>
-                      </td>
-                      <td className="py-2.5 px-3 text-right font-mono font-black text-blue-700 dark:text-blue-400">
-                        {totalGoodsAmount > 0 ? (
-                          <>
-                            <span className="text-[10px] text-slate-400 mr-1">Total</span>
-                            {totalGoodsAmount.toLocaleString()}
-                          </>
-                        ) : "—"}
-                      </td>
-                      <td colSpan={2}></td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-            </div>
-          </div>
-
-          {/* Stage 1C Action Footer (4 Operational Choices) */}
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => selectSub("1B")}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 transition"
-              >
-                <ChevronLeft className="h-4 w-4" />
-                <span>{tt("back_to_1b", "Back to 1B (Truck)")}</span>
-              </button>
-              <button
-                type="button"
-                onClick={onSaveDraft}
-                disabled={saving}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-3.5 py-2 text-xs font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300 transition shadow-2xs"
-              >
-                {saving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-                <span>{tt("save_draft", "Save Draft")}</span>
-              </button>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2">
-              {onReturnForCorrection ? (
-                <button
-                  type="button"
-                  onClick={() => onReturnForCorrection("1C")}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50 px-3.5 py-2 text-xs font-bold text-amber-800 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300 transition shadow-2xs"
-                >
-                  <RotateCcw className="h-3.5 w-3.5" />
-                  <span>{tt("return_to_truck_user", "Return to Truck User")}</span>
-                </button>
-              ) : null}
-
-              <button
-                type="button"
-                onClick={addGoodsItem}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 px-3.5 py-2 text-xs font-bold text-emerald-800 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 transition shadow-2xs"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                <span>{tt("add_item", "+ Add Item")}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={onCompleteGoodsEntry}
-                disabled={saving}
-                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-xs font-black text-white shadow-md shadow-emerald-600/30 hover:from-emerald-700 hover:to-teal-700 transition"
-              >
-                {saving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                <span>{tt("complete_goods_entry", "Complete Goods Entry")}</span>
-              </button>
             </div>
           </div>
         </div>
