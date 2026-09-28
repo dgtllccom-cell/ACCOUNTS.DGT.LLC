@@ -1,4 +1,4 @@
-import { withLocalPg } from "@/lib/db/local-postgres";
+import { withLocalPg, getSharedPg } from "@/lib/db/local-postgres";
 
 type JsonRecord = Record<string, unknown>;
 
@@ -33,7 +33,9 @@ export async function writeRecordChangeHistory(input: {
   };
 
   try {
-    const viaPg = await withLocalPg(async (sql) => {
+    // Independent lookups + one auto-committed INSERT (no transaction) → the shared pool is safe
+    // and avoids a fresh remote connection (~2–5 s) on every audited save.
+    const write = async (sql: any) => {
       let validActorId: string | null = null;
       if (row.actor_id) {
         const profiles = await sql`SELECT id FROM public.profiles WHERE id = ${row.actor_id}::uuid LIMIT 1`;
@@ -55,7 +57,9 @@ export async function writeRecordChangeHistory(input: {
         VALUES (${row.record_table}, ${row.record_id}::uuid, ${row.action}, ${validCountryId}::uuid, ${validBranchId}::uuid, ${validActorId}::uuid, ${row.approval_request_id}::uuid, ${beforeData === null ? null : sql.json(beforeData as any)}, ${afterData === null ? null : sql.json(afterData as any)})
       `;
       return true;
-    });
+    };
+    const pool = getSharedPg();
+    const viaPg = pool ? await write(pool) : await withLocalPg(write);
     if (viaPg) return;
   } catch (err) {
     console.warn("[RECORD-CHANGE-HISTORY] Safe-warning writing audit log:", err);
