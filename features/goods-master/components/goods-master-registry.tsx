@@ -224,7 +224,7 @@ export function GoodsMasterRegistry() {
     try {
       const statusParam = statusFilter === "all" ? "" : statusFilter;
       const res = await apiGet<{ goods: GoodsRecord[]; summary: typeof summary }>(
-        `/api/erp/goods-master?limit=500&status=${statusParam}`
+        `/api/erp/goods-master?limit=500&status=${statusParam}&lang=${encodeURIComponent(lang)}`
       );
       const list = res.goods || [];
       setGoods(list);
@@ -254,7 +254,7 @@ export function GoodsMasterRegistry() {
     loadGoods();
     loadCountries();
     loadMasterParameters();
-  }, [statusFilter]);
+  }, [statusFilter, lang]);
 
   // Toggle Row Expansion
   function toggleRowExpand(goodsItem: GoodsRecord) {

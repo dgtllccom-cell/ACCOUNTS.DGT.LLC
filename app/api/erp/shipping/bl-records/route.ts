@@ -247,7 +247,7 @@ export async function GET(request: NextRequest) {
     let recordsQuery = supabase
       .from("shipping_bl_records")
       .select(
-        "id, country_id, country_branch_id, city_branch_id, shipping_line_name, shipping_line_id, clearing_agent_id, bl_number, container_number, vessel_name, voyage_number, loading_port, discharge_port, eta, etd, shipment_status, account_number, debit, credit, currency_code, purchase_order_id, sales_order_id, loading_record_id, roznamcha_entry_id, ledger_id, created_at, countries(name, iso2, currency_code), country_branches(name, code), city_branches(name, code, city_name), ledgers(code, name, currency), profiles(full_name)"
+        "id, country_id, country_branch_id, city_branch_id, shipping_line_name, shipping_line_id, clearing_agent_id, bl_number, container_number, vessel_name, voyage_number, loading_port, discharge_port, eta, etd, shipment_status, account_number, debit, credit, currency_code, purchase_order_id, sales_order_id, loading_record_id, roznamcha_entry_id, ledger_id, report_payload, created_at, countries(name, iso2, currency_code), country_branches(name, code), city_branches(name, code, city_name), ledgers(code, name, currency), profiles(full_name)"
       )
       .is("deleted_at", null)
       .order("created_at", { ascending: false });
@@ -481,9 +481,11 @@ export async function PATCH(request: NextRequest) {
     });
 
     const reportPayload = before.report_payload || {};
+    const incomingPayload = body.reportPayload || {};
     const updatedReportPayload = {
       ...reportPayload,
-      carrierRemarks: remarks || reportPayload.carrierRemarks || null
+      ...incomingPayload,
+      carrierRemarks: remarks !== undefined ? remarks : (incomingPayload.carrierRemarks ?? reportPayload.carrierRemarks ?? null)
     };
 
     const effectiveEta = eta !== undefined ? eta : before.eta;
@@ -612,6 +614,68 @@ export async function PATCH(request: NextRequest) {
     }
 
     return apiOk({ record: updated });
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const session = await requireErpSession();
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json(
+        { ok: false, error: { message: t(session.preferredLanguage, "ble.err_record_id_required", "Record ID is required") } },
+        { status: 400 }
+      );
+    }
+
+    const supabase = createSupabaseAdminClient() as any;
+
+    const { data: before, error: fetchError } = await supabase
+      .from("shipping_bl_records")
+      .select("*")
+      .eq("id", id)
+      .is("deleted_at", null)
+      .single();
+
+    if (fetchError || !before) {
+      return NextResponse.json(
+        { ok: false, error: { message: t(session.preferredLanguage, "ble.err_record_not_found", "Record not found") } },
+        { status: 404 }
+      );
+    }
+
+    authorizeApiScope(session, {
+      resource: "shipping_records",
+      action: "delete",
+      countryId: before.country_id,
+      countryBranchId: before.country_branch_id,
+      cityBranchId: before.city_branch_id
+    });
+
+    const now = new Date().toISOString();
+    const { error: deleteError } = await supabase
+      .from("shipping_bl_records")
+      .update({ deleted_at: now, updated_at: now })
+      .eq("id", id);
+
+    if (deleteError) {
+      return NextResponse.json({ ok: false, error: { message: deleteError.message } }, { status: 400 });
+    }
+
+    await writeAuditLog({
+      action: "shipping_bl_records.delete",
+      entityTable: "shipping_bl_records",
+      entityId: id,
+      before,
+      after: { deleted_at: now },
+      ipAddress: request.headers.get("x-forwarded-for") ?? null
+    });
+
+    return apiOk({ id, deleted: true });
   } catch (error) {
     return handleApiError(error);
   }

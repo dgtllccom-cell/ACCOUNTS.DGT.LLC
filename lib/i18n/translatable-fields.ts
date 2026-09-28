@@ -43,6 +43,9 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
   ledgers: [{ field: "name", mode: "transliterate" }],
   financial_periods: [{ field: "period_name", mode: "transliterate" }],
 
+  // (goods / goods_variations are defined once, further below — a second copy here was a
+  //  duplicate object key: TS1117, and the later definition was the one in effect anyway.)
+
   // ── Locations (place names → transliterate) ──
   countries: [{ field: "name", mode: "transliterate" }],
   states_provinces: [{ field: "name", mode: "transliterate" }],

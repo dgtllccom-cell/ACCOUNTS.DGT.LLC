@@ -42,26 +42,30 @@ export async function GET(request: NextRequest) {
       const orig = goods.map((g: any) => ({
         id: g.id,
         goods_name: g.goods_name,
-        variations: (g.variations || []).map((v: any) => ({ id: v.id, size: v.size, brand: v.brand, variety: v.variety })),
+        category: g.category,
+        extra_details: g.extra_details,
+        variations: (g.variations || []).map((v: any) => ({ id: v.id, size: v.size, brand: v.brand, variety: v.variety, extra_details: v.extra_details })),
       }));
       const origById = new Map(orig.map((g) => [g.id, g]));
       const origVarById = new Map<string, any>();
       for (const g of orig) for (const v of g.variations) origVarById.set(v.id, v);
 
-      goods = await localizeRecordNames<any>(goods, "goods", "goods_name", lang).catch(() => goods);
+      goods = await localizeRecordFields<any>(goods, "goods", ["goods_name", "category", "extra_details"], lang).catch(() => goods);
 
       const variationRows = goods.flatMap((g: any) =>
-        Array.isArray(g.variations) ? g.variations.map((v: any) => ({ id: v.id, size: v.size, brand: v.brand, variety: v.variety })) : [],
+        Array.isArray(g.variations) ? g.variations.map((v: any) => ({ id: v.id, size: v.size, brand: v.brand, variety: v.variety, extra_details: v.extra_details })) : [],
       );
       const locVarById = new Map<string, any>();
       if (variationRows.length) {
-        const localizedVars = await localizeRecordFields(variationRows, "goods_variations", ["size", "brand", "variety"], lang, { noPhrase: true }).catch(() => variationRows);
+        const localizedVars = await localizeRecordFields(variationRows, "goods_variations", ["size", "brand", "variety", "extra_details"], lang, { noPhrase: true }).catch(() => variationRows);
         for (const v of localizedVars as any[]) locVarById.set(v.id, v);
       }
 
       goods = goods.map((g: any) => ({
         ...g,
         goods_name_original: origById.get(g.id)?.goods_name ?? g.goods_name,
+        category_original: origById.get(g.id)?.category ?? g.category,
+        extra_details_original: origById.get(g.id)?.extra_details ?? g.extra_details,
         variations: Array.isArray(g.variations)
           ? g.variations.map((v: any) => {
               const lv = locVarById.get(v.id);

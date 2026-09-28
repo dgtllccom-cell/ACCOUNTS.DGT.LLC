@@ -171,12 +171,13 @@ export class GoodsRepository {
     return withStats(data, variations) as GoodsRow;
   }
 
-  async checkChsCodeExists(chsCode: string, excludeId?: string) {
+  async checkChsCodeExists(chsCode: string, excludeId?: string, goodsName?: string) {
     const clean = chsCode.trim();
     const viaPg = await withLocalPg(async (sql) => {
+      const nameClean = goodsName ? goodsName.trim().toLowerCase() : null;
       const rows = excludeId
-        ? await sql`SELECT id FROM public.goods WHERE chs_code = ${clean} AND deleted_at IS NULL AND id != ${excludeId}::uuid`
-        : await sql`SELECT id FROM public.goods WHERE chs_code = ${clean} AND deleted_at IS NULL`;
+        ? await sql`SELECT id FROM public.goods WHERE chs_code = ${clean} ${nameClean ? sql`AND lower(trim(goods_name)) = ${nameClean}` : sql``} AND deleted_at IS NULL AND id != ${excludeId}::uuid`
+        : await sql`SELECT id FROM public.goods WHERE chs_code = ${clean} ${nameClean ? sql`AND lower(trim(goods_name)) = ${nameClean}` : sql``} AND deleted_at IS NULL`;
       return rows.length > 0;
     });
     if (viaPg !== null) return viaPg;
@@ -184,6 +185,7 @@ export class GoodsRepository {
     const supabase = createSupabaseAdminClient() as any;
     let query = supabase.from("goods").select("id").eq("chs_code", clean).is("deleted_at", null);
     if (excludeId) query = query.neq("id", excludeId);
+    if (goodsName) query = query.eq("goods_name", goodsName.trim());
     const { data, error } = await query;
     if (error) throw new Error(error.message);
     return Array.isArray(data) && data.length > 0;
