@@ -500,7 +500,9 @@ export class CompaniesRepository {
     const localDbUrl = getDbUrl();
 
     if (localDbUrl) {
-      const localSql = postgres(localDbUrl, { max: 1, prepare: false });
+      // A single auto-committed UPDATE — borrowed from the shared pool (fresh connection ≈ 2–5 s).
+      const localSql = getSharedPg() ?? postgres(localDbUrl, { max: 1, prepare: false });
+      const pooled = localSql === getSharedPg();
       try {
         const rows = await localSql`
           UPDATE public.companies SET
@@ -535,7 +537,7 @@ export class CompaniesRepository {
       } catch (err) {
         console.error("Direct postgres update error:", err);
       } finally {
-        await localSql.end({ timeout: 5 });
+        if (!pooled) await localSql.end({ timeout: 5 });
       }
     }
 
@@ -574,9 +576,15 @@ export class CompaniesRepository {
     }
     if (!Object.keys(patch).length) return;
     patch.updated_at = new Date().toISOString();
-    await withLocalPg(async (sql) => {
-      await sql`UPDATE public.companies SET ${sql(patch)} WHERE id = ${id}::uuid AND deleted_at IS NULL`;
-    });
+    // One auto-committed statement — safe on the shared pool (no session state / transaction).
+    const pool = getSharedPg();
+    if (pool) {
+      await pool`UPDATE public.companies SET ${pool(patch)} WHERE id = ${id}::uuid AND deleted_at IS NULL`;
+    } else {
+      await withLocalPg(async (sql) => {
+        await sql`UPDATE public.companies SET ${sql(patch)} WHERE id = ${id}::uuid AND deleted_at IS NULL`;
+      });
+    }
   }
 
   async softDelete(id: string) {

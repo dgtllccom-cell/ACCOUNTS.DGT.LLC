@@ -26,6 +26,10 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     const id = uuidSchema.parse(rawId);
     const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
     await assertCompanyAccess(session, id);
+    // Company 360 view needs only the aggregated references — skip the legacy profile work.
+    if (request.nextUrl.searchParams.get("view") === "360") {
+      return apiOk({ company360: await getCompany360(session, id) });
+    }
 
     let company = await companiesService.getById(id);
     if (!company) return apiOk({ profile: null });
@@ -97,8 +101,6 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
         })),
         relatedAccounts: relatedAccounts || [],
       },
-      // Company 360 — linked authoritative records by reference (read-only, scope-clamped).
-      company360: request.nextUrl.searchParams.get("view") === "360" ? await getCompany360(session, id) : undefined,
     });
   } catch (error) {
     return handleApiError(error);
