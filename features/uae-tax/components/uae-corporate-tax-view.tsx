@@ -171,7 +171,7 @@ function ReturnDetail({ s, id, statusLabel, onClose, setError, setNotice }: Comm
 
   const run = async (fn: () => Promise<any>, ok: string) => {
     setBusy(true); setError(null); setNotice(null);
-    try { await fn(); setNotice(ok); await load(); }
+    try { await fn(); await load(); setNotice(ok); }
     catch (e: any) {
       const missing = e?.details?.missing ?? e?.body?.error?.details?.missing;
       setError((e instanceof Error ? e.message : String(e)) + (Array.isArray(missing) ? ` (${missing.map((k: string) => s.t(`doc_${k}`, k)).join(", ")})` : ""));
