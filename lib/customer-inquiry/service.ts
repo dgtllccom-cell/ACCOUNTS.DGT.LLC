@@ -47,7 +47,7 @@ export function mapInquiryError(error: unknown): { code: string; message: string
 }
 
 /** $P → $1..$n renumberer (same helper the User Tasks service uses). */
-function build(sqlText: string, params: any[], startAt = 1, fixed: any[] = []): { text: string; values: any[] } {
+export function build(sqlText: string, params: any[], startAt = 1, fixed: any[] = []): { text: string; values: any[] } {
   let i = startAt - 1;
   const text = sqlText.replace(/\$P/g, () => `$${++i}`);
   const used = i - (startAt - 1);
@@ -56,7 +56,7 @@ function build(sqlText: string, params: any[], startAt = 1, fixed: any[] = []): 
 }
 
 /** Server-side visibility predicate for `customer_inquiries i` (uses $P placeholders). */
-function visibilityClause(session: ErpSession): { text: string; params: any[] } {
+export function visibilityClause(session: ErpSession): { text: string; params: any[] } {
   if (session.isSuperAdmin) return { text: "true", params: [] };
   const s = inquiryScope(session);
   const clauses = ["i.created_by = $P", "i.assigned_to = $P"];
@@ -347,13 +347,13 @@ export async function getInquiry(session: ErpSession, id: string, opts: { lang: 
   });
 }
 
-async function loadRow(sql: any, id: string): Promise<InquiryRow> {
+export async function loadRow(sql: any, id: string): Promise<InquiryRow> {
   const rows = (await sql`select * from public.customer_inquiries where id = ${id}::uuid and deleted_at is null`) as unknown as any[];
   if (!rows.length) throw new ApiClientError("Inquiry not found.", { status: 404, code: "NOT_FOUND" });
   return rows[0] as InquiryRow;
 }
 
-async function event(sql: any, inquiryId: string, type: string, payload: { note?: string; from?: string; to?: string; meta?: any }, session: ErpSession) {
+export async function event(sql: any, inquiryId: string, type: string, payload: { note?: string; from?: string; to?: string; meta?: any }, session: ErpSession) {
   await sql`
     insert into public.customer_inquiry_events (inquiry_id, actor_id, actor_name, event_type, from_status, to_status, note, meta)
     values (${inquiryId}::uuid, ${session.userId}::uuid, ${session.fullName ?? session.email ?? null},

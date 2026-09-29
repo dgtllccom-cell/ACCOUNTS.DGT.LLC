@@ -277,9 +277,6 @@ function RegisterDeviceModal({ s, onClose, onRegistered }: { s: ReturnType<typeo
     }
   };
 
-  const L = ({ label, children }: { label: string; children: React.ReactNode }) => (
-    <div><label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{label}</label>{children}</div>
-  );
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4" dir={s.dir}>
@@ -325,4 +322,9 @@ function RegisterDeviceModal({ s, onClose, onRegistered }: { s: ReturnType<typeo
       </div>
     </div>
   );
+}
+
+/** Label + control. Module-level so inputs keep focus while typing. */
+function L({ label, children }: { label: string; children: React.ReactNode }) {
+  return <div><label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{label}</label>{children}</div>;
 }

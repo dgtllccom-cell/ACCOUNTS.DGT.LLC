@@ -829,6 +829,29 @@ export function EmailWorkspace({ session }: EmailWorkspaceProps) {
                     <Forward className="w-3.5 h-3.5" />
                     <span>{s.t('forward', 'Forward')}</span>
                   </button>
+                  <button
+                    data-testid="email-to-followup"
+                    onClick={() => {
+                      // Hand the email to Conversation Intelligence (important dates / actions → tasks). Nothing is sent.
+                      try {
+                        sessionStorage.setItem('ci_prefill', JSON.stringify({
+                          channel: 'email',
+                          text: `Subject: ${activeEmail.subject}
+From: ${activeEmail.senderName} <${activeEmail.senderEmail}>
+Date: ${activeEmail.fullDate}
+
+${activeEmail.body}`,
+                          sourceRoute: '/dashboard/messages/email',
+                          sourceLabel: `${activeEmail.subject} — ${activeEmail.senderEmail}`,
+                        }));
+                      } catch { /* storage unavailable: the page opens empty */ }
+                      window.location.href = '/dashboard/customer-inquiries/intelligence?from=email';
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors"
+                  >
+                    <CheckCheck className="w-3.5 h-3.5" />
+                    <span>{s.t('to_followup', 'Create follow-up / task')}</span>
+                  </button>
                 </div>
 
                 <div className="flex items-center gap-1">

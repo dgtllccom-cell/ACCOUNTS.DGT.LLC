@@ -3255,6 +3255,8 @@ export const HEADER_TRANSLATIONS: Record<string, Row> = {
   "UAE WPS & SIF": { ur: "یو اے ای WPS اور SIF", ar: "نظام حماية الأجور وملف SIF - الإمارات", fa: "WPS و SIF امارات", ps: "د امارات WPS او SIF" },
   "EMPLOYEE PERFORMANCE & APPRAISAL": { ur: "ملازم کی کارکردگی اور جائزہ", ar: "أداء الموظف والتقييم", fa: "عملکرد و ارزیابی کارمند", ps: "د کارکوونکي فعالیت او ارزونه" },
   "CORPORATE TAX": { ur: "کارپوریٹ ٹیکس", ar: "ضريبة الشركات", fa: "مالیات شرکت", ps: "د شرکت مالیه" },
+  "MEETING & CONVERSATION INTELLIGENCE": { ur: "میٹنگ اور گفتگو انٹیلیجنس", ar: "ذكاء الاجتماعات والمحادثات", fa: "هوش جلسات و گفتگوها", ps: "د غونډو او خبرو استخبارات" },
+  "OLD LEAD REACTIVATION": { ur: "پرانی لیڈز کو دوبارہ فعال کرنا", ar: "إعادة تنشيط العملاء المحتملين القدامى", fa: "فعال‌سازی مجدد سرنخ‌های قدیمی", ps: "د زړو لیډونو بیا فعالول" },
 };
 
 /** Normalize an English header for lookup: trim, collapse whitespace, uppercase. */
