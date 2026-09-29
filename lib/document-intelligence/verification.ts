@@ -88,7 +88,7 @@ export async function verifyIntakeJob(jobId: string, scope: IntakeScope, session
       `) as any[];
       const invPos = (await sql`
         SELECT purchase_order_no, country_id, country_branch_id, city_branch_id FROM public.purchase_orders
-        WHERE deleted_at IS NULL AND (lower(form_data->'form'->>'billNo') = lower(${inv}) OR lower(purchase_contract_no) = lower(${inv}))
+        WHERE deleted_at IS NULL AND (lower(form_data->'form'->>'billNo') = lower(${inv}) OR lower(form_data->'form'->>'manualBillNo') = lower(${inv}) OR lower(purchase_contract_no) = lower(${inv}))
         LIMIT 5
       `) as any[];
       const hits = [
@@ -144,7 +144,7 @@ export async function verifyIntakeJob(jobId: string, scope: IntakeScope, session
       add(!lines.length || oQty === null ? { code: "quantity_mismatch", status: "not_applicable" }
         : { code: "quantity_mismatch", status: Math.abs(dQty - oQty) < 0.0001 ? "pass" : "warning", expected: fmt(oQty), found: fmt(dQty) });
       // unit rate (line by line, by position)
-      const pairs = lines.map((l, i) => [num(l.unit_price), num(goods[i]?.priceRateC1 ?? goods[i]?.unitPrice ?? goods[i]?.rate)] as const).filter(([a, b]) => a !== null && b !== null);
+      const pairs = lines.map((l, i) => [num(l.unit_price), num(goods[i]?.priceRateC1 ?? goods[i]?.coursePrice ?? goods[i]?.unitPrice ?? goods[i]?.rate)] as const).filter(([a, b]) => a !== null && b !== null);
       const off = pairs.filter(([a, b]) => relDiff(a as number, b as number) > 0.005);
       add(!pairs.length ? { code: "unit_rate_mismatch", status: "not_applicable" }
         : { code: "unit_rate_mismatch", status: off.length ? "warning" : "pass", expected: pairs.map((p) => fmt(p[1])).join(" / "), found: pairs.map((p) => fmt(p[0])).join(" / ") });
