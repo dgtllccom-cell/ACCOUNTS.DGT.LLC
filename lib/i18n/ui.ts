@@ -10036,6 +10036,7 @@ export type UiKey =
   | "shipping.payments_history"
   | "shipping.no_partner_bills"
   | "shipping.supplier_expense_note"
+  | "nav.customer_order_transfer"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -31347,6 +31348,7 @@ const en: Dict = {
   "shipping.payments_history": "Payments History",
   "shipping.no_partner_bills": "No external partner bills recorded for this order.",
   "shipping.supplier_expense_note": "Note: External partner bills are separate supplier costs and are not billed directly to the customer.",
+  "nav.customer_order_transfer": "Customer Order Transfer",
 };
 
 const ur: Dict = {
@@ -52627,6 +52629,7 @@ const ur: Dict = {
   "shipping.payments_history": "ادائیگیوں کی تاریخ",
   "shipping.no_partner_bills": "اس آرڈر کے لیے کوئی بیرونی پارٹنر بل درج نہیں ہے۔",
   "shipping.supplier_expense_note": "نوٹ: بیرونی پارٹنر کے بل علیحدہ سپلائر اخراجات ہیں اور صارف کو براہ راست چارج نہیں کیے جاتے۔",
+  "nav.customer_order_transfer": "کسٹمر آرڈر ٹرانسفر",
 };
 
 const ar: Dict = {
@@ -73908,6 +73911,7 @@ const ar: Dict = {
   "shipping.payments_history": "سجل المدفوعات",
   "shipping.no_partner_bills": "لا توجد فواتير شركاء خارجيين مسجلة لهذا الطلب.",
   "shipping.supplier_expense_note": "ملاحظة: فواتير الشركاء الخارجيين هي تكاليف موردين منفصلة ولا تُحسب كرسوم مباشرة على العميل.",
+  "nav.customer_order_transfer": "تحويل طلب العميل",
 };
 
 const fa: Dict = {
@@ -95188,6 +95192,7 @@ const fa: Dict = {
   "shipping.payments_history": "تاریخچه پرداخت‌ها",
   "shipping.no_partner_bills": "هیچ صورت‌حساب همکار خارجی برای این سفارش ثبت نشده است.",
   "shipping.supplier_expense_note": "یادداشت: صورت‌حساب‌های همکاران خارجی هزینه‌های مجزای تأمین‌کننده بوده و مستقیماً به مشتری تحمیل نمی‌شود.",
+  "nav.customer_order_transfer": "انتقال سفارش مشتری",
 };
 
 const ps: Dict = {
@@ -116475,6 +116480,7 @@ const ps: Dict = {
   "shipping.payments_history": "د تادیاتو تاریخچه",
   "shipping.no_partner_bills": "د دې امر لپاره هېڅ بهرنی شریک بل نشته.",
   "shipping.supplier_expense_note": "یادونه: د بهرني شریک بلونه جلا لګښتونه دي او مستقیم له پیرودونکي نه اخیستل کېږي.",
+  "nav.customer_order_transfer": "د پیرودونکي امر لیږد",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

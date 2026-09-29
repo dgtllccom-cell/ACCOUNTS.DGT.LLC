@@ -374,6 +374,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     icon: Ship,
     children: [
       { label: nt("New Customer Order"), href: "/dashboard/clearing-agent/customer-order", icon: ListPlus },
+      { label: nt("Customer Order Transfer"), href: "/dashboard/clearing-agent/order-transfer", icon: ArrowRightLeft },
       { label: nt("Customer Bills"), href: "/dashboard/clearing-agent/customer-bill", icon: Receipt, upgraded: true },
       {
         key: "sub-expenses-bill",

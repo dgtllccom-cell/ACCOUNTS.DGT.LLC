@@ -10,7 +10,6 @@ import {
   saveCustomerOrder,
   type CustomerOrderScopeFilter
 } from "@/lib/services/clearing-customer-order-service";
-import { ensureCustomerBillForOrders } from "@/lib/services/clearing-customer-bill-service";
 
 // Shipping Customer Orders carry real commercial/customs data scoped to a country,
 // branch and (for shipping-scoped logins) a clearing agent — this must never be
@@ -173,17 +172,6 @@ export async function POST(req: NextRequest) {
       goodsNetWeight: body.goods_net_weight ?? body.goodsNetWeight ?? null
     });
 
-    // Auto-ensure customer bill if order is confirmed/accepted/completed
-    if (result.order?.id && (
-      ["completed", "accepted", "booking_confirmed", "confirmed", "in_progress"].includes(result.order.status || "") ||
-      ["1C", "stage_2", "completed"].includes(result.order.current_stage || "")
-    )) {
-      try {
-        await ensureCustomerBillForOrders([result.order.id], session.userId ?? null);
-      } catch (billErr) {
-        console.warn("Auto-ensuring customer bill on order save:", billErr);
-      }
-    }
 
     return NextResponse.json({ success: true, data: result.order, party_links: result.partyLinks, legs: result.legs, loading_allocations: result.loadingAllocations });
   } catch (error: any) {
