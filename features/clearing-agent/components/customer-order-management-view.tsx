@@ -48,7 +48,11 @@ import {
   Hash,
   Train,
   User,
-  ArrowRightLeft
+  ArrowRightLeft,
+  Clock,
+  RotateCcw,
+  Activity,
+  AlertTriangle
 } from "lucide-react";
 
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
@@ -78,6 +82,11 @@ import {
   type BranchScopeCountryBranch,
   type BranchScopeCityBranch
 } from "@/features/purchases/components/branch-scope-dropdown";
+import { CustomerOrderActivityTimelineModal } from "@/features/clearing-agent/components/customer-order-activity-timeline-modal";
+import { CustomerOrderReturnCorrectionModal } from "@/features/clearing-agent/components/customer-order-return-correction-modal";
+import { CustomerOrderStageAssignmentModal } from "@/features/clearing-agent/components/customer-order-stage-assignment-modal";
+import { CustomerOrderRouteBuilder } from "@/features/clearing-agent/components/customer-order-route-builder";
+import { CustomerOrderPartnerBillsPanel } from "@/features/clearing-agent/components/customer-order-partner-bills-panel";
 
 type TransportMode = "by_sea" | "by_road" | "by_air" | "by_rail";
 type MovementType = "import" | "export" | "transit" | "up_transit" | "down_transit" | "domestic";
@@ -170,6 +179,12 @@ type RouteLeg = {
   railwayOperator: string;
   wagonNumber: string;
   railContainerNumber: string;
+  handlerType?: "our_branch" | "external_partner" | "";
+  partnerType?: string;
+  partnerName?: string;
+  partnerAccountId?: string;
+  partnerAccountNumber?: string;
+  partnerCountryName?: string;
 };
 
 function emptyLeg(legNo: number, transportMode: LegTransportMode | "" = ""): RouteLeg {
@@ -188,7 +203,9 @@ function emptyLeg(legNo: number, transportMode: LegTransportMode | "" = ""): Rou
     taxAmount: "", otherCharges: "", customsStatus: "not_applicable",
     estimatedExpenseAmount: "", actualExpenseAmount: "", expenseCurrency: "", currentTaskId: null,
     airlineName: "", flightNumber: "", airwayBillNo: "",
-    railwayOperator: "", wagonNumber: "", railContainerNumber: ""
+    railwayOperator: "", wagonNumber: "", railContainerNumber: "",
+    handlerType: "our_branch", partnerType: "", partnerName: "",
+    partnerAccountId: "", partnerAccountNumber: "", partnerCountryName: ""
   };
 }
 
@@ -258,10 +275,20 @@ export type CustomerOrderGoodsItem = {
   goodsChsCode?: string;
   goodsVariationId?: string;
   goodsVariationLabel?: string;
+  size?: string;
+  brandQuality?: string;
+  originCountry?: string;
   unit: string;
   quantity: string;
   kgPerQty: string;
   totalKg: string;
+  grossWeight?: string;
+  emptyWeight?: string;
+  netWeight?: string;
+  currency?: string;
+  rate?: string;
+  finalAmount?: string;
+  qualityReport?: string;
   warehouseSourceType: "same" | "company_warehouse" | "customer_warehouse" | "other";
   warehouseType?: "company" | "customer" | "other" | string;
   warehouseId: string;
@@ -289,10 +316,20 @@ export function defaultGoodsItem(): CustomerOrderGoodsItem {
     goodsChsCode: "",
     goodsVariationId: "",
     goodsVariationLabel: "",
+    size: "",
+    brandQuality: "",
+    originCountry: "",
     unit: "Bags",
     quantity: "1",
     kgPerQty: "50",
     totalKg: "50",
+    grossWeight: "50",
+    emptyWeight: "0",
+    netWeight: "50",
+    currency: "AED",
+    rate: "",
+    finalAmount: "",
+    qualityReport: "",
     warehouseSourceType: "company_warehouse",
     warehouseId: "",
     warehouseName: "",
@@ -365,6 +402,13 @@ const EMPTY_FORM = {
   truck_transport_company: "",
   truck_po_ref: "",
   truck_details: "",
+  truck_vehicle_type: "Container Trailer",
+  truck_arrival_time: "",
+  truck_loading_location: "",
+  truck_status: "Pending",
+  truck_photo_url: "",
+  truck_photo_name: "",
+  current_stage: "1A",
 
   // 1B Dates
   planned_pickup_date: "",
@@ -437,12 +481,14 @@ const EMPTY_FORM = {
   loading_state_province_id: "",
   loading_district_id: "",
   loading_city_id: "",
+  loading_city_name: "",
   loading_area_id: "",
   receiving_country_id: "",
   receiving_country_name: "",
   receiving_state_province_id: "",
   receiving_district_id: "",
   receiving_city_id: "",
+  receiving_city_name: "",
   receiving_area_id: "",
   route_name: "",
   customs_point_text: "",
@@ -854,6 +900,24 @@ export function CustomerOrderManagementView() {
     cityBranchId: ""
   });
 
+  // User Queues
+  const [queueTab, setQueueTab] = useState<
+    "all" | "assigned_to_me" | "pending_with_me" | "completed_by_me" | "sent_to_another" | "returned"
+  >("all");
+
+  // Activity Timeline Modal State
+  const [timelineModalOpen, setTimelineModalOpen] = useState(false);
+  const [timelineOrder, setTimelineOrder] = useState<{ id: string; orderNo: string } | null>(null);
+
+  // Return For Correction Modal State
+  const [returnModalOpen, setReturnModalOpen] = useState(false);
+  const [returnOrderInfo, setReturnOrderInfo] = useState<{ id: string; orderNo: string; stage: "1B" | "1C" } | null>(null);
+
+  // Stage Assignment Modal State (1A -> 1B or 1B -> 1C)
+  const [assignmentModalOpen, setAssignmentModalOpen] = useState(false);
+  const [assignmentModalStage, setAssignmentModalStage] = useState<"1A_TO_1B" | "1B_TO_1C">("1A_TO_1B");
+  const [assignmentTruckData, setAssignmentTruckData] = useState<Record<string, any> | null>(null);
+
   // Table filters
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [modeFilter, setModeFilter] = useState<string>("all");
@@ -870,6 +934,17 @@ export function CustomerOrderManagementView() {
   const [viewOrder, setViewOrder] = useState<ClearingCustomerOrderRow | null>(null);
   const [partySelections, setPartySelections] = useState<Record<PartyRoleKey, PartySelection>>(emptyPartyState());
   const [formData, setFormData] = useState({ ...EMPTY_FORM });
+  const [draftGoodsItem, setDraftGoodsItem] = useState<CustomerOrderGoodsItem>(defaultGoodsItem());
+  const [editingGoodsIdx, setEditingGoodsIdx] = useState<number | null>(null);
+
+  const handleEditGoodsRow = (idx: number) => {
+    const item = formData.goods_items?.[idx];
+    if (!item) return;
+    setDraftGoodsItem({ ...item });
+    setEditingGoodsIdx(idx);
+    setStep1SubStep("1C");
+    setCurrentStep(3);
+  };
 
   const tt = (k: string, f: string) => t(lang, ("com." + k) as never, f);
   const refreshLabel = t(lang, "common.refresh", "Refresh");
@@ -1244,22 +1319,58 @@ export function CustomerOrderManagementView() {
       list = list.filter((o: any) => o.country_id === branchScope.countryId || o.countryId === branchScope.countryId || o.loading_country_id === branchScope.countryId);
     }
 
-    // 2. Status filter
+    // 2. Queue filter
+    const currentUserId = userContext.context?.userId;
+    if (queueTab === "assigned_to_me") {
+      list = list.filter(
+        (o: any) =>
+          (o.latest_handover?.receiver_user_id === currentUserId && o.latest_handover?.status === "pending") ||
+          (o.responsible_user_id === currentUserId && o.status !== "completed")
+      );
+    } else if (queueTab === "pending_with_me") {
+      list = list.filter(
+        (o: any) =>
+          (o.latest_handover?.receiver_user_id === currentUserId && o.latest_handover?.status === "pending") ||
+          (o.created_by === currentUserId && (o.current_stage === "returned_for_correction" || o.status === "draft" || o.current_stage === "1a_draft"))
+      );
+    } else if (queueTab === "completed_by_me") {
+      list = list.filter(
+        (o: any) =>
+          (o.created_by === currentUserId && (o.status === "completed" || o.current_stage === "goods_completed" || o.current_stage === "completed")) ||
+          (o.latest_handover?.receiver_user_id === currentUserId && o.latest_handover?.status === "completed")
+      );
+    } else if (queueTab === "sent_to_another") {
+      list = list.filter(
+        (o: any) =>
+          o.latest_handover?.sender_user_id === currentUserId &&
+          o.latest_handover?.receiver_user_id !== currentUserId &&
+          o.latest_handover?.status === "pending"
+      );
+    } else if (queueTab === "returned") {
+      list = list.filter(
+        (o: any) =>
+          o.current_stage === "returned_for_correction" ||
+          o.status === "returned" ||
+          o.latest_handover?.status === "returned"
+      );
+    }
+
+    // 3. Status filter
     if (statusFilter && statusFilter !== "all") {
       list = list.filter((o) => (o.status || "pending").toLowerCase() === statusFilter.toLowerCase());
     }
 
-    // 3. Transport mode filter
+    // 4. Transport mode filter
     if (modeFilter && modeFilter !== "all") {
       list = list.filter((o) => (o.transport_mode || "").toLowerCase() === modeFilter.toLowerCase());
     }
 
-    // 4. Movement type filter
+    // 5. Movement type filter
     if (movementFilter && movementFilter !== "all") {
       list = list.filter((o) => (o.movement_type || "").toLowerCase() === movementFilter.toLowerCase());
     }
 
-    // 5. Search query
+    // 6. Search query
     const query = normalize(searchQuery || filterState.query);
     if (query) {
       list = list.filter((order) => {
@@ -1293,7 +1404,41 @@ export function CustomerOrderManagementView() {
     }
 
     return list;
-  }, [orders, branchScope, statusFilter, modeFilter, movementFilter, searchQuery, filterState]);
+  }, [orders, branchScope, queueTab, userContext.context?.userId, statusFilter, modeFilter, movementFilter, searchQuery, filterState]);
+
+  const queueCounts = useMemo(() => {
+    const currentUserId = userContext.context?.userId;
+    const assignedToMe = orders.filter(
+      (o: any) =>
+        (o.latest_handover?.receiver_user_id === currentUserId && o.latest_handover?.status === "pending") ||
+        (o.responsible_user_id === currentUserId && o.status !== "completed")
+    ).length;
+    const pendingWithMe = orders.filter(
+      (o: any) =>
+        (o.latest_handover?.receiver_user_id === currentUserId && o.latest_handover?.status === "pending") ||
+        (o.created_by === currentUserId && (o.current_stage === "returned_for_correction" || o.status === "draft" || o.current_stage === "1a_draft"))
+    ).length;
+    const completedByMe = orders.filter(
+      (o: any) =>
+        (o.created_by === currentUserId && (o.status === "completed" || o.current_stage === "goods_completed" || o.current_stage === "completed")) ||
+        (o.latest_handover?.receiver_user_id === currentUserId && o.latest_handover?.status === "completed")
+    ).length;
+    const sentToAnother = orders.filter(
+      (o: any) =>
+        o.latest_handover?.sender_user_id === currentUserId &&
+        o.latest_handover?.receiver_user_id !== currentUserId &&
+        o.latest_handover?.status === "pending"
+    ).length;
+    const returned = orders.filter(
+      (o: any) =>
+        o.current_stage === "returned_for_correction" ||
+        o.status === "returned" ||
+        o.latest_handover?.status === "returned"
+    ).length;
+    const all = orders.length;
+
+    return { assignedToMe, pendingWithMe, completedByMe, sentToAnother, returned, all };
+  }, [orders, userContext.context?.userId]);
 
   const orderCounts = useMemo(() => {
     const total = orders.length;
@@ -1365,6 +1510,8 @@ export function CustomerOrderManagementView() {
     });
     setPartySelections(emptyPartyState());
     setEditingOrderId(null);
+    setDraftGoodsItem(defaultGoodsItem());
+    setEditingGoodsIdx(null);
     setCurrentStep(1);
     setStep1SubStep("1A");
   };
@@ -1377,7 +1524,19 @@ export function CustomerOrderManagementView() {
   const loadEditOrder = (order: ClearingCustomerOrderRow) => {
     const o = order as Record<string, any>;
     setEditingOrderId(order.id);
-    setStep1SubStep("1A");
+    setDraftGoodsItem(defaultGoodsItem());
+    setEditingGoodsIdx(null);
+    const currentStageVal = o.current_stage || "1A";
+    if (currentStageVal === "1B" || currentStageVal === "truck_confirmation_required") {
+      setStep1SubStep("1B");
+      setCurrentStep(2);
+    } else if (currentStageVal === "1C" || currentStageVal === "goods_entry_required" || currentStageVal === "truck_confirmed") {
+      setStep1SubStep("1C");
+      setCurrentStep(3);
+    } else {
+      setStep1SubStep("1A");
+      setCurrentStep(1);
+    }
     setIsFormOpen(true);
 
     // Reconstruct goods items
@@ -1395,10 +1554,20 @@ export function CustomerOrderManagementView() {
               goodsChsCode: idx === 0 ? (order.goods_chs_code || "") : "",
               goodsVariationId: idx === 0 ? (order.goods_variation_id || "") : "",
               goodsVariationLabel: idx === 0 ? (order.goods_variation_label || "") : "",
+              size: row.size || "",
+              brandQuality: row.brand_quality || row.brandQuality || "",
+              originCountry: row.origin_country || row.originCountry || "",
               unit: row.unit || order.goods_unit || "Bags",
               quantity: q,
               kgPerQty: k,
               totalKg: tot,
+              grossWeight: row.gross_weight != null ? String(row.gross_weight) : tot,
+              emptyWeight: row.empty_weight != null ? String(row.empty_weight) : "0",
+              netWeight: row.net_weight != null ? String(row.net_weight) : tot,
+              currency: row.currency || "AED",
+              rate: row.rate != null ? String(row.rate) : "",
+              finalAmount: row.final_amount != null ? String(row.final_amount) : "",
+              qualityReport: row.quality_report || "",
               warehouseSourceType: (row.warehouse_id ? "company_warehouse" : "other") as any,
               warehouseId: row.warehouse_id || "",
               warehouseName: row.warehouse_name || "",
@@ -1488,6 +1657,7 @@ export function CustomerOrderManagementView() {
       country_serial: o.country_serial || "",
       branch_serial: o.branch_serial || "",
       entry_serial: o.entry_serial || "",
+      current_stage: currentStageVal,
       truck_assignment_mode: (o.truck_id ? "permanent" : o.truck_number === "TO BE ASSIGNED" ? "later" : o.truck_number ? "hired" : "permanent") as any,
       truck_registration_type: (o.truck_registration_type as "registered" | "temporary") || "registered",
       truck_id: o.truck_id || "",
@@ -1497,6 +1667,12 @@ export function CustomerOrderManagementView() {
       truck_owner_name: o.truck_owner_name || "",
       truck_transport_company: o.truck_transport_company || "",
       truck_po_ref: o.truck_po_ref || "",
+      truck_vehicle_type: o.truck_vehicle_type || (o.truck_details && typeof o.truck_details === "object" ? o.truck_details.vehicleType : "Container Trailer") || "Container Trailer",
+      truck_arrival_time: o.truck_arrival_time || (o.truck_details && typeof o.truck_details === "object" ? o.truck_details.arrivalTime : "") || "",
+      truck_loading_location: o.truck_loading_location || (o.truck_details && typeof o.truck_details === "object" ? o.truck_details.loadingLocation : "") || "",
+      truck_status: o.truck_status || (o.truck_details && typeof o.truck_details === "object" ? o.truck_details.truckStatus : "Pending") || "Pending",
+      truck_photo_url: o.truck_photo_url || (o.truck_details && typeof o.truck_details === "object" && Array.isArray(o.truck_details.truckPhotos) ? o.truck_details.truckPhotos[0] : "") || "",
+      truck_photo_name: o.truck_photo_name || "",
       truck_details: o.truck_details ? (typeof o.truck_details === "string" ? o.truck_details : JSON.stringify(o.truck_details)) : "",
       planned_pickup_date: o.planned_pickup_date || (o.expected_loading_date ? o.expected_loading_date.split("T")[0] : ""),
       actual_pickup_date: o.actual_pickup_date || "",
@@ -1581,6 +1757,12 @@ export function CustomerOrderManagementView() {
             actualExpenseAmount: leg.actual_expense_amount != null ? String(leg.actual_expense_amount) : "",
             expenseCurrency: leg.expense_currency || "",
             currentTaskId: leg.current_task_id || null,
+            handlerType: leg.handler_type || (leg.partner_name || leg.partner_account_id ? "external_partner" : "our_branch"),
+            partnerType: leg.partner_type || "",
+            partnerName: leg.partner_name || "",
+            partnerAccountId: leg.partner_account_id || "",
+            partnerAccountNumber: leg.partner_account_number || "",
+            partnerCountryName: leg.partner_country_name || "",
             airlineName: leg.airline_name || "",
             flightNumber: leg.flight_number || "",
             airwayBillNo: leg.airway_bill_no || "",
@@ -1843,7 +2025,13 @@ export function CustomerOrderManagementView() {
               customsStatus: leg.customsStatus || "not_applicable",
               estimatedExpenseAmount: leg.estimatedExpenseAmount ? Number(leg.estimatedExpenseAmount) : null,
               actualExpenseAmount: leg.actualExpenseAmount ? Number(leg.actualExpenseAmount) : null,
-              expenseCurrency: leg.expenseCurrency || null
+              expenseCurrency: leg.expenseCurrency || null,
+              handlerType: leg.handlerType || "our_branch",
+              partnerType: leg.partnerType || null,
+              partnerName: leg.partnerName || null,
+              partnerAccountId: leg.partnerAccountId || null,
+              partnerAccountNumber: leg.partnerAccountNumber || null,
+              partnerCountryName: leg.partnerCountryName || null
             }))
           : [
               {
@@ -1958,6 +2146,14 @@ export function CustomerOrderManagementView() {
           transferType: currentStep === 1 ? "truck_task" : currentStep === 2 ? "goods_verification" : "shipping_handover"
         });
       } else if (advanceStep && currentStep === 4) {
+        // Automatically ensure the customer bill exists for this completed order so it immediately appears in /dashboard/clearing-agent/customer-bill
+        if (savedOrder?.id) {
+          fetch("/api/erp/clearing-agent/customer-bill", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ orderIds: [savedOrder.id] })
+          }).catch((err) => console.warn("Auto customer bill generation notice:", err));
+        }
         // Offer the handover choice before clearing the wizard — resetForm() runs
         // only after the user picks "Continue Myself" or finishes an assignment.
         setJustCompletedOrder({
@@ -1967,6 +2163,7 @@ export function CustomerOrderManagementView() {
           customerName: partySelections.supplier.customerName || formData.customer_name || null
         });
       }
+      return savedOrder;
     } catch (error: any) {
       alert(`${tt("err_save_failed", "Save failed")}: ${error?.message || error}`);
     } finally {
@@ -2057,6 +2254,144 @@ export function CustomerOrderManagementView() {
       addressText: cust?.address || "",
       addressSource: "customer"
     });
+  };
+
+  // Unified Operational Stage Workflow Handlers (1A -> 1B -> 1C)
+  const handleAssignStage1A = async () => {
+    let orderId = editingOrderId;
+    if (!orderId) {
+      const saved = await handleSaveProgress(false);
+      if (!saved?.id) return;
+      orderId = saved.id;
+    }
+    setAssignmentModalStage("1A_TO_1B");
+    setAssignmentTruckData(null);
+    setAssignmentModalOpen(true);
+  };
+
+  const handleConfirmTruckContinueMyself = async () => {
+    if (!formData.truck_number && formData.truck_assignment_mode !== "later") {
+      alert("Please enter or select a Truck Number before confirming.");
+      return;
+    }
+    setSaving(true);
+    try {
+      let orderId = editingOrderId;
+      if (!orderId) {
+        const saved = await handleSaveProgress(false);
+        if (!saved?.id) return;
+        orderId = saved.id;
+      } else {
+        await handleSaveProgress(false);
+      }
+      const res = await fetch(`/api/erp/clearing-agent/customer-order/${orderId}/workflow`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "confirm_truck",
+          truckNumber: formData.truck_number || "TO BE ASSIGNED",
+          truckDriverName: formData.truck_driver_name,
+          truckDriverMobile: formData.truck_driver_mobile,
+          vehicleType: formData.truck_vehicle_type || "Container Trailer",
+          truckRegistrationType: formData.truck_registration_type || "temporary",
+          truckTransportCompany: formData.truck_transport_company,
+          arrivalTime: formData.truck_arrival_time,
+          loadingLocation: formData.truck_loading_location,
+          truckStatus: formData.truck_status || "Pending",
+          continueMyself: true
+        })
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || "Failed to confirm truck");
+      setSuccessMessage("Truck confirmed! Proceeding to Stage 1C (Goods Entry).");
+      setStep1SubStep("1C");
+      setCurrentStep(3);
+      await fetchInitialData();
+    } catch (err: any) {
+      alert(err.message || "Failed to confirm truck");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleConfirmTruckAssignGoods = async () => {
+    if (!formData.truck_number && formData.truck_assignment_mode !== "later") {
+      alert("Please enter or select a Truck Number before confirming.");
+      return;
+    }
+    let orderId = editingOrderId;
+    if (!orderId) {
+      const saved = await handleSaveProgress(false);
+      if (!saved?.id) return;
+      orderId = saved.id;
+    } else {
+      await handleSaveProgress(false);
+    }
+    setAssignmentModalStage("1B_TO_1C");
+    setAssignmentTruckData({
+      truckNumber: formData.truck_number || "TO BE ASSIGNED",
+      truckDriverName: formData.truck_driver_name,
+      truckDriverMobile: formData.truck_driver_mobile,
+      vehicleType: formData.truck_vehicle_type || "Container Trailer",
+      truckRegistrationType: formData.truck_registration_type || "temporary",
+      truckTransportCompany: formData.truck_transport_company,
+      arrivalTime: formData.truck_arrival_time,
+      loadingLocation: formData.truck_loading_location,
+      truckStatus: formData.truck_status || "Pending"
+    });
+    setAssignmentModalOpen(true);
+  };
+
+  const handleTriggerReturnModal = (stage: "1B" | "1C") => {
+    if (!editingOrderId) {
+      alert("Please save the order before returning for correction.");
+      return;
+    }
+    setReturnOrderInfo({
+      id: editingOrderId,
+      orderNo: formData.order_no || "Draft",
+      stage
+    });
+    setReturnModalOpen(true);
+  };
+
+  const handleCompleteGoodsEntry = async () => {
+    const validItems = (formData.goods_items || []).filter((g) => g.goodsName || g.quantity);
+    if (validItems.length === 0) {
+      alert("Please add at least one goods item to the manifest.");
+      return;
+    }
+    setSaving(true);
+    try {
+      let orderId = editingOrderId;
+      if (!orderId) {
+        const saved = await handleSaveProgress(false);
+        if (!saved?.id) return;
+        orderId = saved.id;
+      } else {
+        await handleSaveProgress(false);
+      }
+      const totalNet = validItems.reduce((acc, g) => acc + (Number(g.netWeight || g.totalKg) || 0), 0);
+      const res = await fetch(`/api/erp/clearing-agent/customer-order/${orderId}/workflow`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "complete_goods",
+          goodsItems: validItems,
+          totalItems: validItems.length,
+          totalNetWeight: totalNet
+        })
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || "Failed to complete goods entry");
+      setSuccessMessage(`Goods Entry completed successfully for Order ${formData.order_no}!`);
+      setIsFormOpen(false);
+      await fetchInitialData();
+    } catch (err: any) {
+      alert(err.message || "Failed to complete goods entry");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const stepsList = [
@@ -2204,11 +2539,62 @@ export function CustomerOrderManagementView() {
           defaultTask={tt("handover_default_task", "Please continue this customer order to the next step.")}
           sourceCountryId={justCompletedOrder.countryId}
           domain="business"
-          customerPartyName={justCompletedOrder.customerName}
           onSuccess={() => { setHandoffModalOpen(false); setJustCompletedOrder(null); resetForm(); }}
           lang={lang}
         />
       ) : null}
+
+      {/* Complete Activity Timeline & Audit Trail Modal */}
+      <CustomerOrderActivityTimelineModal
+        isOpen={timelineModalOpen}
+        orderId={timelineOrder?.id || null}
+        orderNo={timelineOrder?.orderNo || null}
+        onClose={() => {
+          setTimelineModalOpen(false);
+          setTimelineOrder(null);
+        }}
+        lang={lang}
+      />
+
+      {/* Return for Correction Modal */}
+      {returnOrderInfo ? (
+        <CustomerOrderReturnCorrectionModal
+          isOpen={returnModalOpen}
+          orderId={returnOrderInfo.id}
+          orderNo={returnOrderInfo.orderNo}
+          currentStage={returnOrderInfo.stage}
+          onClose={() => {
+            setReturnModalOpen(false);
+            setReturnOrderInfo(null);
+          }}
+          onSuccess={async (reason) => {
+            setSuccessMessage(`Order ${returnOrderInfo.orderNo} returned for correction: "${reason}".`);
+            await fetchInitialData();
+          }}
+          lang={lang}
+        />
+      ) : null}
+
+      {/* Stage Assignment Modal (1A -> 1B or 1B -> 1C) */}
+      <CustomerOrderStageAssignmentModal
+        isOpen={assignmentModalOpen}
+        orderId={editingOrderId || ""}
+        orderNo={formData.order_no || "Draft"}
+        stage={assignmentModalStage}
+        truckData={assignmentTruckData}
+        countries={countries}
+        countryBranches={countryBranches}
+        cityBranches={cityBranches}
+        assignableUsers={assignableUsers}
+        onClose={() => setAssignmentModalOpen(false)}
+        onSuccess={async (userName) => {
+          setSuccessMessage(`Order assigned to ${userName} successfully!`);
+          setAssignmentModalOpen(false);
+          setIsFormOpen(false);
+          await fetchInitialData();
+        }}
+        lang={lang}
+      />
 
       {!isFormOpen ? (
         /* ========================================================================= */
@@ -2464,6 +2850,100 @@ export function CustomerOrderManagementView() {
             </div>
           </div>
 
+          {/* User Operational Queues Tabs */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-2 shadow-2xs">
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 text-xs font-bold">
+              <button
+                type="button"
+                onClick={() => setQueueTab("all")}
+                className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shrink-0 ${
+                  queueTab === "all"
+                    ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-xs"
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200/70"
+                }`}
+              >
+                <span>{tt("queue_all_orders", "All Orders")}</span>
+                <span className="font-mono text-[10px] opacity-80">({queueCounts.all})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setQueueTab("assigned_to_me")}
+                className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shrink-0 ${
+                  queueTab === "assigned_to_me"
+                    ? "bg-blue-600 text-white shadow-xs"
+                    : "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100"
+                }`}
+              >
+                <User className="h-3 w-3" />
+                <span>{tt("queue_assigned_to_me", "Assigned to Me")}</span>
+                <span className="font-mono text-[10px] font-black rounded-full bg-blue-700 text-white px-1.5 py-0.2">
+                  {queueCounts.assignedToMe}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setQueueTab("pending_with_me")}
+                className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shrink-0 ${
+                  queueTab === "pending_with_me"
+                    ? "bg-indigo-600 text-white shadow-xs"
+                    : "bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100"
+                }`}
+              >
+                <Clock className="h-3 w-3" />
+                <span>{tt("queue_pending_with_me", "Pending with Me")}</span>
+                <span className="font-mono text-[10px] font-black rounded-full bg-indigo-700 text-white px-1.5 py-0.2">
+                  {queueCounts.pendingWithMe}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setQueueTab("completed_by_me")}
+                className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shrink-0 ${
+                  queueTab === "completed_by_me"
+                    ? "bg-emerald-600 text-white shadow-xs"
+                    : "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100"
+                }`}
+              >
+                <CheckCircle2 className="h-3 w-3" />
+                <span>{tt("queue_completed_by_me", "Completed by Me")}</span>
+                <span className="font-mono text-[10px] opacity-80">({queueCounts.completedByMe})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setQueueTab("sent_to_another")}
+                className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shrink-0 ${
+                  queueTab === "sent_to_another"
+                    ? "bg-purple-600 text-white shadow-xs"
+                    : "bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 hover:bg-purple-100"
+                }`}
+              >
+                <ArrowRightLeft className="h-3 w-3" />
+                <span>{tt("queue_sent_to_another", "Sent to Another User")}</span>
+                <span className="font-mono text-[10px] opacity-80">({queueCounts.sentToAnother})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setQueueTab("returned")}
+                className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shrink-0 ${
+                  queueTab === "returned"
+                    ? "bg-rose-600 text-white shadow-xs"
+                    : "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 hover:bg-rose-100"
+                }`}
+              >
+                <AlertTriangle className="h-3 w-3 text-rose-500" />
+                <span>{tt("queue_returned_for_correction", "Returned for Correction")}</span>
+                <span className="font-mono text-[10px] font-black rounded-full bg-rose-700 text-white px-1.5 py-0.2">
+                  {queueCounts.returned}
+                </span>
+              </button>
+            </div>
+          </div>
+
           {/* Smart Filter Bar — Local Purchase Aesthetic */}
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-2.5 shadow-2xs space-y-2">
             <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
@@ -2635,20 +3115,18 @@ export function CustomerOrderManagementView() {
                     <Th className="px-3.5 py-3">{tt("th_order_no", "Order No")}</Th>
                     <Th className="px-3.5 py-3">{tt("th_date", "Date")}</Th>
                     <Th className="px-3.5 py-3">{tt("th_party", "Customer / Account")}</Th>
-                    <Th className="px-3.5 py-3">{tt("th_shipper", "Shipper / Exporter")}</Th>
-                    <Th className="px-3.5 py-3">{tt("th_buyer", "Buyer / Importer")}</Th>
+                    <Th className="px-3.5 py-3">{tt("th_stage_lifecycle", "Stage Lifecycle (1A / 1B / 1C)")}</Th>
                     <Th className="px-3.5 py-3">{tt("th_goods", "Goods & Qty")}</Th>
                     <Th className="px-3.5 py-3">{tt("th_route", "Route / Ports")}</Th>
-                    <Th className="px-3.5 py-3">{tt("th_movement", "Mode & Movement")}</Th>
-                    <Th className="px-3.5 py-3">{tt("th_step_status", "Status")}</Th>
-                    <Th className="px-3.5 py-3">{tt("th_branch", "Branch / Agent")}</Th>
+                    <Th className="px-3.5 py-3">{tt("th_responsible_user", "Responsible User & Branch")}</Th>
+                    <Th className="px-3.5 py-3">{tt("th_next_action", "Next Required Action")}</Th>
                     <Th className="px-3.5 py-3 text-right">{tt("th_actions", "Actions")}</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {visibleOrders.length === 0 ? (
                     <tr>
-                      <td colSpan={12} className="px-4 py-12 text-center text-slate-400">
+                      <td colSpan={10} className="px-4 py-12 text-center text-slate-400">
                         <div className="mx-auto max-w-sm space-y-3">
                           <Route className="mx-auto h-8 w-8 text-slate-300 dark:text-slate-600" />
                           <p className="text-sm font-bold text-slate-600 dark:text-slate-300">
@@ -2670,9 +3148,10 @@ export function CustomerOrderManagementView() {
                     </tr>
                   ) : (
                     visibleOrders.map((order, index) => {
-                      const prog = getOrderProgress(order);
                       const isSelected = editingOrderId === order.id;
                       const dateText = order.created_at ? new Date(order.created_at).toLocaleDateString() : "-";
+                      const currentUserId = userContext.context?.userId;
+
                       return (
                         <tr
                           key={order.id}
@@ -2697,66 +3176,180 @@ export function CustomerOrderManagementView() {
                               <div className="text-[10px] text-slate-400 font-mono">ID: {order.customer_id.slice(0, 8)}</div>
                             ) : null}
                           </td>
-                          <td className="px-3.5 py-3 text-slate-700 dark:text-slate-300 font-medium">
-                            {order.exporter_name || "-"}
+
+                          {/* Stage Lifecycle (1A / 1B / 1C) */}
+                          <td className="px-3.5 py-3">
+                            <div className="flex flex-col gap-1 min-w-[130px]">
+                              {/* 1A */}
+                              <div className="flex items-center gap-1.5 text-[10px]">
+                                <span className="font-bold text-slate-400">1A:</span>
+                                <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.2 bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 font-bold">
+                                  <CheckCircle2 className="h-2.5 w-2.5" /> Setup Complete
+                                </span>
+                              </div>
+                              {/* 1B */}
+                              <div className="flex items-center gap-1.5 text-[10px]">
+                                <span className="font-bold text-slate-400">1B:</span>
+                                {order.truck_number && order.truck_number !== "TO BE ASSIGNED" ? (
+                                  <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.2 bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 font-bold truncate max-w-[110px]" title={order.truck_number}>
+                                    <Truck className="h-2.5 w-2.5 shrink-0" /> {order.truck_number}
+                                  </span>
+                                ) : order.current_stage === "truck_confirmation_required" ? (
+                                  <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.2 bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 font-bold">
+                                    <Clock className="h-2.5 w-2.5 shrink-0" /> Assigned / Pending
+                                  </span>
+                                ) : order.current_stage === "returned_for_correction" ? (
+                                  <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.2 bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 font-bold">
+                                    <AlertTriangle className="h-2.5 w-2.5 shrink-0" /> Returned
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.2 bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 font-medium">
+                                    ○ Pending
+                                  </span>
+                                )}
+                              </div>
+                              {/* 1C */}
+                              <div className="flex items-center gap-1.5 text-[10px]">
+                                <span className="font-bold text-slate-400">1C:</span>
+                                {order.current_stage === "goods_completed" || order.status === "completed" || (order.goods_gross_weight && Number(order.goods_gross_weight) > 0) ? (
+                                  <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.2 bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 font-bold">
+                                    <CheckCircle2 className="h-2.5 w-2.5 shrink-0" /> Goods Verified
+                                  </span>
+                                ) : order.current_stage === "goods_entry_required" || order.current_stage === "truck_confirmed" ? (
+                                  <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.2 bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 font-bold">
+                                    <Clock className="h-2.5 w-2.5 shrink-0" /> Assigned / Entry
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.2 bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 font-medium">
+                                    ○ Pending
+                                  </span>
+                                )}
+                              </div>
+                            </div>
                           </td>
-                          <td className="px-3.5 py-3 text-slate-700 dark:text-slate-300 font-medium">
-                            {order.buyer_name || order.importer_name || "-"}
-                          </td>
+
+                          {/* Goods & Qty */}
                           <td className="px-3.5 py-3">
                             <div className="font-semibold text-slate-900 dark:text-slate-100">{order.goods_name || "-"}</div>
                             <div className="text-[10px] text-slate-500 font-bold">
                               {order.goods_quantity ? `${order.goods_quantity} ${order.goods_unit || ""}` : ""}
+                              {order.goods_gross_weight ? ` • Gross: ${order.goods_gross_weight} kg` : ""}
                               {order.goods_chs_code ? ` • CHS: ${order.goods_chs_code}` : ""}
                             </div>
                           </td>
+
+                          {/* Route / Ports */}
                           <td className="px-3.5 py-3 text-slate-600 dark:text-slate-400">
                             <div>{order.route_name || [order.loading_country_name, order.receiving_country_name].filter(Boolean).join(" → ") || "-"}</div>
-                            {(order.loading_port_name || order.destination_port_name) ? (
-                              <div className="text-[10px] text-slate-400">
-                                {[order.loading_port_name, order.destination_port_name].filter(Boolean).join(" → ")}
-                              </div>
-                            ) : null}
-                          </td>
-                          <td className="px-3.5 py-3">
-                            <div className="flex flex-wrap gap-1">
-                              <span className="capitalize rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                            <div className="flex flex-wrap gap-1 mt-0.5">
+                              <span className="capitalize rounded bg-slate-100 px-1 py-0.2 text-[9px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                                 {order.movement_type || "-"}
                               </span>
-                              <span className="capitalize rounded-md bg-blue-50 px-1.5 py-0.5 text-[10px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                              <span className="capitalize rounded bg-blue-50 px-1 py-0.2 text-[9px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
                                 {order.transport_mode?.replace("_", " ") || "-"}
                               </span>
                             </div>
                           </td>
-                          <td className="px-3.5 py-3">
-                            <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold border ${prog.color}`}>
-                              {tt(prog.labelKey, "Progress")}
-                            </span>
-                            {order.status === "approved" || order.status === "rejected" || order.status === "pending_approval" ? (
-                              <div className="mt-1">
-                                <span
-                                  className={`inline-block px-1.5 py-0.5 rounded-md text-[9px] font-bold border ${
-                                    order.status === "approved"
-                                      ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300"
-                                      : order.status === "rejected"
-                                      ? "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950 dark:text-rose-300"
-                                      : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300"
-                                  }`}
-                                >
-                                  {order.status === "approved"
-                                    ? t(lang, "comv.approval_approved", "Approved")
-                                    : order.status === "rejected"
-                                    ? t(lang, "comv.approval_rejected", "Rejected")
-                                    : t(lang, "comv.approval_pending", "Pending Approval")}
-                                </span>
-                              </div>
-                            ) : null}
-                          </td>
+
+                          {/* Responsible User & Branch */}
                           <td className="px-3.5 py-3 text-slate-600 dark:text-slate-400">
-                            <div className="font-semibold">{order.branch_name || userContext.context?.branchName || "-"}</div>
+                            <div className="space-y-0.5">
+                              <div className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1 text-[11px]">
+                                <User className="h-3 w-3 text-blue-600" />
+                                <span>{order.latest_handover?.receiver_name || order.created_by_name || "Responsible Desk"}</span>
+                              </div>
+                              <div className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                                <Building2 className="h-2.5 w-2.5" />
+                                <span>{order.latest_handover?.dest_branch_name || order.branch_name || userContext.context?.branchName || "-"}</span>
+                              </div>
+                            </div>
                           </td>
+
+                          {/* Next Required Action */}
+                          <td className="px-3.5 py-3">
+                            <div>
+                              {order.current_stage === "returned_for_correction" ? (
+                                <span
+                                  className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-1 text-[10px] font-bold text-rose-700 border border-rose-200 dark:bg-rose-950/50 dark:border-rose-800 dark:text-rose-300 shadow-2xs"
+                                  title={order.rejected_reason || "Correction required"}
+                                >
+                                  <AlertTriangle className="h-3 w-3 shrink-0" />
+                                  <span className="truncate max-w-[120px]">Fix: {order.rejected_reason || "Correction"}</span>
+                                </span>
+                              ) : order.current_stage === "truck_confirmation_required" || (!order.truck_number || order.truck_number === "TO BE ASSIGNED") ? (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    loadEditOrder(order);
+                                    setStep1SubStep("1B");
+                                    setCurrentStep(2);
+                                  }}
+                                  className="inline-flex items-center gap-1 rounded-full bg-amber-50 hover:bg-amber-100 px-2.5 py-1 text-[10px] font-bold text-amber-800 border border-amber-200 dark:bg-amber-950/50 dark:border-amber-800 dark:text-amber-300 shadow-2xs transition"
+                                >
+                                  <Truck className="h-3 w-3 shrink-0 text-amber-600" />
+                                  <span>{tt("btn_confirm_truck", "Confirm Truck")}</span>
+                                </button>
+                              ) : order.current_stage === "goods_entry_required" || order.current_stage === "truck_confirmed" || (!order.goods_gross_weight && order.status !== "completed") ? (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    loadEditOrder(order);
+                                    setStep1SubStep("1C");
+                                    setCurrentStep(3);
+                                  }}
+                                  className="inline-flex items-center gap-1 rounded-full bg-blue-50 hover:bg-blue-100 px-2.5 py-1 text-[10px] font-bold text-blue-800 border border-blue-200 dark:bg-blue-950/50 dark:border-blue-800 dark:text-blue-300 shadow-2xs transition"
+                                >
+                                  <Boxes className="h-3 w-3 shrink-0 text-blue-600" />
+                                  <span>{tt("btn_enter_goods", "Enter Goods")}</span>
+                                </button>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-800 border border-emerald-200 dark:bg-emerald-950/50 dark:border-emerald-800 dark:text-emerald-300 shadow-2xs">
+                                  <CheckCircle2 className="h-3 w-3 shrink-0" />
+                                  <span>{tt("status_completed", "Completed")}</span>
+                                </span>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* Actions */}
                           <td className="px-3.5 py-3 text-right">
-                            <div className="relative inline-block text-left">
+                            <div className="flex items-center justify-end gap-1.5">
+                              {/* Quick Timeline Button */}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setTimelineOrder({ id: order.id, orderNo: order.order_no || `CL-${order.id.slice(0, 6)}` });
+                                  setTimelineModalOpen(true);
+                                }}
+                                className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 transition shadow-2xs"
+                                title={tt("view_activity_timeline", "View Activity Timeline & Audit Trail")}
+                              >
+                                <Activity className="h-3.5 w-3.5 text-blue-600" />
+                              </button>
+
+                              {/* Quick Edit / Resume Button */}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  loadEditOrder(order);
+                                  if (order.current_stage === "truck_confirmation_required") {
+                                    setStep1SubStep("1B");
+                                    setCurrentStep(2);
+                                  } else if (order.current_stage === "goods_entry_required" || order.current_stage === "truck_confirmed") {
+                                    setStep1SubStep("1C");
+                                    setCurrentStep(3);
+                                  } else {
+                                    setStep1SubStep("1A");
+                                    setCurrentStep(1);
+                                  }
+                                }}
+                                className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 transition shadow-2xs"
+                                title={tt("edit_order", "Edit Order")}
+                              >
+                                <Pencil className="h-3.5 w-3.5 text-slate-600 dark:text-slate-300" />
+                              </button>
+
+                              {/* More Actions Dropdown */}
                               <button
                                 type="button"
                                 onClick={(e) => {
@@ -2775,10 +3368,10 @@ export function CustomerOrderManagementView() {
                                     });
                                   }
                                 }}
-                                className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 transition"
+                                className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 transition shadow-2xs"
                                 title={tt("th_actions", "Actions")}
                               >
-                                <MoreVertical className="h-4 w-4" />
+                                <MoreVertical className="h-3.5 w-3.5" />
                               </button>
                             </div>
                           </td>
@@ -2867,6 +3460,34 @@ export function CustomerOrderManagementView() {
                   >
                     <Printer className="h-3.5 w-3.5 text-amber-600" />
                     <span>{tt("print", "Print Voucher")}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTimelineOrder({ id: targetOrder.id, orderNo: targetOrder.order_no || `CL-${targetOrder.id.slice(0, 6)}` });
+                      setTimelineModalOpen(true);
+                      setActiveActionMenuId(null);
+                    }}
+                    className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                  >
+                    <Activity className="h-3.5 w-3.5 text-blue-600" />
+                    <span>{tt("view_activity_timeline", "Activity Timeline & Audit")}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReturnOrderInfo({
+                        id: targetOrder.id,
+                        orderNo: targetOrder.order_no || `CL-${targetOrder.id.slice(0, 6)}`,
+                        stage: targetOrder.current_stage === "goods_entry_required" ? "1C" : "1B"
+                      });
+                      setReturnModalOpen(true);
+                      setActiveActionMenuId(null);
+                    }}
+                    className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                  >
+                    <AlertTriangle className="h-3.5 w-3.5 text-rose-500" />
+                    <span>{tt("return_for_correction_btn", "Return for Correction")}</span>
                   </button>
                 </div>
 
@@ -3213,115 +3834,33 @@ export function CustomerOrderManagementView() {
                       }}
                       onConfirmSave={() => void handleSaveProgress(true)}
                       onSaveDraft={() => void handleSaveProgress(false)}
+                      onAssignStage1A={handleAssignStage1A}
+                      onConfirmTruckContinueMyself={handleConfirmTruckContinueMyself}
+                      onConfirmTruckAssignGoods={handleConfirmTruckAssignGoods}
+                      onReturnForCorrection={handleTriggerReturnModal}
+                      onCompleteGoodsEntry={handleCompleteGoodsEntry}
+                      activeOrder={editingOrderId ? orders.find((o) => o.id === editingOrderId) || null : null}
+                      draftGoodsItem={draftGoodsItem}
+                      setDraftGoodsItem={setDraftGoodsItem}
+                      editingGoodsIdx={editingGoodsIdx}
+                      setEditingGoodsIdx={setEditingGoodsIdx}
                       saving={saving}
                     />
                   )}
 
-                {/* Stepper Footer Controls */}
+                {/* Stepper Navigation / Back to Registry */}
                 <div className="flex flex-wrap items-center justify-between gap-2 pt-2.5 mt-3 border-t border-slate-100 dark:border-slate-800">
-                  <div>
-                    {currentStep > 1 ? (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (currentStep === 3) {
-                            setCurrentStep(2);
-                            setStep1SubStep("1B");
-                          } else if (currentStep === 2) {
-                            setCurrentStep(1);
-                            setStep1SubStep("1A");
-                          }
-                        }}
-                        className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 shadow-2xs"
-                      >
-                        <ChevronLeft className="h-3.5 w-3.5" />
-                        <span>{t(lang, "comv.back", "Previous")}</span>
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => setIsFormOpen(false)}
-                        className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 shadow-2xs"
-                      >
-                        <ArrowLeft className="h-3.5 w-3.5" />
-                        <span>{tt("back_to_registry", "Back to Registry")}</span>
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => void handleSaveProgress(false)}
-                      disabled={saving}
-                      className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300 transition shadow-2xs"
-                    >
-                      {saving ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
-                      <span>{t(lang, "comv.save_draft", "Save Draft")}</span>
-                    </button>
-
-                    {currentStep === 1 ? (
-                      <button
-                        type="button"
-                        onClick={() => void handleSaveProgress(true)}
-                        disabled={saving}
-                        className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-xs shadow-blue-600/25 hover:bg-blue-700 transition"
-                      >
-                        {saving ? <RefreshCw className="h-3 w-3 animate-spin" /> : null}
-                        <span>{tt("save_continue_1b", "Save & Continue to 1B (Truck)")}</span>
-                        <ChevronRight className="h-3.5 w-3.5" />
-                      </button>
-                    ) : currentStep === 2 ? (
-                      <button
-                        type="button"
-                        onClick={() => void handleSaveProgress(true)}
-                        disabled={saving}
-                        className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-xs shadow-blue-600/25 hover:bg-blue-700 transition"
-                      >
-                        {saving ? <RefreshCw className="h-3 w-3 animate-spin" /> : null}
-                        <span>
-                          {formData.step1b_assignee_name
-                            ? tt("com.handover_and_send_to", "Handover & Send to {name} →").replace("{name}", formData.step1b_assignee_name)
-                            : tt("save_continue_1c", "Save & Continue to 1C (Goods)")}
-                        </span>
-                        <ChevronRight className="h-3.5 w-3.5" />
-                      </button>
-                    ) : currentStep === 3 ? (
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => setCurrentStep(4)}
-                          disabled={saving}
-                          className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 transition shadow-2xs"
-                        >
-                          <span>{tt("review_summary", "Review Summary")}</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => void handleSaveProgress(true)}
-                          disabled={saving}
-                          className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-xs shadow-emerald-600/25 hover:bg-emerald-700 transition"
-                        >
-                          {saving ? <RefreshCw className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
-                          <span>
-                            {formData.step1c_assignee_name
-                              ? tt("com.handover_and_send_to", "Handover & Send to {name} →").replace("{name}", formData.step1c_assignee_name)
-                              : tt("save_proceed_step4", "Save & Proceed to Review (Step 4)")}
-                          </span>
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => void handleSaveProgress(true)}
-                        disabled={saving}
-                        className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs shadow-emerald-600/25 hover:bg-emerald-700 transition"
-                      >
-                        {saving ? <RefreshCw className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
-                        <span>{tt("confirm_register_order", "Confirm & Register Order")}</span>
-                      </button>
-                    )}
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsFormOpen(false)}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 shadow-2xs transition"
+                  >
+                    <ArrowLeft className="h-3.5 w-3.5" />
+                    <span>{tt("back_to_registry", "Back to Orders Registry")}</span>
+                  </button>
+                  <span className="text-[11px] text-slate-400 font-medium">
+                    Order ID: <span className="font-mono font-bold text-slate-600 dark:text-slate-300">{formData.order_no || "Draft"}</span>
+                  </span>
                 </div>
               </div>
             </div>
@@ -4115,10 +4654,7 @@ export function CustomerOrderManagementView() {
                                 <div className="inline-flex items-center justify-center gap-1">
                                   <button
                                     type="button"
-                                    onClick={() => {
-                                      setStep1SubStep("1C");
-                                      setCurrentStep(3);
-                                    }}
+                                    onClick={() => handleEditGoodsRow(idx)}
                                     className="p-1 text-blue-600 hover:text-blue-800 rounded hover:bg-blue-50 dark:hover:bg-blue-950/40"
                                     title={tt("edit_item", "Edit Item in Step 1C")}
                                   >
@@ -4391,6 +4927,7 @@ function Step1BookingCustomer({
   userContext,
   formData,
   setFormData,
+  activeOrder,
   step1SubStep,
   setStep1SubStep,
   onSelectSubStep,
@@ -4419,6 +4956,15 @@ function Step1BookingCustomer({
   onAdvanceToStep3,
   onConfirmSave,
   onSaveDraft,
+  onAssignStage1A,
+  onConfirmTruckContinueMyself,
+  onConfirmTruckAssignGoods,
+  onReturnForCorrection,
+  onCompleteGoodsEntry,
+  draftGoodsItem: propsDraftGoodsItem,
+  setDraftGoodsItem: propsSetDraftGoodsItem,
+  editingGoodsIdx: propsEditingGoodsIdx,
+  setEditingGoodsIdx: propsSetEditingGoodsIdx,
   saving
 }: {
   lang: ReturnType<typeof useActiveLanguage>;
@@ -4426,6 +4972,7 @@ function Step1BookingCustomer({
   userContext: { context: BranchUserContext | null; loading: boolean; error: string | null };
   formData: FormDataState;
   setFormData: SetFormData;
+  activeOrder?: ClearingCustomerOrderRow | null;
   step1SubStep: "1A" | "1B" | "1C";
   setStep1SubStep: (sub: "1A" | "1B" | "1C") => void;
   onSelectSubStep?: (sub: "1A" | "1B" | "1C") => void;
@@ -4454,6 +5001,15 @@ function Step1BookingCustomer({
   onAdvanceToStep3?: () => void;
   onConfirmSave?: () => void;
   onSaveDraft?: () => void;
+  onAssignStage1A?: () => void;
+  onConfirmTruckContinueMyself?: () => void;
+  onConfirmTruckAssignGoods?: () => void;
+  onReturnForCorrection?: (stage: "1B" | "1C") => void;
+  onCompleteGoodsEntry?: () => void;
+  draftGoodsItem?: CustomerOrderGoodsItem;
+  setDraftGoodsItem?: React.Dispatch<React.SetStateAction<CustomerOrderGoodsItem>>;
+  editingGoodsIdx?: number | null;
+  setEditingGoodsIdx?: React.Dispatch<React.SetStateAction<number | null>>;
   saving?: boolean;
 }) {
   const ctx = userContext.context;
@@ -4474,27 +5030,6 @@ function Step1BookingCustomer({
       ),
     [accounts, formData.customer_id, selectedCustomer]
   );
-
-  const routeStops = useMemo(() => parseRouteStops(formData.route_name), [formData.route_name]);
-
-  const handleAddRouteStop = (stop: string) => {
-    if (!stop) return;
-    const cleanStop = stop.trim();
-    if (!formData.route_name || !formData.route_name.trim()) {
-      setFormData((c) => ({ ...c, route_name: cleanStop }));
-    } else {
-      setFormData((c) => ({ ...c, route_name: `${c.route_name.trim()} ➔ ${cleanStop}` }));
-    }
-  };
-
-  const handleRemoveRouteStop = (indexToRemove: number) => {
-    const nextStops = routeStops.filter((_, idx) => idx !== indexToRemove);
-    setFormData((c) => ({ ...c, route_name: nextStops.join(" ➔ ") }));
-  };
-
-  const handleClearRoute = () => {
-    setFormData((c) => ({ ...c, route_name: "" }));
-  };
 
   const handleCustomerSelection = (customerId: string) => {
     const cust = customers.find((c) => c.id === customerId);
@@ -4517,42 +5052,14 @@ function Step1BookingCustomer({
     });
   };
 
-  // Multi-goods helper functions
-  const updateGoodsItem = (idx: number, patch: Partial<CustomerOrderGoodsItem>) => {
-    setFormData((current) => {
-      const items = [...(current.goods_items || [defaultGoodsItem()])];
-      const existing = items[idx] || defaultGoodsItem();
-      const next = { ...existing, ...patch };
+  // Step 1C Goods Draft & Edit State
+  const [internalDraftGoodsItem, setInternalDraftGoodsItem] = useState<CustomerOrderGoodsItem>(defaultGoodsItem());
+  const [internalEditingGoodsIdx, setInternalEditingGoodsIdx] = useState<number | null>(null);
 
-      if ("quantity" in patch || "kgPerQty" in patch) {
-        const q = Number(next.quantity) || 0;
-        const k = Number(next.kgPerQty) || 0;
-        next.totalKg = String(q * k);
-      }
-
-      items[idx] = next;
-
-      // Sync first goods to order-level top fields for backward compatibility
-      const first = items[0];
-      const totalQty = items.reduce((sum, g) => sum + (Number(g.quantity) || 0), 0);
-      const totalKg = items.reduce((sum, g) => sum + (Number(g.totalKg) || 0), 0);
-
-      return {
-        ...current,
-        goods_items: items,
-        goods_id: first?.goodsId || current.goods_id,
-        goods_name: items.map((g) => g.goodsName).filter(Boolean).join(", ") || current.goods_name,
-        goods_unit: first?.unit || current.goods_unit,
-        goods_quantity: String(totalQty),
-        goods_gross_weight: String(totalKg),
-        goods_net_weight: String(totalKg)
-      };
-    });
-  };
-
-  // Step 1B Goods Draft & Edit State (Voice note: enter once, save to table, repeat)
-  const [draftGoodsItem, setDraftGoodsItem] = useState<CustomerOrderGoodsItem>(defaultGoodsItem());
-  const [editingGoodsIdx, setEditingGoodsIdx] = useState<number | null>(null);
+  const draftGoodsItem = propsDraftGoodsItem ?? internalDraftGoodsItem;
+  const setDraftGoodsItem = propsSetDraftGoodsItem ?? setInternalDraftGoodsItem;
+  const editingGoodsIdx = propsEditingGoodsIdx !== undefined ? propsEditingGoodsIdx : internalEditingGoodsIdx;
+  const setEditingGoodsIdx = propsSetEditingGoodsIdx ?? setInternalEditingGoodsIdx;
 
   const handleDraftGoodsChange = (field: keyof CustomerOrderGoodsItem, value: any) => {
     setDraftGoodsItem((curr) => {
@@ -4560,7 +5067,25 @@ function Step1BookingCustomer({
       if (field === "quantity" || field === "kgPerQty") {
         const q = Number(field === "quantity" ? value : updated.quantity) || 0;
         const k = Number(field === "kgPerQty" ? value : updated.kgPerQty) || 0;
-        updated.totalKg = String(q * k);
+        const tot = String(q * k);
+        updated.totalKg = tot;
+        updated.grossWeight = tot;
+        const empty = Number(updated.emptyWeight) || 0;
+        updated.netWeight = String(Math.max(0, (q * k) - empty));
+        if (updated.rate) {
+          updated.finalAmount = String(Number((q * Number(updated.rate)).toFixed(2)));
+        }
+      }
+      if (field === "grossWeight" || field === "emptyWeight") {
+        const gross = Number(field === "grossWeight" ? value : updated.grossWeight) || 0;
+        const empty = Number(field === "emptyWeight" ? value : updated.emptyWeight) || 0;
+        updated.totalKg = String(gross);
+        updated.netWeight = String(Math.max(0, gross - empty));
+      }
+      if (field === "rate") {
+        const r = Number(value) || 0;
+        const q = Number(updated.quantity) || 0;
+        updated.finalAmount = r ? String(Number((q * r).toFixed(2))) : "";
       }
       return updated;
     });
@@ -4588,13 +5113,25 @@ function Step1BookingCustomer({
     }
     const qty = Number(draftGoodsItem.quantity) || 1;
     const kg = Number(draftGoodsItem.kgPerQty) || 50;
-    const total = String(qty * kg);
+    const gross = Number(draftGoodsItem.grossWeight) || (qty * kg);
+    const empty = Number(draftGoodsItem.emptyWeight) || 0;
+    const net = Math.max(0, gross - empty);
+    const rateVal = draftGoodsItem.rate || "";
+    const calcFinalAmount = draftGoodsItem.finalAmount || (rateVal ? String(Number((qty * Number(rateVal)).toFixed(2))) : "");
+
     const itemToSave: CustomerOrderGoodsItem = {
       ...draftGoodsItem,
       goodsName: draftGoodsItem.goodsName || "Goods Item",
       quantity: String(qty),
       kgPerQty: String(kg),
-      totalKg: total
+      totalKg: String(gross),
+      grossWeight: String(gross),
+      emptyWeight: String(empty),
+      netWeight: String(net),
+      currency: draftGoodsItem.currency || "AED",
+      rate: rateVal,
+      finalAmount: calcFinalAmount,
+      qualityReport: draftGoodsItem.qualityReport || ""
     };
 
     setFormData((current) => {
@@ -4610,7 +5147,9 @@ function Step1BookingCustomer({
         }
       }
       const totalQty = updatedItems.reduce((sum, g) => sum + (Number(g.quantity) || 0), 0);
-      const totalGrossKg = updatedItems.reduce((sum, g) => sum + (Number(g.totalKg) || 0), 0);
+      const totalGrossKg = updatedItems.reduce((sum, g) => sum + (Number(g.grossWeight || g.totalKg) || 0), 0);
+      const totalEmptyKg = updatedItems.reduce((sum, g) => sum + (Number(g.emptyWeight) || 0), 0);
+      const totalNetKg = updatedItems.reduce((sum, g) => sum + (Number(g.netWeight || g.totalKg) || 0), 0);
       const first = updatedItems[0];
       return {
         ...current,
@@ -4620,7 +5159,8 @@ function Step1BookingCustomer({
         goods_unit: first?.unit || "Bags",
         goods_quantity: String(totalQty),
         goods_gross_weight: String(totalGrossKg),
-        goods_net_weight: String(totalGrossKg)
+        goods_empty_weight: String(totalEmptyKg),
+        goods_net_weight: String(totalNetKg)
       };
     });
 
@@ -4652,7 +5192,9 @@ function Step1BookingCustomer({
       const items = filtered.length > 0 ? filtered : [defaultGoodsItem()];
       const first = items[0];
       const totalQty = items.reduce((sum, g) => sum + (Number(g.quantity) || 0), 0);
-      const totalKg = items.reduce((sum, g) => sum + (Number(g.totalKg) || 0), 0);
+      const totalGrossKg = items.reduce((sum, g) => sum + (Number(g.grossWeight || g.totalKg) || 0), 0);
+      const totalEmptyKg = items.reduce((sum, g) => sum + (Number(g.emptyWeight) || 0), 0);
+      const totalNetKg = items.reduce((sum, g) => sum + (Number(g.netWeight || g.totalKg) || 0), 0);
 
       return {
         ...current,
@@ -4661,8 +5203,9 @@ function Step1BookingCustomer({
         goods_name: items.map((g) => g.goodsName).filter(Boolean).join(", "),
         goods_unit: first?.unit || "Bags",
         goods_quantity: String(totalQty),
-        goods_gross_weight: String(totalKg),
-        goods_net_weight: String(totalKg)
+        goods_gross_weight: String(totalGrossKg),
+        goods_empty_weight: String(totalEmptyKg),
+        goods_net_weight: String(totalNetKg)
       };
     });
     if (editingGoodsIdx === idx) {
@@ -4671,24 +5214,29 @@ function Step1BookingCustomer({
     }
   };
 
-  // Pre-fill 1B warehouse into 1C origin warehouse automatically
-  const effectiveOriginWarehouse = useMemo(() => {
-    const firstItem = formData.goods_items?.[0];
-    if (firstItem?.warehouseName) return firstItem.warehouseName;
-    if (formData.loading_source_name) return formData.loading_source_name;
-    return "";
-  }, [formData.goods_items, formData.loading_source_name]);
-
   // Totals calculations
   const totalGoodsQuantity = useMemo(
     () => (formData.goods_items || []).reduce((sum, g) => sum + (Number(g.quantity) || 0), 0),
     [formData.goods_items]
   );
-  const totalGoodsKg = useMemo(
-    () => (formData.goods_items || []).reduce((sum, g) => sum + (Number(g.totalKg) || 0), 0),
+  const totalGoodsGrossKg = useMemo(
+    () => (formData.goods_items || []).reduce((sum, g) => sum + (Number(g.grossWeight || g.totalKg) || 0), 0),
     [formData.goods_items]
   );
-  const totalGoodsMt = useMemo(() => (totalGoodsKg / 1000).toFixed(2), [totalGoodsKg]);
+  const totalGoodsEmptyKg = useMemo(
+    () => (formData.goods_items || []).reduce((sum, g) => sum + (Number(g.emptyWeight) || 0), 0),
+    [formData.goods_items]
+  );
+  const totalGoodsNetKg = useMemo(
+    () => (formData.goods_items || []).reduce((sum, g) => sum + (Number(g.netWeight || g.totalKg) || 0), 0),
+    [formData.goods_items]
+  );
+  const totalGoodsAmount = useMemo(
+    () => (formData.goods_items || []).reduce((sum, g) => sum + (Number(g.finalAmount) || 0), 0),
+    [formData.goods_items]
+  );
+  const totalGoodsGrossMt = useMemo(() => (totalGoodsGrossKg / 1000).toFixed(2), [totalGoodsGrossKg]);
+  const totalGoodsNetMt = useMemo(() => (totalGoodsNetKg / 1000).toFixed(2), [totalGoodsNetKg]);
 
   const selectSub = (sub: "1A" | "1B" | "1C") => {
     if (onSelectSubStep) {
@@ -4726,7 +5274,7 @@ function Step1BookingCustomer({
           }`}
         >
           <Truck className={`h-3.5 w-3.5 shrink-0 ${step1SubStep === "1B" ? "text-blue-600 dark:text-blue-400" : "text-slate-400"}`} />
-          <span className="truncate">1B — Truck & Fleet</span>
+          <span className="truncate">1B — Truck & Transport</span>
           {formData.truck_number || formData.truck_assignment_mode === "later" ? (
             <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" />
           ) : null}
@@ -4742,7 +5290,7 @@ function Step1BookingCustomer({
           }`}
         >
           <Boxes className={`h-3.5 w-3.5 shrink-0 ${step1SubStep === "1C" ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400"}`} />
-          <span className="truncate">1C — Goods & Warehouse</span>
+          <span className="truncate">1C — Goods Entry</span>
           {(formData.goods_items || []).filter((g) => g.goodsName || g.quantity).length > 0 ? (
             <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" />
           ) : null}
@@ -4750,7 +5298,7 @@ function Step1BookingCustomer({
       </div>
 
       {/* ========================================================================= */}
-      {/* 1A — CUSTOMER ACCOUNT, MOVEMENT TYPE & DYNAMIC ROUTE                      */}
+      {/* 1A — CUSTOMER ACCOUNT, MOVEMENT TYPE & SEQUENCED MULTI-LEG ROUTE          */}
       {/* ========================================================================= */}
       {step1SubStep === "1A" && (
         <div className="space-y-3.5 animate-in fade-in duration-150">
@@ -4759,232 +5307,69 @@ function Step1BookingCustomer({
             <div className="rounded-xl border border-blue-200/90 bg-blue-50/70 p-2.5 text-xs text-blue-900 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-200 shadow-2xs">
               <div className="flex items-center gap-1.5 font-bold">
                 <Truck className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
-                <span>{tt("com.sea_drayage_feeder_title", "Multimodal Sea-Road Drayage (Port Transfer Truck)")}</span>
+                <span>{tt("sea_drayage_feeder_title", "Multimodal Sea-Road Drayage (Port Transfer Truck)")}</span>
               </div>
               <p className="mt-1 text-[11px] text-blue-800/80 dark:text-blue-300/80 leading-relaxed">
-                {tt("com.sea_drayage_feeder_desc", "For Ocean Freight (By Sea), road haulage is required for initial port drayage / loading pickup and final delivery from port to destination warehouse.")}
+                {tt("sea_drayage_feeder_desc", "For Ocean Freight (By Sea), road haulage is required for initial port drayage / loading pickup and final delivery from port to destination warehouse.")}
               </p>
             </div>
           )}
 
-          {/* ROW 1: Customer Account & Route Via / Corridor (Side-by-Side) */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            {/* 1. Customer Account SearchSelect */}
-            <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-2xs flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                    <Users className="h-4 w-4 text-blue-600" />
-                    <span>{tt("customer_account_label", "Customer Account")} *</span>
-                  </label>
-                  {formData.customer_name ? (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
-                      ✓ {formData.customer_name}
-                    </span>
-                  ) : null}
-                </div>
-
-                <SearchSelect
-                  label=""
-                  value={formData.customer_id}
-                  options={customerOptions}
-                  placeholder={tt("select_customer_account_ph", "Select Customer Account...")}
-                  onValueChange={handleCustomerSelection}
-                  disabled={loading}
-                  searchPlaceholder="Search customer by name, code or mobile..."
-                  emptyLabel="No matching customers found"
-                />
+          {/* Customer Account SearchSelect */}
+          <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                  <Users className="h-4 w-4 text-blue-600" />
+                  <span>{tt("customer_account_label", "Customer Account")} *</span>
+                </label>
+                {formData.customer_name ? (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                    ✓ {formData.customer_name}
+                  </span>
+                ) : null}
               </div>
 
-              {/* Tag summary underneath input */}
-              {selectedCustomer || selectedAccount ? (
-                <div className="flex flex-wrap items-center gap-2 pt-2 text-xs text-slate-600 dark:text-slate-300 border-t border-slate-100 dark:border-slate-800/60 mt-1">
-                  <span className="font-bold text-slate-900 dark:text-white">
-                    {selectedCustomer?.customer_name || selectedAccount?.name}
-                  </span>
-                  <span className="text-slate-300 dark:text-slate-600">•</span>
-                  <span className="font-mono text-slate-500">
-                    Code: {selectedAccount?.code || selectedCustomer?.person_code || "—"}
-                  </span>
-                  <span className="text-slate-300 dark:text-slate-600">•</span>
-                  <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                    Bal: {selectedAccount?.currency || "USD"} {Number(selectedAccount?.current_balance || 0).toLocaleString()}
-                  </span>
-                  <span className="text-slate-300 dark:text-slate-600">•</span>
-                  <span className="text-slate-500">
-                    {selectedCustomer?.city_name ? `${selectedCustomer.city_name}, ` : ""}{selectedCustomer?.country_name || ""}
-                  </span>
-                </div>
-              ) : null}
+              <SearchSelect
+                label=""
+                value={formData.customer_id}
+                options={customerOptions}
+                placeholder={tt("select_customer_account_ph", "Select Customer Account...")}
+                onValueChange={handleCustomerSelection}
+                disabled={loading}
+                searchPlaceholder="Search customer by name, code or mobile..."
+                emptyLabel="No matching customers found"
+              />
             </div>
 
-            {/* 2. Route Via / Transit Corridor Pathway Builder */}
-            <div className="rounded-xl border border-emerald-200/90 bg-white dark:bg-slate-900 p-3 space-y-2 shadow-2xs dark:border-emerald-800/80 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                    <Route className="h-4 w-4 text-emerald-600" />
-                    <span>{tt("route_via_corridor", "Route Via / Corridor")}</span>
-                  </label>
-                  <div className="flex items-center gap-1.5">
-                    {routeStops.length > 0 && (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
-                        {routeStops.length} {tt("route_stops_count", "Stops")}
-                      </span>
-                    )}
-                    {formData.route_name ? (
-                      <button
-                        type="button"
-                        onClick={handleClearRoute}
-                        className="text-[10px] font-semibold text-slate-400 hover:text-rose-500 transition-colors"
-                        title={tt("btn_clear", "Clear")}
-                      >
-                        {tt("btn_clear", "Clear")}
-                      </button>
-                    ) : null}
-                  </div>
-                </div>
-
-                {/* Preset & Add Country Dropdowns */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
-                  <select
-                    value=""
-                    onChange={(e) => {
-                      if (e.target.value) {
-                        setFormData((c) => ({ ...c, route_name: e.target.value }));
-                      }
-                    }}
-                    className="w-full rounded-lg border border-slate-200 bg-slate-50/70 px-2.5 py-1.5 text-xs font-medium text-slate-700 focus:border-emerald-500 focus:bg-white focus:outline-none dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-200"
-                  >
-                    <option value="">{tt("corridor_presets_ph", "⚡ Corridor Presets ▾")}</option>
-                    <option value="Dubai ➔ Iran ➔ Afghanistan ➔ Uzbekistan ➔ India">🇦🇪 Dubai ➔ 🇮🇷 Iran ➔ 🇦🇫 Afghan ➔ 🇺🇿 Uzbek ➔ 🇮🇳 India</option>
-                    <option value="Dubai ➔ Iran ➔ Afghanistan ➔ Uzbekistan">🇦🇪 Dubai ➔ 🇮🇷 Iran ➔ 🇦🇫 Afghan ➔ 🇺🇿 Uzbekistan</option>
-                    <option value="Dubai ➔ Iran ➔ Afghanistan">🇦🇪 Dubai ➔ 🇮🇷 Iran ➔ 🇦🇫 Afghanistan</option>
-                    <option value="Dubai ➔ Bandar Abbas ➔ Dogharoun ➔ Islam Qala ➔ Herat">🇦🇪 Dubai ➔ 🇮🇷 Bandar Abbas ➔ 🇦🇫 Islam Qala ➔ Herat</option>
-                    <option value="Karachi ➔ Torkham ➔ Jalalabad ➔ Kabul">🇵🇰 Karachi ➔ 🇦🇫 Torkham ➔ Jalalabad ➔ Kabul</option>
-                    <option value="Karachi ➔ Chaman ➔ Spin Boldak ➔ Kandahar">🇵🇰 Karachi ➔ 🇦🇫 Chaman ➔ Spin Boldak ➔ Kandahar</option>
-                    <option value="Dubai ➔ Karachi ➔ Chaman ➔ Afghanistan">🇦🇪 Dubai ➔ 🇵🇰 Karachi ➔ 🇦🇫 Afghanistan</option>
-                    <option value="China ➔ Khunjerab ➔ Sost ➔ Pakistan">🇨🇳 China ➔ 🇵🇰 Khunjerab ➔ Sost ➔ Pakistan</option>
-                  </select>
-
-                  <select
-                    value=""
-                    onChange={(e) => {
-                      if (e.target.value) {
-                        handleAddRouteStop(e.target.value);
-                      }
-                    }}
-                    className="w-full rounded-lg border border-slate-200 bg-slate-50/70 px-2.5 py-1.5 text-xs font-medium text-slate-700 focus:border-emerald-500 focus:bg-white focus:outline-none dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-200"
-                  >
-                    <option value="">{tt("add_country_hub_ph", "➕ Add Country / Hub ▾")}</option>
-                    <optgroup label={tt("popular_trade_corridors", "Popular Trade Corridors")}>
-                      <option value="Dubai">🇦🇪 Dubai (UAE)</option>
-                      <option value="Jebel Ali">🇦🇪 Jebel Ali Port</option>
-                      <option value="Iran">🇮🇷 Iran</option>
-                      <option value="Bandar Abbas">🇮🇷 Bandar Abbas Port</option>
-                      <option value="Chabahar">🇮🇷 Chabahar Port</option>
-                      <option value="Dogharoun">🇮🇷 Dogharoun Border</option>
-                      <option value="Afghanistan">🇦🇫 Afghanistan</option>
-                      <option value="Islam Qala">🇦🇫 Islam Qala Border</option>
-                      <option value="Torkham">🇦🇫 Torkham Border</option>
-                      <option value="Spin Boldak">🇦🇫 Spin Boldak Border</option>
-                      <option value="Kabul">🇦🇫 Kabul</option>
-                      <option value="Herat">🇦🇫 Herat</option>
-                      <option value="Kandahar">🇦🇫 Kandahar</option>
-                      <option value="Mazar-i-Sharif">🇦🇫 Mazar-i-Sharif</option>
-                      <option value="Uzbekistan">🇺🇿 Uzbekistan</option>
-                      <option value="Hairatan">🇺🇿 Hairatan Border</option>
-                      <option value="Tashkent">🇺🇿 Tashkent</option>
-                      <option value="India">🇮🇳 India</option>
-                      <option value="Nhava Sheva">🇮🇳 Nhava Sheva (JNPT)</option>
-                      <option value="Mundra">🇮🇳 Mundra Port</option>
-                      <option value="Pakistan">🇵🇰 Pakistan</option>
-                      <option value="Karachi">🇵🇰 Karachi Port</option>
-                      <option value="Port Qasim">🇵🇰 Port Qasim</option>
-                      <option value="Gwadar">🇵🇰 Gwadar Port</option>
-                      <option value="Chaman">🇵🇰 Chaman Border</option>
-                      <option value="China">🇨🇳 China</option>
-                      <option value="Turkey">🇹🇷 Turkey</option>
-                      <option value="Turkmenistan">🇹🇲 Turkmenistan</option>
-                      <option value="Tajikistan">🇹🇯 Tajikistan</option>
-                      <option value="Oman">🇴🇲 Oman</option>
-                    </optgroup>
-                  </select>
-                </div>
-
-                {/* Removable Route Stop Tags */}
-                {routeStops.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-1.5 p-2 bg-slate-50/80 dark:bg-slate-950/50 rounded-lg border border-slate-200/80 dark:border-slate-800/80 mb-2">
-                    {routeStops.map((stop, sIdx) => {
-                      const flag = getRouteCountryFlag(stop);
-                      const isOrigin = sIdx === 0;
-                      const isDest = sIdx === routeStops.length - 1 && routeStops.length > 1;
-                      return (
-                        <div key={sIdx} className="flex items-center gap-1">
-                          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-bold border shadow-2xs ${
-                            isOrigin 
-                              ? "bg-blue-50 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800" 
-                              : isDest 
-                              ? "bg-purple-50 dark:bg-purple-950/50 text-purple-800 dark:text-purple-300 border-purple-200 dark:border-purple-800" 
-                              : "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700"
-                          }`}>
-                            <span>{flag}</span>
-                            <span>{stop}</span>
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveRouteStop(sIdx)}
-                              className="ml-1 text-slate-400 hover:text-rose-500 rounded p-0.5 transition-colors"
-                              title={`Remove ${stop}`}
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </span>
-                          {sIdx < routeStops.length - 1 && (
-                            <span className="text-slate-400 font-bold text-[10px]">➔</span>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+            {/* Tag summary underneath input */}
+            {selectedCustomer || selectedAccount ? (
+              <div className="flex flex-wrap items-center gap-2 pt-2 text-xs text-slate-600 dark:text-slate-300 border-t border-slate-100 dark:border-slate-800/60 mt-1">
+                <span className="font-bold text-slate-900 dark:text-white">
+                  {selectedCustomer?.customer_name || selectedAccount?.name}
+                </span>
+                <span className="text-slate-300 dark:text-slate-600">•</span>
+                <span className="font-mono text-slate-500">
+                  Code: {selectedAccount?.code || selectedCustomer?.person_code || "—"}
+                </span>
+                <span className="text-slate-300 dark:text-slate-600">•</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                  Bal: {selectedAccount?.currency || "USD"} {Number(selectedAccount?.current_balance || 0).toLocaleString()}
+                </span>
+                <span className="text-slate-300 dark:text-slate-600">•</span>
+                <span className="text-slate-500">
+                  {selectedCustomer?.city_name ? `${selectedCustomer.city_name}, ` : ""}{selectedCustomer?.country_name || ""}
+                </span>
               </div>
-
-              {/* Text Input for Custom or Fine-Tuning */}
-              <div>
-                <input
-                  type="text"
-                  placeholder={tt("ph_route_via", "e.g. Dubai ➔ Iran ➔ Afghanistan ➔ Uzbekistan ➔ India")}
-                  value={formData.route_name}
-                  onChange={(e) => setFormData((c) => ({ ...c, route_name: e.target.value }))}
-                  className={inputClass}
-                />
-              </div>
-            </div>
+            ) : null}
           </div>
 
-          {/* ROW 2: Shipping / Transport Mode & Movement Type (Wider 2-Column Grid) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-1.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
-              <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                <Ship className="h-4 w-4 text-blue-600" />
-                <span>{tt("shipping_transport_mode", "Shipping / Transport Mode")} *</span>
-              </label>
-              <select
-                value={formData.transport_mode}
-                onChange={(e) => setFormData((curr) => ({ ...curr, transport_mode: e.target.value as any }))}
-                className={selectClass}
-              >
-                <option value="by_sea">🚢 By Sea (Ocean Vessel / Container)</option>
-                <option value="by_road">🚛 By Road (Truck / Trailer / Road Freight)</option>
-                <option value="by_air">✈️ By Air (Air Freight / Cargo)</option>
-                <option value="by_rail">🚆 By Train (Rail Freight)</option>
-              </select>
-            </div>
-
+          {/* ROW 2: Movement Type, Shipment/Package Type & Transport Mode (3-Column Grid) */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-1.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
               <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                 <Repeat2 className="h-4 w-4 text-purple-600" />
-                <span>{tt("movement_type_route", "Movement Type (Route Type)")} *</span>
+                <span>{tt("movement_type_route", "Movement Type")} *</span>
               </label>
               <select
                 value={formData.movement_type}
@@ -4997,15 +5382,52 @@ function Step1BookingCustomer({
                 <option value="down_transit">Down Transit (Inland &rarr; Border Exit)</option>
               </select>
             </div>
+
+            <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-1.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+              <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                <Boxes className="h-4 w-4 text-amber-600" />
+                <span>{tt("shipment_package_type", "Shipment / Package Type")} *</span>
+              </label>
+              <select
+                value={formData.shipment_type || "FCL"}
+                onChange={(e) => setFormData((curr) => ({ ...curr, shipment_type: e.target.value }))}
+                className={selectClass}
+              >
+                <option value="FCL">{tt("shipment_type_fcl", "FCL — Full Container Load")}</option>
+                <option value="LCL">{tt("shipment_type_lcl", "LCL — Less than Container Load")}</option>
+                <option value="Loose">{tt("shipment_type_loose", "Loose Cargo / General Freight")}</option>
+                <option value="Bulk">{tt("shipment_type_bulk", "Dry Bulk Cargo")}</option>
+                <option value="Breakbulk">{tt("shipment_type_breakbulk", "Breakbulk Heavy Cargo")}</option>
+                <option value="Reefer">{tt("shipment_type_reefer", "Reefer Container (Cold Chain)")}</option>
+                <option value="Flat Rack">{tt("shipment_type_flat_rack", "Flat Rack / Open Top Special")}</option>
+              </select>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-1.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+              <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                <Ship className="h-4 w-4 text-blue-600" />
+                <span>{tt("shipping_transport_mode", "Transport Mode")} *</span>
+              </label>
+              <select
+                value={formData.transport_mode}
+                onChange={(e) => setFormData((curr) => ({ ...curr, transport_mode: e.target.value as any }))}
+                className={selectClass}
+              >
+                <option value="by_sea">🚢 By Sea (Ocean Vessel / Container)</option>
+                <option value="by_road">🚛 By Road (Truck / Trailer / Freight)</option>
+                <option value="by_air">✈️ By Air (Air Freight / Cargo)</option>
+                <option value="by_rail">🚆 By Train (Rail Freight)</option>
+              </select>
+            </div>
           </div>
 
-          {/* 3. DYNAMIC MOVEMENT & ROUTE FIELDS BASED ON MOVEMENT TYPE */}
+          {/* DYNAMIC MOVEMENT & LOCATION SPECIFICATIONS BASED ON MOVEMENT TYPE */}
           {formData.movement_type === "import" && (
             <div className="rounded-xl border border-sky-200 bg-sky-50/40 p-3.5 space-y-3 dark:border-sky-900/60 dark:bg-sky-950/20">
               <div className="flex items-center justify-between border-b border-sky-200/60 pb-1.5 dark:border-sky-900/60">
                 <div className="flex items-center gap-1.5 text-xs font-black uppercase text-sky-800 dark:text-sky-300">
                   <Ship className="h-4 w-4 text-sky-600" />
-                  <span>{tt("import_movement_route", "Import Movement & Route Specifications")}</span>
+                  <span>{tt("import_movement_route", "Import Movement & Location Setup")}</span>
                 </div>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-sky-100 dark:bg-sky-900/60 text-sky-700 dark:text-sky-300">
                   {tt("import_clearance_badge", "Import Clearance")}
@@ -5016,7 +5438,7 @@ function Step1BookingCustomer({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {tt("foreign_origin_country", "Foreign Origin Country")} *
+                    {tt("foreign_origin_country", "Loading Country (Origin)")} *
                   </label>
                   <select
                     value={formData.loading_country_id}
@@ -5031,7 +5453,7 @@ function Step1BookingCustomer({
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {tt("foreign_port_of_loading", "Foreign Port of Loading")}
+                    {tt("foreign_port_of_loading", "Port of Loading")}
                   </label>
                   <select
                     value={formData.loading_port_id}
@@ -5114,28 +5536,13 @@ function Step1BookingCustomer({
               {/* Row 4: Final Delivery Location / Warehouse */}
               <div>
                 <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  {tt("final_delivery_location", "Final Delivery Location / Warehouse Address")}
+                  {tt("final_delivery_location", "Final Destination / Warehouse Address")}
                 </label>
                 <input
                   type="text"
                   placeholder={tt("ph_final_delivery", "e.g. Consignee Warehouse, Plot 14, Industrial Area")}
                   value={formData.final_delivery_location}
                   onChange={(e) => setFormData((c) => ({ ...c, final_delivery_location: e.target.value }))}
-                  className={inputClass}
-                />
-              </div>
-
-              {/* Row 5: Route Via / Corridor */}
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
-                  <Route className="h-3.5 w-3.5 text-sky-600" />
-                  <span>{tt("route_via_corridor", "Route Via / Transit Corridor")}</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder={tt("ph_route_via_import", "e.g. via Karachi Port / Bandar Abbas / Torkham")}
-                  value={formData.route_name}
-                  onChange={(e) => setFormData((c) => ({ ...c, route_name: e.target.value }))}
                   className={inputClass}
                 />
               </div>
@@ -5147,7 +5554,7 @@ function Step1BookingCustomer({
               <div className="flex items-center justify-between border-b border-emerald-200/60 pb-1.5 dark:border-emerald-900/60">
                 <div className="flex items-center gap-1.5 text-xs font-black uppercase text-emerald-800 dark:text-emerald-300">
                   <Repeat2 className="h-4 w-4 text-emerald-600" />
-                  <span>{tt("export_movement_route", "Export Movement & Route Specifications")}</span>
+                  <span>{tt("export_movement_route", "Export Movement & Location Setup")}</span>
                 </div>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300">
                   {tt("export_clearance_badge", "Export Clearance")}
@@ -5225,7 +5632,7 @@ function Step1BookingCustomer({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {tt("destination_country", "Destination Country")} *
+                    {tt("destination_country", "Final Destination Country")} *
                   </label>
                   <select
                     value={formData.receiving_country_id}
@@ -5240,7 +5647,7 @@ function Step1BookingCustomer({
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {tt("foreign_port_discharge_city", "Foreign Port of Discharge / Destination City")}
+                    {tt("foreign_port_discharge_city", "Discharge Port / Destination City")}
                   </label>
                   <select
                     value={formData.destination_port_id}
@@ -5254,21 +5661,6 @@ function Step1BookingCustomer({
                   </select>
                 </div>
               </div>
-
-              {/* Row 4: Route Via / Corridor */}
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
-                  <Route className="h-3.5 w-3.5 text-emerald-600" />
-                  <span>{tt("route_via_corridor", "Route Via / Transit Corridor")}</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder={tt("ph_route_via_export", "e.g. via Torkham / Chaman / Bandar Abbas / Spin Boldak")}
-                  value={formData.route_name}
-                  onChange={(e) => setFormData((c) => ({ ...c, route_name: e.target.value }))}
-                  className={inputClass}
-                />
-              </div>
             </div>
           )}
 
@@ -5277,15 +5669,30 @@ function Step1BookingCustomer({
               <div className="flex items-center justify-between border-b border-purple-200/60 pb-1.5 dark:border-purple-900/60">
                 <div className="flex items-center gap-1.5 text-xs font-black uppercase text-purple-800 dark:text-purple-300">
                   <Repeat2 className="h-4 w-4 text-purple-600" />
-                  <span>{tt("bonded_transit_movement", "Bonded Transit Movement Specifications")}</span>
+                  <span>{tt("bonded_transit_movement", "Bonded Transit Movement Setup")}</span>
                 </div>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 uppercase">
                   {formData.movement_type.replace("_", " ")}
                 </span>
               </div>
 
-              {/* Row 1: Entry Border / Port & Corridor */}
+              {/* Row 1: Entry Border / Port & Loading Country */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    {tt("loading_origin_country", "Origin Country")} *
+                  </label>
+                  <select
+                    value={formData.loading_country_id}
+                    onChange={(e) => handleLoadingCountryChange(e.target.value)}
+                    className={selectClass}
+                  >
+                    <option value="">— {tt("select_country_generic", "Select Country")} —</option>
+                    {countries.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
                     {tt("entry_sea_port_border", "Entry Sea Port / Border Point")} *
@@ -5307,19 +5714,6 @@ function Step1BookingCustomer({
                       <option key={p.id} value={p.id}>{p.port_name}</option>
                     ))}
                   </select>
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
-                    <Route className="h-3.5 w-3.5 text-purple-600" />
-                    <span>{tt("route_via_corridor", "Route Via / Transit Corridor")}</span>
-                  </label>
-                  <input
-                    type="text"
-                    placeholder={tt("ph_transit_corridor", "e.g. Karachi - Chaman - Spin Boldak")}
-                    value={formData.route_name}
-                    onChange={(e) => setFormData((c) => ({ ...c, route_name: e.target.value }))}
-                    className={inputClass}
-                  />
                 </div>
               </div>
 
@@ -5364,7 +5758,7 @@ function Step1BookingCustomer({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {tt("transit_destination_country", "Transit Destination Country")} *
+                    {tt("transit_destination_country", "Final Destination Country")} *
                   </label>
                   <select
                     value={formData.receiving_country_id}
@@ -5393,25 +5787,79 @@ function Step1BookingCustomer({
             </div>
           )}
 
+          {/* SEQUENCED MULTI-LEG ROUTE CORRIDOR BUILDER */}
+          <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+            <CustomerOrderRouteBuilder
+              routeName={formData.route_name}
+              transportMode={formData.transport_mode}
+              loadingCountryId={formData.loading_country_id}
+              loadingCountryName={
+                countries.find((c) => c.id === formData.loading_country_id)?.name ||
+                formData.loading_country_name ||
+                ""
+              }
+              receivingCountryId={formData.receiving_country_id}
+              receivingCountryName={
+                countries.find((c) => c.id === formData.receiving_country_id)?.name ||
+                formData.receiving_country_name ||
+                ""
+              }
+              loadingCityName={
+                loadingCities.find((c) => c.id === formData.loading_city_id)?.name ||
+                formData.loading_city_name ||
+                formData.loading_source_name ||
+                ""
+              }
+              destinationCityName={
+                receivingCities.find((c) => c.id === formData.receiving_city_id)?.name ||
+                formData.destination_city ||
+                ""
+              }
+              legs={formData.legs || []}
+              onChange={(routeName, legs) => {
+                setFormData((c) => ({ ...c, route_name: routeName, legs }));
+              }}
+              countries={countries.map((c) => ({ id: c.id, name: c.name }))}
+              ledgers={accounts.map((a) => ({ id: a.id, name: a.name, code: a.code, currency: a.currency || undefined }))}
+              lang={lang}
+            />
+          </div>
+
           {/* 1A Action Footer */}
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
             <button
               type="button"
-              onClick={() => {
-                setFormData((curr) => ({
-                  ...curr,
-                  customer_id: "",
-                  customer_name: "",
-                  movement_type: "import",
-                  transport_mode: "by_sea"
-                }));
-              }}
-              className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 underline"
+              onClick={onSaveDraft}
+              disabled={saving}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 shadow-2xs transition"
             >
-              <RefreshCw className="h-3 w-3" />
-              <span>{tt("reset_1a_form", "Reset 1A Form")}</span>
+              <Save className="h-3.5 w-3.5 text-slate-500" />
+              <span>{t(lang, "comv.save_draft", "Save Draft")}</span>
             </button>
-            <span className="text-[10px] text-slate-400 font-medium">1A: Customer & Route</span>
+
+            <div className="flex items-center gap-2">
+              {onAssignStage1A && (
+                <button
+                  type="button"
+                  onClick={onAssignStage1A}
+                  disabled={saving}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-blue-300 bg-blue-50 px-3.5 py-2 text-xs font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950/60 dark:text-blue-300 shadow-2xs transition"
+                >
+                  <Users className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                  <span>{tt("assign_to_another_user", "Assign to Another User")}</span>
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={onAdvanceToStep2}
+                disabled={saving}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-700 shadow-xs shadow-blue-600/25 transition"
+              >
+                <span>Continue Myself (Go to 1B)</span>
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -5421,57 +5869,104 @@ function Step1BookingCustomer({
       {/* ========================================================================= */}
       {step1SubStep === "1B" && (
         <div className="space-y-4 animate-in fade-in duration-150">
-          {/* Read-Only 1A Summary Badge Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-blue-200/80 bg-blue-50/50 p-2.5 text-xs dark:border-blue-900/60 dark:bg-blue-950/30">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-md bg-blue-600 px-2 py-0.5 text-[10px] font-black uppercase text-white">
-                {tt("summary_1a_badge", "1A Summary")}
-              </span>
-              <span className="font-bold text-slate-800 dark:text-slate-200">
-                {tt("customer_label_colon", "Customer:")} <span className="text-blue-700 dark:text-blue-300">{formData.customer_name || "—"}</span>
-              </span>
-              <span className="text-slate-300 dark:text-slate-600">•</span>
-              <span className="font-bold text-slate-700 dark:text-slate-300 capitalize">
-                {tt("ship_label_colon", "Ship:")} {formData.transport_mode.replace("by_", "")}
-              </span>
-              <span className="text-slate-300 dark:text-slate-600">•</span>
-              <span className="font-bold text-purple-700 dark:text-purple-300 capitalize">
-                {tt("movement_label_colon", "Movement:")} {formData.movement_type.replace("_", " ")}
-              </span>
-              {formData.route_name ? (
-                <>
-                  <span className="text-slate-300 dark:text-slate-600">•</span>
-                  <span className="font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-1">
-                    <Route className="h-3 w-3 text-emerald-600" />
-                    <span>{tt("route_via_colon", "Via:")} {formData.route_name}</span>
-                  </span>
-                </>
-              ) : null}
+          {/* Read-Only Stage 1A Summary Card */}
+          <div className="rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50/70 via-white to-blue-50/40 p-4 space-y-3 dark:border-blue-900/70 dark:bg-slate-900/90 shadow-2xs">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-blue-200/70 pb-2 dark:border-blue-900/60">
+              <div className="flex items-center gap-2">
+                <span className="rounded-md bg-blue-600 px-2.5 py-0.5 text-xs font-black uppercase tracking-wider text-white shadow-xs">
+                  Stage 1A Summary (Read-Only)
+                </span>
+                <span className="text-xs font-bold text-slate-500">
+                  Order: <span className="font-mono font-black text-blue-700 dark:text-blue-300">{formData.order_no || activeOrder?.order_no || "Draft"}</span>
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800 text-amber-800 dark:text-amber-300 px-2.5 py-0.5 text-[11px] font-bold">
+                  <Clock className="h-3 w-3" />
+                  <span>{tt("truck_confirmation_required", "Truck Confirmation Required")}</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => selectSub("1A")}
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 underline"
+                >
+                  <Pencil className="h-3 w-3" />
+                  <span>[{tt("edit_1a", "Edit (1A)")}]</span>
+                </button>
+              </div>
             </div>
-            <button
-              type="button"
-              onClick={() => selectSub("1A")}
-              className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 underline"
-            >
-              <Pencil className="h-3 w-3" />
-              <span>{tt("edit_1a_bracket", "[Edit (1A)]")}</span>
-            </button>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 text-xs">
+              <div>
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("customer_account_label", "Customer")}</span>
+                <span className="font-bold text-slate-900 dark:text-white truncate block">{formData.customer_name || "—"}</span>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("movement_type_route", "Movement Type")}</span>
+                <span className="font-bold text-purple-700 dark:text-purple-300 capitalize block">{formData.movement_type?.replace("_", " ")}</span>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("shipment_package_type", "Shipment Type")}</span>
+                <span className="font-bold text-slate-800 dark:text-slate-200 block">{formData.shipment_type || "FCL"}</span>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("shipping_transport_mode", "Transport Mode")}</span>
+                <span className="font-bold text-blue-700 dark:text-blue-300 capitalize block">{formData.transport_mode?.replace("by_", "")}</span>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("loading_location", "Loading Location")}</span>
+                <span className="font-medium text-slate-700 dark:text-slate-300 truncate block">
+                  {formData.loading_source_name || formData.loading_city_name || countries.find(c => c.id === formData.loading_country_id)?.name || "—"}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("final_destination", "Final Destination")}</span>
+                <span className="font-medium text-slate-700 dark:text-slate-300 truncate block">
+                  {formData.destination_city || countries.find(c => c.id === formData.receiving_country_id)?.name || "—"}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("assigned_by", "Assigned By")}</span>
+                <span className="font-medium text-slate-700 dark:text-slate-300 truncate block">
+                  {activeOrder?.latest_handover?.sender_name || (formData.step1b_assignee_name ? "Assigned by User" : (ctx?.userName || "Self (Current User)"))}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("assigning_branch", "Assigning Branch")}</span>
+                <span className="font-medium text-slate-700 dark:text-slate-300 truncate block">
+                  {activeOrder?.latest_handover?.source_branch_name || ctx?.branchName || "Main Branch"}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("assignment_date_time", "Assignment Date/Time")}</span>
+                <span className="font-medium text-slate-700 dark:text-slate-300 block">
+                  {activeOrder?.latest_handover?.created_at ? new Date(activeOrder.latest_handover.created_at).toLocaleString() : (formData.order_date ? `${formData.order_date} ${formData.order_time}` : new Date().toLocaleString())}
+                </span>
+              </div>
+              <div className="col-span-2 sm:col-span-3">
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("route_via_corridor", "Complete Route Via")}</span>
+                <span className="font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-1">
+                  <Route className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                  <span className="truncate">{formData.route_name || "Direct Route"}</span>
+                </span>
+              </div>
+            </div>
           </div>
 
-          {/* Truck / Pre-Carriage Section — Single Vehicle per Order */}
+          {/* Truck / Fleet Section — Single Vehicle per Order */}
           <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-3 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
             <div className="flex items-center justify-between border-b border-slate-100 pb-2 dark:border-slate-800">
               <div className="flex items-center gap-2">
                 <Truck className="h-4 w-4 text-blue-600" />
                 <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                  {tt("truck_fleet_assignment_single", "Truck / Fleet Assignment (Single Vehicle per Order)")}
+                  {tt("truck_fleet_assignment_single", "Truck & Transport Confirmation")}
                 </span>
               </div>
-              <span className="text-[10px] font-bold text-slate-400">{tt("road_transport", "Road / Transport")}</span>
+              <span className="text-[10px] font-bold text-slate-400">{tt("road_transport", "Road / Fleet Dispatch")}</span>
             </div>
 
-            {/* Truck Assignment Dropdown & Inputs */}
-            <div className="space-y-2.5">
+            {/* Truck Assignment Mode & Registration Type */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               <div>
                 <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
                   {tt("truck_assignment_mode_label", "Truck Assignment Mode")} *
@@ -5495,227 +5990,424 @@ function Step1BookingCustomer({
                 </select>
               </div>
 
-              {/* Truck Form Fields based on Dropdown Selection */}
-              {formData.truck_assignment_mode === "permanent" && (
-                <div className="space-y-2">
-                  <SearchSelect
-                    label={`${tt("select_permanent_truck", "Select Permanent Truck")} *`}
-                    value={formData.truck_id}
-                    placeholder={tt("search_truck_ph", "Search truck by number, registration, driver or make...")}
-                    options={(trucksList || []).map((t: any) => ({
-                      value: t.id,
-                      label: `${t.truck_number || t.registration_number || t.id} • Driver: ${t.driver_name || "—"} (${t.make || ""} ${t.model || ""})`,
-                      keywords: [t.truck_number, t.registration_number, t.driver_name, t.driver_mobile, t.make, t.model, t.transport_company].filter(Boolean).join(" ")
-                    }))}
-                    onValueChange={(truckId) => {
-                      const trk = (trucksList || []).find((t: any) => t.id === truckId);
-                      if (trk) {
-                        setFormData((c) => ({
-                          ...c,
-                          truck_id: trk.id,
-                          truck_number: trk.truck_number || trk.registration_number || "",
-                          truck_driver_name: trk.driver_name || "",
-                          truck_driver_mobile: trk.driver_mobile || trk.driver_phone || "",
-                          truck_transport_company: trk.transport_company || trk.owner_name || "",
-                          truck_details: [trk.truck_type, trk.make, trk.model, trk.color].filter(Boolean).join(" • ")
-                        }));
-                      }
-                    }}
-                    searchPlaceholder="Search truck..."
-                    emptyLabel="No matching trucks found"
-                  />
-
-                  {formData.truck_number ? (
-                    <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-2 text-xs dark:border-slate-800 dark:bg-slate-800/50 flex flex-wrap items-center justify-between gap-2">
-                      <div>
-                        <span className="font-bold text-slate-900 dark:text-white">{formData.truck_number}</span>
-                        <span className="text-slate-400 ml-2">{tt("driver_label", "Driver")}: {formData.truck_driver_name || "—"} ({formData.truck_driver_mobile || "—"})</span>
-                      </div>
-                      {formData.truck_details ? <span className="text-[11px] text-slate-500">{formData.truck_details}</span> : null}
-                    </div>
-                  ) : null}
-                </div>
-              )}
-
-              {formData.truck_assignment_mode === "hired" && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                      {tt("truck_registration_no", "Truck / Registration No")} *
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.truck_number}
-                      onChange={(e) => setFormData((c) => ({ ...c, truck_number: e.target.value }))}
-                      placeholder="e.g. TL-9988-KHI"
-                      className={inputClass}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                      {tt("driver_name", "Driver Name")}
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.truck_driver_name}
-                      onChange={(e) => setFormData((c) => ({ ...c, truck_driver_name: e.target.value }))}
-                      placeholder={tt("driver_full_name_ph", "Driver full name")}
-                      className={inputClass}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                      {tt("driver_mobile", "Driver Mobile")}
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.truck_driver_mobile}
-                      onChange={(e) => setFormData((c) => ({ ...c, truck_driver_mobile: e.target.value }))}
-                      placeholder="+92 300 1234567"
-                      className={inputClass}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                      {tt("po_hire_reference", "PO / Hire Reference")}
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.truck_po_ref || ""}
-                      onChange={(e) => setFormData((c) => ({ ...c, truck_po_ref: e.target.value }))}
-                      placeholder="e.g. PO-8874 / Hire Agmt"
-                      className={inputClass}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {formData.truck_assignment_mode === "later" && (
-                <div className="rounded-lg border border-amber-200 bg-amber-50/70 p-3 text-xs text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300">
-                  <div className="font-bold flex items-center gap-1.5">
-                    <BadgeInfo className="h-4 w-4 text-amber-600" />
-                    <span>{tt("truck_assigned_later", "Truck To Be Assigned Later")}</span>
-                  </div>
-                  <p className="mt-1 text-[11px] text-amber-700/80 dark:text-amber-400/80">
-                    {tt("truck_assigned_later_hint", "This order booking will be saved and registered without blocking. A vehicle can be assigned during dispatch operations.")}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Step 1B Handover & Execution Assignment */}
-          <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-1.5 dark:border-slate-800">
-              <div className="flex items-center gap-2">
-                <Users className="h-3.5 w-3.5 text-blue-600" />
-                <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                  {tt("com.step1b_execution_assignment", "Step 1B (Truck & Fleet) Handover & Execution")}
-                </span>
+              <div>
+                <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                  Permanent / Temporary Vehicle *
+                </label>
+                <select
+                  value={formData.truck_registration_type || "registered"}
+                  onChange={(e) => setFormData((c) => ({ ...c, truck_registration_type: e.target.value as any }))}
+                  className={selectClass}
+                >
+                  <option value="registered">{tt("truck_type_perm", "Permanent Fleet Truck (Company Registered)")}</option>
+                  <option value="temporary">{tt("truck_type_temp", "Temporary Truck (Trip Hired / Contractor)")}</option>
+                </select>
               </div>
-              <span className="text-[10px] font-bold text-slate-400">{tt("workflow_role", "Workflow Role")}</span>
             </div>
 
-            <div className="space-y-2">
-              <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400">
-                {tt("com.assign_other_user", "Assign to Other User / Team Member")}
-              </label>
-              <select
-                value={formData.step1b_assignee_id || ""}
-                onChange={(e) => {
-                  const uid = e.target.value;
-                  const u = (assignableUsers || []).find((usr) => usr.id === uid);
-                  setFormData((c) => ({
-                    ...c,
-                    step1b_assignee_id: uid,
-                    step1b_assignee_name: u?.name || ""
-                  }));
-                }}
-                className={selectClass}
-              >
-                <option value="">{tt("self_execution_option", "Complete this step myself (Default)")}</option>
-                {(assignableUsers || []).map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} (Fleet / Transport Operator)
-                  </option>
-                ))}
-              </select>
+            {/* Truck Form Fields based on Dropdown Selection */}
+            {formData.truck_assignment_mode === "permanent" && (
+              <div className="space-y-2">
+                <SearchSelect
+                  label={`${tt("select_permanent_truck", "Select Permanent Truck")} *`}
+                  value={formData.truck_id}
+                  placeholder={tt("search_truck_ph", "Search truck by number, registration, driver or make...")}
+                  options={(trucksList || []).map((t: any) => ({
+                    value: t.id,
+                    label: `${t.truck_number || t.registration_number || t.id} • Driver: ${t.driver_name || "—"} (${t.make || ""} ${t.model || ""})`,
+                    keywords: [t.truck_number, t.registration_number, t.driver_name, t.driver_mobile, t.make, t.model, t.transport_company].filter(Boolean).join(" ")
+                  }))}
+                  onValueChange={(truckId) => {
+                    const trk = (trucksList || []).find((t: any) => t.id === truckId);
+                    if (trk) {
+                      setFormData((c) => ({
+                        ...c,
+                        truck_id: trk.id,
+                        truck_number: trk.truck_number || trk.registration_number || "",
+                        truck_driver_name: trk.driver_name || "",
+                        truck_driver_mobile: trk.driver_mobile || trk.driver_phone || "",
+                        truck_transport_company: trk.transport_company || trk.owner_name || "",
+                        truck_details: [trk.truck_type, trk.make, trk.model, trk.color].filter(Boolean).join(" • ")
+                      }));
+                    }
+                  }}
+                  searchPlaceholder="Search truck..."
+                  emptyLabel="No matching trucks found"
+                />
 
-              {formData.step1b_assignee_id ? (
-                <div className="space-y-1.5 animate-in fade-in duration-150">
+                {formData.truck_number ? (
+                  <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-2 text-xs dark:border-slate-800 dark:bg-slate-800/50 flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <span className="font-bold text-slate-900 dark:text-white">{formData.truck_number}</span>
+                      <span className="text-slate-400 ml-2">{tt("driver_label", "Driver")}: {formData.truck_driver_name || "—"} ({formData.truck_driver_mobile || "—"})</span>
+                    </div>
+                    {formData.truck_details ? <span className="text-[11px] text-slate-500">{formData.truck_details}</span> : null}
+                  </div>
+                ) : null}
+              </div>
+            )}
+
+            {formData.truck_assignment_mode === "hired" && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                    {tt("truck_registration_no", "Truck / Registration No")} *
+                  </label>
                   <input
                     type="text"
-                    value={formData.step1b_handover_notes || ""}
-                    onChange={(e) => setFormData((c) => ({ ...c, step1b_handover_notes: e.target.value }))}
-                    placeholder={tt("com.handover_notes_optional", "Handover Instructions / Dispatch Note (Optional)")}
+                    value={formData.truck_number}
+                    onChange={(e) => setFormData((c) => ({ ...c, truck_number: e.target.value }))}
+                    placeholder="e.g. TL-9988-KHI"
                     className={inputClass}
                   />
-                  <div className="rounded-lg bg-blue-50/70 p-2 text-[11px] text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 flex items-center gap-1.5">
-                    <CheckCircle2 className="h-3 w-3 shrink-0 text-blue-600" />
-                    <span>
-                      {tt("com.step_handover_success", "Step successfully handed over to {name}.").replace("{name}", formData.step1b_assignee_name || "Team Member")}
-                    </span>
-                  </div>
                 </div>
-              ) : null}
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                    {tt("driver_name", "Driver Name")}
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.truck_driver_name}
+                    onChange={(e) => setFormData((c) => ({ ...c, truck_driver_name: e.target.value }))}
+                    placeholder={tt("driver_full_name_ph", "Driver full name")}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                    {tt("driver_mobile", "Driver Mobile")}
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.truck_driver_mobile}
+                    onChange={(e) => setFormData((c) => ({ ...c, truck_driver_mobile: e.target.value }))}
+                    placeholder="+92 300 1234567"
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                    {tt("po_hire_reference", "PO / Hire Reference")}
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.truck_po_ref || ""}
+                    onChange={(e) => setFormData((c) => ({ ...c, truck_po_ref: e.target.value }))}
+                    placeholder="e.g. PO-8874 / Hire Agmt"
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+            )}
+
+            {formData.truck_assignment_mode === "later" && (
+              <div className="rounded-lg border border-amber-200 bg-amber-50/70 p-3 text-xs text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300">
+                <div className="font-bold flex items-center gap-1.5">
+                  <BadgeInfo className="h-4 w-4 text-amber-600" />
+                  <span>{tt("truck_assigned_later", "Truck To Be Assigned Later")}</span>
+                </div>
+                <p className="mt-1 text-[11px] text-amber-700/80 dark:text-amber-400/80">
+                  {tt("truck_assigned_later_hint", "This order booking will be saved and registered without blocking. A vehicle can be assigned during dispatch operations.")}
+                </p>
+              </div>
+            )}
+
+            {/* Additional Fleet & Operational Parameters */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 pt-3 border-t border-slate-100 dark:border-slate-800">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                  Vehicle Type *
+                </label>
+                <select
+                  value={formData.truck_vehicle_type || "Container Trailer"}
+                  onChange={(e) => setFormData((c) => ({ ...c, truck_vehicle_type: e.target.value }))}
+                  className={selectClass}
+                >
+                  <option value="Container Trailer">{tt("vehicle_type_container", "Container Trailer (40ft / 20ft)")}</option>
+                  <option value="Flatbed Truck">{tt("vehicle_type_flatbed", "Flatbed Truck (Open Body)")}</option>
+                  <option value="Box Truck">{tt("vehicle_type_box_truck", "Box Truck / Covered Van")}</option>
+                  <option value="Tanker">{tt("vehicle_type_tanker", "Liquid Tanker")}</option>
+                  <option value="Lowbed Trailer">{tt("vehicle_type_lowbed", "Lowbed Heavy Equipment Trailer")}</option>
+                  <option value="Reefer">{tt("vehicle_type_reefer", "Refrigerated (Reefer) Truck")}</option>
+                  <option value="Pickup">{tt("vehicle_type_pickup", "Pickup / Light Commercial Vehicle")}</option>
+                  <option value="Other">{tt("vehicle_type_other", "Other Specialized Transport")}</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                  Transport Co / Contractor
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Al-Fatah Goods Transport"
+                  value={formData.truck_transport_company || ""}
+                  onChange={(e) => setFormData((c) => ({ ...c, truck_transport_company: e.target.value }))}
+                  className={inputClass}
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                  Arrival Date & Time
+                </label>
+                <input
+                  type="datetime-local"
+                  value={formData.truck_arrival_time || ""}
+                  onChange={(e) => setFormData((c) => ({ ...c, truck_arrival_time: e.target.value }))}
+                  className={inputClass}
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                  Loading Location / Terminal
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Jebel Ali Gate 4 / Karachi Terminal Yard"
+                  value={formData.truck_loading_location || ""}
+                  onChange={(e) => setFormData((c) => ({ ...c, truck_loading_location: e.target.value }))}
+                  className={inputClass}
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                  Truck Operational Status
+                </label>
+                <select
+                  value={formData.truck_status || "Pending"}
+                  onChange={(e) => setFormData((c) => ({ ...c, truck_status: e.target.value }))}
+                  className={selectClass}
+                >
+                  <option value="Pending">{tt("truck_status_pending", "Pending Assignment")}</option>
+                  <option value="At Gate">{tt("truck_status_at_gate", "At Gate / Terminal")}</option>
+                  <option value="In Transit">{tt("truck_status_in_transit", "In Transit")}</option>
+                  <option value="Loading">{tt("truck_status_loading", "Loading Cargo")}</option>
+                  <option value="Dispatched">{tt("truck_status_dispatched", "Dispatched / Released")}</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1 flex items-center gap-1.5">
+                  <FileText className="h-3.5 w-3.5 text-blue-600" />
+                  <span>{tt("truck_document_photos", "Truck Document / Photos")}</span>
+                </label>
+                <input
+                  type="file"
+                  accept="image/*,.pdf"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                      setFormData((c) => ({
+                        ...c,
+                        truck_photo_url: reader.result as string,
+                        truck_photo_name: file.name
+                      }));
+                    };
+                    reader.readAsDataURL(file);
+                  }}
+                  className="text-[11px] text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-[11px] file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-950/40 dark:file:text-blue-300"
+                />
+                {formData.truck_photo_name ? (
+                  <span className="text-[10px] text-emerald-600 font-bold block mt-1">✓ {formData.truck_photo_name} attached</span>
+                ) : null}
+              </div>
             </div>
           </div>
 
           {/* 1B Action Footer */}
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-            <button
-              type="button"
-              onClick={() => selectSub("1A")}
-              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-            >
-              <ChevronLeft className="h-3 w-3" />
-              <span>Back to 1A</span>
-            </button>
-            <span className="text-[10px] text-slate-400 font-medium">1B: Truck & Fleet</span>
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => selectSub("1A")}
+                className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 shadow-2xs"
+              >
+                <ChevronLeft className="h-3.5 w-3.5" />
+                <span>Back to 1A</span>
+              </button>
+
+              {onReturnForCorrection && (
+                <button
+                  type="button"
+                  onClick={() => onReturnForCorrection("1B")}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300 shadow-2xs transition"
+                  title={tt("return_to_1a_title", "Return back to Stage 1A with mandatory correction reason")}
+                >
+                  <AlertTriangle className="h-3.5 w-3.5 text-rose-600" />
+                  <span>{tt("return_for_correction", "Return for Correction")}</span>
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onSaveDraft}
+                disabled={saving}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 shadow-2xs transition"
+              >
+                <Save className="h-3.5 w-3.5 text-slate-500" />
+                <span>{tt("save_draft", "Save Draft")}</span>
+              </button>
+
+              {onConfirmTruckAssignGoods && (
+                <button
+                  type="button"
+                  onClick={onConfirmTruckAssignGoods}
+                  disabled={saving}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-blue-300 bg-blue-50 px-3.5 py-2 text-xs font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950/60 dark:text-blue-300 shadow-2xs transition"
+                >
+                  <Users className="h-3.5 w-3.5 text-blue-600" />
+                  <span>{tt("confirm_truck_assign_goods", "Confirm Truck & Assign Goods Entry")}</span>
+                </button>
+              )}
+
+              {onConfirmTruckContinueMyself && (
+                <button
+                  type="button"
+                  onClick={onConfirmTruckContinueMyself}
+                  disabled={saving}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-700 shadow-xs shadow-blue-600/25 transition"
+                >
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  <span>{tt("confirm_truck_continue_myself", "Confirm Truck & Continue Myself")}</span>
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}
 
       {/* ========================================================================= */}
-      {/* 1C — GOODS MANIFEST & WAREHOUSE SELECTION (APNA VS OTHER WAREHOUSE)       */}
+      {/* 1C — GOODS ENTRY & LIVE MANIFEST BREAKDOWN                                 */}
       {/* ========================================================================= */}
       {step1SubStep === "1C" && (
         <div className="space-y-4 animate-in fade-in duration-150">
-          {/* Read-Only 1A & 1B Summary Badge Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50/70 p-2.5 text-xs dark:border-slate-800 dark:bg-slate-850">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-md bg-blue-600 px-2 py-0.5 text-[10px] font-black uppercase text-white">
-                1A & 1B Summary
-              </span>
-              <span className="font-bold text-slate-800 dark:text-slate-200">
-                {formData.customer_name} • {formData.transport_mode.replace("by_", "").toUpperCase()} • {formData.movement_type.toUpperCase()}
-                {formData.route_name ? ` • VIA: ${formData.route_name.toUpperCase()}` : ""}
-              </span>
-              <span className="text-slate-300 dark:text-slate-600">•</span>
-              <span className="font-bold text-slate-600 dark:text-slate-400">
-                Truck: {formData.truck_number || "Later"}
-              </span>
+          {/* Prominent Stage 1C Notification Banner */}
+          <div className="flex items-center justify-between gap-3 rounded-2xl border border-emerald-300 bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 p-3.5 shadow-xs dark:border-emerald-800/80 dark:from-emerald-950/40 dark:via-teal-950/30 dark:to-emerald-950/40">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-md shadow-emerald-600/30">
+                <Truck className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
+                    🚚 Truck Confirmed — Goods Entry Assigned to You
+                  </span>
+                  <span className="rounded-full bg-emerald-200/80 px-2 py-0.5 text-[10px] font-black text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200">
+                    Stage 1C Active
+                  </span>
+                </div>
+                <p className="text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
+                  {tt("stage_1c_notification_desc_updated", "Truck logistics verified. Record cargo manifest, size, brand/quality, gross/tare weights, and rate/amounts.")}
+                </p>
+              </div>
             </div>
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => selectSub("1A")}
-                className="text-[11px] font-bold text-blue-600 underline"
-              >
-                [Edit 1A]
-              </button>
-              <button
-                type="button"
-                onClick={() => selectSub("1B")}
-                className="text-[11px] font-bold text-blue-600 underline"
-              >
-                [Edit 1B]
-              </button>
+              {onReturnForCorrection && (
+                <button
+                  type="button"
+                  onClick={() => onReturnForCorrection("1C")}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-800 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300 transition shadow-2xs"
+                  title={tt("return_to_truck_user_title", "Return to Truck User for correction")}
+                >
+                  <RotateCcw className="h-3.5 w-3.5 text-amber-600" />
+                  <span>{tt("return_to_truck_user", "Return to Truck User")}</span>
+                </button>
+              )}
+              {formData.truck_number ? (
+                <div className="hidden sm:flex flex-col items-end text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{tt("assigned_truck", "Assigned Truck")}</span>
+                  <span className="font-mono text-emerald-700 dark:text-emerald-400 font-black">{formData.truck_number}</span>
+                </div>
+              ) : null}
             </div>
           </div>
 
-          {/* Multiple Goods Section with Save-to-Table & Manifest Grid */}
-          <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-3 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+          {/* Read-Only Summary of 1A & 1B for Goods User */}
+          <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-slate-50/50 p-4 space-y-3 dark:border-slate-800 dark:bg-slate-900/90 shadow-2xs">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/70 pb-2 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <span className="rounded-md bg-emerald-600 px-2.5 py-0.5 text-xs font-black uppercase tracking-wider text-white shadow-xs">
+                  1A & 1B Verified Summary (Read-Only)
+                </span>
+                <span className="text-xs font-bold text-slate-500">
+                  Order: <span className="font-mono font-black text-emerald-700 dark:text-emerald-400">{formData.order_no || activeOrder?.order_no || "Draft"}</span>
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 px-2.5 py-0.5 text-[11px] font-bold">
+                  <CheckCircle2 className="h-3 w-3" />
+                  <span>{tt("truck_confirmed", "Truck Confirmed")}</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => selectSub("1B")}
+                  className="text-[11px] font-bold text-blue-600 hover:text-blue-700 underline"
+                >
+                  [{tt("view_1b_truck", "View 1B Truck")}]
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 text-xs">
+              <div>
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("customer_account_label", "Customer")}</span>
+                <span className="font-bold text-slate-900 dark:text-white truncate block">{formData.customer_name || "—"}</span>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("movement_type_route", "Movement")}</span>
+                <span className="font-bold text-purple-700 dark:text-purple-300 capitalize block">{formData.movement_type?.replace("_", " ")}</span>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("truck_number_label", "Truck Number")}</span>
+                <span className="font-mono font-black text-blue-700 dark:text-blue-300 block">{formData.truck_number || "TO BE ASSIGNED"}</span>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("driver_name", "Driver")}</span>
+                <span className="font-medium text-slate-800 dark:text-slate-200 truncate block">
+                  {formData.truck_driver_name || "—"} {formData.truck_driver_mobile ? `(${formData.truck_driver_mobile})` : ""}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("loading_place", "Loading Place")}</span>
+                <span className="font-medium text-slate-700 dark:text-slate-300 truncate block">
+                  {formData.truck_loading_location || formData.loading_source_name || "Terminal Yard"}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("vehicle_type", "Vehicle Type")}</span>
+                <span className="font-medium text-slate-700 dark:text-slate-300 block">{formData.truck_vehicle_type || "Container Trailer"}</span>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("truck_confirmed_by", "Truck Confirmed By")}</span>
+                <span className="font-medium text-slate-700 dark:text-slate-300 truncate block">
+                  {(activeOrder as any)?.truck_details?.confirmedByName || ctx?.userName || "Truck Desk User"}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("confirmation_date_time", "Confirmation Date/Time")}</span>
+                <span className="font-medium text-slate-700 dark:text-slate-300 block">
+                  {(activeOrder as any)?.truck_details?.confirmedAt ? new Date((activeOrder as any).truck_details.confirmedAt).toLocaleString() : new Date().toLocaleString()}
+                </span>
+              </div>
+              <div className="col-span-2 sm:col-span-3 lg:col-span-4">
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("route_via_corridor", "Complete Route")}</span>
+                <span className="font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-1">
+                  <Route className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                  <span className="truncate">{formData.route_name || "Direct Route"}</span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Multiple Goods Section with Save-to-Table & Live Compact Manifest */}
+          <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-3.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
             <div className="flex items-center justify-between border-b border-slate-100 pb-2 dark:border-slate-800">
               <div className="flex items-center gap-2">
                 <Boxes className="h-4 w-4 text-emerald-600" />
@@ -5737,7 +6429,7 @@ function Step1BookingCustomer({
             </div>
 
             {/* Goods Entry / Edit Input Form */}
-            <div className="rounded-xl border border-emerald-200/90 bg-emerald-50/30 p-2.5 space-y-2.5 dark:border-emerald-900/60 dark:bg-emerald-950/20">
+            <div className="rounded-xl border border-emerald-200/90 bg-emerald-50/30 p-3 space-y-3 dark:border-emerald-900/60 dark:bg-emerald-950/20">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5">
                   <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white text-[10px] font-black">
@@ -5746,7 +6438,7 @@ function Step1BookingCustomer({
                   <span>{editingGoodsIdx !== null ? tt("edit_goods_item_num", "Edit Goods Item #{n}").replace("{n}", String(editingGoodsIdx + 1)) : tt("add_goods_item", "Add Goods Item")}</span>
                 </span>
                 <span className="text-[10px] text-slate-500 font-medium hidden sm:inline">
-                  {tt("goods_entry_flexible_hint", "Can be completed now or updated by warehouse / operations user later")}
+                  {tt("goods_entry_flexible_hint", "Complete cargo manifest with weights, warehouse, size, origin and pricing")}
                 </span>
                 {editingGoodsIdx !== null ? (
                   <button
@@ -5759,7 +6451,7 @@ function Step1BookingCustomer({
                 ) : null}
               </div>
 
-              {/* Warehouse Location Dropdown */}
+              {/* Warehouse Location Selection */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
                   <label className="text-[10.5px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
@@ -5838,33 +6530,102 @@ function Step1BookingCustomer({
                 )}
               </div>
 
-              {/* Row 1: Goods Master Selection */}
-              <div>
-                <label className="block text-[10.5px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">
-                  {tt("goods_name_from_master", "Goods Name (from Goods Master or New Item)")} *
-                </label>
-                <SearchSelect
-                  label=""
-                  value={draftGoodsItem.goodsId}
-                  placeholder={tt("select_search_goods_ph", "Select or search goods from master...")}
-                  options={(goodsMasterList || []).map((g: any) => ({
-                    value: g.id,
-                    label: `${g.goods_name || g.name} ${g.chs_code ? `[CHS: ${g.chs_code}]` : ""}`,
-                    keywords: [g.goods_name, g.chs_code, g.category, g.variety].filter(Boolean).join(" ")
-                  }))}
-                  onValueChange={(goodsId) => {
-                    const found = (goodsMasterList || []).find((g: any) => g.id === goodsId);
-                    handleDraftGoodsChange("goodsId", goodsId);
-                    handleDraftGoodsChange("goodsName", found?.goods_name || found?.name || draftGoodsItem.goodsName);
-                    handleDraftGoodsChange("goodsChsCode", found?.chs_code || "");
-                  }}
-                  searchPlaceholder="Search goods..."
-                  emptyLabel="No goods found in master"
-                />
+              {/* Row 1: Goods Master Selection, Goods Name, CHS Code */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
+                    {tt("select_goods_master", "Goods Master")}
+                  </label>
+                  <SearchSelect
+                    label=""
+                    value={draftGoodsItem.goodsId}
+                    placeholder={tt("select_search_goods_ph", "Select or search goods from master...")}
+                    options={(goodsMasterList || []).map((g: any) => ({
+                      value: g.id,
+                      label: `${g.goods_name || g.name} ${g.chs_code ? `[CHS: ${g.chs_code}]` : ""}`,
+                      keywords: [g.goods_name, g.chs_code, g.category, g.variety].filter(Boolean).join(" ")
+                    }))}
+                    onValueChange={(goodsId) => {
+                      const found = (goodsMasterList || []).find((g: any) => g.id === goodsId);
+                      handleDraftGoodsChange("goodsId", goodsId);
+                      handleDraftGoodsChange("goodsName", found?.goods_name || found?.name || draftGoodsItem.goodsName);
+                      handleDraftGoodsChange("goodsChsCode", found?.chs_code || "");
+                    }}
+                    searchPlaceholder={tt("search_goods_ph", "Search goods...")}
+                    emptyLabel={tt("no_goods_in_master", "No goods found in master")}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
+                    {tt("goods_name", "Goods Name")} *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Basmati Rice / Steel Coils"
+                    value={draftGoodsItem.goodsName || ""}
+                    onChange={(e) => handleDraftGoodsChange("goodsName", e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
+                    {tt("chs_code", "CHS / HS Code")}
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 1006.30 / 7208.51"
+                    value={draftGoodsItem.goodsChsCode || ""}
+                    onChange={(e) => handleDraftGoodsChange("goodsChsCode", e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
               </div>
 
-              {/* Row 2: Qty Unit, Quantity, KG Per Qty, Total Gross Wt (KG & MT) */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {/* Row 2: Size / Dimensions, Brand / Quality, Origin Country */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
+                    {tt("goods_size_dim", "Size / Dimension")}
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 40mm / 12x12 / Standard"
+                    value={draftGoodsItem.size || ""}
+                    onChange={(e) => handleDraftGoodsChange("size", e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
+                    {tt("goods_brand_quality", "Brand / Quality")}
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Grade A / Premium / Export Quality"
+                    value={draftGoodsItem.brandQuality || ""}
+                    onChange={(e) => handleDraftGoodsChange("brandQuality", e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
+                    {tt("origin_country", "Origin Country")}
+                  </label>
+                  <select
+                    value={draftGoodsItem.originCountry || ""}
+                    onChange={(e) => handleDraftGoodsChange("originCountry", e.target.value)}
+                    className={selectClass}
+                  >
+                    <option value="">— {tt("select_origin_country", "Select Origin")} —</option>
+                    {countries.map((c) => (
+                      <option key={c.id} value={c.name}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Row 3: Packaging & Unit Counts */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 <div>
                   <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("qty_unit", "Qty Unit")}</label>
                   <select
@@ -5885,7 +6646,7 @@ function Step1BookingCustomer({
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">Quantity *</label>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("quantity", "Quantity")} *</label>
                   <input
                     type="number"
                     min="0"
@@ -5897,7 +6658,7 @@ function Step1BookingCustomer({
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">KG / Unit *</label>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("kg_per_unit", "KG / Unit")} *</label>
                   <input
                     type="number"
                     min="0"
@@ -5907,23 +6668,116 @@ function Step1BookingCustomer({
                     placeholder="50"
                   />
                 </div>
+              </div>
+
+              {/* Row 4: Weight Metrics */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
+                    {tt("gross_wt_kg", "Gross Wt (KG)")} *
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={draftGoodsItem.grossWeight || draftGoodsItem.totalKg}
+                    onChange={(e) => handleDraftGoodsChange("grossWeight", e.target.value)}
+                    className={inputClass}
+                    placeholder="50"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
+                    {tt("empty_tare_kg", "Empty / Tare (KG)")}
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={draftGoodsItem.emptyWeight || "0"}
+                    onChange={(e) => handleDraftGoodsChange("emptyWeight", e.target.value)}
+                    className={inputClass}
+                    placeholder="0"
+                  />
+                </div>
 
                 <div>
                   <label className="block text-[10px] font-bold uppercase text-emerald-700 dark:text-emerald-400 mb-0.5">
-                    Gross Wt (KG & MT)
+                    {tt("net_wt_auto", "Net Wt (Auto)")} *
+                  </label>
+                  <div className="flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50/90 px-2.5 py-2 text-xs font-mono font-black text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 truncate" title={tt("gross_minus_empty", "Gross - Empty Weight")}>
+                    <Scale className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                    <span>{(Number(draftGoodsItem.netWeight) || 0).toLocaleString()} kg</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Row 5: Currency, Rate & Final Amount */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
+                    {tt("currency", "Currency")} *
+                  </label>
+                  <select
+                    value={draftGoodsItem.currency || "AED"}
+                    onChange={(e) => handleDraftGoodsChange("currency", e.target.value)}
+                    className={selectClass}
+                  >
+                    <option value="AED">AED — UAE Dirham</option>
+                    <option value="USD">USD — US Dollar</option>
+                    <option value="PKR">PKR — Pakistani Rupee</option>
+                    <option value="AFN">AFN — Afghan Afghani</option>
+                    <option value="EUR">EUR — Euro</option>
+                    <option value="CNY">CNY — Chinese Yuan</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
+                    {tt("rate_price_unit", "Rate / Price per Unit")}
                   </label>
                   <input
-                    type="text"
-                    readOnly
-                    value={`${(parseFloat(draftGoodsItem.totalKg || "0") || 0).toLocaleString()} kg (${((parseFloat(draftGoodsItem.totalKg || "0") || 0) / 1000).toFixed(3)} MT)`}
-                    className="w-full rounded-xl border border-emerald-300 bg-emerald-50/80 px-2.5 py-2 text-xs font-mono font-bold text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 cursor-not-allowed truncate"
-                    title={tt("calc_gross_wt_title", "Calculated Gross Weight in KG and MT")}
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={draftGoodsItem.rate || ""}
+                    onChange={(e) => handleDraftGoodsChange("rate", e.target.value)}
+                    className={inputClass}
+                    placeholder="e.g. 150.00"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
+                    {tt("final_amount", "Final Amount (Calculated)")}
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={draftGoodsItem.finalAmount || ""}
+                    onChange={(e) => handleDraftGoodsChange("finalAmount", e.target.value)}
+                    className={inputClass}
+                    placeholder="e.g. 1500.00"
                   />
                 </div>
               </div>
 
-              {/* Quality / Inspection Photo Upload & Action Buttons */}
-              <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-emerald-200/50 dark:border-emerald-900/40">
+              {/* Quality Report / Cargo Condition */}
+              <div>
+                <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
+                  {tt("quality_inspection_report", "Quality / Inspection Report & Cargo Notes")}
+                </label>
+                <textarea
+                  rows={2}
+                  value={draftGoodsItem.qualityReport || ""}
+                  onChange={(e) => handleDraftGoodsChange("qualityReport", e.target.value)}
+                  placeholder={tt("quality_report_ph", "Enter cargo inspection notes, moisture levels, batch numbers or packaging condition...")}
+                  className={inputClass}
+                />
+              </div>
+
+              {/* Photo Upload & Add/Update Buttons */}
+              <div className="flex flex-wrap items-center justify-between gap-2.5 pt-2.5 border-t border-emerald-200/50 dark:border-emerald-900/40">
                 <div className="flex items-center gap-2">
                   <label className="text-[10.5px] font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1">
                     <Sparkles className="h-3.5 w-3.5 text-blue-600" />
@@ -5936,108 +6790,224 @@ function Step1BookingCustomer({
                     className="text-[11px] text-slate-500 file:mr-1.5 file:py-0.5 file:px-2 file:rounded-md file:border-0 file:text-[11px] file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-950/40 dark:file:text-blue-300"
                   />
                   {draftGoodsItem.photoUrl ? (
-                    <span className="text-[10px] text-emerald-600 font-bold">✓ Attached</span>
+                    <span className="text-[10px] text-emerald-600 font-bold">✓ {tt("attached", "Attached")}</span>
                   ) : null}
                 </div>
 
                 <div className="flex items-center gap-1.5 ml-auto">
+                  {editingGoodsIdx !== null ? (
+                    <button
+                      type="button"
+                      onClick={handleCancelEditGoods}
+                      className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 transition"
+                    >
+                      <span>{tt("cancel", "Cancel")}</span>
+                    </button>
+                  ) : null}
                   <button
                     type="button"
                     onClick={handleSaveDraftGoods}
-                    className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs shadow-emerald-600/25 hover:bg-emerald-700 transition"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-xs shadow-emerald-600/25 hover:bg-emerald-700 transition"
                   >
                     <Plus className="h-3.5 w-3.5" />
-                    <span>{editingGoodsIdx !== null ? "Update Item" : "Add to Manifest"}</span>
+                    <span>{editingGoodsIdx !== null ? tt("update_goods_item", "Update Item") : tt("add_to_manifest", "Add to Manifest")}</span>
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* Total Goods Weights Bar */}
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3 dark:border-emerald-900/60 dark:bg-emerald-950/30 flex flex-wrap items-center justify-between gap-2 text-xs">
-              <span className="font-bold text-emerald-800 dark:text-emerald-300">
-                Total Quantity: <span className="font-black font-mono">{totalGoodsQuantity}</span>
-              </span>
-              <span className="font-bold text-emerald-800 dark:text-emerald-300">
-                Total Gross Weight: <span className="font-black font-mono">{totalGoodsKg.toLocaleString()} KG</span> ({totalGoodsMt} MT)
-              </span>
-            </div>
-          </div>
-
-          {/* Step 1C Handover & Execution Assignment */}
-          <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-1.5 dark:border-slate-800">
-              <div className="flex items-center gap-2">
-                <Users className="h-3.5 w-3.5 text-emerald-600" />
+            {/* LIVE COMPACT GOODS MANIFEST TABLE WITH TOTALS */}
+            <div className="space-y-2 pt-2">
+              <div className="flex items-center justify-between">
                 <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                  {tt("com.step1c_execution_assignment", "Step 1C (Goods & Warehouse) Handover & Execution")}
+                  {tt("cargo_manifest_table_title", "Live Goods Manifest & Totals")}
+                </span>
+                <span className="text-[11px] font-bold text-slate-500">
+                  {(formData.goods_items || []).filter(g => g.goodsName || g.quantity).length} {tt("items_entered", "item(s)")}
                 </span>
               </div>
-              <span className="text-[10px] font-bold text-slate-400">{tt("cargo_officer", "Cargo Officer")}</span>
-            </div>
 
-            <div className="space-y-2">
-              <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400">
-                {tt("com.assign_other_user", "Assign to Other User / Team Member")}
-              </label>
-              <select
-                value={formData.step1c_assignee_id || ""}
-                onChange={(e) => {
-                  const uid = e.target.value;
-                  const u = (assignableUsers || []).find((usr) => usr.id === uid);
-                  setFormData((c) => ({
-                    ...c,
-                    step1c_assignee_id: uid,
-                    step1c_assignee_name: u?.name || ""
-                  }));
-                }}
-                className={selectClass}
-              >
-                <option value="">{tt("self_execution_option", "Complete this step myself (Default)")}</option>
-                {(assignableUsers || []).map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} (Warehouse / Cargo Inspection Officer)
-                  </option>
-                ))}
-              </select>
-
-              {formData.step1c_assignee_id ? (
-                <div className="space-y-1.5 animate-in fade-in duration-150">
-                  <input
-                    type="text"
-                    value={formData.step1c_handover_notes || ""}
-                    onChange={(e) => setFormData((c) => ({ ...c, step1c_handover_notes: e.target.value }))}
-                    placeholder={tt("com.handover_notes_optional", "Handover Instructions / Dispatch Note (Optional)")}
-                    className={inputClass}
-                  />
-                  <div className="rounded-lg bg-emerald-50/70 p-2 text-[11px] text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 flex items-center gap-1.5">
-                    <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-600" />
-                    <span>
-                      {tt("com.step_handover_success", "Step successfully handed over to {name}.").replace("{name}", formData.step1c_assignee_name || "Team Member")}
-                    </span>
-                  </div>
-                </div>
-              ) : null}
+              <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-100/90 dark:bg-slate-800 text-[10.5px] font-black uppercase text-slate-600 dark:text-slate-300">
+                    <tr>
+                      <th className="py-2 px-2.5 w-8 text-center">#</th>
+                      <th className="py-2 px-2.5">{tt("goods_name_chs", "Goods Name & HS")}</th>
+                      <th className="py-2 px-2.5">{tt("size_brand", "Size / Quality")}</th>
+                      <th className="py-2 px-2.5">{tt("origin", "Origin")}</th>
+                      <th className="py-2 px-2.5 text-right">{tt("quantity", "Qty")}</th>
+                      <th className="py-2 px-2.5 text-right">{tt("gross_wt_kg", "Gross (kg)")}</th>
+                      <th className="py-2 px-2.5 text-right">{tt("empty_tare_kg", "Tare (kg)")}</th>
+                      <th className="py-2 px-2.5 text-right">{tt("net_wt_kg", "Net (kg)")}</th>
+                      <th className="py-2 px-2.5">{tt("warehouse", "Warehouse")}</th>
+                      <th className="py-2 px-2.5 text-right">{tt("rate_amount", "Rate / Amount")}</th>
+                      <th className="py-2 px-2.5 text-center w-16">{tt("actions", "Actions")}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900">
+                    {(formData.goods_items || []).filter(g => g.goodsName || g.quantity).length === 0 ? (
+                      <tr>
+                        <td colSpan={11} className="py-4 text-center text-xs text-slate-400">
+                          {tt("no_goods_added_yet", "No goods items added yet. Complete the form above and click '+ Add to Manifest'.")}
+                        </td>
+                      </tr>
+                    ) : (
+                      (formData.goods_items || []).filter(g => g.goodsName || g.quantity).map((g, idx) => (
+                        <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                          <td className="py-2 px-2.5 text-center font-bold text-slate-400">{idx + 1}</td>
+                          <td className="py-2 px-2.5 font-bold text-slate-900 dark:text-white">
+                            <div>{g.goodsName || "Goods Item"}</div>
+                            {g.goodsChsCode ? <div className="font-mono text-[10px] text-slate-400">HS: {g.goodsChsCode}</div> : null}
+                          </td>
+                          <td className="py-2 px-2.5 text-slate-600 dark:text-slate-300">
+                            {[g.size, g.brandQuality].filter(Boolean).join(" • ") || "—"}
+                          </td>
+                          <td className="py-2 px-2.5 text-slate-600 dark:text-slate-300">{g.originCountry || "—"}</td>
+                          <td className="py-2 px-2.5 text-right font-mono font-bold text-slate-900 dark:text-white">
+                            {Number(g.quantity || 0).toLocaleString()} <span className="text-[10px] font-normal text-slate-500">{g.unit || "Bags"}</span>
+                          </td>
+                          <td className="py-2 px-2.5 text-right font-mono text-slate-700 dark:text-slate-300">
+                            {Number(g.grossWeight || g.totalKg || 0).toLocaleString()}
+                          </td>
+                          <td className="py-2 px-2.5 text-right font-mono text-slate-500">
+                            {Number(g.emptyWeight || 0).toLocaleString()}
+                          </td>
+                          <td className="py-2 px-2.5 text-right font-mono font-bold text-emerald-700 dark:text-emerald-400">
+                            {Number(g.netWeight || g.totalKg || 0).toLocaleString()}
+                          </td>
+                          <td className="py-2 px-2.5 text-slate-600 dark:text-slate-300 truncate max-w-[120px]">
+                            {g.warehouseName || g.warehouseSourceType?.replace("_", " ") || "—"}
+                          </td>
+                          <td className="py-2 px-2.5 text-right font-mono text-slate-800 dark:text-slate-200">
+                            {g.rate ? (
+                              <div>
+                                <span className="text-[10px] text-slate-400">{g.currency || "AED"} </span>
+                                <span className="font-bold">{Number(g.finalAmount || ((Number(g.quantity) || 0) * (Number(g.rate) || 0))).toLocaleString()}</span>
+                              </div>
+                            ) : "—"}
+                          </td>
+                          <td className="py-2 px-2.5 text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => handleEditGoodsRow(idx)}
+                                className="p-1 rounded text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40"
+                                title={tt("edit", "Edit")}
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => removeGoodsItem(idx)}
+                                className="p-1 rounded text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                                title={tt("delete", "Delete")}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                  {/* Table Footer with Totals */}
+                  <tfoot className="bg-slate-100/95 dark:bg-slate-800/90 font-black text-xs border-t-2 border-slate-300 dark:border-slate-700">
+                    <tr>
+                      <td colSpan={4} className="py-2.5 px-2.5 text-right uppercase tracking-wider text-slate-700 dark:text-slate-200">
+                        {tt("manifest_totals", "Manifest Totals")}:
+                      </td>
+                      <td className="py-2.5 px-2.5 text-right font-mono text-slate-900 dark:text-white">
+                        {totalGoodsQuantity.toLocaleString()}
+                      </td>
+                      <td className="py-2.5 px-2.5 text-right font-mono text-slate-900 dark:text-white">
+                        <div>{totalGoodsGrossKg.toLocaleString()} kg</div>
+                        <div className="text-[10px] font-bold text-slate-500">({totalGoodsGrossMt} MT)</div>
+                      </td>
+                      <td className="py-2.5 px-2.5 text-right font-mono text-slate-600 dark:text-slate-400">
+                        {totalGoodsEmptyKg.toLocaleString()} kg
+                      </td>
+                      <td className="py-2.5 px-2.5 text-right font-mono text-emerald-700 dark:text-emerald-400 font-black">
+                        <div>{totalGoodsNetKg.toLocaleString()} kg</div>
+                        <div className="text-[10px] font-bold text-emerald-600 dark:text-emerald-300">({totalGoodsNetMt} MT)</div>
+                      </td>
+                      <td className="py-2.5 px-2.5 text-slate-400 text-[10px]">
+                        {(formData.goods_items || []).filter(g => g.goodsName || g.quantity).length} {tt("items", "items")}
+                      </td>
+                      <td className="py-2.5 px-2.5 text-right font-mono text-slate-900 dark:text-white font-black">
+                        {totalGoodsAmount > 0 ? `${draftGoodsItem.currency || "AED"} ${totalGoodsAmount.toLocaleString()}` : "—"}
+                      </td>
+                      <td></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
             </div>
           </div>
 
           {/* 1C Action Footer */}
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-            <button
-              type="button"
-              onClick={() => selectSub("1B")}
-              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-            >
-              <ChevronLeft className="h-3 w-3" />
-              <span>Back to 1B</span>
-            </button>
-            <span className="text-[10px] text-slate-400 font-medium">1C: Goods & Warehouse</span>
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => selectSub("1B")}
+                className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 shadow-2xs"
+              >
+                <ChevronLeft className="h-3.5 w-3.5" />
+                <span>Back to 1B</span>
+              </button>
+
+              {onReturnForCorrection && (
+                <button
+                  type="button"
+                  onClick={() => onReturnForCorrection("1C")}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300 shadow-2xs transition"
+                  title={tt("return_to_truck_user_title", "Return back to Stage 1B Truck User with mandatory correction reason")}
+                >
+                  <AlertTriangle className="h-3.5 w-3.5 text-rose-600" />
+                  <span>{tt("return_to_truck_user", "Return to Truck User")}</span>
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onSaveDraft}
+                disabled={saving}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 shadow-2xs transition"
+              >
+                <Save className="h-3.5 w-3.5 text-slate-500" />
+                <span>{tt("save_draft", "Save Draft")}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={addGoodsItem}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 px-3.5 py-2 text-xs font-bold text-emerald-700 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 shadow-2xs transition"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>{tt("add_item", "+ Add Item")}</span>
+              </button>
+
+              {onCompleteGoodsEntry && (
+                <button
+                  type="button"
+                  onClick={onCompleteGoodsEntry}
+                  disabled={saving}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 shadow-xs shadow-emerald-600/25 transition"
+                >
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  <span>{tt("complete_goods_entry", "Complete Goods Entry")}</span>
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}
     </div>
   );
 }
+
 
 function Step2PickupGoodsTruck({
   lang,
@@ -6531,7 +7501,9 @@ function Step3RouteVesselCustoms({
   countryBranches,
   cityBranches,
   assignableUsers,
-  editingOrderId
+  editingOrderId,
+  accounts = [],
+  onRefreshLegs
 }: {
   lang: ReturnType<typeof useActiveLanguage>;
   tt: (k: string, f: string) => string;
@@ -6554,6 +7526,8 @@ function Step3RouteVesselCustoms({
   cityBranches: { id: string; name: string; countryBranchId: string }[];
   assignableUsers: { id: string; name: string }[];
   editingOrderId: string | null;
+  accounts?: AccountRow[];
+  onRefreshLegs?: () => void;
 }) {
   const showAutoSeed =
     formData.transport_mode === "by_sea" && formData.loading_source !== "port_terminal" && formData.legs.length === 0;
@@ -6751,31 +7725,190 @@ function Step3RouteVesselCustoms({
                 </div>
               </div>
 
-              <ClearingAgentPicker
-                label={t(lang, "comv.responsible_agent", "Responsible Clearing Agent")}
-                value={leg.responsibleClearingAgentId}
-                onValueChange={(id) => updateLeg(idx, { responsibleClearingAgentId: id })}
-              />
+              {/* Route Leg Handler: Our Branch vs External Partner */}
+              <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-3 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2 dark:border-slate-800">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-black uppercase text-slate-800 dark:text-slate-200">
+                      {tt("leg_handler_type_label", "Route Leg Handler")}
+                    </span>
+                  </div>
+                  <div className="flex items-center rounded-lg border border-slate-200 p-0.5 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+                    <button
+                      type="button"
+                      onClick={() => updateLeg(idx, { handlerType: "our_branch" })}
+                      className={`px-3 py-1 text-xs font-bold rounded-md transition ${
+                        leg.handlerType !== "external_partner"
+                          ? "bg-blue-600 text-white shadow-2xs"
+                          : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
+                      }`}
+                    >
+                      {tt("handler_our_branch", "Our Branch")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => updateLeg(idx, { handlerType: "external_partner" })}
+                      className={`px-3 py-1 text-xs font-bold rounded-md transition ${
+                        leg.handlerType === "external_partner"
+                          ? "bg-indigo-600 text-white shadow-2xs"
+                          : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
+                      }`}
+                    >
+                      {tt("handler_external_partner", "External Partner")}
+                    </button>
+                  </div>
+                </div>
 
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                <LegPartyMini
-                  label={t(lang, "comv.responsible_country_branch", "Responsible Branch")}
-                  value={leg.responsibleCountryBranchId}
-                  rows={countryBranches}
-                  onChange={(id) => updateLeg(idx, { responsibleCountryBranchId: id, responsibleCityBranchId: "" })}
-                />
-                <LegPartyMini
-                  label={t(lang, "comv.responsible_city_branch", "Responsible City Branch")}
-                  value={leg.responsibleCityBranchId}
-                  rows={cityBranches.filter((b) => !leg.responsibleCountryBranchId || b.countryBranchId === leg.responsibleCountryBranchId)}
-                  onChange={(id) => updateLeg(idx, { responsibleCityBranchId: id })}
-                />
-                <LegPartyMini
-                  label={t(lang, "comv.responsible_user", "Responsible User")}
-                  value={leg.responsibleUserId}
-                  rows={assignableUsers}
-                  onChange={(id) => updateLeg(idx, { responsibleUserId: id })}
-                />
+                {leg.handlerType === "external_partner" ? (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                      <div>
+                        <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">
+                          {tt("partner_type_label", "Partner Type *")}
+                        </label>
+                        <select
+                          value={leg.partnerType || ""}
+                          onChange={(e) => updateLeg(idx, { partnerType: e.target.value })}
+                          className={selectClass}
+                        >
+                          <option value="">-- Select Partner Type --</option>
+                          <option value="customs_agent">{tt("pt_customs_agent", "Customs Clearing Agent")}</option>
+                          <option value="transporter">{tt("pt_transporter", "Transporter / Trucking Carrier")}</option>
+                          <option value="shipping_provider">{tt("pt_shipping_provider", "Shipping Line / Sea Provider")}</option>
+                          <option value="airline">{tt("pt_airline", "Airline / Air Freight")}</option>
+                          <option value="railway">{tt("pt_railway", "Railway Operator")}</option>
+                          <option value="other_partner">{tt("pt_other_partner", "Other External Partner")}</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">
+                          {tt("partner_name_label", "Partner / Provider Name *")}
+                        </label>
+                        <input
+                          type="text"
+                          placeholder={tt("ph_partner_name", "e.g. Khyber Afghan Trans / Apex Customs")}
+                          value={leg.partnerName || ""}
+                          onChange={(e) => updateLeg(idx, { partnerName: e.target.value })}
+                          className={inputClass}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">
+                          {tt("partner_country_label", "Country of Service")}
+                        </label>
+                        <select
+                          value={leg.partnerCountryName || ""}
+                          onChange={(e) => updateLeg(idx, { partnerCountryName: e.target.value })}
+                          className={selectClass}
+                        >
+                          <option value="">-- Select Country --</option>
+                          {countries.map((c) => (
+                            <option key={c.id} value={c.name}>{c.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Account Master Ledger Selection & Warning */}
+                    <div className="rounded-lg bg-indigo-50/40 p-2.5 border border-indigo-100 dark:bg-slate-850 dark:border-indigo-900/40 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] font-bold text-indigo-900 dark:text-indigo-300 uppercase">
+                          {tt("provider_account_master", "Provider Account / Ledger (Account Master) *")}
+                        </label>
+                        <a
+                          href="/dashboard/accounts/setup"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 hover:underline"
+                        >
+                          <span>{tt("register_in_account_master", "Register / Open Account Master →")}</span>
+                        </a>
+                      </div>
+
+                      <select
+                        value={leg.partnerAccountId || ""}
+                        onChange={(e) => {
+                          const row = accounts.find((l) => l.id === e.target.value);
+                          updateLeg(idx, {
+                            partnerAccountId: e.target.value,
+                            partnerAccountNumber: row?.code || ""
+                          });
+                        }}
+                        className={selectClass}
+                      >
+                        <option value="">{tt("select_account_master_ledger", "-- Select Existing Provider Ledger --")}</option>
+                        {accounts.map((l) => (
+                          <option key={l.id} value={l.id}>
+                            {l.code ? `[${l.code}] ` : ""}{l.name} {l.currency ? `(${l.currency})` : ""}
+                          </option>
+                        ))}
+                      </select>
+
+                      {!leg.partnerAccountId && (
+                        <div className="flex items-start gap-1.5 rounded-lg border border-amber-200 bg-amber-50 p-2 text-[11px] text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300">
+                          <AlertTriangle className="h-4 w-4 shrink-0 text-amber-500 mt-0.5" />
+                          <div>
+                            <p className="font-bold">{tt("no_ledger_warning_title", "No Account Master Ledger Selected")}</p>
+                            <p className="mt-0.5">
+                              {tt(
+                                "no_ledger_warning_body",
+                                "An authorized payable ledger from Account Master is required before any bills can be approved or posted to Roznamcha. Do not invent fake ledgers; register the provider through the approved Account Master flow."
+                              )}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* External Partner Bills & Postings Sub-Panel */}
+                    <CustomerOrderPartnerBillsPanel
+                      orderId={editingOrderId || undefined}
+                      orderNo={formData.order_no}
+                      legId={leg.id}
+                      legNo={leg.legNo}
+                      handlerType={leg.handlerType}
+                      partnerType={leg.partnerType}
+                      partnerName={leg.partnerName}
+                      partnerAccountId={leg.partnerAccountId}
+                      partnerAccountNumber={leg.partnerAccountNumber}
+                      partnerCountryName={leg.partnerCountryName}
+                      ledgers={accounts.map((a: AccountRow) => ({ id: a.id, name: a.name, code: a.code, currency: a.currency || undefined }))}
+                      lang={lang}
+                      onRefreshLegs={onRefreshLegs}
+                    />
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <ClearingAgentPicker
+                      label={t(lang, "comv.responsible_agent", "Responsible Clearing Agent")}
+                      value={leg.responsibleClearingAgentId}
+                      onValueChange={(id) => updateLeg(idx, { responsibleClearingAgentId: id })}
+                    />
+
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                      <LegPartyMini
+                        label={t(lang, "comv.responsible_country_branch", "Responsible Branch")}
+                        value={leg.responsibleCountryBranchId}
+                        rows={countryBranches}
+                        onChange={(id) => updateLeg(idx, { responsibleCountryBranchId: id, responsibleCityBranchId: "" })}
+                      />
+                      <LegPartyMini
+                        label={t(lang, "comv.responsible_city_branch", "Responsible City Branch")}
+                        value={leg.responsibleCityBranchId}
+                        rows={cityBranches.filter((b) => !leg.responsibleCountryBranchId || b.countryBranchId === leg.responsibleCountryBranchId)}
+                        onChange={(id) => updateLeg(idx, { responsibleCityBranchId: id })}
+                      />
+                      <LegPartyMini
+                        label={t(lang, "comv.responsible_user", "Responsible User")}
+                        value={leg.responsibleUserId}
+                        rows={assignableUsers}
+                        onChange={(id) => updateLeg(idx, { responsibleUserId: id })}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {leg.id && editingOrderId ? (

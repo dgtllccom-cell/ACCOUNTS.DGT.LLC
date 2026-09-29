@@ -132,7 +132,7 @@ function getEffectiveVariationsForGoods(
           goods_id: g.id,
           brand: b,
           size: sz,
-          variety: varieties.length > 0 ? varieties[idx % varieties.length] : g.variety || undefined,
+          variety: varieties.length > 0 ? varieties[idx % varieties.length] : undefined,
           extra_details: reports.length > 0 ? reports[idx % reports.length] : g.extra_details || undefined,
           is_active: true,
         });

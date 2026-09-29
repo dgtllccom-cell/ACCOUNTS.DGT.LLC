@@ -22,6 +22,38 @@ export interface ShippingJobCostExpenseLine {
   } | null;
 }
 
+export interface ShippingJobCostPartnerBill {
+  id: string;
+  billNo: string;
+  legId: string | null;
+  legNo: number | null;
+  fromLocation: string | null;
+  toLocation: string | null;
+  countryOfService: string | null;
+  providerName: string;
+  providerAccountCode: string | null;
+  providerAccountName: string | null;
+  invoiceRef: string | null;
+  expenseCategory: string | null;
+  totalAmount: number;
+  paidAmount: number;
+  remainingBalance: number;
+  currencyCode: string;
+  postingStatus: "draft" | "unposted" | "posted" | "void";
+  paymentStatus: "pending" | "partially_paid" | "paid";
+  postedAt: string | null;
+  payments: Array<{
+    id: string;
+    paymentNo: string;
+    paymentDate: string;
+    amount: number;
+    paymentAccountCode: string | null;
+    paymentAccountName: string | null;
+    referenceNo: string | null;
+    narration: string | null;
+  }>;
+}
+
 export interface ShippingJobCostReport {
   orderId: string;
   orderNo: string | null;
@@ -29,6 +61,7 @@ export interface ShippingJobCostReport {
   orderScope: { countryId: string | null; countryBranchId: string | null; cityBranchId: string | null; countryName: string | null };
   customerCharges: { total: number; postedTotal: number; currency: string; count: number };
   jobExpenses: { total: number; postedTotal: number; currency: string; lines: ShippingJobCostExpenseLine[] };
+  partnerBills: ShippingJobCostPartnerBill[];
   interBranchClaims: Array<{
     id: string;
     status: string;
@@ -96,26 +129,91 @@ export async function getShippingOrderJobCost(orderId: string): Promise<Shipping
       ORDER BY t.created_at ASC
     `;
 
-    return { order, charges, expenseLines, claims };
+    // Query external partner bills directly linked to order legs
+    const partnerBillRows = await sql`
+      SELECT b.*,
+             l.leg_no, l.from_location_text, l.to_location_text,
+             p_acc.code AS provider_account_code, p_acc.name AS provider_account_name
+      FROM public.clearing_payment_bills b
+      LEFT JOIN public.clearing_customer_order_legs l ON l.id = b.leg_id
+      LEFT JOIN public.ledgers p_acc ON p_acc.id = b.provider_account_id
+      WHERE b.order_id = ${orderId}::uuid AND b.deleted_at IS NULL
+      ORDER BY b.created_at ASC
+    `;
+
+    const partnerBillIds = partnerBillRows.map((b: any) => b.id);
+    let partnerPayments: any[] = [];
+    if (partnerBillIds.length > 0) {
+      partnerPayments = await sql`
+        SELECT p.*,
+               pay_acc.code AS payment_account_code, pay_acc.name AS payment_account_name
+        FROM public.clearing_payment_bill_payments p
+        LEFT JOIN public.ledgers pay_acc ON pay_acc.id = p.payment_account_id
+        WHERE p.bill_id = ANY(${partnerBillIds}::uuid[]) AND p.deleted_at IS NULL
+        ORDER BY p.payment_date ASC, p.payment_serial ASC
+      `;
+    }
+
+    return { order, charges, expenseLines, claims, partnerBillRows, partnerPayments };
   });
 
   if (!data) throw new Error("Job cost report needs a direct database connection.");
-  const { order, charges, expenseLines, claims } = data;
+  const { order, charges, expenseLines, claims, partnerBillRows, partnerPayments } = data;
 
   const claimsByLineId = new Map<string, any>();
   for (const c of claims) {
     if (c.source_table === "bill_expense_lines" && c.source_id) claimsByLineId.set(c.source_id, c);
   }
 
-  const currency = expenseLines[0]?.currency || charges[0]?.currency_code || "USD";
+  const currency = expenseLines[0]?.currency || partnerBillRows[0]?.currency_code || charges[0]?.currency_code || "USD";
 
   const chargesTotal = charges.reduce((s: number, c: any) => s + Number(c.amount || 0), 0);
   const chargesPostedTotal = charges.filter((c: any) => c.posting_status === "posted").reduce((s: number, c: any) => s + Number(c.amount || 0), 0);
 
-  const expenseTotal = expenseLines.reduce((s: number, l: any) => s + Number(l.grand_amount || 0), 0);
+  // Partner bills mapping
+  const partnerBills: ShippingJobCostPartnerBill[] = partnerBillRows.map((b: any) => ({
+    id: b.id,
+    billNo: b.bill_no,
+    legId: b.leg_id,
+    legNo: b.leg_no ?? null,
+    fromLocation: b.from_location_text ?? null,
+    toLocation: b.to_location_text ?? null,
+    countryOfService: b.country_of_service ?? null,
+    providerName: b.agent_name,
+    providerAccountCode: b.provider_account_code ?? null,
+    providerAccountName: b.provider_account_name ?? null,
+    invoiceRef: b.invoice_ref ?? null,
+    expenseCategory: b.expense_category ?? null,
+    totalAmount: Number(b.total_amount || 0),
+    paidAmount: Number(b.paid_amount || 0),
+    remainingBalance: Number(b.remaining_balance ?? (Number(b.total_amount || 0) - Number(b.paid_amount || 0))),
+    currencyCode: b.currency_code || "USD",
+    postingStatus: b.posting_status || "unposted",
+    paymentStatus: b.payment_status || "pending",
+    postedAt: b.posted_at ? new Date(b.posted_at).toISOString() : null,
+    payments: partnerPayments
+      .filter((p: any) => p.bill_id === b.id)
+      .map((p: any) => ({
+        id: p.id,
+        paymentNo: p.payment_no,
+        paymentDate: p.payment_date,
+        amount: Number(p.amount),
+        paymentAccountCode: p.payment_account_code ?? null,
+        paymentAccountName: p.payment_account_name ?? null,
+        referenceNo: p.reference_no ?? null,
+        narration: p.narration ?? null
+      }))
+  }));
+
+  const partnerBillsTotal = partnerBills.reduce((s: number, b) => s + b.totalAmount, 0);
+  const partnerBillsPostedTotal = partnerBills
+    .filter((b) => b.postingStatus === "posted")
+    .reduce((s: number, b) => s + b.totalAmount, 0);
+
+  const expenseTotal = expenseLines.reduce((s: number, l: any) => s + Number(l.grand_amount || 0), 0) + partnerBillsTotal;
   const expensePostedTotal = expenseLines
     .filter((l: any) => l.posting_status === "posted")
-    .reduce((s: number, l: any) => s + Number(l.grand_amount || 0), 0);
+    .reduce((s: number, l: any) => s + Number(l.grand_amount || 0), 0) + partnerBillsPostedTotal;
 
   const lines: ShippingJobCostExpenseLine[] = expenseLines.map((l: any) => {
     const claim = claimsByLineId.get(l.id);
@@ -156,6 +254,7 @@ export async function getShippingOrderJobCost(orderId: string): Promise<Shipping
     },
     customerCharges: { total: chargesTotal, postedTotal: chargesPostedTotal, currency, count: charges.length },
     jobExpenses: { total: expenseTotal, postedTotal: expensePostedTotal, currency, lines },
+    partnerBills,
     interBranchClaims: claims.map((c: any) => ({
       id: c.id,
       status: c.status,

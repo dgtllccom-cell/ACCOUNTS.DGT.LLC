@@ -84,6 +84,8 @@ export type ClearingCustomerOrderInput = {
   goodsGrossWeight?: number | null;
   goodsEmptyWeight?: number | null;
   goodsNetWeight?: number | null;
+  currentStage?: string | null;
+  rejectedReason?: string | null;
   legs?: OrderLegInput[];
   loadingAllocations?: LoadingAllocationInput[];
 };
@@ -168,6 +170,18 @@ export type OrderLegInput = {
   railwayOperator?: string | null;
   wagonNumber?: string | null;
   railContainerNumber?: string | null;
+  handlerType?: string | null;
+  handler_type?: string | null;
+  partnerType?: string | null;
+  partner_type?: string | null;
+  partnerName?: string | null;
+  partner_name?: string | null;
+  partnerAccountId?: string | null;
+  partner_account_id?: string | null;
+  partnerAccountNumber?: string | null;
+  partner_account_number?: string | null;
+  partnerCountryName?: string | null;
+  partner_country_name?: string | null;
 };
 
 export type ClearingCustomerOrderLegRow = Record<string, any> & { id: string; order_id: string };
@@ -390,18 +404,42 @@ export async function listCustomerOrders(status?: string | null, scope?: Custome
       // Priority order matches enforceScopeFilter: clearing-agent isolation first (shipping-scoped
       // logins), then city branch, then country branch, then country, then "only what I created"
       // for a plain agent/staff user with no elevated scope of their own — narrowest available wins.
+      const scopeParts: any[] = [];
       if (scope.clearingAgentIds && scope.clearingAgentIds.length > 0) {
-        conditions.push(sql`clearing_agent_id = ANY(${scope.clearingAgentIds}::uuid[])`);
+        scopeParts.push(sql`clearing_agent_id = ANY(${scope.clearingAgentIds}::uuid[])`);
       } else if (scope.cityBranchIds && scope.cityBranchIds.length > 0) {
-        conditions.push(sql`city_branch_id = ANY(${scope.cityBranchIds}::uuid[])`);
+        scopeParts.push(sql`city_branch_id = ANY(${scope.cityBranchIds}::uuid[])`);
       } else if (scope.countryBranchIds && scope.countryBranchIds.length > 0) {
-        conditions.push(sql`country_branch_id = ANY(${scope.countryBranchIds}::uuid[])`);
+        scopeParts.push(sql`country_branch_id = ANY(${scope.countryBranchIds}::uuid[])`);
       } else if (scope.countryIds && scope.countryIds.length > 0) {
-        conditions.push(sql`country_id = ANY(${scope.countryIds}::uuid[])`);
+        scopeParts.push(sql`country_id = ANY(${scope.countryIds}::uuid[])`);
       } else if (scope.createdByUserId) {
-        conditions.push(sql`created_by = ${scope.createdByUserId}::uuid`);
+        scopeParts.push(sql`created_by = ${scope.createdByUserId}::uuid`);
+      }
+
+      if (scope.createdByUserId) {
+        const transferConditions: any[] = [sql`receiver_user_id = ${scope.createdByUserId}::uuid`];
+        if (scope.cityBranchIds && scope.cityBranchIds.length > 0) {
+          transferConditions.push(sql`dest_city_branch_id = ANY(${scope.cityBranchIds}::uuid[])`);
+        }
+        if (scope.countryBranchIds && scope.countryBranchIds.length > 0) {
+          transferConditions.push(sql`dest_country_branch_id = ANY(${scope.countryBranchIds}::uuid[])`);
+        }
+        let transferWhere = transferConditions[0];
+        for (let t = 1; t < transferConditions.length; t++) {
+          transferWhere = sql`${transferWhere} or ${transferConditions[t]}`;
+        }
+
+        const ownScope = scopeParts[0] || sql`false`;
+        conditions.push(sql`(${ownScope} or id in (
+          select source_id from public.inter_country_transfers
+          where source_table = 'clearing_customer_orders'
+            and deleted_at is null
+            and (${transferWhere})
+        ))`);
+      } else if (scopeParts.length > 0) {
+        conditions.push(scopeParts[0]);
       } else {
-        // No scope at all — fail safe to nothing, matching enforceScopeFilter's own fail-safe.
         conditions.push(sql`id = '00000000-0000-0000-0000-000000000000'::uuid`);
       }
     }
@@ -416,22 +454,53 @@ export async function listCustomerOrders(status?: string | null, scope?: Custome
     `;
 
     const orderIds = (orders ?? []).map((row: any) => row.id).filter(Boolean);
-    const [links, legs, allocations] = orderIds.length
+    const [links, legs, allocations, handovers] = orderIds.length
       ? await Promise.all([
           sql`select * from public.clearing_customer_order_parties where deleted_at is null and order_id = ANY(${orderIds}::uuid[]) order by created_at asc`,
           sql`select * from public.clearing_customer_order_legs where deleted_at is null and order_id = ANY(${orderIds}::uuid[]) order by leg_no asc`,
-          sql`select * from public.clearing_customer_order_loading_allocations where deleted_at is null and order_id = ANY(${orderIds}::uuid[]) order by row_serial asc`
+          sql`select * from public.clearing_customer_order_loading_allocations where deleted_at is null and order_id = ANY(${orderIds}::uuid[]) order by row_serial asc`,
+          sql`
+            select distinct on (t.source_id)
+              t.id, t.transfer_no, t.transfer_type, t.status, t.source_id,
+              t.sender_user_id, t.receiver_user_id,
+              t.source_country_id, t.dest_country_id,
+              t.source_country_branch_id, t.dest_country_branch_id,
+              t.source_city_branch_id, t.dest_city_branch_id,
+              t.return_reason, t.narration as instructions, t.remarks, t.metadata,
+              t.created_at, t.accepted_at, t.completed_at,
+              sp.full_name as sender_name,
+              rp.full_name as receiver_name,
+              scb.name as source_branch_name,
+              dcb.name as dest_branch_name
+            from public.inter_country_transfers t
+            left join public.profiles sp on sp.id = t.sender_user_id
+            left join public.profiles rp on rp.id = t.receiver_user_id
+            left join public.country_branches scb on scb.id = t.source_country_branch_id
+            left join public.country_branches dcb on dcb.id = t.dest_country_branch_id
+            where t.deleted_at is null
+              and t.source_table = 'clearing_customer_orders'
+              and t.source_id = ANY(${orderIds}::uuid[])
+            order by t.source_id, t.created_at desc
+          `
         ])
-      : [[], [], []];
+      : [[], [], [], []];
 
     const linksByOrder = groupByOrder(links as ClearingCustomerOrderPartyRow[]);
     const legsByOrder = groupByOrder(legs as ClearingCustomerOrderLegRow[]);
     const allocationsByOrder = groupByOrder(allocations as ClearingCustomerOrderLoadingAllocationRow[]);
+    const handoversByOrder = new Map<string, any>();
+    for (const h of handovers as any[]) {
+      if (h.source_id && !handoversByOrder.has(h.source_id)) {
+        handoversByOrder.set(h.source_id, h);
+      }
+    }
+
     return (orders ?? []).map((row: any) => ({
       ...row,
       party_links: linksByOrder.get(row.id) ?? [],
       legs: legsByOrder.get(row.id) ?? [],
-      loading_allocations: allocationsByOrder.get(row.id) ?? []
+      loading_allocations: allocationsByOrder.get(row.id) ?? [],
+      latest_handover: handoversByOrder.get(row.id) ?? null
     })) as ClearingCustomerOrderRow[];
   });
 }
@@ -445,16 +514,41 @@ export async function getCustomerOrderById(id: string) {
       limit 1
     `;
     if (!order) return null;
-    const [links, legs, allocations] = await Promise.all([
+    const [links, legs, allocations, handovers] = await Promise.all([
       sql`select * from public.clearing_customer_order_parties where deleted_at is null and order_id = ${id}::uuid order by created_at asc`,
       sql`select * from public.clearing_customer_order_legs where deleted_at is null and order_id = ${id}::uuid order by leg_no asc`,
-      sql`select * from public.clearing_customer_order_loading_allocations where deleted_at is null and order_id = ${id}::uuid order by row_serial asc`
+      sql`select * from public.clearing_customer_order_loading_allocations where deleted_at is null and order_id = ${id}::uuid order by row_serial asc`,
+      sql`
+        select distinct on (t.source_id)
+          t.id, t.transfer_no, t.transfer_type, t.status, t.source_id,
+          t.sender_user_id, t.receiver_user_id,
+          t.source_country_id, t.dest_country_id,
+          t.source_country_branch_id, t.dest_country_branch_id,
+          t.source_city_branch_id, t.dest_city_branch_id,
+          t.return_reason, t.narration as instructions, t.remarks, t.metadata,
+          t.created_at, t.accepted_at, t.completed_at,
+          sp.full_name as sender_name,
+          rp.full_name as receiver_name,
+          scb.name as source_branch_name,
+          dcb.name as dest_branch_name
+        from public.inter_country_transfers t
+        left join public.profiles sp on sp.id = t.sender_user_id
+        left join public.profiles rp on rp.id = t.receiver_user_id
+        left join public.country_branches scb on scb.id = t.source_country_branch_id
+        left join public.country_branches dcb on dcb.id = t.dest_country_branch_id
+        where t.deleted_at is null
+          and t.source_table = 'clearing_customer_orders'
+          and t.source_id = ${id}::uuid
+        order by t.source_id, t.created_at desc
+        limit 1
+      `
     ]);
     return {
       ...(order as Record<string, any>),
       party_links: links as ClearingCustomerOrderPartyRow[],
       legs: legs as ClearingCustomerOrderLegRow[],
-      loading_allocations: allocations as ClearingCustomerOrderLoadingAllocationRow[]
+      loading_allocations: allocations as ClearingCustomerOrderLoadingAllocationRow[],
+      latest_handover: (handovers as any[])[0] ?? null
     } as ClearingCustomerOrderRow;
   });
 }
@@ -564,6 +658,8 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
         goods_gross_weight: typeof input.goodsGrossWeight === "number" ? input.goodsGrossWeight : null,
         goods_empty_weight: typeof input.goodsEmptyWeight === "number" ? input.goodsEmptyWeight : null,
         goods_net_weight: typeof input.goodsNetWeight === "number" ? input.goodsNetWeight : null,
+        current_stage: trimOrNull(input.currentStage) ?? (orderId ? undefined : "booking"),
+        rejected_reason: trimOrNull(input.rejectedReason) ?? undefined,
         updated_at: now
       };
 
@@ -646,6 +742,8 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
               goods_gross_weight = ${orderPayload.goods_gross_weight},
               goods_empty_weight = ${orderPayload.goods_empty_weight},
               goods_net_weight = ${orderPayload.goods_net_weight},
+              current_stage = coalesce(${orderPayload.current_stage !== undefined ? orderPayload.current_stage : null}, current_stage),
+              rejected_reason = ${orderPayload.rejected_reason !== undefined ? orderPayload.rejected_reason : null},
               truck_id = ${truckPayload.truck_id},
               truck_registration_type = ${truckPayload.truck_registration_type},
               truck_number = ${truckPayload.truck_number},
@@ -683,6 +781,7 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
             receiving_state_province_id, receiving_district_id, receiving_city_id, receiving_area_id,
             loading_source_warehouse_id, loading_source_container_ref,
             goods_quantity, goods_unit, goods_bags_cartons, goods_gross_weight, goods_empty_weight, goods_net_weight,
+            current_stage, rejected_reason,
             truck_id, truck_registration_type, truck_number, truck_driver_name, truck_driver_mobile,
             truck_owner_name, truck_transport_company, truck_details,
             created_at, updated_at
@@ -711,6 +810,7 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
             ${orderPayload.loading_source_warehouse_id}::uuid, ${orderPayload.loading_source_container_ref},
             ${orderPayload.goods_quantity}, ${orderPayload.goods_unit}, ${orderPayload.goods_bags_cartons},
             ${orderPayload.goods_gross_weight}, ${orderPayload.goods_empty_weight}, ${orderPayload.goods_net_weight},
+            ${orderPayload.current_stage || 'booking'}, ${orderPayload.rejected_reason || null},
             ${truckPayload.truck_id}, ${truckPayload.truck_registration_type}, ${truckPayload.truck_number},
             ${truckPayload.truck_driver_name}, ${truckPayload.truck_driver_mobile}, ${truckPayload.truck_owner_name},
             ${truckPayload.truck_transport_company}, ${truckPayload.truck_details}::jsonb,
@@ -841,6 +941,12 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
             railway_operator: leg.railwayOperator,
             wagon_number: leg.wagonNumber,
             rail_container_number: leg.railContainerNumber,
+            handler_type: leg.handlerType ?? leg.handler_type ?? "our_branch",
+            partner_type: leg.partnerType ?? leg.partner_type ?? null,
+            partner_name: leg.partnerName ?? leg.partner_name ?? null,
+            partner_account_id: leg.partnerAccountId ?? leg.partner_account_id ?? null,
+            partner_account_number: leg.partnerAccountNumber ?? leg.partner_account_number ?? null,
+            partner_country_name: leg.partnerCountryName ?? leg.partner_country_name ?? null,
             updated_at: now
           };
 
