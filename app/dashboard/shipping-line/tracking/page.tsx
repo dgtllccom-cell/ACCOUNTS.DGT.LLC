@@ -5,14 +5,17 @@ export const metadata = { title: "Shipping Line — Container & Vessel Auto-Trac
 export default async function ShippingLineTrackingPage({
   searchParams,
 }: {
-  searchParams: Promise<{ id?: string }>;
+  searchParams?: Promise<{ id?: string; status?: string; tab?: string; q?: string }>;
 }) {
-  const { id } = await searchParams;
+  const params = searchParams ? await searchParams : {};
   return (
     <div className="p-3 sm:p-5">
       <CanonicalShipmentTrackingView
         domain="shipping"
-        initialShipmentId={id || null}
+        initialShipmentId={params.id || null}
+        initialStatus={params.status || "all"}
+        initialTab={(params.tab as any) || "all"}
+        initialQuery={params.q || ""}
         title="Container & Vessel Tracking"
         description="Track shipments, containers and vessels in real-time with complete journey details."
       />

@@ -4,8 +4,19 @@ import { requireErpSession } from "@/lib/auth/session";
 export const metadata = { title: "Shipping Line — Bl Entry" };
 
 
-export default async function ShippingBlEntryPage() {
+export default async function ShippingBlEntryPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ status?: string }>;
+}) {
   // requireErpSession() redirects unauthenticated users to /auth/login — let it.
   const session = await requireErpSession();
-  return <BlRecordsRegister context="shipping" lang={session?.preferredLanguage ?? "en"} />;
+  const params = searchParams ? await searchParams : {};
+  return (
+    <BlRecordsRegister
+      context="shipping"
+      lang={session?.preferredLanguage ?? "en"}
+      initialStatus={params.status}
+    />
+  );
 }

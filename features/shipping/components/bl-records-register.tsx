@@ -13,6 +13,7 @@ import { getLanguageDirection } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
 import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { BlEntryView } from "./bl-entry-view";
+import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 
 type BlRecordRow = {
   id: string;
@@ -35,22 +36,30 @@ type BlRecordRow = {
 
 export function BlRecordsRegister({
   context = "shipping",
-  lang: langProp
+  lang: langProp,
+  initialStatus = "",
 }: {
   context?: "shipping" | "purchase";
   lang?: SupportedLanguage;
+  initialStatus?: string;
 }) {
   const router = useRouter();
   const lang = langProp ?? "en";
+  const s = useErpScreen("bler", lang);
   const isRtl = getLanguageDirection(lang) === "rtl";
   const _ = (key: Parameters<typeof t>[1], fallback: string) => t(lang, key, fallback);
 
   const [rows, setRows] = useState<BlRecordRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState(initialStatus || "");
   const [viewMode, setViewMode] = useState<"list" | "form">("list");
   const [editingRecord, setEditingRecord] = useState<BlRecordRow | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const filteredRows = statusFilter
+    ? rows.filter((r) => (r.shipment_status || "").toLowerCase().includes(statusFilter.toLowerCase()))
+    : rows;
 
   const loadRows = useCallback(async (q = "") => {
     setLoading(true);
@@ -129,7 +138,7 @@ export function BlRecordsRegister({
         <CardHeader className="flex flex-col gap-3 border-b py-3 lg:flex-row lg:items-center lg:justify-between">
           <CardTitle className="flex items-center gap-2 text-sm font-black uppercase tracking-wide text-cyan-700 dark:text-cyan-300">
             <Ship className="h-4 w-4" />
-            {_("bler.title", "Bill of Lading Register")} ({rows.length})
+            {_("bler.title", "Bill of Lading Register")} ({filteredRows.length})
           </CardTitle>
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative w-64">
@@ -144,6 +153,21 @@ export function BlRecordsRegister({
                 className="h-9 pl-9 text-xs"
               />
             </div>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="h-9 rounded-md border border-input bg-background px-2.5 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            >
+              <option value="">{s.t("all_statuses", "All Statuses")}</option>
+              <option value="draft">{s.t("status_draft", "Draft")}</option>
+              <option value="loaded">{s.t("status_loaded", "Loaded")}</option>
+              <option value="in_transit">{s.t("status_in_transit", "In Transit")}</option>
+              <option value="sailing">{s.t("status_sailing", "Sailing")}</option>
+              <option value="arrived">{s.t("status_arrived", "Arrived")}</option>
+              <option value="customs_hold">{s.t("status_customs_hold", "Customs Hold")}</option>
+              <option value="cleared">{s.t("status_cleared", "Cleared")}</option>
+              <option value="delivered">{s.t("status_delivered", "Delivered")}</option>
+            </select>
             <Button type="button" size="sm" variant="outline" className="h-9" onClick={() => void loadRows(query)} disabled={loading}>
               <RefreshCcw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             </Button>
@@ -218,14 +242,16 @@ export function BlRecordsRegister({
                       {_("common.loading", "Loading...")}
                     </td>
                   </tr>
-                ) : rows.length === 0 ? (
+                ) : filteredRows.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="px-3 py-8 text-center text-muted-foreground">
-                      {_("bler.empty", "No B/L records found. Click \"New B/L Entry\" to create one.")}
+                      {statusFilter
+                        ? `No B/L records found with status "${statusFilter}".`
+                        : _("bler.empty", 'No B/L records found. Click "New B/L Entry" to create one.')}
                     </td>
                   </tr>
                 ) : (
-                  rows.map((r) => (
+                  filteredRows.map((r) => (
                     <tr key={r.id} className="border-b hover:bg-muted/30 transition">
                       <td className="px-3 py-2 font-mono font-semibold text-cyan-700 dark:text-cyan-300">
                         {r.bl_number || "-"}

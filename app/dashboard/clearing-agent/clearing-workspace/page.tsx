@@ -9,11 +9,20 @@ export const metadata: Metadata = {
   description: "Country-aware Customs & Clearing workspace across all Customer Order legs.",
 };
 
-export default async function ClearingWorkspacePage() {
+export default async function ClearingWorkspacePage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ status?: string; countryId?: string }>;
+}) {
   const session = await requireErpSession();
+  const params = searchParams ? await searchParams : {};
   return (
     <div className="p-3 sm:p-4">
-      <ClearingWorkspaceView lang={session.preferredLanguage ?? "en"} />
+      <ClearingWorkspaceView
+        lang={session.preferredLanguage ?? "en"}
+        initialStatus={params.status}
+        initialCountryId={params.countryId}
+      />
     </div>
   );
 }

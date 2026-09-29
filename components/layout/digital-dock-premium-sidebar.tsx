@@ -414,7 +414,6 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
       { label: nt("Clearing Workspace"), href: "/dashboard/clearing-agent/clearing-workspace", icon: FileCheck2 },
       { label: nt("Logistics Tracking Dashboard"), href: "/dashboard/logistics", icon: BarChart3 },
       { label: nt("Shipping Account Access"), href: "/dashboard/shipping-line/account-access", icon: Wallet },
-      { label: nt("Transfer & Handover Center"), href: "/dashboard/transfer-center?context=shipping", icon: Inbox },
     ],
   },
   {

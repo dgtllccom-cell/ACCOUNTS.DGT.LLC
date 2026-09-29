@@ -125,6 +125,9 @@ interface TrackingListRow {
 interface CanonicalShipmentTrackingViewProps {
   domain: "business" | "shipping" | "both";
   initialShipmentId?: string | null;
+  initialStatus?: string;
+  initialTab?: "all" | "containers" | "shipments" | "trucks";
+  initialQuery?: string;
   title?: string;
   description?: string;
 }
@@ -240,6 +243,9 @@ const PAGE_SIZE = 10;
 export function CanonicalShipmentTrackingView({
   domain,
   initialShipmentId,
+  initialStatus = "all",
+  initialTab = "all",
+  initialQuery = "",
   title,
   description,
 }: CanonicalShipmentTrackingViewProps) {
@@ -259,12 +265,12 @@ export function CanonicalShipmentTrackingView({
   const [currentPage, setCurrentPage] = useState(1);
 
   // ── Search & filter state ─────────────────────────────────────────────────
-  const [searchQuery, setSearchQuery] = useState("");
-  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(initialQuery || "");
+  const [debouncedQuery, setDebouncedQuery] = useState(initialQuery || "");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [modeFilter, setModeFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [viewTab, setViewTab] = useState<"all" | "containers" | "shipments" | "trucks">("all");
+  const [statusFilter, setStatusFilter] = useState(initialStatus || "all");
+  const [viewTab, setViewTab] = useState<"all" | "containers" | "shipments" | "trucks">(initialTab || "all");
 
   // ── Detail panel state ────────────────────────────────────────────────────
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(

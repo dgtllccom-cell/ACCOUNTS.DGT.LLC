@@ -310,17 +310,17 @@ export function LogisticsDashboardOverview({
           Logistics Operations
         </span>
         <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1.5 tracking-tight">
-          Shipping & Clearance Dashboard
+          Logistics Tracking Dashboard
         </h1>
         <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-          Operational dashboard tracking live shipments, customs clearance, trucks and container locations.
+          Operational dashboard tracking freight shipments, customs clearance, transit containers, and task handovers.
         </p>
       </div>
 
       {/* ── 8 KPI Cards (Top Row) ────────────────────────────────────────── */}
       <section className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-8 gap-3">
         {/* 1. Assigned Shipments */}
-        <Link href="/dashboard/shipping-line/shipment-details" className="group">
+        <Link href="/dashboard/shipping-line/bl-entry" className="group">
           <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-3.5 shadow-xs hover:shadow-md hover:border-blue-300 dark:hover:border-blue-800 transition-all duration-200 flex flex-col justify-between h-full">
             <div className="flex items-center justify-between">
               <span className="p-2.5 rounded-xl bg-blue-100/70 text-blue-600 dark:bg-blue-950 dark:text-blue-400">
@@ -332,18 +332,18 @@ export function LogisticsDashboardOverview({
                 Assigned Shipments
               </p>
               <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">
-                {data.assignedShipments || 24}
+                {data.assignedShipments ?? 0}
               </p>
-              <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-0.5">
+              <p className={`text-[10px] font-bold mt-1 flex items-center gap-0.5 ${data.assignedShipments > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400"}`}>
                 <ArrowUpRight className="h-3 w-3" />
-                +3 this week
+                {data.assignedShipments > 0 ? `${data.assignedShipments} active in scope` : "No active shipments"}
               </p>
             </div>
           </div>
         </Link>
 
         {/* 2. Pending Clearance */}
-        <Link href="/dashboard/clearing-agent/agent-custom-entry" className="group">
+        <Link href="/dashboard/clearing-agent/clearing-workspace?status=pending" className="group">
           <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-3.5 shadow-xs hover:shadow-md hover:border-amber-300 dark:hover:border-amber-800 transition-all duration-200 flex flex-col justify-between h-full">
             <div className="flex items-center justify-between">
               <span className="p-2.5 rounded-xl bg-amber-100/70 text-amber-700 dark:bg-amber-950 dark:text-amber-400">
@@ -355,17 +355,17 @@ export function LogisticsDashboardOverview({
                 Pending Clearance
               </p>
               <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">
-                {data.pendingClearance || 8}
+                {data.pendingClearance ?? 0}
               </p>
-              <p className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 mt-1">
-                Requires action
+              <p className={`text-[10px] font-semibold mt-1 ${data.pendingClearance > 0 ? "text-amber-600 dark:text-amber-400" : "text-slate-400"}`}>
+                {data.pendingClearance > 0 ? "Requires action" : "All cleared"}
               </p>
             </div>
           </div>
         </Link>
 
         {/* 3. In Transit */}
-        <Link href="/dashboard/shipping-line/tracking" className="group">
+        <Link href="/dashboard/shipping-line/tracking?status=in_transit" className="group">
           <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-3.5 shadow-xs hover:shadow-md hover:border-emerald-300 dark:hover:border-emerald-800 transition-all duration-200 flex flex-col justify-between h-full">
             <div className="flex items-center justify-between">
               <span className="p-2.5 rounded-xl bg-emerald-100/70 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400">
@@ -377,17 +377,17 @@ export function LogisticsDashboardOverview({
                 In Transit
               </p>
               <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">
-                {data.inTransit || 12}
+                {data.inTransit ?? 0}
               </p>
-              <p className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 mt-1">
-                On the way
+              <p className={`text-[10px] font-semibold mt-1 ${data.inTransit > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400"}`}>
+                {data.inTransit > 0 ? "On the way" : "None in transit"}
               </p>
             </div>
           </div>
         </Link>
 
         {/* 4. Containers Tracking */}
-        <Link href="/dashboard/shipping-line/tracking" className="group">
+        <Link href="/dashboard/shipping-line/tracking?tab=containers" className="group">
           <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-3.5 shadow-xs hover:shadow-md hover:border-purple-300 dark:hover:border-purple-800 transition-all duration-200 flex flex-col justify-between h-full">
             <div className="flex items-center justify-between">
               <span className="p-2.5 rounded-xl bg-purple-100/70 text-purple-600 dark:bg-purple-950 dark:text-purple-400">
@@ -399,17 +399,17 @@ export function LogisticsDashboardOverview({
                 Containers Tracking
               </p>
               <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">
-                {data.trackedContainers || 6}
+                {data.trackedContainers ?? 0}
               </p>
-              <p className="text-[10px] font-semibold text-purple-600 dark:text-purple-400 mt-1">
-                Active tracking
+              <p className={`text-[10px] font-semibold mt-1 ${data.trackedContainers > 0 ? "text-purple-600 dark:text-purple-400" : "text-slate-400"}`}>
+                {data.trackedContainers > 0 ? "Active tracking" : "No active containers"}
               </p>
             </div>
           </div>
         </Link>
 
         {/* 5. Open Documents */}
-        <Link href="/dashboard/shipping-line/shipment-report" className="group">
+        <Link href="/dashboard/shipping-line/bl-entry" className="group">
           <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-3.5 shadow-xs hover:shadow-md hover:border-rose-300 dark:hover:border-rose-800 transition-all duration-200 flex flex-col justify-between h-full">
             <div className="flex items-center justify-between">
               <span className="p-2.5 rounded-xl bg-rose-100/70 text-rose-600 dark:bg-rose-950 dark:text-rose-400">
@@ -421,17 +421,17 @@ export function LogisticsDashboardOverview({
                 Open Documents
               </p>
               <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">
-                {data.documents || 15}
+                {data.documents ?? 0}
               </p>
-              <p className="text-[10px] font-semibold text-rose-600 dark:text-rose-400 mt-1">
-                Need review
+              <p className={`text-[10px] font-semibold mt-1 ${data.documents > 0 ? "text-rose-600 dark:text-rose-400" : "text-slate-400"}`}>
+                {data.documents > 0 ? "Need review" : "No open documents"}
               </p>
             </div>
           </div>
         </Link>
 
         {/* 6. Delivery Completed */}
-        <Link href="/dashboard/shipping-line/shipment-details" className="group">
+        <Link href="/dashboard/shipping-line/bl-entry?status=delivered" className="group">
           <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-3.5 shadow-xs hover:shadow-md hover:border-blue-300 dark:hover:border-blue-800 transition-all duration-200 flex flex-col justify-between h-full">
             <div className="flex items-center justify-between">
               <span className="p-2.5 rounded-xl bg-blue-100/70 text-blue-600 dark:bg-blue-950 dark:text-blue-400">
@@ -443,17 +443,17 @@ export function LogisticsDashboardOverview({
                 Delivery Completed
               </p>
               <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">
-                {data.delivered || 32}
+                {data.delivered ?? 0}
               </p>
-              <p className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 mt-1">
-                This month
+              <p className={`text-[10px] font-semibold mt-1 ${data.delivered > 0 ? "text-blue-600 dark:text-blue-400" : "text-slate-400"}`}>
+                {data.delivered > 0 ? "Completed" : "None completed"}
               </p>
             </div>
           </div>
         </Link>
 
         {/* 7. Pending Tasks */}
-        <Link href="/dashboard/user-tasks" className="group">
+        <Link href="/dashboard/user-tasks?status=open" className="group">
           <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-3.5 shadow-xs hover:shadow-md hover:border-rose-300 dark:hover:border-rose-800 transition-all duration-200 flex flex-col justify-between h-full">
             <div className="flex items-center justify-between">
               <span className="p-2.5 rounded-xl bg-rose-100/70 text-rose-600 dark:bg-rose-950 dark:text-rose-400">
@@ -465,34 +465,36 @@ export function LogisticsDashboardOverview({
                 Pending Tasks
               </p>
               <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">
-                {data.pendingTasks || 5}
+                {data.pendingTasks ?? 0}
               </p>
-              <p className="text-[10px] font-semibold text-rose-600 dark:text-rose-400 mt-1">
-                Need attention
+              <p className={`text-[10px] font-semibold mt-1 ${data.pendingTasks > 0 ? "text-rose-600 dark:text-rose-400" : "text-slate-400"}`}>
+                {data.pendingTasks > 0 ? "Need attention" : "No pending tasks"}
               </p>
             </div>
           </div>
         </Link>
 
         {/* 8. Notifications */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-3.5 shadow-xs hover:shadow-md hover:border-emerald-300 dark:hover:border-emerald-800 transition-all duration-200 flex flex-col justify-between h-full group">
-          <div className="flex items-center justify-between">
-            <span className="p-2.5 rounded-xl bg-emerald-100/70 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400">
-              <Bell className="h-4 w-4" />
-            </span>
+        <Link href="/dashboard/user-tasks" className="group">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-3.5 shadow-xs hover:shadow-md hover:border-emerald-300 dark:hover:border-emerald-800 transition-all duration-200 flex flex-col justify-between h-full">
+            <div className="flex items-center justify-between">
+              <span className="p-2.5 rounded-xl bg-emerald-100/70 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400">
+                <Bell className="h-4 w-4" />
+              </span>
+            </div>
+            <div className="mt-3">
+              <p className="text-[11px] font-bold text-slate-600 dark:text-slate-400 leading-tight">
+                Notifications
+              </p>
+              <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">
+                {data.notifications ?? 0}
+              </p>
+              <p className={`text-[10px] font-semibold mt-1 ${data.notifications > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400"}`}>
+                {data.notifications > 0 ? "New alerts" : "All caught up"}
+              </p>
+            </div>
           </div>
-          <div className="mt-3">
-            <p className="text-[11px] font-bold text-slate-600 dark:text-slate-400 leading-tight">
-              Notifications
-            </p>
-            <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">
-              {data.notifications || 3}
-            </p>
-            <p className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 mt-1">
-              New alerts
-            </p>
-          </div>
-        </div>
+        </Link>
       </section>
 
       {/* ── Row 2: Charts & Quick Access (3 Columns) ────────────────────── */}
@@ -761,39 +763,51 @@ export function LogisticsDashboardOverview({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium text-slate-700 dark:text-slate-300">
-                {displayShipments.map((s, idx) => (
-                  <tr key={s.id || idx} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
-                    <td className="px-3.5 py-2.5 text-slate-400 font-mono text-[11px]">{idx + 1}</td>
-                    <td className="px-3.5 py-2.5 text-slate-600 dark:text-slate-400 whitespace-nowrap text-[11px]">{s.date}</td>
-                    <td className="px-3.5 py-2.5 font-bold text-slate-900 dark:text-white whitespace-nowrap">{s.shippingLine}</td>
-                    <td className="px-3.5 py-2.5 font-mono text-blue-600 dark:text-blue-400 font-semibold">{s.container}</td>
-                    <td className="px-3.5 py-2.5 text-slate-600 dark:text-slate-400 whitespace-nowrap">{s.vessel}</td>
-                    <td className="px-3.5 py-2.5 text-slate-600 dark:text-slate-400 whitespace-nowrap">{s.eta}</td>
-                    <td className="px-3.5 py-2.5 text-center">
-                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${getStatusBadge(s.status)}`}>
-                        {s.status}
-                      </span>
-                    </td>
-                    <td className="px-3.5 py-2.5 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedRecord({ type: "Shipment", ...s })}
-                          className="h-6 w-6 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-blue-600 transition-colors"
-                          title="View Details"
-                        >
-                          <Eye className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          className="h-6 w-6 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-slate-600"
-                        >
-                          <MoreVertical className="h-3.5 w-3.5" />
-                        </button>
+                {displayShipments.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
+                      <div className="flex flex-col items-center justify-center gap-1.5 py-2">
+                        <Package className="h-6 w-6 text-slate-300 dark:text-slate-600" />
+                        <p className="text-xs font-semibold">No recent shipments recorded in your branch scope.</p>
+                        <p className="text-[11px] text-slate-400">When BL records or freight consignments are created, they will appear here.</p>
                       </div>
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  displayShipments.map((s, idx) => (
+                    <tr key={s.id || idx} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
+                      <td className="px-3.5 py-2.5 text-slate-400 font-mono text-[11px]">{idx + 1}</td>
+                      <td className="px-3.5 py-2.5 text-slate-600 dark:text-slate-400 whitespace-nowrap text-[11px]">{s.date}</td>
+                      <td className="px-3.5 py-2.5 font-bold text-slate-900 dark:text-white whitespace-nowrap">{s.shippingLine}</td>
+                      <td className="px-3.5 py-2.5 font-mono text-blue-600 dark:text-blue-400 font-semibold">{s.container}</td>
+                      <td className="px-3.5 py-2.5 text-slate-600 dark:text-slate-400 whitespace-nowrap">{s.vessel}</td>
+                      <td className="px-3.5 py-2.5 text-slate-600 dark:text-slate-400 whitespace-nowrap">{s.eta}</td>
+                      <td className="px-3.5 py-2.5 text-center">
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${getStatusBadge(s.status)}`}>
+                          {s.status}
+                        </span>
+                      </td>
+                      <td className="px-3.5 py-2.5 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedRecord({ type: "Shipment", ...s })}
+                            className="h-6 w-6 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-blue-600 transition-colors"
+                            title={tt("common.view_details", "View Details")}
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            className="h-6 w-6 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-slate-600"
+                          >
+                            <MoreVertical className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -829,42 +843,54 @@ export function LogisticsDashboardOverview({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium text-slate-700 dark:text-slate-300">
-                {displayTasks.map((t, idx) => (
-                  <tr key={t.id || idx} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
-                    <td className="px-3.5 py-2.5 text-slate-400 font-mono text-[11px]">{idx + 1}</td>
-                    <td className="px-3.5 py-2.5 font-bold text-slate-900 dark:text-white truncate max-w-[130px]">{t.task}</td>
-                    <td className="px-3.5 py-2.5 text-slate-600 dark:text-slate-400 font-mono text-[11px] whitespace-nowrap">{t.relatedTo}</td>
-                    <td className="px-3.5 py-2.5 text-slate-500 whitespace-nowrap text-[11px]">{t.dueDate}</td>
-                    <td className="px-3.5 py-2.5 whitespace-nowrap">
-                      <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${getPriorityBadge(t.priority || "Medium")}`}>
-                        {t.priority}
-                      </span>
-                    </td>
-                    <td className="px-3.5 py-2.5 text-center">
-                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${getStatusBadge(t.status)}`}>
-                        {t.status}
-                      </span>
-                    </td>
-                    <td className="px-3.5 py-2.5 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedRecord({ type: "Task", ...t })}
-                          className="h-6 w-6 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-blue-600 transition-colors"
-                          title="View Details"
-                        >
-                          <Eye className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          className="h-6 w-6 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-slate-600"
-                        >
-                          <MoreVertical className="h-3.5 w-3.5" />
-                        </button>
+                {displayTasks.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
+                      <div className="flex flex-col items-center justify-center gap-1.5 py-2">
+                        <CheckCircle2 className="h-6 w-6 text-slate-300 dark:text-slate-600" />
+                        <p className="text-xs font-semibold">No pending operational tasks assigned.</p>
+                        <p className="text-[11px] text-slate-400">All workflow handovers and clearing assignments are up to date.</p>
                       </div>
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  displayTasks.map((t, idx) => (
+                    <tr key={t.id || idx} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
+                      <td className="px-3.5 py-2.5 text-slate-400 font-mono text-[11px]">{idx + 1}</td>
+                      <td className="px-3.5 py-2.5 font-bold text-slate-900 dark:text-white truncate max-w-[130px]">{t.task}</td>
+                      <td className="px-3.5 py-2.5 text-slate-600 dark:text-slate-400 font-mono text-[11px] whitespace-nowrap">{t.relatedTo}</td>
+                      <td className="px-3.5 py-2.5 text-slate-500 whitespace-nowrap text-[11px]">{t.dueDate}</td>
+                      <td className="px-3.5 py-2.5 whitespace-nowrap">
+                        <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${getPriorityBadge(t.priority || "Medium")}`}>
+                          {t.priority}
+                        </span>
+                      </td>
+                      <td className="px-3.5 py-2.5 text-center">
+                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${getStatusBadge(t.status)}`}>
+                          {t.status}
+                        </span>
+                      </td>
+                      <td className="px-3.5 py-2.5 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedRecord({ type: "Task", ...t })}
+                            className="h-6 w-6 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-blue-600 transition-colors"
+                            title={tt("common.view_details", "View Details")}
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            className="h-6 w-6 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-slate-600"
+                          >
+                            <MoreVertical className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

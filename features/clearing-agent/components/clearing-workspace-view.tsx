@@ -33,11 +33,19 @@ function statusVariant(status: string): "default" | "secondary" | "destructive" 
   return "secondary";
 }
 
-export function ClearingWorkspaceView({ lang }: { lang?: string | null }) {
+export function ClearingWorkspaceView({
+  lang,
+  initialStatus = "",
+  initialCountryId = "",
+}: {
+  lang?: string | null;
+  initialStatus?: string;
+  initialCountryId?: string;
+}) {
   const s = useErpScreen("cwk", lang);
   const [countries, setCountries] = useState<any[]>([]);
-  const [countryId, setCountryId] = useState("");
-  const [status, setStatus] = useState("");
+  const [countryId, setCountryId] = useState(initialCountryId || "");
+  const [status, setStatus] = useState(initialStatus || "");
   const [legs, setLegs] = useState<WorkspaceLeg[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
