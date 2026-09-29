@@ -1,6 +1,8 @@
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { ApiClientError } from "@/lib/api/response";
+import { validateRoute } from "@/lib/shipping/route-validation";
 
 export type PartyRoleKey = "supplier" | "importer" | "exporter" | "notify_party" | "buyer" | "consignee";
 
@@ -553,6 +555,44 @@ export async function getCustomerOrderById(id: string) {
   });
 }
 
+/**
+ * Route rule (lib/shipping/route-validation): legs must connect, and a cross-border road / rail
+ * leg needs a shared land border + a named crossing. Enforced here so no client can bypass it.
+ */
+export async function routeIssuesForLegs(sql: any, legs: Array<Record<string, any>>) {
+  const ids = [...new Set(legs.flatMap((l) => [l.fromCountryId, l.toCountryId]).filter(Boolean))];
+  const rows = ids.length ? ((await sql`select id, upper(iso2) as iso2, name from public.countries where id = any(${ids}::uuid[])`) as any[]) : [];
+  const iso = new Map(rows.map((r: any) => [r.id, r.iso2 as string]));
+  const nameOf = new Map(rows.map((r: any) => [r.iso2 as string, r.name as string]));
+  return validateRoute(
+    legs.map((l) => ({
+      legNo: Number(l.legNo) || 0,
+      fromIso2: (l.fromCountryId && iso.get(l.fromCountryId)) || null,
+      toIso2: (l.toCountryId && iso.get(l.toCountryId)) || null,
+      fromName: l.fromCountryName ?? null,
+      toName: l.toCountryName ?? null,
+      transportMode: l.transportMode ?? null,
+      borderCrossing: l.customsPointText ?? null,
+      portOfLoading: l.portOfLoading ?? null,
+      portOfDischarge: l.portOfDischarge ?? null,
+      fromLocation: l.fromLocationText ?? null,
+      toLocation: l.toLocationText ?? null,
+      flightOrAwb: l.flightNumber || l.airwayBillNo || null,
+      status: l.status ?? null,
+    })),
+    (code) => nameOf.get(code) ?? code
+  );
+}
+
+async function assertValidRoute(sql: any, legs: Array<Record<string, any>>) {
+  if (!legs.length) return;
+  const issues = await routeIssuesForLegs(sql, legs);
+  const errors = issues.filter((i) => i.level === "error");
+  if (errors.length) {
+    throw new ApiClientError(errors.map((e) => e.message).join(" "), { status: 422, code: "ROUTE_INVALID", details: { issues } });
+  }
+}
+
 export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
   return await withOrderDb(async (sql) => {
     return await sql.begin(async (tx: any) => {
@@ -865,6 +905,7 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
       let legRows: ClearingCustomerOrderLegRow[] = [];
       if (hasLegsPayload) {
         const normalizedLegs = normalizeLegs(input.legs);
+        await assertValidRoute(tx, normalizedLegs);
 
         // Upsert BY ID rather than delete-all-then-reinsert: a leg's id must stay
         // stable across saves, because DocumentAttachmentIcon (generic documents

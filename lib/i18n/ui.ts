@@ -10037,6 +10037,79 @@ export type UiKey =
   | "shipping.no_partner_bills"
   | "shipping.supplier_expense_note"
   | "nav.customer_order_transfer"
+  | "corin.add_policy"
+  | "corin.border_port"
+  | "corin.cancel"
+  | "corin.confirm_cancel"
+  | "corin.cover_period"
+  | "corin.coverage_from"
+  | "corin.coverage_gaps"
+  | "corin.coverage_to"
+  | "corin.covered_cargo"
+  | "corin.currency"
+  | "corin.customs"
+  | "corin.from_leg"
+  | "corin.from_to"
+  | "corin.fully_covered"
+  | "corin.handover"
+  | "corin.insurance"
+  | "corin.insured_value"
+  | "corin.insurer"
+  | "corin.legs"
+  | "corin.mode"
+  | "corin.no_legs"
+  | "corin.no_policies"
+  | "corin.not_set"
+  | "corin.paid"
+  | "corin.partner"
+  | "corin.partner_bill"
+  | "corin.partner_totals"
+  | "corin.policy_file"
+  | "corin.policy_no"
+  | "corin.premium"
+  | "corin.refresh"
+  | "corin.remaining"
+  | "corin.responsible"
+  | "corin.route_ok"
+  | "corin.save"
+  | "corin.save_first"
+  | "corin.status"
+  | "corin.territory"
+  | "corin.title"
+  | "corin.to_leg"
+  | "corin.mode_by_road"
+  | "corin.mode_by_rail"
+  | "corin.mode_by_sea"
+  | "corin.mode_by_air"
+  | "corin.gap_uncovered"
+  | "corin.gap_dates_outside"
+  | "corin.gap_policy_expired"
+  | "corin.gap_document_missing"
+  | "corin.issue_route_gap"
+  | "corin.issue_no_land_border"
+  | "corin.issue_border_crossing_required"
+  | "corin.issue_border_data_missing"
+  | "corin.issue_country_missing"
+  | "corin.issue_port_missing"
+  | "corin.issue_airport_missing"
+  | "corin.cs_not_applicable"
+  | "corin.cs_pending"
+  | "corin.cs_submitted"
+  | "corin.cs_cleared"
+  | "corin.cs_held"
+  | "corin.cs_rejected"
+  | "corin.ho_pending"
+  | "corin.ho_accepted"
+  | "corin.ho_returned"
+  | "corin.ho_rejected"
+  | "corin.ho_resubmitted"
+  | "corin.ho_completed"
+  | "corin.ls_pending"
+  | "corin.ls_in_transit"
+  | "corin.ls_arrived"
+  | "corin.ls_completed"
+  | "corin.ls_delayed"
+  | "corin.ls_cancelled"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -31349,6 +31422,79 @@ const en: Dict = {
   "shipping.no_partner_bills": "No external partner bills recorded for this order.",
   "shipping.supplier_expense_note": "Note: External partner bills are separate supplier costs and are not billed directly to the customer.",
   "nav.customer_order_transfer": "Customer Order Transfer",
+  "corin.add_policy": "Add insurance policy",
+  "corin.border_port": "Border / port",
+  "corin.cancel": "Cancel",
+  "corin.confirm_cancel": "Cancel this policy on the order? Its legs will show as uncovered.",
+  "corin.cover_period": "Cover period",
+  "corin.coverage_from": "Cover from",
+  "corin.coverage_gaps": "Insurance gaps",
+  "corin.coverage_to": "Cover to",
+  "corin.covered_cargo": "Covered cargo",
+  "corin.currency": "Currency",
+  "corin.customs": "Customs",
+  "corin.from_leg": "From leg",
+  "corin.from_to": "From → To",
+  "corin.fully_covered": "Every leg is insured",
+  "corin.handover": "Handover",
+  "corin.insurance": "Insurance",
+  "corin.insured_value": "Insured value",
+  "corin.insurer": "Insurer",
+  "corin.legs": "Legs",
+  "corin.mode": "Mode",
+  "corin.no_legs": "No route legs yet.",
+  "corin.no_policies": "No insurance recorded for this order.",
+  "corin.not_set": "not set",
+  "corin.paid": "paid",
+  "corin.partner": "Partner",
+  "corin.partner_bill": "Partner bill (billed / paid / remaining)",
+  "corin.partner_totals": "Partner bills on this order",
+  "corin.policy_file": "Policy file",
+  "corin.policy_no": "Policy / certificate no.",
+  "corin.premium": "Premium (optional)",
+  "corin.refresh": "Refresh",
+  "corin.remaining": "remaining",
+  "corin.responsible": "Responsible",
+  "corin.route_ok": "Route is continuous and every road leg crosses a real land border.",
+  "corin.save": "Save",
+  "corin.save_first": "Save the order to see handovers, insurance cover and partner bills per leg.",
+  "corin.status": "Status",
+  "corin.territory": "Route / territory",
+  "corin.title": "Route, border & insurance",
+  "corin.to_leg": "To leg",
+  "corin.mode_by_road": "Road",
+  "corin.mode_by_rail": "Rail",
+  "corin.mode_by_sea": "Sea",
+  "corin.mode_by_air": "Air",
+  "corin.gap_uncovered": "Not insured",
+  "corin.gap_dates_outside": "Dates outside cover",
+  "corin.gap_policy_expired": "Policy expired",
+  "corin.gap_document_missing": "Policy file not attached",
+  "corin.issue_route_gap": "Leg {leg}: the route has a gap — the previous leg ends in {from} but this leg starts in {to}.",
+  "corin.issue_no_land_border": "Leg {leg}: {from} and {to} do not share a land border — split it into legs through a connecting country, or use sea / air.",
+  "corin.issue_border_crossing_required": "Leg {leg}: name the border crossing / customs point between {from} and {to}.",
+  "corin.issue_border_data_missing": "Leg {leg}: land-border data is not configured for {from} → {to}; confirm the crossing manually.",
+  "corin.issue_country_missing": "Leg {leg}: choose the origin and destination country.",
+  "corin.issue_port_missing": "Leg {leg}: add the port of loading and port of discharge.",
+  "corin.issue_airport_missing": "Leg {leg}: add the departure / arrival airport or flight / AWB number.",
+  "corin.cs_not_applicable": "Not applicable",
+  "corin.cs_pending": "Pending",
+  "corin.cs_submitted": "Submitted",
+  "corin.cs_cleared": "Cleared",
+  "corin.cs_held": "Held",
+  "corin.cs_rejected": "Rejected",
+  "corin.ho_pending": "Pending",
+  "corin.ho_accepted": "Accepted",
+  "corin.ho_returned": "Returned",
+  "corin.ho_rejected": "Rejected",
+  "corin.ho_resubmitted": "Resubmitted",
+  "corin.ho_completed": "Completed",
+  "corin.ls_pending": "Pending",
+  "corin.ls_in_transit": "In transit",
+  "corin.ls_arrived": "Arrived",
+  "corin.ls_completed": "Completed",
+  "corin.ls_delayed": "Delayed",
+  "corin.ls_cancelled": "Cancelled",
 };
 
 const ur: Dict = {
@@ -52630,6 +52776,79 @@ const ur: Dict = {
   "shipping.no_partner_bills": "اس آرڈر کے لیے کوئی بیرونی پارٹنر بل درج نہیں ہے۔",
   "shipping.supplier_expense_note": "نوٹ: بیرونی پارٹنر کے بل علیحدہ سپلائر اخراجات ہیں اور صارف کو براہ راست چارج نہیں کیے جاتے۔",
   "nav.customer_order_transfer": "کسٹمر آرڈر ٹرانسفر",
+  "corin.add_policy": "انشورنس پالیسی شامل کریں",
+  "corin.border_port": "سرحد / بندرگاہ",
+  "corin.cancel": "منسوخ",
+  "corin.confirm_cancel": "آرڈر پر یہ پالیسی منسوخ کریں؟ اس کے لیگز غیر محفوظ دکھائی دیں گے۔",
+  "corin.cover_period": "کوریج کی مدت",
+  "corin.coverage_from": "کوریج شروع",
+  "corin.coverage_gaps": "انشورنس خلا",
+  "corin.coverage_to": "کوریج ختم",
+  "corin.covered_cargo": "محفوظ سامان",
+  "corin.currency": "کرنسی",
+  "corin.customs": "کسٹمز",
+  "corin.from_leg": "لیگ سے",
+  "corin.from_to": "سے ← تک",
+  "corin.fully_covered": "ہر لیگ کا انشورنس ہے",
+  "corin.handover": "حوالگی",
+  "corin.insurance": "انشورنس",
+  "corin.insured_value": "بیمہ شدہ مالیت",
+  "corin.insurer": "بیمہ کنندہ",
+  "corin.legs": "لیگز",
+  "corin.mode": "ذریعہ",
+  "corin.no_legs": "ابھی تک کوئی روٹ لیگ نہیں۔",
+  "corin.no_policies": "اس آرڈر کے لیے کوئی انشورنس درج نہیں۔",
+  "corin.not_set": "درج نہیں",
+  "corin.paid": "ادا شدہ",
+  "corin.partner": "پارٹنر",
+  "corin.partner_bill": "پارٹنر بل (کل / ادا / باقی)",
+  "corin.partner_totals": "اس آرڈر پر پارٹنر بلز",
+  "corin.policy_file": "پالیسی فائل",
+  "corin.policy_no": "پالیسی / سرٹیفکیٹ نمبر",
+  "corin.premium": "پریمیم (اختیاری)",
+  "corin.refresh": "تازہ کریں",
+  "corin.remaining": "باقی",
+  "corin.responsible": "ذمہ دار",
+  "corin.route_ok": "روٹ مسلسل ہے اور ہر سڑک لیگ حقیقی زمینی سرحد عبور کرتی ہے۔",
+  "corin.save": "محفوظ کریں",
+  "corin.save_first": "ہر لیگ کی حوالگی، انشورنس اور پارٹنر بل دیکھنے کے لیے آرڈر محفوظ کریں۔",
+  "corin.status": "حیثیت",
+  "corin.territory": "روٹ / علاقہ",
+  "corin.title": "روٹ، سرحد اور انشورنس",
+  "corin.to_leg": "لیگ تک",
+  "corin.mode_by_road": "سڑک",
+  "corin.mode_by_rail": "ریل",
+  "corin.mode_by_sea": "سمندری",
+  "corin.mode_by_air": "فضائی",
+  "corin.gap_uncovered": "انشورنس نہیں",
+  "corin.gap_dates_outside": "تاریخیں کوریج سے باہر",
+  "corin.gap_policy_expired": "پالیسی ختم",
+  "corin.gap_document_missing": "پالیسی فائل منسلک نہیں",
+  "corin.issue_route_gap": "لیگ {leg}: روٹ میں خلا ہے — پچھلا لیگ {from} پر ختم ہوتا ہے مگر یہ لیگ {to} سے شروع ہوتا ہے۔",
+  "corin.issue_no_land_border": "لیگ {leg}: {from} اور {to} کی مشترکہ زمینی سرحد نہیں — درمیانی ملک کے ذریعے لیگز بنائیں یا سمندری / فضائی ذریعہ استعمال کریں۔",
+  "corin.issue_border_crossing_required": "لیگ {leg}: {from} اور {to} کے درمیان سرحدی گزرگاہ / کسٹمز پوائنٹ درج کریں۔",
+  "corin.issue_border_data_missing": "لیگ {leg}: {from} ← {to} کی زمینی سرحد کا ڈیٹا دستیاب نہیں؛ گزرگاہ کی خود تصدیق کریں۔",
+  "corin.issue_country_missing": "لیگ {leg}: روانگی اور منزل کا ملک منتخب کریں۔",
+  "corin.issue_port_missing": "لیگ {leg}: لوڈنگ اور ڈسچارج بندرگاہ درج کریں۔",
+  "corin.issue_airport_missing": "لیگ {leg}: روانگی / آمد ہوائی اڈہ یا فلائٹ / AWB نمبر درج کریں۔",
+  "corin.cs_not_applicable": "لاگو نہیں",
+  "corin.cs_pending": "زیر التوا",
+  "corin.cs_submitted": "جمع شدہ",
+  "corin.cs_cleared": "کلیئر",
+  "corin.cs_held": "روکا گیا",
+  "corin.cs_rejected": "مسترد",
+  "corin.ho_pending": "زیر التوا",
+  "corin.ho_accepted": "قبول",
+  "corin.ho_returned": "واپس",
+  "corin.ho_rejected": "مسترد",
+  "corin.ho_resubmitted": "دوبارہ جمع",
+  "corin.ho_completed": "مکمل",
+  "corin.ls_pending": "زیر التوا",
+  "corin.ls_in_transit": "راستے میں",
+  "corin.ls_arrived": "پہنچ گیا",
+  "corin.ls_completed": "مکمل",
+  "corin.ls_delayed": "تاخیر",
+  "corin.ls_cancelled": "منسوخ",
 };
 
 const ar: Dict = {
@@ -73912,6 +74131,79 @@ const ar: Dict = {
   "shipping.no_partner_bills": "لا توجد فواتير شركاء خارجيين مسجلة لهذا الطلب.",
   "shipping.supplier_expense_note": "ملاحظة: فواتير الشركاء الخارجيين هي تكاليف موردين منفصلة ولا تُحسب كرسوم مباشرة على العميل.",
   "nav.customer_order_transfer": "تحويل طلب العميل",
+  "corin.add_policy": "إضافة وثيقة تأمين",
+  "corin.border_port": "الحدود / الميناء",
+  "corin.cancel": "إلغاء",
+  "corin.confirm_cancel": "إلغاء هذه الوثيقة على الطلب؟ ستظهر مراحلها غير مؤمنة.",
+  "corin.cover_period": "فترة التغطية",
+  "corin.coverage_from": "التغطية من",
+  "corin.coverage_gaps": "فجوات التأمين",
+  "corin.coverage_to": "التغطية حتى",
+  "corin.covered_cargo": "البضائع المؤمنة",
+  "corin.currency": "العملة",
+  "corin.customs": "الجمارك",
+  "corin.from_leg": "من المرحلة",
+  "corin.from_to": "من ← إلى",
+  "corin.fully_covered": "كل مرحلة مؤمنة",
+  "corin.handover": "التسليم",
+  "corin.insurance": "التأمين",
+  "corin.insured_value": "القيمة المؤمنة",
+  "corin.insurer": "شركة التأمين",
+  "corin.legs": "المراحل",
+  "corin.mode": "الوسيلة",
+  "corin.no_legs": "لا توجد مراحل مسار بعد.",
+  "corin.no_policies": "لا يوجد تأمين مسجل لهذا الطلب.",
+  "corin.not_set": "غير محدد",
+  "corin.paid": "مدفوع",
+  "corin.partner": "شريك",
+  "corin.partner_bill": "فاتورة الشريك (المفوتر / المدفوع / المتبقي)",
+  "corin.partner_totals": "فواتير الشركاء على هذا الطلب",
+  "corin.policy_file": "ملف الوثيقة",
+  "corin.policy_no": "رقم الوثيقة / الشهادة",
+  "corin.premium": "القسط (اختياري)",
+  "corin.refresh": "تحديث",
+  "corin.remaining": "المتبقي",
+  "corin.responsible": "المسؤول",
+  "corin.route_ok": "المسار متصل وكل مرحلة برية تعبر حدودًا برية حقيقية.",
+  "corin.save": "حفظ",
+  "corin.save_first": "احفظ الطلب لعرض التسليمات والتأمين وفواتير الشركاء لكل مرحلة.",
+  "corin.status": "الحالة",
+  "corin.territory": "المسار / الإقليم",
+  "corin.title": "المسار والحدود والتأمين",
+  "corin.to_leg": "إلى المرحلة",
+  "corin.mode_by_road": "بري",
+  "corin.mode_by_rail": "سكة حديد",
+  "corin.mode_by_sea": "بحري",
+  "corin.mode_by_air": "جوي",
+  "corin.gap_uncovered": "غير مؤمن",
+  "corin.gap_dates_outside": "التواريخ خارج التغطية",
+  "corin.gap_policy_expired": "الوثيقة منتهية",
+  "corin.gap_document_missing": "ملف الوثيقة غير مرفق",
+  "corin.issue_route_gap": "المرحلة {leg}: في المسار فجوة — المرحلة السابقة تنتهي في {from} وهذه تبدأ من {to}.",
+  "corin.issue_no_land_border": "المرحلة {leg}: لا توجد حدود برية مشتركة بين {from} و{to} — قسّمها عبر دولة وسيطة أو استخدم البحر / الجو.",
+  "corin.issue_border_crossing_required": "المرحلة {leg}: اذكر المعبر الحدودي / نقطة الجمارك بين {from} و{to}.",
+  "corin.issue_border_data_missing": "المرحلة {leg}: بيانات الحدود البرية غير متوفرة لـ {from} ← {to}؛ تحقق من المعبر يدويًا.",
+  "corin.issue_country_missing": "المرحلة {leg}: اختر دولة الانطلاق والوصول.",
+  "corin.issue_port_missing": "المرحلة {leg}: أضف ميناء الشحن وميناء التفريغ.",
+  "corin.issue_airport_missing": "المرحلة {leg}: أضف مطار المغادرة / الوصول أو رقم الرحلة / بوليصة الشحن الجوي.",
+  "corin.cs_not_applicable": "غير منطبق",
+  "corin.cs_pending": "معلق",
+  "corin.cs_submitted": "مُقدَّم",
+  "corin.cs_cleared": "تم التخليص",
+  "corin.cs_held": "محتجز",
+  "corin.cs_rejected": "مرفوض",
+  "corin.ho_pending": "معلق",
+  "corin.ho_accepted": "مقبول",
+  "corin.ho_returned": "مُعاد",
+  "corin.ho_rejected": "مرفوض",
+  "corin.ho_resubmitted": "أعيد تقديمه",
+  "corin.ho_completed": "مكتمل",
+  "corin.ls_pending": "معلق",
+  "corin.ls_in_transit": "قيد النقل",
+  "corin.ls_arrived": "وصل",
+  "corin.ls_completed": "مكتمل",
+  "corin.ls_delayed": "متأخر",
+  "corin.ls_cancelled": "ملغى",
 };
 
 const fa: Dict = {
@@ -95193,6 +95485,79 @@ const fa: Dict = {
   "shipping.no_partner_bills": "هیچ صورت‌حساب همکار خارجی برای این سفارش ثبت نشده است.",
   "shipping.supplier_expense_note": "یادداشت: صورت‌حساب‌های همکاران خارجی هزینه‌های مجزای تأمین‌کننده بوده و مستقیماً به مشتری تحمیل نمی‌شود.",
   "nav.customer_order_transfer": "انتقال سفارش مشتری",
+  "corin.add_policy": "افزودن بیمه‌نامه",
+  "corin.border_port": "مرز / بندر",
+  "corin.cancel": "لغو",
+  "corin.confirm_cancel": "این بیمه‌نامه در سفارش لغو شود؟ مراحل آن بدون پوشش نمایش داده می‌شوند.",
+  "corin.cover_period": "دوره پوشش",
+  "corin.coverage_from": "پوشش از",
+  "corin.coverage_gaps": "خلأهای بیمه",
+  "corin.coverage_to": "پوشش تا",
+  "corin.covered_cargo": "کالای تحت پوشش",
+  "corin.currency": "ارز",
+  "corin.customs": "گمرک",
+  "corin.from_leg": "از مرحله",
+  "corin.from_to": "از ← به",
+  "corin.fully_covered": "همه مراحل بیمه شده‌اند",
+  "corin.handover": "تحویل",
+  "corin.insurance": "بیمه",
+  "corin.insured_value": "ارزش بیمه‌شده",
+  "corin.insurer": "بیمه‌گر",
+  "corin.legs": "مراحل",
+  "corin.mode": "روش حمل",
+  "corin.no_legs": "هنوز مرحله‌ای برای مسیر وجود ندارد.",
+  "corin.no_policies": "هیچ بیمه‌ای برای این سفارش ثبت نشده است.",
+  "corin.not_set": "تعیین نشده",
+  "corin.paid": "پرداخت‌شده",
+  "corin.partner": "شریک",
+  "corin.partner_bill": "صورتحساب شریک (کل / پرداخت / مانده)",
+  "corin.partner_totals": "صورتحساب‌های شریک در این سفارش",
+  "corin.policy_file": "فایل بیمه‌نامه",
+  "corin.policy_no": "شماره بیمه‌نامه / گواهی",
+  "corin.premium": "حق بیمه (اختیاری)",
+  "corin.refresh": "تازه‌سازی",
+  "corin.remaining": "مانده",
+  "corin.responsible": "مسئول",
+  "corin.route_ok": "مسیر پیوسته است و هر مرحله زمینی از یک مرز زمینی واقعی عبور می‌کند.",
+  "corin.save": "ذخیره",
+  "corin.save_first": "برای دیدن تحویل‌ها، بیمه و صورتحساب شرکا در هر مرحله، سفارش را ذخیره کنید.",
+  "corin.status": "وضعیت",
+  "corin.territory": "مسیر / قلمرو",
+  "corin.title": "مسیر، مرز و بیمه",
+  "corin.to_leg": "تا مرحله",
+  "corin.mode_by_road": "زمینی",
+  "corin.mode_by_rail": "ریلی",
+  "corin.mode_by_sea": "دریایی",
+  "corin.mode_by_air": "هوایی",
+  "corin.gap_uncovered": "بدون بیمه",
+  "corin.gap_dates_outside": "تاریخ‌ها خارج از پوشش",
+  "corin.gap_policy_expired": "بیمه‌نامه منقضی",
+  "corin.gap_document_missing": "فایل بیمه‌نامه پیوست نشده",
+  "corin.issue_route_gap": "مرحله {leg}: مسیر گسسته است — مرحله قبل در {from} تمام می‌شود ولی این مرحله از {to} شروع می‌شود.",
+  "corin.issue_no_land_border": "مرحله {leg}: {from} و {to} مرز زمینی مشترک ندارند — آن را از طریق کشور میانی تقسیم کنید یا از دریا / هوا استفاده کنید.",
+  "corin.issue_border_crossing_required": "مرحله {leg}: گذرگاه مرزی / نقطه گمرکی بین {from} و {to} را مشخص کنید.",
+  "corin.issue_border_data_missing": "مرحله {leg}: داده مرز زمینی برای {from} ← {to} تنظیم نشده؛ گذرگاه را دستی تأیید کنید.",
+  "corin.issue_country_missing": "مرحله {leg}: کشور مبدأ و مقصد را انتخاب کنید.",
+  "corin.issue_port_missing": "مرحله {leg}: بندر بارگیری و تخلیه را وارد کنید.",
+  "corin.issue_airport_missing": "مرحله {leg}: فرودگاه مبدأ / مقصد یا شماره پرواز / بارنامه هوایی را وارد کنید.",
+  "corin.cs_not_applicable": "غیرقابل اعمال",
+  "corin.cs_pending": "در انتظار",
+  "corin.cs_submitted": "ارسال‌شده",
+  "corin.cs_cleared": "ترخیص‌شده",
+  "corin.cs_held": "توقیف‌شده",
+  "corin.cs_rejected": "ردشده",
+  "corin.ho_pending": "در انتظار",
+  "corin.ho_accepted": "پذیرفته",
+  "corin.ho_returned": "برگشتی",
+  "corin.ho_rejected": "ردشده",
+  "corin.ho_resubmitted": "ارسال مجدد",
+  "corin.ho_completed": "تکمیل",
+  "corin.ls_pending": "در انتظار",
+  "corin.ls_in_transit": "در حال حمل",
+  "corin.ls_arrived": "رسیده",
+  "corin.ls_completed": "تکمیل",
+  "corin.ls_delayed": "با تأخیر",
+  "corin.ls_cancelled": "لغوشده",
 };
 
 const ps: Dict = {
@@ -116481,6 +116846,79 @@ const ps: Dict = {
   "shipping.no_partner_bills": "د دې امر لپاره هېڅ بهرنی شریک بل نشته.",
   "shipping.supplier_expense_note": "یادونه: د بهرني شریک بلونه جلا لګښتونه دي او مستقیم له پیرودونکي نه اخیستل کېږي.",
   "nav.customer_order_transfer": "د پیرودونکي امر لیږد",
+  "corin.add_policy": "د بیمې پالیسي زیاته کړئ",
+  "corin.border_port": "پوله / بندر",
+  "corin.cancel": "لغوه",
+  "corin.confirm_cancel": "دا پالیسي په امر کې لغوه شي؟ د هغې پړاوونه بې پوښښه ښکاري.",
+  "corin.cover_period": "د پوښښ موده",
+  "corin.coverage_from": "پوښښ له",
+  "corin.coverage_gaps": "د بیمې تشې",
+  "corin.coverage_to": "پوښښ تر",
+  "corin.covered_cargo": "بیمه شوی بار",
+  "corin.currency": "اسعار",
+  "corin.customs": "ګمرک",
+  "corin.from_leg": "له پړاو",
+  "corin.from_to": "له ← تر",
+  "corin.fully_covered": "هر پړاو بیمه دی",
+  "corin.handover": "سپارنه",
+  "corin.insurance": "بیمه",
+  "corin.insured_value": "بیمه شوی ارزښت",
+  "corin.insurer": "بیمه کوونکی",
+  "corin.legs": "پړاوونه",
+  "corin.mode": "د لېږد ډول",
+  "corin.no_legs": "تر اوسه د لارې پړاو نشته.",
+  "corin.no_policies": "د دې امر لپاره بیمه نه ده ثبت شوې.",
+  "corin.not_set": "نه دی ټاکل شوی",
+  "corin.paid": "ورکړل شوی",
+  "corin.partner": "شریک",
+  "corin.partner_bill": "د شریک بل (ټول / ورکړل شوی / پاتې)",
+  "corin.partner_totals": "په دې امر د شریکانو بلونه",
+  "corin.policy_file": "د پالیسي فایل",
+  "corin.policy_no": "د پالیسي / سند شمېره",
+  "corin.premium": "پریمیم (اختیاري)",
+  "corin.refresh": "تازه کول",
+  "corin.remaining": "پاتې",
+  "corin.responsible": "مسؤل",
+  "corin.route_ok": "لاره پرله پسې ده او هر ځمکنی پړاو له ریښتینې ځمکنۍ پولې تېرېږي.",
+  "corin.save": "خوندي کول",
+  "corin.save_first": "د هر پړاو سپارنې، بیمې او د شریک بلونو لیدو لپاره امر خوندي کړئ.",
+  "corin.status": "حالت",
+  "corin.territory": "لاره / سیمه",
+  "corin.title": "لاره، پوله او بیمه",
+  "corin.to_leg": "تر پړاو",
+  "corin.mode_by_road": "ځمکنی",
+  "corin.mode_by_rail": "اورګاډی",
+  "corin.mode_by_sea": "سمندري",
+  "corin.mode_by_air": "هوايي",
+  "corin.gap_uncovered": "بې بیمې",
+  "corin.gap_dates_outside": "نېټې له پوښښه بهر",
+  "corin.gap_policy_expired": "پالیسي پای ته رسېدلې",
+  "corin.gap_document_missing": "د پالیسي فایل نه دی نښلول شوی",
+  "corin.issue_route_gap": "پړاو {leg}: په لاره کې تشه ده — مخکینی پړاو په {from} پای ته رسېږي خو دا له {to} پیلېږي.",
+  "corin.issue_no_land_border": "پړاو {leg}: {from} او {to} ګډه ځمکنۍ پوله نه لري — د منځني هېواد له لارې یې ووېشئ یا سمندري / هوايي لاره وکاروئ.",
+  "corin.issue_border_crossing_required": "پړاو {leg}: د {from} او {to} ترمنځ پولې تېرېدنځای / ګمرکي ټکی ولیکئ.",
+  "corin.issue_border_data_missing": "پړاو {leg}: د {from} ← {to} ځمکنۍ پولې معلومات نشته؛ تېرېدنځای په لاس تایید کړئ.",
+  "corin.issue_country_missing": "پړاو {leg}: د پیل او منزل هېواد وټاکئ.",
+  "corin.issue_port_missing": "پړاو {leg}: د بار کولو او تشولو بندر ولیکئ.",
+  "corin.issue_airport_missing": "پړاو {leg}: د وتلو / رسېدو هوايي ډګر یا د الوتنې / AWB شمېره ولیکئ.",
+  "corin.cs_not_applicable": "نه پلي کېږي",
+  "corin.cs_pending": "په تمه",
+  "corin.cs_submitted": "سپارل شوی",
+  "corin.cs_cleared": "ترخیص شوی",
+  "corin.cs_held": "ودرول شوی",
+  "corin.cs_rejected": "رد شوی",
+  "corin.ho_pending": "په تمه",
+  "corin.ho_accepted": "منل شوی",
+  "corin.ho_returned": "بېرته شوی",
+  "corin.ho_rejected": "رد شوی",
+  "corin.ho_resubmitted": "بیا سپارل شوی",
+  "corin.ho_completed": "بشپړ",
+  "corin.ls_pending": "په تمه",
+  "corin.ls_in_transit": "په لاره کې",
+  "corin.ls_arrived": "رسېدلی",
+  "corin.ls_completed": "بشپړ",
+  "corin.ls_delayed": "ځنډېدلی",
+  "corin.ls_cancelled": "لغوه شوی",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

@@ -71,6 +71,7 @@ import { ShippingLinePicker } from "@/features/shipping/components/shipping-line
 import { LocationPicker } from "@/features/location-master/components/location-picker";
 import { useBranchUserContext, type BranchUserContext } from "@/lib/hooks/use-branch-user-context";
 import { DocumentAttachmentIcon } from "@/components/documents/document-attachment-icon";
+import { CustomerOrderRouteInsurancePanel } from "@/features/clearing-agent/components/customer-order-route-insurance-panel";
 import { VoiceDictateButton } from "@/components/voice-dictate-button";
 import { listCities } from "@/features/locations/location-api";
 import { useSetActiveRecord } from "@/lib/support/active-record-context";
@@ -4102,6 +4103,9 @@ export function CustomerOrderManagementView() {
                     </div>
                   </div>
                 </div>
+
+                {/* Route, border & insurance (route check, per-leg customs / handover / insurance / partner bill) */}
+                <CustomerOrderRouteInsurancePanel orderId={editingOrderId} legs={formData.legs || []} />
 
                 {/* REMARKS CARD (Directly below the 3 top reports) */}
                 <div className="rounded-xl border border-slate-200/80 bg-white p-3.5 shadow-2xs dark:border-slate-800 dark:bg-slate-900">

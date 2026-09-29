@@ -69,7 +69,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: true, data });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message, code: error.code, details: error.details }, { status: typeof error.status === "number" ? error.status : 500 });
   }
 }
 
@@ -176,6 +176,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, data: result.order, party_links: result.partyLinks, legs: result.legs, loading_allocations: result.loadingAllocations });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message, code: error.code, details: error.details }, { status: typeof error.status === "number" ? error.status : 500 });
   }
 }
