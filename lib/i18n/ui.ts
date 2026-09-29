@@ -9412,6 +9412,92 @@ export type UiKey =
   | "sops.s_review"
   | "sops.subtitle"
   | "sops.title"
+  | "hrm.all_branches"
+  | "hrm.all_countries"
+  | "hrm.att_absent"
+  | "hrm.att_late"
+  | "hrm.att_leave"
+  | "hrm.att_not_recorded"
+  | "hrm.att_other"
+  | "hrm.att_present"
+  | "hrm.att_register_title"
+  | "hrm.att_subtitle"
+  | "hrm.branch"
+  | "hrm.check_in"
+  | "hrm.check_out"
+  | "hrm.close"
+  | "hrm.copy"
+  | "hrm.dev_assign"
+  | "hrm.dev_assign_to"
+  | "hrm.dev_att_updated"
+  | "hrm.dev_bio_id"
+  | "hrm.dev_code"
+  | "hrm.dev_csv_hint"
+  | "hrm.dev_direction"
+  | "hrm.dev_disable"
+  | "hrm.dev_duplicates"
+  | "hrm.dev_enable"
+  | "hrm.dev_events"
+  | "hrm.dev_events_matched"
+  | "hrm.dev_how_body"
+  | "hrm.dev_how_title"
+  | "hrm.dev_import"
+  | "hrm.dev_import_done"
+  | "hrm.dev_key_hint"
+  | "hrm.dev_key_once"
+  | "hrm.dev_last_seen"
+  | "hrm.dev_mapped"
+  | "hrm.dev_never"
+  | "hrm.dev_no_events"
+  | "hrm.dev_none"
+  | "hrm.dev_punch_time"
+  | "hrm.dev_punches"
+  | "hrm.dev_register"
+  | "hrm.dev_rotate"
+  | "hrm.dev_rotate_confirm"
+  | "hrm.dev_serial"
+  | "hrm.dev_stored"
+  | "hrm.dev_timezone"
+  | "hrm.dev_title"
+  | "hrm.dev_to_employee"
+  | "hrm.dev_type"
+  | "hrm.dev_unmatched"
+  | "hrm.dev_unmatched_body"
+  | "hrm.dev_unmatched_title"
+  | "hrm.dir_in"
+  | "hrm.dir_out"
+  | "hrm.emp_code"
+  | "hrm.ev_applied"
+  | "hrm.ev_ignored_duplicate"
+  | "hrm.ev_ignored_manual"
+  | "hrm.ev_pending"
+  | "hrm.ev_unmatched"
+  | "hrm.hours"
+  | "hrm.inactive"
+  | "hrm.kpi_absent"
+  | "hrm.kpi_device"
+  | "hrm.kpi_employees"
+  | "hrm.kpi_late"
+  | "hrm.kpi_not_recorded"
+  | "hrm.kpi_present"
+  | "hrm.late_min"
+  | "hrm.no_employees"
+  | "hrm.overtime_h"
+  | "hrm.records"
+  | "hrm.search_emp"
+  | "hrm.select"
+  | "hrm.source"
+  | "hrm.src_correction"
+  | "hrm.src_device"
+  | "hrm.src_import"
+  | "hrm.src_manual"
+  | "hrm.tab_attendance"
+  | "hrm.tab_devices"
+  | "hrm.dev_type_face"
+  | "hrm.dev_type_fingerprint"
+  | "hrm.dev_type_card"
+  | "hrm.dev_type_mobile"
+  | "hrm.dev_type_other"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -30099,6 +30185,92 @@ const en: Dict = {
   "sops.s_review": "Needs review",
   "sops.subtitle": "Automatic read-only checks across your country / branch. Open a finding to correct it in its own module.",
   "sops.title": "Control Checks",
+  "hrm.all_branches": "All Branches",
+  "hrm.all_countries": "All Countries",
+  "hrm.att_absent": "Absent",
+  "hrm.att_late": "Late",
+  "hrm.att_leave": "On leave",
+  "hrm.att_not_recorded": "Not recorded",
+  "hrm.att_other": "Other",
+  "hrm.att_present": "Present",
+  "hrm.att_register_title": "Daily Attendance Register",
+  "hrm.att_subtitle": "One attendance record per employee per day — manual, Face-ID device or HR correction. Payroll reads these records.",
+  "hrm.branch": "Branch",
+  "hrm.check_in": "Check In",
+  "hrm.check_out": "Check Out",
+  "hrm.close": "Close",
+  "hrm.copy": "Copy",
+  "hrm.dev_assign": "Assign ID",
+  "hrm.dev_assign_to": "Assign",
+  "hrm.dev_att_updated": "attendance days updated",
+  "hrm.dev_bio_id": "Biometric ID",
+  "hrm.dev_code": "Device Code",
+  "hrm.dev_csv_hint": "CSV columns: biometric ID, date-time (device local time), optional in/out.",
+  "hrm.dev_direction": "In / Out",
+  "hrm.dev_disable": "Disable",
+  "hrm.dev_duplicates": "duplicates",
+  "hrm.dev_enable": "Enable",
+  "hrm.dev_events": "Device Punches",
+  "hrm.dev_events_matched": "punches matched",
+  "hrm.dev_how_body": "Each punch is stored once, then rolled into the employee's attendance for that day (first in / last out). A manual or HR-corrected attendance record is never overwritten by a device. Payroll reads the same attendance records.",
+  "hrm.dev_how_title": "How devices feed attendance",
+  "hrm.dev_import": "Import log (CSV)",
+  "hrm.dev_import_done": "Log imported",
+  "hrm.dev_key_hint": "Key ends with",
+  "hrm.dev_key_once": "Device key — shown only once. Configure it on the device now; it cannot be displayed again.",
+  "hrm.dev_last_seen": "Last seen",
+  "hrm.dev_mapped": "Biometric ID assigned",
+  "hrm.dev_never": "Never",
+  "hrm.dev_no_events": "No device punches received yet.",
+  "hrm.dev_none": "No devices registered yet.",
+  "hrm.dev_punch_time": "Punch time",
+  "hrm.dev_punches": "Punches",
+  "hrm.dev_register": "Register Device",
+  "hrm.dev_rotate": "New key",
+  "hrm.dev_rotate_confirm": "Issue a new key? The device stops working until it is configured with the new key.",
+  "hrm.dev_serial": "Serial No.",
+  "hrm.dev_stored": "stored",
+  "hrm.dev_timezone": "Device time zone",
+  "hrm.dev_title": "Registered Devices",
+  "hrm.dev_to_employee": "to employee",
+  "hrm.dev_type": "Type",
+  "hrm.dev_unmatched": "unmatched",
+  "hrm.dev_unmatched_body": "These IDs punched on a device but are not assigned to any employee. Assign each to the right employee; its punches are then applied to attendance.",
+  "hrm.dev_unmatched_title": "Unmatched biometric IDs",
+  "hrm.dir_in": "In",
+  "hrm.dir_out": "Out",
+  "hrm.emp_code": "Employee ID",
+  "hrm.ev_applied": "Applied to attendance",
+  "hrm.ev_ignored_duplicate": "Duplicate",
+  "hrm.ev_ignored_manual": "Kept manual record",
+  "hrm.ev_pending": "Pending",
+  "hrm.ev_unmatched": "Unmatched ID",
+  "hrm.hours": "Hours",
+  "hrm.inactive": "Inactive",
+  "hrm.kpi_absent": "Absent",
+  "hrm.kpi_device": "From Face-ID devices",
+  "hrm.kpi_employees": "Employees",
+  "hrm.kpi_late": "Late",
+  "hrm.kpi_not_recorded": "Not recorded",
+  "hrm.kpi_present": "Present",
+  "hrm.late_min": "Late (min)",
+  "hrm.no_employees": "No employees in your scope yet.",
+  "hrm.overtime_h": "Overtime (h)",
+  "hrm.records": "records",
+  "hrm.search_emp": "Search employee, code, department…",
+  "hrm.select": "Select…",
+  "hrm.source": "Source",
+  "hrm.src_correction": "HR correction",
+  "hrm.src_device": "Face-ID / device",
+  "hrm.src_import": "Device log import",
+  "hrm.src_manual": "Manual",
+  "hrm.tab_attendance": "Attendance Register",
+  "hrm.tab_devices": "Face-ID / Biometric Devices",
+  "hrm.dev_type_face": "Face-ID",
+  "hrm.dev_type_fingerprint": "Fingerprint",
+  "hrm.dev_type_card": "Card",
+  "hrm.dev_type_mobile": "Mobile",
+  "hrm.dev_type_other": "Other",
 };
 
 const ur: Dict = {
@@ -50755,6 +50927,92 @@ const ur: Dict = {
   "sops.s_review": "جائزہ درکار",
   "sops.subtitle": "آپ کے ملک / برانچ میں خودکار، صرف پڑھنے والی جانچ۔ کسی نتیجے کو اس کے اپنے ماڈیول میں کھول کر درست کریں۔",
   "sops.title": "کنٹرول جانچ",
+  "hrm.all_branches": "تمام برانچیں",
+  "hrm.all_countries": "تمام ممالک",
+  "hrm.att_absent": "غیر حاضر",
+  "hrm.att_late": "تاخیر",
+  "hrm.att_leave": "چھٹی پر",
+  "hrm.att_not_recorded": "ریکارڈ نہیں",
+  "hrm.att_other": "دیگر",
+  "hrm.att_present": "حاضر",
+  "hrm.att_register_title": "روزانہ حاضری رجسٹر",
+  "hrm.att_subtitle": "ہر ملازم کا روزانہ ایک حاضری ریکارڈ — دستی، فیس آئی ڈی ڈیوائس یا ایچ آر درستگی۔ پے رول انہی ریکارڈز کو پڑھتا ہے۔",
+  "hrm.branch": "برانچ",
+  "hrm.check_in": "آمد",
+  "hrm.check_out": "روانگی",
+  "hrm.close": "بند کریں",
+  "hrm.copy": "کاپی کریں",
+  "hrm.dev_assign": "آئی ڈی تفویض کریں",
+  "hrm.dev_assign_to": "تفویض کریں",
+  "hrm.dev_att_updated": "حاضری کے دن اپڈیٹ ہوئے",
+  "hrm.dev_bio_id": "بایومیٹرک آئی ڈی",
+  "hrm.dev_code": "ڈیوائس کوڈ",
+  "hrm.dev_csv_hint": "CSV کالم: بایومیٹرک آئی ڈی، تاریخ و وقت (ڈیوائس کا مقامی وقت)، اختیاری آمد/روانگی۔",
+  "hrm.dev_direction": "آمد / روانگی",
+  "hrm.dev_disable": "غیر فعال کریں",
+  "hrm.dev_duplicates": "دہرے",
+  "hrm.dev_enable": "فعال کریں",
+  "hrm.dev_events": "ڈیوائس پنچز",
+  "hrm.dev_events_matched": "پنچز میچ ہوئے",
+  "hrm.dev_how_body": "ہر پنچ ایک بار محفوظ ہوتا ہے، پھر اس دن کی ملازم کی حاضری میں شامل ہوتا ہے (پہلی آمد / آخری روانگی)۔ دستی یا ایچ آر کی درست کردہ حاضری کو ڈیوائس کبھی نہیں بدلتی۔ پے رول انہی حاضری ریکارڈز کو پڑھتا ہے۔",
+  "hrm.dev_how_title": "ڈیوائسز حاضری کیسے درج کرتی ہیں",
+  "hrm.dev_import": "لاگ امپورٹ (CSV)",
+  "hrm.dev_import_done": "لاگ امپورٹ ہو گیا",
+  "hrm.dev_key_hint": "کلید کا آخری حصہ",
+  "hrm.dev_key_once": "ڈیوائس کلید — صرف ایک بار دکھائی جاتی ہے۔ اسے ابھی ڈیوائس پر درج کریں؛ یہ دوبارہ نہیں دکھائی جا سکتی۔",
+  "hrm.dev_last_seen": "آخری رابطہ",
+  "hrm.dev_mapped": "بایومیٹرک آئی ڈی تفویض ہو گئی",
+  "hrm.dev_never": "کبھی نہیں",
+  "hrm.dev_no_events": "ابھی تک کوئی ڈیوائس پنچ موصول نہیں ہوا۔",
+  "hrm.dev_none": "ابھی تک کوئی ڈیوائس رجسٹر نہیں ہوئی۔",
+  "hrm.dev_punch_time": "پنچ کا وقت",
+  "hrm.dev_punches": "پنچز",
+  "hrm.dev_register": "ڈیوائس رجسٹر کریں",
+  "hrm.dev_rotate": "نئی کلید",
+  "hrm.dev_rotate_confirm": "نئی کلید جاری کریں؟ ڈیوائس نئی کلید درج ہونے تک کام نہیں کرے گی۔",
+  "hrm.dev_serial": "سیریل نمبر",
+  "hrm.dev_stored": "محفوظ",
+  "hrm.dev_timezone": "ڈیوائس کا ٹائم زون",
+  "hrm.dev_title": "رجسٹرڈ ڈیوائسز",
+  "hrm.dev_to_employee": "ملازم کو",
+  "hrm.dev_type": "قسم",
+  "hrm.dev_unmatched": "غیر میچ شدہ",
+  "hrm.dev_unmatched_body": "ان آئی ڈیز نے ڈیوائس پر پنچ کیا مگر کسی ملازم کو تفویض نہیں۔ ہر ایک کو صحیح ملازم کو تفویض کریں؛ پھر اس کے پنچ حاضری میں شامل ہو جائیں گے۔",
+  "hrm.dev_unmatched_title": "غیر میچ شدہ بایومیٹرک آئی ڈیز",
+  "hrm.dir_in": "آمد",
+  "hrm.dir_out": "روانگی",
+  "hrm.emp_code": "ملازم آئی ڈی",
+  "hrm.ev_applied": "حاضری میں شامل",
+  "hrm.ev_ignored_duplicate": "دہرا",
+  "hrm.ev_ignored_manual": "دستی ریکارڈ برقرار",
+  "hrm.ev_pending": "زیر التوا",
+  "hrm.ev_unmatched": "غیر میچ شدہ آئی ڈی",
+  "hrm.hours": "گھنٹے",
+  "hrm.inactive": "غیر فعال",
+  "hrm.kpi_absent": "غیر حاضر",
+  "hrm.kpi_device": "فیس آئی ڈی ڈیوائسز سے",
+  "hrm.kpi_employees": "ملازمین",
+  "hrm.kpi_late": "تاخیر",
+  "hrm.kpi_not_recorded": "ریکارڈ نہیں",
+  "hrm.kpi_present": "حاضر",
+  "hrm.late_min": "تاخیر (منٹ)",
+  "hrm.no_employees": "آپ کے دائرہ کار میں ابھی کوئی ملازم نہیں۔",
+  "hrm.overtime_h": "اوور ٹائم (گھنٹے)",
+  "hrm.records": "ریکارڈز",
+  "hrm.search_emp": "ملازم، کوڈ، شعبہ تلاش کریں…",
+  "hrm.select": "منتخب کریں…",
+  "hrm.source": "ذریعہ",
+  "hrm.src_correction": "ایچ آر درستگی",
+  "hrm.src_device": "فیس آئی ڈی / ڈیوائس",
+  "hrm.src_import": "ڈیوائس لاگ امپورٹ",
+  "hrm.src_manual": "دستی",
+  "hrm.tab_attendance": "حاضری رجسٹر",
+  "hrm.tab_devices": "فیس آئی ڈی / بایومیٹرک ڈیوائسز",
+  "hrm.dev_type_face": "فیس آئی ڈی",
+  "hrm.dev_type_fingerprint": "فنگر پرنٹ",
+  "hrm.dev_type_card": "کارڈ",
+  "hrm.dev_type_mobile": "موبائل",
+  "hrm.dev_type_other": "دیگر",
 };
 
 const ar: Dict = {
@@ -71412,6 +71670,92 @@ const ar: Dict = {
   "sops.s_review": "بحاجة إلى مراجعة",
   "sops.subtitle": "فحوصات تلقائية للقراءة فقط عبر دولتك / فرعك. افتح أي نتيجة لتصحيحها في وحدتها الخاصة.",
   "sops.title": "فحوصات الرقابة",
+  "hrm.all_branches": "جميع الفروع",
+  "hrm.all_countries": "جميع الدول",
+  "hrm.att_absent": "غائب",
+  "hrm.att_late": "متأخر",
+  "hrm.att_leave": "في إجازة",
+  "hrm.att_not_recorded": "غير مسجل",
+  "hrm.att_other": "أخرى",
+  "hrm.att_present": "حاضر",
+  "hrm.att_register_title": "سجل الحضور اليومي",
+  "hrm.att_subtitle": "سجل حضور واحد لكل موظف يوميًا — يدوي أو من جهاز بصمة الوجه أو تصحيح الموارد البشرية. تقرأ الرواتب هذه السجلات.",
+  "hrm.branch": "الفرع",
+  "hrm.check_in": "تسجيل الدخول",
+  "hrm.check_out": "تسجيل الخروج",
+  "hrm.close": "إغلاق",
+  "hrm.copy": "نسخ",
+  "hrm.dev_assign": "تعيين المعرّف",
+  "hrm.dev_assign_to": "تعيين",
+  "hrm.dev_att_updated": "أيام حضور محدّثة",
+  "hrm.dev_bio_id": "المعرّف الحيوي",
+  "hrm.dev_code": "رمز الجهاز",
+  "hrm.dev_csv_hint": "أعمدة CSV: المعرّف الحيوي، التاريخ والوقت (الوقت المحلي للجهاز)، دخول/خروج اختياري.",
+  "hrm.dev_direction": "دخول / خروج",
+  "hrm.dev_disable": "تعطيل",
+  "hrm.dev_duplicates": "مكررة",
+  "hrm.dev_enable": "تفعيل",
+  "hrm.dev_events": "بصمات الجهاز",
+  "hrm.dev_events_matched": "بصمات مطابقة",
+  "hrm.dev_how_body": "تُخزَّن كل بصمة مرة واحدة ثم تُجمَّع في حضور الموظف لذلك اليوم (أول دخول / آخر خروج). لا يستبدل الجهاز أبدًا سجل حضور يدويًا أو مصححًا من الموارد البشرية. تقرأ الرواتب سجلات الحضور نفسها.",
+  "hrm.dev_how_title": "كيف تغذي الأجهزة الحضور",
+  "hrm.dev_import": "استيراد السجل (CSV)",
+  "hrm.dev_import_done": "تم استيراد السجل",
+  "hrm.dev_key_hint": "ينتهي المفتاح بـ",
+  "hrm.dev_key_once": "مفتاح الجهاز — يُعرض مرة واحدة فقط. اضبطه على الجهاز الآن؛ لا يمكن عرضه مرة أخرى.",
+  "hrm.dev_last_seen": "آخر ظهور",
+  "hrm.dev_mapped": "تم تعيين المعرّف الحيوي",
+  "hrm.dev_never": "أبدًا",
+  "hrm.dev_no_events": "لم تُستلم أي بصمات من الأجهزة بعد.",
+  "hrm.dev_none": "لم يتم تسجيل أي جهاز بعد.",
+  "hrm.dev_punch_time": "وقت البصمة",
+  "hrm.dev_punches": "البصمات",
+  "hrm.dev_register": "تسجيل جهاز",
+  "hrm.dev_rotate": "مفتاح جديد",
+  "hrm.dev_rotate_confirm": "إصدار مفتاح جديد؟ سيتوقف الجهاز عن العمل حتى يُضبط بالمفتاح الجديد.",
+  "hrm.dev_serial": "الرقم التسلسلي",
+  "hrm.dev_stored": "مخزنة",
+  "hrm.dev_timezone": "المنطقة الزمنية للجهاز",
+  "hrm.dev_title": "الأجهزة المسجلة",
+  "hrm.dev_to_employee": "للموظف",
+  "hrm.dev_type": "النوع",
+  "hrm.dev_unmatched": "غير مطابقة",
+  "hrm.dev_unmatched_body": "سجّلت هذه المعرّفات بصمات على جهاز لكنها غير معيّنة لأي موظف. عيّن كل معرّف للموظف الصحيح؛ ثم تُطبَّق بصماته على الحضور.",
+  "hrm.dev_unmatched_title": "معرّفات حيوية غير مطابقة",
+  "hrm.dir_in": "دخول",
+  "hrm.dir_out": "خروج",
+  "hrm.emp_code": "رقم الموظف",
+  "hrm.ev_applied": "طُبّقت على الحضور",
+  "hrm.ev_ignored_duplicate": "مكرر",
+  "hrm.ev_ignored_manual": "الإبقاء على السجل اليدوي",
+  "hrm.ev_pending": "معلّق",
+  "hrm.ev_unmatched": "معرّف غير مطابق",
+  "hrm.hours": "الساعات",
+  "hrm.inactive": "غير نشط",
+  "hrm.kpi_absent": "غائب",
+  "hrm.kpi_device": "من أجهزة بصمة الوجه",
+  "hrm.kpi_employees": "الموظفون",
+  "hrm.kpi_late": "متأخرون",
+  "hrm.kpi_not_recorded": "غير مسجل",
+  "hrm.kpi_present": "حاضرون",
+  "hrm.late_min": "التأخير (دقيقة)",
+  "hrm.no_employees": "لا يوجد موظفون ضمن نطاقك بعد.",
+  "hrm.overtime_h": "العمل الإضافي (ساعة)",
+  "hrm.records": "سجلات",
+  "hrm.search_emp": "ابحث عن موظف أو رمز أو قسم…",
+  "hrm.select": "اختر…",
+  "hrm.source": "المصدر",
+  "hrm.src_correction": "تصحيح الموارد البشرية",
+  "hrm.src_device": "بصمة الوجه / جهاز",
+  "hrm.src_import": "استيراد سجل الجهاز",
+  "hrm.src_manual": "يدوي",
+  "hrm.tab_attendance": "سجل الحضور",
+  "hrm.tab_devices": "بصمة الوجه / الأجهزة الحيوية",
+  "hrm.dev_type_face": "بصمة الوجه",
+  "hrm.dev_type_fingerprint": "بصمة الإصبع",
+  "hrm.dev_type_card": "بطاقة",
+  "hrm.dev_type_mobile": "الجوال",
+  "hrm.dev_type_other": "أخرى",
 };
 
 const fa: Dict = {
@@ -92068,6 +92412,92 @@ const fa: Dict = {
   "sops.s_review": "نیاز به بررسی",
   "sops.subtitle": "بررسی‌های خودکار و فقط‌خواندنی در کشور / شعبه شما. هر یافته را در ماژول خودش باز و اصلاح کنید.",
   "sops.title": "بررسی‌های کنترلی",
+  "hrm.all_branches": "همه شعبه‌ها",
+  "hrm.all_countries": "همه کشورها",
+  "hrm.att_absent": "غایب",
+  "hrm.att_late": "تأخیر",
+  "hrm.att_leave": "در مرخصی",
+  "hrm.att_not_recorded": "ثبت نشده",
+  "hrm.att_other": "دیگر",
+  "hrm.att_present": "حاضر",
+  "hrm.att_register_title": "دفتر حضور روزانه",
+  "hrm.att_subtitle": "یک رکورد حضور برای هر کارمند در هر روز — دستی، دستگاه تشخیص چهره یا اصلاح منابع انسانی. حقوق از همین رکوردها خوانده می‌شود.",
+  "hrm.branch": "شعبه",
+  "hrm.check_in": "ورود",
+  "hrm.check_out": "خروج",
+  "hrm.close": "بستن",
+  "hrm.copy": "کپی",
+  "hrm.dev_assign": "تخصیص شناسه",
+  "hrm.dev_assign_to": "تخصیص",
+  "hrm.dev_att_updated": "روز حضور به‌روزرسانی شد",
+  "hrm.dev_bio_id": "شناسه بیومتریک",
+  "hrm.dev_code": "کد دستگاه",
+  "hrm.dev_csv_hint": "ستون‌های CSV: شناسه بیومتریک، تاریخ و زمان (زمان محلی دستگاه)، ورود/خروج اختیاری.",
+  "hrm.dev_direction": "ورود / خروج",
+  "hrm.dev_disable": "غیرفعال کردن",
+  "hrm.dev_duplicates": "تکراری",
+  "hrm.dev_enable": "فعال کردن",
+  "hrm.dev_events": "ثبت‌های دستگاه",
+  "hrm.dev_events_matched": "ثبت تطبیق شد",
+  "hrm.dev_how_body": "هر ثبت یک بار ذخیره می‌شود و سپس در حضور همان روز کارمند جمع می‌شود (اولین ورود / آخرین خروج). رکورد حضور دستی یا اصلاح‌شده توسط منابع انسانی هرگز توسط دستگاه بازنویسی نمی‌شود. حقوق از همین رکوردهای حضور خوانده می‌شود.",
+  "hrm.dev_how_title": "دستگاه‌ها چگونه حضور را ثبت می‌کنند",
+  "hrm.dev_import": "واردکردن گزارش (CSV)",
+  "hrm.dev_import_done": "گزارش وارد شد",
+  "hrm.dev_key_hint": "پایان کلید",
+  "hrm.dev_key_once": "کلید دستگاه — فقط یک بار نمایش داده می‌شود. همین حالا آن را روی دستگاه تنظیم کنید؛ دوباره نمایش داده نمی‌شود.",
+  "hrm.dev_last_seen": "آخرین ارتباط",
+  "hrm.dev_mapped": "شناسه بیومتریک تخصیص یافت",
+  "hrm.dev_never": "هرگز",
+  "hrm.dev_no_events": "هنوز هیچ ثبتی از دستگاه دریافت نشده است.",
+  "hrm.dev_none": "هنوز هیچ دستگاهی ثبت نشده است.",
+  "hrm.dev_punch_time": "زمان ثبت",
+  "hrm.dev_punches": "ثبت‌ها",
+  "hrm.dev_register": "ثبت دستگاه",
+  "hrm.dev_rotate": "کلید جدید",
+  "hrm.dev_rotate_confirm": "کلید جدید صادر شود؟ دستگاه تا تنظیم کلید جدید کار نخواهد کرد.",
+  "hrm.dev_serial": "شماره سریال",
+  "hrm.dev_stored": "ذخیره شد",
+  "hrm.dev_timezone": "منطقه زمانی دستگاه",
+  "hrm.dev_title": "دستگاه‌های ثبت‌شده",
+  "hrm.dev_to_employee": "به کارمند",
+  "hrm.dev_type": "نوع",
+  "hrm.dev_unmatched": "تطبیق‌نشده",
+  "hrm.dev_unmatched_body": "این شناسه‌ها روی دستگاه ثبت شده‌اند اما به هیچ کارمندی تخصیص نیافته‌اند. هر کدام را به کارمند درست تخصیص دهید؛ سپس ثبت‌های آن در حضور اعمال می‌شود.",
+  "hrm.dev_unmatched_title": "شناسه‌های بیومتریک تطبیق‌نشده",
+  "hrm.dir_in": "ورود",
+  "hrm.dir_out": "خروج",
+  "hrm.emp_code": "شناسه کارمند",
+  "hrm.ev_applied": "در حضور اعمال شد",
+  "hrm.ev_ignored_duplicate": "تکراری",
+  "hrm.ev_ignored_manual": "رکورد دستی حفظ شد",
+  "hrm.ev_pending": "در انتظار",
+  "hrm.ev_unmatched": "شناسه تطبیق‌نشده",
+  "hrm.hours": "ساعت‌ها",
+  "hrm.inactive": "غیرفعال",
+  "hrm.kpi_absent": "غایب",
+  "hrm.kpi_device": "از دستگاه‌های تشخیص چهره",
+  "hrm.kpi_employees": "کارمندان",
+  "hrm.kpi_late": "تأخیر",
+  "hrm.kpi_not_recorded": "ثبت نشده",
+  "hrm.kpi_present": "حاضر",
+  "hrm.late_min": "تأخیر (دقیقه)",
+  "hrm.no_employees": "هنوز کارمندی در محدوده شما نیست.",
+  "hrm.overtime_h": "اضافه‌کاری (ساعت)",
+  "hrm.records": "رکورد",
+  "hrm.search_emp": "جستجوی کارمند، کد، بخش…",
+  "hrm.select": "انتخاب…",
+  "hrm.source": "منبع",
+  "hrm.src_correction": "اصلاح منابع انسانی",
+  "hrm.src_device": "تشخیص چهره / دستگاه",
+  "hrm.src_import": "واردکردن گزارش دستگاه",
+  "hrm.src_manual": "دستی",
+  "hrm.tab_attendance": "دفتر حضور",
+  "hrm.tab_devices": "تشخیص چهره / دستگاه‌های بیومتریک",
+  "hrm.dev_type_face": "تشخیص چهره",
+  "hrm.dev_type_fingerprint": "اثر انگشت",
+  "hrm.dev_type_card": "کارت",
+  "hrm.dev_type_mobile": "موبایل",
+  "hrm.dev_type_other": "دیگر",
 };
 
 const ps: Dict = {
@@ -112731,6 +113161,92 @@ const ps: Dict = {
   "sops.s_review": "بیاکتنې ته اړتیا",
   "sops.subtitle": "ستاسو په هېواد / څانګه کې اتومات، یوازې لوستونکې ازموینې. هره موندنه په خپل ماډل کې پرانیزئ او سمه یې کړئ.",
   "sops.title": "کنټرولي ازموینې",
+  "hrm.all_branches": "ټولې څانګې",
+  "hrm.all_countries": "ټول هېوادونه",
+  "hrm.att_absent": "غیر حاضر",
+  "hrm.att_late": "ناوخته",
+  "hrm.att_leave": "په رخصتۍ",
+  "hrm.att_not_recorded": "نه دی ثبت",
+  "hrm.att_other": "نور",
+  "hrm.att_present": "حاضر",
+  "hrm.att_register_title": "د ورځني حاضرۍ راجستر",
+  "hrm.att_subtitle": "د هر کارکوونکي لپاره په ورځ کې یو حاضري ثبت — لاسي، د مخ پېژندنې وسیله یا د بشري سرچینو سمون. معاش همدا ثبتونه لولي.",
+  "hrm.branch": "څانګه",
+  "hrm.check_in": "راتګ",
+  "hrm.check_out": "وتل",
+  "hrm.close": "بندول",
+  "hrm.copy": "کاپي",
+  "hrm.dev_assign": "پېژند وټاکئ",
+  "hrm.dev_assign_to": "وټاکئ",
+  "hrm.dev_att_updated": "د حاضرۍ ورځې تازه شوې",
+  "hrm.dev_bio_id": "بایومتریک پېژند",
+  "hrm.dev_code": "د وسیلې کوډ",
+  "hrm.dev_csv_hint": "د CSV ستونونه: بایومتریک پېژند، نېټه او وخت (د وسیلې محلي وخت)، اختیاري راتګ/وتل.",
+  "hrm.dev_direction": "راتګ / وتل",
+  "hrm.dev_disable": "غیر فعال کول",
+  "hrm.dev_duplicates": "تکراري",
+  "hrm.dev_enable": "فعالول",
+  "hrm.dev_events": "د وسیلې ثبتونه",
+  "hrm.dev_events_matched": "ثبتونه سمون شول",
+  "hrm.dev_how_body": "هر ثبت یو ځل ساتل کېږي، بیا د هماغې ورځې د کارکوونکي په حاضرۍ کې یوځای کېږي (لومړی راتګ / وروستی وتل). لاسي یا د بشري سرچینو سم شوی ثبت هېڅکله د وسیلې له خوا نه بدلېږي. معاش همدا د حاضرۍ ثبتونه لولي.",
+  "hrm.dev_how_title": "وسیلې څنګه حاضري ثبتوي",
+  "hrm.dev_import": "لاګ واردول (CSV)",
+  "hrm.dev_import_done": "لاګ وارد شو",
+  "hrm.dev_key_hint": "د کیلي پای",
+  "hrm.dev_key_once": "د وسیلې کیلي — یوازې یو ځل ښودل کېږي. همدا اوس یې په وسیله کې ولیکئ؛ بیا نه شي ښودل کېدای.",
+  "hrm.dev_last_seen": "وروستی اړیکه",
+  "hrm.dev_mapped": "بایومتریک پېژند وټاکل شو",
+  "hrm.dev_never": "هېڅکله",
+  "hrm.dev_no_events": "تر اوسه د وسیلې هېڅ ثبت نه دی ترلاسه شوی.",
+  "hrm.dev_none": "تر اوسه هېڅ وسیله نه ده ثبت شوې.",
+  "hrm.dev_punch_time": "د ثبت وخت",
+  "hrm.dev_punches": "ثبتونه",
+  "hrm.dev_register": "وسیله ثبت کړئ",
+  "hrm.dev_rotate": "نوې کیلي",
+  "hrm.dev_rotate_confirm": "نوې کیلي صادره شي؟ وسیله به تر هغه کار ونه کړي چې نوې کیلي پکې ولیکل شي.",
+  "hrm.dev_serial": "سریال شمېره",
+  "hrm.dev_stored": "خوندي شول",
+  "hrm.dev_timezone": "د وسیلې د وخت سیمه",
+  "hrm.dev_title": "ثبت شوې وسیلې",
+  "hrm.dev_to_employee": "کارکوونکي ته",
+  "hrm.dev_type": "ډول",
+  "hrm.dev_unmatched": "نا سمون شوي",
+  "hrm.dev_unmatched_body": "دې پېژندونو په وسیله کې ثبت کړي خو هېڅ کارکوونکي ته نه دي ټاکل شوي. هر یو سم کارکوونکي ته وټاکئ؛ بیا یې ثبتونه په حاضرۍ کې پلي کېږي.",
+  "hrm.dev_unmatched_title": "نا سمون شوي بایومتریک پېژندونه",
+  "hrm.dir_in": "راتګ",
+  "hrm.dir_out": "وتل",
+  "hrm.emp_code": "د کارکوونکي پېژند",
+  "hrm.ev_applied": "په حاضرۍ کې پلي شو",
+  "hrm.ev_ignored_duplicate": "تکراري",
+  "hrm.ev_ignored_manual": "لاسي ثبت وساتل شو",
+  "hrm.ev_pending": "په تمه",
+  "hrm.ev_unmatched": "نا سمون شوی پېژند",
+  "hrm.hours": "ساعتونه",
+  "hrm.inactive": "غیر فعال",
+  "hrm.kpi_absent": "غیر حاضر",
+  "hrm.kpi_device": "د مخ پېژندنې له وسیلو",
+  "hrm.kpi_employees": "کارکوونکي",
+  "hrm.kpi_late": "ناوخته",
+  "hrm.kpi_not_recorded": "نه دی ثبت",
+  "hrm.kpi_present": "حاضر",
+  "hrm.late_min": "ځنډ (دقیقې)",
+  "hrm.no_employees": "ستاسو په ساحه کې تر اوسه کارکوونکی نشته.",
+  "hrm.overtime_h": "اضافه کار (ساعت)",
+  "hrm.records": "ثبتونه",
+  "hrm.search_emp": "کارکوونکی، کوډ، څانګه ولټوئ…",
+  "hrm.select": "وټاکئ…",
+  "hrm.source": "سرچینه",
+  "hrm.src_correction": "د بشري سرچینو سمون",
+  "hrm.src_device": "د مخ پېژندنه / وسیله",
+  "hrm.src_import": "د وسیلې لاګ واردول",
+  "hrm.src_manual": "لاسي",
+  "hrm.tab_attendance": "د حاضرۍ راجستر",
+  "hrm.tab_devices": "د مخ پېژندنه / بایومتریک وسیلې",
+  "hrm.dev_type_face": "د مخ پېژندنه",
+  "hrm.dev_type_fingerprint": "د ګوتې نښه",
+  "hrm.dev_type_card": "کارت",
+  "hrm.dev_type_mobile": "موبایل",
+  "hrm.dev_type_other": "نور",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

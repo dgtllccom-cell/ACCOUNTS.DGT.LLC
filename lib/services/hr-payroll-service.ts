@@ -132,10 +132,14 @@ export class HrPayrollService {
         const allowancesTotal = Object.values(allowBreakdown).reduce((a: number, b) => a + Number(b), 0);
 
         // overtime from attendance overtime_hours * overtime_rate
-        const otRows = await sql`SELECT COALESCE(sum(overtime_hours),0)::numeric AS h
+        // Overtime + worked days from the ONE authoritative attendance store (manual, device /
+        // Face-ID and corrected rows alike).
+        const otRows = await sql`SELECT COALESCE(sum(overtime_hours),0)::numeric AS h,
+            count(*) FILTER (WHERE lower(coalesce(status,'')) IN ('present','late','half day','half-day','work from home','wfh'))::int AS worked
           FROM public.office_attendance
           WHERE employee_id = ${e.id} AND deleted_at IS NULL AND attendance_date BETWEEN ${start} AND ${end}`;
         const otHours = Number(otRows?.[0]?.h || 0);
+        const workedDays = Number(otRows?.[0]?.worked || 0);
         const overtimeAmount = Math.round(otHours * Number(e.overtime_rate || 0) * 100) / 100;
 
         // unpaid leave days that month -> deduction pro-rata on 'unpaid' type
@@ -202,10 +206,10 @@ export class HrPayrollService {
           INSERT INTO public.hr_payroll_run_lines
             (run_id, employee_id, basic_salary, allowances_total, allowances_breakdown, overtime_amount, bonus_amount,
              unpaid_leave_deduction, other_deductions, advance_recovery, tax_employee, employer_contributions,
-             gross_salary, net_salary, currency, exchange_rate, local_amount, usd_amount, unpaid_leave_days, status)
+             gross_salary, net_salary, currency, exchange_rate, local_amount, usd_amount, unpaid_leave_days, worked_days, status)
           VALUES (${runId}, ${e.id}, ${basic}, ${allowancesTotal}, ${sql.json(allowBreakdown)}, ${overtimeAmount}, 0,
             ${unpaidLeaveDeduction}, ${otherDeductions}, ${advanceRecovery}, ${taxEmployee}, ${employerContrib},
-            ${gross}, ${net}, ${currency}, ${rate}, ${net}, ${usdAmount}, ${unpaidDays}, 'calculated')
+            ${gross}, ${net}, ${currency}, ${rate}, ${net}, ${usdAmount}, ${unpaidDays}, ${workedDays}, 'calculated')
           ON CONFLICT (run_id, employee_id) DO UPDATE SET
             basic_salary = EXCLUDED.basic_salary, allowances_total = EXCLUDED.allowances_total,
             allowances_breakdown = EXCLUDED.allowances_breakdown, overtime_amount = EXCLUDED.overtime_amount,
@@ -213,7 +217,7 @@ export class HrPayrollService {
             advance_recovery = EXCLUDED.advance_recovery, tax_employee = EXCLUDED.tax_employee,
             gross_salary = EXCLUDED.gross_salary, net_salary = EXCLUDED.net_salary, currency = EXCLUDED.currency,
             exchange_rate = EXCLUDED.exchange_rate, local_amount = EXCLUDED.local_amount, usd_amount = EXCLUDED.usd_amount,
-            unpaid_leave_days = EXCLUDED.unpaid_leave_days, updated_at = now()
+            unpaid_leave_days = EXCLUDED.unpaid_leave_days, worked_days = EXCLUDED.worked_days, updated_at = now()
           WHERE public.hr_payroll_run_lines.status = 'calculated'`;
         insertedLines++;
       }

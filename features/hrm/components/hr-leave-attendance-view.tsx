@@ -1,23 +1,30 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+/**
+ * Leave & Attendance (HRM). The Attendance Register shows REAL office_attendance records for the
+ * selected date — manual, Face-ID / biometric device and HR-corrected rows alike. An employee
+ * without a record is shown as "Not recorded"; nothing is invented (the earlier register derived
+ * status and times from the row index and showed demo employees when the list was empty).
+ */
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import {
-  Loader2, Plus, Pencil, Trash2, X, Check, Ban, RefreshCw, Play,
-  CalendarCheck, Building2, Users, Clock, Globe, Search, Printer,
-  FileDown, FileSpreadsheet, MoreVertical, ChevronLeft, ChevronRight,
-  Filter, CheckCircle2, AlertCircle, XCircle, Calendar, ArrowUpDown
+  Loader2, Plus, Pencil, Trash2, X, Check, Ban, RefreshCw, Play, CalendarCheck, Users, Clock, Search,
+  Fingerprint, UserX, AlertCircle, CheckCircle2,
 } from "lucide-react";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { apiGet, apiPost, apiPatch, apiDelete } from "@/lib/api/client";
 import { Th } from "@/components/ui/translated-th";
 import { UniversalPrintActionButton } from "@/components/reports/universal-print-action-button";
+import { BiometricDevicesPanel } from "@/features/hrm/components/biometric-devices-panel";
 
 type Row = Record<string, any>;
-type Tab = "attendance" | "balances" | "leave_types" | "shifts" | "holidays" | "corrections";
+type Tab = "attendance" | "devices" | "balances" | "leave_types" | "shifts" | "holidays" | "corrections";
 
 const INP = "w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 dark:border-slate-700 dark:bg-slate-800";
 const NUM = (v: any) => new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(Number(v) || 0);
+const today = () => new Date().toISOString().slice(0, 10);
+const hhmm = (t: unknown) => (t ? String(t).slice(0, 5) : "—");
 
 const CORR_TONE: Record<string, string> = {
   pending: "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300",
@@ -26,73 +33,77 @@ const CORR_TONE: Record<string, string> = {
   rejected: "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300",
 };
 
-function getCountryFlagAndName(country?: string): { flag: string; name: string } {
-  if (!country) return { flag: "🇦🇪", name: "UAE" };
-  const lower = country.toLowerCase();
-  if (lower.includes("uae") || lower.includes("emirates") || lower.includes("united arab")) return { flag: "🇦🇪", name: "UAE" };
-  if (lower.includes("pak")) return { flag: "🇵🇰", name: "Pakistan" };
-  if (lower.includes("oman")) return { flag: "🇴🇲", name: "Oman" };
-  if (lower.includes("saudi")) return { flag: "🇸🇦", name: "Saudi Arabia" };
-  if (lower.includes("india")) return { flag: "🇮🇳", name: "India" };
-  if (lower.includes("qatar")) return { flag: "🇶🇦", name: "Qatar" };
-  if (lower.includes("kuwait")) return { flag: "🇰🇼", name: "Kuwait" };
-  if (lower.includes("bahrain")) return { flag: "🇧🇭", name: "Bahrain" };
-  return { flag: "🌐", name: country };
+type AttRow = {
+  id: string; code: string; name: string; department: string; branch: string; country: string;
+  checkIn: string; checkOut: string; hours: number | null; late: number | null; overtime: number | null;
+  status: "present" | "late" | "absent" | "leave" | "not_recorded" | "other"; rawStatus: string | null; source: string | null;
+};
+
+function normStatus(raw: string | null | undefined, late: number | null): AttRow["status"] {
+  const v = (raw ?? "").toLowerCase();
+  if (!v) return "not_recorded";
+  if (v.includes("absent")) return "absent";
+  if (v.includes("leave")) return "leave";
+  if (v.includes("late") || (late ?? 0) > 0) return "late";
+  if (v.includes("present") || v.includes("wfh") || v.includes("work from home") || v.includes("half")) return "present";
+  return "other";
 }
+
+const STATUS_TONE: Record<AttRow["status"], string> = {
+  present: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300",
+  late: "bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300",
+  absent: "bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300",
+  leave: "bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300",
+  not_recorded: "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400",
+  other: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
+};
 
 export function HrLeaveAttendanceView({ lang }: { lang?: string }) {
   const s = useErpScreen("hrm", lang);
   const [tab, setTab] = useState<Tab>("attendance");
   const [rows, setRows] = useState<Row[]>([]);
   const [employees, setEmployees] = useState<Row[]>([]);
+  const [attendance, setAttendance] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [year, setYear] = useState(new Date().getFullYear());
   const [editing, setEditing] = useState<Row | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [busy, setBusy] = useState(false);
-
-  // Filters for Attendance Register
-  const [searchQuery, setSearchQuery] = useState("");
+  const [search, setSearch] = useState("");
   const [countryFilter, setCountryFilter] = useState("all");
   const [branchFilter, setBranchFilter] = useState("all");
-  const [departmentFilter, setDepartmentFilter] = useState("all");
-  const [shiftFilter, setShiftFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [selectedDate, setSelectedDate] = useState("2026-09-10");
-  const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({});
+  const [selectedDate, setSelectedDate] = useState(today());
 
-  const endpoint = tab === "attendance" ? "/api/erp/hr/employees"
-    : tab === "leave_types" ? "/api/erp/hr/leave-types"
+  const endpoint = tab === "leave_types" ? "/api/erp/hr/leave-types"
     : tab === "shifts" ? "/api/erp/hr/shifts"
     : tab === "holidays" ? "/api/erp/hr/holidays"
     : tab === "balances" ? "/api/erp/hr/leave-balances"
     : "/api/erp/hr/attendance-corrections";
 
   const load = useCallback(async () => {
+    if (tab === "devices") { setLoading(false); return; }
     setLoading(true);
     setError(null);
     try {
+      const e = await apiGet<{ rows: Row[] }>("/api/erp/hr/employees");
+      setEmployees(e.rows ?? []);
       if (tab === "attendance") {
-        const e = await apiGet<{ rows: Row[] }>("/api/erp/hr/employees");
-        setEmployees(e.rows ?? []);
-        setRows(e.rows ?? []);
+        const a = await apiGet<{ attendance: Row[] }>(`/api/erp/general-office/attendance?from=${selectedDate}&to=${selectedDate}`);
+        setAttendance(a.attendance ?? []);
       } else {
         let url = endpoint;
         if (tab === "balances" || tab === "holidays") url += `?year=${year}`;
         const res = await apiGet<{ rows: Row[] }>(url);
         setRows(res.rows ?? []);
-        if (employees.length === 0) {
-          const e = await apiGet<{ rows: Row[] }>("/api/erp/hr/employees");
-          setEmployees(e.rows ?? []);
-        }
       }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
-  }, [endpoint, tab, year, employees.length]);
+  }, [endpoint, tab, year, selectedDate]);
 
   useEffect(() => { void load(); }, [load]);
 
@@ -103,34 +114,30 @@ export function HrLeaveAttendanceView({ lang }: { lang?: string }) {
     setEditing(null);
     await load();
   };
-
   const remove = async (r: Row) => {
     if (!window.confirm(s.t("confirm_delete", "Delete this record?"))) return;
     try { await apiDelete(`${endpoint}/${r.id}`); await load(); }
     catch (e) { setError(e instanceof Error ? e.message : String(e)); }
   };
-
   const balanceAction = async (action: "initialize" | "recompute") => {
     setBusy(true);
     setError(null);
     try {
       const res = await apiPost<{ upserted?: number; updated?: number }>("/api/erp/hr/leave-balances", { action, year });
       await load();
-      window.alert(`${action}: ${res.upserted ?? res.updated ?? 0}`);
+      window.alert(`${action === "initialize" ? s.t("bal_initialize", "Initialize Year") : s.t("bal_recompute", "Recompute")}: ${res.upserted ?? res.updated ?? 0}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
       setBusy(false);
     }
   };
-
   const correctionAction = async (id: string, action: "approve" | "reject" | "apply") => {
     setBusy(true);
     try { await apiPatch(`/api/erp/hr/attendance-corrections/${id}`, { action }); await load(); }
     catch (e) { setError(e instanceof Error ? e.message : String(e)); }
     finally { setBusy(false); }
   };
-
   const adjustBalance = async (r: Row) => {
     const v = window.prompt(s.t("adjust_prompt", "Adjustment days (+/-):"));
     if (v == null) return;
@@ -140,756 +147,274 @@ export function HrLeaveAttendanceView({ lang }: { lang?: string }) {
     catch (e) { setError(e instanceof Error ? e.message : String(e)); }
   };
 
-  // Synthetic or calculated attendance list matching the screenshot presentation
-  const attendanceList = useMemo(() => {
-    const rawList = employees.length > 0 ? employees : [
-      { id: "1", employee_code: "EMP-001", name: "Muhammad Rashid", country_name: "UAE", branch_name: "Main Headquarters", department: "Administration", shift: "Morning (09:00 - 18:00)", check_in: "08:55 AM", check_out: "06:05 PM", work_hours: "8h 10m", late: "0m", overtime: "5m", leave_type: "--", status: "present" },
-      { id: "2", employee_code: "EMP-002", name: "Ahmed Al-Maktoum", country_name: "UAE", branch_name: "Dubai Branch", department: "Sales", shift: "Morning (09:00 - 18:00)", check_in: "09:12 AM", check_out: "06:00 PM", work_hours: "8h 48m", late: "12m", overtime: "0m", leave_type: "--", status: "late" },
-      { id: "3", employee_code: "EMP-003", name: "Zainab Fatima", country_name: "Pakistan", branch_name: "Lahore Office", department: "Accounts", shift: "Morning (09:00 - 18:00)", check_in: "08:50 AM", check_out: "06:15 PM", work_hours: "8h 25m", late: "0m", overtime: "15m", leave_type: "--", status: "present" },
-      { id: "4", employee_code: "EMP-004", name: "Tariq Mahmood", country_name: "Oman", branch_name: "Muscat Branch", department: "Operations", shift: "Morning (09:00 - 18:00)", check_in: "--", check_out: "--", work_hours: "0h 0m", late: "--", overtime: "--", leave_type: "Annual Leave", status: "leave" },
-      { id: "5", employee_code: "EMP-005", name: "Bilal Khan", country_name: "Pakistan", branch_name: "Karachi Branch", department: "IT & Systems", shift: "Morning (09:00 - 18:00)", check_in: "--", check_out: "--", work_hours: "0h 0m", late: "--", overtime: "--", leave_type: "--", status: "absent" },
-      { id: "6", employee_code: "EMP-006", name: "Sarah Al-Nuaimi", country_name: "UAE", branch_name: "Abu Dhabi Branch", department: "Human Resources", shift: "Morning (09:00 - 18:00)", check_in: "08:58 AM", check_out: "06:02 PM", work_hours: "8h 04m", late: "0m", overtime: "2m", leave_type: "--", status: "present" },
-      { id: "7", employee_code: "EMP-007", name: "Omar Farooq", country_name: "Saudi Arabia", branch_name: "Riyadh Branch", department: "Logistics", shift: "Evening (14:00 - 23:00)", check_in: "02:10 PM", check_out: "11:05 PM", work_hours: "8h 55m", late: "10m", overtime: "5m", leave_type: "--", status: "late" },
-      { id: "8", employee_code: "EMP-008", name: "Ayesha Siddiqa", country_name: "UAE", branch_name: "Sharjah Branch", department: "Customer Support", shift: "Morning (09:00 - 18:00)", check_in: "--", check_out: "--", work_hours: "0h 0m", late: "--", overtime: "--", leave_type: "Sick Leave", status: "leave" },
-    ];
-
-    return rawList.map((emp, idx) => {
-      const code = emp.employee_code || `EMP-${String(idx + 1).padStart(3, "0")}`;
-      const name = emp.name || emp.full_name || "Employee " + (idx + 1);
-      const c = getCountryFlagAndName(emp.country_name || emp.country || "UAE");
-      const branch = emp.branch_name || emp.branch || "Main Headquarters";
-      const dept = emp.department || "Administration";
-      const shift = emp.shift || "Morning (09:00 - 18:00)";
-      
-      // Derive status or use existing
-      let st = emp.status || (idx % 7 === 1 ? "late" : idx % 7 === 3 ? "leave" : idx % 7 === 4 ? "absent" : "present");
-      let inTime = emp.check_in || (st === "absent" || st === "leave" ? "--" : st === "late" ? "09:15 AM" : "08:55 AM");
-      let outTime = emp.check_out || (st === "absent" || st === "leave" ? "--" : "06:05 PM");
-      let hours = emp.work_hours || (st === "absent" || st === "leave" ? "0h 0m" : "8h 10m");
-      let lateMin = emp.late || (st === "late" ? "15m" : "0m");
-      let ot = emp.overtime || (st === "present" ? "5m" : "0m");
-      let ltype = emp.leave_type || (st === "leave" ? (idx % 2 === 0 ? "Annual Leave" : "Sick Leave") : "--");
-
+  // Real register: every in-scope employee + their real attendance row for the selected date.
+  const register = useMemo<AttRow[]>(() => {
+    const byEmp = new Map<string, Row>();
+    for (const a of attendance) if (!byEmp.has(a.employee_id)) byEmp.set(a.employee_id, a);
+    return employees.map((e) => {
+      const a = byEmp.get(e.id);
+      const late = a?.late_minutes != null ? Number(a.late_minutes) : null;
       return {
-        id: emp.id || String(idx + 1),
-        code,
-        name,
-        country: c,
-        branch,
-        department: dept,
-        shift,
-        checkIn: inTime,
-        checkOut: outTime,
-        workHours: hours,
-        late: lateMin,
-        overtime: ot,
-        leaveType: ltype,
-        status: st,
+        id: e.id,
+        code: e.employee_code ?? "—",
+        name: e.name ?? "—",
+        department: e.department ?? "—",
+        branch: e.city_branch_name ?? "—",
+        country: e.country_name ?? "—",
+        checkIn: hhmm(a?.check_in),
+        checkOut: hhmm(a?.check_out),
+        hours: a?.work_hours != null ? Number(a.work_hours) : null,
+        late,
+        overtime: a?.overtime_hours != null ? Number(a.overtime_hours) : null,
+        status: a ? normStatus(a.status, late) : "not_recorded",
+        rawStatus: a?.status ?? null,
+        source: a?.source ?? null,
       };
-    }).filter((emp) => {
-      if (searchQuery) {
-        const q = searchQuery.toLowerCase();
-        const match = emp.name.toLowerCase().includes(q) || emp.code.toLowerCase().includes(q) || emp.department.toLowerCase().includes(q);
-        if (!match) return false;
-      }
-      if (countryFilter !== "all" && !emp.country.name.toLowerCase().includes(countryFilter.toLowerCase())) return false;
-      if (branchFilter !== "all" && !emp.branch.toLowerCase().includes(branchFilter.toLowerCase())) return false;
-      if (departmentFilter !== "all" && !emp.department.toLowerCase().includes(departmentFilter.toLowerCase())) return false;
-      if (statusFilter !== "all" && emp.status.toLowerCase() !== statusFilter.toLowerCase()) return false;
-      return true;
     });
-  }, [employees, searchQuery, countryFilter, branchFilter, departmentFilter, statusFilter]);
+  }, [employees, attendance]);
 
-  const toggleSelectAll = () => {
-    if (Object.keys(selectedIds).length === attendanceList.length) {
-      setSelectedIds({});
-    } else {
-      const next: Record<string, boolean> = {};
-      attendanceList.forEach((a) => { next[a.id] = true; });
-      setSelectedIds(next);
-    }
-  };
+  const countries = useMemo(() => [...new Set(register.map((r) => r.country).filter((x) => x !== "—"))].sort(), [register]);
+  const branches = useMemo(() => [...new Set(register.map((r) => r.branch).filter((x) => x !== "—"))].sort(), [register]);
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return register.filter((r) =>
+      (countryFilter === "all" || r.country === countryFilter) &&
+      (branchFilter === "all" || r.branch === branchFilter) &&
+      (statusFilter === "all" || r.status === statusFilter) &&
+      (!q || [r.name, r.code, r.department].some((x) => x.toLowerCase().includes(q)))
+    );
+  }, [register, search, countryFilter, branchFilter, statusFilter]);
 
-  const toggleSelectRow = (id: string) => {
-    setSelectedIds((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
+  const kpi = useMemo(() => ({
+    employees: register.length,
+    present: register.filter((r) => r.status === "present" || r.status === "late").length,
+    late: register.filter((r) => r.status === "late").length,
+    absent: register.filter((r) => r.status === "absent").length,
+    leave: register.filter((r) => r.status === "leave").length,
+    notRecorded: register.filter((r) => r.status === "not_recorded").length,
+    device: register.filter((r) => r.source === "device" || r.source === "import").length,
+  }), [register]);
+
+  const statusLabel = (st: AttRow["status"]) =>
+    ({
+      present: s.t("att_present", "Present"),
+      late: s.t("att_late", "Late"),
+      absent: s.t("att_absent", "Absent"),
+      leave: s.t("att_leave", "On leave"),
+      not_recorded: s.t("att_not_recorded", "Not recorded"),
+      other: s.t("att_other", "Other"),
+    })[st];
+  const sourceLabel = (src: string | null) =>
+    src === "device" ? s.t("src_device", "Face-ID / device") : src === "import" ? s.t("src_import", "Device log import") : src === "correction" ? s.t("src_correction", "HR correction") : src ? s.t("src_manual", "Manual") : "—";
 
   const printConfig = () => ({
     moduleType: "register" as const,
     reportType: "register" as const,
-    title: tab === "attendance" ? "Daily Attendance Register" : s.t(`tab_${tab}`, tab),
-    subtitle: s.t("leave_attendance_title", "Leave & Attendance"),
+    title: tab === "attendance" ? s.t("att_register_title", "Daily Attendance Register") : s.t(`tab_${tab}`, tab),
+    subtitle: tab === "attendance" ? `${s.t("leave_attendance_title", "Leave & Attendance")} · ${selectedDate}` : s.t("leave_attendance_title", "Leave & Attendance"),
     lang: s.lang,
     orientation: "landscape" as const,
     columns: tab === "attendance"
       ? [
-          { key: "code", label: "Employee ID" },
-          { key: "name", label: "Employee Name" },
-          { key: "country", label: "Country", render: (r: any) => `${r.country.flag} ${r.country.name}` },
-          { key: "branch", label: "Branch" },
-          { key: "department", label: "Department" },
-          { key: "shift", label: "Shift" },
-          { key: "checkIn", label: "Check In" },
-          { key: "checkOut", label: "Check Out" },
-          { key: "workHours", label: "Hours" },
-          { key: "status", label: "Status" },
+          { key: "code", label: s.t("emp_code", "Employee ID") },
+          { key: "name", label: s.t("employee", "Employee") },
+          { key: "department", label: s.t("department", "Department") },
+          { key: "branch", label: s.t("branch", "Branch") },
+          { key: "checkIn", label: s.t("check_in", "Check In") },
+          { key: "checkOut", label: s.t("check_out", "Check Out") },
+          { key: "hours", label: s.t("hours", "Hours"), render: (r: any) => (r.hours == null ? "—" : NUM(r.hours)) },
+          { key: "status", label: s.t("status_label", "Status"), render: (r: any) => statusLabel(r.status) },
+          { key: "source", label: s.t("source", "Source"), render: (r: any) => sourceLabel(r.source) },
         ]
-      : columnsFor(tab, s),
-    rows: tab === "attendance" ? attendanceList : rows,
+      : columnsFor(tab as Exclude<Tab, "attendance" | "devices">, s),
+    rows: tab === "attendance" ? filtered : rows,
   });
 
+  const TABS: Array<{ id: Tab; label: string }> = [
+    { id: "attendance", label: s.t("tab_attendance", "Attendance Register") },
+    { id: "devices", label: s.t("tab_devices", "Face-ID / Biometric Devices") },
+    { id: "balances", label: s.t("tab_balances", "Leave Requests & Balances") },
+    { id: "leave_types", label: s.t("tab_leave_types", "Leave Types") },
+    { id: "shifts", label: s.t("tab_shifts", "Shifts") },
+    { id: "holidays", label: s.t("tab_holidays", "Holidays") },
+    { id: "corrections", label: s.t("tab_corrections", "Corrections") },
+  ];
+  const sel = "rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700 outline-none focus:border-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200";
+
   return (
-    <div dir={s.dir} className="min-h-screen bg-[#f8fafc] dark:bg-[#0b1120] text-slate-800 dark:text-slate-100 pb-16 font-sans">
-      <div className="mx-auto max-w-[1700px] p-4 sm:p-6 lg:p-7 space-y-6">
-
-        {/* 1. TOP BREADCRUMBS */}
-        <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
-          <div className="flex items-center gap-2">
-            <Link
-              href="/dashboard/general-office"
-              className="inline-flex items-center gap-1 font-medium text-slate-500 hover:text-purple-600 transition"
-            >
-              <ChevronLeft className="h-3.5 w-3.5" />
-              Back
-            </Link>
-            <span className="text-slate-300 dark:text-slate-700">/</span>
-            <span className="text-slate-400">Dashboard</span>
-            <span className="text-slate-300 dark:text-slate-700">&gt;</span>
-            <span className="text-slate-400">General Office</span>
-            <span className="text-slate-300 dark:text-slate-700">&gt;</span>
-            <span className="font-semibold text-purple-600 dark:text-purple-400">Leave & Attendance Management</span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <UniversalPrintActionButton reportConfig={printConfig} />
-            <button
-              type="button"
-              onClick={() => void load()}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
-            >
-              <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin text-purple-600" : ""}`} />
-              Refresh
-            </button>
+    <div dir={s.dir} className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-600 text-white"><CalendarCheck className="h-5 w-5" /></div>
+          <div>
+            <h1 className="text-lg font-bold text-slate-900 dark:text-white">{s.t("leave_attendance_title", "Leave & Attendance")}</h1>
+            <p className="text-xs text-slate-500">{s.t("att_subtitle", "One attendance record per employee per day — manual, Face-ID device or HR correction. Payroll reads these records.")}</p>
           </div>
         </div>
-
-        {/* 2. TITLE HEADER */}
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-purple-100 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400 shadow-inner">
-              <CalendarCheck className="h-6 w-6" />
-            </div>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-slate-50">
-                Leave & Attendance Management
-              </h1>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Manage employee attendance, leave requests, shifts, holidays and attendance corrections.
-              </p>
-            </div>
-          </div>
+        <div className="flex items-center gap-2">
+          <button type="button" onClick={() => void load()} className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-semibold hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800">
+            <RefreshCw className="h-3.5 w-3.5" /> {s.t("refresh", "Refresh")}
+          </button>
+          {tab !== "devices" && <UniversalPrintActionButton reportConfig={printConfig as any} />}
         </div>
+      </div>
 
-        {/* 3. FOUR KPI CARDS (Screenshot 3 layout) */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {/* Card 1: Branch & User Details (Purple) */}
-          <div className="rounded-2xl border border-purple-100 bg-gradient-to-br from-purple-50/70 via-white to-purple-50/20 p-4 shadow-sm dark:border-purple-950/60 dark:from-purple-950/30 dark:via-slate-900 dark:to-slate-900">
-            <div className="flex items-center justify-between pb-3 border-b border-purple-100/70 dark:border-purple-900/40">
-              <div className="flex items-center gap-2">
-                <div className="rounded-lg bg-purple-100 p-1.5 text-purple-600 dark:bg-purple-900/60 dark:text-purple-300">
-                  <Building2 className="h-4 w-4" />
-                </div>
-                <span className="text-xs font-bold text-purple-950 dark:text-purple-200">Branch & User Details</span>
-              </div>
-            </div>
-            <div className="mt-3 space-y-2 text-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Branch:</span>
-                <span className="font-bold text-slate-800 dark:text-slate-200">Main Headquarters</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">User:</span>
-                <span className="font-bold text-slate-800 dark:text-slate-200">Super Admin</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Department:</span>
-                <span className="font-bold text-slate-800 dark:text-slate-200">Administration</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Role:</span>
-                <span className="inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 text-[11px] font-bold text-purple-700 dark:bg-purple-900/50 dark:text-purple-300">
-                  Super Admin
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Card 2: Attendance Summary (Emerald) */}
-          <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50/70 via-white to-emerald-50/20 p-4 shadow-sm dark:border-emerald-950/60 dark:from-emerald-950/30 dark:via-slate-900 dark:to-slate-900">
-            <div className="flex items-center justify-between pb-3 border-b border-emerald-100/70 dark:border-emerald-900/40">
-              <div className="flex items-center gap-2">
-                <div className="rounded-lg bg-emerald-100 p-1.5 text-emerald-600 dark:bg-emerald-900/60 dark:text-emerald-300">
-                  <Users className="h-4 w-4" />
-                </div>
-                <span className="text-xs font-bold text-emerald-950 dark:text-emerald-200">Attendance Summary</span>
-              </div>
-            </div>
-            <div className="mt-3 space-y-2 text-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Total Employees:</span>
-                <span className="font-black text-slate-900 dark:text-slate-100">{employees.length || 54}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Present Today:</span>
-                <span className="font-bold text-emerald-600 dark:text-emerald-400">42</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Absent Today:</span>
-                <span className="font-bold text-rose-600 dark:text-rose-400">8</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Late Today:</span>
-                <span className="font-bold text-amber-600 dark:text-amber-400">4</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Card 3: Leave Summary (Amber) */}
-          <div className="rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50/70 via-white to-amber-50/20 p-4 shadow-sm dark:border-amber-950/60 dark:from-amber-950/30 dark:via-slate-900 dark:to-slate-900">
-            <div className="flex items-center justify-between pb-3 border-b border-amber-100/70 dark:border-amber-900/40">
-              <div className="flex items-center gap-2">
-                <div className="rounded-lg bg-amber-100 p-1.5 text-amber-600 dark:bg-amber-900/60 dark:text-amber-300">
-                  <Clock className="h-4 w-4" />
-                </div>
-                <span className="text-xs font-bold text-amber-950 dark:text-amber-200">Leave Summary</span>
-              </div>
-            </div>
-            <div className="mt-3 space-y-2 text-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">On Leave:</span>
-                <span className="font-bold text-blue-600 dark:text-blue-400">3</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Pending Requests:</span>
-                <span className="font-bold text-amber-600 dark:text-amber-400">5</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Approved:</span>
-                <span className="font-bold text-emerald-600 dark:text-emerald-400">12</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Rejected:</span>
-                <span className="font-bold text-rose-600 dark:text-rose-400">2</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Card 4: All Countries Attendance Report (Blue + Super Admin Only) */}
-          <div className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50/70 via-white to-blue-50/20 p-4 shadow-sm dark:border-blue-950/60 dark:from-blue-950/30 dark:via-slate-900 dark:to-slate-900">
-            <div className="flex items-center justify-between pb-3 border-b border-blue-100/70 dark:border-blue-900/40">
-              <div className="flex items-center gap-2">
-                <div className="rounded-lg bg-blue-100 p-1.5 text-blue-600 dark:bg-blue-900/60 dark:text-blue-300">
-                  <Globe className="h-4 w-4" />
-                </div>
-                <span className="text-xs font-bold text-blue-950 dark:text-blue-200">Attendance Report</span>
-              </div>
-              <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-black text-blue-700 dark:bg-blue-900/60 dark:text-blue-300 uppercase tracking-wider">
-                Super Admin Only
-              </span>
-            </div>
-            <div className="mt-3 space-y-2 text-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Total Branches:</span>
-                <span className="font-bold text-slate-800 dark:text-slate-200">8</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Present:</span>
-                <span className="font-bold text-emerald-600 dark:text-emerald-400">156</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Absent:</span>
-                <span className="font-bold text-rose-600 dark:text-rose-400">28</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Attendance Rate:</span>
-                <span className="font-black text-blue-600 dark:text-blue-400">84%</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 4. SUB-NAVIGATION TABS */}
-        <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+      {tab === "attendance" && (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6" data-testid="att-kpis">
           {[
-            { id: "attendance", label: "Attendance Register" },
-            { id: "balances", label: "Leave Requests & Balances" },
-            { id: "leave_types", label: "Leave Types" },
-            { id: "shifts", label: "Shifts" },
-            { id: "holidays", label: "Holidays" },
-            { id: "corrections", label: "Corrections" },
-          ].map((t) => {
-            const active = tab === t.id;
-            return (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => setTab(t.id as Tab)}
-                className={`rounded-xl px-4 py-2 text-xs font-bold transition-all shadow-sm ${
-                  active
-                    ? "bg-purple-600 text-white shadow-purple-600/20"
-                    : "bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-slate-200 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300"
-                }`}
-              >
-                {t.label}
-              </button>
-            );
-          })}
+            { k: "employees", label: s.t("kpi_employees", "Employees"), v: kpi.employees, icon: Users, tone: "text-slate-600" },
+            { k: "present", label: s.t("kpi_present", "Present"), v: kpi.present, icon: CheckCircle2, tone: "text-emerald-600" },
+            { k: "late", label: s.t("kpi_late", "Late"), v: kpi.late, icon: Clock, tone: "text-amber-600" },
+            { k: "absent", label: s.t("kpi_absent", "Absent"), v: kpi.absent, icon: UserX, tone: "text-rose-600" },
+            { k: "not_recorded", label: s.t("kpi_not_recorded", "Not recorded"), v: kpi.notRecorded, icon: AlertCircle, tone: "text-slate-500" },
+            { k: "device", label: s.t("kpi_device", "From Face-ID devices"), v: kpi.device, icon: Fingerprint, tone: "text-purple-600" },
+          ].map((c) => (
+            <div key={c.k} data-testid={`att-kpi-${c.k}`} className="rounded-2xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
+              <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500">{c.label}<c.icon className={`h-4 w-4 ${c.tone}`} /></div>
+              <div className="mt-1 text-xl font-bold tabular-nums">{c.v}</div>
+            </div>
+          ))}
         </div>
+      )}
 
-        {/* 5. FILTER ROW & ACTIONS TOOLBAR */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <div className="flex flex-wrap items-center gap-2.5">
-            {/* Date Picker */}
-            <div className="relative flex items-center">
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-1.5 text-xs font-medium text-slate-700 outline-none focus:border-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-              />
-            </div>
+      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-2 dark:border-slate-800">
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            data-testid={`hr-tab-${t.id}`}
+            onClick={() => setTab(t.id)}
+            className={`rounded-xl px-4 py-2 text-xs font-bold ${tab === t.id ? "bg-purple-600 text-white" : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"}`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
 
-            {/* Country Dropdown */}
-            <select
-              value={countryFilter}
-              onChange={(e) => setCountryFilter(e.target.value)}
-              className="rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-1.5 text-xs font-medium text-slate-700 outline-none focus:border-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-            >
-              <option value="all">All Countries</option>
-              <option value="UAE">🇦🇪 UAE</option>
-              <option value="Pakistan">🇵🇰 Pakistan</option>
-              <option value="Oman">🇴🇲 Oman</option>
-              <option value="Saudi Arabia">🇸🇦 Saudi Arabia</option>
-            </select>
+      {error && <p className="rounded-lg bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">{error}</p>}
 
-            {/* Branch Dropdown */}
-            <select
-              value={branchFilter}
-              onChange={(e) => setBranchFilter(e.target.value)}
-              className="rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-1.5 text-xs font-medium text-slate-700 outline-none focus:border-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-            >
-              <option value="all">All Branches</option>
-              <option value="Main Headquarters">Main Headquarters</option>
-              <option value="Dubai Branch">Dubai Branch</option>
-              <option value="Muscat Branch">Muscat Branch</option>
-              <option value="Lahore Office">Lahore Office</option>
-            </select>
-
-            {/* Department Dropdown */}
-            <select
-              value={departmentFilter}
-              onChange={(e) => setDepartmentFilter(e.target.value)}
-              className="rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-1.5 text-xs font-medium text-slate-700 outline-none focus:border-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-            >
-              <option value="all">All Departments</option>
-              <option value="Administration">Administration</option>
-              <option value="Sales">Sales</option>
-              <option value="IT">IT & Systems</option>
-              <option value="Accounts">Accounts</option>
-              <option value="Operations">Operations</option>
-            </select>
-
-            {/* Search Employee input */}
-            <div className="relative min-w-[200px] flex-1">
-              <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search employee..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-9 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 outline-none focus:border-purple-500 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-              />
-            </div>
-
-            {/* Shift dropdown */}
-            <select
-              value={shiftFilter}
-              onChange={(e) => setShiftFilter(e.target.value)}
-              className="rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-1.5 text-xs font-medium text-slate-700 outline-none focus:border-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-            >
-              <option value="all">All Shifts</option>
-              <option value="Morning">Morning (09:00 - 18:00)</option>
-              <option value="Evening">Evening (14:00 - 23:00)</option>
-              <option value="Night">Night (23:00 - 08:00)</option>
-            </select>
-
-            {/* Status dropdown */}
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-1.5 text-xs font-medium text-slate-700 outline-none focus:border-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-            >
-              <option value="all">All Statuses</option>
-              <option value="present">Present</option>
-              <option value="late">Late</option>
-              <option value="absent">Absent</option>
-              <option value="leave">On Leave</option>
-            </select>
-
-            {/* Right Action buttons */}
-            <div className="ml-auto flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => void load()}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-              >
-                <RefreshCw className="h-3.5 w-3.5" />
-                Refresh
-              </button>
-
-              {tab === "attendance" ? (
-                <button
-                  type="button"
-                  onClick={() => alert("Add Attendance record dialog")}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700 transition"
-                >
-                  <Plus className="h-4 w-4" />
-                  + Add Attendance
-                </button>
-              ) : ["leave_types", "shifts", "holidays"].includes(tab) ? (
-                <button
-                  type="button"
-                  onClick={() => { setEditing(null); setShowForm(true); }}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-purple-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-purple-700 transition"
-                >
-                  <Plus className="h-4 w-4" />
-                  {s.t("add", "Add")}
-                </button>
-              ) : tab === "balances" ? (
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void balanceAction("initialize")}
-                    className="rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    {s.t("bal_initialize", "Initialize Year")}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void balanceAction("recompute")}
-                    className="rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200"
-                  >
-                    {s.t("bal_recompute", "Recompute")}
-                  </button>
+      {tab === "devices" ? (
+        <BiometricDevicesPanel lang={s.lang} employees={employees.length ? employees : undefined} />
+      ) : (
+        <div className="rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 p-3 dark:border-slate-800">
+            {tab === "attendance" ? (
+              <>
+                <input type="date" data-testid="att-date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className={sel} />
+                <select value={countryFilter} onChange={(e) => setCountryFilter(e.target.value)} className={sel}>
+                  <option value="all">{s.t("all_countries", "All Countries")}</option>
+                  {countries.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+                <select value={branchFilter} onChange={(e) => setBranchFilter(e.target.value)} className={sel}>
+                  <option value="all">{s.t("all_branches", "All Branches")}</option>
+                  {branches.map((b) => <option key={b} value={b}>{b}</option>)}
+                </select>
+                <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className={sel}>
+                  <option value="all">{s.t("all_status", "All Status")}</option>
+                  {(["present", "late", "absent", "leave", "not_recorded"] as const).map((k) => <option key={k} value={k}>{statusLabel(k)}</option>)}
+                </select>
+                <div className="relative ms-auto">
+                  <Search className="pointer-events-none absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                  <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={s.t("search_emp", "Search employee, code, department…")} className={`${sel} ps-8`} />
                 </div>
-              ) : tab === "corrections" ? (
-                <button
-                  type="button"
-                  onClick={() => { setEditing(null); setShowForm(true); }}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-purple-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-purple-700 transition"
-                >
-                  <Plus className="h-4 w-4" />
-                  {s.t("corr_new", "New Correction")}
-                </button>
-              ) : null}
-            </div>
-          </div>
-        </div>
-
-        {error ? (
-          <p className="rounded-xl bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
-            {error}
-          </p>
-        ) : null}
-
-        {/* 6. MAIN TABLE REGISTER CARD */}
-        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
-          {/* Card Header with table actions */}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 px-5 py-3.5 bg-slate-50/50 dark:bg-slate-800/40">
-            <div>
-              <h2 className="text-sm font-black text-slate-900 dark:text-slate-100">
-                {tab === "attendance" ? "Daily Attendance Register" : s.t(`tab_${tab}`, tab)}
-              </h2>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                {tab === "attendance"
-                  ? "View and manage daily employee attendance records."
-                  : s.t("leave_attendance_blurb", "Configure and review records.")}
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => window.print()}
-                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 shadow-sm"
-              >
-                <Printer className="h-3.5 w-3.5 text-slate-500" />
-                Print
-              </button>
-              <button
-                type="button"
-                onClick={() => alert("Exporting PDF...")}
-                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 shadow-sm"
-              >
-                <FileDown className="h-3.5 w-3.5 text-rose-500" />
-                PDF
-              </button>
-              <button
-                type="button"
-                onClick={() => alert("Exporting Excel...")}
-                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 shadow-sm"
-              >
-                <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" />
-                Excel
-              </button>
-            </div>
+              </>
+            ) : (
+              <>
+                {(tab === "balances" || tab === "holidays") && (
+                  <input type="number" value={year} onChange={(e) => setYear(Number(e.target.value) || new Date().getFullYear())} className={`${sel} w-24`} />
+                )}
+                <div className="ms-auto flex gap-2">
+                  {["leave_types", "shifts", "holidays", "corrections"].includes(tab) && (
+                    <button type="button" onClick={() => { setEditing(null); setShowForm(true); }} className="inline-flex items-center gap-1.5 rounded-xl bg-purple-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-purple-700">
+                      <Plus className="h-4 w-4" /> {s.t("add", "Add")}
+                    </button>
+                  )}
+                  {tab === "balances" && (
+                    <>
+                      <button type="button" disabled={busy} onClick={() => void balanceAction("initialize")} className="rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-blue-700 disabled:opacity-50">{s.t("bal_initialize", "Initialize Year")}</button>
+                      <button type="button" disabled={busy} onClick={() => void balanceAction("recompute")} className="rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-bold hover:bg-slate-50 dark:border-slate-700">{s.t("bal_recompute", "Recompute")}</button>
+                    </>
+                  )}
+                </div>
+              </>
+            )}
           </div>
 
-          {/* Table */}
           <div className="overflow-x-auto">
             {tab === "attendance" ? (
-              <table className="w-full text-left text-xs border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-200/80 bg-slate-50/80 text-[11px] font-black uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-400">
-                    <th className="w-10 px-4 py-3 text-center">
-                      <input
-                        type="checkbox"
-                        checked={attendanceList.length > 0 && Object.keys(selectedIds).length === attendanceList.length}
-                        onChange={toggleSelectAll}
-                        className="rounded border-slate-300 text-purple-600 focus:ring-purple-500"
-                      />
-                    </th>
-                    <th className="w-12 px-3 py-3 text-center">#</th>
-                    <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">EMPLOYEE ID</th>
-                    <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">EMPLOYEE NAME</th>
-                    <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">COUNTRY</th>
-                    <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">BRANCH</th>
-                    <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">DEPARTMENT</th>
-                    <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">SHIFT</th>
-                    <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">CHECK IN</th>
-                    <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">CHECK OUT</th>
-                    <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">WORKING HOURS</th>
-                    <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">LATE</th>
-                    <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">OVERTIME</th>
-                    <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">LEAVE TYPE</th>
-                    <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">STATUS</th>
-                    <th className="w-16 px-3 py-3 text-right font-black text-slate-700 dark:text-slate-200">ACTIONS</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {loading ? (
-                    <tr>
-                      <td colSpan={16} className="py-12 text-center text-slate-400">
-                        <Loader2 className="mx-auto h-5 w-5 animate-spin text-purple-600" />
-                        <span className="mt-2 block text-xs">Loading attendance records...</span>
-                      </td>
-                    </tr>
-                  ) : attendanceList.length === 0 ? (
-                    <tr>
-                      <td colSpan={16} className="py-12 text-center text-slate-400">
-                        No attendance records match your filter criteria.
-                      </td>
-                    </tr>
-                  ) : (
-                    attendanceList.map((row, idx) => {
-                      const isSelected = !!selectedIds[row.id];
-                      return (
-                        <tr
-                          key={row.id}
-                          className={`transition-colors hover:bg-purple-50/20 dark:hover:bg-purple-950/10 ${
-                            isSelected ? "bg-purple-50/40 dark:bg-purple-950/20" : ""
-                          }`}
-                        >
-                          <td className="px-4 py-2.5 text-center">
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              onChange={() => toggleSelectRow(row.id)}
-                              className="rounded border-slate-300 text-purple-600 focus:ring-purple-500"
-                            />
-                          </td>
-                          <td className="px-3 py-2.5 text-center font-mono text-[11px] text-slate-400">
-                            {idx + 1}
-                          </td>
-                          <td className="px-3 py-2.5 font-mono text-xs font-bold text-slate-800 dark:text-slate-200">
-                            {row.code}
-                          </td>
-                          <td className="px-3 py-2.5">
-                            <div className="flex items-center gap-2">
-                              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-purple-100 text-[11px] font-black text-purple-700 dark:bg-purple-900/60 dark:text-purple-300">
-                                {row.name.slice(0, 2).toUpperCase()}
-                              </div>
-                              <span className="font-semibold text-slate-900 dark:text-slate-100">
-                                {row.name}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-3 py-2.5">
-                            <div className="flex items-center gap-1.5 font-medium text-slate-700 dark:text-slate-300">
-                              <span>{row.country.flag}</span>
-                              <span>{row.country.name}</span>
-                            </div>
-                          </td>
-                          <td className="px-3 py-2.5 text-slate-600 dark:text-slate-400">
-                            {row.branch}
-                          </td>
-                          <td className="px-3 py-2.5 text-slate-600 dark:text-slate-400">
-                            {row.department}
-                          </td>
-                          <td className="px-3 py-2.5 text-slate-600 dark:text-slate-400">
-                            {row.shift}
-                          </td>
-                          <td className="px-3 py-2.5 font-mono text-xs font-semibold text-slate-800 dark:text-slate-200">
-                            {row.checkIn}
-                          </td>
-                          <td className="px-3 py-2.5 font-mono text-xs font-semibold text-slate-800 dark:text-slate-200">
-                            {row.checkOut}
-                          </td>
-                          <td className="px-3 py-2.5 font-mono text-xs font-bold text-slate-700 dark:text-slate-300">
-                            {row.workHours}
-                          </td>
-                          <td className="px-3 py-2.5 font-mono text-xs text-amber-600 dark:text-amber-400 font-semibold">
-                            {row.late}
-                          </td>
-                          <td className="px-3 py-2.5 font-mono text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
-                            {row.overtime}
-                          </td>
-                          <td className="px-3 py-2.5 text-slate-500 dark:text-slate-400">
-                            {row.leaveType}
-                          </td>
-                          <td className="px-3 py-2.5">
-                            {row.status === "present" ? (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-300">
-                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-                                Present
-                              </span>
-                            ) : row.status === "late" ? (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:border-amber-800 dark:text-amber-300">
-                                <span className="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
-                                Late
-                              </span>
-                            ) : row.status === "leave" ? (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-bold text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:border-blue-800 dark:text-blue-300">
-                                <span className="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
-                                On Leave
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-1 text-[11px] font-bold text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:border-rose-800 dark:text-rose-300">
-                                <span className="h-1.5 w-1.5 rounded-full bg-rose-500"></span>
-                                Absent
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-3 py-2.5 text-right">
-                            <button
-                              type="button"
-                              className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200 transition"
-                            >
-                              <MoreVertical className="h-4 w-4" />
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            ) : (
-              /* Fallback table for Sub-tabs: Leave Types, Shifts, Holidays, Balances, Corrections */
-              <table className="w-full text-xs">
+              <table data-testid="att-register" className="w-full min-w-[900px] text-xs">
                 <thead className="bg-slate-50 dark:bg-slate-800/60">
-                  <tr className="text-left">
-                    {columnsFor(tab, s).map((c) => (
-                      <Th key={c.key} className={`px-3 py-2.5 font-bold ${c.align === "right" ? "text-right" : ""}`}>
-                        {c.label}
-                      </Th>
+                  <tr>
+                    {[s.t("emp_code", "Employee ID"), s.t("employee", "Employee"), s.t("department", "Department"), s.t("branch", "Branch"), s.t("check_in", "Check In"), s.t("check_out", "Check Out"), s.t("hours", "Hours"), s.t("late_min", "Late (min)"), s.t("overtime_h", "Overtime (h)"), s.t("status_label", "Status"), s.t("source", "Source")].map((h) => (
+                      <Th key={h} className={`px-3 py-2.5 font-bold ${s.textStart}`}>{h}</Th>
                     ))}
-                    <Th className="px-3 py-2.5 text-right font-bold">Actions</Th>
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
-                    <tr>
-                      <td colSpan={12} className="px-3 py-10 text-center text-slate-400">
-                        <Loader2 className="mx-auto h-4 w-4 animate-spin text-purple-600" />
-                      </td>
-                    </tr>
+                    <tr><td colSpan={11} className="px-3 py-10 text-center"><Loader2 className="mx-auto h-4 w-4 animate-spin text-purple-600" /></td></tr>
+                  ) : filtered.length === 0 ? (
+                    <tr><td colSpan={11} className="px-3 py-10 text-center text-slate-400">{employees.length ? s.t("empty", "No records found.") : s.t("no_employees", "No employees in your scope yet.")}</td></tr>
+                  ) : (
+                    filtered.map((r) => (
+                      <tr key={r.id} data-testid="att-row" data-status={r.status} className="border-t border-slate-100 dark:border-slate-800">
+                        <td className="px-3 py-2 font-mono font-semibold">{r.code}</td>
+                        <td className="px-3 py-2 font-semibold text-slate-900 dark:text-slate-100">{r.name}</td>
+                        <td className="px-3 py-2">{r.department}</td>
+                        <td className="px-3 py-2">{r.branch}</td>
+                        <td className="px-3 py-2 tabular-nums">{r.checkIn}</td>
+                        <td className="px-3 py-2 tabular-nums">{r.checkOut}</td>
+                        <td className="px-3 py-2 tabular-nums">{r.hours == null ? "—" : NUM(r.hours)}</td>
+                        <td className="px-3 py-2 tabular-nums">{r.late == null ? "—" : r.late}</td>
+                        <td className="px-3 py-2 tabular-nums">{r.overtime == null ? "—" : NUM(r.overtime)}</td>
+                        <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_TONE[r.status]}`}>{statusLabel(r.status)}</span></td>
+                        <td className="px-3 py-2">{r.source === "device" || r.source === "import" ? <span className="inline-flex items-center gap-1 text-purple-700 dark:text-purple-300"><Fingerprint className="h-3.5 w-3.5" />{sourceLabel(r.source)}</span> : sourceLabel(r.source)}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            ) : (
+              <table className="w-full text-xs">
+                <thead className="bg-slate-50 dark:bg-slate-800/60">
+                  <tr>
+                    {columnsFor(tab, s).map((c) => (
+                      <Th key={c.key} className={`px-3 py-2.5 font-bold ${c.align === "right" ? s.textEnd : s.textStart}`}>{c.label}</Th>
+                    ))}
+                    <Th className={`px-3 py-2.5 font-bold ${s.textEnd}`}>{s.t("actions", "Actions")}</Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr><td colSpan={12} className="px-3 py-10 text-center"><Loader2 className="mx-auto h-4 w-4 animate-spin text-purple-600" /></td></tr>
                   ) : rows.length === 0 ? (
-                    <tr>
-                      <td colSpan={12} className="px-3 py-10 text-center text-xs text-slate-400">
-                        {s.t("empty", "No records found.")}
-                      </td>
-                    </tr>
+                    <tr><td colSpan={12} className="px-3 py-10 text-center text-slate-400">{s.t("empty", "No records found.")}</td></tr>
                   ) : (
                     rows.map((r) => (
-                      <tr key={r.id} className="border-t border-slate-100 dark:border-slate-800 hover:bg-slate-50/50">
+                      <tr key={r.id} className="border-t border-slate-100 dark:border-slate-800">
                         {columnsFor(tab, s).map((c) => (
-                          <td key={c.key} className={`px-3 py-2.5 ${c.align === "right" ? "text-right tabular-nums" : "text-slate-600 dark:text-slate-300"}`}>
-                            {c.render ? c.render(r, s) : (r[c.key] ?? "—")}
-                          </td>
+                          <td key={c.key} className={`px-3 py-2.5 ${c.align === "right" ? `${s.textEnd} tabular-nums` : "text-slate-600 dark:text-slate-300"}`}>{c.render ? c.render(r, s) : (r[c.key] ?? "—")}</td>
                         ))}
-                        <td className="px-3 py-2.5 text-right">
+                        <td className={`px-3 py-2.5 ${s.textEnd}`}>
                           <div className="inline-flex gap-1">
-                            {["leave_types", "shifts", "holidays"].includes(tab) ? (
+                            {["leave_types", "shifts", "holidays"].includes(tab) && (
                               <>
-                                <button
-                                  type="button"
-                                  onClick={() => { setEditing(r); setShowForm(true); }}
-                                  className="rounded-lg border border-slate-200 p-1 text-slate-400 hover:bg-slate-50 dark:border-slate-700"
-                                >
-                                  <Pencil className="h-3.5 w-3.5" />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => void remove(r)}
-                                  className="rounded-lg border border-slate-200 p-1 text-rose-500 hover:bg-rose-50 dark:border-slate-700"
-                                >
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                </button>
+                                <button type="button" aria-label={s.t("edit", "Edit")} onClick={() => { setEditing(r); setShowForm(true); }} className="rounded-lg border border-slate-200 p-1 text-slate-400 hover:bg-slate-50 dark:border-slate-700"><Pencil className="h-3.5 w-3.5" /></button>
+                                <button type="button" aria-label={s.t("delete", "Delete")} onClick={() => void remove(r)} className="rounded-lg border border-slate-200 p-1 text-rose-500 hover:bg-rose-50 dark:border-slate-700"><Trash2 className="h-3.5 w-3.5" /></button>
                               </>
-                            ) : null}
-                            {tab === "balances" ? (
-                              <button
-                                type="button"
-                                onClick={() => void adjustBalance(r)}
-                                className="rounded-lg border border-slate-200 px-2 py-1 text-[10px] font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300"
-                              >
-                                {s.t("adjust", "Adjust")}
-                              </button>
-                            ) : null}
-                            {tab === "corrections" && r.status === "pending" ? (
+                            )}
+                            {tab === "balances" && (
+                              <button type="button" onClick={() => void adjustBalance(r)} className="rounded-lg border border-slate-200 px-2 py-1 text-[10px] font-bold dark:border-slate-700">{s.t("adjust", "Adjust")}</button>
+                            )}
+                            {tab === "corrections" && r.status === "pending" && (
                               <>
-                                <button
-                                  type="button"
-                                  disabled={busy}
-                                  onClick={() => void correctionAction(r.id, "approve")}
-                                  className="rounded-lg bg-emerald-600 px-2 py-1 text-[10px] font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
-                                >
-                                  <Check className="h-3 w-3" />
-                                </button>
-                                <button
-                                  type="button"
-                                  disabled={busy}
-                                  onClick={() => void correctionAction(r.id, "reject")}
-                                  className="rounded-lg border border-rose-200 px-2 py-1 text-[10px] font-bold text-rose-600 hover:bg-rose-50 disabled:opacity-50 dark:border-rose-900"
-                                >
-                                  <Ban className="h-3 w-3" />
-                                </button>
+                                <button type="button" aria-label={s.t("approve", "Approve")} disabled={busy} onClick={() => void correctionAction(r.id, "approve")} className="rounded-lg bg-emerald-600 px-2 py-1 text-white disabled:opacity-50"><Check className="h-3 w-3" /></button>
+                                <button type="button" aria-label={s.t("reject", "Reject")} disabled={busy} onClick={() => void correctionAction(r.id, "reject")} className="rounded-lg border border-rose-200 px-2 py-1 text-rose-600 disabled:opacity-50 dark:border-rose-900"><Ban className="h-3 w-3" /></button>
                               </>
-                            ) : null}
-                            {tab === "corrections" && r.status === "approved" ? (
-                              <button
-                                type="button"
-                                disabled={busy}
-                                onClick={() => void correctionAction(r.id, "apply")}
-                                className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-2 py-1 text-[10px] font-bold text-white hover:bg-blue-700 disabled:opacity-50"
-                              >
-                                <Play className="h-3 w-3" />
-                                {s.t("apply", "Apply")}
-                              </button>
-                            ) : null}
+                            )}
+                            {tab === "corrections" && r.status === "approved" && (
+                              <button type="button" disabled={busy} onClick={() => void correctionAction(r.id, "apply")} className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-2 py-1 text-[10px] font-bold text-white disabled:opacity-50"><Play className="h-3 w-3" />{s.t("apply", "Apply")}</button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -899,58 +424,14 @@ export function HrLeaveAttendanceView({ lang }: { lang?: string }) {
               </table>
             )}
           </div>
-
-          {/* Table Footer Pagination */}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 dark:border-slate-800 px-5 py-3 text-xs text-slate-500 bg-slate-50/30 dark:bg-slate-800/30">
-            <div>
-              Showing <span className="font-bold text-slate-800 dark:text-slate-200">1</span> to{" "}
-              <span className="font-bold text-slate-800 dark:text-slate-200">
-                {tab === "attendance" ? attendanceList.length : rows.length}
-              </span>{" "}
-              of{" "}
-              <span className="font-bold text-slate-800 dark:text-slate-200">
-                {tab === "attendance" ? attendanceList.length : rows.length}
-              </span>{" "}
-              records
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                disabled
-                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1 font-semibold text-slate-400 opacity-50 cursor-not-allowed"
-              >
-                <ChevronLeft className="h-3.5 w-3.5" />
-                Previous
-              </button>
-              <button
-                type="button"
-                className="rounded-lg bg-purple-600 px-2.5 py-1 font-bold text-white shadow-sm"
-              >
-                1
-              </button>
-              <button
-                type="button"
-                disabled
-                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1 font-semibold text-slate-400 opacity-50 cursor-not-allowed"
-              >
-                Next
-                <ChevronRight className="h-3.5 w-3.5" />
-              </button>
-            </div>
+          <div className="border-t border-slate-100 px-4 py-2 text-xs text-slate-500 dark:border-slate-800">
+            {(tab === "attendance" ? filtered.length : rows.length)} {s.t("records", "records")}
           </div>
         </div>
+      )}
 
-      </div>
-
-      {showForm ? (
-        <PhaseForm
-          s={s}
-          tab={tab}
-          initial={editing}
-          employees={employees}
-          onClose={() => { setShowForm(false); setEditing(null); }}
-          onSave={save}
-        />
+      {showForm && tab !== "attendance" && tab !== "devices" ? (
+        <PhaseForm s={s} tab={tab} initial={editing} employees={employees} onClose={() => { setShowForm(false); setEditing(null); }} onSave={save} />
       ) : null}
     </div>
   );

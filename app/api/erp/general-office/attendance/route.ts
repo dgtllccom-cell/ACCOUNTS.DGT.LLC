@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { assertEmployeeAccess } from "@/lib/services/hr-api";
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiOk, apiCreated, handleApiError } from "@/lib/api/response";
@@ -51,7 +52,13 @@ export async function POST(request: NextRequest) {
   try {
     const session = await requireOfficeSession(true);
     const body = createSchema.parse(await request.json());
+    // The employee must be inside the caller's scope; country / branch come from the employee
+    // record, never from the request body.
+    await assertEmployeeAccess(session, body.employeeId);
     const id = await withLocalPg(async (sql) => {
+      const emp = ((await sql`select country_id, city_branch_id from employees where id = ${body.employeeId}::uuid`) as any[])[0];
+      body.countryId = emp?.country_id ?? null;
+      body.cityBranchId = emp?.city_branch_id ?? null;
       const row = {
         employee_id: body.employeeId,
         attendance_date: body.attendanceDate,
