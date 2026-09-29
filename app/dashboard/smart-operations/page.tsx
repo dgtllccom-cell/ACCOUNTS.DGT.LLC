@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { requireErpSession } from "@/lib/auth/session";
 import { SmartDueView } from "@/features/smart-due/components/smart-due-view";
+import { ControlChecksPanel } from "@/features/smart-due/components/control-checks-panel";
 
 export const metadata: Metadata = {
   title: "Smart Operations & Action Center — Digital Dock ERP",
@@ -13,6 +14,7 @@ export default async function SmartOperationsPage() {
   await requireErpSession();
   return (
     <div className="w-full">
+      <ControlChecksPanel />
       <SmartDueView />
     </div>
   );

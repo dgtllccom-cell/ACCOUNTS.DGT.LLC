@@ -148,6 +148,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     label: nt("Smart Operations"),
     icon: Sparkles,
     href: "/dashboard/smart-operations",
+    upgraded: true,
     roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "agent_user"],
   },
   {

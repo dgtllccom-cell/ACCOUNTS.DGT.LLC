@@ -9372,6 +9372,46 @@ export type UiKey =
   | "dverify.st_warning"
   | "dverify.title"
   | "dverify.to_review"
+  | "sops.check_failed"
+  | "sops.d_approval"
+  | "sops.d_attendance"
+  | "sops.d_company"
+  | "sops.d_crm"
+  | "sops.d_dup_invoice"
+  | "sops.d_emp_doc"
+  | "sops.d_eta"
+  | "sops.d_fx"
+  | "sops.d_incomplete"
+  | "sops.d_missing_posting"
+  | "sops.d_payable"
+  | "sops.d_payment_posting"
+  | "sops.d_payroll"
+  | "sops.d_receivable"
+  | "sops.d_settlement"
+  | "sops.d_ship_doc"
+  | "sops.d_tax"
+  | "sops.d_unbalanced"
+  | "sops.d_wps"
+  | "sops.empty"
+  | "sops.g_accounting"
+  | "sops.g_all"
+  | "sops.g_compliance"
+  | "sops.g_crm"
+  | "sops.g_hr"
+  | "sops.g_receivables"
+  | "sops.g_shipping"
+  | "sops.generated"
+  | "sops.load_failed"
+  | "sops.loading"
+  | "sops.open"
+  | "sops.run_now"
+  | "sops.s_all"
+  | "sops.s_critical"
+  | "sops.s_reminder"
+  | "sops.s_resolved"
+  | "sops.s_review"
+  | "sops.subtitle"
+  | "sops.title"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -30019,6 +30059,46 @@ const en: Dict = {
   "dverify.st_warning": "Check",
   "dverify.title": "Verification Checks",
   "dverify.to_review": "to review",
+  "sops.check_failed": "Check unavailable",
+  "sops.d_approval": "Pending approval (over 2 days)",
+  "sops.d_attendance": "Missing attendance before payroll",
+  "sops.d_company": "Company licence expired / expiring",
+  "sops.d_crm": "Stale CRM follow-up",
+  "sops.d_dup_invoice": "Duplicate invoice / bill number",
+  "sops.d_emp_doc": "Employee document expired / expiring",
+  "sops.d_eta": "ETA passed without tracking update",
+  "sops.d_fx": "Missing / wrong historical FX rate",
+  "sops.d_incomplete": "Incomplete purchase / sales workflow",
+  "sops.d_missing_posting": "Purchase / sales not posted to Roznamcha",
+  "sops.d_payable": "Overdue payable",
+  "sops.d_payment_posting": "Payment posted but Roznamcha / transfer missing",
+  "sops.d_payroll": "Payroll exception",
+  "sops.d_receivable": "Overdue receivable",
+  "sops.d_settlement": "Settlement / reconciliation discrepancy",
+  "sops.d_ship_doc": "Missing shipping / clearing document data",
+  "sops.d_tax": "Tax / compliance filing deadline",
+  "sops.d_unbalanced": "Unbalanced financial entry",
+  "sops.d_wps": "WPS exception",
+  "sops.empty": "No checks match this filter.",
+  "sops.g_accounting": "Accounting",
+  "sops.g_all": "All",
+  "sops.g_compliance": "Company & Tax Compliance",
+  "sops.g_crm": "CRM",
+  "sops.g_hr": "HR & Payroll",
+  "sops.g_receivables": "Receivables, Payables & Workflow",
+  "sops.g_shipping": "Shipping & Clearing",
+  "sops.generated": "Checked at",
+  "sops.load_failed": "Control checks could not be loaded.",
+  "sops.loading": "Running control checks…",
+  "sops.open": "Open",
+  "sops.run_now": "Run checks now",
+  "sops.s_all": "All",
+  "sops.s_critical": "Critical",
+  "sops.s_reminder": "Reminder",
+  "sops.s_resolved": "Resolved",
+  "sops.s_review": "Needs review",
+  "sops.subtitle": "Automatic read-only checks across your country / branch. Open a finding to correct it in its own module.",
+  "sops.title": "Control Checks",
 };
 
 const ur: Dict = {
@@ -50635,6 +50715,46 @@ const ur: Dict = {
   "dverify.st_warning": "جانچیں",
   "dverify.title": "تصدیقی جانچ",
   "dverify.to_review": "جائزہ کے لیے",
+  "sops.check_failed": "جانچ دستیاب نہیں",
+  "sops.d_approval": "زیر التوا منظوری (2 دن سے زیادہ)",
+  "sops.d_attendance": "پے رول سے پہلے حاضری موجود نہیں",
+  "sops.d_company": "کمپنی لائسنس ختم / ختم ہونے والا",
+  "sops.d_crm": "پرانا CRM فالو اپ",
+  "sops.d_dup_invoice": "دہرا انوائس / بل نمبر",
+  "sops.d_emp_doc": "ملازم کی دستاویز ختم / ختم ہونے والی",
+  "sops.d_eta": "ETA گزر گیا مگر ٹریکنگ اپڈیٹ نہیں",
+  "sops.d_fx": "تاریخی شرح تبادلہ موجود نہیں / غلط",
+  "sops.d_incomplete": "نامکمل خریداری / فروخت کا عمل",
+  "sops.d_missing_posting": "خریداری / فروخت روزنامچہ میں پوسٹ نہیں",
+  "sops.d_payable": "واجب الادا رقم کی تاخیر",
+  "sops.d_payment_posting": "ادائیگی پوسٹ ہوئی مگر روزنامچہ / ٹرانسفر موجود نہیں",
+  "sops.d_payroll": "پے رول میں مسئلہ",
+  "sops.d_receivable": "قابل وصول رقم کی تاخیر",
+  "sops.d_settlement": "سیٹلمنٹ / مطابقت میں فرق",
+  "sops.d_ship_doc": "شپنگ / کلیئرنگ دستاویزی ڈیٹا موجود نہیں",
+  "sops.d_tax": "ٹیکس / تعمیل فائلنگ کی آخری تاریخ",
+  "sops.d_unbalanced": "غیر متوازن مالی اندراج",
+  "sops.d_wps": "WPS مسئلہ",
+  "sops.empty": "اس فلٹر کے مطابق کوئی جانچ نہیں۔",
+  "sops.g_accounting": "اکاؤنٹنگ",
+  "sops.g_all": "تمام",
+  "sops.g_compliance": "کمپنی اور ٹیکس تعمیل",
+  "sops.g_crm": "CRM",
+  "sops.g_hr": "ایچ آر اور پے رول",
+  "sops.g_receivables": "وصولیاں، ادائیگیاں اور ورک فلو",
+  "sops.g_shipping": "شپنگ اور کلیئرنگ",
+  "sops.generated": "جانچ کا وقت",
+  "sops.load_failed": "کنٹرول جانچ لوڈ نہیں ہو سکیں۔",
+  "sops.loading": "کنٹرول جانچ جاری ہیں…",
+  "sops.open": "کھولیں",
+  "sops.run_now": "ابھی جانچ کریں",
+  "sops.s_all": "تمام",
+  "sops.s_critical": "انتہائی اہم",
+  "sops.s_reminder": "یاد دہانی",
+  "sops.s_resolved": "حل شدہ",
+  "sops.s_review": "جائزہ درکار",
+  "sops.subtitle": "آپ کے ملک / برانچ میں خودکار، صرف پڑھنے والی جانچ۔ کسی نتیجے کو اس کے اپنے ماڈیول میں کھول کر درست کریں۔",
+  "sops.title": "کنٹرول جانچ",
 };
 
 const ar: Dict = {
@@ -71252,6 +71372,46 @@ const ar: Dict = {
   "dverify.st_warning": "تحقق",
   "dverify.title": "فحوصات التحقق",
   "dverify.to_review": "للمراجعة",
+  "sops.check_failed": "الفحص غير متاح",
+  "sops.d_approval": "موافقة معلقة (أكثر من يومين)",
+  "sops.d_attendance": "الحضور مفقود قبل الرواتب",
+  "sops.d_company": "رخصة شركة منتهية / قاربت على الانتهاء",
+  "sops.d_crm": "متابعة CRM متأخرة",
+  "sops.d_dup_invoice": "رقم فاتورة / فاتورة مكرر",
+  "sops.d_emp_doc": "مستند موظف منتهٍ / قارب على الانتهاء",
+  "sops.d_eta": "انقضى موعد الوصول دون تحديث التتبع",
+  "sops.d_fx": "سعر صرف تاريخي مفقود / خاطئ",
+  "sops.d_incomplete": "سير عمل شراء / بيع غير مكتمل",
+  "sops.d_missing_posting": "شراء / بيع غير مرحّل إلى الروزنامچه",
+  "sops.d_payable": "مستحقات دفع متأخرة",
+  "sops.d_payment_posting": "دفعة مرحّلة لكن الروزنامچه / التحويل مفقود",
+  "sops.d_payroll": "استثناء في الرواتب",
+  "sops.d_receivable": "مستحقات تحصيل متأخرة",
+  "sops.d_settlement": "تباين في التسوية / المطابقة",
+  "sops.d_ship_doc": "بيانات مستندات الشحن / التخليص مفقودة",
+  "sops.d_tax": "الموعد النهائي لتقديم الضرائب / الامتثال",
+  "sops.d_unbalanced": "قيد مالي غير متوازن",
+  "sops.d_wps": "استثناء WPS",
+  "sops.empty": "لا توجد فحوصات مطابقة لهذا المرشح.",
+  "sops.g_accounting": "المحاسبة",
+  "sops.g_all": "الكل",
+  "sops.g_compliance": "امتثال الشركة والضرائب",
+  "sops.g_crm": "إدارة العملاء",
+  "sops.g_hr": "الموارد البشرية والرواتب",
+  "sops.g_receivables": "المستحقات والمدفوعات وسير العمل",
+  "sops.g_shipping": "الشحن والتخليص",
+  "sops.generated": "وقت الفحص",
+  "sops.load_failed": "تعذر تحميل فحوصات الرقابة.",
+  "sops.loading": "جارٍ تشغيل فحوصات الرقابة…",
+  "sops.open": "فتح",
+  "sops.run_now": "تشغيل الفحوصات الآن",
+  "sops.s_all": "الكل",
+  "sops.s_critical": "حرج",
+  "sops.s_reminder": "تذكير",
+  "sops.s_resolved": "تم الحل",
+  "sops.s_review": "بحاجة إلى مراجعة",
+  "sops.subtitle": "فحوصات تلقائية للقراءة فقط عبر دولتك / فرعك. افتح أي نتيجة لتصحيحها في وحدتها الخاصة.",
+  "sops.title": "فحوصات الرقابة",
 };
 
 const fa: Dict = {
@@ -91868,6 +92028,46 @@ const fa: Dict = {
   "dverify.st_warning": "بررسی شود",
   "dverify.title": "بررسی‌های اعتبارسنجی",
   "dverify.to_review": "برای بررسی",
+  "sops.check_failed": "بررسی در دسترس نیست",
+  "sops.d_approval": "تأیید معلق (بیش از ۲ روز)",
+  "sops.d_attendance": "حضور پیش از حقوق ثبت نشده",
+  "sops.d_company": "مجوز شرکت منقضی / در حال انقضا",
+  "sops.d_crm": "پیگیری CRM عقب‌افتاده",
+  "sops.d_dup_invoice": "شماره فاکتور / صورتحساب تکراری",
+  "sops.d_emp_doc": "سند کارمند منقضی / در حال انقضا",
+  "sops.d_eta": "زمان رسیدن گذشته بدون به‌روزرسانی ردیابی",
+  "sops.d_fx": "نرخ ارز تاریخی موجود نیست / نادرست",
+  "sops.d_incomplete": "گردش کار خرید / فروش ناقص",
+  "sops.d_missing_posting": "خرید / فروش در روزنامچه ثبت نشده",
+  "sops.d_payable": "پرداختنی معوق",
+  "sops.d_payment_posting": "پرداخت ثبت شده اما روزنامچه / انتقال موجود نیست",
+  "sops.d_payroll": "استثنای حقوق",
+  "sops.d_receivable": "دریافتنی معوق",
+  "sops.d_settlement": "مغایرت در تسویه / تطبیق",
+  "sops.d_ship_doc": "اطلاعات اسناد حمل / ترخیص موجود نیست",
+  "sops.d_tax": "مهلت تسلیم مالیات / انطباق",
+  "sops.d_unbalanced": "ثبت مالی نامتوازن",
+  "sops.d_wps": "استثنای WPS",
+  "sops.empty": "هیچ بررسی با این فیلتر مطابقت ندارد.",
+  "sops.g_accounting": "حسابداری",
+  "sops.g_all": "همه",
+  "sops.g_compliance": "انطباق شرکت و مالیات",
+  "sops.g_crm": "مدیریت مشتری",
+  "sops.g_hr": "منابع انسانی و حقوق",
+  "sops.g_receivables": "دریافتنی‌ها، پرداختنی‌ها و گردش کار",
+  "sops.g_shipping": "حمل و ترخیص",
+  "sops.generated": "زمان بررسی",
+  "sops.load_failed": "بررسی‌های کنترلی بارگذاری نشد.",
+  "sops.loading": "در حال اجرای بررسی‌های کنترلی…",
+  "sops.open": "باز کردن",
+  "sops.run_now": "اجرای بررسی‌ها اکنون",
+  "sops.s_all": "همه",
+  "sops.s_critical": "بحرانی",
+  "sops.s_reminder": "یادآوری",
+  "sops.s_resolved": "حل‌شده",
+  "sops.s_review": "نیاز به بررسی",
+  "sops.subtitle": "بررسی‌های خودکار و فقط‌خواندنی در کشور / شعبه شما. هر یافته را در ماژول خودش باز و اصلاح کنید.",
+  "sops.title": "بررسی‌های کنترلی",
 };
 
 const ps: Dict = {
@@ -112491,6 +112691,46 @@ const ps: Dict = {
   "dverify.st_warning": "وګورئ",
   "dverify.title": "د تایید ازموینې",
   "dverify.to_review": "د بیاکتنې لپاره",
+  "sops.check_failed": "ازموینه شتون نه لري",
+  "sops.d_approval": "ځنډېدلی تایید (له ۲ ورځو زیات)",
+  "sops.d_attendance": "له معاش مخکې حاضري نشته",
+  "sops.d_company": "د شرکت جواز پای ته رسېدلی / رسېدونکی",
+  "sops.d_crm": "زوړ CRM تعقیب",
+  "sops.d_dup_invoice": "تکراري بل / فاکتور شمېره",
+  "sops.d_emp_doc": "د کارکوونکي سند پای ته رسېدلی / رسېدونکی",
+  "sops.d_eta": "د رسېدو وخت تېر شو خو تعقیب تازه نه شو",
+  "sops.d_fx": "تاریخي د تبادلې نرخ نشته / ناسم",
+  "sops.d_incomplete": "نیمګړی د پېرود / پلور بهیر",
+  "sops.d_missing_posting": "پېرود / پلور په روزنامچه کې نه دی ثبت",
+  "sops.d_payable": "ځنډېدلی د ورکړې حساب",
+  "sops.d_payment_posting": "تادیه ثبت شوه خو روزنامچه / لېږد نشته",
+  "sops.d_payroll": "د معاش استثنا",
+  "sops.d_receivable": "ځنډېدلی د ترلاسه کولو حساب",
+  "sops.d_settlement": "په تصفیه / سمون کې توپیر",
+  "sops.d_ship_doc": "د بار وړلو / ترخیص د اسنادو معلومات نشته",
+  "sops.d_tax": "د مالیې / اطاعت د سپارلو وروستۍ نېټه",
+  "sops.d_unbalanced": "نامتوازن مالي ثبت",
+  "sops.d_wps": "WPS استثنا",
+  "sops.empty": "له دې فلټر سره هیڅ ازموینه سمون نه لري.",
+  "sops.g_accounting": "محاسبه",
+  "sops.g_all": "ټول",
+  "sops.g_compliance": "د شرکت او مالیې اطاعت",
+  "sops.g_crm": "CRM",
+  "sops.g_hr": "بشري سرچینې او معاش",
+  "sops.g_receivables": "ترلاسه کېدونکي، ورکړې او بهیر",
+  "sops.g_shipping": "بار وړل او ترخیص",
+  "sops.generated": "د ازموینې وخت",
+  "sops.load_failed": "کنټرولي ازموینې پورته نه شوې.",
+  "sops.loading": "کنټرولي ازموینې روانې دي…",
+  "sops.open": "پرانیستل",
+  "sops.run_now": "اوس ازموینې وچلوئ",
+  "sops.s_all": "ټول",
+  "sops.s_critical": "بحراني",
+  "sops.s_reminder": "یادونه",
+  "sops.s_resolved": "حل شوی",
+  "sops.s_review": "بیاکتنې ته اړتیا",
+  "sops.subtitle": "ستاسو په هېواد / څانګه کې اتومات، یوازې لوستونکې ازموینې. هره موندنه په خپل ماډل کې پرانیزئ او سمه یې کړئ.",
+  "sops.title": "کنټرولي ازموینې",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
