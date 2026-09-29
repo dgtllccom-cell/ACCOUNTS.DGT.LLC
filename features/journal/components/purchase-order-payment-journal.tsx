@@ -20,6 +20,7 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronRight,
+  ChevronUp,
   ClipboardList,
   Coins,
   CornerDownRight,
@@ -53,6 +54,7 @@ import {
   Users,
   Wallet,
   WalletCards,
+  X,
   XCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -1070,6 +1072,7 @@ function NestedPaymentHistory({
   const currentLanguage = useActiveLanguage() as LanguageCode;
   const [payments, setPayments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showFxFlow, setShowFxFlow] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -1108,9 +1111,6 @@ function NestedPaymentHistory({
   const totalRequiredAdvanceFC = (totalPrice * advancePercent) / 100;
   
   // Filter out the initial booking liability transfer so it only shows actual payments.
-  // kind !== "booking" is the authoritative check (a real structured field on every row);
-  // the narration-text match is kept only as a belt-and-suspenders fallback for any older
-  // row that predates the kind column being populated on booking-transfer entries.
   const filteredPayments = payments.filter(
     (p: any) => p.kind !== "booking" && !p.narration?.toLowerCase().includes("initial booking transfer")
   );
@@ -1175,184 +1175,305 @@ function NestedPaymentHistory({
   });
 
   const latestPaymentState = computedHistory[computedHistory.length - 1];
-  const statementAdvanceRequiredForeign = totalRequiredAdvanceFC > 0 ? totalRequiredAdvanceFC : totalPrice;
-  const statementRate = Number(latestPaymentState?.exchangeRateUsed || orderExchangeRate || 1) || 1;
-  const statementAdvanceRequiredLocal = statementAdvanceRequiredForeign * statementRate;
-  const statementReceivedForeign = Number(latestPaymentState?.runningPaidForeign || 0);
-  const statementReceivedLocal = Number(latestPaymentState?.runningPaidLocal || 0);
-  const statementBalanceForeign = Math.max(0, statementAdvanceRequiredForeign - statementReceivedForeign);
-  const statementBalanceLocal = Math.max(0, statementAdvanceRequiredLocal - statementReceivedLocal);
-
-  // Display newest first in UI table view (reversed chronological)
   const historyWithBalance = [...computedHistory].reverse();
   const calcs = resolvePurchaseCalculations(row);
+  const statementRate = Number(latestPaymentState?.exchangeRateUsed || orderExchangeRate || calcs.exRate || 1) || 1;
+
+  // Determine stage context based on activeMode (advance, remaining, credit)
+  const isAdvanceMode = activeMode === "advance";
+  const isRemainingMode = activeMode === "remaining";
+  const isCreditMode = activeMode === "credit" || activeMode === "charges";
+
+  const stageTitle = isCreditMode
+    ? translateHeader(currentLanguage, "Credit Bill Audit")
+    : isRemainingMode
+    ? translateHeader(currentLanguage, "Clearance Audit")
+    : translateHeader(currentLanguage, "Advance Payment Audit");
+
+  const stageTargetLabel = isCreditMode
+    ? translateHeader(currentLanguage, "Credit Bill Due")
+    : isRemainingMode
+    ? translateHeader(currentLanguage, "Remaining Target")
+    : `${translateHeader(currentLanguage, "Advance Due")} (${advancePercent}%)`;
+
+  const stageRequiredForeign = isCreditMode
+    ? totalPrice
+    : isRemainingMode
+    ? Math.max(0, totalPrice - Number(row.advance_paid || 0))
+    : (totalRequiredAdvanceFC > 0 ? totalRequiredAdvanceFC : totalPrice);
+
+  const stageRequiredLocal = stageRequiredForeign * statementRate;
+
+  const totalPaidForeign = Number(latestPaymentState?.runningPaidForeign || 0);
+  const totalPaidLocal = Number(latestPaymentState?.runningPaidLocal || 0);
+
+  const stageBalanceForeign = Math.max(0, stageRequiredForeign - totalPaidForeign);
+  const stageBalanceLocal = Math.max(0, stageRequiredLocal - totalPaidLocal);
+
+  const rowKey = (row as any).__rowKey || row.id;
+  const handleClose = () => {
+    setExpandedIds((prev) => ({ ...prev, [rowKey]: false }));
+  };
 
   return (
-    <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950/40">
-      <div className="overflow-hidden rounded-2xl border border-slate-900 bg-slate-950 shadow-lg dark:border-slate-700">
-        <div className="flex flex-col gap-4 bg-gradient-to-r from-slate-950 via-blue-950 to-slate-900 p-4 text-white lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <div className="text-[10px] font-black uppercase tracking-[0.28em] text-blue-200">{translateHeader(currentLanguage, "Endorsement Audit Console")}</div>
-            <div className="mt-2 flex flex-wrap items-end gap-3">
-              <h3 className="text-2xl font-black tracking-tight">{row.purchase_order_no || "Purchase Order"}</h3>
-              <span className="mb-1 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-blue-100">{historyWithBalance.length} Posted Entries</span>
-              <span className="mb-1 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-blue-100">{purchaseCurrency} to {calcs.finalCurr}</span>
-            </div>
-            <p className="mt-2 max-w-4xl text-xs font-semibold leading-5 text-slate-300">Complete endorsement payment audit: purchase order, supplier, goods, debit ledger, credit ledger, exchange rate, local currency amount, running balance, and journal reference in one place.</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {onOpenFullBill && (
-              <button
-                type="button"
-                onClick={onOpenFullBill}
-                className="inline-flex h-10 items-center gap-2 rounded-xl bg-white px-4 text-[11px] font-black uppercase tracking-wider text-slate-950 shadow-sm transition hover:bg-blue-50"
-              >
-                <Eye className="h-4 w-4" />
-                {translateHeader(currentLanguage, "Open Full Bill")}
-              </button>
+    <div className="overflow-hidden rounded-xl border border-slate-300/80 bg-white text-xs shadow-sm transition-all dark:border-slate-800 dark:bg-slate-900/90">
+      {/* 1. Ultra-Compact Executive Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-2 bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 px-3 py-1.5 text-white dark:from-slate-950 dark:to-slate-900">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Mode Badge */}
+          <span
+            className={cn(
+              "rounded px-2 py-0.5 text-[9px] font-black uppercase tracking-wider",
+              isCreditMode
+                ? "border border-amber-500/30 bg-amber-500/20 text-amber-300"
+                : isRemainingMode
+                ? "border border-emerald-500/30 bg-emerald-500/20 text-emerald-300"
+                : "border border-blue-500/30 bg-blue-500/20 text-blue-300"
             )}
+          >
+            {stageTitle}
+          </span>
+
+          {/* Order No / Bill No */}
+          <span className="font-mono text-xs font-black text-white">
+            {row.purchase_order_no ? `P#${row.purchase_order_no}` : form.billNo || "Purchase Order"}
+          </span>
+
+          {/* Posted Entries Count */}
+          <span className="rounded-full bg-white/10 px-2 py-0.5 font-mono text-[10px] font-bold text-slate-300">
+            {historyWithBalance.length} {historyWithBalance.length === 1 ? "Entry" : "Entries"}
+          </span>
+
+          {/* Currency Bridge Pill */}
+          <span className="hidden items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 font-mono text-[10px] font-bold text-blue-200 sm:inline-flex">
+            {purchaseCurrency} ➔ {calcs.finalCurr} @ {statementRate.toFixed(4)}
+          </span>
+        </div>
+
+        {/* Action Controls */}
+        <div className="flex items-center gap-1.5">
+          {/* FX Flow Toggle */}
+          <button
+            type="button"
+            onClick={() => setShowFxFlow(!showFxFlow)}
+            className="inline-flex h-6 items-center gap-1 rounded bg-white/10 px-2 text-[10px] font-bold text-slate-200 transition hover:bg-white/20"
+            title={translateHeader(currentLanguage, showFxFlow ? "HIDE FX FLOW" : "FX FLOW")}
+          >
+            <span>{translateHeader(currentLanguage, showFxFlow ? "HIDE FX FLOW" : "FX FLOW")}</span>
+            {showFxFlow ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+          </button>
+
+          {/* Open Full Bill */}
+          {onOpenFullBill && (
+            <button
+              type="button"
+              onClick={onOpenFullBill}
+              className="inline-flex h-6 items-center gap-1 rounded bg-blue-600 px-2 text-[10px] font-bold text-white transition hover:bg-blue-500"
+            >
+              <Eye className="h-3 w-3" />
+              <span>{translateHeader(currentLanguage, "FULL BILL")}</span>
+            </button>
+          )}
+
+          {/* Close Curtain */}
+          <button
+            type="button"
+            onClick={handleClose}
+            className="inline-flex h-6 w-6 items-center justify-center rounded bg-white/10 text-slate-400 transition hover:bg-rose-500/20 hover:text-rose-300"
+            title={translateHeader(currentLanguage, "CLOSE")}
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* 2. Compact Financial Metrics Strip */}
+      <div className="grid grid-cols-2 divide-y divide-slate-200 border-b border-slate-200 bg-slate-50/90 text-[11px] sm:grid-cols-3 sm:divide-y-0 sm:divide-x lg:grid-cols-5 dark:divide-slate-800 dark:border-slate-800 dark:bg-slate-950/60">
+        {/* Metric 1: Total Order */}
+        <div className="p-2 sm:p-2.5">
+          <div className="text-[9px] font-black uppercase tracking-wider text-slate-400">
+            {translateHeader(currentLanguage, "Total Purchase")}
+          </div>
+          <div className="mt-0.5 font-mono text-xs font-black text-slate-900 dark:text-white">
+            {money(totalPrice, purchaseCurrency)}
+          </div>
+          <div className="text-[10px] font-semibold text-slate-500">
+            Local: {money(totalPurchaseLocal, calcs.finalCurr)}
           </div>
         </div>
-        <div className="grid gap-px bg-slate-800 p-px md:grid-cols-2 xl:grid-cols-4">
-          <div className="bg-white p-4 dark:bg-slate-950">
-            <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">{translateHeader(currentLanguage, "Purchase Required")}</div>
-            <div className="mt-1 font-mono text-lg font-black text-slate-950 dark:text-white">{money(statementAdvanceRequiredForeign, purchaseCurrency)}</div>
-            <div className="mt-1 text-[10px] font-bold text-slate-500">Local: {money(statementAdvanceRequiredLocal, calcs.finalCurr)}</div>
+
+        {/* Metric 2: Stage Target Due */}
+        <div className="p-2 sm:p-2.5">
+          <div className="text-[9px] font-black uppercase tracking-wider text-slate-400">
+            {stageTargetLabel}
           </div>
-          <div className="bg-white p-4 dark:bg-slate-950">
-            <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">{translateHeader(currentLanguage, "Received / Paid")}</div>
-            <div className="mt-1 font-mono text-lg font-black text-emerald-600">{money(statementReceivedForeign, purchaseCurrency)}</div>
-            <div className="mt-1 text-[10px] font-bold text-slate-500">Local: {money(statementReceivedLocal, calcs.finalCurr)}</div>
+          <div className="mt-0.5 font-mono text-xs font-black text-slate-900 dark:text-white">
+            {money(stageRequiredForeign, purchaseCurrency)}
           </div>
-          <div className="bg-white p-4 dark:bg-slate-950">
-            <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">{translateHeader(currentLanguage, "Remaining Balance")}</div>
-            <div className="mt-1 font-mono text-lg font-black text-rose-600">{statementBalanceForeign <= 0.01 ? "Cleared" : money(statementBalanceForeign, purchaseCurrency)}</div>
-            <div className="mt-1 text-[10px] font-bold text-slate-500">Local: {statementBalanceLocal <= 0.01 ? "Cleared" : money(statementBalanceLocal, calcs.finalCurr)}</div>
+          <div className="text-[10px] font-semibold text-slate-500">
+            Local: {money(stageRequiredLocal, calcs.finalCurr)}
           </div>
-          <div className="bg-white p-4 dark:bg-slate-950">
-            <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">{translateHeader(currentLanguage, "Ledger Route")}</div>
-            <div className="mt-1 truncate text-sm font-black text-blue-700 dark:text-blue-300" title={form.purchaseAccountName || "Debit Account"}>DR: {form.purchaseAccountName || "Debit Account"}</div>
-            <div className="mt-1 truncate text-sm font-black text-rose-700 dark:text-rose-300" title={form.salesAccountName || "Credit Account"}>CR: {form.salesAccountName || "Credit Account"}</div>
+        </div>
+
+        {/* Metric 3: Paid / Settled */}
+        <div className="p-2 sm:p-2.5">
+          <div className="text-[9px] font-black uppercase tracking-wider text-slate-400">
+            {translateHeader(currentLanguage, "Total Received / Paid")}
+          </div>
+          <div className="mt-0.5 font-mono text-xs font-black text-emerald-600 dark:text-emerald-400">
+            {money(totalPaidForeign, purchaseCurrency)}
+          </div>
+          <div className="text-[10px] font-semibold text-slate-500">
+            Local: {money(totalPaidLocal, calcs.finalCurr)}
+          </div>
+        </div>
+
+        {/* Metric 4: Stage Balance */}
+        <div className="p-2 sm:p-2.5">
+          <div className="text-[9px] font-black uppercase tracking-wider text-slate-400">
+            {translateHeader(currentLanguage, "Remaining Balance")}
+          </div>
+          <div
+            className={cn(
+              "mt-0.5 font-mono text-xs font-black",
+              stageBalanceForeign <= 0.01 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
+            )}
+          >
+            {stageBalanceForeign <= 0.01 ? "Cleared" : money(stageBalanceForeign, purchaseCurrency)}
+          </div>
+          <div className="text-[10px] font-semibold text-slate-500">
+            Local: {stageBalanceLocal <= 0.01 ? "Cleared" : money(stageBalanceLocal, calcs.finalCurr)}
+          </div>
+        </div>
+
+        {/* Metric 5: Ledger Route */}
+        <div className="col-span-2 p-2 sm:col-span-1 sm:p-2.5">
+          <div className="text-[9px] font-black uppercase tracking-wider text-slate-400">
+            {translateHeader(currentLanguage, "Ledger Route")}
+          </div>
+          <div className="mt-0.5 truncate text-[10px] font-bold text-blue-700 dark:text-blue-300" title={form.purchaseAccountName || "Debit Ledger"}>
+            DR: {form.purchaseAccountName || "Debit Ledger"}
+          </div>
+          <div className="truncate text-[10px] font-bold text-rose-700 dark:text-rose-300" title={form.salesAccountName || "Credit Ledger"}>
+            CR: {form.salesAccountName || "Credit Ledger"}
           </div>
         </div>
       </div>
-      {/* Visual Calculation Flow sequence */}
-      <div className="bg-slate-50 dark:bg-slate-900/60 rounded-xl p-3 border border-slate-200/60 dark:border-slate-800/80 shadow-inner">
-        <h4 className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100 mb-2 flex items-center gap-1.5">
-          {translateHeader(currentLanguage, "Purchase Order Financial Conversion Flow")}
-        </h4>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-stretch">
-          {/* Column 1: Original Currency Breakdown */}
-          <div className="flex flex-col justify-between border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 rounded-lg p-3 shadow-sm">
-            <div className="text-[10px] font-black uppercase tracking-widest text-indigo-700 dark:text-indigo-400 border-b border-slate-100 dark:border-slate-800 pb-1.5 mb-2.5">
-              Original Currency Flow ({calcs.purchCurr})
-            </div>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-500 font-semibold">{translateHeader(currentLanguage, "Total Purchase Amount:")}</span>
-                <span className="font-mono font-black text-slate-800 dark:text-slate-200">{money(calcs.totalPurchaseFC, calcs.purchCurr)}</span>
+
+      {/* 3. Collapsible FX Flow (Only visible when toggled) */}
+      {showFxFlow && (
+        <div className="animate-in fade-in duration-200 border-b border-slate-200 bg-slate-100/70 p-2.5 dark:border-slate-800 dark:bg-slate-900/60">
+          <div className="grid grid-cols-1 gap-2 text-[11px] md:grid-cols-3">
+            {/* Box 1: Original FC */}
+            <div className="rounded border border-slate-200 bg-white p-2 dark:border-slate-800 dark:bg-slate-950">
+              <div className="mb-1.5 border-b pb-1 text-[9px] font-black uppercase text-indigo-700 dark:text-indigo-400">
+                Original Currency Flow ({calcs.purchCurr})
               </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-500 font-semibold">{translateHeader(currentLanguage, "Invoice / Advance %:")}</span>
-                <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[10px] font-mono font-black dark:bg-blue-950/40 dark:text-blue-400">{calcs.advancePercent}%</span>
-              </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-500 font-semibold">{translateHeader(currentLanguage, "Invoice / Advance Amount:")}</span>
-                <span className="font-mono font-black text-emerald-600 dark:text-emerald-400">{money(calcs.advanceAmountFC, calcs.purchCurr)}</span>
-              </div>
-              {Number(calcs.advancePercent) > 0 && form?.advancePaymentDate && (
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-slate-500 font-semibold">{translateHeader(currentLanguage, "Advance Payment Due Date:")}</span>
-                  <span className="bg-amber-50 text-amber-700 px-2 py-0.5 rounded text-[10px] font-mono font-black dark:bg-amber-950/40 dark:text-amber-400">
-                    {String(form.advancePaymentDate)}
-                  </span>
+              <div className="space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Total Purchase:</span>
+                  <span className="font-mono font-bold">{money(calcs.totalPurchaseFC, calcs.purchCurr)}</span>
                 </div>
-              )}
-              <div className="border-t border-dashed border-slate-100 dark:border-slate-800/60 my-1"></div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-800 dark:text-slate-200 font-bold">{translateHeader(currentLanguage, "Remaining Purchase Balance:")}</span>
-                <span className="font-mono font-black text-rose-600 dark:text-rose-400">{money(calcs.remainingPurchaseFC, calcs.purchCurr)}</span>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Advance ({calcs.advancePercent}%):</span>
+                  <span className="font-mono font-bold text-emerald-600">{money(calcs.advanceAmountFC, calcs.purchCurr)}</span>
+                </div>
+                {Number(calcs.advancePercent) > 0 && form?.advancePaymentDate && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Due Date:</span>
+                    <span className="font-mono font-bold text-amber-600">{String(form.advancePaymentDate)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between border-t pt-1">
+                  <span className="font-bold text-slate-700 dark:text-slate-300">Remaining FC:</span>
+                  <span className="font-mono font-bold text-rose-600">{money(calcs.remainingPurchaseFC, calcs.purchCurr)}</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Column 2: Conversion Rate Bridge */}
-          <div className="flex flex-col justify-center items-center p-3 bg-white dark:bg-slate-950 rounded-lg border border-slate-200/60 dark:border-slate-800/80 shadow-sm relative overflow-hidden text-center min-h-[92px]">
-            <div className="absolute top-0 right-0 px-2 py-0.5 text-[8px] font-black bg-indigo-50 text-indigo-700 rounded-bl dark:bg-indigo-950/40 dark:text-indigo-400 uppercase tracking-widest">{translateHeader(currentLanguage, "BRIDGE")}</div>
-            <div className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">{t("receipt_exchange_rate_applied", currentLanguage)}</div>
-            <div className="text-xl font-mono font-black text-indigo-600 dark:text-indigo-400">{calcs.exRate.toFixed(4)}</div>
-            <div className="text-[10px] text-slate-500 font-bold mt-1.5">1 {calcs.purchCurr} = {calcs.exRate.toFixed(2)} {calcs.finalCurr}</div>
-          </div>
-
-          {/* Column 3: Converted Local Currency Breakdown */}
-          <div className="flex flex-col justify-between border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 rounded-lg p-3 shadow-sm">
-            <div className="text-[10px] font-black uppercase tracking-widest text-indigo-700 dark:text-indigo-400 border-b border-slate-100 dark:border-slate-800 pb-1.5 mb-2.5">
-              {t("converted_currency_flow", currentLanguage)} ({calcs.finalCurr})
+            {/* Box 2: Rate Bridge */}
+            <div className="flex flex-col items-center justify-center rounded border border-slate-200 bg-white p-2 text-center dark:border-slate-800 dark:bg-slate-950">
+              <div className="text-[9px] font-black uppercase text-slate-400">FX Conversion Bridge</div>
+              <div className="my-0.5 font-mono text-lg font-black text-indigo-600 dark:text-indigo-400">
+                {calcs.exRate.toFixed(4)}
+              </div>
+              <div className="text-[10px] font-bold text-slate-500">
+                1 {calcs.purchCurr} = {calcs.exRate.toFixed(2)} {calcs.finalCurr}
+              </div>
             </div>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-500 font-semibold">{t("converted_local_amount", currentLanguage)}</span>
-                <span className="font-mono font-black text-slate-800 dark:text-slate-200">{money(calcs.totalPurchaseLC, calcs.finalCurr)}</span>
+
+            {/* Box 3: Converted LC */}
+            <div className="rounded border border-slate-200 bg-white p-2 dark:border-slate-800 dark:bg-slate-950">
+              <div className="mb-1.5 border-b pb-1 text-[9px] font-black uppercase text-indigo-700 dark:text-indigo-400">
+                Converted Currency Flow ({calcs.finalCurr})
               </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-500 font-semibold">{t("local_currency_advance", currentLanguage)} ({calcs.advancePercent}%):</span>
-                <span className="font-mono font-black text-emerald-600 dark:text-emerald-400">{money(calcs.advanceAmountLC, calcs.finalCurr)}</span>
-              </div>
-              <div className="border-t border-dashed border-slate-100 dark:border-slate-800/60 my-1"></div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-800 dark:text-slate-200 font-bold">{t("remaining_local_balance", currentLanguage)}</span>
-                <span className="font-mono font-black text-rose-600 dark:text-rose-400">{money(calcs.remainingPurchaseLC, calcs.finalCurr)}</span>
+              <div className="space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Total Local:</span>
+                  <span className="font-mono font-bold">{money(calcs.totalPurchaseLC, calcs.finalCurr)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Local Advance:</span>
+                  <span className="font-mono font-bold text-emerald-600">{money(calcs.advanceAmountLC, calcs.finalCurr)}</span>
+                </div>
+                <div className="flex justify-between border-t pt-1">
+                  <span className="font-bold text-slate-700 dark:text-slate-300">Remaining LC:</span>
+                  <span className="font-mono font-bold text-rose-600">{money(calcs.remainingPurchaseLC, calcs.finalCurr)}</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
-      <div className="mb-3 flex items-center justify-between">
-        <h4 className="text-xs font-black uppercase tracking-wider text-indigo-700 dark:text-indigo-400 flex items-center gap-1.5">
-          {t("traceable_payment_history", currentLanguage)}
-        </h4>
-        {(loading || loadingRemainingLoadingRecords) && (
-          <span className="text-[10px] font-semibold text-slate-400 animate-pulse">{t("loading_history", currentLanguage)}</span>
-        )}
-      </div>
-      {payments.length > 0 ? (
-        <>
-          <div className="mb-2 grid grid-cols-1 gap-2 lg:grid-cols-3">
-            <div className="rounded-lg border border-blue-200 bg-blue-50/70 px-3 py-2 dark:border-blue-900 dark:bg-blue-950/20">
-              <div className="text-[9px] font-black uppercase tracking-widest text-blue-700 dark:text-blue-300">{translateHeader(currentLanguage, "Advance / Endorse Required")}</div>
-              <div className="mt-0.5 font-mono text-sm font-black text-slate-900 dark:text-slate-100">{money(statementAdvanceRequiredForeign, purchaseCurrency)}</div>
-              <div className="text-[10px] font-bold text-slate-500">Office currency: {money(statementAdvanceRequiredLocal, calcs.finalCurr)}</div>
-            </div>
-            <div className="rounded-lg border border-emerald-200 bg-emerald-50/70 px-3 py-2 dark:border-emerald-900 dark:bg-emerald-950/20">
-              <div className="text-[9px] font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-300">{translateHeader(currentLanguage, "Total Received / Paid")}</div>
-              <div className="mt-0.5 font-mono text-sm font-black text-emerald-700 dark:text-emerald-300">{money(statementReceivedForeign, purchaseCurrency)}</div>
-              <div className="text-[10px] font-bold text-slate-500">Office currency: {money(statementReceivedLocal, calcs.finalCurr)}</div>
-            </div>
-            <div className="rounded-lg border border-rose-200 bg-rose-50/70 px-3 py-2 dark:border-rose-900 dark:bg-rose-950/20">
-              <div className="text-[9px] font-black uppercase tracking-widest text-rose-700 dark:text-rose-300">{translateHeader(currentLanguage, "Final Advance Balance")}</div>
-              <div className="mt-0.5 font-mono text-sm font-black text-rose-700 dark:text-rose-300">{statementBalanceForeign <= 0.01 ? "Cleared" : money(statementBalanceForeign, purchaseCurrency)}</div>
-              <div className="text-[10px] font-bold text-slate-500">Office currency: {statementBalanceLocal <= 0.01 ? "Cleared" : money(statementBalanceLocal, calcs.finalCurr)}</div>
-            </div>
+      {/* 4. Payment Entries State */}
+      {loading ? (
+        <div className="flex items-center justify-center gap-2 p-4 text-xs font-semibold text-slate-500">
+          <RefreshCw className="h-3.5 w-3.5 animate-spin text-blue-600" />
+          <span>{t("loading_history", currentLanguage)}...</span>
+        </div>
+      ) : historyWithBalance.length === 0 ? (
+        /* Sleek 1-line Empty State */
+        <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3 dark:bg-slate-900">
+          <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+            <Info className="h-4 w-4 shrink-0 text-blue-500" />
+            <span>
+              No payment transactions posted yet for this order. Required:{" "}
+              <strong className="font-mono text-slate-800 dark:text-slate-200">
+                {money(stageRequiredForeign, purchaseCurrency)}
+              </strong>{" "}
+              ({money(stageRequiredLocal, calcs.finalCurr)}).
+            </span>
           </div>
-          <div className="overflow-x-auto">
-          <table className="w-full min-w-[1320px] text-left border-collapse text-[11px]">
+          <button
+            type="button"
+            onClick={() => selectOrder(row.id)}
+            className="inline-flex h-7 items-center gap-1.5 rounded-lg bg-blue-600 px-3 text-[11px] font-bold text-white shadow-sm transition hover:bg-blue-700"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            <span>{translateHeader(currentLanguage, "POST PAYMENT ENTRY")}</span>
+          </button>
+        </div>
+      ) : (
+        /* High-Density Compact Table */
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[1100px] border-collapse text-left text-[11px]">
             <thead>
-              <tr className="bg-slate-100 dark:bg-slate-900 border-b font-bold text-slate-600 uppercase text-[10px] tracking-wider">
-                <Th className="px-3 py-2.5 border-r">{translateHeader(currentLanguage, "General Serial / Date")}</Th>
-                <Th className="px-3 py-2.5 border-r">{translateHeader(currentLanguage, "Reference / User")}</Th>
-                <Th className="px-3 py-2.5 border-r">{translateHeader(currentLanguage, "Debit & Credit Ledger Account")}</Th>
-                <Th className="px-3 py-2.5 text-right border-r">Advance Required ({purchaseCurrency})</Th>
-                <Th className="px-3 py-2.5 text-right border-r">Received ({purchaseCurrency})</Th>
-                <Th className="px-3 py-2.5 text-right border-r">Balance ({purchaseCurrency})</Th>
-                <Th className="px-3 py-2.5 text-center border-r">{translateHeader(currentLanguage, "Exchange Rate")}</Th>
-                <Th className="px-3 py-2.5 text-right border-r">Advance Required ({calcs.finalCurr})</Th>
-                <Th className="px-3 py-2.5 text-right border-r">Received ({calcs.finalCurr})</Th>
-                <Th className="px-3 py-2.5 text-right border-r">Balance ({calcs.finalCurr})</Th>
-                <Th className="px-3 py-2.5 text-center w-28">{translateHeader(currentLanguage, "Actions")}</Th>
+              <tr className="border-b border-slate-200 bg-slate-100/90 text-[9px] font-bold uppercase tracking-wider text-slate-600 dark:border-slate-800 dark:bg-slate-800/80 dark:text-slate-400">
+                <th className="border-r border-slate-200 px-2.5 py-1.5 dark:border-slate-800">{translateHeader(currentLanguage, "General Serial / Date")}</th>
+                <th className="border-r border-slate-200 px-2.5 py-1.5 dark:border-slate-800">{translateHeader(currentLanguage, "Reference / User")}</th>
+                <th className="border-r border-slate-200 px-2.5 py-1.5 dark:border-slate-800">{translateHeader(currentLanguage, "Debit & Credit Ledger Account")}</th>
+                <th className="border-r border-slate-200 px-2.5 py-1.5 text-right dark:border-slate-800">Target ({purchaseCurrency})</th>
+                <th className="border-r border-slate-200 px-2.5 py-1.5 text-right dark:border-slate-800">Paid ({purchaseCurrency})</th>
+                <th className="border-r border-slate-200 px-2.5 py-1.5 text-right dark:border-slate-800">Balance ({purchaseCurrency})</th>
+                <th className="border-r border-slate-200 px-2.5 py-1.5 text-center dark:border-slate-800">{translateHeader(currentLanguage, "Exchange Rate")}</th>
+                <th className="border-r border-slate-200 px-2.5 py-1.5 text-right dark:border-slate-800">Target ({calcs.finalCurr})</th>
+                <th className="border-r border-slate-200 px-2.5 py-1.5 text-right dark:border-slate-800">Paid ({calcs.finalCurr})</th>
+                <th className="border-r border-slate-200 px-2.5 py-1.5 text-right dark:border-slate-800">Balance ({calcs.finalCurr})</th>
+                <th className="w-20 px-2.5 py-1.5 text-center">{translateHeader(currentLanguage, "Actions")}</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
               {historyWithBalance.map((p) => {
                 const drLedger = ledgers.find((l) => ledgerId(l) === p.debit_ledger_id);
                 const crLedger = ledgers.find((l) => ledgerId(l) === p.credit_ledger_id);
@@ -1366,95 +1487,101 @@ function NestedPaymentHistory({
                 const creditSerialBase = String(re.credit_serial_number || p.credit_serial_number || journalSerial || "Pending");
                 const debitSerial = debitSerialBase.endsWith("-DR") ? debitSerialBase : debitSerialBase + "-DR";
                 const creditSerial = creditSerialBase.endsWith("-CR") ? creditSerialBase : creditSerialBase + "-CR";
-                const requiredAdvanceForeign = totalRequiredAdvanceFC > 0 ? totalRequiredAdvanceFC : p.originalPurchaseForeign;
-                const requiredAdvanceLocal = requiredAdvanceForeign * Number(p.exchangeRateUsed || 1);
-                const remainingAdvanceForeign = Math.max(0, requiredAdvanceForeign - p.runningPaidForeign);
-                const remainingAdvanceLocal = Math.max(0, requiredAdvanceLocal - p.runningPaidLocal);
+                const requiredTargetForeign = stageRequiredForeign > 0 ? stageRequiredForeign : p.originalPurchaseForeign;
+                const requiredTargetLocal = requiredTargetForeign * Number(p.exchangeRateUsed || 1);
+                const remainingTargetForeign = Math.max(0, requiredTargetForeign - p.runningPaidForeign);
+                const remainingTargetLocal = Math.max(0, requiredTargetLocal - p.runningPaidLocal);
 
                 return (
-                  <tr key={p.id} className="border-b border-indigo-100/50 hover:bg-indigo-50/40 transition">
-                    <td className="px-3 py-2.5 border-r font-mono text-slate-900 dark:text-slate-100 text-[10px] align-top space-y-1 whitespace-nowrap">
-                      <div><span className="text-muted-foreground font-semibold">{translateHeader(currentLanguage, "General:")}</span> <span className="font-bold">{journalSerial}</span></div>
-                      <div><span className="text-muted-foreground font-semibold">{translateHeader(currentLanguage, "Country:")}</span> <span className="font-bold">{countrySerial}</span></div>
-                      <div><span className="text-muted-foreground font-semibold">{translateHeader(currentLanguage, "Branch:")}</span> <span className="font-bold">{branchSerial}</span></div>
-                      <div className="pt-1 text-slate-500">{date(p.entry_date || p.created_at)}</div>
-                    </td>
-                    <td className="px-3 py-2.5 border-r text-xs align-top space-y-1 min-w-[160px]">
-                      <div className="font-mono text-[10px] text-slate-500">Ref: {p.reference_no || p.roznamcha_number || p.voucher_no || "-"}</div>
-                      <div className="font-bold text-slate-800 dark:text-slate-200">{p.users?.full_name || row.form_data?.form?.userName || "Admin"}</div>
-                      <div className="text-muted-foreground">{p.kind === "advance" ? "Advance Payment" : p.kind || "Payment"}</div>
-                    </td>
-                    <td className="px-3 py-2.5 border-r text-[10px] align-top min-w-[220px]">
-                      <div className="rounded-lg border border-blue-100 bg-blue-50/70 px-2 py-1 dark:border-blue-900 dark:bg-blue-950/20">
-                        <div className="inline-flex items-center rounded-full bg-blue-600 px-2 py-0.5 font-mono text-[8px] font-black text-white shadow-sm">DR Serial: {debitSerial}</div>
-                        <div className="font-semibold text-indigo-600 leading-tight" title={drLabel}><span className="font-black text-indigo-800 mr-1">DR:</span>{drLabel}</div>
+                  <tr key={p.id} className="transition hover:bg-blue-50/40 dark:hover:bg-slate-800/40">
+                    <td className="whitespace-nowrap border-r border-slate-200 px-2.5 py-1.5 font-mono text-[10px] align-top dark:border-slate-800">
+                      <div className="flex items-center gap-1">
+                        <span className="font-semibold text-slate-400">{translateHeader(currentLanguage, "Gen:")}</span>
+                        <span className="font-bold text-slate-800 dark:text-slate-200">{journalSerial}</span>
                       </div>
-                      <div className="mt-1 rounded-lg border border-violet-100 bg-violet-50/70 px-2 py-1 dark:border-violet-900 dark:bg-violet-950/20">
-                        <div className="inline-flex items-center rounded-full bg-violet-600 px-2 py-0.5 font-mono text-[8px] font-black text-white shadow-sm">CR Serial: {creditSerial}</div>
-                        <div className="font-semibold text-violet-600 leading-tight" title={crLabel}><span className="font-black text-violet-800 mr-1">CR:</span>{crLabel}</div>
+                      <div className="flex items-center gap-1 text-[9px] text-slate-400">
+                        <span>{countrySerial} / {branchSerial}</span>
+                      </div>
+                      <div className="text-[9px] text-slate-400">{date(p.entry_date || p.created_at)}</div>
+                    </td>
+                    <td className="min-w-[140px] border-r border-slate-200 px-2.5 py-1.5 align-top dark:border-slate-800">
+                      <div className="font-mono text-[9px] text-slate-400">Ref: {p.reference_no || p.roznamcha_number || "-"}</div>
+                      <div className="truncate text-[11px] font-bold text-slate-800 dark:text-slate-200">{p.users?.full_name || row.form_data?.form?.userName || "Admin"}</div>
+                      <div className="text-[9px] uppercase tracking-wider text-slate-400">{p.kind === "advance" ? "Advance" : p.kind || "Payment"}</div>
+                    </td>
+                    <td className="min-w-[180px] border-r border-slate-200 px-2.5 py-1.5 align-top dark:border-slate-800">
+                      <div className="flex items-center gap-1 truncate" title={drLabel}>
+                        <span className="rounded bg-blue-50 px-1 py-0.5 text-[8px] font-black text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">DR</span>
+                        <span className="truncate text-[10px] font-medium text-slate-700 dark:text-slate-300">{drLabel}</span>
+                      </div>
+                      <div className="mt-0.5 flex items-center gap-1 truncate" title={crLabel}>
+                        <span className="rounded bg-violet-50 px-1 py-0.5 text-[8px] font-black text-violet-700 dark:bg-violet-950/40 dark:text-violet-300">CR</span>
+                        <span className="truncate text-[10px] font-medium text-slate-700 dark:text-slate-300">{crLabel}</span>
                       </div>
                     </td>
-                    <td className="px-3 py-2.5 text-right font-mono border-r align-top whitespace-nowrap">
-                      <div className="text-sm font-bold text-slate-800 dark:text-slate-200">{money(requiredAdvanceForeign, p.purchaseCurrency)}</div>
-                      <div className="text-[10px] text-slate-400 mt-0.5">PO: {money(p.originalPurchaseForeign, p.purchaseCurrency)}</div>
+                    <td className="whitespace-nowrap border-r border-slate-200 px-2.5 py-1.5 text-right font-mono align-top dark:border-slate-800">
+                      <div className="font-bold text-slate-800 dark:text-slate-200">{money(requiredTargetForeign, p.purchaseCurrency)}</div>
                     </td>
-                    <td className="px-3 py-2.5 text-right font-mono border-r align-top whitespace-nowrap">
-                      <div className="text-sm font-bold text-emerald-600">{money(p.runningPaidForeign, p.purchaseCurrency)}</div>
-                      <div className="text-[10px] text-slate-400 mt-0.5">Current: {money(p.amtForeign, p.purchaseCurrency)}</div>
+                    <td className="whitespace-nowrap border-r border-slate-200 px-2.5 py-1.5 text-right font-mono align-top dark:border-slate-800">
+                      <div className="font-bold text-emerald-600 dark:text-emerald-400">{money(p.runningPaidForeign, p.purchaseCurrency)}</div>
+                      <div className="text-[9px] text-slate-400">Entry: {money(p.amtForeign, p.purchaseCurrency)}</div>
                     </td>
-                    <td className="px-3 py-2.5 text-right font-mono border-r align-top whitespace-nowrap">
-                      <div className="text-sm font-bold text-rose-600">{remainingAdvanceForeign <= 0.01 ? "Advance Cleared" : money(remainingAdvanceForeign, p.purchaseCurrency)}</div>
-                      <div className="text-[10px] text-slate-400 mt-0.5">Purchase Bal: {money(p.remainingForeign, p.purchaseCurrency)}</div>
+                    <td className="whitespace-nowrap border-r border-slate-200 px-2.5 py-1.5 text-right font-mono align-top dark:border-slate-800">
+                      <div className={cn("font-bold", remainingTargetForeign <= 0.01 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")}>
+                        {remainingTargetForeign <= 0.01 ? "Cleared" : money(remainingTargetForeign, p.purchaseCurrency)}
+                      </div>
                     </td>
-                    <td className="px-3 py-2.5 text-center font-mono text-slate-600 whitespace-nowrap border-r align-top">
-                      <div className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-[11px] font-bold inline-block">
+                    <td className="whitespace-nowrap border-r border-slate-200 px-2.5 py-1.5 text-center font-mono text-slate-600 align-top dark:border-slate-800">
+                      <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold dark:bg-slate-800">
                         {Number(p.exchangeRateUsed || 1).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
+                      </span>
+                    </td>
+                    <td className="whitespace-nowrap border-r border-slate-200 px-2.5 py-1.5 text-right font-mono align-top dark:border-slate-800">
+                      <div className="font-bold text-slate-800 dark:text-slate-200">{money(requiredTargetLocal, p.localCurrency)}</div>
+                    </td>
+                    <td className="whitespace-nowrap border-r border-slate-200 px-2.5 py-1.5 text-right font-mono align-top dark:border-slate-800">
+                      <div className="font-bold text-emerald-600 dark:text-emerald-400">{money(p.runningPaidLocal, p.localCurrency)}</div>
+                      <div className="text-[9px] text-slate-400">Entry: {money(p.amtLocal, p.localCurrency)}</div>
+                    </td>
+                    <td className="whitespace-nowrap border-r border-slate-200 px-2.5 py-1.5 text-right font-mono align-top dark:border-slate-800">
+                      <div className={cn("font-bold", remainingTargetLocal <= 0.01 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")}>
+                        {remainingTargetLocal <= 0.01 ? "Cleared" : money(remainingTargetLocal, p.localCurrency)}
                       </div>
                     </td>
-                    <td className="px-3 py-2.5 text-right font-mono border-r align-top whitespace-nowrap">
-                      <div className="text-sm font-bold text-slate-800 dark:text-slate-200">{money(requiredAdvanceLocal, p.localCurrency)}</div>
-                      <div className="text-[10px] text-slate-400 mt-0.5">PO: {money(p.originalPurchaseLocal, p.localCurrency)}</div>
-                    </td>
-                    <td className="px-3 py-2.5 text-right font-mono border-r align-top whitespace-nowrap">
-                      <div className="text-sm font-bold text-emerald-600">{money(p.runningPaidLocal, p.localCurrency)}</div>
-                      <div className="text-[10px] text-slate-400 mt-0.5">Current: {money(p.amtLocal, p.localCurrency)}</div>
-                    </td>
-                    <td className="px-3 py-2.5 text-right font-mono border-r align-top whitespace-nowrap">
-                      <div className="text-sm font-bold text-rose-600">{remainingAdvanceLocal <= 0.01 ? "Advance Cleared" : money(remainingAdvanceLocal, p.localCurrency)}</div>
-                      <div className="text-[10px] text-slate-400 mt-0.5">Purchase Bal: {money(p.remainingLocal, p.localCurrency)}</div>
-                    </td>
-                    <td className="px-3 py-2.5 text-center align-top">
+                    <td className="px-2.5 py-1.5 text-center align-top">
                       <NestedRowActions payment={p} row={row} ledgers={ledgers} localCurrency={p.localCurrency} />
                     </td>
                   </tr>
                 );
               })}
             </tbody>
+            {/* Direct Compact Table Footer */}
+            <tfoot className="border-t border-slate-200 bg-slate-50 font-mono text-[10px] font-bold text-slate-700 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-300">
+              <tr>
+                <td colSpan={4} className="px-2.5 py-1.5 text-right uppercase tracking-wider text-slate-400">
+                  Total Settled to Date:
+                </td>
+                <td className="px-2.5 py-1.5 text-right text-emerald-600 dark:text-emerald-400">
+                  {money(totalPaidForeign, purchaseCurrency)}
+                </td>
+                <td className="px-2.5 py-1.5 text-right text-rose-600 dark:text-rose-400">
+                  {stageBalanceForeign <= 0.01 ? "Cleared" : money(stageBalanceForeign, purchaseCurrency)}
+                </td>
+                <td className="px-2.5 py-1.5 text-center text-slate-400">⇄</td>
+                <td className="px-2.5 py-1.5 text-right text-slate-400">
+                  {money(stageRequiredLocal, calcs.finalCurr)}
+                </td>
+                <td className="px-2.5 py-1.5 text-right text-emerald-600 dark:text-emerald-400">
+                  {money(totalPaidLocal, calcs.finalCurr)}
+                </td>
+                <td className="px-2.5 py-1.5 text-right text-rose-600 dark:text-rose-400">
+                  {stageBalanceLocal <= 0.01 ? "Cleared" : money(stageBalanceLocal, calcs.finalCurr)}
+                </td>
+                <td></td>
+              </tr>
+            </tfoot>
           </table>
-          </div>
-          <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-800 dark:bg-slate-900/50">
-            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-              <div>
-                <div className="text-[10px] font-black uppercase tracking-widest text-slate-500">{translateHeader(currentLanguage, "Final Digital Balance Statement")}</div>
-                <div className="mt-1 text-xs font-semibold text-slate-600 dark:text-slate-300">Purchase currency balance is calculated first, then converted into the country / office currency.</div>
-              </div>
-              <div className="grid grid-cols-2 gap-2 text-right md:min-w-[360px]">
-                <div className="rounded-lg bg-white px-3 py-2 shadow-sm dark:bg-slate-950/60">
-                  <div className="text-[9px] font-black uppercase tracking-wider text-slate-400">Balance ({purchaseCurrency})</div>
-                  <div className="font-mono text-sm font-black text-rose-600">{statementBalanceForeign <= 0.01 ? "Cleared" : money(statementBalanceForeign, purchaseCurrency)}</div>
-                </div>
-                <div className="rounded-lg bg-white px-3 py-2 shadow-sm dark:bg-slate-950/60">
-                  <div className="text-[9px] font-black uppercase tracking-wider text-slate-400">Balance ({calcs.finalCurr})</div>
-                  <div className="font-mono text-sm font-black text-rose-600">{statementBalanceLocal <= 0.01 ? "Cleared" : money(statementBalanceLocal, calcs.finalCurr)}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </>
-      ) : (
-        <p className="text-xs text-slate-400 italic py-2">
-          {loading ? "Loading payments..." : "No payments posted for this purchase order yet."}
-        </p>
+        </div>
       )}
     </div>
   );
@@ -4445,8 +4572,8 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
 
         {/* Expandable Payment History Row spanning all 28 cols */}
         {isExpanded && (
-          <tr onClick={(e) => e.stopPropagation()} className="bg-slate-50/80 dark:bg-slate-900/50">
-            <td colSpan={28} className="p-4 border-b border-slate-200 dark:border-slate-800">
+          <tr onClick={(e) => e.stopPropagation()} className="bg-slate-100/60 dark:bg-slate-950/60">
+            <td colSpan={28} className="p-2 sm:p-2.5 border-b border-slate-300 dark:border-slate-800 shadow-inner">
               <NestedPaymentHistory
                 row={row}
                 ledgers={ledgers}
