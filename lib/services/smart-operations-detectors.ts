@@ -157,7 +157,14 @@ const DETECTORS: Def[] = [
         AND ${sqlScopeCondition(sql, scope, "ci")}
       UNION ALL
       SELECT a.reference_no, a.party_name, a.next_follow_up::date, a.country_name, 'crm_action', a.id::text
-      FROM public.crm_action_items a
+      -- crm_action_items keeps its scope ids as text: expose them as uuid for the one scope rule.
+      FROM (
+        SELECT x.reference_no, x.party_name, x.next_follow_up, x.country_name, x.id, x.is_completed,
+               CASE WHEN x.country_id::text ~* '^[0-9a-f-]{36}$' THEN x.country_id::text::uuid END AS country_id,
+               CASE WHEN x.country_branch_id::text ~* '^[0-9a-f-]{36}$' THEN x.country_branch_id::text::uuid END AS country_branch_id,
+               CASE WHEN x.city_branch_id::text ~* '^[0-9a-f-]{36}$' THEN x.city_branch_id::text::uuid END AS city_branch_id
+        FROM public.crm_action_items x
+      ) a
       WHERE coalesce(a.is_completed,false) = false AND a.next_follow_up < now() AND ${sqlScopeCondition(sql, scope, "a")}
       ORDER BY 3 LIMIT ${LIMIT}`,
     map: (r) => ({ reference: r.ref ?? "—", detail: r.customer_name, date: iso(r.d), href: r.kind === "inquiry" ? `/dashboard/customer-inquiries?id=${r.id}` : "/dashboard/crm?report=due-followup", country: r.country }),
