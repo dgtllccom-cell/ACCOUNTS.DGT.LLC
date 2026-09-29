@@ -201,14 +201,41 @@ export async function ensureCustomerBillForOrders(
 
     const order = primaryOrder;
 
-    // 3. Ensure Customer Shipping AR Ledger & Enterprise Account
+    // 3. Resolve Customer ID (fallback to customer by name if customer_id is null on order)
+    let effectiveCustomerId = primaryOrder.customer_id;
+    if (!effectiveCustomerId) {
+      const custName = (primaryOrder.customer_name || "Direct Cash Customer").trim();
+      const [matchedCust] = await sql`
+        SELECT id FROM public.customers WHERE customer_name ILIKE ${custName} LIMIT 1
+      `;
+      if (matchedCust) {
+        effectiveCustomerId = matchedCust.id;
+      } else {
+        const [createdCust] = await sql`
+          INSERT INTO public.customers (customer_name, country_id, created_by)
+          VALUES (${custName}, ${primaryOrder.country_id ? sql`${primaryOrder.country_id}::uuid` : null}, ${actorId ? sql`${actorId}::uuid` : null})
+          RETURNING id
+        `;
+        effectiveCustomerId = createdCust?.id;
+      }
+      if (effectiveCustomerId) {
+        await sql`
+          UPDATE public.clearing_customer_orders
+          SET customer_id = ${effectiveCustomerId}::uuid
+          WHERE id = ${primaryOrder.id}::uuid AND customer_id IS NULL
+        `;
+        primaryOrder.customer_id = effectiveCustomerId;
+      }
+    }
+
+    // 4. Ensure Customer Shipping AR Ledger & Enterprise Account
     let customerAccountId: string | null = null;
     let customerAccountNumber: string | null = null;
 
-    if (order.customer_id) {
+    if (effectiveCustomerId) {
       try {
         await ensureCustomerShippingLedger(
-          order.customer_id,
+          effectiveCustomerId,
           {
             countryId: order.country_id,
             countryBranchId: order.country_branch_id,
@@ -220,7 +247,7 @@ export async function ensureCustomerBillForOrders(
         const [ea] = await sql`
           SELECT id, code, account_number
           FROM public.enterprise_accounts
-          WHERE customer_id = ${order.customer_id}::uuid
+          WHERE customer_id = ${effectiveCustomerId}::uuid
             AND operational_domain = 'shipping'
             AND deleted_at IS NULL
           LIMIT 1
@@ -234,7 +261,7 @@ export async function ensureCustomerBillForOrders(
       }
     }
 
-    // 4. Generate Bill Number
+    // 5. Generate Bill Number
     let billNo: string | null = null;
     try {
       const [seqRow] = await sql`
@@ -248,7 +275,7 @@ export async function ensureCustomerBillForOrders(
       billNo = `CB-${year}-${rand}`;
     }
 
-    // 5. Insert Customer Bill Draft
+    // 6. Insert Customer Bill Draft
     const [newBill] = await sql`
       INSERT INTO public.clearing_customer_bills (
         order_id,
@@ -286,8 +313,8 @@ export async function ensureCustomerBillForOrders(
       ) VALUES (
         ${order.id}::uuid,
         ${order.order_no},
-        ${order.customer_id}::uuid,
-        ${order.customer_name},
+        ${effectiveCustomerId}::uuid,
+        ${order.customer_name || 'Direct Cash Customer'},
         ${customerAccountId ? sql`${customerAccountId}::uuid` : null},
         ${customerAccountNumber},
         ${billNo},
@@ -455,6 +482,33 @@ export async function listCustomerBills(filters?: {
   offset?: number;
 }): Promise<CustomerBillRow[]> {
   const result = await withLocalPg(async (sql) => {
+    // Auto-ensure customer bills for any customer orders that completed the intake / are confirmed, accepted, or completed
+    try {
+      const ordersWithoutBills = await sql`
+        SELECT o.id, o.created_by
+        FROM public.clearing_customer_orders o
+        LEFT JOIN public.clearing_customer_bills b ON b.order_id = o.id AND b.deleted_at IS NULL
+        LEFT JOIN public.clearing_customer_bill_orders bo ON bo.order_id = o.id
+        WHERE o.deleted_at IS NULL
+          AND (
+            o.status IN ('completed', 'accepted', 'booking_confirmed', 'confirmed', 'in_progress')
+            OR o.current_stage IN ('1C', 'stage_2', 'completed')
+          )
+          AND b.id IS NULL
+          AND bo.bill_id IS NULL
+        LIMIT 25
+      `;
+      for (const row of ordersWithoutBills) {
+        try {
+          await ensureCustomerBillForOrders([String(row.id)], row.created_by);
+        } catch (e) {
+          console.warn("Could not auto-ensure bill for order:", row.id, e);
+        }
+      }
+    } catch (err) {
+      console.warn("Could not check unbilled orders:", err);
+    }
+
     const search = filters?.search?.trim();
     const customerId = filters?.customerId?.trim();
     const orderId = filters?.orderId?.trim();

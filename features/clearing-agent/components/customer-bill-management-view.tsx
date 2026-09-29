@@ -74,7 +74,7 @@ const EXPENSE_TYPES = [
   { id: "other_expenses", labelKey: "cbill.charge_other", defaultLabel: "Other Expenses" }
 ];
 
-export function CustomerBillManagementView() {
+export function CustomerBillManagementView({ initialBillId }: { initialBillId?: string | null } = {}) {
   const activeLang = useActiveLanguage();
   const lang = (activeLang || "en") as SupportedLanguage;
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
@@ -222,7 +222,7 @@ export function CustomerBillManagementView() {
       const orders = await loadCustomerOrders();
 
       const orderIdParam = searchParams.get("orderId");
-      const billIdParam = searchParams.get("id");
+      const billIdParam = initialBillId || searchParams.get("id");
 
       let endpoint = "";
       if (orderIdParam) {

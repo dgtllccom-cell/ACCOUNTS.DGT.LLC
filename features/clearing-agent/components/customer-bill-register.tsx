@@ -81,7 +81,7 @@ export function CustomerBillRegister({ lang: langProp }: { lang?: SupportedLangu
           <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
           {_("cbr.back_to_register", "Back to Bill Register")}
         </Button>
-        <CustomerBillManagementView key={openBillId ?? "new"} />
+        <CustomerBillManagementView key={openBillId ?? "new"} initialBillId={openBillId} />
       </div>
     );
   }

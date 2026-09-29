@@ -2146,6 +2146,14 @@ export function CustomerOrderManagementView() {
           transferType: currentStep === 1 ? "truck_task" : currentStep === 2 ? "goods_verification" : "shipping_handover"
         });
       } else if (advanceStep && currentStep === 4) {
+        // Automatically ensure the customer bill exists for this completed order so it immediately appears in /dashboard/clearing-agent/customer-bill
+        if (savedOrder?.id) {
+          fetch("/api/erp/clearing-agent/customer-bill", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ orderIds: [savedOrder.id] })
+          }).catch((err) => console.warn("Auto customer bill generation notice:", err));
+        }
         // Offer the handover choice before clearing the wizard — resetForm() runs
         // only after the user picks "Continue Myself" or finishes an assignment.
         setJustCompletedOrder({

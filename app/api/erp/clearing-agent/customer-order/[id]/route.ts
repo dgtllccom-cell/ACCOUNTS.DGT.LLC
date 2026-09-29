@@ -8,6 +8,7 @@ import {
   getCustomerOrderById,
   saveCustomerOrder
 } from "@/lib/services/clearing-customer-order-service";
+import { ensureCustomerBillForOrders } from "@/lib/services/clearing-customer-bill-service";
 import { canAccessOrder } from "@/lib/services/clearing-customer-order-scope";
 
 async function resolveOrderId(req: NextRequest, params: Promise<{ id: string }> | { id: string }) {
@@ -135,6 +136,18 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       goodsEmptyWeight: body.goods_empty_weight ?? body.goodsEmptyWeight ?? null,
       goodsNetWeight: body.goods_net_weight ?? body.goodsNetWeight ?? null
     });
+
+    // Auto-ensure customer bill if order is confirmed/accepted/completed
+    if (result.order?.id && (
+      ["completed", "accepted", "booking_confirmed", "confirmed", "in_progress"].includes(result.order.status || "") ||
+      ["1C", "stage_2", "completed"].includes(result.order.current_stage || "")
+    )) {
+      try {
+        await ensureCustomerBillForOrders([result.order.id], session.userId ?? null);
+      } catch (billErr) {
+        console.warn("Auto-ensuring customer bill on order update:", billErr);
+      }
+    }
 
     return NextResponse.json({ success: true, data: result.order, party_links: result.partyLinks, legs: result.legs, loading_allocations: result.loadingAllocations });
   } catch (error: any) {
