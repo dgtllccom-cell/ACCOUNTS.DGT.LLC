@@ -170,6 +170,18 @@ export type OrderLegInput = {
   railwayOperator?: string | null;
   wagonNumber?: string | null;
   railContainerNumber?: string | null;
+  handlerType?: string | null;
+  handler_type?: string | null;
+  partnerType?: string | null;
+  partner_type?: string | null;
+  partnerName?: string | null;
+  partner_name?: string | null;
+  partnerAccountId?: string | null;
+  partner_account_id?: string | null;
+  partnerAccountNumber?: string | null;
+  partner_account_number?: string | null;
+  partnerCountryName?: string | null;
+  partner_country_name?: string | null;
 };
 
 export type ClearingCustomerOrderLegRow = Record<string, any> & { id: string; order_id: string };
@@ -929,6 +941,12 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
             railway_operator: leg.railwayOperator,
             wagon_number: leg.wagonNumber,
             rail_container_number: leg.railContainerNumber,
+            handler_type: leg.handlerType ?? leg.handler_type ?? "our_branch",
+            partner_type: leg.partnerType ?? leg.partner_type ?? null,
+            partner_name: leg.partnerName ?? leg.partner_name ?? null,
+            partner_account_id: leg.partnerAccountId ?? leg.partner_account_id ?? null,
+            partner_account_number: leg.partnerAccountNumber ?? leg.partner_account_number ?? null,
+            partner_country_name: leg.partnerCountryName ?? leg.partner_country_name ?? null,
             updated_at: now
           };
 

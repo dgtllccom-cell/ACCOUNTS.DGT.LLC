@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Search, Loader2, TrendingUp, TrendingDown, CheckCircle2, XCircle, Send, RefreshCw } from "lucide-react";
+import { Search, Loader2, TrendingUp, TrendingDown, CheckCircle2, XCircle, Send, RefreshCw, Building2, CreditCard, Receipt, ShieldCheck } from "lucide-react";
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
@@ -35,12 +35,47 @@ interface Claim {
   decidedAt: string | null;
 }
 
+interface PartnerBillPayment {
+  id: string;
+  paymentNo: string;
+  paymentDate: string;
+  amount: number;
+  paymentAccountCode: string | null;
+  paymentAccountName: string | null;
+  referenceNo: string | null;
+  narration: string | null;
+}
+
+interface PartnerBill {
+  id: string;
+  billNo: string;
+  legId: string | null;
+  legNo: number | null;
+  fromLocation: string | null;
+  toLocation: string | null;
+  countryOfService: string | null;
+  providerName: string;
+  providerAccountCode: string | null;
+  providerAccountName: string | null;
+  invoiceRef: string | null;
+  expenseCategory: string | null;
+  totalAmount: number;
+  paidAmount: number;
+  remainingBalance: number;
+  currencyCode: string;
+  postingStatus: "draft" | "unposted" | "posted" | "void";
+  paymentStatus: "pending" | "partially_paid" | "paid";
+  postedAt: string | null;
+  payments: PartnerBillPayment[];
+}
+
 interface JobCostReport {
   orderId: string;
   orderNo: string | null;
   customerName: string | null;
   customerCharges: { total: number; postedTotal: number; currency: string; count: number };
   jobExpenses: { total: number; postedTotal: number; currency: string; lines: JobCostLine[] };
+  partnerBills?: PartnerBill[];
   interBranchClaims: Claim[];
   profit: { revenue: number; expense: number; net: number; currency: string };
 }
@@ -266,6 +301,150 @@ export function ShippingJobCostView({ lang: langProp }: { lang: SupportedLanguag
                     ))}
                   </tbody>
                 </table>
+              </div>
+            )}
+          </div>
+
+          {/* External Partner Route Leg Bills & Supplier Costs */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-indigo-400" />
+                <h3 className="text-sm font-bold text-white uppercase">
+                  {tt("partner_bills_title", "External Partner Bills & Supplier Cost Breakdown")} ({report.partnerBills?.length || 0})
+                </h3>
+              </div>
+              <span className="text-xs text-slate-400">
+                {tt("supplier_expense_note", "Supplier expenses kept separate from customer billing")}
+              </span>
+            </div>
+
+            {!report.partnerBills || report.partnerBills.length === 0 ? (
+              <div className="text-xs text-slate-500 py-4 text-center">
+                {tt("no_partner_bills", "No external partner bills recorded for this order.")}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs text-slate-300">
+                    <thead className="bg-slate-950/60 text-slate-400 uppercase text-[10px] tracking-wider">
+                      <tr>
+                        <Th>{tt("col_leg", "Leg / Corridor")}</Th>
+                        <Th>{tt("col_provider", "Provider / Account")}</Th>
+                        <Th>{tt("col_invoice", "Invoice Ref")}</Th>
+                        <Th>{tt("col_category", "Category / Country")}</Th>
+                        <Th className="text-right">{tt("col_bill_total", "Bill Total")}</Th>
+                        <Th className="text-right">{tt("col_paid", "Paid")}</Th>
+                        <Th className="text-right">{tt("col_remaining", "Remaining Due")}</Th>
+                        <Th className="text-center">{tt("col_status", "Status")}</Th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800">
+                      {report.partnerBills.map((pb) => (
+                        <tr key={pb.id} className="hover:bg-slate-800/40">
+                          <td className="px-3 py-2 font-mono">
+                            <span className="font-bold text-white">Leg #{pb.legNo ?? "-"}</span>
+                            {pb.fromLocation || pb.toLocation ? (
+                              <span className="block text-[10px] text-slate-400">
+                                {pb.fromLocation || "?"} → {pb.toLocation || "?"}
+                              </span>
+                            ) : null}
+                          </td>
+                          <td className="px-3 py-2">
+                            <span className="font-bold text-white">{pb.providerName}</span>
+                            <span className="block text-[10px] font-mono text-indigo-400">
+                              {pb.providerAccountCode ? `[${pb.providerAccountCode}] ` : ""}
+                              {pb.providerAccountName || ""}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2 font-mono text-slate-300">
+                            {pb.invoiceRef || pb.billNo}
+                          </td>
+                          <td className="px-3 py-2">
+                            <span className="capitalize">{pb.expenseCategory?.replace(/_/g, " ") || "-"}</span>
+                            {pb.countryOfService && (
+                              <span className="block text-[10px] text-slate-400">
+                                📍 {pb.countryOfService}
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-3 py-2 text-right font-mono font-bold text-white">
+                            {pb.currencyCode} {Number(pb.totalAmount).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                          </td>
+                          <td className="px-3 py-2 text-right font-mono font-bold text-emerald-400">
+                            {pb.currencyCode} {Number(pb.paidAmount).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                          </td>
+                          <td className="px-3 py-2 text-right font-mono font-black text-rose-400">
+                            {pb.currencyCode} {Number(pb.remainingBalance).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                          </td>
+                          <td className="px-3 py-2 text-center">
+                            <div className="flex flex-col items-center gap-1">
+                              <span
+                                className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                                  pb.postingStatus === "posted"
+                                    ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                                    : "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                                }`}
+                              >
+                                {pb.postingStatus === "posted" ? tt("posted", "Posted") : tt("unposted", "Unposted")}
+                              </span>
+                              <span
+                                className={`text-[9px] font-semibold px-2 py-0.5 rounded-full uppercase ${
+                                  pb.paymentStatus === "paid"
+                                    ? "bg-emerald-500/20 text-emerald-300"
+                                    : pb.paymentStatus === "partially_paid"
+                                    ? "bg-blue-500/20 text-blue-300"
+                                    : "bg-slate-700/50 text-slate-300"
+                                }`}
+                              >
+                                {pb.paymentStatus === "paid"
+                                  ? tt("paid", "Paid")
+                                  : pb.paymentStatus === "partially_paid"
+                                  ? tt("partial", "Partially Paid")
+                                  : tt("unpaid", "Unpaid")}
+                              </span>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Sub-breakdown of payments recorded for partner bills */}
+                {report.partnerBills.some((b) => b.payments && b.payments.length > 0) && (
+                  <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-3 space-y-2">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
+                      {tt("partner_payments_breakdown", "Partner Bill Payments Breakdown")}
+                    </span>
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      {report.partnerBills.map((b) =>
+                        b.payments?.map((pmt) => (
+                          <div
+                            key={pmt.id}
+                            className="flex items-center justify-between rounded-lg border border-slate-800/80 bg-slate-900/60 p-2.5 text-xs"
+                          >
+                            <div>
+                              <span className="font-bold text-white">{b.providerName}</span>
+                              <span className="block text-[10px] text-slate-400 font-mono">
+                                {pmt.paymentNo} • {pmt.paymentDate?.split("T")[0]} {pmt.referenceNo ? `(${pmt.referenceNo})` : ""}
+                              </span>
+                              <span className="text-[10px] text-slate-400">
+                                Paid via: {pmt.paymentAccountName || pmt.paymentAccountCode || "Cash/Bank"}
+                              </span>
+                            </div>
+                            <div className="text-right">
+                              <span className="font-mono font-bold text-emerald-400">
+                                {b.currencyCode} {Number(pmt.amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                              </span>
+                              <span className="block text-[9px] uppercase text-emerald-500/80">Posted</span>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

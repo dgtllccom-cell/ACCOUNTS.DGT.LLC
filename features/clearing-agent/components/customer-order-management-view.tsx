@@ -86,6 +86,7 @@ import { CustomerOrderActivityTimelineModal } from "@/features/clearing-agent/co
 import { CustomerOrderReturnCorrectionModal } from "@/features/clearing-agent/components/customer-order-return-correction-modal";
 import { CustomerOrderStageAssignmentModal } from "@/features/clearing-agent/components/customer-order-stage-assignment-modal";
 import { CustomerOrderRouteBuilder } from "@/features/clearing-agent/components/customer-order-route-builder";
+import { CustomerOrderPartnerBillsPanel } from "@/features/clearing-agent/components/customer-order-partner-bills-panel";
 
 type TransportMode = "by_sea" | "by_road" | "by_air" | "by_rail";
 type MovementType = "import" | "export" | "transit" | "up_transit" | "down_transit" | "domestic";
@@ -178,6 +179,12 @@ type RouteLeg = {
   railwayOperator: string;
   wagonNumber: string;
   railContainerNumber: string;
+  handlerType?: "our_branch" | "external_partner" | "";
+  partnerType?: string;
+  partnerName?: string;
+  partnerAccountId?: string;
+  partnerAccountNumber?: string;
+  partnerCountryName?: string;
 };
 
 function emptyLeg(legNo: number, transportMode: LegTransportMode | "" = ""): RouteLeg {
@@ -196,7 +203,9 @@ function emptyLeg(legNo: number, transportMode: LegTransportMode | "" = ""): Rou
     taxAmount: "", otherCharges: "", customsStatus: "not_applicable",
     estimatedExpenseAmount: "", actualExpenseAmount: "", expenseCurrency: "", currentTaskId: null,
     airlineName: "", flightNumber: "", airwayBillNo: "",
-    railwayOperator: "", wagonNumber: "", railContainerNumber: ""
+    railwayOperator: "", wagonNumber: "", railContainerNumber: "",
+    handlerType: "our_branch", partnerType: "", partnerName: "",
+    partnerAccountId: "", partnerAccountNumber: "", partnerCountryName: ""
   };
 }
 
@@ -1748,6 +1757,12 @@ export function CustomerOrderManagementView() {
             actualExpenseAmount: leg.actual_expense_amount != null ? String(leg.actual_expense_amount) : "",
             expenseCurrency: leg.expense_currency || "",
             currentTaskId: leg.current_task_id || null,
+            handlerType: leg.handler_type || (leg.partner_name || leg.partner_account_id ? "external_partner" : "our_branch"),
+            partnerType: leg.partner_type || "",
+            partnerName: leg.partner_name || "",
+            partnerAccountId: leg.partner_account_id || "",
+            partnerAccountNumber: leg.partner_account_number || "",
+            partnerCountryName: leg.partner_country_name || "",
             airlineName: leg.airline_name || "",
             flightNumber: leg.flight_number || "",
             airwayBillNo: leg.airway_bill_no || "",
@@ -2010,7 +2025,13 @@ export function CustomerOrderManagementView() {
               customsStatus: leg.customsStatus || "not_applicable",
               estimatedExpenseAmount: leg.estimatedExpenseAmount ? Number(leg.estimatedExpenseAmount) : null,
               actualExpenseAmount: leg.actualExpenseAmount ? Number(leg.actualExpenseAmount) : null,
-              expenseCurrency: leg.expenseCurrency || null
+              expenseCurrency: leg.expenseCurrency || null,
+              handlerType: leg.handlerType || "our_branch",
+              partnerType: leg.partnerType || null,
+              partnerName: leg.partnerName || null,
+              partnerAccountId: leg.partnerAccountId || null,
+              partnerAccountNumber: leg.partnerAccountNumber || null,
+              partnerCountryName: leg.partnerCountryName || null
             }))
           : [
               {
@@ -5791,6 +5812,7 @@ function Step1BookingCustomer({
                 setFormData((c) => ({ ...c, route_name: routeName, legs }));
               }}
               countries={countries.map((c) => ({ id: c.id, name: c.name }))}
+              ledgers={accounts.map((a) => ({ id: a.id, name: a.name, code: a.code, currency: a.currency || undefined }))}
               lang={lang}
             />
           </div>
@@ -7471,7 +7493,9 @@ function Step3RouteVesselCustoms({
   countryBranches,
   cityBranches,
   assignableUsers,
-  editingOrderId
+  editingOrderId,
+  accounts = [],
+  onRefreshLegs
 }: {
   lang: ReturnType<typeof useActiveLanguage>;
   tt: (k: string, f: string) => string;
@@ -7494,6 +7518,8 @@ function Step3RouteVesselCustoms({
   cityBranches: { id: string; name: string; countryBranchId: string }[];
   assignableUsers: { id: string; name: string }[];
   editingOrderId: string | null;
+  accounts?: AccountRow[];
+  onRefreshLegs?: () => void;
 }) {
   const showAutoSeed =
     formData.transport_mode === "by_sea" && formData.loading_source !== "port_terminal" && formData.legs.length === 0;
@@ -7691,31 +7717,190 @@ function Step3RouteVesselCustoms({
                 </div>
               </div>
 
-              <ClearingAgentPicker
-                label={t(lang, "comv.responsible_agent", "Responsible Clearing Agent")}
-                value={leg.responsibleClearingAgentId}
-                onValueChange={(id) => updateLeg(idx, { responsibleClearingAgentId: id })}
-              />
+              {/* Route Leg Handler: Our Branch vs External Partner */}
+              <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-3 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2 dark:border-slate-800">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-black uppercase text-slate-800 dark:text-slate-200">
+                      {tt("leg_handler_type_label", "Route Leg Handler")}
+                    </span>
+                  </div>
+                  <div className="flex items-center rounded-lg border border-slate-200 p-0.5 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+                    <button
+                      type="button"
+                      onClick={() => updateLeg(idx, { handlerType: "our_branch" })}
+                      className={`px-3 py-1 text-xs font-bold rounded-md transition ${
+                        leg.handlerType !== "external_partner"
+                          ? "bg-blue-600 text-white shadow-2xs"
+                          : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
+                      }`}
+                    >
+                      {tt("handler_our_branch", "Our Branch")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => updateLeg(idx, { handlerType: "external_partner" })}
+                      className={`px-3 py-1 text-xs font-bold rounded-md transition ${
+                        leg.handlerType === "external_partner"
+                          ? "bg-indigo-600 text-white shadow-2xs"
+                          : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
+                      }`}
+                    >
+                      {tt("handler_external_partner", "External Partner")}
+                    </button>
+                  </div>
+                </div>
 
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                <LegPartyMini
-                  label={t(lang, "comv.responsible_country_branch", "Responsible Branch")}
-                  value={leg.responsibleCountryBranchId}
-                  rows={countryBranches}
-                  onChange={(id) => updateLeg(idx, { responsibleCountryBranchId: id, responsibleCityBranchId: "" })}
-                />
-                <LegPartyMini
-                  label={t(lang, "comv.responsible_city_branch", "Responsible City Branch")}
-                  value={leg.responsibleCityBranchId}
-                  rows={cityBranches.filter((b) => !leg.responsibleCountryBranchId || b.countryBranchId === leg.responsibleCountryBranchId)}
-                  onChange={(id) => updateLeg(idx, { responsibleCityBranchId: id })}
-                />
-                <LegPartyMini
-                  label={t(lang, "comv.responsible_user", "Responsible User")}
-                  value={leg.responsibleUserId}
-                  rows={assignableUsers}
-                  onChange={(id) => updateLeg(idx, { responsibleUserId: id })}
-                />
+                {leg.handlerType === "external_partner" ? (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                      <div>
+                        <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">
+                          {tt("partner_type_label", "Partner Type *")}
+                        </label>
+                        <select
+                          value={leg.partnerType || ""}
+                          onChange={(e) => updateLeg(idx, { partnerType: e.target.value })}
+                          className={selectClass}
+                        >
+                          <option value="">-- Select Partner Type --</option>
+                          <option value="customs_agent">{tt("pt_customs_agent", "Customs Clearing Agent")}</option>
+                          <option value="transporter">{tt("pt_transporter", "Transporter / Trucking Carrier")}</option>
+                          <option value="shipping_provider">{tt("pt_shipping_provider", "Shipping Line / Sea Provider")}</option>
+                          <option value="airline">{tt("pt_airline", "Airline / Air Freight")}</option>
+                          <option value="railway">{tt("pt_railway", "Railway Operator")}</option>
+                          <option value="other_partner">{tt("pt_other_partner", "Other External Partner")}</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">
+                          {tt("partner_name_label", "Partner / Provider Name *")}
+                        </label>
+                        <input
+                          type="text"
+                          placeholder={tt("ph_partner_name", "e.g. Khyber Afghan Trans / Apex Customs")}
+                          value={leg.partnerName || ""}
+                          onChange={(e) => updateLeg(idx, { partnerName: e.target.value })}
+                          className={inputClass}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">
+                          {tt("partner_country_label", "Country of Service")}
+                        </label>
+                        <select
+                          value={leg.partnerCountryName || ""}
+                          onChange={(e) => updateLeg(idx, { partnerCountryName: e.target.value })}
+                          className={selectClass}
+                        >
+                          <option value="">-- Select Country --</option>
+                          {countries.map((c) => (
+                            <option key={c.id} value={c.name}>{c.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Account Master Ledger Selection & Warning */}
+                    <div className="rounded-lg bg-indigo-50/40 p-2.5 border border-indigo-100 dark:bg-slate-850 dark:border-indigo-900/40 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] font-bold text-indigo-900 dark:text-indigo-300 uppercase">
+                          {tt("provider_account_master", "Provider Account / Ledger (Account Master) *")}
+                        </label>
+                        <a
+                          href="/dashboard/accounts/setup"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 hover:underline"
+                        >
+                          <span>{tt("register_in_account_master", "Register / Open Account Master →")}</span>
+                        </a>
+                      </div>
+
+                      <select
+                        value={leg.partnerAccountId || ""}
+                        onChange={(e) => {
+                          const row = accounts.find((l) => l.id === e.target.value);
+                          updateLeg(idx, {
+                            partnerAccountId: e.target.value,
+                            partnerAccountNumber: row?.code || ""
+                          });
+                        }}
+                        className={selectClass}
+                      >
+                        <option value="">{tt("select_account_master_ledger", "-- Select Existing Provider Ledger --")}</option>
+                        {accounts.map((l) => (
+                          <option key={l.id} value={l.id}>
+                            {l.code ? `[${l.code}] ` : ""}{l.name} {l.currency ? `(${l.currency})` : ""}
+                          </option>
+                        ))}
+                      </select>
+
+                      {!leg.partnerAccountId && (
+                        <div className="flex items-start gap-1.5 rounded-lg border border-amber-200 bg-amber-50 p-2 text-[11px] text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300">
+                          <AlertTriangle className="h-4 w-4 shrink-0 text-amber-500 mt-0.5" />
+                          <div>
+                            <p className="font-bold">{tt("no_ledger_warning_title", "No Account Master Ledger Selected")}</p>
+                            <p className="mt-0.5">
+                              {tt(
+                                "no_ledger_warning_body",
+                                "An authorized payable ledger from Account Master is required before any bills can be approved or posted to Roznamcha. Do not invent fake ledgers; register the provider through the approved Account Master flow."
+                              )}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* External Partner Bills & Postings Sub-Panel */}
+                    <CustomerOrderPartnerBillsPanel
+                      orderId={editingOrderId || undefined}
+                      orderNo={formData.order_no}
+                      legId={leg.id}
+                      legNo={leg.legNo}
+                      handlerType={leg.handlerType}
+                      partnerType={leg.partnerType}
+                      partnerName={leg.partnerName}
+                      partnerAccountId={leg.partnerAccountId}
+                      partnerAccountNumber={leg.partnerAccountNumber}
+                      partnerCountryName={leg.partnerCountryName}
+                      ledgers={accounts.map((a: AccountRow) => ({ id: a.id, name: a.name, code: a.code, currency: a.currency || undefined }))}
+                      lang={lang}
+                      onRefreshLegs={onRefreshLegs}
+                    />
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <ClearingAgentPicker
+                      label={t(lang, "comv.responsible_agent", "Responsible Clearing Agent")}
+                      value={leg.responsibleClearingAgentId}
+                      onValueChange={(id) => updateLeg(idx, { responsibleClearingAgentId: id })}
+                    />
+
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                      <LegPartyMini
+                        label={t(lang, "comv.responsible_country_branch", "Responsible Branch")}
+                        value={leg.responsibleCountryBranchId}
+                        rows={countryBranches}
+                        onChange={(id) => updateLeg(idx, { responsibleCountryBranchId: id, responsibleCityBranchId: "" })}
+                      />
+                      <LegPartyMini
+                        label={t(lang, "comv.responsible_city_branch", "Responsible City Branch")}
+                        value={leg.responsibleCityBranchId}
+                        rows={cityBranches.filter((b) => !leg.responsibleCountryBranchId || b.countryBranchId === leg.responsibleCountryBranchId)}
+                        onChange={(id) => updateLeg(idx, { responsibleCityBranchId: id })}
+                      />
+                      <LegPartyMini
+                        label={t(lang, "comv.responsible_user", "Responsible User")}
+                        value={leg.responsibleUserId}
+                        rows={assignableUsers}
+                        onChange={(id) => updateLeg(idx, { responsibleUserId: id })}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {leg.id && editingOrderId ? (
