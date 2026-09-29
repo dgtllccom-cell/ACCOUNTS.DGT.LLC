@@ -211,9 +211,18 @@ export async function ensureCustomerBillForOrders(
       if (matchedCust) {
         effectiveCustomerId = matchedCust.id;
       } else {
+        let targetCountryId = primaryOrder.country_id || primaryOrder.loading_country_id || primaryOrder.receiving_country_id;
+        if (!targetCountryId) {
+          const [defCountry] = await sql`SELECT id FROM public.countries WHERE is_active = true ORDER BY created_at ASC LIMIT 1`;
+          targetCountryId = defCountry?.id;
+        }
+        if (!targetCountryId) {
+          const [anyCountry] = await sql`SELECT id FROM public.countries ORDER BY created_at ASC LIMIT 1`;
+          targetCountryId = anyCountry?.id;
+        }
         const [createdCust] = await sql`
           INSERT INTO public.customers (customer_name, country_id, created_by)
-          VALUES (${custName}, ${primaryOrder.country_id ? sql`${primaryOrder.country_id}::uuid` : null}, ${actorId ? sql`${actorId}::uuid` : null})
+          VALUES (${custName}, ${targetCountryId ? sql`${targetCountryId}::uuid` : null}, ${actorId ? sql`${actorId}::uuid` : null})
           RETURNING id
         `;
         effectiveCustomerId = createdCust?.id;
