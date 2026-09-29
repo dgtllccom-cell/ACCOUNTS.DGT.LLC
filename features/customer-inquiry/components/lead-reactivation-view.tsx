@@ -34,7 +34,7 @@ export function LeadReactivationView({ lang }: { lang?: string }) {
     catch (e) { setError(e instanceof Error ? e.message : String(e)); setRows([]); }
   }, [days, includeLost]);
   useEffect(() => { void load(); }, [load]);
-  useEffect(() => { apiGet<{ assignees: Row[] }>("/api/erp/customer-inquiries/assignees").then((r) => setAssignees(r.assignees ?? [])).catch(() => setAssignees([])); }, []);
+  useEffect(() => { apiGet<{ users: Row[] }>("/api/erp/user-tasks/assignees").then((r) => setAssignees(r.users ?? [])).catch(() => setAssignees([])); }, []);
 
   const start = (r: Row) => {
     const due = new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10);

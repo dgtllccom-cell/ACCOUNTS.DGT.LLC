@@ -155,7 +155,8 @@ function trimNameStopwords(name: string): string {
 
 function extractPersonName(text: string): string | null {
   const lbl = labelledValue(text, ["name", "customer name", "customer", "client", "contact person", "contact"]);
-  if (lbl) return trimNameStopwords(lbl);
+  // "Contact: +971…" / "Contact: a@b.com" is contact data, not a name — a name has letters and no digits / @.
+  if (lbl && /\p{L}/u.test(lbl) && !/[\d@]/.test(lbl)) return trimNameStopwords(lbl);
   // "Met Mr Ahmed Khan" / "met with Ahmed Khan from ..." / "spoke to Ali Raza"
   // The cue words are case-insensitive; the captured name stays case-sensitive (Title Case).
   const cue = "(?:[Mm]et|[Mm]eeting|[Ss]poke|[Ss]peaking|[Tt]alked|[Cc]all(?:ed)? (?:from|by)|[Ii]nquiry from|[Vv]isit(?:ed)?(?: by)?)";

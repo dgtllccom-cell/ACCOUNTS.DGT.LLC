@@ -35,7 +35,7 @@ export function ConversationIntelligenceView({ lang }: { lang?: string }) {
   const [copied, setCopied] = useState<string | null>(null);
 
   useEffect(() => {
-    apiGet<{ assignees: Row[] }>("/api/erp/customer-inquiries/assignees").then((r) => setAssignees(r.assignees ?? [])).catch(() => setAssignees([]));
+    apiGet<{ users: Row[] }>("/api/erp/user-tasks/assignees").then((r) => setAssignees(r.users ?? [])).catch(() => setAssignees([]));
     // An email handed over from the Email workspace.
     try {
       const raw = sessionStorage.getItem("ci_prefill");
