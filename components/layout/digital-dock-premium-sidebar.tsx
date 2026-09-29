@@ -548,6 +548,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     children: [
       { label: nt("UAE Tax Dashboard"), href: "/dashboard/tax-einvoicing/uae/dashboard", icon: BarChart3 },
       { label: nt("VAT Return 201"), href: "/dashboard/tax-einvoicing/uae/vat-return", icon: FileSpreadsheet },
+      { label: nt("Corporate Tax"), href: "/dashboard/tax-einvoicing/uae/corporate-tax", icon: Landmark },
       { label: nt("E-Invoices Center"), href: "/dashboard/tax-einvoicing/uae/e-invoices", icon: FileText },
       { label: nt("ASP / FTA Compliance Status"), href: "/dashboard/tax-einvoicing/uae/asp-fta-status", icon: ShieldCheck },
       { label: nt("VAT Control & Reconciliation"), href: "/dashboard/tax-einvoicing/uae/vat-control", icon: Split },
@@ -859,6 +860,7 @@ export const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/dashboard/crm/reports": ["reports:read", "customers:read", "route:/dashboard/crm/reports"],
   "/dashboard/tax-einvoicing/uae/dashboard": ["uae_tax:read", "route:/dashboard/tax-einvoicing/uae/dashboard"],
   "/dashboard/tax-einvoicing/uae/vat-return": ["uae_tax:read", "uae_tax_filing:read", "route:/dashboard/tax-einvoicing/uae/vat-return"],
+  "/dashboard/tax-einvoicing/uae/corporate-tax": ["uae_tax:read", "uae_tax_filing:read", "route:/dashboard/tax-einvoicing/uae/corporate-tax"],
   "/dashboard/tax-einvoicing/uae/e-invoices": ["uae_tax:read", "route:/dashboard/tax-einvoicing/uae/e-invoices"],
   "/dashboard/tax-einvoicing/uae/asp-fta-status": ["uae_tax:read", "route:/dashboard/tax-einvoicing/uae/asp-fta-status"],
   "/dashboard/tax-einvoicing/uae/vat-control": ["uae_tax:read", "route:/dashboard/tax-einvoicing/uae/vat-control"],

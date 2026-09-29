@@ -271,15 +271,25 @@ const DETECTORS: Def[] = [
   },
   {
     detector: "tax_filing_deadline", group: "compliance", severity: "reminder",
+    // VAT periods (due 28 days after period end) and Corporate Tax returns (due 9 months after
+    // the financial year) that are not filed and fall due within 15 / 45 days (or are overdue).
     run: (sql, _scope, session) => sql`
-      SELECT p.period_code AS ref, p.period_end, t.legal_name, c.name AS country
-      FROM public.uae_tax_periods p JOIN public.uae_tax_entities t ON t.id = p.tax_entity_id
-      LEFT JOIN public.countries c ON c.id = t.country_id
-      WHERE p.deleted_at IS NULL AND p.filed_at IS NULL AND coalesce(p.status,'') NOT IN ('filed','closed')
-        AND p.period_end + 28 < current_date + 15
-        AND ${countryOnly(sql, session, "t.country_id")}
-      ORDER BY p.period_end LIMIT ${LIMIT}`,
-    map: (r) => ({ reference: r.ref, detail: r.legal_name, date: iso(r.period_end), href: "/dashboard/tax-einvoicing/uae/vat-return", country: r.country }),
+      SELECT * FROM (
+        SELECT p.period_code AS ref, (p.period_end + 28) AS due, t.legal_name, c.name AS country, '/dashboard/tax-einvoicing/uae/vat-return' AS href
+        FROM public.uae_tax_periods p JOIN public.uae_tax_entities t ON t.id = p.tax_entity_id
+        LEFT JOIN public.countries c ON c.id = t.country_id
+        WHERE p.deleted_at IS NULL AND p.filed_at IS NULL AND coalesce(p.status,'') NOT IN ('filed','closed')
+          AND p.period_end + 28 < current_date + 15
+          AND ${countryOnly(sql, session, "t.country_id")}
+        UNION ALL
+        SELECT r.return_no, r.filing_deadline, t.legal_name, c.name, '/dashboard/tax-einvoicing/uae/corporate-tax?return=' || r.id
+        FROM public.uae_ct_returns r JOIN public.uae_tax_entities t ON t.id = r.tax_entity_id
+        LEFT JOIN public.countries c ON c.id = r.country_id
+        WHERE r.deleted_at IS NULL AND r.status NOT IN ('filed','paid','cancelled')
+          AND r.filing_deadline < current_date + 45
+          AND ${countryOnly(sql, session, "r.country_id")}
+      ) x ORDER BY due LIMIT ${LIMIT}`,
+    map: (r) => ({ reference: r.ref, detail: r.legal_name, date: iso(r.due), href: r.href, country: r.country }),
   },
 ];
 
