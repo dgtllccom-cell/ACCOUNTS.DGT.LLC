@@ -2146,14 +2146,6 @@ export function CustomerOrderManagementView() {
           transferType: currentStep === 1 ? "truck_task" : currentStep === 2 ? "goods_verification" : "shipping_handover"
         });
       } else if (advanceStep && currentStep === 4) {
-        // Automatically ensure the customer bill exists for this completed order so it immediately appears in /dashboard/clearing-agent/customer-bill
-        if (savedOrder?.id) {
-          fetch("/api/erp/clearing-agent/customer-bill", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ orderIds: [savedOrder.id] })
-          }).catch((err) => console.warn("Auto customer bill generation notice:", err));
-        }
         // Offer the handover choice before clearing the wizard — resetForm() runs
         // only after the user picks "Continue Myself" or finishes an assignment.
         setJustCompletedOrder({
@@ -2510,6 +2502,14 @@ export function CustomerOrderManagementView() {
             <p className="text-slate-600 dark:text-slate-300">
               {tt("handover_choice_desc", "Order")} <span className="font-bold text-slate-900 dark:text-white">{justCompletedOrder.orderNo}</span> {tt("handover_choice_desc2", "is saved. Continue working on it yourself, or hand it off to another user for the next step.")}
             </p>
+            <Link
+              href="/dashboard/clearing-agent/order-transfer"
+              onClick={() => { setJustCompletedOrder(null); resetForm(); }}
+              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 transition shadow-sm"
+            >
+              <ArrowRightLeft className="h-4 w-4" />
+              <span>{tt("nav_customer_order_transfer", "Customer Order Transfer")}</span>
+            </Link>
             <button
               type="button"
               onClick={() => { setJustCompletedOrder(null); resetForm(); }}

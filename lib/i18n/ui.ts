@@ -1194,6 +1194,7 @@ export type UiKey =
   | "nav.shipping_line_dashboard"
   | "nav.clearing_agent_dashboard"
   | "nav.customer_order"
+  | "nav.customer_order_transfer"
   | "nav.new_entry"
   | "nav.branch_entry"
   | "nav.branch_menu"
@@ -14044,6 +14045,7 @@ const en: Dict = {
   "vch.approved_by": "Approved By",
   "vch.received_by": "Received By",
   "nav.customer_order": "New Customer Order",
+  "nav.customer_order_transfer": "Customer Order Transfer",
   "nav.open_navigation": "Open navigation",
   "nav.close_navigation": "Close navigation",
   "nav.expand_sidebar": "Expand sidebar",
@@ -36430,6 +36432,7 @@ const ur: Dict = {
   "vch.approved_by": "منظور کنندہ",
   "vch.received_by": "وصول کنندہ",
   "nav.customer_order": "نیا کسٹمر آرڈر",
+  "nav.customer_order_transfer": "کسٹمر آرڈر ٹرانسفر",
   "nav.open_navigation": "نیویگیشن کھولیں",
   "nav.close_navigation": "نیویگیشن بند کریں",
   "nav.expand_sidebar": "سائیڈ بار پھیلائیں",
@@ -56858,6 +56861,7 @@ const ar: Dict = {
   "vch.approved_by": "اعتمده",
   "vch.received_by": "استلمه",
   "nav.customer_order": "طلب عميل جديد",
+  "nav.customer_order_transfer": "تحويل طلب العميل",
   "nav.open_navigation": "فتح التنقل",
   "nav.close_navigation": "إغلاق التنقل",
   "nav.expand_sidebar": "توسيع الشريط الجانبي",
@@ -77312,6 +77316,7 @@ const fa: Dict = {
   "vch.approved_by": "تأییدکننده",
   "vch.received_by": "دریافت‌کننده",
   "nav.customer_order": "سفارش جدید مشتری",
+  "nav.customer_order_transfer": "انتقال سفارش مشتری",
   "nav.open_navigation": "باز کردن ناوبری",
   "nav.close_navigation": "بستن ناوبری",
   "nav.expand_sidebar": "گسترش نوار کناری",
@@ -97793,6 +97798,7 @@ const ps: Dict = {
   "vch.approved_by": "تصویبوونکی",
   "vch.received_by": "ترلاسه کوونکی",
   "nav.customer_order": "د پیرودونکي نوی امر",
+  "nav.customer_order_transfer": "د پیرودونکي امر لیږد",
   "nav.open_navigation": "نیویګیشن خلاص کړئ",
   "nav.close_navigation": "نیویګیشن بند کړئ",
   "nav.expand_sidebar": "څنګ پټه پراخه کړئ",
