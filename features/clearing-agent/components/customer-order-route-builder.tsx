@@ -82,6 +82,23 @@ export function CustomerOrderRouteBuilder({
     return [];
   });
 
+  useEffect(() => {
+    if (legs && legs.length > 1) {
+      setStops(
+        legs.slice(0, -1).map((leg: any, idx: number) => ({
+          id: leg.id || `stop-${idx}`,
+          countryId: leg.toCountryId || leg.to_country_id || "",
+          countryName: leg.toCountryName || leg.to_country_name || "",
+          locationName: leg.toLocationText || leg.to_location_text || leg.portOfDischarge || "",
+          mode: (leg.transportMode || leg.transport_mode || "by_road") as any,
+          customsPoint: leg.customsPointText || leg.customs_point_text || ""
+        }))
+      );
+    } else if (!legs || legs.length <= 1) {
+      setStops([]);
+    }
+  }, [legs?.length, routeName]);
+
   const getModeLabel = (m: string) => {
     switch (m) {
       case "by_sea":

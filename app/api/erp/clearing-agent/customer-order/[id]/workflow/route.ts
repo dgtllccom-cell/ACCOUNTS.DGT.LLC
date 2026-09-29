@@ -255,7 +255,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
         // Update customer order status and current_stage
         await sql`
           update public.clearing_customer_orders
-          set current_stage = 'truck_confirmation_required',
+          set current_stage = 'truck_assignment',
               status = 'booking_confirmed',
               updated_at = now()
           where id = ${id}::uuid
@@ -324,7 +324,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
             ${(order as any).order_no},
             '/dashboard/clearing-agent/customer-order',
             'high',
-            'pending',
+            'new',
             ${dueDate ? new Date(dueDate).toISOString() : null},
             now(), now()
           )
@@ -443,7 +443,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
           stage1bCompletedAt: now
         };
 
-        const nextStage = continueMyself ? "truck_confirmed" : "goods_entry_required";
+        const effectiveRegType = (truckRegistrationType === "permanent" || truckRegistrationType === "registered") ? "registered" : "temporary";
 
         await sql`
           update public.clearing_customer_orders
@@ -451,9 +451,10 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
               truck_driver_name = ${truckDriverName?.trim() || null},
               truck_driver_mobile = ${truckDriverMobile?.trim() || null},
               truck_transport_company = ${truckTransportCompany?.trim() || null},
-              truck_registration_type = ${truckRegistrationType || 'temporary'},
+              truck_registration_type = ${effectiveRegType},
               truck_details = ${JSON.stringify(updatedTruckDetails)}::jsonb,
-              current_stage = ${nextStage},
+              current_stage = 'goods_verification',
+              status = 'truck_confirmed',
               updated_at = now()
           where id = ${id}::uuid
         `;
@@ -549,7 +550,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
               ${(order as any).order_no},
               '/dashboard/clearing-agent/customer-order',
               'high',
-              'pending',
+              'new',
               ${effectiveDueDate ? new Date(effectiveDueDate).toISOString() : null},
               now(), now()
             )
@@ -617,8 +618,8 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
           returning id, sender_user_id, transfer_no
         `;
 
-        // Mark pending user task as returned
-        await sql`
+        // Mark active user task as returned
+        const returnedTasks = (await sql`
           update public.user_tasks
           set status = 'returned',
               return_reason = ${reason.trim()},
@@ -626,27 +627,32 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
               updated_at = now()
           where related_record_id = ${id}::uuid
             and related_record_table = 'clearing_customer_orders'
-            and status = 'pending'
-        `;
+            and status in ('new', 'accepted', 'in_progress', 'waiting')
+          returning id, created_by
+        `) as unknown as any[];
+
+        const targetStage = returnToStage === "1B" ? "truck_assignment" : "booking";
 
         // Update customer order
         await sql`
           update public.clearing_customer_orders
-          set current_stage = 'returned_for_correction',
+          set current_stage = ${targetStage},
+              status = 'returned_for_correction',
               rejected_reason = ${reason.trim()},
               updated_at = now()
           where id = ${id}::uuid
         `;
 
-        const targetUserId = returnedTransfer[0]?.sender_user_id || (order as any).created_by;
+        const effectiveTaskId = returnedTasks?.[0]?.id;
+        const targetUserId = returnedTransfer[0]?.sender_user_id || returnedTasks?.[0]?.created_by || (order as any).created_by;
 
-        if (targetUserId) {
+        if (effectiveTaskId && targetUserId) {
           // Notification to the returning user
           await sql`
             insert into public.user_task_notifications (
               task_id, recipient_id, kind, title, is_read, created_at
             ) values (
-              ${returnedTransfer[0]?.id ?? null}::uuid,
+              ${effectiveTaskId}::uuid,
               ${targetUserId}::uuid,
               'return',
               ${'Order ' + (order as any).order_no + ' returned for correction: ' + reason.trim()},
@@ -708,7 +714,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
           set status = 'completed', completed_at = now(), updated_at = now()
           where related_record_id = ${id}::uuid
             and related_record_table = 'clearing_customer_orders'
-            and status = 'pending'
+            and status in ('new', 'accepted', 'in_progress', 'waiting')
         `;
 
         // Update clearing_customer_orders to completed

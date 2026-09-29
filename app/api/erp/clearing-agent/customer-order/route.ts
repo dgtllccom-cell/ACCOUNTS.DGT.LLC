@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
+import { hasRolePermission } from "@/lib/permissions/middleware";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import {
@@ -29,7 +30,14 @@ function scopeOf(session: any): CustomerOrderScopeFilter {
 export async function GET(req: NextRequest) {
   try {
     const session = await requireErpSession();
-    authorizeApiScope(session, { resource: "shipping_records", action: "read" });
+    if (
+      !hasRolePermission(session, "shipping_records", "read") &&
+      !hasRolePermission(session, "clearing_orders", "read") &&
+      !hasRolePermission(session, "clearing", "view") &&
+      !hasRolePermission(session, "shipping", "view")
+    ) {
+      authorizeApiScope(session, { resource: "shipping_records", action: "read" });
+    }
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status");
     const orderId = searchParams.get("id");
@@ -46,7 +54,10 @@ export async function GET(req: NextRequest) {
           (scope.cityBranchIds && scope.cityBranchIds.length > 0 && scope.cityBranchIds.includes(order.city_branch_id)) ||
           (scope.countryBranchIds && scope.countryBranchIds.length > 0 && scope.countryBranchIds.includes(order.country_branch_id)) ||
           (scope.countryIds && scope.countryIds.length > 0 && scope.countryIds.includes(order.country_id)) ||
-          (order.created_by && order.created_by === scope.createdByUserId);
+          (order.created_by && order.created_by === scope.createdByUserId) ||
+          (order.latest_handover?.receiver_user_id && order.latest_handover.receiver_user_id === scope.createdByUserId) ||
+          (order.latest_handover?.dest_country_branch_id && (scope.countryBranchIds ?? []).includes(order.latest_handover.dest_country_branch_id)) ||
+          (order.latest_handover?.dest_city_branch_id && (scope.cityBranchIds ?? []).includes(order.latest_handover.dest_city_branch_id));
         if (!inScope) {
           return NextResponse.json({ success: false, error: "Not authorized to view this order" }, { status: 403 });
         }
@@ -65,7 +76,14 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const session = await requireErpSession();
-    authorizeApiScope(session, { resource: "shipping_records", action: "create" });
+    if (
+      !hasRolePermission(session, "shipping_records", "create") &&
+      !hasRolePermission(session, "clearing_orders", "create") &&
+      !hasRolePermission(session, "clearing", "create") &&
+      !hasRolePermission(session, "shipping", "create")
+    ) {
+      authorizeApiScope(session, { resource: "shipping_records", action: "create" });
+    }
     const body = await req.json();
     const isSuperAdmin = !!session.isSuperAdmin;
 

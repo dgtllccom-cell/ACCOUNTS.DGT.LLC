@@ -18,6 +18,9 @@ export function canAccessOrder(session: any, order: Record<string, any>) {
   if (order.country_branch_id && canAccessCountryBranch(session, order.country_branch_id)) return true;
   if (order.country_id && canAccessCountry(session, order.country_id)) return true;
   if (order.created_by && order.created_by === session.userId) return true;
+  if (order.latest_handover?.receiver_user_id && order.latest_handover.receiver_user_id === session.userId) return true;
+  if (order.latest_handover?.dest_country_branch_id && canAccessCountryBranch(session, order.latest_handover.dest_country_branch_id)) return true;
+  if (order.latest_handover?.dest_city_branch_id && canAccessCityBranch(session, order.latest_handover.dest_city_branch_id)) return true;
   // An order created before this scope model existed has no scope columns set at
   // all — fail open only for that legacy case so existing data stays reachable,
   // never for a row that has a scope which simply doesn't match this session.

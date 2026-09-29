@@ -392,18 +392,42 @@ export async function listCustomerOrders(status?: string | null, scope?: Custome
       // Priority order matches enforceScopeFilter: clearing-agent isolation first (shipping-scoped
       // logins), then city branch, then country branch, then country, then "only what I created"
       // for a plain agent/staff user with no elevated scope of their own — narrowest available wins.
+      const scopeParts: any[] = [];
       if (scope.clearingAgentIds && scope.clearingAgentIds.length > 0) {
-        conditions.push(sql`clearing_agent_id = ANY(${scope.clearingAgentIds}::uuid[])`);
+        scopeParts.push(sql`clearing_agent_id = ANY(${scope.clearingAgentIds}::uuid[])`);
       } else if (scope.cityBranchIds && scope.cityBranchIds.length > 0) {
-        conditions.push(sql`city_branch_id = ANY(${scope.cityBranchIds}::uuid[])`);
+        scopeParts.push(sql`city_branch_id = ANY(${scope.cityBranchIds}::uuid[])`);
       } else if (scope.countryBranchIds && scope.countryBranchIds.length > 0) {
-        conditions.push(sql`country_branch_id = ANY(${scope.countryBranchIds}::uuid[])`);
+        scopeParts.push(sql`country_branch_id = ANY(${scope.countryBranchIds}::uuid[])`);
       } else if (scope.countryIds && scope.countryIds.length > 0) {
-        conditions.push(sql`country_id = ANY(${scope.countryIds}::uuid[])`);
+        scopeParts.push(sql`country_id = ANY(${scope.countryIds}::uuid[])`);
       } else if (scope.createdByUserId) {
-        conditions.push(sql`created_by = ${scope.createdByUserId}::uuid`);
+        scopeParts.push(sql`created_by = ${scope.createdByUserId}::uuid`);
+      }
+
+      if (scope.createdByUserId) {
+        const transferConditions: any[] = [sql`receiver_user_id = ${scope.createdByUserId}::uuid`];
+        if (scope.cityBranchIds && scope.cityBranchIds.length > 0) {
+          transferConditions.push(sql`dest_city_branch_id = ANY(${scope.cityBranchIds}::uuid[])`);
+        }
+        if (scope.countryBranchIds && scope.countryBranchIds.length > 0) {
+          transferConditions.push(sql`dest_country_branch_id = ANY(${scope.countryBranchIds}::uuid[])`);
+        }
+        let transferWhere = transferConditions[0];
+        for (let t = 1; t < transferConditions.length; t++) {
+          transferWhere = sql`${transferWhere} or ${transferConditions[t]}`;
+        }
+
+        const ownScope = scopeParts[0] || sql`false`;
+        conditions.push(sql`(${ownScope} or id in (
+          select source_id from public.inter_country_transfers
+          where source_table = 'clearing_customer_orders'
+            and deleted_at is null
+            and (${transferWhere})
+        ))`);
+      } else if (scopeParts.length > 0) {
+        conditions.push(scopeParts[0]);
       } else {
-        // No scope at all — fail safe to nothing, matching enforceScopeFilter's own fail-safe.
         conditions.push(sql`id = '00000000-0000-0000-0000-000000000000'::uuid`);
       }
     }
