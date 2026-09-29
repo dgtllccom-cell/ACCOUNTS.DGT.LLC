@@ -209,6 +209,26 @@ const DETECTORS: Def[] = [
     map: (r) => ({ reference: `${r.ref} · ${r.employee_code}`, detail: `net ${Number(r.net_salary ?? 0).toFixed(2)}`, date: iso(r.period_month), href: `/dashboard/general-office/payroll?run=${encodeURIComponent(r.ref ?? "")}`, country: r.country }),
   },
   {
+    // UAE WPS: approved runs with no SIF after 3 days, SIFs rejected by the agent with no
+    // replacement, and SIFs submitted more than 5 days ago with no outcome recorded.
+    detector: "wps_exception", group: "hr", severity: "critical",
+    run: (sql, scope) => sql`
+      SELECT * FROM (
+        SELECT r.run_no AS ref, 'no_sif' AS kind, r.approved_at AS at, c.name AS country
+        FROM public.hr_payroll_runs r JOIN public.countries c ON c.id = r.country_id AND upper(c.iso2) = 'AE'
+        WHERE r.deleted_at IS NULL AND r.status IN ('approved','posted','paid') AND r.approved_at < now() - interval '3 days'
+          AND NOT EXISTS (SELECT 1 FROM public.hr_wps_sif_files f WHERE f.run_id = r.id AND f.status NOT IN ('cancelled','rejected'))
+          AND ${sqlScopeCondition(sql, scope, "r")}
+        UNION ALL
+        SELECT f.file_no, f.status, f.updated_at, c.name
+        FROM public.hr_wps_sif_files f LEFT JOIN public.countries c ON c.id = f.country_id
+        WHERE ((f.status = 'rejected' AND NOT EXISTS (SELECT 1 FROM public.hr_wps_sif_files g WHERE g.run_id = f.run_id AND g.status NOT IN ('cancelled','rejected')))
+            OR (f.status = 'submitted' AND f.submitted_at < now() - interval '5 days'))
+          AND ${sqlScopeCondition(sql, scope, "f")}
+      ) x ORDER BY at NULLS LAST LIMIT ${LIMIT}`,
+    map: (r) => ({ reference: r.ref, detail: null, date: iso(r.at), href: "/dashboard/general-office/wps-sif", country: r.country }),
+  },
+  {
     detector: "missing_attendance_before_payroll", group: "hr", severity: "needs_review",
     run: (sql, scope) => sql`
       SELECT e.employee_code AS ref, r.run_no, r.period_month, c.name AS country
@@ -220,7 +240,7 @@ const DETECTORS: Def[] = [
         AND NOT EXISTS (
           SELECT 1 FROM public.office_attendance a
           WHERE a.employee_id = e.id AND a.deleted_at IS NULL
-            AND date_trunc('month', a.attendance_date) = date_trunc('month', r.period_month::date)
+            AND date_trunc('month', a.attendance_date) = date_trunc('month', (r.period_month || '-01')::date)
         )
         AND ${sqlScopeCondition(sql, scope, "r")}
       ORDER BY r.period_month DESC LIMIT ${LIMIT}`,
