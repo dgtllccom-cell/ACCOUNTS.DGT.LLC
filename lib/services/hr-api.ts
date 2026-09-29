@@ -77,6 +77,13 @@ export function hrScopeFromSession(session: ErpSession): HrScope {
   };
 }
 
+/** Non-throwing role check (same role lists as guardHr) for mixed-audience features. */
+export function hasHrRole(session: ErpSession, action: "read" | "write"): boolean {
+  if (session.isSuperAdmin) return true;
+  const allowed = action === "read" ? HR_READ_ROLES : HR_WRITE_ROLES;
+  return (session.roles ?? []).some((r) => allowed.has(r));
+}
+
 export async function guardHr(action: "read" | "write"): Promise<{ session: ErpSession; scope: HrScope }> {
   const session = await requireErpSession();
   const roles: string[] = session.roles ?? [];

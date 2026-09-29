@@ -9610,6 +9610,102 @@ export type UiKey =
   | "wps.issue_establishment_unassigned"
   | "wps.issue_duplicate_person_id"
   | "nav.wps_sif"
+  | "perf.ack_placeholder"
+  | "perf.acknowledge"
+  | "perf.actual"
+  | "perf.add_goal"
+  | "perf.all_periods"
+  | "perf.all_status"
+  | "perf.avg_rating"
+  | "perf.band"
+  | "perf.by_band"
+  | "perf.by_department"
+  | "perf.cancel"
+  | "perf.cancel_btn"
+  | "perf.close"
+  | "perf.close_appraisal"
+  | "perf.comments"
+  | "perf.create"
+  | "perf.department"
+  | "perf.employee"
+  | "perf.employee_comments"
+  | "perf.empty"
+  | "perf.from"
+  | "perf.goal"
+  | "perf.goals"
+  | "perf.goals_title"
+  | "perf.history"
+  | "perf.improvement_due"
+  | "perf.improvement_plan"
+  | "perf.kpi_total"
+  | "perf.kpi_type"
+  | "perf.manager_comments"
+  | "perf.new"
+  | "perf.no"
+  | "perf.no_data"
+  | "perf.no_goals"
+  | "perf.no_login"
+  | "perf.no_rated"
+  | "perf.period"
+  | "perf.period_hint"
+  | "perf.period_type"
+  | "perf.rating"
+  | "perf.refresh"
+  | "perf.refresh_metrics"
+  | "perf.remove"
+  | "perf.reopen"
+  | "perf.reviewer"
+  | "perf.reviewer_default"
+  | "perf.save_draft"
+  | "perf.saved"
+  | "perf.score"
+  | "perf.select"
+  | "perf.st_acknowledged"
+  | "perf.st_closed"
+  | "perf.st_draft"
+  | "perf.st_submitted"
+  | "perf.status"
+  | "perf.strengths"
+  | "perf.submit"
+  | "perf.subtitle"
+  | "perf.system_actual"
+  | "perf.tab_list"
+  | "perf.tab_mine"
+  | "perf.tab_report"
+  | "perf.target"
+  | "perf.title"
+  | "perf.to"
+  | "perf.unit"
+  | "perf.weight"
+  | "perf.weight_total"
+  | "perf.st_cancelled"
+  | "perf.band_outstanding"
+  | "perf.band_exceeds"
+  | "perf.band_meets"
+  | "perf.band_needs_improvement"
+  | "perf.band_unsatisfactory"
+  | "perf.kpi_manual"
+  | "perf.kpi_task_completion"
+  | "perf.kpi_task_on_time"
+  | "perf.kpi_attendance_rate"
+  | "perf.pt_quarterly"
+  | "perf.pt_annual"
+  | "perf.pt_custom"
+  | "perf.done_submit"
+  | "perf.done_acknowledge"
+  | "perf.done_close"
+  | "perf.done_cancel"
+  | "perf.done_reopen"
+  | "perf.done_refresh_metrics"
+  | "perf.ev_created"
+  | "perf.ev_updated"
+  | "perf.ev_submit"
+  | "perf.ev_follow_up"
+  | "perf.ev_acknowledge"
+  | "perf.ev_close"
+  | "perf.ev_cancel"
+  | "perf.ev_reopen"
+  | "nav.performance_appraisal"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -30495,6 +30591,102 @@ const en: Dict = {
   "wps.issue_establishment_unassigned": "No establishment on the employee record — included under the selected establishment.",
   "wps.issue_duplicate_person_id": "The same person ID is used by another employee in this run.",
   "nav.wps_sif": "UAE WPS & SIF",
+  "perf.ack_placeholder": "Your comments (optional)",
+  "perf.acknowledge": "Acknowledge",
+  "perf.actual": "Actual",
+  "perf.add_goal": "Add goal",
+  "perf.all_periods": "All periods",
+  "perf.all_status": "All statuses",
+  "perf.avg_rating": "Average rating",
+  "perf.band": "Band",
+  "perf.by_band": "Rating distribution",
+  "perf.by_department": "Average rating by department",
+  "perf.cancel": "Cancel appraisal",
+  "perf.cancel_btn": "Cancel",
+  "perf.close": "Close",
+  "perf.close_appraisal": "Close appraisal",
+  "perf.comments": "Comments",
+  "perf.create": "Create appraisal",
+  "perf.department": "Department",
+  "perf.employee": "Employee",
+  "perf.employee_comments": "Employee comments",
+  "perf.empty": "No appraisals yet.",
+  "perf.from": "From",
+  "perf.goal": "Goal / KPI",
+  "perf.goals": "Goals",
+  "perf.goals_title": "Goals & KPIs",
+  "perf.history": "Audit history",
+  "perf.improvement_due": "Improvement review date",
+  "perf.improvement_plan": "Improvement plan",
+  "perf.kpi_total": "Appraisals",
+  "perf.kpi_type": "Measure",
+  "perf.manager_comments": "Manager review comments",
+  "perf.new": "New appraisal",
+  "perf.no": "Appraisal No.",
+  "perf.no_data": "No records in this period",
+  "perf.no_goals": "No goals yet — add the goals agreed for this period.",
+  "perf.no_login": "Employee has no ERP login — no task data",
+  "perf.no_rated": "No submitted appraisals in this period.",
+  "perf.period": "Period",
+  "perf.period_hint": "e.g. 2026-Q3 or 2026",
+  "perf.period_type": "Review period",
+  "perf.rating": "Rating",
+  "perf.refresh": "Refresh",
+  "perf.refresh_metrics": "Refresh system KPIs",
+  "perf.remove": "Remove",
+  "perf.reopen": "Reopen",
+  "perf.reviewer": "Reviewer",
+  "perf.reviewer_default": "Reporting manager (from employee record)",
+  "perf.save_draft": "Save draft",
+  "perf.saved": "Saved.",
+  "perf.score": "Score (1–5)",
+  "perf.select": "Select…",
+  "perf.st_acknowledged": "Acknowledged",
+  "perf.st_closed": "Closed",
+  "perf.st_draft": "Draft",
+  "perf.st_submitted": "Submitted",
+  "perf.status": "Status",
+  "perf.strengths": "Strengths",
+  "perf.submit": "Submit review",
+  "perf.subtitle": "Goals and KPIs per review period, manager review, employee acknowledgement and improvement plans. Task and attendance KPIs come from the real User Tasks and attendance records.",
+  "perf.system_actual": "From real records",
+  "perf.tab_list": "Appraisals",
+  "perf.tab_mine": "My appraisals",
+  "perf.tab_report": "Quarterly / annual report",
+  "perf.target": "Target",
+  "perf.title": "Employee Performance & Appraisal",
+  "perf.to": "To",
+  "perf.unit": "Unit",
+  "perf.weight": "Weight %",
+  "perf.weight_total": "Weights",
+  "perf.st_cancelled": "Cancelled",
+  "perf.band_outstanding": "Outstanding",
+  "perf.band_exceeds": "Exceeds expectations",
+  "perf.band_meets": "Meets expectations",
+  "perf.band_needs_improvement": "Needs improvement",
+  "perf.band_unsatisfactory": "Unsatisfactory",
+  "perf.kpi_manual": "Manual (manager)",
+  "perf.kpi_task_completion": "Task completion rate",
+  "perf.kpi_task_on_time": "Tasks completed on time",
+  "perf.kpi_attendance_rate": "Attendance rate",
+  "perf.pt_quarterly": "Quarterly",
+  "perf.pt_annual": "Annual",
+  "perf.pt_custom": "Custom period",
+  "perf.done_submit": "Review submitted.",
+  "perf.done_acknowledge": "Appraisal acknowledged.",
+  "perf.done_close": "Appraisal closed.",
+  "perf.done_cancel": "Appraisal cancelled.",
+  "perf.done_reopen": "Appraisal reopened.",
+  "perf.done_refresh_metrics": "System KPIs refreshed.",
+  "perf.ev_created": "Created",
+  "perf.ev_updated": "Updated",
+  "perf.ev_submit": "Submitted",
+  "perf.ev_follow_up": "Follow-up tasks",
+  "perf.ev_acknowledge": "Acknowledged",
+  "perf.ev_close": "Closed",
+  "perf.ev_cancel": "Cancelled",
+  "perf.ev_reopen": "Reopened",
+  "nav.performance_appraisal": "Employee Performance & Appraisal",
 };
 
 const ur: Dict = {
@@ -51349,6 +51541,102 @@ const ur: Dict = {
   "wps.issue_establishment_unassigned": "ملازم کے ریکارڈ پر کوئی ادارہ نہیں — منتخب ادارے کے تحت شامل کیا گیا۔",
   "wps.issue_duplicate_person_id": "یہی پرسن آئی ڈی اس رن میں کسی دوسرے ملازم کی ہے۔",
   "nav.wps_sif": "یو اے ای WPS اور SIF",
+  "perf.ack_placeholder": "آپ کے تبصرے (اختیاری)",
+  "perf.acknowledge": "تسلیم کریں",
+  "perf.actual": "اصل",
+  "perf.add_goal": "ہدف شامل کریں",
+  "perf.all_periods": "تمام مدتیں",
+  "perf.all_status": "تمام حیثیتیں",
+  "perf.avg_rating": "اوسط درجہ بندی",
+  "perf.band": "درجہ",
+  "perf.by_band": "درجہ بندی کی تقسیم",
+  "perf.by_department": "شعبہ وار اوسط درجہ بندی",
+  "perf.cancel": "جائزہ منسوخ کریں",
+  "perf.cancel_btn": "منسوخ",
+  "perf.close": "بند کریں",
+  "perf.close_appraisal": "جائزہ بند کریں",
+  "perf.comments": "تبصرے",
+  "perf.create": "جائزہ بنائیں",
+  "perf.department": "شعبہ",
+  "perf.employee": "ملازم",
+  "perf.employee_comments": "ملازم کے تبصرے",
+  "perf.empty": "ابھی تک کوئی جائزہ نہیں۔",
+  "perf.from": "سے",
+  "perf.goal": "ہدف / KPI",
+  "perf.goals": "اہداف",
+  "perf.goals_title": "اہداف اور KPIs",
+  "perf.history": "آڈٹ تاریخچہ",
+  "perf.improvement_due": "بہتری کے جائزے کی تاریخ",
+  "perf.improvement_plan": "بہتری کا منصوبہ",
+  "perf.kpi_total": "جائزے",
+  "perf.kpi_type": "پیمانہ",
+  "perf.manager_comments": "مینیجر کے جائزہ تبصرے",
+  "perf.new": "نیا جائزہ",
+  "perf.no": "جائزہ نمبر",
+  "perf.no_data": "اس مدت میں کوئی ریکارڈ نہیں",
+  "perf.no_goals": "ابھی کوئی ہدف نہیں — اس مدت کے لیے طے شدہ اہداف شامل کریں۔",
+  "perf.no_login": "ملازم کا ای آر پی لاگ ان نہیں — ٹاسک ڈیٹا نہیں",
+  "perf.no_rated": "اس مدت میں کوئی جمع شدہ جائزہ نہیں۔",
+  "perf.period": "مدت",
+  "perf.period_hint": "مثلاً 2026-Q3 یا 2026",
+  "perf.period_type": "جائزے کی مدت",
+  "perf.rating": "درجہ بندی",
+  "perf.refresh": "تازہ کریں",
+  "perf.refresh_metrics": "سسٹم KPIs تازہ کریں",
+  "perf.remove": "ہٹائیں",
+  "perf.reopen": "دوبارہ کھولیں",
+  "perf.reviewer": "جائزہ کار",
+  "perf.reviewer_default": "رپورٹنگ مینیجر (ملازم کے ریکارڈ سے)",
+  "perf.save_draft": "مسودہ محفوظ کریں",
+  "perf.saved": "محفوظ ہو گیا۔",
+  "perf.score": "اسکور (1–5)",
+  "perf.select": "منتخب کریں…",
+  "perf.st_acknowledged": "تسلیم شدہ",
+  "perf.st_closed": "بند",
+  "perf.st_draft": "مسودہ",
+  "perf.st_submitted": "جمع شدہ",
+  "perf.status": "حیثیت",
+  "perf.strengths": "خوبیاں",
+  "perf.submit": "جائزہ جمع کریں",
+  "perf.subtitle": "ہر مدت کے اہداف اور KPIs، مینیجر کا جائزہ، ملازم کی تسلیم اور بہتری کے منصوبے۔ ٹاسک اور حاضری KPIs اصل یوزر ٹاسکس اور حاضری ریکارڈز سے آتے ہیں۔",
+  "perf.system_actual": "اصل ریکارڈز سے",
+  "perf.tab_list": "جائزے",
+  "perf.tab_mine": "میرے جائزے",
+  "perf.tab_report": "سہ ماہی / سالانہ رپورٹ",
+  "perf.target": "ہدف",
+  "perf.title": "ملازم کی کارکردگی اور جائزہ",
+  "perf.to": "تک",
+  "perf.unit": "اکائی",
+  "perf.weight": "وزن %",
+  "perf.weight_total": "اوزان",
+  "perf.st_cancelled": "منسوخ",
+  "perf.band_outstanding": "شاندار",
+  "perf.band_exceeds": "توقعات سے بہتر",
+  "perf.band_meets": "توقعات کے مطابق",
+  "perf.band_needs_improvement": "بہتری درکار",
+  "perf.band_unsatisfactory": "غیر تسلی بخش",
+  "perf.kpi_manual": "دستی (مینیجر)",
+  "perf.kpi_task_completion": "ٹاسک تکمیل کی شرح",
+  "perf.kpi_task_on_time": "بروقت مکمل ٹاسکس",
+  "perf.kpi_attendance_rate": "حاضری کی شرح",
+  "perf.pt_quarterly": "سہ ماہی",
+  "perf.pt_annual": "سالانہ",
+  "perf.pt_custom": "اپنی مرضی کی مدت",
+  "perf.done_submit": "جائزہ جمع ہو گیا۔",
+  "perf.done_acknowledge": "جائزہ تسلیم کر لیا گیا۔",
+  "perf.done_close": "جائزہ بند ہو گیا۔",
+  "perf.done_cancel": "جائزہ منسوخ ہو گیا۔",
+  "perf.done_reopen": "جائزہ دوبارہ کھل گیا۔",
+  "perf.done_refresh_metrics": "سسٹم KPIs تازہ ہو گئے۔",
+  "perf.ev_created": "بنایا گیا",
+  "perf.ev_updated": "اپڈیٹ ہوا",
+  "perf.ev_submit": "جمع کیا گیا",
+  "perf.ev_follow_up": "فالو اپ ٹاسکس",
+  "perf.ev_acknowledge": "تسلیم کیا گیا",
+  "perf.ev_close": "بند کیا گیا",
+  "perf.ev_cancel": "منسوخ کیا گیا",
+  "perf.ev_reopen": "دوبارہ کھولا گیا",
+  "nav.performance_appraisal": "ملازم کی کارکردگی اور جائزہ",
 };
 
 const ar: Dict = {
@@ -72204,6 +72492,102 @@ const ar: Dict = {
   "wps.issue_establishment_unassigned": "لا توجد منشأة في سجل الموظف — أُدرج ضمن المنشأة المختارة.",
   "wps.issue_duplicate_person_id": "رقم الشخص نفسه مستخدم لموظف آخر في هذه الدورة.",
   "nav.wps_sif": "نظام حماية الأجور وملف SIF - الإمارات",
+  "perf.ack_placeholder": "تعليقاتك (اختياري)",
+  "perf.acknowledge": "إقرار",
+  "perf.actual": "الفعلي",
+  "perf.add_goal": "إضافة هدف",
+  "perf.all_periods": "جميع الفترات",
+  "perf.all_status": "جميع الحالات",
+  "perf.avg_rating": "متوسط التقييم",
+  "perf.band": "الفئة",
+  "perf.by_band": "توزيع التقييمات",
+  "perf.by_department": "متوسط التقييم حسب القسم",
+  "perf.cancel": "إلغاء التقييم",
+  "perf.cancel_btn": "إلغاء",
+  "perf.close": "إغلاق",
+  "perf.close_appraisal": "إغلاق التقييم",
+  "perf.comments": "التعليقات",
+  "perf.create": "إنشاء التقييم",
+  "perf.department": "القسم",
+  "perf.employee": "الموظف",
+  "perf.employee_comments": "تعليقات الموظف",
+  "perf.empty": "لا توجد تقييمات بعد.",
+  "perf.from": "من",
+  "perf.goal": "الهدف / مؤشر الأداء",
+  "perf.goals": "الأهداف",
+  "perf.goals_title": "الأهداف ومؤشرات الأداء",
+  "perf.history": "سجل التدقيق",
+  "perf.improvement_due": "تاريخ مراجعة التحسين",
+  "perf.improvement_plan": "خطة التحسين",
+  "perf.kpi_total": "التقييمات",
+  "perf.kpi_type": "المقياس",
+  "perf.manager_comments": "تعليقات مراجعة المدير",
+  "perf.new": "تقييم جديد",
+  "perf.no": "رقم التقييم",
+  "perf.no_data": "لا توجد سجلات في هذه الفترة",
+  "perf.no_goals": "لا أهداف بعد — أضف الأهداف المتفق عليها لهذه الفترة.",
+  "perf.no_login": "ليس للموظف حساب في النظام — لا بيانات مهام",
+  "perf.no_rated": "لا توجد تقييمات مقدمة في هذه الفترة.",
+  "perf.period": "الفترة",
+  "perf.period_hint": "مثال: 2026-Q3 أو 2026",
+  "perf.period_type": "فترة المراجعة",
+  "perf.rating": "التقييم",
+  "perf.refresh": "تحديث",
+  "perf.refresh_metrics": "تحديث مؤشرات النظام",
+  "perf.remove": "إزالة",
+  "perf.reopen": "إعادة فتح",
+  "perf.reviewer": "المراجع",
+  "perf.reviewer_default": "المدير المباشر (من سجل الموظف)",
+  "perf.save_draft": "حفظ المسودة",
+  "perf.saved": "تم الحفظ.",
+  "perf.score": "الدرجة (1–5)",
+  "perf.select": "اختر…",
+  "perf.st_acknowledged": "تم الإقرار",
+  "perf.st_closed": "مغلق",
+  "perf.st_draft": "مسودة",
+  "perf.st_submitted": "مُقدَّم",
+  "perf.status": "الحالة",
+  "perf.strengths": "نقاط القوة",
+  "perf.submit": "تقديم المراجعة",
+  "perf.subtitle": "أهداف ومؤشرات أداء لكل فترة، ومراجعة المدير، وإقرار الموظف، وخطط التحسين. تأتي مؤشرات المهام والحضور من سجلات المهام والحضور الفعلية.",
+  "perf.system_actual": "من السجلات الفعلية",
+  "perf.tab_list": "التقييمات",
+  "perf.tab_mine": "تقييماتي",
+  "perf.tab_report": "تقرير ربع سنوي / سنوي",
+  "perf.target": "المستهدف",
+  "perf.title": "أداء الموظف والتقييم",
+  "perf.to": "إلى",
+  "perf.unit": "الوحدة",
+  "perf.weight": "الوزن %",
+  "perf.weight_total": "الأوزان",
+  "perf.st_cancelled": "ملغى",
+  "perf.band_outstanding": "متميز",
+  "perf.band_exceeds": "يتجاوز التوقعات",
+  "perf.band_meets": "يلبي التوقعات",
+  "perf.band_needs_improvement": "يحتاج إلى تحسين",
+  "perf.band_unsatisfactory": "غير مرضٍ",
+  "perf.kpi_manual": "يدوي (المدير)",
+  "perf.kpi_task_completion": "معدل إنجاز المهام",
+  "perf.kpi_task_on_time": "المهام المنجزة في الوقت",
+  "perf.kpi_attendance_rate": "معدل الحضور",
+  "perf.pt_quarterly": "ربع سنوي",
+  "perf.pt_annual": "سنوي",
+  "perf.pt_custom": "فترة مخصصة",
+  "perf.done_submit": "تم تقديم المراجعة.",
+  "perf.done_acknowledge": "تم الإقرار بالتقييم.",
+  "perf.done_close": "تم إغلاق التقييم.",
+  "perf.done_cancel": "تم إلغاء التقييم.",
+  "perf.done_reopen": "أُعيد فتح التقييم.",
+  "perf.done_refresh_metrics": "تم تحديث مؤشرات النظام.",
+  "perf.ev_created": "أُنشئ",
+  "perf.ev_updated": "حُدّث",
+  "perf.ev_submit": "قُدّم",
+  "perf.ev_follow_up": "مهام المتابعة",
+  "perf.ev_acknowledge": "تم الإقرار",
+  "perf.ev_close": "أُغلق",
+  "perf.ev_cancel": "أُلغي",
+  "perf.ev_reopen": "أُعيد فتحه",
+  "nav.performance_appraisal": "أداء الموظف والتقييم",
 };
 
 const fa: Dict = {
@@ -93058,6 +93442,102 @@ const fa: Dict = {
   "wps.issue_establishment_unassigned": "هیچ مؤسسه‌ای در رکورد کارمند نیست — زیر مؤسسه انتخاب‌شده گنجانده شد.",
   "wps.issue_duplicate_person_id": "همین شناسه شخص برای کارمند دیگری در این اجرا استفاده شده است.",
   "nav.wps_sif": "WPS و SIF امارات",
+  "perf.ack_placeholder": "نظرات شما (اختیاری)",
+  "perf.acknowledge": "تأیید دریافت",
+  "perf.actual": "واقعی",
+  "perf.add_goal": "افزودن هدف",
+  "perf.all_periods": "همه دوره‌ها",
+  "perf.all_status": "همه وضعیت‌ها",
+  "perf.avg_rating": "میانگین رتبه",
+  "perf.band": "سطح",
+  "perf.by_band": "توزیع رتبه‌ها",
+  "perf.by_department": "میانگین رتبه بر اساس بخش",
+  "perf.cancel": "لغو ارزیابی",
+  "perf.cancel_btn": "انصراف",
+  "perf.close": "بستن",
+  "perf.close_appraisal": "بستن ارزیابی",
+  "perf.comments": "نظرات",
+  "perf.create": "ایجاد ارزیابی",
+  "perf.department": "بخش",
+  "perf.employee": "کارمند",
+  "perf.employee_comments": "نظرات کارمند",
+  "perf.empty": "هنوز ارزیابی‌ای وجود ندارد.",
+  "perf.from": "از",
+  "perf.goal": "هدف / KPI",
+  "perf.goals": "اهداف",
+  "perf.goals_title": "اهداف و شاخص‌ها",
+  "perf.history": "تاریخچه ممیزی",
+  "perf.improvement_due": "تاریخ بازبینی بهبود",
+  "perf.improvement_plan": "برنامه بهبود",
+  "perf.kpi_total": "ارزیابی‌ها",
+  "perf.kpi_type": "سنجه",
+  "perf.manager_comments": "نظرات بازبینی مدیر",
+  "perf.new": "ارزیابی جدید",
+  "perf.no": "شماره ارزیابی",
+  "perf.no_data": "در این دوره رکوردی نیست",
+  "perf.no_goals": "هنوز هدفی نیست — اهداف توافق‌شده این دوره را اضافه کنید.",
+  "perf.no_login": "کارمند حساب ورود ERP ندارد — داده وظیفه‌ای نیست",
+  "perf.no_rated": "در این دوره ارزیابی ارسال‌شده‌ای نیست.",
+  "perf.period": "دوره",
+  "perf.period_hint": "مثلاً 2026-Q3 یا 2026",
+  "perf.period_type": "دوره بازبینی",
+  "perf.rating": "رتبه",
+  "perf.refresh": "تازه‌سازی",
+  "perf.refresh_metrics": "تازه‌سازی شاخص‌های سیستم",
+  "perf.remove": "حذف",
+  "perf.reopen": "بازگشایی",
+  "perf.reviewer": "بازبین",
+  "perf.reviewer_default": "مدیر مستقیم (از رکورد کارمند)",
+  "perf.save_draft": "ذخیره پیش‌نویس",
+  "perf.saved": "ذخیره شد.",
+  "perf.score": "امتیاز (۱–۵)",
+  "perf.select": "انتخاب…",
+  "perf.st_acknowledged": "تأییدشده توسط کارمند",
+  "perf.st_closed": "بسته",
+  "perf.st_draft": "پیش‌نویس",
+  "perf.st_submitted": "ارسال‌شده",
+  "perf.status": "وضعیت",
+  "perf.strengths": "نقاط قوت",
+  "perf.submit": "ارسال بازبینی",
+  "perf.subtitle": "اهداف و شاخص‌ها در هر دوره، بازبینی مدیر، تأیید کارمند و برنامه‌های بهبود. شاخص‌های وظایف و حضور از رکوردهای واقعی وظایف و حضور می‌آیند.",
+  "perf.system_actual": "از رکوردهای واقعی",
+  "perf.tab_list": "ارزیابی‌ها",
+  "perf.tab_mine": "ارزیابی‌های من",
+  "perf.tab_report": "گزارش فصلی / سالانه",
+  "perf.target": "هدف عددی",
+  "perf.title": "عملکرد و ارزیابی کارمند",
+  "perf.to": "تا",
+  "perf.unit": "واحد",
+  "perf.weight": "وزن %",
+  "perf.weight_total": "وزن‌ها",
+  "perf.st_cancelled": "لغوشده",
+  "perf.band_outstanding": "برجسته",
+  "perf.band_exceeds": "فراتر از انتظار",
+  "perf.band_meets": "مطابق انتظار",
+  "perf.band_needs_improvement": "نیازمند بهبود",
+  "perf.band_unsatisfactory": "نامطلوب",
+  "perf.kpi_manual": "دستی (مدیر)",
+  "perf.kpi_task_completion": "نرخ تکمیل وظایف",
+  "perf.kpi_task_on_time": "وظایف به‌موقع",
+  "perf.kpi_attendance_rate": "نرخ حضور",
+  "perf.pt_quarterly": "فصلی",
+  "perf.pt_annual": "سالانه",
+  "perf.pt_custom": "دوره سفارشی",
+  "perf.done_submit": "بازبینی ارسال شد.",
+  "perf.done_acknowledge": "ارزیابی تأیید شد.",
+  "perf.done_close": "ارزیابی بسته شد.",
+  "perf.done_cancel": "ارزیابی لغو شد.",
+  "perf.done_reopen": "ارزیابی بازگشایی شد.",
+  "perf.done_refresh_metrics": "شاخص‌های سیستم تازه شد.",
+  "perf.ev_created": "ایجاد شد",
+  "perf.ev_updated": "به‌روزرسانی شد",
+  "perf.ev_submit": "ارسال شد",
+  "perf.ev_follow_up": "وظایف پیگیری",
+  "perf.ev_acknowledge": "تأیید شد",
+  "perf.ev_close": "بسته شد",
+  "perf.ev_cancel": "لغو شد",
+  "perf.ev_reopen": "بازگشایی شد",
+  "nav.performance_appraisal": "عملکرد و ارزیابی کارمند",
 };
 
 const ps: Dict = {
@@ -113919,6 +114399,102 @@ const ps: Dict = {
   "wps.issue_establishment_unassigned": "د کارکوونکي په ثبت کې اداره نشته — د ټاکل شوې ادارې لاندې شامل شو.",
   "wps.issue_duplicate_person_id": "همدا د شخص پېژند په دې چلون کې د بل کارکوونکي لپاره کارېدلی.",
   "nav.wps_sif": "د امارات WPS او SIF",
+  "perf.ack_placeholder": "ستاسو نظرونه (اختیاري)",
+  "perf.acknowledge": "تصدیق کړئ",
+  "perf.actual": "اصلي",
+  "perf.add_goal": "هدف زیات کړئ",
+  "perf.all_periods": "ټولې مودې",
+  "perf.all_status": "ټول حالتونه",
+  "perf.avg_rating": "منځنۍ درجه",
+  "perf.band": "کټګوري",
+  "perf.by_band": "د درجو وېش",
+  "perf.by_department": "د څانګې له مخې منځنۍ درجه",
+  "perf.cancel": "ارزونه لغوه کړئ",
+  "perf.cancel_btn": "لغوه",
+  "perf.close": "بندول",
+  "perf.close_appraisal": "ارزونه بنده کړئ",
+  "perf.comments": "نظرونه",
+  "perf.create": "ارزونه جوړه کړئ",
+  "perf.department": "څانګه",
+  "perf.employee": "کارکوونکی",
+  "perf.employee_comments": "د کارکوونکي نظرونه",
+  "perf.empty": "تر اوسه ارزونه نشته.",
+  "perf.from": "له",
+  "perf.goal": "هدف / KPI",
+  "perf.goals": "موخې",
+  "perf.goals_title": "موخې او KPIs",
+  "perf.history": "د پلټنې تاریخچه",
+  "perf.improvement_due": "د ښه والي د بیاکتنې نېټه",
+  "perf.improvement_plan": "د ښه والي پلان",
+  "perf.kpi_total": "ارزونې",
+  "perf.kpi_type": "معیار",
+  "perf.manager_comments": "د مدیر د بیاکتنې نظرونه",
+  "perf.new": "نوې ارزونه",
+  "perf.no": "د ارزونې شمېره",
+  "perf.no_data": "په دې موده کې ثبت نشته",
+  "perf.no_goals": "تر اوسه موخه نشته — د دې مودې لپاره هوکړه شوې موخې زیاتې کړئ.",
+  "perf.no_login": "کارکوونکی د ERP ننوتنه نه لري — د دندو معلومات نشته",
+  "perf.no_rated": "په دې موده کې سپارل شوې ارزونه نشته.",
+  "perf.period": "موده",
+  "perf.period_hint": "لکه 2026-Q3 یا 2026",
+  "perf.period_type": "د بیاکتنې موده",
+  "perf.rating": "درجه",
+  "perf.refresh": "تازه کول",
+  "perf.refresh_metrics": "د سیستم KPIs تازه کړئ",
+  "perf.remove": "لرې کول",
+  "perf.reopen": "بیا پرانیستل",
+  "perf.reviewer": "بیاکتونکی",
+  "perf.reviewer_default": "مستقیم مدیر (د کارکوونکي له ثبت)",
+  "perf.save_draft": "مسوده خوندي کړئ",
+  "perf.saved": "خوندي شو.",
+  "perf.score": "نمره (۱–۵)",
+  "perf.select": "وټاکئ…",
+  "perf.st_acknowledged": "تصدیق شوی",
+  "perf.st_closed": "بند",
+  "perf.st_draft": "مسوده",
+  "perf.st_submitted": "سپارل شوی",
+  "perf.status": "حالت",
+  "perf.strengths": "ځواکمنې ټکي",
+  "perf.submit": "بیاکتنه وسپارئ",
+  "perf.subtitle": "د هرې مودې موخې او KPIs، د مدیر بیاکتنه، د کارکوونکي تصدیق او د ښه والي پلانونه. د دندو او حاضرۍ KPIs د ریښتینو دندو او حاضرۍ له ثبتونو راځي.",
+  "perf.system_actual": "له ریښتینو ثبتونو",
+  "perf.tab_list": "ارزونې",
+  "perf.tab_mine": "زما ارزونې",
+  "perf.tab_report": "درې میاشتنی / کلنی راپور",
+  "perf.target": "هدف",
+  "perf.title": "د کارکوونکي فعالیت او ارزونه",
+  "perf.to": "تر",
+  "perf.unit": "واحد",
+  "perf.weight": "وزن %",
+  "perf.weight_total": "وزنونه",
+  "perf.st_cancelled": "لغوه شوی",
+  "perf.band_outstanding": "عالي",
+  "perf.band_exceeds": "له تمې پورته",
+  "perf.band_meets": "د تمې سره سم",
+  "perf.band_needs_improvement": "ښه والي ته اړتیا",
+  "perf.band_unsatisfactory": "نا رضایت بخش",
+  "perf.kpi_manual": "لاسي (مدیر)",
+  "perf.kpi_task_completion": "د دندو د بشپړېدو کچه",
+  "perf.kpi_task_on_time": "په وخت بشپړې دندې",
+  "perf.kpi_attendance_rate": "د حاضرۍ کچه",
+  "perf.pt_quarterly": "درې میاشتنی",
+  "perf.pt_annual": "کلنی",
+  "perf.pt_custom": "ځانګړې موده",
+  "perf.done_submit": "بیاکتنه وسپارل شوه.",
+  "perf.done_acknowledge": "ارزونه تصدیق شوه.",
+  "perf.done_close": "ارزونه بنده شوه.",
+  "perf.done_cancel": "ارزونه لغوه شوه.",
+  "perf.done_reopen": "ارزونه بیا پرانیستل شوه.",
+  "perf.done_refresh_metrics": "د سیستم KPIs تازه شول.",
+  "perf.ev_created": "جوړ شو",
+  "perf.ev_updated": "تازه شو",
+  "perf.ev_submit": "وسپارل شو",
+  "perf.ev_follow_up": "د تعقیب دندې",
+  "perf.ev_acknowledge": "تصدیق شو",
+  "perf.ev_close": "بند شو",
+  "perf.ev_cancel": "لغوه شو",
+  "perf.ev_reopen": "بیا پرانیستل شو",
+  "nav.performance_appraisal": "د کارکوونکي فعالیت او ارزونه",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

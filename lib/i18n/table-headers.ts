@@ -3253,6 +3253,7 @@ export const HEADER_TRANSLATIONS: Record<string, Row> = {
   "IN PROGRESS": { ur: "جاری", ar: "قيد التنفيذ", fa: "در حال انجام", ps: "روان" },
   "NEW": { ur: "نیا", ar: "جديد", fa: "جدید", ps: "نوی" },
   "UAE WPS & SIF": { ur: "یو اے ای WPS اور SIF", ar: "نظام حماية الأجور وملف SIF - الإمارات", fa: "WPS و SIF امارات", ps: "د امارات WPS او SIF" },
+  "EMPLOYEE PERFORMANCE & APPRAISAL": { ur: "ملازم کی کارکردگی اور جائزہ", ar: "أداء الموظف والتقييم", fa: "عملکرد و ارزیابی کارمند", ps: "د کارکوونکي فعالیت او ارزونه" },
 };
 
 /** Normalize an English header for lookup: trim, collapse whitespace, uppercase. */
