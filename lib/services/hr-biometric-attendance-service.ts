@@ -32,11 +32,6 @@ function localParts(iso: string, tz: string) {
   const hh = p.hour === "24" ? "00" : p.hour;
   return { date: `${p.year}-${p.month}-${p.day}`, time: `${hh}:${p.minute}:${p.second}` };
 }
-const toMin = (t: string | null | undefined) => {
-  if (!t) return null;
-  const m = /^(\d{1,2}):(\d{2})(?::(\d{2}))?/.exec(String(t));
-  return m ? Number(m[1]) * 60 + Number(m[2]) + (m[3] ? Number(m[3]) / 60 : 0) : null;
-};
 
 // ── Devices ─────────────────────────────────────────────────────────────────
 
@@ -149,54 +144,48 @@ export async function ingestPunches(device: Device, punches: DevicePunch[], sour
 
 /**
  * Roll one employee-day of punches into office_attendance. First 'in' (else earliest) = check-in,
- * last 'out' (else latest, when more than one punch) = check-out. Late / early / overtime use the
- * employee's own duty times. Returns true when the attendance row was created / updated.
+ * last 'out' (else latest, when more than one punch) = check-out. Work hours, late, early-leave and
+ * overtime are NOT computed here: the existing hr_calc_attendance trigger derives them from the
+ * employee's shift, exactly as for manual rows. Returns true when the attendance row was written.
  */
 export async function rollupDay(employeeId: string, date: string, tz: string): Promise<boolean> {
   return !!(await withLocalPg(async (sql) => {
     const ev = (await sql`
-      SELECT id, event_time, direction FROM public.hr_attendance_device_events
+      SELECT id, event_time, direction, source FROM public.hr_attendance_device_events
       WHERE employee_id = ${employeeId}::uuid AND event_local_date = ${date}::date AND status IN ('pending', 'applied', 'ignored_manual')
       ORDER BY event_time
     `) as any[];
     if (!ev.length) return false;
-    const emp = ((await sql`SELECT country_id, city_branch_id, duty_start_time, duty_end_time FROM public.employees WHERE id = ${employeeId}::uuid`) as any[])[0];
+    const emp = ((await sql`SELECT country_id, city_branch_id FROM public.employees WHERE id = ${employeeId}::uuid`) as any[])[0];
     const ins = ev.filter((e) => e.direction === "in");
     const outs = ev.filter((e) => e.direction === "out");
     const first = (ins[0] ?? ev[0]).event_time;
     const last = outs.length ? outs[outs.length - 1].event_time : ev.length > 1 ? ev[ev.length - 1].event_time : null;
     const cin = localParts(new Date(first).toISOString(), tz).time;
     const cout = last ? localParts(new Date(last).toISOString(), tz).time : null;
-    const inM = toMin(cin), outM = toMin(cout);
-    const workHours = inM !== null && outM !== null && outM > inM ? Math.round(((outM - inM) / 60) * 100) / 100 : null;
-    const ds = toMin(emp?.duty_start_time), de = toMin(emp?.duty_end_time);
-    const expected = ds !== null && de !== null && de > ds ? Math.round(((de - ds) / 60) * 100) / 100 : null;
-    const late = ds !== null && inM !== null ? Math.max(0, Math.round(inM - ds)) : null;
-    const early = de !== null && outM !== null ? Math.max(0, Math.round(de - outM)) : null;
-    const overtime = expected !== null && workHours !== null ? Math.max(0, Math.round((workHours - expected) * 100) / 100) : null;
+    // 'import' only when every punch of the day came from an uploaded device log.
+    const source = ev.every((e) => e.source === "import") ? "import" : "device";
 
     const existing = ((await sql`
       SELECT id, source FROM public.office_attendance WHERE employee_id = ${employeeId}::uuid AND attendance_date = ${date}::date AND deleted_at IS NULL
       ORDER BY created_at LIMIT 1
     `) as any[])[0];
     const evIds = ev.map((e) => e.id);
-    if (existing && existing.source !== "device") {
+    if (existing && existing.source !== "device" && existing.source !== "import") {
       // A manual / corrected row is authoritative — keep it, keep the punches as evidence.
       await sql`UPDATE public.hr_attendance_device_events SET status = 'ignored_manual', attendance_id = ${existing.id}::uuid, processed_at = now() WHERE id = ANY(${evIds}::uuid[])`;
       return false;
     }
     let attId: string;
     if (existing) {
-      await sql`UPDATE public.office_attendance SET check_in = ${cin}::time, check_out = ${cout}::time, work_hours = ${workHours}, late_minutes = ${late},
-                  early_leave_minutes = ${early}, overtime_hours = ${overtime}, expected_hours = ${expected}, status = 'Present', updated_at = now()
+      await sql`UPDATE public.office_attendance SET check_in = ${cin}::time, check_out = ${cout}::time, status = 'Present', source = ${source}, updated_at = now()
                 WHERE id = ${existing.id}::uuid`;
       attId = existing.id;
     } else {
       const r = (await sql`
-        INSERT INTO public.office_attendance (employee_id, attendance_date, check_in, check_out, status, work_hours, late_minutes, early_leave_minutes,
-                                              overtime_hours, expected_hours, country_id, city_branch_id, source, notes)
-        VALUES (${employeeId}::uuid, ${date}::date, ${cin}::time, ${cout}::time, 'Present', ${workHours}, ${late}, ${early}, ${overtime}, ${expected},
-                ${emp?.country_id ?? null}::uuid, ${emp?.city_branch_id ?? null}::uuid, 'device', ${"Face-ID / biometric device"})
+        INSERT INTO public.office_attendance (employee_id, attendance_date, check_in, check_out, status, country_id, city_branch_id, source, notes)
+        VALUES (${employeeId}::uuid, ${date}::date, ${cin}::time, ${cout}::time, 'Present',
+                ${emp?.country_id ?? null}::uuid, ${emp?.city_branch_id ?? null}::uuid, ${source}, ${"Face-ID / biometric device"})
         RETURNING id
       `) as any[];
       attId = r[0].id;
