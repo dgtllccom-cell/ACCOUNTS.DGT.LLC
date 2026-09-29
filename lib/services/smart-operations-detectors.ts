@@ -45,7 +45,11 @@ const DETECTORS: Def[] = [
       FROM public.roznamcha_entries e JOIN public.roznamcha_lines l ON l.roznamcha_entry_id = e.id
       LEFT JOIN public.countries c ON c.id = e.country_id
       WHERE e.deleted_at IS NULL AND ${sqlScopeCondition(sql, scope, "e")}
-      GROUP BY e.id, c.name HAVING abs(sum(coalesce(l.debit,0)) - sum(coalesce(l.credit,0))) > 0.01
+      GROUP BY e.id, c.name
+      HAVING abs(sum(coalesce(l.debit,0)) - sum(coalesce(l.credit,0))) > 0.01
+         -- Cash-book (Roznamcha) cash payment / receipt lines carry an implicit cash side by design;
+         -- only journal-style entries must balance on their own lines.
+         AND NOT bool_and(coalesce(l.payment_entry_type::text,'') IN ('cash_payment','cash_receipt'))
       ORDER BY e.entry_date DESC LIMIT ${LIMIT}`,
     map: (r) => ({ reference: r.ref ?? r.id, detail: `DR ${Number(r.dr).toFixed(2)} ≠ CR ${Number(r.cr).toFixed(2)}`, date: iso(r.entry_date), href: `/dashboard/roznamcha/reports/all?q=${encodeURIComponent(r.ref ?? "")}`, country: r.country }),
   },
