@@ -219,7 +219,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     label: nt("Daily Payment Entry"),
     icon: FileText,
     children: [
-      { label: nt("Daily Cash Entry (Roznamcha)"), href: "/dashboard/roznamcha/cash-entry", icon: Wallet },
+      { label: nt("Daily Cash Entry (Roznamcha)"), href: "/dashboard/roznamcha/cash-entry", icon: Wallet, upgraded: true },
       {
         key: "sub-purchase-payments",
         label: nt("Purchase Payments"),
@@ -288,7 +288,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         label: nt("Local Purchase"),
         icon: ShoppingCart,
         children: [
-          { label: nt("Local Purchase Order"), href: "/dashboard/purchase/local-purchase", icon: ShoppingCart },
+          { label: nt("Local Purchase Order"), href: "/dashboard/purchase/local-purchase", icon: ShoppingCart, upgraded: true },
           { label: nt("Local Goods Received"), href: "/dashboard/purchase/local-goods-received", icon: Package },
           { label: nt("Warehouse Transfer Queue"), href: "/dashboard/purchase/local-purchase-warehouse-transfer", icon: Warehouse },
           { label: nt("Local Purchase Loading Queue"), href: "/dashboard/purchase/local-purchase-loading", icon: Truck },
@@ -372,7 +372,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     icon: Ship,
     children: [
       { label: nt("New Customer Order"), href: "/dashboard/clearing-agent/customer-order", icon: ListPlus },
-      { label: nt("Customer Bills"), href: "/dashboard/clearing-agent/customer-bill", icon: Receipt },
+      { label: nt("Customer Bills"), href: "/dashboard/clearing-agent/customer-bill", icon: Receipt, upgraded: true },
       {
         key: "sub-expenses-bill",
         label: nt("Expenses Bill"),
@@ -405,7 +405,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         ],
       },
       { label: nt("Shipping Lines"), href: "/dashboard/shipping-line", icon: Ship },
-      { label: nt("BL Entry"), href: "/dashboard/shipping-line/bl-entry", icon: FileText },
+      { label: nt("BL Entry"), href: "/dashboard/shipping-line/bl-entry", icon: FileText, upgraded: true },
       { label: nt("Container & Vessel Tracking"), href: "/dashboard/shipping-line/tracking", icon: Compass, tone: "red" },
       { label: nt("Free Country Shipping Claims"), href: "/dashboard/inter-country-transfers?category=shipping_line", icon: ArrowRightLeft },
       { label: nt("Clearing Workspace"), href: "/dashboard/clearing-agent/clearing-workspace", icon: FileCheck2 },
@@ -529,7 +529,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
       { label: nt("AI Voice & Text Entry"), href: "/dashboard/ai-entry/voice-text", icon: Sparkles },
       { label: nt("AI Approvals & Workflow"), href: "/dashboard/ai-entry/approvals", icon: CheckSquare },
       { label: nt("AI Calls Center"), href: "/dashboard/customer-inquiries/calls", icon: PhoneCall },
-      { label: nt("Document Intelligence AI"), href: "/dashboard/document-intelligence", icon: FileText },
+      { label: nt("Document Intelligence AI"), href: "/dashboard/document-intelligence", icon: FileText, upgraded: true },
     ],
   },
   {

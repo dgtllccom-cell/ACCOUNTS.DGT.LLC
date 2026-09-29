@@ -1,5 +1,6 @@
 "use client";
 
+import { IntakeDraftPicker } from "@/features/document-intelligence/components/intake-draft-picker";
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, RefreshCcw, Search, Receipt, ArrowLeft } from "lucide-react";
@@ -134,6 +135,16 @@ export function CustomerBillRegister({ lang: langProp }: { lang?: SupportedLangu
             <Button type="button" size="sm" variant="outline" className="h-9" onClick={() => void loadRows()} disabled={loading}>
               <RefreshCcw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             </Button>
+            {/* Scan / Upload a charge document → reviewed draft → new bill pre-filled with its charge lines. */}
+            <IntakeDraftPicker
+              targetModule="clearing_customer_bills"
+              domain="shipping"
+              lang={lang}
+              onPicked={() => {
+                setOpenBillId(null);
+                setViewMode("form");
+              }}
+            />
             <Button
               type="button"
               size="sm"

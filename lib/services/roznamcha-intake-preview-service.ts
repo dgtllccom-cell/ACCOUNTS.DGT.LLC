@@ -83,8 +83,8 @@ export class RoznamchaIntakePreviewService {
         sql`re.deleted_at IS NULL`,
         sql`re.country_id IS NOT DISTINCT FROM ${job.country_id}`,
       ];
-      if (manualBillNumber) dupWhere.push(sql`re.source_reference_no = ${manualBillNumber} OR re.reference_no = ${manualBillNumber}`);
-      else if (billNumber) dupWhere.push(sql`re.reference_no = ${billNumber} OR re.source_reference_no = ${billNumber}`);
+      if (manualBillNumber) dupWhere.push(sql`(re.source_reference_no = ${manualBillNumber} OR re.reference_no = ${manualBillNumber})`);
+      else if (billNumber) dupWhere.push(sql`(re.reference_no = ${billNumber} OR re.source_reference_no = ${billNumber})`);
       else dupWhere.push(sql`false`);
       if (entryDate) dupWhere.push(sql`re.entry_date = ${entryDate}`);
       const dupW = dupWhere.reduce((a, p, i) => (i === 0 ? p : sql`${a} AND ${p}`));

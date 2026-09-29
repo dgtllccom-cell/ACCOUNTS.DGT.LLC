@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { handleApiError } from "@/lib/api/response";
+import { handleApiError, ApiClientError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { assertBusinessCityBranch } from "@/lib/api/branch-scope-guard";
@@ -24,7 +24,8 @@ const listQuerySchema = z.object({
 });
 
 const localPurchaseCreateSchema = z.object({
-  companyId: z.string().uuid(),
+  // Resolved server-side from the branch's legal company when omitted (see POST).
+  companyId: z.string().uuid().nullable().optional(),
   countryId: z.string().uuid(),
   countryBranchId: z.string().uuid(),
   cityBranchId: z.string().uuid().nullable().optional(),
@@ -216,6 +217,29 @@ export async function POST(request: NextRequest) {
     // Business transaction — reject shipping/clearing/agent branches passed directly.
     await assertBusinessCityBranch(payload.cityBranchId ?? null);
 
+    // The purchase belongs to the legal company the branch operates under (Company Master:
+    // city_branches.company_id → country_branches.company_id). The screen used to fall back to
+    // "the first company in the list", silently booking purchases under an unrelated company.
+    const branchCompany = (await withLocalPg(async (sql) => {
+      const r = (await sql`
+        SELECT coalesce(cb.company_id, mb.company_id) AS company_id
+        FROM public.country_branches mb
+        LEFT JOIN public.city_branches cb ON cb.id = ${payload.cityBranchId ?? null}::uuid
+        WHERE mb.id = ${payload.countryBranchId}::uuid
+      `) as any[];
+      return (r[0]?.company_id as string | null) ?? null;
+    })) ?? null;
+    if (!branchCompany) {
+      throw new ApiClientError(
+        "This branch is not linked to a legal company. Link it in Company Setup (Internal / Branch Company) before recording a local purchase.",
+        { status: 422, code: "BRANCH_COMPANY_MISSING" }
+      );
+    }
+    if (payload.companyId && payload.companyId !== branchCompany) {
+      throw new ApiClientError("The selected company is not the legal company of this branch.", { status: 422, code: "COMPANY_BRANCH_MISMATCH" });
+    }
+    payload.companyId = branchCompany;
+
     const insertedViaPg = await withLocalPg(async (sql) => {
       const rows = await sql`
         insert into public.local_purchases (
@@ -231,7 +255,7 @@ export async function POST(request: NextRequest) {
           purchase_cost, apply_tax, tax_type, tax_percentage, tax_amount, final_cost,
           status, created_by
         ) values (
-          ${payload.companyId}, ${payload.countryId}, ${payload.countryBranchId},
+          ${branchCompany}, ${payload.countryId}, ${payload.countryBranchId},
           ${payload.cityBranchId || null}, ${payload.goodsId || null},
           ${payload.purchaseAccountNo || null}, ${payload.salesAccountNo || null},
           ${payload.brokerAccountNo || null}, ${payload.contractNo || null}, ${payload.brand || null},

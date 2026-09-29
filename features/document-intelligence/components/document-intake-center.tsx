@@ -1,5 +1,6 @@
 "use client";
 
+import { VerificationChecksPanel } from "@/features/document-intelligence/components/verification-checks-panel";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -1822,6 +1823,7 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
             {/* ── STEP 5: SPLIT-SCREEN REVIEW & ERP FORM BESIDE DOCUMENT ───────── */}
             {wizardStep === 5 && (
               <div className="space-y-4">
+                <VerificationChecksPanel jobId={activeJobId} lang={s.lang} />
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
                   {/* ── LEFT COLUMN (52% width): DOCUMENT PREVIEW & AI RESULTS ── */}
                   <div className="lg:col-span-6 xl:col-span-6 space-y-4">

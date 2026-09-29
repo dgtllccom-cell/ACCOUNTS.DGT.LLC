@@ -1,5 +1,6 @@
 "use client";
 
+import { IntakeDraftPicker } from "@/features/document-intelligence/components/intake-draft-picker";
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, RefreshCcw, Search, ScanLine, Ship, ArrowLeft, Edit2, Trash2, Eye } from "lucide-react";
@@ -171,16 +172,16 @@ export function BlRecordsRegister({
               filters={query.trim() ? [{ label: _("common.search", "Search"), value: query.trim() }] : []}
               orientation="landscape"
             />
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="h-9"
-              onClick={() => router.push(`/dashboard/document-intelligence?domain=${context}&module=shipping_bl_records`)}
-            >
-              <ScanLine className="mr-1.5 h-3.5 w-3.5" />
-              {_("bler.scan_upload", "Scan / Upload")}
-            </Button>
+            {/* Scan / Upload + Continue a reviewed Document Intelligence draft → opens the B/L form pre-filled. */}
+            <IntakeDraftPicker
+              targetModule="shipping_bl_records"
+              domain={context === "shipping" ? "shipping" : "business"}
+              lang={lang}
+              onPicked={() => {
+                setEditingRecord(null);
+                setViewMode("form");
+              }}
+            />
             <Button
               type="button"
               size="sm"

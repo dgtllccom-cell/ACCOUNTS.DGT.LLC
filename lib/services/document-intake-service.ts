@@ -151,6 +151,10 @@ export class DocumentIntakeService {
       throw new DocumentValidationError("Clearing agent is outside your assigned scope.");
     }
 
+    // A scoped uploader's document always lands inside their own scope (a job with no
+    // country used to be visible to every country).
+    if (scope.countryIds && !input.countryId) input = { ...input, countryId: scope.countryIds[0] };
+    if (scope.cityBranchIds && !input.cityBranchId) input = { ...input, cityBranchId: scope.cityBranchIds[0] };
     const validated = validateUpload(file.buffer, file.declaredMime, file.filename);
     const scan = await malwareScan(validated);
     if (!scan.ok) throw new DocumentValidationError(`File rejected by the security scan: ${scan.reason}`);

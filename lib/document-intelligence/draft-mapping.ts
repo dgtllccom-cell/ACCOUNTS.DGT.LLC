@@ -234,6 +234,27 @@ const MODULE_MAP: Record<string, Record<string, string>> = {
   },
   // Cash / Bank Roznamcha — a reviewed draft + pre-post preview only. The AI
   // never posts; the human posts through the existing Roznamcha screen.
+  // Clearing customer bill — the document's charge lines become bill charge lines (goodsEntries).
+  clearing_customer_bills: {
+    invoice_number: "billReference",
+    document_date: "billDate",
+    due_date: "dueDate",
+    currency: "currency",
+    grand_total: "grandTotal",
+    customer_name: "customerName",
+    consignee: "customerName",
+    bl_number: "blNumber",
+    container_numbers: "containerNumbers",
+  },
+  // Local purchase bill (local supplier invoice) — pre-fill only; the Local Purchase form saves.
+  local_purchases: {
+    invoice_number: "manualBillNo",
+    document_date: "purchaseDate",
+    supplier_name: "supplierName",
+    currency: "currency",
+    grand_total: "totalAmount",
+    exchange_rate: "exchangeRate",
+  },
   roznamcha_entries: {
     invoice_number: "billNumber",
     manual_contract_number: "manualBillNumber",

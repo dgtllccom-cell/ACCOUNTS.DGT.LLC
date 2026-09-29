@@ -9346,6 +9346,32 @@ export type UiKey =
   | "utask.mod_dgt_mail"
   | "utask.mod_whatsapp"
   | "utask.mod_performance"
+  | "dintake.em_continue"
+  | "dverify.all_clear"
+  | "dverify.c_already_used"
+  | "dverify.c_currency"
+  | "dverify.c_duplicate_document"
+  | "dverify.c_duplicate_invoice"
+  | "dverify.c_duplicate_posting"
+  | "dverify.c_party"
+  | "dverify.c_quantity"
+  | "dverify.c_rate"
+  | "dverify.c_reference"
+  | "dverify.c_total"
+  | "dverify.c_unit_rate"
+  | "dverify.compared_with"
+  | "dverify.expected"
+  | "dverify.failed"
+  | "dverify.found"
+  | "dverify.no_match_hint"
+  | "dverify.read_only"
+  | "dverify.rerun"
+  | "dverify.st_fail"
+  | "dverify.st_na"
+  | "dverify.st_pass"
+  | "dverify.st_warning"
+  | "dverify.title"
+  | "dverify.to_review"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -29967,6 +29993,32 @@ const en: Dict = {
   "utask.mod_dgt_mail": "DGT Mail",
   "utask.mod_whatsapp": "WhatsApp",
   "utask.mod_performance": "Employee Performance",
+  "dintake.em_continue": "Continue Saved Draft",
+  "dverify.all_clear": "No problems found",
+  "dverify.c_already_used": "Document already used for a record",
+  "dverify.c_currency": "Currency matches the order",
+  "dverify.c_duplicate_document": "Duplicate document (same file)",
+  "dverify.c_duplicate_invoice": "Duplicate invoice number",
+  "dverify.c_duplicate_posting": "No duplicate posting",
+  "dverify.c_party": "Supplier / customer matches the order",
+  "dverify.c_quantity": "Quantity matches the order",
+  "dverify.c_rate": "Exchange rate matches the order",
+  "dverify.c_reference": "Contract / reference matches the order",
+  "dverify.c_total": "Total matches the order",
+  "dverify.c_unit_rate": "Unit rates match the order",
+  "dverify.compared_with": "Compared with",
+  "dverify.expected": "expected",
+  "dverify.failed": "Verification could not be run.",
+  "dverify.found": "found",
+  "dverify.no_match_hint": "Select the matching order to compare quantities, rates, currency and totals.",
+  "dverify.read_only": "These checks only warn — nothing is posted or changed.",
+  "dverify.rerun": "Re-check",
+  "dverify.st_fail": "Problem",
+  "dverify.st_na": "Not applicable",
+  "dverify.st_pass": "OK",
+  "dverify.st_warning": "Check",
+  "dverify.title": "Verification Checks",
+  "dverify.to_review": "to review",
 };
 
 const ur: Dict = {
@@ -50557,6 +50609,32 @@ const ur: Dict = {
   "utask.mod_dgt_mail": "ڈی جی ٹی میل",
   "utask.mod_whatsapp": "واٹس ایپ",
   "utask.mod_performance": "ملازم کی کارکردگی",
+  "dintake.em_continue": "محفوظ ڈرافٹ جاری رکھیں",
+  "dverify.all_clear": "کوئی مسئلہ نہیں ملا",
+  "dverify.c_already_used": "دستاویز پہلے ہی کسی ریکارڈ میں استعمال ہو چکی ہے",
+  "dverify.c_currency": "کرنسی آرڈر سے مطابقت رکھتی ہے",
+  "dverify.c_duplicate_document": "دہری دستاویز (ایک ہی فائل)",
+  "dverify.c_duplicate_invoice": "دہرا انوائس نمبر",
+  "dverify.c_duplicate_posting": "کوئی دہری پوسٹنگ نہیں",
+  "dverify.c_party": "سپلائر / کسٹمر آرڈر سے مطابقت رکھتا ہے",
+  "dverify.c_quantity": "مقدار آرڈر سے مطابقت رکھتی ہے",
+  "dverify.c_rate": "شرح تبادلہ آرڈر سے مطابقت رکھتی ہے",
+  "dverify.c_reference": "معاہدہ / حوالہ آرڈر سے مطابقت رکھتا ہے",
+  "dverify.c_total": "کل رقم آرڈر سے مطابقت رکھتی ہے",
+  "dverify.c_unit_rate": "یونٹ ریٹس آرڈر سے مطابقت رکھتے ہیں",
+  "dverify.compared_with": "اس سے موازنہ کیا گیا",
+  "dverify.expected": "متوقع",
+  "dverify.failed": "تصدیق نہیں چل سکی۔",
+  "dverify.found": "پایا گیا",
+  "dverify.no_match_hint": "مقدار، ریٹس، کرنسی اور کل رقم کے موازنے کے لیے متعلقہ آرڈر منتخب کریں۔",
+  "dverify.read_only": "یہ جانچ صرف خبردار کرتی ہیں — کچھ بھی پوسٹ یا تبدیل نہیں ہوتا۔",
+  "dverify.rerun": "دوبارہ جانچیں",
+  "dverify.st_fail": "مسئلہ",
+  "dverify.st_na": "لاگو نہیں",
+  "dverify.st_pass": "ٹھیک",
+  "dverify.st_warning": "جانچیں",
+  "dverify.title": "تصدیقی جانچ",
+  "dverify.to_review": "جائزہ کے لیے",
 };
 
 const ar: Dict = {
@@ -71148,6 +71226,32 @@ const ar: Dict = {
   "utask.mod_dgt_mail": "بريد DGT",
   "utask.mod_whatsapp": "واتساب",
   "utask.mod_performance": "أداء الموظفين",
+  "dintake.em_continue": "متابعة المسودة المحفوظة",
+  "dverify.all_clear": "لم يتم العثور على مشاكل",
+  "dverify.c_already_used": "المستند مستخدم مسبقاً في سجل",
+  "dverify.c_currency": "العملة مطابقة للأمر",
+  "dverify.c_duplicate_document": "مستند مكرر (نفس الملف)",
+  "dverify.c_duplicate_invoice": "رقم فاتورة مكرر",
+  "dverify.c_duplicate_posting": "لا يوجد ترحيل مكرر",
+  "dverify.c_party": "المورد / العميل مطابق للأمر",
+  "dverify.c_quantity": "الكمية مطابقة للأمر",
+  "dverify.c_rate": "سعر الصرف مطابق للأمر",
+  "dverify.c_reference": "العقد / المرجع مطابق للأمر",
+  "dverify.c_total": "الإجمالي مطابق للأمر",
+  "dverify.c_unit_rate": "أسعار الوحدات مطابقة للأمر",
+  "dverify.compared_with": "تمت المقارنة مع",
+  "dverify.expected": "المتوقع",
+  "dverify.failed": "تعذر تشغيل التحقق.",
+  "dverify.found": "الموجود",
+  "dverify.no_match_hint": "اختر الأمر المطابق لمقارنة الكميات والأسعار والعملة والإجماليات.",
+  "dverify.read_only": "هذه الفحوصات للتحذير فقط — لا يتم ترحيل أو تغيير أي شيء.",
+  "dverify.rerun": "إعادة الفحص",
+  "dverify.st_fail": "مشكلة",
+  "dverify.st_na": "غير منطبق",
+  "dverify.st_pass": "سليم",
+  "dverify.st_warning": "تحقق",
+  "dverify.title": "فحوصات التحقق",
+  "dverify.to_review": "للمراجعة",
 };
 
 const fa: Dict = {
@@ -91738,6 +91842,32 @@ const fa: Dict = {
   "utask.mod_dgt_mail": "ایمیل DGT",
   "utask.mod_whatsapp": "واتساپ",
   "utask.mod_performance": "عملکرد کارکنان",
+  "dintake.em_continue": "ادامه پیش‌نویس ذخیره‌شده",
+  "dverify.all_clear": "مشکلی یافت نشد",
+  "dverify.c_already_used": "سند قبلاً برای یک رکورد استفاده شده است",
+  "dverify.c_currency": "ارز با سفارش مطابقت دارد",
+  "dverify.c_duplicate_document": "سند تکراری (همان فایل)",
+  "dverify.c_duplicate_invoice": "شماره فاکتور تکراری",
+  "dverify.c_duplicate_posting": "ثبت تکراری وجود ندارد",
+  "dverify.c_party": "تأمین‌کننده / مشتری با سفارش مطابقت دارد",
+  "dverify.c_quantity": "مقدار با سفارش مطابقت دارد",
+  "dverify.c_rate": "نرخ ارز با سفارش مطابقت دارد",
+  "dverify.c_reference": "قرارداد / مرجع با سفارش مطابقت دارد",
+  "dverify.c_total": "مجموع با سفارش مطابقت دارد",
+  "dverify.c_unit_rate": "نرخ‌های واحد با سفارش مطابقت دارند",
+  "dverify.compared_with": "مقایسه شده با",
+  "dverify.expected": "مورد انتظار",
+  "dverify.failed": "بررسی اجرا نشد.",
+  "dverify.found": "یافت‌شده",
+  "dverify.no_match_hint": "برای مقایسه مقدار، نرخ، ارز و مجموع، سفارش مربوط را انتخاب کنید.",
+  "dverify.read_only": "این بررسی‌ها فقط هشدار می‌دهند — هیچ چیزی ثبت یا تغییر نمی‌کند.",
+  "dverify.rerun": "بررسی دوباره",
+  "dverify.st_fail": "مشکل",
+  "dverify.st_na": "قابل اجرا نیست",
+  "dverify.st_pass": "درست",
+  "dverify.st_warning": "بررسی شود",
+  "dverify.title": "بررسی‌های اعتبارسنجی",
+  "dverify.to_review": "برای بررسی",
 };
 
 const ps: Dict = {
@@ -112335,6 +112465,32 @@ const ps: Dict = {
   "utask.mod_dgt_mail": "DGT برېښنالیک",
   "utask.mod_whatsapp": "واټس اپ",
   "utask.mod_performance": "د کارکوونکو فعالیت",
+  "dintake.em_continue": "خوندي شوې مسوده دوام ورکړئ",
+  "dverify.all_clear": "هیڅ ستونزه ونه موندل شوه",
+  "dverify.c_already_used": "سند مخکې په یو ریکارډ کې کارول شوی",
+  "dverify.c_currency": "اسعار له امر سره سمون لري",
+  "dverify.c_duplicate_document": "تکراري سند (ورته فایل)",
+  "dverify.c_duplicate_invoice": "تکراري د بل شمېره",
+  "dverify.c_duplicate_posting": "تکراري ثبت نشته",
+  "dverify.c_party": "عرضه کوونکی / پیرودونکی له امر سره سمون لري",
+  "dverify.c_quantity": "مقدار له امر سره سمون لري",
+  "dverify.c_rate": "د تبادلې نرخ له امر سره سمون لري",
+  "dverify.c_reference": "تړون / حواله له امر سره سمون لري",
+  "dverify.c_total": "ټولټال له امر سره سمون لري",
+  "dverify.c_unit_rate": "د واحد نرخونه له امر سره سمون لري",
+  "dverify.compared_with": "پرتله شوی له",
+  "dverify.expected": "تمه شوی",
+  "dverify.failed": "تایید ونه چلېد.",
+  "dverify.found": "موندل شوی",
+  "dverify.no_match_hint": "د مقدار، نرخونو، اسعارو او ټولټال د پرتلې لپاره اړوند امر وټاکئ.",
+  "dverify.read_only": "دا ازموینې یوازې خبرداری ورکوي — هیڅ شی نه ثبتېږي او نه بدلېږي.",
+  "dverify.rerun": "بیا وازمویئ",
+  "dverify.st_fail": "ستونزه",
+  "dverify.st_na": "د تطبیق وړ نه دی",
+  "dverify.st_pass": "سم",
+  "dverify.st_warning": "وګورئ",
+  "dverify.title": "د تایید ازموینې",
+  "dverify.to_review": "د بیاکتنې لپاره",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

@@ -1,5 +1,6 @@
 "use client";
 
+import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -96,6 +97,46 @@ export function CustomerBillManagementView() {
   const [availableOrders, setAvailableOrders] = useState<CustomerOrderOption[]>([]);
   const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
   const [selectedOrdersList, setSelectedOrdersList] = useState<CustomerOrderOption[]>([]);
+
+  // AI Document Intake draft (Scan / Upload → reviewed draft): charge lines + due date pre-fill only.
+  const intake = useIntakeDraft("clearing_customer_bills");
+  const intakeApplied = useRef(false);
+  useEffect(() => {
+    if (intakeApplied.current || !intake.draft || loading) return;
+    intakeApplied.current = true;
+    const lines = (intake.goodsEntries ?? []).filter((l: any) => l && (l.description || l.amount || l.unitPrice));
+    if (lines.length) {
+      setItems((prev) => [
+        ...prev,
+        ...lines.map((l: any, i: number) => {
+          const qty = Number(l.quantity) || 1;
+          const rate = Number(l.unitPrice) || (Number(l.amount) || 0) / qty;
+          const amount = Math.round(qty * rate * 100) / 100;
+          return {
+            id: `temp_di_${i}_${Date.now()}`,
+            bill_id: "",
+            item_order: prev.length + i + 1,
+            charge_type: "other",
+            charge_name: String(l.description || "").slice(0, 120),
+            description: l.description ? String(l.description) : null,
+            quantity: qty,
+            unit: String(l.unit || "unit"),
+            rate,
+            amount,
+            tax_pct: 0,
+            tax_amount: 0,
+            total_amount: amount,
+            remarks: null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          } as CustomerBillItemRow;
+        }),
+      ]);
+    }
+    const p = intake.payload || {};
+    if (p.dueDate && /^\d{4}-\d{2}-\d{2}/.test(String(p.dueDate))) setDueDate(String(p.dueDate).slice(0, 10));
+    if (p.billReference) setRemarks((r) => (r ? r : `${String(p.billReference)}`));
+  }, [intake.draft, intake.goodsEntries, intake.payload, loading]);
 
   // Selected Transfer Expense Types
   const [selectedExpenseTypes, setSelectedExpenseTypes] = useState<string[]>([
@@ -435,6 +476,7 @@ export function CustomerBillManagementView() {
         if (!createJson.success) throw new Error(createJson.error || "Failed to create customer bill.");
         activeBillId = createJson.data.id;
         setBill(createJson.data);
+        if (intake.draft && activeBillId) await intake.consume(String(activeBillId)).catch(() => undefined);
         const createdOrderIds = Array.isArray(createJson.data.order_ids)
           ? createJson.data.order_ids
           : selectedOrderIds;

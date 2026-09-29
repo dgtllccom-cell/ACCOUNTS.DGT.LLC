@@ -1,5 +1,7 @@
 "use client";
 
+import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
+import { IntakeDraftPicker } from "@/features/document-intelligence/components/intake-draft-picker";
 import React, { useMemo, useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { printDomFragmentViaModal } from "@/lib/reports/print-dom-fragment";
@@ -578,6 +580,21 @@ export function LocalPurchaseView({
   // real, user-editable rate into it. Booking-level only (not per goods line): the
   // local_purchases table has no per-line currency, so this does not add one.
   const [exchangeRateToAed, setExchangeRateToAed] = useState("1");
+
+  // AI Document Intake: a reviewed Local Purchase Bill draft pre-fills (never saves) the form.
+  const intake = useIntakeDraft("local_purchases");
+  const intakeApplied = useRef(false);
+  useEffect(() => {
+    if (intakeApplied.current || !intake.draft) return;
+    intakeApplied.current = true;
+    const p = intake.payload || {};
+    if (p.supplierName) setSupplierName(String(p.supplierName));
+    if (p.manualBillNo) setContractNo(String(p.manualBillNo));
+    if (p.currency && /^[A-Za-z]{3}$/.test(String(p.currency))) setPurchaseCurrency(String(p.currency).toUpperCase());
+    if (p.exchangeRate && Number(p.exchangeRate) > 0) setExchangeRateToAed(String(p.exchangeRate));
+    const first = (intake.goodsEntries ?? [])[0] as any;
+    if (first?.unitPrice && Number(first.unitPrice) > 0) setPurchaseRate(String(first.unitPrice));
+  }, [intake.draft, intake.payload, intake.goodsEntries]);
   const [applyTax, setApplyTax] = useState("No");
   const [taxType, setTaxType] = useState("VAT");
   const [taxPercentage, setTaxPercentage] = useState("0");
@@ -1301,7 +1318,8 @@ export function LocalPurchaseView({
     setSaving(true);
     try {
       const payload = {
-        companyId: activeBranch?.companyId || activeBranch?.company_id || companies[0]?.id,
+        // Server resolves the branch's legal company; never fall back to an arbitrary company.
+        companyId: activeBranch?.companyId || activeBranch?.company_id || null,
         countryId: activeBranch?.countryId || activeBranch?.country_id,
         countryBranchId: selectedBranchId,
         cityBranchId: selectedCityBranchId || null,
@@ -1368,6 +1386,7 @@ export function LocalPurchaseView({
       if (!res.ok || !data.ok) throw new Error(data.error?.message || "Failed to save purchase.");
 
       const newPurchase = data.data?.purchase || data.purchase;
+      if (!isEditingDraft && intake.draft && newPurchase?.id) await intake.consume(String(newPurchase.id)).catch(() => undefined);
 
       // Automatically accept the bill as per workflow (Draft -> Accepted transition) only if
       // draft or newly created, AND the user asked for "Book & Accept" rather than "Save Draft".
@@ -1585,7 +1604,8 @@ export function LocalPurchaseView({
       }
 
       const payload = {
-        companyId: activeBranch?.companyId || activeBranch?.company_id || companies[0]?.id,
+        // Server resolves the branch's legal company; never fall back to an arbitrary company.
+        companyId: activeBranch?.companyId || activeBranch?.company_id || null,
         countryId: activeBranch?.countryId || activeBranch?.country_id,
         countryBranchId: selectedBranchId,
         cityBranchId: selectedCityBranchId || null,
@@ -2721,6 +2741,9 @@ export function LocalPurchaseView({
                     <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t(lang, "lp.bill_accounts_info", "1. Bill & Accounts Information")}</h4>
                   </div>
 
+                  <div className="flex justify-end">
+                    <IntakeDraftPicker targetModule="local_purchases" lang={lang} onPicked={() => window.location.reload()} />
+                  </div>
                   <VoiceFormFill
                     context="purchase"
                     lang={lang}
