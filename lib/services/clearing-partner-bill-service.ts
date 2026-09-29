@@ -171,6 +171,14 @@ export async function createOrUpdatePartnerBill(
       );
     }
 
+    // 3b. The bill belongs to the external partner chosen on THIS leg — never another account.
+    if (leg.partner_account_id && leg.partner_account_id !== input.providerAccountId) {
+      throw new ApiClientError(
+        `Leg ${leg.leg_no} is handled by ${leg.partner_name ?? "another partner"}; the bill must be raised on that partner's account.`,
+        { status: 422, code: "PROVIDER_NOT_LEG_PARTNER" }
+      );
+    }
+
     // 4. Resolve expense account (if not explicitly chosen, find or fall back to standard clearing/freight expense)
     let expenseAccountId = input.expenseAccountId;
     if (!expenseAccountId) {

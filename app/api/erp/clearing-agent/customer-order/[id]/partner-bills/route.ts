@@ -2,6 +2,8 @@ import { NextRequest } from "next/server";
 import { apiOk, handleApiError, ApiClientError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { canAccessOrder } from "@/lib/services/clearing-customer-order-scope";
+import { getCustomerOrderById } from "@/lib/services/clearing-customer-order-service";
+import { withReadPg } from "@/lib/db/local-postgres";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import {
   listPartnerBillsForOrder,
@@ -13,6 +15,20 @@ import { auditApiAction } from "@/lib/api/audit";
 
 export const dynamic = "force-dynamic";
 
+/** Same access rule as the order itself (canAccessOrder(session, order)); 404 for an order out of scope. */
+async function assertOrderAccess(session: any, orderId: string) {
+  const order = await getCustomerOrderById(orderId);
+  if (!order || !canAccessOrder(session, order)) {
+    throw new ApiClientError("Customer order not found.", { status: 404, code: "NOT_FOUND" });
+  }
+}
+
+/** A bill action must target a bill of THIS order (no cross-order bill ids). */
+async function assertBillOnOrder(billId: string, orderId: string) {
+  const rows = (await withReadPg((sql) => sql`SELECT 1 FROM public.clearing_payment_bills WHERE id = ${billId}::uuid AND order_id = ${orderId}::uuid AND deleted_at IS NULL`)) as any[] | null;
+  if (!rows?.length) throw new ApiClientError("Bill not found on this order.", { status: 404, code: "NOT_FOUND" });
+}
+
 export async function GET(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
@@ -21,10 +37,7 @@ export async function GET(
     const session = await requireErpSession();
     const { id } = await context.params;
 
-    const access = await canAccessOrder(id, session);
-    if (!access) {
-      throw new ApiClientError("Access denied to customer order.", { status: 403, code: "FORBIDDEN" });
-    }
+    await assertOrderAccess(session, id);
 
     const lang = await getRequestLanguage();
     const data = await listPartnerBillsForOrder(id);
@@ -42,10 +55,7 @@ export async function POST(
     const session = await requireErpSession();
     const { id } = await context.params;
 
-    const access = await canAccessOrder(id, session);
-    if (!access) {
-      throw new ApiClientError("Access denied to customer order.", { status: 403, code: "FORBIDDEN" });
-    }
+    await assertOrderAccess(session, id);
 
     const body = await req.json();
     const action = body.action || "create_bill";
@@ -95,6 +105,7 @@ export async function POST(
       if (!body.billId) {
         throw new ApiClientError("billId is required to approve bill.", { status: 400 });
       }
+      await assertBillOnOrder(body.billId, id);
 
       const res = await approveAndPostPartnerBill(body.billId, session.userId, {
         isSuperAdmin: session.isSuperAdmin,
@@ -120,6 +131,7 @@ export async function POST(
       if (!body.paymentAccountId) {
         throw new ApiClientError("Payment bank/cash account is required.", { status: 400, code: "ACCOUNT_REQUIRED" });
       }
+      await assertBillOnOrder(body.billId, id);
 
       const res = await recordPartnerBillPayment(
         {
