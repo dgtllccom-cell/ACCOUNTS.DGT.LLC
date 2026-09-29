@@ -162,7 +162,10 @@ function extractPersonName(text: string): string | null {
   const cue = "(?:[Mm]et|[Mm]eeting|[Ss]poke|[Ss]peaking|[Tt]alked|[Cc]all(?:ed)? (?:from|by)|[Ii]nquiry from|[Vv]isit(?:ed)?(?: by)?)";
   const honor = "(?:[Mm]r\\.?\\s+|[Mm]s\\.?\\s+|[Mm]rs\\.?\\s+|[Dd]r\\.?\\s+|[Hh]aji\\s+|[Hh]ajji\\s+|[Ee]ngr\\.?\\s+)?";
   const m = text.match(new RegExp(`\\b${cue}\\s+(?:with\\s+|to\\s+|by\\s+)?${honor}([A-Z][a-z]+(?:\\s+[A-Z][a-z]+){0,2})`));
-  return m ? trimNameStopwords(m[1]) : null;
+  if (m) return trimNameStopwords(m[1]);
+  // An honorific anywhere ("… with Mr Bilal Qureshi …") still marks a person's name.
+  const h = text.match(/\b(?:Mr|Ms|Mrs|Dr|Engr)\.?\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2})|\b(?:Haji|Hajji)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2})/);
+  return h ? trimNameStopwords(h[1] ?? h[2]) : null;
 }
 
 function extractCompany(text: string): string | null {

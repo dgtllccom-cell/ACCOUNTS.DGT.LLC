@@ -164,7 +164,7 @@ export function ConversationIntelligenceView({ lang }: { lang?: string }) {
                           <td className="py-1.5 pe-2">
                             <select data-testid="ci-task-assignee" className={`${INP} w-44`} value={t.assignedTo} onChange={(e) => setTask(i, "assignedTo", e.target.value)}>
                               <option value="">{s.t("responsible", "Responsible…")}</option>
-                              {assignees.map((u) => <option key={u.user_id} value={u.user_id}>{u.name ?? u.user_id}</option>)}
+                              {assignees.map((u) => <option key={u.userId} value={u.userId}>{u.name ?? u.userId}</option>)}
                             </select>
                           </td>
                           <td className="py-1.5">{t.priority === "high" && <span className="rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-bold text-rose-700 dark:bg-rose-950/50 dark:text-rose-300">{s.t("urgent", "Urgent")}</span>}</td>

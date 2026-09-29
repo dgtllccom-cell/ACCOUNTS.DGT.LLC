@@ -55,5 +55,7 @@ describe("inquiry extractor", () => {
   it("does not take a 'Contact: <phone>' line as the customer name", () => {
     const a = analyzeConversation({ channel: "meeting", refDate: REF, lang: "en", text: "Meeting with Mr Bilal Qureshi from Qureshi Steel Traders LLC. Contact: +971501234567, bilal@example.com" });
     expect(a.draft.customer_name).toBe("Bilal Qureshi");
+    const b = analyzeConversation({ channel: "meeting", refDate: REF, lang: "en", text: "Meeting 4471 at our office with Mr Bilal Qureshi about rebar." });
+    expect(b.draft.customer_name).toBe("Bilal Qureshi");
   });
 });

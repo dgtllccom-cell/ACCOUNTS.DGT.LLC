@@ -404,7 +404,7 @@ function NewReturnModal({ s, onClose, onCreated }: { s: ReturnType<typeof useErp
           <L label={s.t("responsible", "Responsible")}>
             <select data-testid="ct-f-resp" className={INP} value={f.responsibleUserId} onChange={(e) => setF({ ...f, responsibleUserId: e.target.value })}>
               <option value="">{s.t("me", "Me")}</option>
-              {users.map((u) => <option key={u.user_id} value={u.user_id}>{u.name ?? u.user_id}</option>)}
+              {users.map((u) => <option key={u.userId} value={u.userId}>{u.name ?? u.userId}</option>)}
             </select>
           </L>
         </div>

@@ -384,7 +384,7 @@ function NewAppraisalModal({ s, onClose, onCreated }: { s: ReturnType<typeof use
             <L label={s.t("reviewer", "Reviewer")}>
               <select data-testid="perf-f-reviewer" className={INP} value={f.reviewerId} onChange={(e) => setF({ ...f, reviewerId: e.target.value })}>
                 <option value="">{s.t("reviewer_default", "Reporting manager (from employee record)")}</option>
-                {users.map((u) => <option key={u.user_id} value={u.user_id}>{u.name ?? u.user_id}</option>)}
+                {users.map((u) => <option key={u.userId} value={u.userId}>{u.name ?? u.userId}</option>)}
               </select>
             </L>
           </div>

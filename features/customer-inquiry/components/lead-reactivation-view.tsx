@@ -111,7 +111,7 @@ export function LeadReactivationView({ lang }: { lang?: string }) {
               <Field label={s.t("assign_to", "Follow-up by")}>
                 <select data-testid="react-f-assignee" className={INP} value={f.assignedTo} onChange={(e) => setF({ ...f, assignedTo: e.target.value })}>
                   <option value="">{s.t("select", "Select…")}</option>
-                  {assignees.map((u) => <option key={u.user_id} value={u.user_id}>{u.name ?? u.user_id}</option>)}
+                  {assignees.map((u) => <option key={u.userId} value={u.userId}>{u.name ?? u.userId}</option>)}
                 </select>
               </Field>
               <Field label={s.t("due", "Follow-up date")}><input data-testid="react-f-due" type="date" className={INP} value={f.dueDate} onChange={(e) => setF({ ...f, dueDate: e.target.value })} /></Field>
