@@ -85,7 +85,7 @@ export type PurchasePaymentJournalRemainingViewProps = {
   baseCurrency: string;
   countryOptions: string[];
   branchOptions: string[];
-  onOpenFullDetails: (orderId: string) => void;
+  onOpenFullDetails: (orderId: string, initialTab?: "overview" | "goods" | "payments" | "transport") => void;
   onPrintReceipt: (payment: any, orderRow: any) => void;
   onDownloadPdf: (orderRow: any) => void;
 };
@@ -528,8 +528,24 @@ export function PurchasePaymentJournalRemainingView({
                       {p.super_admin_serial || p.entry_serial || "—"}
                     </td>
                     <td className="px-2.5 py-2 font-mono whitespace-nowrap text-slate-600 dark:text-slate-300">{fmtDate(p.entry_date || p.created_at)}</td>
-                    <td className="px-2.5 py-2 font-mono text-blue-600 dark:text-blue-400 whitespace-nowrap">{p.purchase_order_no || "—"}</td>
-                    <td className="px-2.5 py-2 font-semibold text-slate-800 dark:text-slate-200 whitespace-nowrap">{p.vendor_name || "—"}</td>
+                    <td className="px-2.5 py-2 font-mono whitespace-nowrap" onClick={(e) => { e.stopPropagation(); if (p.purchase_order_id) onOpenFullDetails(p.purchase_order_id, "goods"); }}>
+                      <button
+                        type="button"
+                        className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:underline font-mono font-bold text-left cursor-pointer"
+                        title={tt("tt_click_view_goods", "Click to view Goods & Purchase Details")}
+                      >
+                        {p.purchase_order_no || "—"}
+                      </button>
+                    </td>
+                    <td className="px-2.5 py-2 font-semibold whitespace-nowrap" onClick={(e) => { e.stopPropagation(); if (p.purchase_order_id) onOpenFullDetails(p.purchase_order_id, "overview"); }}>
+                      <button
+                        type="button"
+                        className="text-slate-800 hover:text-blue-600 dark:text-slate-200 dark:hover:text-blue-400 hover:underline text-left cursor-pointer"
+                        title={tt("tt_click_view_accounts", "Click to view Account & Supplier Details")}
+                      >
+                        {p.vendor_name || "—"}
+                      </button>
+                    </td>
                     <td className="px-2.5 py-2 text-end font-mono font-bold text-slate-900 dark:text-white">{money(p.amount)}</td>
                     <td className="px-2.5 py-2 text-slate-600 dark:text-slate-300 whitespace-nowrap">{p.payment_method_name || "—"}</td>
                     <td className="px-2.5 py-2">
@@ -618,8 +634,8 @@ export function PurchasePaymentJournalRemainingView({
               </span>
               <button
                 type="button"
-                onClick={() => onOpenFullDetails(checked.purchase_order_id)}
-                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 dark:border-slate-700 px-2.5 py-1.5 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                onClick={() => onOpenFullDetails(checked.purchase_order_id, "goods")}
+                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 dark:border-slate-700 px-2.5 py-1.5 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
               >
                 <Eye className="h-3.5 w-3.5" /> {tt("view_full_details", "View Full Details")}
               </button>
@@ -651,9 +667,29 @@ export function PurchasePaymentJournalRemainingView({
           </DetailSection>
 
           <DetailSection icon={<ClipboardList className="h-3.5 w-3.5 text-blue-600" />} title={tt("purchase_order_details", "Purchase Order Details")}>
-            <DetailRow label={tt("purchase_order_no", "PO No.")} value={checked.purchase_order_no} />
+            <div className="flex items-center justify-between text-xs py-1">
+              <span className="text-slate-500 dark:text-slate-400">{tt("purchase_order_no", "PO No.")}</span>
+              <button
+                type="button"
+                onClick={() => onOpenFullDetails(checked.purchase_order_id, "goods")}
+                className="font-mono font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                title={tt("tt_open_goods_manifest", "Open Goods Manifest")}
+              >
+                {checked.purchase_order_no || "—"}
+              </button>
+            </div>
             <DetailRow label={tt("po_date", "PO Date")} value={checkedOrder ? fmtDate(checkedOrder.created_at) : undefined} />
-            <DetailRow label={tt("vendor", "Vendor")} value={checked.vendor_name} />
+            <div className="flex items-center justify-between text-xs py-1">
+              <span className="text-slate-500 dark:text-slate-400">{tt("vendor", "Vendor")}</span>
+              <button
+                type="button"
+                onClick={() => onOpenFullDetails(checked.purchase_order_id, "overview")}
+                className="font-semibold text-slate-800 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 hover:underline cursor-pointer text-right max-w-[200px] truncate"
+                title={tt("tt_open_accounts_details", "Open Account & Supplier Details")}
+              >
+                {checked.vendor_name || "—"}
+              </button>
+            </div>
             <DetailRow label={tt("po_amount", "PO Amount")} value={checkedOrder ? `${money(checkedOrder.order_total)} ${checked.po_currency_code || baseCurrency}` : undefined} />
             <DetailRow label={tt("paid_amount", "Paid Amount")} value={checkedOrder ? `${money(Number(checkedOrder.advance_paid || 0) + Number(checkedOrder.remaining_paid || 0))} ${checked.po_currency_code || baseCurrency}` : undefined} />
             <DetailRow label={tt("balance_amount", "Balance Amount")} value={checkedOrder ? `${money(checkedOrder.remaining_due)} ${checked.po_currency_code || baseCurrency}` : undefined} />

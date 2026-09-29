@@ -2743,8 +2743,10 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
   };
   const [orders, setOrders] = useState<PurchaseOrderRow[]>([]);
   const [selectedId, setSelectedId] = useState("");
-  const selectOrder = (id: string) => {
+  const [modalTab, setModalTab] = useState<"overview" | "goods" | "payments" | "transport">("overview");
+  const selectOrder = (id: string, initialTab: "overview" | "goods" | "payments" | "transport" = "overview") => {
     setSelectedId(id);
+    setModalTab(initialTab);
     setTimeout(() => {
       const el = document.getElementById("ledger-cash-entry-section");
       if (el) {
@@ -4928,12 +4930,13 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
       </>
       )}
 
-      {/* Ledger Cash Entry Panel (Modal) - Light & Dark Theme Synced matching Screenshot */}
+      {/* Ledger Cash Entry Panel (Modal) - Compact 4-Tab Architecture */}
       {selected && (
         <SimpleModal
           title=""
           onClose={() => setSelectedId("")}
-          className="h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-[1780px] p-0 overflow-hidden bg-slate-100 dark:bg-[#070e20] text-slate-900 dark:text-slate-100 rounded-2xl shadow-2xl border border-slate-300 dark:border-slate-800"
+          maxWidth="max-w-4xl"
+          className="w-[95vw] max-w-4xl h-[90vh] max-h-[850px] p-0 overflow-hidden bg-slate-50 dark:bg-[#070e20] text-slate-900 dark:text-slate-100 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col"
         >
           {(() => {
             const form = selected.form_data?.form || {};
@@ -5062,44 +5065,30 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
             const displayAdvanceTx = historyWithBalance.filter(p => p.kind === "advance");
             const displayEndorsement = historyWithBalance;
 
+
             return (
-              <div className="flex flex-col h-full overflow-y-auto bg-slate-100 dark:bg-[#070e20] text-slate-900 dark:text-slate-100 p-4 space-y-3 font-sans transition-colors">
+              <div className="flex flex-col h-full bg-slate-50 dark:bg-[#070e20] text-slate-900 dark:text-slate-100 font-sans">
                 
-                {/* ââ TOP HEADER BAR (Light & Dark Theme Synced) ââ */}
-                <div className="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-[#0c1427] border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 shadow-sm">
-                  <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs">
+                {/* ── COMPACT FIXED TOP BAR ── */}
+                <div className="shrink-0 flex items-center justify-between gap-3 bg-white dark:bg-[#0c1427] border-b border-slate-200 dark:border-slate-800 px-4 py-2.5 shadow-xs">
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
                     <div>
-                      <span className="block text-[9px] font-bold uppercase text-slate-500 dark:text-slate-400">{translateHeader(currentLanguage, "Purchase No.")}</span>
-                      <span className="font-mono font-black text-sm text-slate-900 dark:text-white">PURCHASE # {selected.purchase_order_no || selected.id}</span>
+                      <span className="block text-[9px] font-bold uppercase text-slate-400 dark:text-slate-500">{translateHeader(currentLanguage, "Purchase No.")}</span>
+                      <span className="font-mono font-black text-sm text-blue-600 dark:text-blue-400">PURCHASE #{selected.purchase_order_no || selected.id}</span>
+                    </div>
+                    <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block" />
+                    <div>
+                      <span className="block text-[9px] font-bold uppercase text-slate-400 dark:text-slate-500">{translateHeader(currentLanguage, "Party / Supplier")}</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-200 truncate max-w-[180px] block" title={supplierHeader}>{supplierHeader}</span>
+                    </div>
+                    <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block" />
+                    <div>
+                      <span className="block text-[9px] font-bold uppercase text-slate-400 dark:text-slate-500">{translateHeader(currentLanguage, "Branch / Country")}</span>
+                      <span className="font-semibold text-slate-700 dark:text-slate-300">{branchName} ({countryName})</span>
                     </div>
                     <div>
-                      <span className="block text-[9px] font-bold uppercase text-slate-500 dark:text-slate-400">{translateHeader(currentLanguage, "User")}</span>
-                      <span className="font-bold text-slate-800 dark:text-slate-200">{userName}</span>
-                      <span className="block text-[9px] text-slate-500 dark:text-slate-400">{userRoleLabel}</span>
-                    </div>
-                    <div>
-                      <span className="block text-[9px] font-bold uppercase text-slate-500 dark:text-slate-400">{translateHeader(currentLanguage, "Date")}</span>
-                      <span className="font-semibold text-slate-800 dark:text-slate-200">{date(selected.created_at)}</span>
-                    </div>
-                    <div>
-                      <span className="block text-[9px] font-bold uppercase text-slate-500 dark:text-slate-400">{translateHeader(currentLanguage, "Type")}</span>
                       <span className="inline-flex items-center rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-700/60 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider">
                         {translateHeader(currentLanguage, "BOOKING")}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="block text-[9px] font-bold uppercase text-slate-500 dark:text-slate-400">{translateHeader(currentLanguage, "Country")}</span>
-                      <span className="font-bold text-slate-800 dark:text-slate-200">{countryName}</span>
-                    </div>
-                    <div>
-                      <span className="block text-[9px] font-bold uppercase text-slate-500 dark:text-slate-400">{translateHeader(currentLanguage, "Branch")}</span>
-                      <span className="font-bold text-slate-800 dark:text-slate-200">{branchName}</span>
-                    </div>
-                    <div>
-                      <span className="block text-[9px] font-bold uppercase text-slate-500 dark:text-slate-400">{translateHeader(currentLanguage, "Status")}</span>
-                      <span className="inline-flex items-center gap-1 font-bold text-amber-600 dark:text-amber-400 text-xs">
-                        <Lock className="h-3 w-3 text-amber-600 dark:text-amber-400" />
-                        <span>{translateHeader(currentLanguage, "Transferred.")}</span>
                       </span>
                     </div>
                   </div>
@@ -5108,123 +5097,122 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                     <button
                       type="button"
                       onClick={() => handleOpenA4PDF(selected, true)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-blue-300 dark:border-blue-600/40 bg-blue-50 dark:bg-blue-950/50 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-700 dark:text-blue-300 font-bold text-xs shadow-sm transition"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-blue-300 dark:border-blue-600/40 bg-blue-50 dark:bg-blue-950/50 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-700 dark:text-blue-300 font-bold text-xs shadow-xs transition cursor-pointer"
                     >
                       <Printer className="h-3.5 w-3.5" />
                       <span>{translateHeader(currentLanguage, "PRINT (PDF)")}</span>
                     </button>
+                  </div>
+                </div>
+
+                {/* ── 4 COMPACT FINANCIAL KPI HIGHLIGHT STRIP ── */}
+                <div className="shrink-0 grid grid-cols-2 sm:grid-cols-4 gap-2 px-4 pt-3 pb-2 bg-slate-50 dark:bg-[#070e20]">
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] p-2.5 shadow-xs">
+                    <span className="block text-[9.5px] font-bold uppercase text-slate-400 dark:text-slate-500">{translateHeader(currentLanguage, "Total Purchase")}</span>
+                    <div className="font-mono font-black text-sm text-slate-900 dark:text-white mt-0.5">
+                      {statementPurchaseForeign.toLocaleString(undefined, { minimumFractionDigits: 2 })} <span className="text-[10px] text-slate-400">{poCurrencyHeader}</span>
+                    </div>
+                    <div className="font-mono text-[10.5px] text-slate-500">{statementPurchaseLocal.toLocaleString(undefined, { minimumFractionDigits: 2 })} AED</div>
+                  </div>
+
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] p-2.5 shadow-xs">
+                    <span className="block text-[9.5px] font-bold uppercase text-slate-400 dark:text-slate-500">{translateHeader(currentLanguage, "Condition / Stage")}</span>
+                    <div className="font-bold text-xs text-blue-600 dark:text-blue-400 mt-1 truncate">
+                      {isCredit ? "Credit Liability" : `${paymentCondition || "Advance"} (${advancePercent}%)`}
+                    </div>
+                    <div className="text-[10px] text-slate-500 mt-0.5 truncate">{date(selected.created_at)} • {userName}</div>
+                  </div>
+
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] p-2.5 shadow-xs">
+                    <span className="block text-[9.5px] font-bold uppercase text-slate-400 dark:text-slate-500">{translateHeader(currentLanguage, "Total Paid")}</span>
+                    <div className="font-mono font-black text-sm text-emerald-600 dark:text-emerald-400 mt-0.5">
+                      {statTotalPaidFC.toLocaleString(undefined, { minimumFractionDigits: 2 })} <span className="text-[10px] text-emerald-500/70">{poCurrencyHeader}</span>
+                    </div>
+                    <div className="font-mono text-[10.5px] text-emerald-600/80">{statTotalPaidLC.toLocaleString(undefined, { minimumFractionDigits: 2 })} AED</div>
+                  </div>
+
+                  <div className="rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50/50 dark:bg-rose-950/20 p-2.5 shadow-xs">
+                    <span className="block text-[9.5px] font-bold uppercase text-rose-500">{translateHeader(currentLanguage, "Remaining Balance")}</span>
+                    <div className="font-mono font-black text-sm text-rose-600 dark:text-rose-400 mt-0.5">
+                      {statRemainingFC.toLocaleString(undefined, { minimumFractionDigits: 2 })} <span className="text-[10px] text-rose-400">{poCurrencyHeader}</span>
+                    </div>
+                    <div className="font-mono text-[10.5px] text-rose-500/80">{statRemainingLC.toLocaleString(undefined, { minimumFractionDigits: 2 })} AED</div>
+                  </div>
+                </div>
+
+                {/* ── 4-TAB SEGMENTED NAVIGATION BAR ── */}
+                <div className="shrink-0 px-4 pb-2 bg-slate-50 dark:bg-[#070e20] border-b border-slate-200 dark:border-slate-800">
+                  <div className="grid grid-cols-4 gap-1 p-1 rounded-xl bg-slate-200/80 dark:bg-slate-900/90 border border-slate-300/70 dark:border-slate-800">
                     <button
                       type="button"
-                      className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                      title={translateHeader(currentLanguage, "Locked")}
+                      onClick={() => setModalTab("overview")}
+                      className={cn(
+                        "flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-xs font-bold transition cursor-pointer",
+                        modalTab === "overview"
+                          ? "bg-white dark:bg-blue-600 text-blue-700 dark:text-white shadow-xs"
+                          : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-800/50"
+                      )}
                     >
-                      <Lock className="h-4 w-4" />
+                      <Building2 className="h-3.5 w-3.5" />
+                      <span className="truncate">{translateHeader(currentLanguage, "Overview & Accounts")}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setModalTab("goods")}
+                      className={cn(
+                        "flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-xs font-bold transition cursor-pointer",
+                        modalTab === "goods"
+                          ? "bg-white dark:bg-blue-600 text-blue-700 dark:text-white shadow-xs"
+                          : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-800/50"
+                      )}
+                    >
+                      <ClipboardList className="h-3.5 w-3.5" />
+                      <span className="truncate">{translateHeader(currentLanguage, "Goods Manifest")}</span>
+                      <span className={cn("text-[10px] font-mono px-1.5 py-0.2 rounded-full", modalTab === "goods" ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400")}>
+                        {displayGoods.length}
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setModalTab("payments")}
+                      className={cn(
+                        "flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-xs font-bold transition cursor-pointer",
+                        modalTab === "payments"
+                          ? "bg-white dark:bg-blue-600 text-blue-700 dark:text-white shadow-xs"
+                          : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-800/50"
+                      )}
+                    >
+                      <WalletCards className="h-3.5 w-3.5" />
+                      <span className="truncate">{translateHeader(currentLanguage, "Payments & Ledger")}</span>
+                      <span className={cn("text-[10px] font-mono px-1.5 py-0.2 rounded-full", modalTab === "payments" ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400")}>
+                        {displayEndorsement.length}
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setModalTab("transport")}
+                      className={cn(
+                        "flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-xs font-bold transition cursor-pointer",
+                        modalTab === "transport"
+                          ? "bg-white dark:bg-blue-600 text-blue-700 dark:text-white shadow-xs"
+                          : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-800/50"
+                      )}
+                    >
+                      <Truck className="h-3.5 w-3.5" />
+                      <span className="truncate">{translateHeader(currentLanguage, "Transport & Batches")}</span>
                     </button>
                   </div>
                 </div>
 
-                {/* Container Selection / Active Container Banner for Remaining Mode */}
-                {activeMode === "remaining" && fromLoading && (
-                  <div className="flex flex-wrap items-center justify-between gap-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-xl px-4 py-2.5 shadow-sm">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white font-bold shrink-0">
-                        <Truck className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <div className="text-xs font-black text-blue-900 dark:text-blue-200 flex items-center gap-2">
-                          <span>Active Container: {selectedLoadingRecord?.loading_record_no || (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("loadingRecordId") : "") || "Loaded Batch"}</span>
-                          <span className="text-[10px] bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300 font-extrabold px-2 py-0.5 rounded-full">Proportional Batch</span>
-                        </div>
-                        <div className="text-[11px] text-blue-700 dark:text-blue-300 mt-0.5">
-                          Loaded Value: <strong className="font-mono">{money(loadingPurchaseAmount, poCurrency)}</strong> | Allocated Advance: <strong className="font-mono text-emerald-600 dark:text-emerald-400">{money(loadingAdvancePaid, poCurrency)}</strong> | Remaining Batch Due: <strong className="font-mono text-rose-600 dark:text-rose-400">{money(outstandingBalance, poCurrency)}</strong>
-                        </div>
-                      </div>
-                    </div>
-                    {loadingRecords.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setSelectedLoadingRecord(null)}
-                        className="text-xs font-bold border-blue-300 hover:bg-blue-100 dark:border-blue-700 dark:hover:bg-blue-900/40 cursor-pointer"
-                      >
-                        Switch Container
-                      </Button>
-                    )}
-                  </div>
-                )}
-
-                {activeMode === "remaining" && !fromLoading && (
-                  <div className="bg-amber-50/40 border border-amber-200 rounded-xl p-5 dark:bg-amber-950/10 dark:border-amber-900/40 text-center space-y-3">
-                    <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600">
-                      <Truck className="h-5 w-5" />
-                    </div>
-                    <div className="space-y-0.5">
-                      <h3 className="text-xs font-black uppercase text-amber-800 dark:text-amber-400">{t("select_loaded_container", currentLanguage) || "Select Loaded Container / Batch"}</h3>
-                      <p className="text-[11px] text-slate-500 max-w-md mx-auto">
-                        {t("select_container_instruction", currentLanguage) || "Select a loaded container below to post its proportional remaining payment."}
-                      </p>
-                    </div>
-                    {loadingLoadingRecords ? (
-                      <div className="text-xs text-amber-700 italic flex items-center justify-center gap-1.5 py-4">
-                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-amber-600 border-t-transparent" />
-                        {t("loading_container_records", currentLanguage) || "Loading container records..."}
-                      </div>
-                    ) : loadingRecords.length > 0 ? (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 pt-1 max-h-[280px] overflow-y-auto p-1">
-                        {loadingRecords.map((lr) => {
-                          const poRow = selected || {};
-                          const finance = calcLoadingFinance(lr, poRow, poRow.form_data?.form || {});
-                          const loadedQty = lr.report_payload?.loadedQuantity || lr.loadedQuantity || 0;
-                          const poAdvanceAmt = Number(poRow.advance_paid || poRow.form_data?.form?.advanceAmount || 0);
-                          const totalPOQuantity = Number(
-                            poRow.form_data?.totals?.totalQuantity ||
-                            goods.reduce((acc: number, item: any) => acc + Number(item.qtyNo || item.quantity || 0), 0) ||
-                            poRow.form_data?.form?.quantity ||
-                            1
-                          );
-                          const loadedAdvanceUSD = totalPOQuantity > 0 ? (loadedQty / totalPOQuantity) * poAdvanceAmt : poAdvanceAmt;
-                          const loadedRemainingUSD = Math.max(0, finance.amountUSD - loadedAdvanceUSD);
-
-                          return (
-                            <button
-                              key={lr.id}
-                              type="button"
-                              onClick={() => handleSelectLoadingRecord(lr)}
-                              className="flex flex-col text-left p-3 rounded-xl border border-slate-200 bg-white hover:border-blue-500 hover:shadow-md transition text-xs space-y-1.5 dark:bg-slate-900 dark:border-slate-800 shadow-xs cursor-pointer"
-                            >
-                              <div className="flex justify-between items-center w-full">
-                                <span className="font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-1">
-                                  Container #{lr.loading_record_no || lr.container_number || lr.report_payload?.containerNumber || "-"}
-                                </span>
-                                <span className="text-[10px] font-black uppercase text-blue-600 bg-blue-50 dark:bg-blue-950/30 dark:text-blue-400 px-2 py-0.5 rounded-full">
-                                  {Number(loadedQty).toLocaleString()} {lr.report_payload?.unit || "Bags"}
-                                </span>
-                              </div>
-                              <div className="grid grid-cols-2 gap-1 text-[10px] text-slate-400 w-full">
-                                <div>Net: <span className="font-semibold text-slate-700 dark:text-slate-300">{Number(finance.netWeight || 0).toLocaleString()} KG</span></div>
-                                <div>Gross: <span className="font-semibold text-slate-700 dark:text-slate-300">{Number(finance.grossWeight || 0).toLocaleString()} KG</span></div>
-                                <div className="col-span-2 border-t border-slate-100 dark:border-slate-800 pt-1 mt-0.5 flex justify-between items-center w-full">
-                                  <span>Batch Due:</span>
-                                  <span className="font-black text-xs text-rose-600 dark:text-rose-400">{money(loadedRemainingUSD, poCurrency)}</span>
-                                </div>
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <div className="text-xs text-slate-400 italic py-4 bg-slate-50 dark:bg-slate-900/10 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
-                        No loaded containers found for this purchase order.
-                        <div className="text-[10px] text-slate-400 mt-0.5 font-normal">Please make sure the containers are added and loaded in the Loading module first.</div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-
-                {/* ââ ROW 1: 5 TOP SUMMARY CARDS (1, 2, 3, 4, 17) ââ */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
+                {/* ── SCROLLABLE TAB CONTENT BODY ── */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                  {/* TAB 1: OVERVIEW & ACCOUNTS */}
+                  {modalTab === "overview" && (
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
                   {/* Card 1: 1 Branch & User Details */}
                   <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] p-3 shadow-sm flex flex-col justify-between">
                     <div className="text-[11px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400 pb-1.5 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-1.5">
@@ -5274,38 +5262,8 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                     </div>
                   </div>
 
-                  {/* Card 4: 4 Industrial Report Summary */}
-                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] p-3 shadow-sm flex flex-col justify-between">
-                    <div className="text-[11px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 pb-1.5 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-1.5">
-                      <span>4</span>
-                      <span>{translateHeader(currentLanguage, "Industrial Report Summary")}</span>
-                    </div>
-                    <div className="space-y-1 mt-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
-                      <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "Total Quantity")}</span><span className="text-right font-mono font-bold">{Number(totalQtyDisplay).toLocaleString()} CTAN</span></div>
-                      <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">Total Purchase ({poCurrencyHeader})</span><span className="text-right font-mono font-bold">{statementPurchaseForeign.toLocaleString(undefined, { minimumFractionDigits: 2 })} {poCurrencyHeader}</span></div>
-                      <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "Exchange Rate")}</span><span className="text-right font-mono font-bold">{exRate.toFixed(4)}</span></div>
-                      <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "Total Final Currency")}</span><span className="text-right font-mono font-black text-emerald-600 dark:text-emerald-400">{statementPurchaseLocal.toLocaleString(undefined, { minimumFractionDigits: 2 })} {baseCurrency}</span></div>
-                    </div>
-                  </div>
-
-                  {/* Card 17: 17 Transport & Logistics */}
-                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] p-3 shadow-sm flex flex-col justify-between">
-                    <div className="text-[11px] font-black uppercase tracking-wider text-cyan-600 dark:text-cyan-400 pb-1.5 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-1.5">
-                      <span>17</span>
-                      <span>{t("sec_transport_logistics", currentLanguage)}</span>
-                    </div>
-                    <div className="space-y-1 mt-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
-                      <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "Loading Country")}</span><span className="text-right font-bold">{loadingCountry}</span></div>
-                      <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "Loading Date")}</span><span className="text-right font-mono text-[11px]">{loadingDate}</span></div>
-                      <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "Receiving Country")}</span><span className="text-right font-bold">{receivingCountry}</span></div>
-                      <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "Received Date")}</span><span className="text-right font-mono text-[11px]">{receivedDate}</span></div>
-                      <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "Payment Condition")}</span><span className="text-right text-emerald-600 dark:text-emerald-400 font-bold">{paymentCondition}</span></div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* ââ ROW 2: 4 SUMMARY & CONVERSION CARDS (5, 6, 7, 8) ââ */}
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2.5">
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
                   {/* Card 5: 5 Purchase, Sales & Payment Summary */}
                   <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] p-3 shadow-sm flex flex-col justify-between">
                     <div className="text-[11px] font-black uppercase tracking-wider text-pink-600 dark:text-pink-400 pb-1.5 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-1.5">
@@ -5351,6 +5309,110 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                     </div>
                   </div>
 
+                  {/* Card 8: Total Payment & Balance Summary */}
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] p-3 shadow-sm flex flex-col justify-between">
+                    <div className="text-[11px] font-black uppercase tracking-wider text-sky-600 dark:text-sky-400 pb-1.5 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-1.5">
+                      <span>8</span>
+                      <span>{translateHeader(currentLanguage, isCredit ? "Credit Total Payment & Balance Summary" : "Total Payment & Balance Summary")}</span>
+                    </div>
+                    <div className="space-y-2 mt-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      <div>
+                        <span className="text-[9.5px] text-slate-500 dark:text-slate-400 block font-normal">{translateHeader(currentLanguage, isCredit ? "Total Credit Amount :" : "Total Payment :")}</span>
+                        <span className="font-mono font-black text-sm text-slate-900 dark:text-white">USD {statementPurchaseForeign.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                        <div className="font-mono text-[11px] text-slate-600 dark:text-slate-300">AED {statementPurchaseLocal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                      </div>
+                      <div>
+                        <span className="text-[9.5px] text-slate-500 dark:text-slate-400 block font-normal">{translateHeader(currentLanguage, isCredit ? "Total Paid Credit (Cash/Bank) :" : "Total Paid Payment :")}</span>
+                        <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">USD {statTotalPaidFC.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                        <div className="font-mono text-[11px] text-emerald-600/90 dark:text-emerald-400/80">AED {statTotalPaidLC.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                      </div>
+                      <div>
+                        <span className="text-[9.5px] text-rose-600 dark:text-rose-400 block font-normal">{translateHeader(currentLanguage, isCredit ? "Remaining Credit Balance :" : "Remaining Payment Balance :")}</span>
+                        <span className="font-mono font-black text-sm text-rose-600 dark:text-rose-400">USD {statRemainingFC.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                        <div className="font-mono text-[11px] text-rose-600/90 dark:text-rose-400/90">AED {statRemainingLC.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                      </div>
+                    </div>
+                  </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* TAB 2: GOODS MANIFEST */}
+                  {modalTab === "goods" && (
+                    <div className="space-y-3">
+                      <div className="max-w-md">
+                  {/* Card 4: 4 Industrial Report Summary */}
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] p-3 shadow-sm flex flex-col justify-between">
+                    <div className="text-[11px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 pb-1.5 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-1.5">
+                      <span>4</span>
+                      <span>{translateHeader(currentLanguage, "Industrial Report Summary")}</span>
+                    </div>
+                    <div className="space-y-1 mt-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "Total Quantity")}</span><span className="text-right font-mono font-bold">{Number(totalQtyDisplay).toLocaleString()} CTAN</span></div>
+                      <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">Total Purchase ({poCurrencyHeader})</span><span className="text-right font-mono font-bold">{statementPurchaseForeign.toLocaleString(undefined, { minimumFractionDigits: 2 })} {poCurrencyHeader}</span></div>
+                      <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "Exchange Rate")}</span><span className="text-right font-mono font-bold">{exRate.toFixed(4)}</span></div>
+                      <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "Total Final Currency")}</span><span className="text-right font-mono font-black text-emerald-600 dark:text-emerald-400">{statementPurchaseLocal.toLocaleString(undefined, { minimumFractionDigits: 2 })} {baseCurrency}</span></div>
+                    </div>
+                  </div>
+                      </div>
+                {/* ââ TABLE 1: GOODS / ITEMS DETAILS ââ */}
+                <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] overflow-hidden shadow-sm">
+                  <div className="px-4 py-2 bg-slate-50 dark:bg-[#091022] border-b border-slate-200 dark:border-slate-800 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                    {translateHeader(currentLanguage, "Goods / Items Details")}
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs border-collapse font-sans">
+                      <thead>
+                        <tr className="bg-slate-100 dark:bg-[#0b1329] text-slate-600 dark:text-slate-400 text-[9px] uppercase font-black border-b border-slate-200 dark:border-slate-800">
+                          <th className="px-3 py-2 text-center w-10">#</th>
+                          <th className="px-3 py-2">{translateHeader(currentLanguage, "GOODS / SIZE / BRAND / ORIGIN")}</th>
+                          <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "QTY")}</th>
+                          <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "KGS")}</th>
+                          <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "NET KGS")}</th>
+                          <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "TOTAL")}</th>
+                          <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "PRICE")}</th>
+                          <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "AMOUNT")}</th>
+                          <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "FINAL (AED)")}</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-semibold text-slate-800 dark:text-slate-200">
+                        {displayGoods.length === 0 && (
+                          <tr><td colSpan={9} className="px-3 py-6 text-center text-slate-400 font-normal">{translateHeader(currentLanguage, "No records found")}</td></tr>
+                        )}
+                        {displayGoods.map((g: any, idx: number) => {
+                          const itemQty = Number(g.qtyNo || g.quantity || 0);
+                          const itemGross = Number(g.qtyKgs || g.grossWeight || 0);
+                          const itemNet = Number(g.netKgs || g.netWeight || 0);
+                          const itemPrice = Number(g.coursePrice || g.price || 0);
+                          const itemAmount = Number(g.totalAmount || 0);
+                          const itemFinalAED = itemAmount * exRate;
+
+                          return (
+                            <tr key={g.id || idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
+                              <td className="px-3 py-2 text-center font-mono text-slate-500 dark:text-slate-400">{idx + 1}</td>
+                              <td className="px-3 py-2 text-blue-600 dark:text-blue-400 font-bold">
+                                {[g.goodsName || g.name, g.size, g.brand, g.origin].filter(Boolean).join(" / ") || "—"}
+                              </td>
+                              <td className="px-3 py-2 text-center font-mono">{itemQty.toLocaleString()} {g.unit || ""}</td>
+                              <td className="px-3 py-2 text-right font-mono">{itemGross.toLocaleString()}</td>
+                              <td className="px-3 py-2 text-right font-mono">{itemNet.toLocaleString()} (TON)</td>
+                              <td className="px-3 py-2 text-right font-mono">{itemNet.toLocaleString()}</td>
+                              <td className="px-3 py-2 text-center font-mono">{itemPrice} {g.priceType || "P/TON"}</td>
+                              <td className="px-3 py-2 text-right font-mono font-bold text-slate-900 dark:text-white">{itemAmount.toLocaleString()} USD</td>
+                              <td className="px-3 py-2 text-right font-mono font-black text-emerald-600 dark:text-emerald-400">{itemFinalAED.toLocaleString()} AED</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                    </div>
+                  )}
+
+                  {/* TAB 3: PAYMENTS & LEDGER */}
+                  {modalTab === "payments" && (
+                    <div className="space-y-4">
                   {/* Card 7: Advance or Credit Payment & Financial Summary */}
                   {isCredit ? (
                     <div className="rounded-xl border border-purple-200 dark:border-purple-800/80 bg-white dark:bg-[#0c1427] p-3 shadow-sm flex flex-col justify-between">
@@ -5465,86 +5527,6 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                       </div>
                     </div>
                   )}
-
-                  {/* Card 8: Total Payment & Balance Summary */}
-                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] p-3 shadow-sm flex flex-col justify-between">
-                    <div className="text-[11px] font-black uppercase tracking-wider text-sky-600 dark:text-sky-400 pb-1.5 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-1.5">
-                      <span>8</span>
-                      <span>{translateHeader(currentLanguage, isCredit ? "Credit Total Payment & Balance Summary" : "Total Payment & Balance Summary")}</span>
-                    </div>
-                    <div className="space-y-2 mt-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
-                      <div>
-                        <span className="text-[9.5px] text-slate-500 dark:text-slate-400 block font-normal">{translateHeader(currentLanguage, isCredit ? "Total Credit Amount :" : "Total Payment :")}</span>
-                        <span className="font-mono font-black text-sm text-slate-900 dark:text-white">USD {statementPurchaseForeign.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                        <div className="font-mono text-[11px] text-slate-600 dark:text-slate-300">AED {statementPurchaseLocal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
-                      </div>
-                      <div>
-                        <span className="text-[9.5px] text-slate-500 dark:text-slate-400 block font-normal">{translateHeader(currentLanguage, isCredit ? "Total Paid Credit (Cash/Bank) :" : "Total Paid Payment :")}</span>
-                        <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">USD {statTotalPaidFC.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                        <div className="font-mono text-[11px] text-emerald-600/90 dark:text-emerald-400/80">AED {statTotalPaidLC.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
-                      </div>
-                      <div>
-                        <span className="text-[9.5px] text-rose-600 dark:text-rose-400 block font-normal">{translateHeader(currentLanguage, isCredit ? "Remaining Credit Balance :" : "Remaining Payment Balance :")}</span>
-                        <span className="font-mono font-black text-sm text-rose-600 dark:text-rose-400">USD {statRemainingFC.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                        <div className="font-mono text-[11px] text-rose-600/90 dark:text-rose-400/90">AED {statRemainingLC.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* ââ TABLE 1: GOODS / ITEMS DETAILS ââ */}
-                <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] overflow-hidden shadow-sm">
-                  <div className="px-4 py-2 bg-slate-50 dark:bg-[#091022] border-b border-slate-200 dark:border-slate-800 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                    {translateHeader(currentLanguage, "Goods / Items Details")}
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs border-collapse font-sans">
-                      <thead>
-                        <tr className="bg-slate-100 dark:bg-[#0b1329] text-slate-600 dark:text-slate-400 text-[9px] uppercase font-black border-b border-slate-200 dark:border-slate-800">
-                          <th className="px-3 py-2 text-center w-10">#</th>
-                          <th className="px-3 py-2">{translateHeader(currentLanguage, "GOODS / SIZE / BRAND / ORIGIN")}</th>
-                          <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "QTY")}</th>
-                          <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "KGS")}</th>
-                          <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "NET KGS")}</th>
-                          <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "TOTAL")}</th>
-                          <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "PRICE")}</th>
-                          <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "AMOUNT")}</th>
-                          <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "FINAL (AED)")}</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-semibold text-slate-800 dark:text-slate-200">
-                        {displayGoods.length === 0 && (
-                          <tr><td colSpan={9} className="px-3 py-6 text-center text-slate-400 font-normal">{translateHeader(currentLanguage, "No records found")}</td></tr>
-                        )}
-                        {displayGoods.map((g: any, idx: number) => {
-                          const itemQty = Number(g.qtyNo || g.quantity || 0);
-                          const itemGross = Number(g.qtyKgs || g.grossWeight || 0);
-                          const itemNet = Number(g.netKgs || g.netWeight || 0);
-                          const itemPrice = Number(g.coursePrice || g.price || 0);
-                          const itemAmount = Number(g.totalAmount || 0);
-                          const itemFinalAED = itemAmount * exRate;
-
-                          return (
-                            <tr key={g.id || idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition">
-                              <td className="px-3 py-2 text-center font-mono text-slate-500 dark:text-slate-400">{idx + 1}</td>
-                              <td className="px-3 py-2 text-blue-600 dark:text-blue-400 font-bold">
-                                {[g.goodsName || g.name, g.size, g.brand, g.origin].filter(Boolean).join(" / ") || "—"}
-                              </td>
-                              <td className="px-3 py-2 text-center font-mono">{itemQty.toLocaleString()} {g.unit || ""}</td>
-                              <td className="px-3 py-2 text-right font-mono">{itemGross.toLocaleString()}</td>
-                              <td className="px-3 py-2 text-right font-mono">{itemNet.toLocaleString()} (TON)</td>
-                              <td className="px-3 py-2 text-right font-mono">{itemNet.toLocaleString()}</td>
-                              <td className="px-3 py-2 text-center font-mono">{itemPrice} {g.priceType || "P/TON"}</td>
-                              <td className="px-3 py-2 text-right font-mono font-bold text-slate-900 dark:text-white">{itemAmount.toLocaleString()} USD</td>
-                              <td className="px-3 py-2 text-right font-mono font-black text-emerald-600 dark:text-emerald-400">{itemFinalAED.toLocaleString()} AED</td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
                 {/* ── CREDIT VS ADVANCE TABLES ── */}
                 {isCredit ? (
                   <>
@@ -5874,7 +5856,6 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                     </div>
                   </>
                 )}
-
                 {/* ââ PAYMENT ENTRY ACTION / DOUBLE-ENTRY POSTING PANEL ââ */}
                 <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] overflow-hidden shadow-sm p-4 space-y-4">
                   <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
@@ -6288,9 +6269,132 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                     </div>
                   )}
                 </div>
+                    </div>
+                  )}
 
-                {/* Footer Metadata */}
-                <div className="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400 pt-2 border-t border-slate-200 dark:border-slate-800/80">
+                  {/* TAB 4: TRANSPORT & BATCHES */}
+                  {modalTab === "transport" && (
+                    <div className="space-y-3">
+                {/* Container Selection / Active Container Banner for Remaining Mode */}
+                {activeMode === "remaining" && fromLoading && (
+                  <div className="flex flex-wrap items-center justify-between gap-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-xl px-4 py-2.5 shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white font-bold shrink-0">
+                        <Truck className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-black text-blue-900 dark:text-blue-200 flex items-center gap-2">
+                          <span>Active Container: {selectedLoadingRecord?.loading_record_no || (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("loadingRecordId") : "") || "Loaded Batch"}</span>
+                          <span className="text-[10px] bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300 font-extrabold px-2 py-0.5 rounded-full">Proportional Batch</span>
+                        </div>
+                        <div className="text-[11px] text-blue-700 dark:text-blue-300 mt-0.5">
+                          Loaded Value: <strong className="font-mono">{money(loadingPurchaseAmount, poCurrency)}</strong> | Allocated Advance: <strong className="font-mono text-emerald-600 dark:text-emerald-400">{money(loadingAdvancePaid, poCurrency)}</strong> | Remaining Batch Due: <strong className="font-mono text-rose-600 dark:text-rose-400">{money(outstandingBalance, poCurrency)}</strong>
+                        </div>
+                      </div>
+                    </div>
+                    {loadingRecords.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSelectedLoadingRecord(null)}
+                        className="text-xs font-bold border-blue-300 hover:bg-blue-100 dark:border-blue-700 dark:hover:bg-blue-900/40 cursor-pointer"
+                      >
+                        Switch Container
+                      </Button>
+                    )}
+                  </div>
+                )}
+
+                {activeMode === "remaining" && !fromLoading && (
+                  <div className="bg-amber-50/40 border border-amber-200 rounded-xl p-5 dark:bg-amber-950/10 dark:border-amber-900/40 text-center space-y-3">
+                    <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600">
+                      <Truck className="h-5 w-5" />
+                    </div>
+                    <div className="space-y-0.5">
+                      <h3 className="text-xs font-black uppercase text-amber-800 dark:text-amber-400">{t("select_loaded_container", currentLanguage) || "Select Loaded Container / Batch"}</h3>
+                      <p className="text-[11px] text-slate-500 max-w-md mx-auto">
+                        {t("select_container_instruction", currentLanguage) || "Select a loaded container below to post its proportional remaining payment."}
+                      </p>
+                    </div>
+                    {loadingLoadingRecords ? (
+                      <div className="text-xs text-amber-700 italic flex items-center justify-center gap-1.5 py-4">
+                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-amber-600 border-t-transparent" />
+                        {t("loading_container_records", currentLanguage) || "Loading container records..."}
+                      </div>
+                    ) : loadingRecords.length > 0 ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 pt-1 max-h-[280px] overflow-y-auto p-1">
+                        {loadingRecords.map((lr) => {
+                          const poRow = selected || {};
+                          const finance = calcLoadingFinance(lr, poRow, poRow.form_data?.form || {});
+                          const loadedQty = lr.report_payload?.loadedQuantity || lr.loadedQuantity || 0;
+                          const poAdvanceAmt = Number(poRow.advance_paid || poRow.form_data?.form?.advanceAmount || 0);
+                          const totalPOQuantity = Number(
+                            poRow.form_data?.totals?.totalQuantity ||
+                            goods.reduce((acc: number, item: any) => acc + Number(item.qtyNo || item.quantity || 0), 0) ||
+                            poRow.form_data?.form?.quantity ||
+                            1
+                          );
+                          const loadedAdvanceUSD = totalPOQuantity > 0 ? (loadedQty / totalPOQuantity) * poAdvanceAmt : poAdvanceAmt;
+                          const loadedRemainingUSD = Math.max(0, finance.amountUSD - loadedAdvanceUSD);
+
+                          return (
+                            <button
+                              key={lr.id}
+                              type="button"
+                              onClick={() => handleSelectLoadingRecord(lr)}
+                              className="flex flex-col text-left p-3 rounded-xl border border-slate-200 bg-white hover:border-blue-500 hover:shadow-md transition text-xs space-y-1.5 dark:bg-slate-900 dark:border-slate-800 shadow-xs cursor-pointer"
+                            >
+                              <div className="flex justify-between items-center w-full">
+                                <span className="font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-1">
+                                  Container #{lr.loading_record_no || lr.container_number || lr.report_payload?.containerNumber || "-"}
+                                </span>
+                                <span className="text-[10px] font-black uppercase text-blue-600 bg-blue-50 dark:bg-blue-950/30 dark:text-blue-400 px-2 py-0.5 rounded-full">
+                                  {Number(loadedQty).toLocaleString()} {lr.report_payload?.unit || "Bags"}
+                                </span>
+                              </div>
+                              <div className="grid grid-cols-2 gap-1 text-[10px] text-slate-400 w-full">
+                                <div>Net: <span className="font-semibold text-slate-700 dark:text-slate-300">{Number(finance.netWeight || 0).toLocaleString()} KG</span></div>
+                                <div>Gross: <span className="font-semibold text-slate-700 dark:text-slate-300">{Number(finance.grossWeight || 0).toLocaleString()} KG</span></div>
+                                <div className="col-span-2 border-t border-slate-100 dark:border-slate-800 pt-1 mt-0.5 flex justify-between items-center w-full">
+                                  <span>Batch Due:</span>
+                                  <span className="font-black text-xs text-rose-600 dark:text-rose-400">{money(loadedRemainingUSD, poCurrency)}</span>
+                                </div>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="text-xs text-slate-400 italic py-4 bg-slate-50 dark:bg-slate-900/10 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
+                        No loaded containers found for this purchase order.
+                        <div className="text-[10px] text-slate-400 mt-0.5 font-normal">Please make sure the containers are added and loaded in the Loading module first.</div>
+                      </div>
+                    )}
+                  </div>
+                )}
+                      <div className="max-w-md">
+                  {/* Card 17: 17 Transport & Logistics */}
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427] p-3 shadow-sm flex flex-col justify-between">
+                    <div className="text-[11px] font-black uppercase tracking-wider text-cyan-600 dark:text-cyan-400 pb-1.5 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-1.5">
+                      <span>17</span>
+                      <span>{t("sec_transport_logistics", currentLanguage)}</span>
+                    </div>
+                    <div className="space-y-1 mt-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "Loading Country")}</span><span className="text-right font-bold">{loadingCountry}</span></div>
+                      <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "Loading Date")}</span><span className="text-right font-mono text-[11px]">{loadingDate}</span></div>
+                      <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "Receiving Country")}</span><span className="text-right font-bold">{receivingCountry}</span></div>
+                      <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "Received Date")}</span><span className="text-right font-mono text-[11px]">{receivedDate}</span></div>
+                      <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 font-normal">{translateHeader(currentLanguage, "Payment Condition")}</span><span className="text-right text-emerald-600 dark:text-emerald-400 font-bold">{paymentCondition}</span></div>
+                    </div>
+                  </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* ── COMPACT FOOTER ── */}
+                <div className="shrink-0 flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400 px-4 py-2 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1427]">
                   <div>
                     <span>{translateHeader(currentLanguage, "Created By:")} </span>
                     <strong className="text-slate-800 dark:text-slate-200 font-bold">{userName}</strong>
