@@ -21,7 +21,8 @@ const URGENT_RE = /\b(urgent|asap|immediately|today|priority|critical)\b|فور�
 const DATE_KIND: Array<[ImportantDate["kind"], RegExp]> = [
   ["payment", /\b(pay|payment|paid|invoice|due amount|balance|remit|transfer)\b/i],
   ["delivery", /\b(deliver|delivery|dispatch|shipment|ship|eta|arrival|loading)\b/i],
-  ["expiry", /\b(expir|valid until|validity|renew|renewal)\b/i],
+  // Word stems ("expires", "expiring", "renewal") — no trailing boundary on the stem.
+  ["expiry", /\b(expir\w*|valid until|validity|renew\w*)/i],
   ["meeting", /\b(meet|meeting|call|visit|appointment|demo)\b/i],
   ["deadline", /\b(deadline|due|before|by|latest|submit|last date)\b/i],
 ];
@@ -108,6 +109,12 @@ export function analyzeConversation(input: { channel: Channel; text: string; ref
     if (messages.length) body = messages.map((m) => `${m.sender}: ${m.text}`).join("\n");
   }
   const draft = extractInquiryDraft(input.channel === "whatsapp" && messages.length ? messages.map((m) => m.text).join("\n") : body);
+  // A WhatsApp chat names its people in the sender column: the first sender is taken as the contact
+  // when the text itself names nobody (the user can change it in the preview).
+  if (input.channel === "whatsapp" && messages.length && !draft.customer_name) {
+    draft.customer_name = messages[0].sender;
+    draft.contact_person = draft.contact_person ?? messages[0].sender;
+  }
   const customerNames = [draft.customer_name, draft.company_name, draft.contact_person].filter(Boolean) as string[];
   const sents = sentencesOf(body);
   const decisions = [...new Set(sents.filter((s) => DECISION_RE.test(s)))].slice(0, 12);

@@ -59,3 +59,13 @@ describe("inquiry extractor", () => {
     expect(b.draft.customer_name).toBe("Bilal Qureshi");
   });
 });
+
+describe("regressions from DEV E2E", () => {
+  it("'expires' is an expiry date and WhatsApp senders name the contact", () => {
+    const e = analyzeConversation({ channel: "email", refDate: REF, lang: "en", text: "Dear customer, your trade licence expires on 20/12/2026. The renewal fee payment is due by 05/12/2026." });
+    expect(e.dates.find((d) => d.date === "2026-12-20")?.kind).toBe("expiry");
+    expect(e.dates.find((d) => d.date === "2026-12-05")?.kind).toBe("payment");
+    const w = analyzeConversation({ channel: "whatsapp", refDate: REF, lang: "en", text: "29/09/2026, 09:12 - Bilal Qureshi: any update on the quotation?\n29/09/2026, 09:15 - Sales Desk: We will send it by Friday." });
+    expect(w.draft.customer_name).toBe("Bilal Qureshi");
+  });
+});

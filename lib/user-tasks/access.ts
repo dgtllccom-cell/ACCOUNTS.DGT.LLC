@@ -105,7 +105,15 @@ function dedupeUsers(rows: any[]) {
 }
 
 export async function canAssignTo(session: ErpSession, assigneeId: string): Promise<boolean> {
-  if (session.isSuperAdmin) return canManageTasks(session);
+  if (session.isSuperAdmin) {
+    if (!canManageTasks(session)) return false;
+    // Super Admin may assign anyone — but only a real, active user (no task for a non-existent id).
+    const rows = (await withLocalPg((sql) => sql`
+      select 1 from public.user_role_assignments
+      where user_id = ${assigneeId}::uuid and is_active = true and deleted_at is null limit 1
+    `)) as unknown as unknown[] | null;
+    return !!rows?.length;
+  }
   const list = await assignableUserIds(session);
   return list.some((u) => u.userId === assigneeId);
 }
