@@ -3117,6 +3117,13 @@ export type UiKey =
   | "cinsights.no_next_action"
   | "cinsights.empty"
   | "cinsights.more"
+  | "inv.drilldown_tab"
+  | "inv.unassigned_branch"
+  | "inv.drill_countries"
+  | "inv.total_on_hand"
+  | "inv.trace"
+  | "inv.trace_note"
+  | "inv.no_movements"
   | "kyc.kycManagement"
   | "kyc.applyRange"
   | "bankroz.update_status_clear"
@@ -27084,6 +27091,13 @@ const en: Dict = {
   "cinsights.no_next_action": "No Next Action Assigned",
   "cinsights.empty": "Nothing here right now.",
   "cinsights.more": "more",
+  "inv.drilldown_tab": "Country → Warehouse → Goods",
+  "inv.unassigned_branch": "Country-level (no branch assigned)",
+  "inv.drill_countries": "Countries",
+  "inv.total_on_hand": "Total on hand",
+  "inv.trace": "Trace",
+  "inv.trace_note": "Every real stock movement recorded against this item at this warehouse — its source/reference traceability.",
+  "inv.no_movements": "No stock movements recorded yet for this item at this warehouse.",
   "kyc.kycManagement": "KYC Management",
 
 
@@ -48593,6 +48607,13 @@ const ur: Dict = {
   "cinsights.no_next_action": "کوئی اگلا اقدام مقرر نہیں",
   "cinsights.empty": "ابھی یہاں کچھ نہیں۔",
   "cinsights.more": "مزید",
+  "inv.drilldown_tab": "ملک → گودام → سامان",
+  "inv.unassigned_branch": "ملکی سطح (کوئی شاخ مقرر نہیں)",
+  "inv.drill_countries": "ممالک",
+  "inv.total_on_hand": "کل موجود مقدار",
+  "inv.trace": "ٹریس",
+  "inv.trace_note": "اس آئٹم کے خلاف اس گودام میں درج تمام حقیقی اسٹاک حرکات — اس کی ماخذ/حوالہ سراغ رسانی۔",
+  "inv.no_movements": "اس گودام میں اس آئٹم کے لیے ابھی تک کوئی اسٹاک حرکت درج نہیں ہوئی۔",
   "kyc.kycManagement": "KYC انتظام",
 
 
@@ -70184,6 +70205,13 @@ const ar: Dict = {
   "cinsights.no_next_action": "لا يوجد إجراء تالٍ محدد",
   "cinsights.empty": "لا يوجد شيء هنا الآن.",
   "cinsights.more": "المزيد",
+  "inv.drilldown_tab": "الدولة ← المستودع ← البضاعة",
+  "inv.unassigned_branch": "على مستوى الدولة (لم يتم تعيين فرع)",
+  "inv.drill_countries": "الدول",
+  "inv.total_on_hand": "إجمالي الكمية المتوفرة",
+  "inv.trace": "تتبع",
+  "inv.trace_note": "كل حركة مخزون حقيقية مسجلة لهذا الصنف في هذا المستودع — تتبع المصدر/المرجع الخاص به.",
+  "inv.no_movements": "لم يتم تسجيل أي حركة مخزون بعد لهذا الصنف في هذا المستودع.",
   "kyc.kycManagement": "إدارة اعرف عميلك",
 
 
@@ -91825,6 +91853,13 @@ const fa: Dict = {
   "cinsights.no_next_action": "هیچ اقدام بعدی تعیین نشده",
   "cinsights.empty": "در حال حاضر چیزی اینجا نیست.",
   "cinsights.more": "بیشتر",
+  "inv.drilldown_tab": "کشور ← انبار ← کالا",
+  "inv.unassigned_branch": "سطح کشور (شعبه‌ای تعیین نشده)",
+  "inv.drill_countries": "کشورها",
+  "inv.total_on_hand": "مجموع موجودی",
+  "inv.trace": "ردیابی",
+  "inv.trace_note": "هر حرکت موجودی واقعی ثبت‌شده برای این قلم در این انبار — ردیابی منبع/مرجع آن.",
+  "inv.no_movements": "هنوز هیچ حرکت موجودی برای این قلم در این انبار ثبت نشده است.",
   "kyc.kycManagement": "مدیریت احراز هویت مشتری",
 
 
@@ -113464,6 +113499,13 @@ const ps: Dict = {
   "cinsights.no_next_action": "هیڅ راتلونکی کار نه دی ټاکل شوی",
   "cinsights.empty": "اوس دلته څه نشته.",
   "cinsights.more": "نور",
+  "inv.drilldown_tab": "هیواد ← ګدام ← توکي",
+  "inv.unassigned_branch": "د هیواد کچه (هیڅ څانګه نه ده ټاکل شوې)",
+  "inv.drill_countries": "هیوادونه",
+  "inv.total_on_hand": "ټوله شته مقدار",
+  "inv.trace": "تعقیب",
+  "inv.trace_note": "د دې توکي لپاره په دې ګدام کې ثبت شوې هره ریښتینې د سټاک حرکت — د هغې د سرچینې/حواله تعقیب.",
+  "inv.no_movements": "تر اوسه د دې توکي لپاره په دې ګدام کې هیڅ د سټاک حرکت نه دی ثبت شوی.",
   "kyc.kycManagement": "د KYC مدیریت",
 
 

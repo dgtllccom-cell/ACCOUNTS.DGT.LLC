@@ -39,11 +39,15 @@ export async function GET(request: NextRequest) {
           w.warehouse_name,
           w.warehouse_code,
           w.warehouse_type,
-          c.name AS country_name
+          c.name AS country_name,
+          cb.name AS country_branch_name,
+          cib.name AS city_branch_name
         FROM public.product_inventory_balances pib
         LEFT JOIN public.goods g ON g.id = pib.product_id
         LEFT JOIN public.warehouses w ON w.id = pib.warehouse_id
         LEFT JOIN public.countries c ON c.id = pib.country_id
+        LEFT JOIN public.country_branches cb ON cb.id = pib.country_branch_id
+        LEFT JOIN public.city_branches cib ON cib.id = pib.city_branch_id
         WHERE g.deleted_at IS NULL AND w.deleted_at IS NULL
       `;
 
@@ -86,11 +90,21 @@ export async function GET(request: NextRequest) {
         const localizedCountries = await localizeRecordNames(countryItems, "countries", "name", lang);
         const countryMap = new Map(localizedCountries.map(c => [c.id, c.name]));
 
+        // Localize country_branch_name / city_branch_name
+        const cbItems = rows.map(r => ({ id: r.country_branch_id, name: r.country_branch_name })).filter(r => r.id);
+        const localizedCb = await localizeRecordNames(cbItems, "country_branches", "name", lang);
+        const cbMap = new Map(localizedCb.map(b => [b.id, b.name]));
+        const cibItems = rows.map(r => ({ id: r.city_branch_id, name: r.city_branch_name })).filter(r => r.id);
+        const localizedCib = await localizeRecordNames(cibItems, "city_branches", "name", lang);
+        const cibMap = new Map(localizedCib.map(b => [b.id, b.name]));
+
         rows = rows.map(r => ({
           ...r,
           goods_name: r.goods_id ? (goodsMap.get(r.goods_id) || r.goods_name) : r.goods_name,
           warehouse_name: r.warehouse_id ? (whMap.get(r.warehouse_id) || r.warehouse_name) : r.warehouse_name,
-          country_name: r.country_id ? (countryMap.get(r.country_id) || r.country_name) : r.country_name
+          country_name: r.country_id ? (countryMap.get(r.country_id) || r.country_name) : r.country_name,
+          country_branch_name: r.country_branch_id ? (cbMap.get(r.country_branch_id) || r.country_branch_name) : r.country_branch_name,
+          city_branch_name: r.city_branch_id ? (cibMap.get(r.city_branch_id) || r.city_branch_name) : r.city_branch_name
         }));
       }
 

@@ -22,6 +22,7 @@ export function SimpleModal({
   maxWidth?: string;
 }) {
   const lang = useActiveLanguage();
+  if (isOpen === false) return null;
   const modal = (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/70 p-2 sm:p-4 overflow-y-auto print:static print:bg-transparent print:p-0 print:block backdrop-blur-xs">
       <div

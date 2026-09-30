@@ -41,6 +41,10 @@ type InventoryBalance = {
   goods_id: string;
   warehouse_id: string;
   country_id: string | null;
+  country_branch_id: string | null;
+  city_branch_id: string | null;
+  country_branch_name: string | null;
+  city_branch_name: string | null;
   quantity_on_hand: number;
   quantity_reserved: number;
   quantity_available: number;
@@ -84,7 +88,16 @@ type WarehouseOption = {
 };
 
 export default function InventoryWorkspaceClient({ session }: { session: any }) {
-  const [activeTab, setActiveTab] = useState<"balances" | "movements">("balances");
+  const [activeTab, setActiveTab] = useState<"balances" | "movements" | "drilldown">("balances");
+
+  // Country -> Branch -> Warehouse -> Goods -> Movement drill-down (pure client-side
+  // navigation over the already-fetched `balances` rows — same real data, no
+  // separate backend query until the final Movements step).
+  const [drillCountryId, setDrillCountryId] = useState<string | null>(null);
+  const [drillBranchKey, setDrillBranchKey] = useState<string | null>(null); // "cb:<id>" | "cib:<id>" | "unassigned"
+  const [drillWarehouseId, setDrillWarehouseId] = useState<string | null>(null);
+  const [drillGoods, setDrillGoods] = useState<InventoryBalance | null>(null);
+  const [drillMovements, setDrillMovements] = useState<StockMovement[] | null>(null);
   const [showReport, setShowReport] = useState(false);
   const [q, setQ] = useState("");
   const [busy, setBusy] = useState(false);
@@ -136,7 +149,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (activeTab === "balances") {
+      if (activeTab === "balances" || activeTab === "drilldown") {
         fetchBalances();
       } else {
         fetchMovements();
@@ -202,6 +215,76 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
     } finally {
       setBusy(false);
     }
+  }
+
+  async function fetchDrillMovements(goodsId: string, warehouseId: string) {
+    setDrillMovements(null);
+    try {
+      const params = new URLSearchParams({ goodsId, warehouseId, lang: activeLang, limit: "100" });
+      const res = await apiGet<{ movements: StockMovement[] }>(`/api/erp/inventory/stock-movements?${params.toString()}`);
+      setDrillMovements(res.movements || []);
+    } catch (e: any) {
+      setBanner({ type: "error", text: e?.message || "Failed to load movement history" });
+      setDrillMovements([]);
+    }
+  }
+
+  useEffect(() => {
+    if (drillGoods) void fetchDrillMovements(drillGoods.goods_id, drillGoods.warehouse_id);
+    else setDrillMovements(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [drillGoods?.id]);
+
+  // Real distinct Country -> Branch -> Warehouse -> Goods hierarchy, derived from the
+  // already-fetched balances (no fabricated tree — whatever isn't in `balances` isn't shown).
+  const drillCountries = React.useMemo(() => {
+    const map = new Map<string, { id: string; name: string; qty: number }>();
+    for (const b of balances) {
+      if (!b.country_id) continue;
+      const cur = map.get(b.country_id) || { id: b.country_id, name: b.country_name || b.country_id, qty: 0 };
+      cur.qty += Number(b.quantity_on_hand || 0);
+      map.set(b.country_id, cur);
+    }
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [balances]);
+
+  const drillBranches = React.useMemo(() => {
+    if (!drillCountryId) return [];
+    const map = new Map<string, { key: string; name: string; qty: number }>();
+    for (const b of balances) {
+      if (b.country_id !== drillCountryId) continue;
+      const key = b.country_branch_id ? `cb:${b.country_branch_id}` : b.city_branch_id ? `cib:${b.city_branch_id}` : "unassigned";
+      const name = b.country_branch_id ? (b.country_branch_name || b.country_branch_id) : b.city_branch_id ? (b.city_branch_name || b.city_branch_id) : tt("inv.unassigned_branch", "Country-level (no branch assigned)");
+      const cur = map.get(key) || { key, name, qty: 0 };
+      cur.qty += Number(b.quantity_on_hand || 0);
+      map.set(key, cur);
+    }
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [balances, drillCountryId, activeLang]);
+
+  const drillWarehouses = React.useMemo(() => {
+    if (!drillCountryId || !drillBranchKey) return [];
+    const map = new Map<string, { id: string; name: string; code: string; qty: number }>();
+    for (const b of balances) {
+      if (b.country_id !== drillCountryId) continue;
+      const key = b.country_branch_id ? `cb:${b.country_branch_id}` : b.city_branch_id ? `cib:${b.city_branch_id}` : "unassigned";
+      if (key !== drillBranchKey) continue;
+      const cur = map.get(b.warehouse_id) || { id: b.warehouse_id, name: b.warehouse_name || b.warehouse_id, code: b.warehouse_code, qty: 0 };
+      cur.qty += Number(b.quantity_on_hand || 0);
+      map.set(b.warehouse_id, cur);
+    }
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [balances, drillCountryId, drillBranchKey]);
+
+  const drillGoodsRows = React.useMemo(() => {
+    if (!drillWarehouseId) return [];
+    return balances.filter((b) => b.warehouse_id === drillWarehouseId);
+  }, [balances, drillWarehouseId]);
+
+  function resetDrillFrom(level: "country" | "branch" | "warehouse") {
+    if (level === "country") { setDrillCountryId(null); setDrillBranchKey(null); setDrillWarehouseId(null); setDrillGoods(null); }
+    if (level === "branch") { setDrillBranchKey(null); setDrillWarehouseId(null); setDrillGoods(null); }
+    if (level === "warehouse") { setDrillWarehouseId(null); setDrillGoods(null); }
   }
 
   function handleOpenMovementModal(type: "STOCK_IN" | "STOCK_OUT") {
@@ -462,8 +545,19 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
           >
             {tr("Stock Movement History")}
           </button>
+          <button
+            onClick={() => setActiveTab("drilldown")}
+            className={`px-4 py-2 text-sm font-semibold rounded-md transition-colors ${
+              activeTab === "drilldown"
+                ? "bg-primary text-primary-foreground shadow-xs"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+            }`}
+          >
+            {tt("inv.drilldown_tab", "Country → Warehouse → Goods")}
+          </button>
         </div>
 
+        {activeTab !== "drilldown" && (
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative min-w-[200px]">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -513,6 +607,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
             {tr("Print / Report")}
           </Button>
         </div>
+        )}
       </div>
 
       {/* Tab Content 1: Inventory Balances Table */}
@@ -658,6 +753,156 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
               </tbody>
             </table>
           </div>
+        </Card>
+      )}
+
+      {/* Tab Content 3: Country -> Branch -> Warehouse -> Goods -> Movement drill-down */}
+      {activeTab === "drilldown" && (
+        <Card className="border p-4 space-y-4">
+          {/* Breadcrumb */}
+          <div className="flex flex-wrap items-center gap-1.5 text-xs font-medium">
+            <button onClick={() => resetDrillFrom("country")} className={`hover:underline ${!drillCountryId ? "text-foreground font-bold" : "text-muted-foreground"}`}>
+              {tt("inv.drill_countries", "Countries")}
+            </button>
+            {drillCountryId && (<>
+              <span className="text-muted-foreground">/</span>
+              <button onClick={() => resetDrillFrom("branch")} className={`hover:underline ${!drillBranchKey ? "text-foreground font-bold" : "text-muted-foreground"}`}>
+                {drillCountries.find((c) => c.id === drillCountryId)?.name}
+              </button>
+            </>)}
+            {drillBranchKey && (<>
+              <span className="text-muted-foreground">/</span>
+              <button onClick={() => resetDrillFrom("warehouse")} className={`hover:underline ${!drillWarehouseId ? "text-foreground font-bold" : "text-muted-foreground"}`}>
+                {drillBranches.find((b) => b.key === drillBranchKey)?.name}
+              </button>
+            </>)}
+            {drillWarehouseId && (<>
+              <span className="text-muted-foreground">/</span>
+              <button onClick={() => setDrillGoods(null)} className={`hover:underline ${!drillGoods ? "text-foreground font-bold" : "text-muted-foreground"}`}>
+                {drillWarehouses.find((w) => w.id === drillWarehouseId)?.name}
+              </button>
+            </>)}
+            {drillGoods && (<>
+              <span className="text-muted-foreground">/</span>
+              <span className="text-foreground font-bold">{drillGoods.goods_name}</span>
+            </>)}
+          </div>
+
+          {/* Level 1: Countries */}
+          {!drillCountryId && (
+            drillCountries.length === 0 ? (
+              <p className="py-8 text-center text-sm text-muted-foreground">{busy ? tt("inv.loading", "Loading inventory balances...") : tt("inv.no_records", "No inventory balance records found.")}</p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                {drillCountries.map((c) => (
+                  <button key={c.id} onClick={() => setDrillCountryId(c.id)} className="text-left rounded-xl border p-4 hover:border-primary hover:bg-muted/40 transition-colors">
+                    <div className="font-semibold text-foreground">{c.name}</div>
+                    <div className="text-xs text-muted-foreground mt-1">{tt("inv.total_on_hand", "Total on hand")}: {c.qty.toLocaleString()}</div>
+                  </button>
+                ))}
+              </div>
+            )
+          )}
+
+          {/* Level 2: Branches */}
+          {drillCountryId && !drillBranchKey && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              {drillBranches.map((b) => (
+                <button key={b.key} onClick={() => setDrillBranchKey(b.key)} className="text-left rounded-xl border p-4 hover:border-primary hover:bg-muted/40 transition-colors">
+                  <div className="font-semibold text-foreground">{b.name}</div>
+                  <div className="text-xs text-muted-foreground mt-1">{tt("inv.total_on_hand", "Total on hand")}: {b.qty.toLocaleString()}</div>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Level 3: Warehouses */}
+          {drillCountryId && drillBranchKey && !drillWarehouseId && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              {drillWarehouses.map((w) => (
+                <button key={w.id} onClick={() => setDrillWarehouseId(w.id)} className="text-left rounded-xl border p-4 hover:border-primary hover:bg-muted/40 transition-colors">
+                  <div className="font-semibold text-foreground flex items-center gap-1.5"><Warehouse className="h-3.5 w-3.5" />{w.name}</div>
+                  <div className="text-xs text-muted-foreground mt-1">{w.code} · {tt("inv.total_on_hand", "Total on hand")}: {w.qty.toLocaleString()}</div>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Level 4: Goods in the selected warehouse */}
+          {drillWarehouseId && !drillGoods && (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left border-collapse">
+                <thead className="bg-muted/60 text-muted-foreground uppercase text-[11px] font-semibold border-b">
+                  <tr>
+                    <Th className="py-2.5 px-3">Goods Name</Th>
+                    <Th className="py-2.5 px-3">CHS Code</Th>
+                    <Th className="py-2.5 px-3 text-right">On Hand</Th>
+                    <Th className="py-2.5 px-3 text-right">Reserved</Th>
+                    <Th className="py-2.5 px-3 text-right">Available</Th>
+                    <Th className="py-2.5 px-3 text-center">{tt("inv.trace", "Trace")}</Th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {drillGoodsRows.length === 0 ? (
+                    <tr><td colSpan={6} className="py-8 text-center text-muted-foreground">{tt("inv.no_records", "No inventory balance records found.")}</td></tr>
+                  ) : drillGoodsRows.map((g) => (
+                    <tr key={g.id} className="hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => setDrillGoods(g)}>
+                      <td className="py-2.5 px-3 font-medium text-foreground">{g.goods_name || "—"}</td>
+                      <td className="py-2.5 px-3 font-mono text-xs text-muted-foreground">{g.chs_code || "—"}</td>
+                      <td className="py-2.5 px-3 text-right font-bold">{Number(g.quantity_on_hand).toLocaleString()}</td>
+                      <td className="py-2.5 px-3 text-right text-amber-600 dark:text-amber-400">{Number(g.quantity_reserved).toLocaleString()}</td>
+                      <td className="py-2.5 px-3 text-right text-emerald-600 dark:text-emerald-400">{Number(g.quantity_available).toLocaleString()}</td>
+                      <td className="py-2.5 px-3 text-center"><Eye className="h-4 w-4 inline text-muted-foreground" /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Level 5: Real source movement trace for the selected goods item */}
+          {drillGoods && (
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground">{tt("inv.trace_note", "Every real stock movement recorded against this item at this warehouse — its source/reference traceability.")}</p>
+              {drillMovements === null ? (
+                <p className="py-8 text-center text-sm text-muted-foreground">{tt("inv.loading", "Loading inventory balances...")}</p>
+              ) : drillMovements.length === 0 ? (
+                <p className="py-8 text-center text-sm text-muted-foreground">{tt("inv.no_movements", "No stock movements recorded yet for this item at this warehouse.")}</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm text-left border-collapse">
+                    <thead className="bg-muted/60 text-muted-foreground uppercase text-[11px] font-semibold border-b">
+                      <tr>
+                        <Th className="py-2.5 px-3">Date / Ref</Th>
+                        <Th className="py-2.5 px-3">Type</Th>
+                        <Th className="py-2.5 px-3 text-right">Quantity</Th>
+                        <Th className="py-2.5 px-3">Notes</Th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {drillMovements.map((m) => (
+                        <tr key={m.id}>
+                          <td className="py-2.5 px-3">
+                            <div className="font-medium text-foreground">{new Date(m.movement_date || m.created_at).toLocaleDateString()}</div>
+                            <div className="text-xs font-mono text-muted-foreground">{m.reference_no || m.id.slice(0, 8)}</div>
+                          </td>
+                          <td className="py-2.5 px-3">
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${
+                              m.movement_type === "STOCK_IN" ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+                              : m.movement_type === "STOCK_OUT" ? "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300"
+                              : "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300"
+                            }`}>{tv(m.movement_type)}</span>
+                          </td>
+                          <td className="py-2.5 px-3 text-right font-bold">{m.movement_type === "STOCK_IN" ? "+" : "-"}{Number(m.quantity).toLocaleString()}</td>
+                          <td className="py-2.5 px-3 text-muted-foreground text-xs">{m.notes || "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
         </Card>
       )}
 
