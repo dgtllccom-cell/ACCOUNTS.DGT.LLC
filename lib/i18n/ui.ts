@@ -3086,6 +3086,37 @@ export type UiKey =
   | "crm.th_currency"
   | "crm.th_priority"
   | "crm.not_available_yet"
+  | "pipe.title"
+  | "pipe.subtitle"
+  | "pipe.show_closed"
+  | "pipe.stage_new_lead"
+  | "pipe.stage_contacted"
+  | "pipe.stage_qualified"
+  | "pipe.stage_quotation_sent"
+  | "pipe.stage_negotiation"
+  | "pipe.stage_won"
+  | "pipe.stage_lost"
+  | "pipe.empty_stage"
+  | "pipe.assigned"
+  | "pipe.advance_to"
+  | "pipe.mark_lost"
+  | "pipe.quotation_value"
+  | "pipe.currency"
+  | "pipe.quotation_optional"
+  | "pipe.lost_reason"
+  | "nav.sales_pipeline"
+  | "nav.lead_reactivation"
+  | "cinsights.title"
+  | "cinsights.hot_lead"
+  | "cinsights.stale_lead"
+  | "cinsights.follow_up_missed"
+  | "cinsights.callback_today"
+  | "cinsights.quotation_no_response"
+  | "cinsights.old_customer_reactivation"
+  | "cinsights.payment_follow_up"
+  | "cinsights.no_next_action"
+  | "cinsights.empty"
+  | "cinsights.more"
   | "kyc.kycManagement"
   | "kyc.applyRange"
   | "bankroz.update_status_clear"
@@ -27022,6 +27053,37 @@ const en: Dict = {
   "crm.th_currency": "Currency",
   "crm.th_priority": "Priority",
   "crm.not_available_yet": "Not available yet",
+  "pipe.title": "Sales Pipeline",
+  "pipe.subtitle": "Real leads from Customer Inquiries, tracked through a real sales funnel. Every move is scope-checked and recorded in a real audit trail.",
+  "pipe.show_closed": "Show Won / Lost",
+  "pipe.stage_new_lead": "New Lead",
+  "pipe.stage_contacted": "Contacted",
+  "pipe.stage_qualified": "Qualified",
+  "pipe.stage_quotation_sent": "Quotation Sent",
+  "pipe.stage_negotiation": "Negotiation",
+  "pipe.stage_won": "Won",
+  "pipe.stage_lost": "Lost",
+  "pipe.empty_stage": "No leads",
+  "pipe.assigned": "Assigned",
+  "pipe.advance_to": "Move to",
+  "pipe.mark_lost": "Lost",
+  "pipe.quotation_value": "Quotation Value",
+  "pipe.currency": "Currency",
+  "pipe.quotation_optional": "Optional — leave blank if the value is not decided yet.",
+  "pipe.lost_reason": "Reason (optional)",
+  "nav.sales_pipeline": "Sales Pipeline",
+  "nav.lead_reactivation": "Lead Reactivation",
+  "cinsights.title": "CRM Insights",
+  "cinsights.hot_lead": "Hot Lead",
+  "cinsights.stale_lead": "Stale Lead",
+  "cinsights.follow_up_missed": "Follow-Up Missed",
+  "cinsights.callback_today": "Callback Today",
+  "cinsights.quotation_no_response": "Quotation Sent — No Response",
+  "cinsights.old_customer_reactivation": "Old Customer Reactivation",
+  "cinsights.payment_follow_up": "Payment Follow-Up Required",
+  "cinsights.no_next_action": "No Next Action Assigned",
+  "cinsights.empty": "Nothing here right now.",
+  "cinsights.more": "more",
   "kyc.kycManagement": "KYC Management",
 
 
@@ -48500,6 +48562,37 @@ const ur: Dict = {
   "crm.th_currency": "کرنسی",
   "crm.th_priority": "ترجیح",
   "crm.not_available_yet": "ابھی دستیاب نہیں",
+  "pipe.title": "سیلز پائپ لائن",
+  "pipe.subtitle": "کسٹمر انکوائریز سے حقیقی لیڈز، حقیقی سیلز فنل کے ذریعے ٹریک کی گئیں۔ ہر حرکت کی دائرہ کار جانچ ہوتی ہے اور اسے حقیقی آڈٹ ٹریل میں درج کیا جاتا ہے۔",
+  "pipe.show_closed": "جیتے/ہارے دکھائیں",
+  "pipe.stage_new_lead": "نئی لیڈ",
+  "pipe.stage_contacted": "رابطہ ہو گیا",
+  "pipe.stage_qualified": "اہل قرار",
+  "pipe.stage_quotation_sent": "کوٹیشن بھیجی گئی",
+  "pipe.stage_negotiation": "مذاکرات",
+  "pipe.stage_won": "جیت گئے",
+  "pipe.stage_lost": "ہار گئے",
+  "pipe.empty_stage": "کوئی لیڈ نہیں",
+  "pipe.assigned": "تفویض شدہ",
+  "pipe.advance_to": "منتقل کریں",
+  "pipe.mark_lost": "ہار",
+  "pipe.quotation_value": "کوٹیشن کی رقم",
+  "pipe.currency": "کرنسی",
+  "pipe.quotation_optional": "اختیاری — اگر رقم ابھی طے نہیں ہوئی تو خالی چھوڑ دیں۔",
+  "pipe.lost_reason": "وجہ (اختیاری)",
+  "nav.sales_pipeline": "سیلز پائپ لائن",
+  "nav.lead_reactivation": "لیڈ ری ایکٹیویشن",
+  "cinsights.title": "سی آر ایم بصیرتیں",
+  "cinsights.hot_lead": "گرم لیڈ",
+  "cinsights.stale_lead": "پرانی لیڈ",
+  "cinsights.follow_up_missed": "فالو اپ چھوٹ گیا",
+  "cinsights.callback_today": "آج کال بیک",
+  "cinsights.quotation_no_response": "کوٹیشن بھیجی گئی — کوئی جواب نہیں",
+  "cinsights.old_customer_reactivation": "پرانے کسٹمر کی بحالی",
+  "cinsights.payment_follow_up": "ادائیگی کا فالو اپ درکار",
+  "cinsights.no_next_action": "کوئی اگلا اقدام مقرر نہیں",
+  "cinsights.empty": "ابھی یہاں کچھ نہیں۔",
+  "cinsights.more": "مزید",
   "kyc.kycManagement": "KYC انتظام",
 
 
@@ -70060,6 +70153,37 @@ const ar: Dict = {
   "crm.th_currency": "العملة",
   "crm.th_priority": "الأولوية",
   "crm.not_available_yet": "غير متاح بعد",
+  "pipe.title": "مسار المبيعات",
+  "pipe.subtitle": "عملاء محتملون حقيقيون من استفسارات العملاء، يتم تتبعهم عبر قمع مبيعات حقيقي. يتم التحقق من نطاق كل خطوة وتسجيلها في سجل تدقيق حقيقي.",
+  "pipe.show_closed": "إظهار الفائز / الخاسر",
+  "pipe.stage_new_lead": "عميل محتمل جديد",
+  "pipe.stage_contacted": "تم التواصل",
+  "pipe.stage_qualified": "مؤهل",
+  "pipe.stage_quotation_sent": "تم إرسال عرض السعر",
+  "pipe.stage_negotiation": "التفاوض",
+  "pipe.stage_won": "فاز",
+  "pipe.stage_lost": "خسر",
+  "pipe.empty_stage": "لا توجد عملاء محتملون",
+  "pipe.assigned": "مُسند إلى",
+  "pipe.advance_to": "نقل إلى",
+  "pipe.mark_lost": "خسارة",
+  "pipe.quotation_value": "قيمة عرض السعر",
+  "pipe.currency": "العملة",
+  "pipe.quotation_optional": "اختياري — اتركه فارغاً إذا لم تُحدد القيمة بعد.",
+  "pipe.lost_reason": "السبب (اختياري)",
+  "nav.sales_pipeline": "مسار المبيعات",
+  "nav.lead_reactivation": "إعادة تنشيط العملاء المحتملين",
+  "cinsights.title": "رؤى CRM",
+  "cinsights.hot_lead": "عميل محتمل ساخن",
+  "cinsights.stale_lead": "عميل محتمل راكد",
+  "cinsights.follow_up_missed": "فاتت المتابعة",
+  "cinsights.callback_today": "معاودة الاتصال اليوم",
+  "cinsights.quotation_no_response": "تم إرسال عرض السعر — لا رد",
+  "cinsights.old_customer_reactivation": "إعادة تنشيط عميل قديم",
+  "cinsights.payment_follow_up": "متابعة دفع مطلوبة",
+  "cinsights.no_next_action": "لا يوجد إجراء تالٍ محدد",
+  "cinsights.empty": "لا يوجد شيء هنا الآن.",
+  "cinsights.more": "المزيد",
   "kyc.kycManagement": "إدارة اعرف عميلك",
 
 
@@ -91670,6 +91794,37 @@ const fa: Dict = {
   "crm.th_currency": "ارز",
   "crm.th_priority": "اولویت",
   "crm.not_available_yet": "هنوز در دسترس نیست",
+  "pipe.title": "قیف فروش",
+  "pipe.subtitle": "سرنخ‌های واقعی از استعلام‌های مشتری، که در یک قیف فروش واقعی پیگیری می‌شوند. هر حرکت از نظر محدوده بررسی شده و در یک ردیابی حسابرسی واقعی ثبت می‌شود.",
+  "pipe.show_closed": "نمایش برد/باخت",
+  "pipe.stage_new_lead": "سرنخ جدید",
+  "pipe.stage_contacted": "تماس گرفته شد",
+  "pipe.stage_qualified": "واجد شرایط",
+  "pipe.stage_quotation_sent": "پیش‌فاکتور ارسال شد",
+  "pipe.stage_negotiation": "مذاکره",
+  "pipe.stage_won": "برد",
+  "pipe.stage_lost": "باخت",
+  "pipe.empty_stage": "هیچ سرنخی نیست",
+  "pipe.assigned": "واگذار شده به",
+  "pipe.advance_to": "انتقال به",
+  "pipe.mark_lost": "باخت",
+  "pipe.quotation_value": "مبلغ پیش‌فاکتور",
+  "pipe.currency": "ارز",
+  "pipe.quotation_optional": "اختیاری — اگر مبلغ هنوز مشخص نشده خالی بگذارید.",
+  "pipe.lost_reason": "دلیل (اختیاری)",
+  "nav.sales_pipeline": "قیف فروش",
+  "nav.lead_reactivation": "فعال‌سازی مجدد سرنخ",
+  "cinsights.title": "بینش‌های CRM",
+  "cinsights.hot_lead": "سرنخ داغ",
+  "cinsights.stale_lead": "سرنخ راکد",
+  "cinsights.follow_up_missed": "پیگیری از دست رفته",
+  "cinsights.callback_today": "تماس مجدد امروز",
+  "cinsights.quotation_no_response": "پیش‌فاکتور ارسال شد — بدون پاسخ",
+  "cinsights.old_customer_reactivation": "فعال‌سازی مجدد مشتری قدیمی",
+  "cinsights.payment_follow_up": "پیگیری پرداخت لازم است",
+  "cinsights.no_next_action": "هیچ اقدام بعدی تعیین نشده",
+  "cinsights.empty": "در حال حاضر چیزی اینجا نیست.",
+  "cinsights.more": "بیشتر",
   "kyc.kycManagement": "مدیریت احراز هویت مشتری",
 
 
@@ -113278,6 +113433,37 @@ const ps: Dict = {
   "crm.th_currency": "پیسه",
   "crm.th_priority": "لومړیتوب",
   "crm.not_available_yet": "تر اوسه شتون نلري",
+  "pipe.title": "د پلور پایپ لاین",
+  "pipe.subtitle": "د پیرودونکي پوښتنو څخه ریښتیني لیډونه، چې د ریښتیني پلور فنل له لارې تعقیب کیږي. هره حرکت د ساحې له مخې کتل کیږي او په یو ریښتیني آډیټ لاګ کې ثبتیږي.",
+  "pipe.show_closed": "ګټونکی/بایلونکی وښایاست",
+  "pipe.stage_new_lead": "نوی لیډ",
+  "pipe.stage_contacted": "اړیکه ونیول شوه",
+  "pipe.stage_qualified": "وړ",
+  "pipe.stage_quotation_sent": "نرخنامه واستول شوه",
+  "pipe.stage_negotiation": "خبرې اترې",
+  "pipe.stage_won": "وګټله",
+  "pipe.stage_lost": "وبایلله",
+  "pipe.empty_stage": "هیڅ لیډ نشته",
+  "pipe.assigned": "ورکړل شوی چاته",
+  "pipe.advance_to": "انتقال ته",
+  "pipe.mark_lost": "بایللی",
+  "pipe.quotation_value": "د نرخنامې ارزښت",
+  "pipe.currency": "پیسه",
+  "pipe.quotation_optional": "اختیاري — که ارزښت لا تر اوسه نه دی ټاکل شوی خالي پریږدئ.",
+  "pipe.lost_reason": "دلیل (اختیاري)",
+  "nav.sales_pipeline": "د پلور پایپ لاین",
+  "nav.lead_reactivation": "د لیډ بیا فعالول",
+  "cinsights.title": "د CRM لیدونه",
+  "cinsights.hot_lead": "ګرم لیډ",
+  "cinsights.stale_lead": "زوړ لیډ",
+  "cinsights.follow_up_missed": "تعقیب پاتې شو",
+  "cinsights.callback_today": "نن بیرته زنګ",
+  "cinsights.quotation_no_response": "نرخنامه واستول شوه — ځواب نشته",
+  "cinsights.old_customer_reactivation": "د زوړ پیرودونکي بیا فعالول",
+  "cinsights.payment_follow_up": "د تادیاتو تعقیب ته اړتیا ده",
+  "cinsights.no_next_action": "هیڅ راتلونکی کار نه دی ټاکل شوی",
+  "cinsights.empty": "اوس دلته څه نشته.",
+  "cinsights.more": "نور",
   "kyc.kycManagement": "د KYC مدیریت",
 
 

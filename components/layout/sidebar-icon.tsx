@@ -25,6 +25,7 @@ import {
   Package,
   Palette,
   Phone,
+  RotateCcw,
   Scale,
   ScrollText,
   Search,
@@ -33,6 +34,7 @@ import {
   ShieldCheck,
   ShoppingBag,
   Users,
+  TrendingUp,
   Truck,
   Video,
   Warehouse,
@@ -77,7 +79,9 @@ const iconMap: Partial<Record<SidebarIconKey, LucideIcon>> = {
   "shield-check": ShieldCheck,
   "shopping-bag": ShoppingBag,
   warehouse: Warehouse,
-  flag: Flag
+  flag: Flag,
+  "trending-up": TrendingUp,
+  "rotate-ccw": RotateCcw
 };
 
 export function SidebarIcon({ name, className }: { name?: SidebarIconKey; className?: string }) {

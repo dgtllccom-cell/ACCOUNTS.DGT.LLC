@@ -42,7 +42,9 @@ export type SidebarIconKey =
   | "credit-card"
   | "warehouse"
   | "flag"
-  | "lock";
+  | "lock"
+  | "trending-up"
+  | "rotate-ccw";
 
 export type SidebarNode = {
   key: string;
@@ -921,7 +923,9 @@ export const sidebarTree: SidebarNode[] = [
     href: "/dashboard/customer-inquiries" as Route,
     children: [
       { key: "ci-register", labelKey: "nav.inquiry_register", iconKey: "message-square", href: "/dashboard/customer-inquiries" as Route },
+      { key: "ci-pipeline", labelKey: "nav.sales_pipeline", iconKey: "trending-up", href: "/dashboard/customer-inquiries/pipeline" as Route },
       { key: "ci-followups", labelKey: "nav.inquiry_follow_ups", iconKey: "clock", href: "/dashboard/customer-inquiries/follow-ups" as Route },
+      { key: "ci-reactivation", labelKey: "nav.lead_reactivation", iconKey: "rotate-ccw", href: "/dashboard/customer-inquiries/reactivation" as Route },
       { key: "ci-calls", labelKey: "nav.ai_calls", iconKey: "phone", href: "/dashboard/customer-inquiries/calls" as Route },
     ]
   },
@@ -1264,6 +1268,20 @@ export const sidebarTree: SidebarNode[] = [
         iconKey: "bar-chart-3",
         href: "/dashboard/crm/reports" as Route,
         roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"]
+      },
+      {
+        key: "crm-insights",
+        labelKey: "cinsights.title" as any,
+        iconKey: "flag",
+        href: "/dashboard/crm/insights" as Route,
+        roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "cashier", "agent_user"]
+      },
+      {
+        key: "crm-pipeline-nav",
+        labelKey: "nav.sales_pipeline" as any,
+        iconKey: "trending-up",
+        href: "/dashboard/customer-inquiries/pipeline" as Route,
+        roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "agent_user"]
       }
     ]
   },

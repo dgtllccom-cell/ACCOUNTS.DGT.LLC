@@ -22,7 +22,7 @@ function assertTrue(label: string, cond: boolean, extra?: unknown) {
 }
 
 const S = (isSuperAdmin: boolean) => ({ userId: SUPERADMIN_ID, isSuperAdmin, fullName: "E2E Tester", roles: [], countryIds: isSuperAdmin ? null : [], email: "e2e@test.local" } as any);
-const wrongCountrySession = { userId: "00000000-0000-4000-8000-000000000099", isSuperAdmin: false, fullName: "Wrong Scope Tester", roles: ["country_admin"], countryIds: ["00000000-0000-0000-0000-0000000000aa"], countryBranchIds: [], cityBranchIds: [], email: "wrong@test.local" } as any;
+const wrongCountrySession = { userId: "00000000-0000-4000-8000-000000000099", isSuperAdmin: false, fullName: "Wrong Scope Tester", roles: ["country_admin"], countryIds: ["00000000-0000-0000-0000-0000000000aa"], countryBranchIds: [], cityBranchIds: [], assignments: [], email: "wrong@test.local" } as any;
 
 async function main() {
   const dbUrl = getDbUrl();
@@ -93,9 +93,14 @@ async function main() {
   assertTrue("pipelineBoard (super admin) includes the won test lead", board.won.some((r: any) => r.id === created.id));
   const wrongBoard = await pipelineBoard(wrongCountrySession, { lang: "en" as any, includeClosed: true });
   assertTrue("pipelineBoard scoped to an unrelated country does NOT see the Pakistan test lead", !Object.values(wrongBoard).flat().some((r: any) => r.id === created.id));
+  // setPipelineStage mirrors the existing setStatus design: an out-of-scope session
+  // fails canEditInquiry, so allowedNextPipelineStages returns [] and the transition
+  // is rejected as BAD_TRANSITION — the same mechanism already used for `status`.
   let scopeBlocked = false;
-  try { await setPipelineStage(wrongCountrySession, created.id, "lost"); } catch (e: any) { scopeBlocked = e?.code === "NOT_FOUND" || e?.code === "FORBIDDEN" || e?.status === 404 || e?.status === 403; }
+  try { await setPipelineStage(wrongCountrySession, created.id, "lost"); } catch (e: any) { scopeBlocked = e?.code === "BAD_TRANSITION" || e?.code === "NOT_FOUND" || e?.code === "FORBIDDEN"; }
   assertTrue("an unrelated-scope session cannot move this lead's stage", scopeBlocked);
+  const afterScopeAttempt = await getInquiry(session, created.id, { lang: "en" as any });
+  assertTrue("the lead's real pipeline_stage is unchanged after the blocked attempt", afterScopeAttempt.pipeline_stage === "won", afterScopeAttempt.pipeline_stage);
 
   console.log("\nALL CRM PIPELINE E2E CHECKS PASSED.");
   console.log(JSON.stringify({ wonLeadId: created.id, lostLeadId: lostLead.id }, null, 2));
