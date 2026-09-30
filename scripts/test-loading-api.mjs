@@ -62,8 +62,9 @@ async function testTarget(baseUrl, label, identifier, pass) {
 }
 
 async function main() {
-  await testTarget("http://127.0.0.1:3000", "PROD VPS (dgt-nextjs, port 3000)", "all.superadmin@dgt.llc", "Chaman@9090");
-  await testTarget("http://127.0.0.1:3100", "DEV VPS (dgt-dev, port 3100)", "superadmin@dgt.llc", "chaman@9090");
+  const testPass = process.env.TEST_ADMIN_PASSWORD || "";
+  await testTarget("http://127.0.0.1:3000", "PROD VPS (dgt-nextjs, port 3000)", "all.superadmin@dgt.llc", testPass);
+  await testTarget("http://127.0.0.1:3100", "DEV VPS (dgt-dev, port 3100)", "superadmin@dgt.llc", testPass);
 }
 
 main();

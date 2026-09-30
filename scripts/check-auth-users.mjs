@@ -1,7 +1,7 @@
 import postgres from 'postgres';
 
-const PROD_URL = "postgresql://postgres.inmayhrxucimxqhgseqi:9z2_v5b6oZKPrbwoEL-z6awkg53gPDmPf3_pNFbSFsSVQdDk@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres";
-const DEV_URL = "postgresql://postgres.csesvyxxjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres";
+const PROD_URL = process.env.PROD_DATABASE_URL || process.env.DATABASE_URL || "";
+const DEV_URL = process.env.DEV_DATABASE_URL || "";
 
 async function check(label, url) {
   console.log(`\n=== ${label} ===`);

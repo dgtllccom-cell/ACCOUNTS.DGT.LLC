@@ -5,10 +5,11 @@ async function verifyAll() {
   console.log("=== Comprehensive ERP Module-by-Module Verification ===");
 
   // 1. Super Admin Authentication
+  const testPass = process.env.TEST_ADMIN_PASSWORD || "";
   const loginRes = await fetch(`${baseUrl}/api/erp/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ identifier: "all.superadmin@dgt.llc", password: "Chaman@9090" })
+    body: JSON.stringify({ identifier: "all.superadmin@dgt.llc", password: testPass })
   });
   if (!loginRes.ok) {
     console.error("Login failed!");

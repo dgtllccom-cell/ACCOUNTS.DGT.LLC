@@ -1,7 +1,8 @@
 import postgres from 'postgres';
 
 async function main() {
-  const sql = postgres('postgresql://postgres.inmayhrxucimxqhgseqi:9z2_v5b6oZKPrbwoEL-z6awkg53gPDmPf3_pNFbSFsSVQdDk@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres', { ssl: 'require' });
+  const connStr = process.env.PROD_DATABASE_URL || process.env.DATABASE_URL || "";
+  const sql = postgres(connStr, { ssl: 'require' });
   const [po] = await sql`select * from purchase_orders where purchase_order_no = 'AE-001-0003'`;
   console.log('PO AE-001-0003:');
   console.log('ID:', po.id);
