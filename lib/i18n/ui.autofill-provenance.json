@@ -9982,5 +9982,1189 @@
     "engine": "local-phrase",
     "confidence": 0.8,
     "at": "2026-09-24T16:19:08.113Z"
+  },
+  {
+    "key": "crm.lbl_branch",
+    "lang": "ur",
+    "value": "برانچ:",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.lbl_branch",
+    "lang": "ar",
+    "value": "الفرع:",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.lbl_branch",
+    "lang": "fa",
+    "value": "شعبه:",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.lbl_branch",
+    "lang": "ps",
+    "value": "څانګه:",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.lbl_user",
+    "lang": "ur",
+    "value": "وسر:",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.lbl_user",
+    "lang": "ar",
+    "value": "وسر:",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.lbl_user",
+    "lang": "fa",
+    "value": "وسر:",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.lbl_user",
+    "lang": "ps",
+    "value": "وسر:",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.lbl_role",
+    "lang": "ur",
+    "value": "رولی:",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.lbl_role",
+    "lang": "ar",
+    "value": "رولی:",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.lbl_role",
+    "lang": "fa",
+    "value": "رولی:",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.lbl_role",
+    "lang": "ps",
+    "value": "رولی:",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.lbl_scope",
+    "lang": "ur",
+    "value": "سکوپی:",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.lbl_scope",
+    "lang": "ar",
+    "value": "سإلىبی:",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.lbl_scope",
+    "lang": "fa",
+    "value": "سبهپی:",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.lbl_scope",
+    "lang": "ps",
+    "value": "ستهپی:",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.due_summary",
+    "lang": "ur",
+    "value": "دوی سوممری",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.due_summary",
+    "lang": "ar",
+    "value": "دوی سوممری",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.due_summary",
+    "lang": "fa",
+    "value": "دوی سوممری",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.due_summary",
+    "lang": "ps",
+    "value": "دوی سوممری",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.receivable_due",
+    "lang": "ur",
+    "value": "قابل وصولی واجب الادا:",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.receivable_due",
+    "lang": "ar",
+    "value": "القبض المستحق:",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.receivable_due",
+    "lang": "fa",
+    "value": "دریافتنی معوق:",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.receivable_due",
+    "lang": "ps",
+    "value": "د ترلاسه تهلو وړ پاتې:",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.payable_due",
+    "lang": "ur",
+    "value": "قابل ادائیگی واجب الادا:",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.payable_due",
+    "lang": "ar",
+    "value": "الدفع المستحق:",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.payable_due",
+    "lang": "fa",
+    "value": "پرداختنی معوق:",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.payable_due",
+    "lang": "ps",
+    "value": "د تادیې وړ پاتې:",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.cheques_due",
+    "lang": "ur",
+    "value": "چیکویس دوی:",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.cheques_due",
+    "lang": "ar",
+    "value": "تشیإلىیس دوی:",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.cheques_due",
+    "lang": "fa",
+    "value": "چبهیس دوی:",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.cheques_due",
+    "lang": "ps",
+    "value": "چتهیس دوی:",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.shipment_due",
+    "lang": "ur",
+    "value": "شپنگ واجب الادا:",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.shipment_due",
+    "lang": "ar",
+    "value": "الشحن المستحق:",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.shipment_due",
+    "lang": "fa",
+    "value": "حمل و نقل معوق:",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.shipment_due",
+    "lang": "ps",
+    "value": "لېږد پاتې:",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.due_today",
+    "lang": "ur",
+    "value": "واجب الادا آج",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.due_today",
+    "lang": "ar",
+    "value": "المستحق اليوم",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.due_today",
+    "lang": "fa",
+    "value": "معوق امروز",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.due_today",
+    "lang": "ps",
+    "value": "پاتې نن",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.total_countries",
+    "lang": "ur",
+    "value": "توتال کاورنترایس:",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.total_countries",
+    "lang": "ar",
+    "value": "توتال کونترایس:",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.total_countries",
+    "lang": "fa",
+    "value": "توتال کونترایس:",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.total_countries",
+    "lang": "ps",
+    "value": "توتال دونترایس:",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.total_branches",
+    "lang": "ur",
+    "value": "کل برانچ:",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.total_branches",
+    "lang": "ar",
+    "value": "الإجمالي الفرع:",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.total_branches",
+    "lang": "fa",
+    "value": "مجموع شعبه:",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.total_branches",
+    "lang": "ps",
+    "value": "ټول څانګه:",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.all_countries",
+    "lang": "ur",
+    "value": "الل کاورنترایس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.all_countries",
+    "lang": "ar",
+    "value": "الل کونترایس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.all_countries",
+    "lang": "fa",
+    "value": "الل کونترایس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.all_countries",
+    "lang": "ps",
+    "value": "الل دونترایس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.all_users",
+    "lang": "ur",
+    "value": "الل وسرس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.all_users",
+    "lang": "ar",
+    "value": "الل وسرس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.all_users",
+    "lang": "fa",
+    "value": "الل وسرس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.all_users",
+    "lang": "ps",
+    "value": "الل وسرس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.all_statuses",
+    "lang": "ur",
+    "value": "الل ستاتوسیس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.all_statuses",
+    "lang": "ar",
+    "value": "الل ستاتوسیس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.all_statuses",
+    "lang": "fa",
+    "value": "الل ستاتوسیس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.all_statuses",
+    "lang": "ps",
+    "value": "الل ستاتوسیس",
+    "engine": "memory",
+    "confidence": 0.8,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.due_type_receivable",
+    "lang": "ur",
+    "value": "گاہک قابل وصولی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.due_type_receivable",
+    "lang": "ar",
+    "value": "العميل القبض",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.due_type_receivable",
+    "lang": "fa",
+    "value": "مشتری دریافتنی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.due_type_receivable",
+    "lang": "ps",
+    "value": "پیرودونکی د ترلاسه تهلو وړ",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.due_type_payable",
+    "lang": "ur",
+    "value": "سپلائر قابل ادائیگی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.due_type_payable",
+    "lang": "ar",
+    "value": "المورد الدفع",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.due_type_payable",
+    "lang": "fa",
+    "value": "تامین کامروزده پرداختنی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.due_type_payable",
+    "lang": "ps",
+    "value": "ورتهنکی د تادیې وړ",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.due_type_cheque",
+    "lang": "ur",
+    "value": "چیکویس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.due_type_cheque",
+    "lang": "ar",
+    "value": "تشیإلىیس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.due_type_cheque",
+    "lang": "fa",
+    "value": "چبهیس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.due_type_cheque",
+    "lang": "ps",
+    "value": "چتهیس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.due_type_sales_recovery",
+    "lang": "ur",
+    "value": "سالیس ریکووری",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.due_type_sales_recovery",
+    "lang": "ar",
+    "value": "سالیس ریإلىوری",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.due_type_sales_recovery",
+    "lang": "fa",
+    "value": "سالیس ریبهوری",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.due_type_sales_recovery",
+    "lang": "ps",
+    "value": "سالیس ریتهوری",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.due_type_purchase",
+    "lang": "ur",
+    "value": "خریداری واجب الادا",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.due_type_purchase",
+    "lang": "ar",
+    "value": "شراء المستحق",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.due_type_purchase",
+    "lang": "fa",
+    "value": "خرید معوق",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.due_type_purchase",
+    "lang": "ps",
+    "value": "پیرودنه پاتې",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.from_label",
+    "lang": "ur",
+    "value": "سے:",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.from_label",
+    "lang": "ar",
+    "value": "من:",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.from_label",
+    "lang": "fa",
+    "value": "از:",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.from_label",
+    "lang": "ps",
+    "value": "له:",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.to_label",
+    "lang": "ur",
+    "value": "کو:",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.to_label",
+    "lang": "ar",
+    "value": "إلى:",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.to_label",
+    "lang": "fa",
+    "value": "به:",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.to_label",
+    "lang": "ps",
+    "value": "ته:",
+    "engine": "local-phrase",
+    "confidence": 0.8,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.columns",
+    "lang": "ur",
+    "value": "کولوسےس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.columns",
+    "lang": "ar",
+    "value": "إلىلومنس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.columns",
+    "lang": "fa",
+    "value": "بهلوازس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.columns",
+    "lang": "ps",
+    "value": "تهلولهس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.pg_showing",
+    "lang": "ur",
+    "value": "شاورینگ",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.pg_showing",
+    "lang": "ar",
+    "value": "شوینج",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.pg_showing",
+    "lang": "fa",
+    "value": "شوینگ",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.pg_showing",
+    "lang": "ps",
+    "value": "شاوینگ",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.pg_to",
+    "lang": "ur",
+    "value": "کو",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.pg_to",
+    "lang": "ar",
+    "value": "إلى",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.pg_to",
+    "lang": "fa",
+    "value": "به",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.pg_to",
+    "lang": "ps",
+    "value": "ته",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.pg_of",
+    "lang": "ur",
+    "value": "کا",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.pg_of",
+    "lang": "ar",
+    "value": "من",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.pg_of",
+    "lang": "fa",
+    "value": "از",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.pg_of",
+    "lang": "ps",
+    "value": "د",
+    "engine": "glossary",
+    "confidence": 0.97,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.pg_records",
+    "lang": "ur",
+    "value": "ریکوردس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.pg_records",
+    "lang": "ar",
+    "value": "ریإلىردس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.pg_records",
+    "lang": "fa",
+    "value": "ریبهردس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.pg_records",
+    "lang": "ps",
+    "value": "ریتهردس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.previous",
+    "lang": "ur",
+    "value": "پریویاورس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.previous",
+    "lang": "ar",
+    "value": "بریویوس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.previous",
+    "lang": "fa",
+    "value": "پریویوس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.previous",
+    "lang": "ps",
+    "value": "پریویاوس",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.next",
+    "lang": "ur",
+    "value": "نیکست",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.next",
+    "lang": "ar",
+    "value": "نیکست",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.next",
+    "lang": "fa",
+    "value": "نیکست",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.next",
+    "lang": "ps",
+    "value": "نیکست",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.financial_summary_today",
+    "lang": "ur",
+    "value": "فینانکیال سوممری",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.financial_summary_today",
+    "lang": "ar",
+    "value": "فینانکیال سوممری",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.financial_summary_today",
+    "lang": "fa",
+    "value": "فینانکیال سوممری",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.financial_summary_today",
+    "lang": "ps",
+    "value": "فینانکیال سوممری",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.add_cheque",
+    "lang": "ur",
+    "value": "ادد چیکوی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.add_cheque",
+    "lang": "ar",
+    "value": "ادد تشیإلىی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.add_cheque",
+    "lang": "fa",
+    "value": "ادد چبهی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.add_cheque",
+    "lang": "ps",
+    "value": "ادد چتهی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.priority_high",
+    "lang": "ur",
+    "value": "ہیغ",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.priority_high",
+    "lang": "ar",
+    "value": "ہیغ",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.priority_high",
+    "lang": "fa",
+    "value": "ہیغ",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.priority_high",
+    "lang": "ps",
+    "value": "ہیغ",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.priority_medium",
+    "lang": "ur",
+    "value": "میدیوم",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.priority_medium",
+    "lang": "ar",
+    "value": "میدیوم",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.priority_medium",
+    "lang": "fa",
+    "value": "میدیوم",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.priority_medium",
+    "lang": "ps",
+    "value": "میدیوم",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.priority_low",
+    "lang": "ur",
+    "value": "لاور",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.priority_low",
+    "lang": "ar",
+    "value": "لو",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.priority_low",
+    "lang": "fa",
+    "value": "لو",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.priority_low",
+    "lang": "ps",
+    "value": "لاو",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.promise_date",
+    "lang": "ur",
+    "value": "پرومیسی داتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.promise_date",
+    "lang": "ar",
+    "value": "برومیسی داتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.promise_date",
+    "lang": "fa",
+    "value": "پرومیسی داتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.promise_date",
+    "lang": "ps",
+    "value": "پرومیسی داتی",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.promise_amount",
+    "lang": "ur",
+    "value": "پرومیسی اماورنت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.promise_amount",
+    "lang": "ar",
+    "value": "برومیسی امونت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.promise_amount",
+    "lang": "fa",
+    "value": "پرومیسی امونت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.promise_amount",
+    "lang": "ps",
+    "value": "پرومیسی اماونت",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.followup_for_prefix",
+    "lang": "ur",
+    "value": "فوللاور-وپ:",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.followup_for_prefix",
+    "lang": "ar",
+    "value": "فوللو-وب:",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.followup_for_prefix",
+    "lang": "fa",
+    "value": "فوللو-وپ:",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
+  },
+  {
+    "key": "crm.followup_for_prefix",
+    "lang": "ps",
+    "value": "فوللاو-وپ:",
+    "engine": "local-phrase",
+    "confidence": 0.6,
+    "at": "2026-09-30T11:53:17.859Z"
   }
 ]

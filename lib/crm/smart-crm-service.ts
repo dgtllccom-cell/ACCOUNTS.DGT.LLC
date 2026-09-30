@@ -43,37 +43,54 @@ export interface CrmActionItem {
   updated_at: string;
 }
 
+/** Real per-currency total — never a naive cross-currency sum. */
+export interface CrmMoneyByCurrency {
+  currency: string;
+  count: number;
+  amount: number;
+}
+
+/** Combines several per-currency breakdowns into one, summing entries that share a currency. */
+function mergeByCurrency(rows: CrmMoneyByCurrency[]): CrmMoneyByCurrency[] {
+  const map = new Map<string, CrmMoneyByCurrency>();
+  for (const row of rows) {
+    const existing = map.get(row.currency);
+    if (existing) {
+      existing.count += row.count;
+      existing.amount += row.amount;
+    } else {
+      map.set(row.currency, { ...row });
+    }
+  }
+  return Array.from(map.values());
+}
+
 export interface CrmKpiStats {
   chequesDepositCount: number;
-  chequesDepositAmount: number;
-  chequesDepositCurrency: string;
+  /** Real per-currency breakdown (a bucket may legitimately span AED/PKR/USD rows). */
+  chequesDepositByCurrency: CrmMoneyByCurrency[];
   chequesPayCount: number;
-  chequesPayAmount: number;
-  chequesPayCurrency: string;
+  chequesPayByCurrency: CrmMoneyByCurrency[];
   chequesCollectCount: number;
-  chequesCollectAmount: number;
-  chequesCollectCurrency: string;
+  chequesCollectByCurrency: CrmMoneyByCurrency[];
   purchaseDueCount: number;
-  purchaseDueAmount: number;
-  purchaseDueCurrency: string;
+  purchaseDueByCurrency: CrmMoneyByCurrency[];
   salesRecoveryCount: number;
-  salesRecoveryAmount: number;
-  salesRecoveryCurrency: string;
+  salesRecoveryByCurrency: CrmMoneyByCurrency[];
   shippingDueCount: number;
-  shippingDueAmount: number;
-  shippingDueCurrency: string;
+  shippingDueByCurrency: CrmMoneyByCurrency[];
   overdueCount: number;
-  overdueAmount: number;
-  overdueCurrency: string;
+  overdueByCurrency: CrmMoneyByCurrency[];
 }
 
 export interface CrmFinancialSummary {
-  totalReceivable: number;
-  totalPayable: number;
-  cashInHand: number;
-  bankBalance: number;
-  netPosition: number;
-  currency: string;
+  /** Real per-currency receivable totals (Sales Recovery + Collect From Customer). */
+  totalReceivableByCurrency: CrmMoneyByCurrency[];
+  /** Real per-currency payable totals (Purchase Payment + Cheque Pay). */
+  totalPayableByCurrency: CrmMoneyByCurrency[];
+  /** Not computed by this service (no ledger/cash-bank query wired in yet) — always null, never a fabricated 0. */
+  cashInHand: null;
+  bankBalance: null;
 }
 
 export interface CrmDashboardPayload {
@@ -144,60 +161,56 @@ export async function getSmartCrmDashboardData(params: {
       allowedBranchIds = params.session.cityBranchIds || [];
     }
 
-    // 1. Calculate 7 Summary KPI metrics using index-only aggregation
-    const kpiRows = await sql`
+    // 1. Calculate 7 Summary KPI metrics, grouped by real currency (a bucket can
+    // legitimately span AED/PKR/USD rows — never collapsed into one fake-labeled sum).
+    const kpiByCurrencyRows = await sql`
       SELECT
-        COUNT(*) FILTER (WHERE item_type = 'Cheque Deposit' AND is_completed = false) AS chq_dep_cnt,
-        COALESCE(SUM(remaining_amount) FILTER (WHERE item_type = 'Cheque Deposit' AND is_completed = false), 0) AS chq_dep_amt,
-        
-        COUNT(*) FILTER (WHERE item_type = 'Cheque Pay' AND is_completed = false) AS chq_pay_cnt,
-        COALESCE(SUM(remaining_amount) FILTER (WHERE item_type = 'Cheque Pay' AND is_completed = false), 0) AS chq_pay_amt,
-        
-        COUNT(*) FILTER (WHERE item_type = 'Collect From Customer' AND is_completed = false) AS chq_col_cnt,
-        COALESCE(SUM(remaining_amount) FILTER (WHERE item_type = 'Collect From Customer' AND is_completed = false), 0) AS chq_col_amt,
-        
-        COUNT(*) FILTER (WHERE item_type = 'Purchase Payment' AND is_completed = false) AS pur_due_cnt,
-        COALESCE(SUM(remaining_amount) FILTER (WHERE item_type = 'Purchase Payment' AND is_completed = false), 0) AS pur_due_amt,
-        
-        COUNT(*) FILTER (WHERE item_type = 'Sales Recovery' AND is_completed = false) AS sal_rec_cnt,
-        COALESCE(SUM(remaining_amount) FILTER (WHERE item_type = 'Sales Recovery' AND is_completed = false), 0) AS sal_rec_amt,
-        
-        COUNT(*) FILTER (WHERE item_type = 'Shipping Payment' AND is_completed = false) AS shp_due_cnt,
-        COALESCE(SUM(remaining_amount) FILTER (WHERE item_type = 'Shipping Payment' AND is_completed = false), 0) AS shp_due_amt,
-        
-        COUNT(*) FILTER (WHERE urgency_class = 'overdue' AND is_completed = false) AS ovd_cnt,
-        COALESCE(SUM(remaining_amount) FILTER (WHERE urgency_class = 'overdue' AND is_completed = false), 0) AS ovd_amt
+        item_type,
+        currency,
+        COUNT(*) AS cnt,
+        COALESCE(SUM(remaining_amount), 0) AS amt
       FROM crm_action_items
-      WHERE 1=1
+      WHERE is_completed = false
+        AND item_type IN ('Cheque Deposit', 'Cheque Pay', 'Collect From Customer', 'Purchase Payment', 'Sales Recovery', 'Shipping Payment')
         ${params.countryId ? sql`AND country_id = ${params.countryId}` : sql``}
         ${params.cityBranchId ? sql`AND city_branch_id = ${params.cityBranchId}` : sql``}
         ${allowedCountryIds.length > 0 ? sql`AND country_id = ANY(${allowedCountryIds})` : sql``}
-        ${allowedBranchIds.length > 0 ? sql`AND city_branch_id = ANY(${allowedBranchIds})` : sql``};
+        ${allowedBranchIds.length > 0 ? sql`AND city_branch_id = ANY(${allowedBranchIds})` : sql``}
+      GROUP BY item_type, currency;
     `;
 
-    const kpiRaw = kpiRows[0] || {};
+    const overdueByCurrencyRows = await sql`
+      SELECT currency, COUNT(*) AS cnt, COALESCE(SUM(remaining_amount), 0) AS amt
+      FROM crm_action_items
+      WHERE is_completed = false AND urgency_class = 'overdue'
+        ${params.countryId ? sql`AND country_id = ${params.countryId}` : sql``}
+        ${params.cityBranchId ? sql`AND city_branch_id = ${params.cityBranchId}` : sql``}
+        ${allowedCountryIds.length > 0 ? sql`AND country_id = ANY(${allowedCountryIds})` : sql``}
+        ${allowedBranchIds.length > 0 ? sql`AND city_branch_id = ANY(${allowedBranchIds})` : sql``}
+      GROUP BY currency;
+    `;
+
+    const byType = (type: string): CrmMoneyByCurrency[] =>
+      (kpiByCurrencyRows as any[])
+        .filter((r) => r.item_type === type)
+        .map((r) => ({ currency: r.currency, count: Number(r.cnt || 0), amount: Number(r.amt || 0) }));
+    const countByType = (type: string) => byType(type).reduce((sum, r) => sum + r.count, 0);
+
     const kpis: CrmKpiStats = {
-      chequesDepositCount: Number(kpiRaw.chq_dep_cnt || 0),
-      chequesDepositAmount: Number(kpiRaw.chq_dep_amt || 0),
-      chequesDepositCurrency: "PKR",
-      chequesPayCount: Number(kpiRaw.chq_pay_cnt || 0),
-      chequesPayAmount: Number(kpiRaw.chq_pay_amt || 0),
-      chequesPayCurrency: "PKR",
-      chequesCollectCount: Number(kpiRaw.chq_col_cnt || 0),
-      chequesCollectAmount: Number(kpiRaw.chq_col_amt || 0),
-      chequesCollectCurrency: "PKR",
-      purchaseDueCount: Number(kpiRaw.pur_due_cnt || 0),
-      purchaseDueAmount: Number(kpiRaw.pur_due_amt || 0),
-      purchaseDueCurrency: "USD",
-      salesRecoveryCount: Number(kpiRaw.sal_rec_cnt || 0),
-      salesRecoveryAmount: Number(kpiRaw.sal_rec_amt || 0),
-      salesRecoveryCurrency: "USD",
-      shippingDueCount: Number(kpiRaw.shp_due_cnt || 0),
-      shippingDueAmount: Number(kpiRaw.shp_due_amt || 0),
-      shippingDueCurrency: "USD",
-      overdueCount: Number(kpiRaw.ovd_cnt || 0),
-      overdueAmount: Number(kpiRaw.ovd_amt || 0),
-      overdueCurrency: "PKR"
+      chequesDepositCount: countByType("Cheque Deposit"),
+      chequesDepositByCurrency: byType("Cheque Deposit"),
+      chequesPayCount: countByType("Cheque Pay"),
+      chequesPayByCurrency: byType("Cheque Pay"),
+      chequesCollectCount: countByType("Collect From Customer"),
+      chequesCollectByCurrency: byType("Collect From Customer"),
+      purchaseDueCount: countByType("Purchase Payment"),
+      purchaseDueByCurrency: byType("Purchase Payment"),
+      salesRecoveryCount: countByType("Sales Recovery"),
+      salesRecoveryByCurrency: byType("Sales Recovery"),
+      shippingDueCount: countByType("Shipping Payment"),
+      shippingDueByCurrency: byType("Shipping Payment"),
+      overdueCount: (overdueByCurrencyRows as any[]).reduce((sum, r) => sum + Number(r.cnt || 0), 0),
+      overdueByCurrency: (overdueByCurrencyRows as any[]).map((r) => ({ currency: r.currency, count: Number(r.cnt || 0), amount: Number(r.amt || 0) }))
     };
 
     // 2. Fetch Action Items for the active Tab
@@ -345,12 +358,10 @@ export async function getSmartCrmDashboardData(params: {
     return {
       kpis,
       financialSummary: {
-        totalReceivable: Number(kpis.salesRecoveryAmount || 0),
-        totalPayable: Number(kpis.purchaseDueAmount || 0),
-        cashInHand: 0,
-        bankBalance: 0,
-        netPosition: Number((kpis.salesRecoveryAmount || 0) - (kpis.purchaseDueAmount || 0)),
-        currency: "USD"
+        totalReceivableByCurrency: mergeByCurrency([...kpis.salesRecoveryByCurrency, ...kpis.chequesCollectByCurrency]),
+        totalPayableByCurrency: mergeByCurrency([...kpis.purchaseDueByCurrency, ...kpis.chequesPayByCurrency]),
+        cashInHand: null,
+        bankBalance: null
       },
       actionItems,
       overdueFollowUps: overdueRows.map((r: any) => ({

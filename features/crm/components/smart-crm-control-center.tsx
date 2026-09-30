@@ -48,16 +48,35 @@ import {
 } from "@/components/ui/dialog";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
-import { translateHeader } from "@/lib/i18n/table-headers";
 import { downloadCsv } from "@/features/branches/components/branch-report-export";
 import { cn } from "@/lib/utils";
+import { useBranchUserContext, roleLabel } from "@/lib/hooks/use-branch-user-context";
+
+/** Formats a real per-currency breakdown; never collapses mixed currencies into one number. */
+function formatByCurrency(rows: Array<{ currency: string; amount: number }> | undefined | null): string {
+  if (!rows || rows.length === 0) return "—";
+  return rows.map((r) => `${r.currency} ${Number(r.amount || 0).toLocaleString()}`).join("  +  ");
+}
+
+/** Combines several real per-currency breakdowns, summing entries that share a currency. */
+function mergeByCurrency(...groups: Array<Array<{ currency: string; amount: number }>>): Array<{ currency: string; amount: number }> {
+  const map = new Map<string, number>();
+  for (const rows of groups) {
+    for (const r of rows || []) {
+      map.set(r.currency, (map.get(r.currency) || 0) + Number(r.amount || 0));
+    }
+  }
+  return Array.from(map.entries()).map(([currency, amount]) => ({ currency, amount }));
+}
+
+const DUE_TABS = ["overdue", "today", "tomorrow", "upcoming", "completed"] as const;
 
 export function SmartCrmControlCenter() {
   const lang = useActiveLanguage();
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
-  const th = (x: string) => translateHeader(lang, x);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { context: userContext } = useBranchUserContext();
 
   // Scope & Filters State
   const [selectedCountry, setSelectedCountry] = useState("all");
@@ -80,6 +99,9 @@ export function SmartCrmControlCenter() {
   // Data Loading State
   const [loading, setLoading] = useState(false);
   const [dashboardData, setDashboardData] = useState<any>(null);
+  /** Real record count per tab (overdue/today/tomorrow/upcoming/completed) — fetched
+   *  separately since the main dashboard call only returns rows for the active tab. */
+  const [tabCounts, setTabCounts] = useState<Record<string, number>>({});
 
   // Follow-Up Note Modal State
   const [noteModalOpen, setNoteModalOpen] = useState(false);
@@ -161,8 +183,35 @@ export function SmartCrmControlCenter() {
     void fetchDashboardData();
   }, [selectedCountry, selectedMainBranch, selectedCityBranch, activeTab]);
 
+  // Real per-tab counts (Overdue/Today/Tomorrow/Upcoming/Completed) for the filter
+  // badges and the Follow-Up Status Summary card — a separate lightweight call per
+  // tab since the main dashboard endpoint only returns rows for the active tab.
+  useEffect(() => {
+    let cancelled = false;
+    async function loadTabCounts() {
+      try {
+        const results = await Promise.all(
+          DUE_TABS.map(async (tabId) => {
+            const qp = new URLSearchParams({ tab: tabId, fromDate, toDate, pageSize: "10" });
+            if (selectedCountry !== "all") qp.set("countryId", selectedCountry);
+            if (selectedMainBranch !== "all") qp.set("countryBranchId", selectedMainBranch);
+            if (selectedCityBranch !== "all") qp.set("cityBranchId", selectedCityBranch);
+            const res = await fetch(`/api/erp/crm/dashboard?${qp.toString()}`);
+            const data = await res.json();
+            return [tabId, data?.success ? Number(data?.pagination?.total || 0) : 0] as const;
+          })
+        );
+        if (!cancelled) setTabCounts(Object.fromEntries(results));
+      } catch (e) {
+        console.error("Failed to load CRM tab counts", e);
+      }
+    }
+    void loadTabCounts();
+    return () => { cancelled = true; };
+  }, [selectedCountry, selectedMainBranch, selectedCityBranch, fromDate, toDate]);
+
   const handleCompleteItem = async (itemId: string) => {
-    if (!window.confirm("Mark this action item as completed?")) return;
+    if (!window.confirm(t(lang, "crm.confirm_mark_complete", "Mark this action item as completed?"))) return;
     try {
       const res = await fetch("/api/erp/crm/complete", {
         method: "POST",
@@ -208,6 +257,9 @@ export function SmartCrmControlCenter() {
     }
   };
 
+  const kpis = dashboardData?.kpis || {};
+  const financialSummary = dashboardData?.financialSummary || {};
+
   const registeredItems = useMemo(() => {
     const rawItems: any[] = dashboardData?.actionItems || [];
 
@@ -219,12 +271,22 @@ export function SmartCrmControlCenter() {
                   (item.invoice_no || item.reference_no || "").toLowerCase().includes(q);
         if (!m) return false;
       }
-      if (dueTypeFilter !== "all" && !item.item_type.toLowerCase().includes(dueTypeFilter.toLowerCase())) return false;
+      if (dueTypeFilter !== "all" && item.item_type !== dueTypeFilter) return false;
       if (userFilter !== "all" && item.responsible_user_name !== userFilter) return false;
       if (statusFilter !== "all" && item.status.toLowerCase() !== statusFilter.toLowerCase()) return false;
       return true;
     });
   }, [dashboardData, searchQuery, dueTypeFilter, userFilter, statusFilter]);
+
+  // Real responsible-user options, derived from the currently loaded action items —
+  // no fabricated names (Ahmed Ali / Sara Khan / ...).
+  const responsibleUserOptions = useMemo(() => {
+    const names = new Set<string>();
+    for (const item of (dashboardData?.actionItems || []) as any[]) {
+      if (item.responsible_user_name) names.add(item.responsible_user_name);
+    }
+    return Array.from(names).sort();
+  }, [dashboardData]);
 
   const toggleSelectAll = () => {
     if (Object.keys(selectedIds).length === registeredItems.length) {
@@ -274,12 +336,12 @@ export function SmartCrmControlCenter() {
               className="inline-flex items-center gap-1 font-medium text-slate-500 hover:text-purple-600 transition"
             >
               <ChevronLeft className="h-3.5 w-3.5" />
-              Back
+              {t(lang, "common.back", "Back")}
             </Link>
             <span className="text-slate-300 dark:text-slate-700">/</span>
-            <span className="text-slate-400">Dashboard</span>
+            <span className="text-slate-400">{t(lang, "common.dashboard", "Dashboard")}</span>
             <span className="text-slate-300 dark:text-slate-700">&gt;</span>
-            <span className="font-semibold text-purple-600 dark:text-purple-400">Smart CRM & Due / Follow-Up Control</span>
+            <span className="font-semibold text-purple-600 dark:text-purple-400">{t(lang, "crm.title", "Smart CRM & Due")}</span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -291,7 +353,7 @@ export function SmartCrmControlCenter() {
               className="h-8 text-xs font-semibold gap-1.5 rounded-lg border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900"
             >
               <RefreshCw className={cn("h-3.5 w-3.5", loading ? "animate-spin text-purple-600" : "")} />
-              Refresh
+              {t(lang, "crm.refresh", "Refresh")}
             </Button>
             <Button
               type="button"
@@ -300,7 +362,7 @@ export function SmartCrmControlCenter() {
               className="h-8 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs gap-1.5 rounded-xl shadow-sm px-3.5"
             >
               <Plus className="h-4 w-4" />
-              + Add New Due
+              {t(lang, "crm.add_new_due", "Add New Due")}
             </Button>
           </div>
         </div>
@@ -313,10 +375,10 @@ export function SmartCrmControlCenter() {
             </div>
             <div>
               <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-slate-50">
-                Smart CRM & Due / Follow-Up Control
+                {t(lang, "crm.title", "Smart CRM & Due")}
               </h1>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Comprehensive CRM for tracking all receivables, payables, cheques, sales recoveries, purchase dues, shipping dues and customer interactions.
+                {t(lang, "crm.due_register", "Due & Follow-Up Register")}
               </p>
             </div>
           </div>
@@ -331,27 +393,27 @@ export function SmartCrmControlCenter() {
                 <div className="rounded-lg bg-purple-100 p-1.5 text-purple-600 dark:bg-purple-900/60 dark:text-purple-300">
                   <Building2 className="h-4 w-4" />
                 </div>
-                <span className="text-xs font-bold text-purple-950 dark:text-purple-200">Branch & User Details</span>
+                <span className="text-xs font-bold text-purple-950 dark:text-purple-200">{t(lang, "crm.branch_user_details", "Branch & User Details")}</span>
               </div>
             </div>
             <div className="mt-3 space-y-2 text-xs">
               <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Branch:</span>
-                <span className="font-bold text-slate-800 dark:text-slate-200">Main Headquarters</span>
+                <span className="text-slate-500 dark:text-slate-400">{t(lang, "crm.lbl_branch", "Branch:")}</span>
+                <span className="font-bold text-slate-800 dark:text-slate-200">{userContext?.branchName || "—"}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">User:</span>
-                <span className="font-bold text-slate-800 dark:text-slate-200">Super Admin</span>
+                <span className="text-slate-500 dark:text-slate-400">{t(lang, "crm.lbl_user", "User:")}</span>
+                <span className="font-bold text-slate-800 dark:text-slate-200">{userContext?.userName || "—"}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Role:</span>
+                <span className="text-slate-500 dark:text-slate-400">{t(lang, "crm.lbl_role", "Role:")}</span>
                 <span className="inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 text-[11px] font-bold text-purple-700 dark:bg-purple-900/50 dark:text-purple-300">
-                  Super Admin
+                  {roleLabel(userContext?.role)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Last Login:</span>
-                <span className="font-medium text-slate-600 dark:text-slate-300">27 Sept 2026 10:42 AM</span>
+                <span className="text-slate-500 dark:text-slate-400">{t(lang, "crm.lbl_scope", "Scope:")}</span>
+                <span className="font-medium text-slate-600 dark:text-slate-300">{userContext?.scopeLabel || userContext?.country || "—"}</span>
               </div>
             </div>
           </div>
@@ -363,25 +425,33 @@ export function SmartCrmControlCenter() {
                 <div className="rounded-lg bg-emerald-100 p-1.5 text-emerald-600 dark:bg-emerald-900/60 dark:text-emerald-300">
                   <CalendarCheck className="h-4 w-4" />
                 </div>
-                <span className="text-xs font-bold text-emerald-950 dark:text-emerald-200">Today's Due Summary</span>
+                <span className="text-xs font-bold text-emerald-950 dark:text-emerald-200">{t(lang, "crm.due_summary", "Due Summary")}</span>
               </div>
             </div>
             <div className="mt-3 space-y-2 text-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Receivable Due:</span>
-                <span className="font-bold text-emerald-600 dark:text-emerald-400">AED 125,320</span>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-slate-500 dark:text-slate-400 shrink-0">{t(lang, "crm.receivable_due", "Receivable Due:")}</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400 text-right">
+                  {formatByCurrency(mergeByCurrency(kpis.salesRecoveryByCurrency || [], kpis.chequesCollectByCurrency || []))}
+                </span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Payable Due:</span>
-                <span className="font-bold text-rose-600 dark:text-rose-400">AED 89,450</span>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-slate-500 dark:text-slate-400 shrink-0">{t(lang, "crm.payable_due", "Payable Due:")}</span>
+                <span className="font-bold text-rose-600 dark:text-rose-400 text-right">
+                  {formatByCurrency(mergeByCurrency(kpis.purchaseDueByCurrency || [], kpis.chequesPayByCurrency || []))}
+                </span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Cheques Due:</span>
-                <span className="font-bold text-amber-600 dark:text-amber-400">AED 42,000</span>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-slate-500 dark:text-slate-400 shrink-0">{t(lang, "crm.cheques_due", "Cheques Due:")}</span>
+                <span className="font-bold text-amber-600 dark:text-amber-400 text-right">
+                  {formatByCurrency(mergeByCurrency(kpis.chequesDepositByCurrency || [], kpis.chequesPayByCurrency || [], kpis.chequesCollectByCurrency || []))}
+                </span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Shipment Due:</span>
-                <span className="font-bold text-blue-600 dark:text-blue-400">AED 18,750</span>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-slate-500 dark:text-slate-400 shrink-0">{t(lang, "crm.shipment_due", "Shipment Due:")}</span>
+                <span className="font-bold text-blue-600 dark:text-blue-400 text-right">
+                  {formatByCurrency(kpis.shippingDueByCurrency || [])}
+                </span>
               </div>
             </div>
           </div>
@@ -393,95 +463,96 @@ export function SmartCrmControlCenter() {
                 <div className="rounded-lg bg-amber-100 p-1.5 text-amber-600 dark:bg-amber-900/60 dark:text-amber-300">
                   <Clock className="h-4 w-4" />
                 </div>
-                <span className="text-xs font-bold text-amber-950 dark:text-amber-200">Follow-Up Status Summary</span>
+                <span className="text-xs font-bold text-amber-950 dark:text-amber-200">{t(lang, "crm.followup_status_summary", "Follow-Up Status Summary")}</span>
               </div>
             </div>
             <div className="mt-3 space-y-1.5 text-xs">
               <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Overdue:</span>
-                <span className="font-bold text-rose-600 dark:text-rose-400">12</span>
+                <span className="text-slate-500 dark:text-slate-400">{t(lang, "crm.tab_overdue", "Overdue")}:</span>
+                <span className="font-bold text-rose-600 dark:text-rose-400">{tabCounts.overdue ?? "—"}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Due Today:</span>
-                <span className="font-bold text-blue-600 dark:text-blue-400">8</span>
+                <span className="text-slate-500 dark:text-slate-400">{t(lang, "crm.due_today", "Due Today")}:</span>
+                <span className="font-bold text-blue-600 dark:text-blue-400">{tabCounts.today ?? "—"}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Tomorrow:</span>
-                <span className="font-bold text-amber-600 dark:text-amber-400">6</span>
+                <span className="text-slate-500 dark:text-slate-400">{t(lang, "crm.tab_tomorrow", "Tomorrow")}:</span>
+                <span className="font-bold text-amber-600 dark:text-amber-400">{tabCounts.tomorrow ?? "—"}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Upcoming:</span>
-                <span className="font-bold text-purple-600 dark:text-purple-400">14</span>
+                <span className="text-slate-500 dark:text-slate-400">{t(lang, "crm.tab_upcoming", "Upcoming")}:</span>
+                <span className="font-bold text-purple-600 dark:text-purple-400">{tabCounts.upcoming ?? "—"}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Completed:</span>
-                <span className="font-bold text-emerald-600 dark:text-emerald-400">28</span>
+                <span className="text-slate-500 dark:text-slate-400">{t(lang, "crm.tab_completed", "Completed")}:</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400">{tabCounts.completed ?? "—"}</span>
               </div>
             </div>
           </div>
 
-          {/* Card 4: Country / Branch Due Report (Blue + Super Admin Only) */}
+          {/* Card 4: Country / Branch Due Report — Super Admin only, since it aggregates
+              across every country/branch the way only a super admin is scoped to see. */}
           <div className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50/70 via-white to-blue-50/20 p-4 shadow-sm dark:border-blue-950/60 dark:from-blue-950/30 dark:via-slate-900 dark:to-slate-900">
             <div className="flex items-center justify-between pb-3 border-b border-blue-100/70 dark:border-blue-900/40">
               <div className="flex items-center gap-2">
                 <div className="rounded-lg bg-blue-100 p-1.5 text-blue-600 dark:bg-blue-900/60 dark:text-blue-300">
                   <Globe className="h-4 w-4" />
                 </div>
-                <span className="text-xs font-bold text-blue-950 dark:text-blue-200">Country / Branch Due Report</span>
+                <span className="text-xs font-bold text-blue-950 dark:text-blue-200">{t(lang, "crm.country_branch_due_report", "Country / Branch Due Report")}</span>
               </div>
               <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-black text-blue-700 dark:bg-blue-900/60 dark:text-blue-300 uppercase tracking-wider">
-                Super Admin Only
+                {t(lang, "crm.super_admin_only", "Super Admin Only")}
               </span>
             </div>
+            {!userContext?.isSuperAdmin ? (
+              <p className="mt-3 text-[11px] text-slate-500 dark:text-slate-400">{t(lang, "crm.super_admin_only", "Super Admin Only")}</p>
+            ) : (
             <div className="mt-3 space-y-1.5 text-xs">
               <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Total Countries:</span>
-                <span className="font-bold text-slate-800 dark:text-slate-200">6</span>
+                <span className="text-slate-500 dark:text-slate-400">{t(lang, "crm.total_countries", "Total Countries:")}</span>
+                <span className="font-bold text-slate-800 dark:text-slate-200">{countryOptions.length}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Total Branches:</span>
-                <span className="font-bold text-slate-800 dark:text-slate-200">12</span>
+                <span className="text-slate-500 dark:text-slate-400">{t(lang, "crm.total_branches", "Total Branches:")}</span>
+                <span className="font-bold text-slate-800 dark:text-slate-200">{cityBranchOptions.length}</span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Total Rec:</span>
-                <span className="font-bold text-emerald-600 dark:text-emerald-400">AED 1,245,680</span>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-slate-500 dark:text-slate-400 shrink-0">{t(lang, "crm.total_receivable", "Total Receivable")}:</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400 text-right">{formatByCurrency(financialSummary.totalReceivableByCurrency)}</span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Total Payable:</span>
-                <span className="font-bold text-rose-600 dark:text-rose-400">AED 892,420</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Net Position:</span>
-                <span className="font-black text-blue-600 dark:text-blue-400">AED 353,260</span>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-slate-500 dark:text-slate-400 shrink-0">{t(lang, "crm.total_payable", "Total Payable")}:</span>
+                <span className="font-bold text-rose-600 dark:text-rose-400 text-right">{formatByCurrency(financialSummary.totalPayableByCurrency)}</span>
               </div>
             </div>
+            )}
           </div>
         </div>
 
         {/* 4. FILTER TABS (Screenshot 4 layout) */}
         <div className="flex flex-wrap items-center gap-2">
           {[
-            { id: "overdue", label: "Overdue", count: 12, tone: "text-rose-700 bg-rose-50 border-rose-200 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900", activeTone: "bg-rose-600 text-white border-rose-600 shadow-rose-600/20" },
-            { id: "today", label: "Today", count: 8, tone: "text-blue-700 bg-blue-50 border-blue-200 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-900", activeTone: "bg-blue-600 text-white border-blue-600 shadow-blue-600/20" },
-            { id: "tomorrow", label: "Tomorrow", count: 6, tone: "text-amber-700 bg-amber-50 border-amber-200 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900", activeTone: "bg-amber-600 text-white border-amber-600 shadow-amber-600/20" },
-            { id: "upcoming", label: "Upcoming", count: 14, tone: "text-purple-700 bg-purple-50 border-purple-200 hover:bg-purple-100 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-900", activeTone: "bg-purple-600 text-white border-purple-600 shadow-purple-600/20" },
-            { id: "completed", label: "Completed", count: 28, tone: "text-emerald-700 bg-emerald-50 border-emerald-200 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900", activeTone: "bg-emerald-600 text-white border-emerald-600 shadow-emerald-600/20" },
-          ].map((t) => {
-            const isActive = activeTab === t.id;
+            { id: "overdue", labelKey: "crm.tab_overdue", labelFallback: "Overdue", tone: "text-rose-700 bg-rose-50 border-rose-200 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900", activeTone: "bg-rose-600 text-white border-rose-600 shadow-rose-600/20" },
+            { id: "today", labelKey: "crm.due_today", labelFallback: "Due Today", tone: "text-blue-700 bg-blue-50 border-blue-200 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-900", activeTone: "bg-blue-600 text-white border-blue-600 shadow-blue-600/20" },
+            { id: "tomorrow", labelKey: "crm.tab_tomorrow", labelFallback: "Tomorrow", tone: "text-amber-700 bg-amber-50 border-amber-200 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900", activeTone: "bg-amber-600 text-white border-amber-600 shadow-amber-600/20" },
+            { id: "upcoming", labelKey: "crm.tab_upcoming", labelFallback: "Upcoming", tone: "text-purple-700 bg-purple-50 border-purple-200 hover:bg-purple-100 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-900", activeTone: "bg-purple-600 text-white border-purple-600 shadow-purple-600/20" },
+            { id: "completed", labelKey: "crm.tab_completed", labelFallback: "Completed", tone: "text-emerald-700 bg-emerald-50 border-emerald-200 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900", activeTone: "bg-emerald-600 text-white border-emerald-600 shadow-emerald-600/20" },
+          ].map((tabDef) => {
+            const isActive = activeTab === tabDef.id;
             return (
               <button
-                key={t.id}
+                key={tabDef.id}
                 type="button"
-                onClick={() => setActiveTab(t.id as any)}
+                onClick={() => setActiveTab(tabDef.id as any)}
                 className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold border transition-all shadow-sm ${
-                  isActive ? t.activeTone : t.tone
+                  isActive ? tabDef.activeTone : tabDef.tone
                 }`}
               >
-                <span>{t.label}</span>
+                <span>{t(lang, tabDef.labelKey as any, tabDef.labelFallback)}</span>
                 <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${
                   isActive ? "bg-white/20 text-white" : "bg-black/5 dark:bg-white/10"
                 }`}>
-                  {t.count}
+                  {tabCounts[tabDef.id] ?? "—"}
                 </span>
               </button>
             );
@@ -491,70 +562,67 @@ export function SmartCrmControlCenter() {
         {/* 5. FILTER ROW TOOLBAR */}
         <div className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <div className="flex flex-wrap items-center gap-2.5">
-            {/* Country Dropdown */}
+            {/* Country Dropdown — bound to real fetched country master data */}
             <select
               value={selectedCountry}
-              onChange={(e) => setSelectedCountry(e.target.value)}
+              onChange={(e) => { setSelectedCountry(e.target.value); setSelectedMainBranch("all"); setSelectedCityBranch("all"); }}
               className="rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-1.5 text-xs font-medium text-slate-700 outline-none focus:border-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
             >
-              <option value="all">All Countries</option>
-              <option value="UAE">🇦🇪 UAE</option>
-              <option value="Pakistan">🇵🇰 Pakistan</option>
-              <option value="Oman">🇴🇲 Oman</option>
-              <option value="Saudi Arabia">🇸🇦 Saudi Arabia</option>
+              <option value="all">{t(lang, "crm.all_countries", "All Countries")}</option>
+              {countryOptions.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
             </select>
 
-            {/* Main Branch Dropdown */}
+            {/* Main Branch Dropdown — bound to real fetched country-branch master data */}
             <select
               value={selectedMainBranch}
               onChange={(e) => setSelectedMainBranch(e.target.value)}
               className="rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-1.5 text-xs font-medium text-slate-700 outline-none focus:border-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
             >
-              <option value="all">All Main Branches</option>
-              <option value="Main Headquarters">Main Headquarters</option>
-              <option value="Dubai Central">Dubai Central</option>
+              <option value="all">{t(lang, "crm.all_main_branches", "All Main Branches")}</option>
+              {mainBranchOptions.map((b) => (
+                <option key={b.id} value={b.id}>{b.name}</option>
+              ))}
             </select>
 
-            {/* City Branch Dropdown */}
+            {/* City Branch Dropdown — bound to real fetched city-branch master data */}
             <select
               value={selectedCityBranch}
               onChange={(e) => setSelectedCityBranch(e.target.value)}
               className="rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-1.5 text-xs font-medium text-slate-700 outline-none focus:border-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
             >
-              <option value="all">All City Branches</option>
-              <option value="Dubai Branch">Dubai Branch</option>
-              <option value="Sharjah Branch">Sharjah Branch</option>
-              <option value="Muscat Branch">Muscat Branch</option>
-              <option value="Lahore Office">Lahore Office</option>
+              <option value="all">{t(lang, "crm.all_city_branches", "All City Branches")}</option>
+              {cityBranchOptions.map((b) => (
+                <option key={b.id} value={b.id}>{b.name}</option>
+              ))}
             </select>
 
-            {/* Due Type Dropdown */}
+            {/* Due Type Dropdown — values match the real item_type column exactly (not a loose text guess) */}
             <select
               value={dueTypeFilter}
               onChange={(e) => setDueTypeFilter(e.target.value)}
               className="rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-1.5 text-xs font-medium text-slate-700 outline-none focus:border-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
             >
-              <option value="all">All Due Types</option>
-              <option value="Customer Receivable">Customer Receivable</option>
-              <option value="Supplier Payable">Supplier Payable</option>
-              <option value="Cheque Entry">Cheques</option>
-              <option value="Sales Recovery">Sales Recovery</option>
-              <option value="Purchase Due">Purchase Due</option>
-              <option value="Shipping">Shipping / Clearing</option>
+              <option value="all">{t(lang, "crm.all_due_types", "All Due Types")}</option>
+              <option value="Sales Recovery">{t(lang, "crm.due_type_sales_recovery", "Sales Recovery")}</option>
+              <option value="Collect From Customer">{t(lang, "crm.due_type_receivable", "Customer Receivable")}</option>
+              <option value="Purchase Payment">{t(lang, "crm.due_type_purchase", "Purchase Due")}</option>
+              <option value="Cheque Pay">{t(lang, "crm.due_type_payable", "Supplier Payable")}</option>
+              <option value="Cheque Deposit">{t(lang, "crm.due_type_cheque", "Cheques")}</option>
+              <option value="Shipping Payment">{t(lang, "crm.due_type_shipping", "Shipping / Clearing")}</option>
             </select>
 
-            {/* Responsible User Dropdown */}
+            {/* Responsible User Dropdown — real distinct names from the currently loaded action items */}
             <select
               value={userFilter}
               onChange={(e) => setUserFilter(e.target.value)}
               className="rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-1.5 text-xs font-medium text-slate-700 outline-none focus:border-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
             >
-              <option value="all">All Users</option>
-              <option value="Super Admin">Super Admin</option>
-              <option value="Ahmed Ali">Ahmed Ali</option>
-              <option value="Sara Khan">Sara Khan</option>
-              <option value="Tariq Mahmood">Tariq Mahmood</option>
-              <option value="Bilal Khan">Bilal Khan</option>
+              <option value="all">{t(lang, "crm.all_users", "All Users")}</option>
+              {responsibleUserOptions.map((name) => (
+                <option key={name} value={name}>{name}</option>
+              ))}
             </select>
 
             {/* Status Dropdown */}
@@ -563,24 +631,24 @@ export function SmartCrmControlCenter() {
               onChange={(e) => setStatusFilter(e.target.value)}
               className="rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-1.5 text-xs font-medium text-slate-700 outline-none focus:border-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
             >
-              <option value="all">All Statuses</option>
-              <option value="today">Today</option>
-              <option value="overdue">Overdue</option>
-              <option value="tomorrow">Tomorrow</option>
-              <option value="upcoming">Upcoming</option>
-              <option value="completed">Completed</option>
+              <option value="all">{t(lang, "crm.all_statuses", "All Statuses")}</option>
+              <option value="today">{t(lang, "crm.due_today", "Due Today")}</option>
+              <option value="overdue">{t(lang, "crm.tab_overdue", "Overdue")}</option>
+              <option value="tomorrow">{t(lang, "crm.tab_tomorrow", "Tomorrow")}</option>
+              <option value="upcoming">{t(lang, "crm.tab_upcoming", "Upcoming")}</option>
+              <option value="completed">{t(lang, "crm.tab_completed", "Completed")}</option>
             </select>
 
             {/* Date Range Inputs */}
             <div className="flex items-center gap-1 text-xs text-slate-500">
-              <span>From:</span>
+              <span>{t(lang, "crm.from_label", "From:")}</span>
               <input
                 type="date"
                 value={fromDate}
                 onChange={(e) => setFromDate(e.target.value)}
                 className="rounded-xl border border-slate-200 bg-slate-50/50 px-2 py-1 text-xs text-slate-700 outline-none focus:border-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
               />
-              <span>To:</span>
+              <span>{t(lang, "crm.to_label", "To:")}</span>
               <input
                 type="date"
                 value={toDate}
@@ -597,7 +665,7 @@ export function SmartCrmControlCenter() {
                 className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700 transition"
               >
                 <RefreshCw className={cn("h-3.5 w-3.5", loading ? "animate-spin" : "")} />
-                Refresh
+                {t(lang, "crm.refresh", "Refresh")}
               </button>
             </div>
           </div>
@@ -608,7 +676,7 @@ export function SmartCrmControlCenter() {
           {/* Card Header */}
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 px-5 py-3.5 bg-slate-50/50 dark:bg-slate-800/40">
             <h2 className="text-sm font-black text-slate-900 dark:text-slate-100">
-              Due & Follow-Up Register
+              {t(lang, "crm.due_register", "Due & Follow-Up Register")}
             </h2>
 
             <div className="flex items-center gap-2.5">
@@ -617,7 +685,7 @@ export function SmartCrmControlCenter() {
                 <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
-                  placeholder="Search by reference, party, invoice..."
+                  placeholder={t(lang, "crm.search_register_ph", "Search by reference, party, invoice...")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 outline-none focus:border-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 shadow-sm"
@@ -630,7 +698,7 @@ export function SmartCrmControlCenter() {
                 className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
               >
                 <SlidersHorizontal className="h-3.5 w-3.5 text-slate-400" />
-                Columns
+                {t(lang, "crm.columns", "Columns")}
                 <ChevronDown className="h-3 w-3 text-slate-400" />
               </button>
 
@@ -641,7 +709,7 @@ export function SmartCrmControlCenter() {
                 className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
               >
                 <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" />
-                Excel
+                {t(lang, "crm.btn_export_excel", "Export to Excel")}
               </button>
             </div>
           </div>
@@ -660,20 +728,20 @@ export function SmartCrmControlCenter() {
                     />
                   </th>
                   <th className="w-12 px-3 py-3 text-center">#</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">TYPE</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">REFERENCE NO</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">PARTY / ACCOUNT</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">INVOICE / BL NO</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">DUE DATE</th>
-                  <th className="px-3 py-3 text-right font-black text-slate-700 dark:text-slate-200">AMOUNT</th>
-                  <th className="px-3 py-3 text-right font-black text-slate-700 dark:text-slate-200">PAID</th>
-                  <th className="px-3 py-3 text-right font-black text-slate-700 dark:text-slate-200">REMAINING</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">CURRENCY</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">BRANCH</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">RESPONSIBLE</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">PRIORITY</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">STATUS</th>
-                  <th className="w-16 px-3 py-3 text-right font-black text-slate-700 dark:text-slate-200">ACTIONS</th>
+                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_type", "Type")}</th>
+                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_reference", "Reference No.")}</th>
+                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_party_account", "Party / Account")}</th>
+                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_invoice_bill", "Invoice / Bill No.")}</th>
+                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_due_date", "Due Date")}</th>
+                  <th className="px-3 py-3 text-right font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_amount", "Amount")}</th>
+                  <th className="px-3 py-3 text-right font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_paid", "Paid")}</th>
+                  <th className="px-3 py-3 text-right font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_remaining", "Remaining")}</th>
+                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_currency", "Currency")}</th>
+                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_branch", "Branch")}</th>
+                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_responsible", "Responsible")}</th>
+                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_priority", "Priority")}</th>
+                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_status", "Status")}</th>
+                  <th className="w-16 px-3 py-3 text-right font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_action", "Action")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -735,38 +803,38 @@ export function SmartCrmControlCenter() {
                       <td className="px-3 py-2.5">
                         {r.priority === "High" ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-0.5 text-[10px] font-black text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:border-rose-900 dark:text-rose-300">
-                            + High
+                            {t(lang, "crm.priority_high", "High")}
                           </span>
                         ) : r.priority === "Medium" ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[10px] font-black text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:border-amber-900 dark:text-amber-300">
-                            + Medium
+                            {t(lang, "crm.priority_medium", "Medium")}
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-[10px] font-black text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:border-blue-900 dark:text-blue-300">
-                            + Low
+                            {t(lang, "crm.priority_low", "Low")}
                           </span>
                         )}
                       </td>
                       <td className="px-3 py-2.5">
                         {r.status === "Overdue" ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-0.5 text-[11px] font-bold text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:border-rose-900 dark:text-rose-300">
-                            Overdue
+                            {t(lang, "crm.tab_overdue", "Overdue")}
                           </span>
                         ) : r.status === "Today" ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-bold text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:border-blue-900 dark:text-blue-300">
-                            + Today
+                            {t(lang, "crm.due_today", "Due Today")}
                           </span>
                         ) : r.status === "Tomorrow" ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-bold text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:border-amber-900 dark:text-amber-300">
-                            + Tomorrow
+                            {t(lang, "crm.tab_tomorrow", "Tomorrow")}
                           </span>
                         ) : r.status === "Completed" ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:border-emerald-900 dark:text-emerald-300">
-                            Completed
+                            {t(lang, "crm.tab_completed", "Completed")}
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 px-2.5 py-0.5 text-[11px] font-bold text-purple-700 border border-purple-200 dark:bg-purple-950/40 dark:border-purple-900 dark:text-purple-300">
-                            + Upcoming
+                            {t(lang, "crm.tab_upcoming", "Upcoming")}
                           </span>
                         )}
                       </td>
@@ -775,7 +843,7 @@ export function SmartCrmControlCenter() {
                           <button
                             type="button"
                             onClick={() => { setSelectedItemForNote(r); setNoteModalOpen(true); }}
-                            title="Follow-Up Note"
+                            title={t(lang, "crm.title_followup_note", "Follow-up Note")}
                             className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-blue-600 dark:hover:bg-slate-800 transition"
                           >
                             <PhoneCall className="h-3.5 w-3.5" />
@@ -783,7 +851,7 @@ export function SmartCrmControlCenter() {
                           <button
                             type="button"
                             onClick={() => void handleCompleteItem(r.id)}
-                            title="Mark Complete"
+                            title={t(lang, "crm.title_mark_completed", "Mark Completed")}
                             className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-emerald-600 dark:hover:bg-slate-800 transition"
                           >
                             <CheckCircle2 className="h-3.5 w-3.5" />
@@ -793,6 +861,13 @@ export function SmartCrmControlCenter() {
                     </tr>
                   );
                 })}
+                {registeredItems.length === 0 && (
+                  <tr>
+                    <td colSpan={16} className="px-4 py-8 text-center text-slate-400">
+                      {loading ? t(lang, "crm.loading_action_tasks", "Loading action tasks...") : t(lang, "crm.no_active_items_tab", "No active items found for this tab.")}
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -800,9 +875,9 @@ export function SmartCrmControlCenter() {
           {/* Table Footer */}
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 dark:border-slate-800 px-5 py-3 text-xs text-slate-500 bg-slate-50/30 dark:bg-slate-800/30">
             <div>
-              Showing <span className="font-bold text-slate-800 dark:text-slate-200">1</span> to{" "}
-              <span className="font-bold text-slate-800 dark:text-slate-200">{registeredItems.length}</span> of{" "}
-              <span className="font-bold text-slate-800 dark:text-slate-200">{registeredItems.length}</span> records
+              {t(lang, "crm.pg_showing", "Showing")} <span className="font-bold text-slate-800 dark:text-slate-200">{registeredItems.length > 0 ? 1 : 0}</span> {t(lang, "crm.pg_to", "to")}{" "}
+              <span className="font-bold text-slate-800 dark:text-slate-200">{registeredItems.length}</span> {t(lang, "crm.pg_of", "of")}{" "}
+              <span className="font-bold text-slate-800 dark:text-slate-200">{registeredItems.length}</span> {t(lang, "crm.pg_records", "records")}
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -811,7 +886,7 @@ export function SmartCrmControlCenter() {
                 className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1 font-semibold text-slate-400 opacity-50 cursor-not-allowed"
               >
                 <ChevronLeft className="h-3.5 w-3.5" />
-                Previous
+                {t(lang, "crm.previous", "Previous")}
               </button>
               <button
                 type="button"
@@ -824,7 +899,7 @@ export function SmartCrmControlCenter() {
                 disabled
                 className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1 font-semibold text-slate-400 opacity-50 cursor-not-allowed"
               >
-                Next
+                {t(lang, "crm.next", "Next")}
                 <ChevronRight className="h-3.5 w-3.5" />
               </button>
             </div>
@@ -833,13 +908,13 @@ export function SmartCrmControlCenter() {
 
         {/* 7. BOTTOM THREE WIDGETS (Screenshot 4 layout) */}
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-          {/* Widget 1: Overdue Follow-Ups (12) */}
+          {/* Widget 1: Overdue Follow-Ups — real rows from dashboardData.overdueFollowUps */}
           <div className="rounded-2xl border border-rose-100 bg-white p-4 shadow-sm dark:border-rose-950/60 dark:bg-slate-900">
             <div className="flex items-center justify-between border-b border-rose-100 pb-3 dark:border-rose-950/60">
               <div className="flex items-center gap-2">
                 <span className="flex h-2 w-2 rounded-full bg-rose-500"></span>
                 <h3 className="text-xs font-black text-rose-950 dark:text-rose-200">
-                  Overdue Follow-Ups (12)
+                  {t(lang, "crm.overdue_followups", "Overdue Follow-Ups")} ({(dashboardData?.overdueFollowUps || []).length})
                 </h3>
               </div>
               <button
@@ -847,73 +922,59 @@ export function SmartCrmControlCenter() {
                 onClick={() => setActiveTab("overdue")}
                 className="text-xs font-bold text-blue-600 hover:underline"
               >
-                View All
+                {t(lang, "crm.view_all", "View All")}
               </button>
             </div>
             <div className="mt-3 space-y-2.5 text-xs">
-              <div className="rounded-xl border border-rose-100/80 bg-rose-50/40 p-2.5 dark:border-rose-900/40 dark:bg-rose-950/20">
-                <div className="flex items-center justify-between font-bold text-slate-800 dark:text-slate-100">
-                  <span>Emirates Steel Industries</span>
-                  <span className="text-rose-600">AED 69,450</span>
-                </div>
-                <div className="mt-1 flex items-center justify-between text-[11px] text-slate-500">
-                  <span>Payable Due · 2 days overdue</span>
-                  <button
-                    type="button"
-                    onClick={() => { setSelectedItemForNote({ id: "2", party_name: "Emirates Steel Industries" }); setNoteModalOpen(true); }}
-                    className="font-semibold text-blue-600 hover:underline"
-                  >
-                    + Note
-                  </button>
-                </div>
-              </div>
-
-              <div className="rounded-xl border border-rose-100/80 bg-rose-50/40 p-2.5 dark:border-rose-900/40 dark:bg-rose-950/20">
-                <div className="flex items-center justify-between font-bold text-slate-800 dark:text-slate-100">
-                  <span>National Paper Mill</span>
-                  <span className="text-rose-600">AED 15,200</span>
-                </div>
-                <div className="mt-1 flex items-center justify-between text-[11px] text-slate-500">
-                  <span>Purchase Due · 1 day overdue</span>
-                  <button
-                    type="button"
-                    onClick={() => { setSelectedItemForNote({ id: "5", party_name: "National Paper Mill" }); setNoteModalOpen(true); }}
-                    className="font-semibold text-blue-600 hover:underline"
-                  >
-                    + Note
-                  </button>
-                </div>
-              </div>
+              {(dashboardData?.overdueFollowUps || []).length === 0 ? (
+                <p className="text-slate-400 py-4 text-center">{t(lang, "crm.no_overdue_followups", "No overdue follow-ups.")}</p>
+              ) : (
+                (dashboardData.overdueFollowUps as any[]).map((f) => (
+                  <div key={f.id} className="rounded-xl border border-rose-100/80 bg-rose-50/40 p-2.5 dark:border-rose-900/40 dark:bg-rose-950/20">
+                    <div className="flex items-center justify-between font-bold text-slate-800 dark:text-slate-100">
+                      <span>{f.party}</span>
+                      <span className="text-rose-600">{f.currency} {Number(f.amount || 0).toLocaleString()}</span>
+                    </div>
+                    <div className="mt-1 flex items-center justify-between text-[11px] text-slate-500">
+                      <span>{f.source} · {f.overdueDays} {f.overdueDays === 1 ? "day" : "days"} overdue</span>
+                      <button
+                        type="button"
+                        onClick={() => { setSelectedItemForNote({ id: f.id, party_name: f.party }); setNoteModalOpen(true); }}
+                        className="font-semibold text-blue-600 hover:underline"
+                      >
+                        {t(lang, "crm.btn_add_note", "Add Note")}
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
-          {/* Widget 2: Today's Financial Summary */}
+          {/* Widget 2: Financial Summary — real per-currency totals; Cash/Bank honestly
+              shown as "—" since no ledger/cash-bank query is wired into this service yet */}
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
               <h3 className="text-xs font-black text-slate-900 dark:text-slate-100">
-                Today's Financial Summary
+                {t(lang, "crm.financial_summary_today", "Financial Summary")}
               </h3>
             </div>
             <div className="mt-3 space-y-2 text-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Total Receivable Due:</span>
-                <span className="font-bold text-emerald-600 dark:text-emerald-400">AED 125,320</span>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-slate-500 dark:text-slate-400 shrink-0">{t(lang, "crm.total_receivable", "Total Receivable")}:</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400 text-right">{formatByCurrency(financialSummary.totalReceivableByCurrency)}</span>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-slate-500 dark:text-slate-400 shrink-0">{t(lang, "crm.total_payable", "Total Payable")}:</span>
+                <span className="font-bold text-rose-600 dark:text-rose-400 text-right">{formatByCurrency(financialSummary.totalPayableByCurrency)}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Total Payable Due:</span>
-                <span className="font-bold text-rose-600 dark:text-rose-400">AED 89,450</span>
+                <span className="text-slate-500 dark:text-slate-400">{t(lang, "crm.cash_in_hand", "Cash in Hand")}:</span>
+                <span className="font-bold text-slate-800 dark:text-slate-200">{"—"}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Cash in Hand:</span>
-                <span className="font-bold text-slate-800 dark:text-slate-200">AED 245,800</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Bank Balance:</span>
-                <span className="font-bold text-slate-800 dark:text-slate-200">AED 1,890,450</span>
-              </div>
-              <div className="mt-2 rounded-xl bg-blue-50/70 p-2.5 dark:bg-blue-950/30 flex items-center justify-between font-black text-blue-900 dark:text-blue-200">
-                <span>Net Position:</span>
-                <span className="text-sm">AED 353,260</span>
+                <span className="text-slate-500 dark:text-slate-400">{t(lang, "crm.bank_balance", "Bank Balance")}:</span>
+                <span className="font-bold text-slate-800 dark:text-slate-200">{"—"}</span>
               </div>
             </div>
           </div>
@@ -922,7 +983,7 @@ export function SmartCrmControlCenter() {
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
               <h3 className="text-xs font-black text-slate-900 dark:text-slate-100">
-                Quick Actions
+                {t(lang, "crm.quick_actions", "Quick Actions")}
               </h3>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
@@ -932,7 +993,7 @@ export function SmartCrmControlCenter() {
                 className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/60 p-2.5 font-bold text-slate-700 hover:bg-purple-50 hover:text-purple-700 hover:border-purple-200 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-200 transition text-left"
               >
                 <Plus className="h-3.5 w-3.5 text-purple-600 shrink-0" />
-                <span className="text-[11px]">+ Add Customer Receivable</span>
+                <span className="text-[11px]">{t(lang, "crm.add_customer_receivable", "Add Customer Receivable")}</span>
               </button>
 
               <button
@@ -941,7 +1002,7 @@ export function SmartCrmControlCenter() {
                 className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/60 p-2.5 font-bold text-slate-700 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-200 transition text-left"
               >
                 <Plus className="h-3.5 w-3.5 text-rose-600 shrink-0" />
-                <span className="text-[11px]">+ Add Supplier Payable</span>
+                <span className="text-[11px]">{t(lang, "crm.add_supplier_payable", "Add Supplier Payable")}</span>
               </button>
 
               <button
@@ -950,7 +1011,7 @@ export function SmartCrmControlCenter() {
                 className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/60 p-2.5 font-bold text-slate-700 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-200 transition text-left"
               >
                 <Plus className="h-3.5 w-3.5 text-amber-600 shrink-0" />
-                <span className="text-[11px]">+ Add Cheque</span>
+                <span className="text-[11px]">{t(lang, "crm.add_cheque", "Add Cheque")}</span>
               </button>
 
               <button
@@ -959,16 +1020,21 @@ export function SmartCrmControlCenter() {
                 className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/60 p-2.5 font-bold text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-200 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-200 transition text-left"
               >
                 <Plus className="h-3.5 w-3.5 text-indigo-600 shrink-0" />
-                <span className="text-[11px]">+ Add Shipping Due</span>
+                <span className="text-[11px]">{t(lang, "crm.add_shipping_due", "Add Shipping Due")}</span>
               </button>
 
+              {/* No real WhatsApp broadcast integration exists yet for this screen
+                  (whatsapp_accounts / communication-center supports single-thread
+                  messaging, not a bulk follow-up broadcast) — disabled with an honest
+                  label instead of a fake "Launching..." alert. */}
               <button
                 type="button"
-                onClick={() => alert("Launching WhatsApp follow-up broadcast...")}
-                className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/60 p-2.5 font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-200 transition text-left"
+                disabled
+                title={t(lang, "crm.not_available_yet", "Not available yet")}
+                className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/60 p-2.5 font-bold text-slate-400 dark:border-slate-800 dark:bg-slate-800/60 opacity-50 cursor-not-allowed text-left"
               >
-                <MessageCircle className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                <span className="text-[11px]">Send Follow-Up (WhatsApp)</span>
+                <MessageCircle className="h-3.5 w-3.5 shrink-0" />
+                <span className="text-[11px]">{t(lang, "crm.btn_send_whatsapp", "Send Message / WhatsApp")}</span>
               </button>
 
               <button
@@ -977,7 +1043,7 @@ export function SmartCrmControlCenter() {
                 className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/60 p-2.5 font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-200 transition text-left"
               >
                 <FileText className="h-3.5 w-3.5 text-blue-600 shrink-0" />
-                <span className="text-[11px]">Generate Due Report</span>
+                <span className="text-[11px]">{t(lang, "crm.generate_due_report", "Generate Due Report")}</span>
               </button>
             </div>
           </div>
@@ -991,36 +1057,36 @@ export function SmartCrmControlCenter() {
           <DialogContent className="max-w-md font-sans" dir={isRtl ? "rtl" : "ltr"}>
             <DialogHeader>
               <DialogTitle className="text-base font-black">
-                {selectedItemForNote ? `Follow-Up: ${selectedItemForNote.party_name}` : "Add CRM Follow-Up Note"}
+                {selectedItemForNote ? `${t(lang, "crm.followup_for_prefix", "Follow-Up:")} ${selectedItemForNote.party_name}` : t(lang, "crm.add_followup_note_title", "Add CRM Follow-Up Note")}
               </DialogTitle>
             </DialogHeader>
 
             <div className="space-y-3 py-2 text-xs">
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Follow-Up Action Type
+                  {t(lang, "crm.follow_up_action_type", "Follow-Up Action Type")}
                 </label>
                 <select
                   value={noteType}
                   onChange={(e) => setNoteType(e.target.value)}
                   className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-2.5 font-semibold text-xs"
                 >
-                  <option value="Call Follow-Up">Phone Call Follow-Up</option>
-                  <option value="WhatsApp Message">WhatsApp Follow-Up</option>
-                  <option value="In-Person Meeting">In-Person Meeting</option>
-                  <option value="Promise to Pay">Promise to Pay</option>
+                  <option value="Call Follow-Up">{t(lang, "crm.ftype_call", "Phone Call Follow-Up")}</option>
+                  <option value="WhatsApp Message">{t(lang, "crm.ftype_whatsapp", "WhatsApp Follow-Up")}</option>
+                  <option value="In-Person Meeting">{t(lang, "crm.ftype_meeting", "In-Person Meeting")}</option>
+                  <option value="Promise to Pay">{t(lang, "crm.ftype_promise", "Promise to Pay")}</option>
                 </select>
               </div>
 
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Follow-Up Notes / Outcome
+                  {t(lang, "crm.follow_up_notes_outcome", "Follow-Up Notes / Outcome")}
                 </label>
                 <textarea
                   rows={3}
                   value={noteText}
                   onChange={(e) => setNoteText(e.target.value)}
-                  placeholder="Enter client response, payment commitment or notes..."
+                  placeholder={t(lang, "crm.note_ph", "Enter client response, payment commitment or notes...")}
                   className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-2.5 font-sans text-xs"
                 />
               </div>
@@ -1028,7 +1094,7 @@ export function SmartCrmControlCenter() {
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Promise Date
+                    {t(lang, "crm.promise_date", "Promise Date")}
                   </label>
                   <Input
                     type="date"
@@ -1039,7 +1105,7 @@ export function SmartCrmControlCenter() {
                 </div>
                 <div>
                   <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Promise Amount
+                    {t(lang, "crm.promise_amount", "Promise Amount")}
                   </label>
                   <Input
                     type="number"
@@ -1054,7 +1120,7 @@ export function SmartCrmControlCenter() {
 
             <DialogFooter className="border-t pt-3">
               <Button type="button" variant="outline" size="sm" onClick={() => setNoteModalOpen(false)}>
-                Cancel
+                {t(lang, "common.cancel", "Cancel")}
               </Button>
               <Button
                 type="button"
@@ -1063,7 +1129,7 @@ export function SmartCrmControlCenter() {
                 disabled={savingNote || !noteText.trim()}
                 className="bg-blue-600 hover:bg-blue-700 text-white font-black"
               >
-                {savingNote ? "Saving..." : "Save Note"}
+                {savingNote ? t(lang, "common.saving", "Saving...") : t(lang, "crm.btn_add_note", "Add Note")}
               </Button>
             </DialogFooter>
           </DialogContent>

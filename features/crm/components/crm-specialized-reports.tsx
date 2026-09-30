@@ -30,6 +30,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { getCrmTranslation } from "@/lib/crm/crm-i18n";
+import { t as tUi } from "@/lib/i18n/ui";
 
 interface SpecializedReportProps {
   reportType: "executive" | "pipeline" | "payments-recovery" | "city-branch" | "team-performance";
@@ -374,7 +375,13 @@ export function CrmSpecializedReportView({ reportType }: SpecializedReportProps)
                   available figure (all overdue items, no day split) replaces them. */}
               <div className="p-4 rounded-xl border border-rose-200 bg-rose-50/40 md:col-span-3">
                 <span className="text-xs font-bold text-rose-800">Overdue (All)</span>
-                <div className="text-xl font-black text-rose-700 mt-1">AED {Number((data?.dashboard?.kpis?.overdueAmount) || 0).toLocaleString()}</div>
+                <div className="text-xl font-black text-rose-700 mt-1">
+                  {((data?.dashboard?.kpis?.overdueByCurrency || []) as Array<{ currency: string; amount: number }>).length === 0
+                    ? "—"
+                    : (data.dashboard.kpis.overdueByCurrency as Array<{ currency: string; amount: number }>)
+                        .map((row) => `${row.currency} ${Number(row.amount || 0).toLocaleString()}`)
+                        .join("  +  ")}
+                </div>
                 <p className="text-[11px] text-rose-600 mt-1">{Number((data?.dashboard?.kpis?.overdueCount) || 0).toLocaleString()} overdue item(s) — day-range ageing (1-30/31-60/60+) not yet built</p>
               </div>
             </div>
@@ -389,7 +396,7 @@ export function CrmSpecializedReportView({ reportType }: SpecializedReportProps)
             </h3>
             {receivableByCountry.length === 0 ? (
               <div className="p-6 rounded-2xl border border-slate-200 bg-slate-50/50 text-center text-sm text-slate-500">
-                No open receivable balances found across any country for the current scope.
+                {tUi(lang, "crm.no_receivable_any_country", "No open receivable balances found across any country for the current scope.")}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -399,7 +406,7 @@ export function CrmSpecializedReportView({ reportType }: SpecializedReportProps)
                       <span>{row.country}</span>
                     </div>
                     <div className="text-xl font-black text-slate-900">{row.currency} {row.amount.toLocaleString()}</div>
-                    <p className="text-xs text-slate-500">Open receivable balance</p>
+                    <p className="text-xs text-slate-500">{tUi(lang, "crm.open_receivable_balance", "Open receivable balance")}</p>
                   </div>
                 ))}
               </div>

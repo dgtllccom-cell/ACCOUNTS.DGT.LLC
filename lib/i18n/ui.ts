@@ -3023,6 +3023,69 @@ export type UiKey =
   | "spin.enter_pin"
   | "crm.loading_action_tasks"
   | "crm.no_active_items_tab"
+  | "crm.branch_user_details"
+  | "crm.lbl_branch"
+  | "crm.lbl_user"
+  | "crm.lbl_role"
+  | "crm.lbl_scope"
+  | "crm.due_summary"
+  | "crm.receivable_due"
+  | "crm.payable_due"
+  | "crm.cheques_due"
+  | "crm.shipment_due"
+  | "crm.followup_status_summary"
+  | "crm.due_today"
+  | "crm.country_branch_due_report"
+  | "crm.super_admin_only"
+  | "crm.total_countries"
+  | "crm.total_branches"
+  | "crm.all_countries"
+  | "crm.all_main_branches"
+  | "crm.all_city_branches"
+  | "crm.all_due_types"
+  | "crm.all_users"
+  | "crm.all_statuses"
+  | "crm.due_type_receivable"
+  | "crm.due_type_payable"
+  | "crm.due_type_cheque"
+  | "crm.due_type_sales_recovery"
+  | "crm.due_type_purchase"
+  | "crm.due_type_shipping"
+  | "crm.from_label"
+  | "crm.to_label"
+  | "crm.due_register"
+  | "crm.search_register_ph"
+  | "crm.columns"
+  | "crm.pg_showing"
+  | "crm.pg_to"
+  | "crm.pg_of"
+  | "crm.pg_records"
+  | "crm.previous"
+  | "crm.next"
+  | "crm.financial_summary_today"
+  | "crm.add_customer_receivable"
+  | "crm.add_supplier_payable"
+  | "crm.add_cheque"
+  | "crm.add_shipping_due"
+  | "crm.generate_due_report"
+  | "crm.confirm_mark_complete"
+  | "crm.add_new_due"
+  | "crm.priority_high"
+  | "crm.priority_medium"
+  | "crm.priority_low"
+  | "crm.no_overdue_followups"
+  | "crm.follow_up_action_type"
+  | "crm.follow_up_notes_outcome"
+  | "crm.promise_date"
+  | "crm.promise_amount"
+  | "crm.add_followup_note_title"
+  | "crm.followup_for_prefix"
+  | "crm.no_receivable_any_country"
+  | "crm.open_receivable_balance"
+  | "crm.th_reference"
+  | "crm.th_currency"
+  | "crm.th_priority"
+  | "crm.not_available_yet"
   | "kyc.kycManagement"
   | "kyc.applyRange"
   | "bankroz.update_status_clear"
@@ -26894,6 +26957,69 @@ const en: Dict = {
 
 
   "crm.no_active_items_tab": "No active items found for this tab.",
+  "crm.branch_user_details": "Branch & User Details",
+  "crm.lbl_branch": "Branch:",
+  "crm.lbl_user": "User:",
+  "crm.lbl_role": "Role:",
+  "crm.lbl_scope": "Scope:",
+  "crm.due_summary": "Due Summary",
+  "crm.receivable_due": "Receivable Due:",
+  "crm.payable_due": "Payable Due:",
+  "crm.cheques_due": "Cheques Due:",
+  "crm.shipment_due": "Shipment Due:",
+  "crm.followup_status_summary": "Follow-Up Status Summary",
+  "crm.due_today": "Due Today",
+  "crm.country_branch_due_report": "Country / Branch Due Report",
+  "crm.super_admin_only": "Super Admin Only",
+  "crm.total_countries": "Total Countries:",
+  "crm.total_branches": "Total Branches:",
+  "crm.all_countries": "All Countries",
+  "crm.all_main_branches": "All Main Branches",
+  "crm.all_city_branches": "All City Branches",
+  "crm.all_due_types": "All Due Types",
+  "crm.all_users": "All Users",
+  "crm.all_statuses": "All Statuses",
+  "crm.due_type_receivable": "Customer Receivable",
+  "crm.due_type_payable": "Supplier Payable",
+  "crm.due_type_cheque": "Cheques",
+  "crm.due_type_sales_recovery": "Sales Recovery",
+  "crm.due_type_purchase": "Purchase Due",
+  "crm.due_type_shipping": "Shipping / Clearing",
+  "crm.from_label": "From:",
+  "crm.to_label": "To:",
+  "crm.due_register": "Due & Follow-Up Register",
+  "crm.search_register_ph": "Search by reference, party, invoice...",
+  "crm.columns": "Columns",
+  "crm.pg_showing": "Showing",
+  "crm.pg_to": "to",
+  "crm.pg_of": "of",
+  "crm.pg_records": "records",
+  "crm.previous": "Previous",
+  "crm.next": "Next",
+  "crm.financial_summary_today": "Financial Summary",
+  "crm.add_customer_receivable": "Add Customer Receivable",
+  "crm.add_supplier_payable": "Add Supplier Payable",
+  "crm.add_cheque": "Add Cheque",
+  "crm.add_shipping_due": "Add Shipping Due",
+  "crm.generate_due_report": "Generate Due Report",
+  "crm.confirm_mark_complete": "Mark this action item as completed?",
+  "crm.add_new_due": "Add New Due",
+  "crm.priority_high": "High",
+  "crm.priority_medium": "Medium",
+  "crm.priority_low": "Low",
+  "crm.no_overdue_followups": "No overdue follow-ups.",
+  "crm.follow_up_action_type": "Follow-Up Action Type",
+  "crm.follow_up_notes_outcome": "Follow-Up Notes / Outcome",
+  "crm.promise_date": "Promise Date",
+  "crm.promise_amount": "Promise Amount",
+  "crm.add_followup_note_title": "Add CRM Follow-Up Note",
+  "crm.followup_for_prefix": "Follow-Up:",
+  "crm.no_receivable_any_country": "No open receivable balances found across any country for the current scope.",
+  "crm.open_receivable_balance": "Open receivable balance",
+  "crm.th_reference": "Reference No.",
+  "crm.th_currency": "Currency",
+  "crm.th_priority": "Priority",
+  "crm.not_available_yet": "Not available yet",
   "kyc.kycManagement": "KYC Management",
 
 
@@ -48307,6 +48433,69 @@ const ur: Dict = {
 
 
   "crm.no_active_items_tab": "اس ٹیب کے لیے کوئی فعال آئٹم نہیں ملا۔",
+  "crm.branch_user_details": "شاخ اور صارف کی تفصیلات",
+  "crm.lbl_branch": "شاخ:",
+  "crm.lbl_user": "صارف:",
+  "crm.lbl_role": "کردار:",
+  "crm.lbl_scope": "دائرہ کار:",
+  "crm.due_summary": "واجبات کا خلاصہ",
+  "crm.receivable_due": "قابلِ وصول رقم:",
+  "crm.payable_due": "قابلِ ادا رقم:",
+  "crm.cheques_due": "واجب الادا چیک:",
+  "crm.shipment_due": "ترسیل واجب الادا:",
+  "crm.followup_status_summary": "فالو اپ کی صورتحال کا خلاصہ",
+  "crm.due_today": "واجب الادا آج",
+  "crm.country_branch_due_report": "ملک / شاخ واجبات رپورٹ",
+  "crm.super_admin_only": "صرف سپر ایڈمن",
+  "crm.total_countries": "کل ممالک:",
+  "crm.total_branches": "کل شاخیں:",
+  "crm.all_countries": "تمام ممالک",
+  "crm.all_main_branches": "تمام مرکزی شاخیں",
+  "crm.all_city_branches": "تمام شہری شاخیں",
+  "crm.all_due_types": "تمام اقسامِ واجبات",
+  "crm.all_users": "تمام صارفین",
+  "crm.all_statuses": "تمام حالتیں",
+  "crm.due_type_receivable": "گاہک سے وصولی",
+  "crm.due_type_payable": "سپلائر کو ادائیگی",
+  "crm.due_type_cheque": "چیک",
+  "crm.due_type_sales_recovery": "فروخت کی وصولی",
+  "crm.due_type_purchase": "خریداری واجب الادا",
+  "crm.due_type_shipping": "ترسیل / کلیئرنگ",
+  "crm.from_label": "سے:",
+  "crm.to_label": "کو:",
+  "crm.due_register": "واجبات اور فالو اپ رجسٹر",
+  "crm.search_register_ph": "حوالہ، فریق یا انوائس سے تلاش کریں...",
+  "crm.columns": "کالمز",
+  "crm.pg_showing": "دکھایا جا رہا ہے",
+  "crm.pg_to": "کو",
+  "crm.pg_of": "کا",
+  "crm.pg_records": "ریکارڈز",
+  "crm.previous": "پچھلا",
+  "crm.next": "اگلا",
+  "crm.financial_summary_today": "مالی خلاصہ",
+  "crm.add_customer_receivable": "گاہک وصولی شامل کریں",
+  "crm.add_supplier_payable": "سپلائر ادائیگی شامل کریں",
+  "crm.add_cheque": "چیک شامل کریں",
+  "crm.add_shipping_due": "ترسیل واجبات شامل کریں",
+  "crm.generate_due_report": "واجبات رپورٹ بنائیں",
+  "crm.confirm_mark_complete": "کیا اس آئٹم کو مکمل شدہ نشان زد کیا جائے؟",
+  "crm.add_new_due": "نیا واجب الادا شامل کریں",
+  "crm.priority_high": "زیادہ",
+  "crm.priority_medium": "درمیانہ",
+  "crm.priority_low": "کم",
+  "crm.no_overdue_followups": "کوئی زائد المیعاد فالو اپ موجود نہیں۔",
+  "crm.follow_up_action_type": "فالو اپ ایکشن کی قسم",
+  "crm.follow_up_notes_outcome": "فالو اپ نوٹس / نتیجہ",
+  "crm.promise_date": "وعدہ کی تاریخ",
+  "crm.promise_amount": "وعدہ کی رقم",
+  "crm.add_followup_note_title": "سی آر ایم فالو اپ نوٹ شامل کریں",
+  "crm.followup_for_prefix": "فالو اپ:",
+  "crm.no_receivable_any_country": "موجودہ دائرہ کار میں کسی بھی ملک میں کوئی کھلا وصولی بیلنس نہیں ملا۔",
+  "crm.open_receivable_balance": "کھلا وصولی بیلنس",
+  "crm.th_reference": "حوالہ نمبر",
+  "crm.th_currency": "کرنسی",
+  "crm.th_priority": "ترجیح",
+  "crm.not_available_yet": "ابھی دستیاب نہیں",
   "kyc.kycManagement": "KYC انتظام",
 
 
@@ -69802,6 +69991,69 @@ const ar: Dict = {
 
 
   "crm.no_active_items_tab": "لم يتم العثور على عناصر نشطة لهذه التبويب.",
+  "crm.branch_user_details": "تفاصيل الفرع والمستخدم",
+  "crm.lbl_branch": "الفرع:",
+  "crm.lbl_user": "المستخدم:",
+  "crm.lbl_role": "الدور:",
+  "crm.lbl_scope": "النطاق:",
+  "crm.due_summary": "ملخص المستحقات",
+  "crm.receivable_due": "المبلغ المستحق القبض:",
+  "crm.payable_due": "المبلغ المستحق الدفع:",
+  "crm.cheques_due": "الشيكات المستحقة:",
+  "crm.shipment_due": "الشحنة المستحقة:",
+  "crm.followup_status_summary": "ملخص حالة المتابعة",
+  "crm.due_today": "المستحق اليوم",
+  "crm.country_branch_due_report": "تقرير مستحقات الدولة / الفرع",
+  "crm.super_admin_only": "للمشرف العام فقط",
+  "crm.total_countries": "إجمالي الدول:",
+  "crm.total_branches": "إجمالي الفروع:",
+  "crm.all_countries": "جميع الدول",
+  "crm.all_main_branches": "جميع الفروع الرئيسية",
+  "crm.all_city_branches": "جميع فروع المدينة",
+  "crm.all_due_types": "جميع أنواع المستحقات",
+  "crm.all_users": "جميع المستخدمين",
+  "crm.all_statuses": "جميع الحالات",
+  "crm.due_type_receivable": "مستحقات العميل",
+  "crm.due_type_payable": "مستحقات المورد",
+  "crm.due_type_cheque": "الشيكات",
+  "crm.due_type_sales_recovery": "تحصيل المبيعات",
+  "crm.due_type_purchase": "شراء المستحق",
+  "crm.due_type_shipping": "الشحن / التخليص",
+  "crm.from_label": "من:",
+  "crm.to_label": "إلى:",
+  "crm.due_register": "سجل المستحقات والمتابعة",
+  "crm.search_register_ph": "البحث بالمرجع أو الطرف أو الفاتورة...",
+  "crm.columns": "الأعمدة",
+  "crm.pg_showing": "عرض",
+  "crm.pg_to": "إلى",
+  "crm.pg_of": "من",
+  "crm.pg_records": "سجلات",
+  "crm.previous": "السابق",
+  "crm.next": "التالي",
+  "crm.financial_summary_today": "الملخص المالي",
+  "crm.add_customer_receivable": "إضافة مستحقات عميل",
+  "crm.add_supplier_payable": "إضافة مستحقات مورد",
+  "crm.add_cheque": "إضافة شيك",
+  "crm.add_shipping_due": "إضافة مستحقات شحن",
+  "crm.generate_due_report": "إنشاء تقرير المستحقات",
+  "crm.confirm_mark_complete": "هل تريد تعليم هذا العنصر كمكتمل؟",
+  "crm.add_new_due": "إضافة مستحق جديد",
+  "crm.priority_high": "مرتفع",
+  "crm.priority_medium": "متوسط",
+  "crm.priority_low": "منخفض",
+  "crm.no_overdue_followups": "لا توجد متابعات متأخرة.",
+  "crm.follow_up_action_type": "نوع إجراء المتابعة",
+  "crm.follow_up_notes_outcome": "ملاحظات المتابعة / النتيجة",
+  "crm.promise_date": "تاريخ الوعد",
+  "crm.promise_amount": "مبلغ الوعد",
+  "crm.add_followup_note_title": "إضافة ملاحظة متابعة CRM",
+  "crm.followup_for_prefix": "متابعة:",
+  "crm.no_receivable_any_country": "لم يتم العثور على أرصدة مستحقة مفتوحة في أي دولة ضمن النطاق الحالي.",
+  "crm.open_receivable_balance": "رصيد مستحق مفتوح",
+  "crm.th_reference": "رقم المرجع",
+  "crm.th_currency": "العملة",
+  "crm.th_priority": "الأولوية",
+  "crm.not_available_yet": "غير متاح بعد",
   "kyc.kycManagement": "إدارة اعرف عميلك",
 
 
@@ -91347,6 +91599,69 @@ const fa: Dict = {
 
 
   "crm.no_active_items_tab": "هیچ موردی فعالی برای این زبانه یافت نشد.",
+  "crm.branch_user_details": "جزئیات شعبه و کاربر",
+  "crm.lbl_branch": "شعبه:",
+  "crm.lbl_user": "کاربر:",
+  "crm.lbl_role": "نقش:",
+  "crm.lbl_scope": "محدوده:",
+  "crm.due_summary": "خلاصه مانده‌ها",
+  "crm.receivable_due": "مبلغ دریافتنی:",
+  "crm.payable_due": "مبلغ پرداختنی:",
+  "crm.cheques_due": "چک‌های سررسید شده:",
+  "crm.shipment_due": "محموله سررسید شده:",
+  "crm.followup_status_summary": "خلاصه وضعیت پیگیری",
+  "crm.due_today": "معوق امروز",
+  "crm.country_branch_due_report": "گزارش مانده‌های کشور / شعبه",
+  "crm.super_admin_only": "فقط ابرمدیر",
+  "crm.total_countries": "مجموع کشورها:",
+  "crm.total_branches": "مجموع شعبه‌ها:",
+  "crm.all_countries": "همه کشورها",
+  "crm.all_main_branches": "همه شعب اصلی",
+  "crm.all_city_branches": "همه شعب شهری",
+  "crm.all_due_types": "همه انواع مانده‌ها",
+  "crm.all_users": "همه کاربران",
+  "crm.all_statuses": "همه وضعیت‌ها",
+  "crm.due_type_receivable": "دریافتنی از مشتری",
+  "crm.due_type_payable": "پرداختنی به تامین‌کننده",
+  "crm.due_type_cheque": "چک‌ها",
+  "crm.due_type_sales_recovery": "بازیافت فروش",
+  "crm.due_type_purchase": "خرید معوق",
+  "crm.due_type_shipping": "حمل و نقل / ترخیص",
+  "crm.from_label": "از:",
+  "crm.to_label": "به:",
+  "crm.due_register": "دفتر مانده‌ها و پیگیری",
+  "crm.search_register_ph": "جستجو بر اساس مرجع، طرف یا فاکتور...",
+  "crm.columns": "ستون‌ها",
+  "crm.pg_showing": "نمایش",
+  "crm.pg_to": "به",
+  "crm.pg_of": "از",
+  "crm.pg_records": "رکورد",
+  "crm.previous": "قبلی",
+  "crm.next": "بعدی",
+  "crm.financial_summary_today": "خلاصه مالی",
+  "crm.add_customer_receivable": "افزودن دریافتنی مشتری",
+  "crm.add_supplier_payable": "افزودن پرداختنی تامین‌کننده",
+  "crm.add_cheque": "افزودن چک",
+  "crm.add_shipping_due": "افزودن مانده حمل و نقل",
+  "crm.generate_due_report": "تولید گزارش مانده‌ها",
+  "crm.confirm_mark_complete": "آیا این مورد به عنوان تکمیل شده علامت‌گذاری شود؟",
+  "crm.add_new_due": "افزودن مانده جدید",
+  "crm.priority_high": "بالا",
+  "crm.priority_medium": "متوسط",
+  "crm.priority_low": "پایین",
+  "crm.no_overdue_followups": "هیچ پیگیری معوقی وجود ندارد.",
+  "crm.follow_up_action_type": "نوع اقدام پیگیری",
+  "crm.follow_up_notes_outcome": "یادداشت‌های پیگیری / نتیجه",
+  "crm.promise_date": "تاریخ وعده",
+  "crm.promise_amount": "مبلغ وعده",
+  "crm.add_followup_note_title": "افزودن یادداشت پیگیری CRM",
+  "crm.followup_for_prefix": "پیگیری:",
+  "crm.no_receivable_any_country": "هیچ مانده دریافتنی باز در هیچ کشوری در محدوده فعلی یافت نشد.",
+  "crm.open_receivable_balance": "مانده دریافتنی باز",
+  "crm.th_reference": "شماره مرجع",
+  "crm.th_currency": "ارز",
+  "crm.th_priority": "اولویت",
+  "crm.not_available_yet": "هنوز در دسترس نیست",
   "kyc.kycManagement": "مدیریت احراز هویت مشتری",
 
 
@@ -112890,6 +113205,69 @@ const ps: Dict = {
 
 
   "crm.no_active_items_tab": "د دې ټب لپاره هیڅ فعال توکي ونه موندل شول.",
+  "crm.branch_user_details": "د څانګې او کاروونکي جزئیات",
+  "crm.lbl_branch": "څانګه:",
+  "crm.lbl_user": "کارونکی:",
+  "crm.lbl_role": "رول:",
+  "crm.lbl_scope": "ساحه:",
+  "crm.due_summary": "د پاتې شونو لنډیز",
+  "crm.receivable_due": "د ترلاسه کولو وړ مقدار:",
+  "crm.payable_due": "د ورکړې وړ مقدار:",
+  "crm.cheques_due": "پاتې چکونه:",
+  "crm.shipment_due": "لېږد پاتې:",
+  "crm.followup_status_summary": "د تعقیب حالت لنډیز",
+  "crm.due_today": "پاتې نن",
+  "crm.country_branch_due_report": "د هیواد / څانګې د پاتې شونو راپور",
+  "crm.super_admin_only": "یوازې سوپر اډمین",
+  "crm.total_countries": "ټول هیوادونه:",
+  "crm.total_branches": "ټولې څانګې:",
+  "crm.all_countries": "ټول هیوادونه",
+  "crm.all_main_branches": "ټولې اصلي څانګې",
+  "crm.all_city_branches": "ټولې ښاري څانګې",
+  "crm.all_due_types": "د پاتې شونو ټول ډولونه",
+  "crm.all_users": "ټول کاروونکي",
+  "crm.all_statuses": "ټول حالتونه",
+  "crm.due_type_receivable": "د پیرودونکي د ترلاسه کولو وړ",
+  "crm.due_type_payable": "د عرضه کوونکي ورکړه",
+  "crm.due_type_cheque": "چکونه",
+  "crm.due_type_sales_recovery": "د پلور بیرته اخیستل",
+  "crm.due_type_purchase": "پیرودنه پاتې",
+  "crm.due_type_shipping": "لېږد / ترخیص",
+  "crm.from_label": "له:",
+  "crm.to_label": "ته:",
+  "crm.due_register": "د پاتې شونو او تعقیب راجستر",
+  "crm.search_register_ph": "د حواله، اړخ یا انوائس له مخې لټون...",
+  "crm.columns": "کالمونه",
+  "crm.pg_showing": "ښودل کیږي",
+  "crm.pg_to": "ته",
+  "crm.pg_of": "د",
+  "crm.pg_records": "ریکارډونه",
+  "crm.previous": "پخوانی",
+  "crm.next": "راتلونکی",
+  "crm.financial_summary_today": "مالي لنډیز",
+  "crm.add_customer_receivable": "د پیرودونکي ترلاسه کول اضافه کړئ",
+  "crm.add_supplier_payable": "د عرضه کوونکي ورکړه اضافه کړئ",
+  "crm.add_cheque": "چک اضافه کړئ",
+  "crm.add_shipping_due": "د لېږد پاتې اضافه کړئ",
+  "crm.generate_due_report": "د پاتې شونو راپور جوړ کړئ",
+  "crm.confirm_mark_complete": "ایا دا توکی د بشپړ شوي په توګه نښه شي؟",
+  "crm.add_new_due": "نوی پاتې اضافه کړئ",
+  "crm.priority_high": "لوړ",
+  "crm.priority_medium": "منځنی",
+  "crm.priority_low": "ټیټ",
+  "crm.no_overdue_followups": "هیڅ ناوخته تعقیب نشته.",
+  "crm.follow_up_action_type": "د تعقیب د کړنې ډول",
+  "crm.follow_up_notes_outcome": "د تعقیب یادښتونه / پایله",
+  "crm.promise_date": "د ژمنې نیټه",
+  "crm.promise_amount": "د ژمنې مقدار",
+  "crm.add_followup_note_title": "د CRM تعقیب یادښت اضافه کړئ",
+  "crm.followup_for_prefix": "تعقیب:",
+  "crm.no_receivable_any_country": "په اوسني ساحه کې په هیڅ هیواد کې هیڅ پرانیستی د ترلاسه کولو وړ بیلانس ونه موندل شو.",
+  "crm.open_receivable_balance": "پرانیستی د ترلاسه کولو وړ بیلانس",
+  "crm.th_reference": "د حوالې شمېره",
+  "crm.th_currency": "پیسه",
+  "crm.th_priority": "لومړیتوب",
+  "crm.not_available_yet": "تر اوسه شتون نلري",
   "kyc.kycManagement": "د KYC مدیریت",
 
 
