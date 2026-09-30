@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -123,6 +123,25 @@ export function CrmSpecializedReportView({ reportType }: SpecializedReportProps)
   const customers = data?.c360?.customers || [];
   const actionItems = data?.dashboard?.actionItems || [];
   const teamUsers = data?.c360?.filterOptions?.users || [];
+
+  // Real per-country receivable totals, computed client-side from the already-fetched
+  // actionItems (each row carries a real country_name/currency/remaining_amount) —
+  // no fabricated per-country figures, no new backend query needed.
+  const receivableByCountry = useMemo(() => {
+    const map = new Map<string, { country: string; currency: string; amount: number }>();
+    for (const item of actionItems as any[]) {
+      if (item.is_completed) continue;
+      const remaining = Number(item.remaining_amount || 0);
+      if (!remaining) continue;
+      const country = item.country_name || "Unspecified";
+      const currency = item.currency || "AED";
+      const key = `${country}__${currency}`;
+      const existing = map.get(key) || { country, currency, amount: 0 };
+      existing.amount += remaining;
+      map.set(key, existing);
+    }
+    return Array.from(map.values()).sort((a, b) => b.amount - a.amount);
+  }, [actionItems]);
 
   return (
     <div className={`w-full min-h-screen space-y-6 font-sans pb-12 ${isRtl ? "rtl" : "ltr"}`}>
@@ -368,34 +387,23 @@ export function CrmSpecializedReportView({ reportType }: SpecializedReportProps)
             <h3 className="text-sm font-black text-slate-900 dark:text-slate-100">
               Regional Commercial Performance by Territory &amp; City Branch
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-2">
-                <div className="flex items-center gap-2 font-bold text-slate-800">
-                  <span className="text-lg">🇦🇪</span>
-                  <span>United Arab Emirates</span>
-                </div>
-                <div className="text-xl font-black text-slate-900">AED {Number(kpis.receivableDue || 0).toLocaleString()}</div>
-                <p className="text-xs text-slate-500">Commercial operations</p>
+            {receivableByCountry.length === 0 ? (
+              <div className="p-6 rounded-2xl border border-slate-200 bg-slate-50/50 text-center text-sm text-slate-500">
+                No open receivable balances found across any country for the current scope.
               </div>
-
-              <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-2">
-                <div className="flex items-center gap-2 font-bold text-slate-800">
-                  <span className="text-lg">🇸🇦</span>
-                  <span>Saudi Arabia</span>
-                </div>
-                <div className="text-xl font-black text-slate-900">SAR 0</div>
-                <p className="text-xs text-slate-500">Commercial operations</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {receivableByCountry.map((row) => (
+                  <div key={`${row.country}__${row.currency}`} className="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-2">
+                    <div className="flex items-center gap-2 font-bold text-slate-800">
+                      <span>{row.country}</span>
+                    </div>
+                    <div className="text-xl font-black text-slate-900">{row.currency} {row.amount.toLocaleString()}</div>
+                    <p className="text-xs text-slate-500">Open receivable balance</p>
+                  </div>
+                ))}
               </div>
-
-              <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-2">
-                <div className="flex items-center gap-2 font-bold text-slate-800">
-                  <span className="text-lg">🇵🇰</span>
-                  <span>Pakistan</span>
-                </div>
-                <div className="text-xl font-black text-slate-900">PKR 0</div>
-                <p className="text-xs text-slate-500">Commercial operations</p>
-              </div>
-            </div>
+            )}
           </div>
         )}
 
