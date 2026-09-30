@@ -52,7 +52,10 @@ import {
   Clock,
   RotateCcw,
   Activity,
-  AlertTriangle
+  AlertTriangle,
+  Copy,
+  Check,
+  ShieldCheck
 } from "lucide-react";
 
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
@@ -114,6 +117,39 @@ type LoadingAllocation = {
 
 function emptyLoadingAllocation(rowSerial: number): LoadingAllocation {
   return { rowSerial, warehouseId: "", warehouseName: "", sourceLocationText: "", quantity: "", unit: "", remarks: "" };
+}
+
+function getCanonicalOrderSerials(order: any, countryName?: string, branchName?: string) {
+  const rawNo = order?.order_no || `CL-ORD-202609-${order?.id?.slice(0, 4) || "0001"}`;
+  const match = rawNo.match(/(?:ORD-)?(\d{6})-(\d+)/);
+  const period = match ? match[1] : (order?.created_at ? new Date(order.created_at).toISOString().slice(0, 7).replace("-", "") : "202609");
+  const seq = match ? match[2] : (order?.id ? order.id.slice(0, 4).toUpperCase() : "0001");
+
+  const cName = order?.country_name || countryName || order?.loading_country_name || "UAE";
+  let countryCode = "AE";
+  const cLower = String(cName).toLowerCase();
+  if (cLower.includes("pak")) countryCode = "PK";
+  else if (cLower.includes("afg")) countryCode = "AF";
+  else if (cLower.includes("iran")) countryCode = "IR";
+  else if (cLower.includes("uzb")) countryCode = "UZ";
+  else if (cLower.includes("ind")) countryCode = "IN";
+  else if (cLower.includes("uae") || cLower.includes("emirates")) countryCode = "AE";
+
+  const bName = order?.branch_name || branchName || "Main";
+  let branchCode = "BR";
+  const bLower = String(bName).toLowerCase();
+  if (bLower.includes("karachi") || bLower.includes("khi")) branchCode = "KHI";
+  else if (bLower.includes("lahore") || bLower.includes("lhe")) branchCode = "LHE";
+  else if (bLower.includes("dubai") || bLower.includes("dxb")) branchCode = "DXB";
+  else if (bLower.includes("kabul") || bLower.includes("kbl")) branchCode = "KBL";
+  else branchCode = (String(bName).replace(/[^A-Za-z]/g, "").slice(0, 3).toUpperCase()) || "HQ";
+
+  return {
+    superAdminSerial: `SA-ORD-${period}-${seq}`,
+    countrySerial: `${countryCode}-ORD-${period}-${seq}`,
+    branchSerial: `${branchCode}-ORD-${period}-${seq}`,
+    entrySerial: rawNo
+  };
 }
 
 type RouteLeg = {
@@ -901,6 +937,15 @@ export function CustomerOrderManagementView() {
     cityBranchId: ""
   });
 
+  // Scope Tabs: Super Admin (Global), Country Admin, Branch Admin
+  const [scopeMode, setScopeMode] = useState<"super_admin" | "country" | "branch">("super_admin");
+  const [selectedCountryScopeId, setSelectedCountryScopeId] = useState<string>("");
+  const [selectedBranchScopeId, setSelectedBranchScopeId] = useState<string>("");
+
+  // 4 Canonical Serials Modal State
+  const [selectedOrderForSerials, setSelectedOrderForSerials] = useState<any | null>(null);
+  const [copiedSerialKey, setCopiedSerialKey] = useState<string | null>(null);
+
   // User Queues
   const [queueTab, setQueueTab] = useState<
     "all" | "assigned_to_me" | "pending_with_me" | "completed_by_me" | "sent_to_another" | "returned"
@@ -1311,13 +1356,32 @@ export function CustomerOrderManagementView() {
   const visibleOrders = useMemo(() => {
     let list = orders;
 
-    // 1. Branch Scope hierarchy
-    if (branchScope.cityBranchId) {
-      list = list.filter((o: any) => o.city_branch_id === branchScope.cityBranchId || o.cityBranchId === branchScope.cityBranchId);
-    } else if (branchScope.countryBranchId) {
-      list = list.filter((o: any) => o.country_branch_id === branchScope.countryBranchId || o.countryBranchId === branchScope.countryBranchId);
-    } else if (branchScope.countryId) {
-      list = list.filter((o: any) => o.country_id === branchScope.countryId || o.countryId === branchScope.countryId || o.loading_country_id === branchScope.countryId);
+    // 1. Enterprise Multi-Tier Scope Filtering (Super Admin / Country Admin / Branch Admin)
+    if (scopeMode === "country" && selectedCountryScopeId) {
+      list = list.filter((o: any) =>
+        o.country_id === selectedCountryScopeId ||
+        o.countryId === selectedCountryScopeId ||
+        o.loading_country_id === selectedCountryScopeId ||
+        o.country_branch_id === selectedCountryScopeId
+      );
+    } else if (scopeMode === "branch" && selectedBranchScopeId) {
+      list = list.filter((o: any) =>
+        o.city_branch_id === selectedBranchScopeId ||
+        o.cityBranchId === selectedBranchScopeId ||
+        o.branch_id === selectedBranchScopeId ||
+        o.country_branch_id === selectedBranchScopeId
+      );
+    } else if (scopeMode === "super_admin") {
+      // Super Admin sees all orders across all branches
+    } else {
+      // Fallback to branchScope hierarchy if set
+      if (branchScope.cityBranchId) {
+        list = list.filter((o: any) => o.city_branch_id === branchScope.cityBranchId || o.cityBranchId === branchScope.cityBranchId);
+      } else if (branchScope.countryBranchId) {
+        list = list.filter((o: any) => o.country_branch_id === branchScope.countryBranchId || o.countryBranchId === branchScope.countryBranchId);
+      } else if (branchScope.countryId) {
+        list = list.filter((o: any) => o.country_id === branchScope.countryId || o.countryId === branchScope.countryId || o.loading_country_id === branchScope.countryId);
+      }
     }
 
     // 2. Queue filter
@@ -1405,7 +1469,7 @@ export function CustomerOrderManagementView() {
     }
 
     return list;
-  }, [orders, branchScope, queueTab, userContext.context?.userId, statusFilter, modeFilter, movementFilter, searchQuery, filterState]);
+  }, [orders, scopeMode, selectedCountryScopeId, selectedBranchScopeId, branchScope, queueTab, userContext.context?.userId, statusFilter, modeFilter, movementFilter, searchQuery, filterState]);
 
   const queueCounts = useMemo(() => {
     const currentUserId = userContext.context?.userId;
@@ -2642,6 +2706,100 @@ export function CustomerOrderManagementView() {
               </div>
 
               <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+                {/* 3 Scope Mode Tabs: Super Admin / Country Admin / Branch Admin */}
+                <div className="flex flex-wrap items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 text-xs font-bold">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setScopeMode("super_admin");
+                      setSelectedCountryScopeId("");
+                      setSelectedBranchScopeId("");
+                    }}
+                    className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 ${
+                      scopeMode === "super_admin"
+                        ? "bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 shadow-xs border border-slate-200/80 dark:border-slate-700"
+                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                    }`}
+                  >
+                    <ShieldCheck className="h-3.5 w-3.5 text-blue-600" />
+                    <span>{tt("scope_super_admin", "Super Admin")}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setScopeMode("country");
+                      if (!selectedCountryScopeId && countries.length > 0) {
+                        setSelectedCountryScopeId(countries[0].id);
+                      }
+                    }}
+                    className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 ${
+                      scopeMode === "country"
+                        ? "bg-white dark:bg-slate-900 text-indigo-700 dark:text-indigo-300 shadow-xs border border-slate-200/80 dark:border-slate-700"
+                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                    }`}
+                  >
+                    <Globe2 className="h-3.5 w-3.5 text-indigo-600" />
+                    <span>{tt("scope_country_admin", "Country Admin")}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setScopeMode("branch");
+                      if (!selectedBranchScopeId && (cityBranches.length > 0 || countryBranches.length > 0)) {
+                        setSelectedBranchScopeId(cityBranches[0]?.id || countryBranches[0]?.id || "");
+                      }
+                    }}
+                    className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 ${
+                      scopeMode === "branch"
+                        ? "bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-300 shadow-xs border border-slate-200/80 dark:border-slate-700"
+                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                    }`}
+                  >
+                    <Building2 className="h-3.5 w-3.5 text-emerald-600" />
+                    <span>{tt("scope_branch_admin", "Branch Admin")}</span>
+                  </button>
+
+                  {/* Contextual Selector for Country */}
+                  {scopeMode === "country" ? (
+                    <select
+                      value={selectedCountryScopeId}
+                      onChange={(e) => setSelectedCountryScopeId(e.target.value)}
+                      className="ml-1 rounded-lg border border-indigo-200 bg-white px-2 py-1 text-xs font-bold text-indigo-900 dark:border-indigo-800 dark:bg-slate-900 dark:text-indigo-200"
+                    >
+                      <option value="">{tt("all_countries", "— All Countries —")}</option>
+                      {countries.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  ) : null}
+
+                  {/* Contextual Selector for Branch */}
+                  {scopeMode === "branch" ? (
+                    <select
+                      value={selectedBranchScopeId}
+                      onChange={(e) => setSelectedBranchScopeId(e.target.value)}
+                      className="ml-1 rounded-lg border border-emerald-200 bg-white px-2 py-1 text-xs font-bold text-emerald-900 dark:border-emerald-800 dark:bg-slate-900 dark:text-emerald-200"
+                    >
+                      <option value="">{tt("all_branches", "— All Branches —")}</option>
+                      {cityBranches.map((b) => (
+                        <option key={b.id} value={b.id}>
+                          {b.name}
+                        </option>
+                      ))}
+                      {cityBranches.length === 0 &&
+                        countryBranches.map((b) => (
+                          <option key={b.id} value={b.id}>
+                            {b.name}
+                          </option>
+                        ))}
+                    </select>
+                  ) : null}
+                </div>
+
                 {/* Branch Scope Dropdown for Multi-Branch Scope */}
                 <BranchScopeDropdown
                   lang={lang}
@@ -3162,20 +3320,67 @@ export function CustomerOrderManagementView() {
                         >
                           <td className="px-3.5 py-3 font-bold text-slate-400">{index + 1}</td>
                           <td className="px-3.5 py-3">
-                            <a
-                              href={`/dashboard/clearing-agent/customer-order/${order.id}/workflow`}
-                              className="font-mono font-bold text-blue-600 hover:underline dark:text-blue-400"
-                              title={tt("shipping_clearing_pipeline", "Shipping / Clearing pipeline — truck, goods verification, customs, handover")}
+                            <button
+                              type="button"
+                              onClick={() => setSelectedOrderForSerials(order)}
+                              className="group flex flex-col items-start text-left focus:outline-hidden"
+                              title={tt("view_4_canonical_serials", "Click to view 4 canonical serial numbers & details")}
                             >
-                              {order.order_no || `CL-${order.id.slice(0, 6)}`}
-                            </a>
+                              <div className="flex items-center gap-1.5 font-mono font-bold text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                                <span className="underline decoration-dotted">{order.order_no || `CL-${order.id.slice(0, 6)}`}</span>
+                                <span className="opacity-80 group-hover:opacity-100 rounded bg-blue-100 dark:bg-blue-900/60 px-1 py-0.2 text-[9px] font-mono text-blue-700 dark:text-blue-200">
+                                  4 Serials
+                                </span>
+                              </div>
+                              <span className="text-[9.5px] text-slate-400 group-hover:text-blue-500 transition-colors">
+                                {tt("click_to_inspect_serials", "Click for SA / Country / Branch")}
+                              </span>
+                            </button>
+                            <div className="text-[10px] text-slate-400 mt-1">
+                              <a
+                                href={`/dashboard/clearing-agent/customer-order/${order.id}/workflow`}
+                                className="text-slate-500 hover:text-blue-600 hover:underline inline-flex items-center gap-0.5"
+                                title={tt("shipping_clearing_pipeline", "Shipping / Clearing pipeline — truck, goods verification, customs, handover")}
+                              >
+                                <span>{tt("workflow_link", "Workflow")}</span>
+                                <span>&rarr;</span>
+                              </a>
+                            </div>
                           </td>
                           <td className="px-3.5 py-3 whitespace-nowrap text-slate-500 font-medium">{dateText}</td>
                           <td className="px-3.5 py-3">
-                            <div className="font-bold text-slate-900 dark:text-slate-100">{order.customer_name || "-"}</div>
-                            {order.customer_id ? (
-                              <div className="text-[10px] text-slate-400 font-mono">ID: {order.customer_id.slice(0, 8)}</div>
-                            ) : null}
+                            {(() => {
+                              const linkedCust = customers.find((c) => c.id === order.customer_id || c.name === order.customer_name);
+                              const linkedAcc = accounts.find((a) =>
+                                a.id === order.account_id ||
+                                (linkedCust && (a.id === (linkedCust as any).account_id || a.id === (linkedCust as any).accountId))
+                              );
+                              const phone = (order as any).customer_phone || (order as any).phone || (linkedCust as any)?.phone;
+
+                              return (
+                                <div className="space-y-1 min-w-[150px]">
+                                  <div className="font-bold text-slate-900 dark:text-slate-100 leading-tight">
+                                    {order.customer_name || linkedCust?.name || "-"}
+                                  </div>
+                                  {linkedAcc ? (
+                                    <div className="inline-flex items-center gap-1 text-[10px] text-emerald-700 dark:text-emerald-300 font-mono font-bold bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.5 rounded border border-emerald-200/60 dark:border-emerald-800/60 max-w-full truncate" title={linkedAcc.name || (linkedAcc as any).account_name}>
+                                      <span>Acc: #{linkedAcc.account_number || (linkedAcc as any).code || linkedAcc.id.slice(0, 6)}</span>
+                                      <span className="font-sans font-medium text-slate-500 dark:text-slate-400 truncate max-w-[90px]">
+                                        - {linkedAcc.name || (linkedAcc as any).account_name}
+                                      </span>
+                                    </div>
+                                  ) : order.customer_id ? (
+                                    <div className="text-[10px] text-slate-400 font-mono">ID: {order.customer_id.slice(0, 8)}</div>
+                                  ) : null}
+                                  {phone ? (
+                                    <div className="text-[9.5px] text-slate-500 dark:text-slate-400 font-mono flex items-center gap-1">
+                                      <span className="text-slate-400">📞</span>
+                                      <span>{phone}</span>
+                                    </div>
+                                  ) : null}
+                                </div>
+                              );
+                            })()}
                           </td>
 
                           {/* Stage Lifecycle (1A / 1B / 1C) */}
@@ -3555,6 +3760,204 @@ export function CustomerOrderManagementView() {
               </div>
             );
           })()}
+
+          {/* 4 Canonical Order Serials Modal requested by User */}
+          {selectedOrderForSerials ? (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs animate-in fade-in duration-150">
+              <div className="relative w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl dark:border-slate-800 dark:bg-slate-900">
+                {/* Header */}
+                <div className="flex items-start justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-100 dark:bg-blue-950/60 dark:border-blue-900 dark:text-blue-400">
+                      <ShieldCheck className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
+                        {tt("canonical_serials_modal_title", "4 Canonical Order Reference Numbers")}
+                      </h3>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        {tt("canonical_serials_modal_desc", "Multi-tier organizational identifiers & ledger links for this order")}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedOrderForSerials(null)}
+                    className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+
+                {(() => {
+                  const order = selectedOrderForSerials;
+                  const serials = getCanonicalOrderSerials(
+                    order,
+                    order.country_name || countries.find((c) => c.id === order.country_id)?.name,
+                    order.branch_name || cityBranches.find((b) => b.id === order.city_branch_id)?.name
+                  );
+                  const linkedCust = customers.find((c) => c.id === order.customer_id || c.name === order.customer_name);
+                  const linkedAcc = accounts.find((a) =>
+                    a.id === order.account_id ||
+                    (linkedCust && (a.id === (linkedCust as any).account_id || a.id === (linkedCust as any).accountId))
+                  );
+
+                  const handleCopy = (text: string, key: string) => {
+                    if (typeof navigator !== "undefined" && navigator.clipboard) {
+                      navigator.clipboard.writeText(text);
+                      setCopiedSerialKey(key);
+                      setTimeout(() => setCopiedSerialKey(null), 2000);
+                    }
+                  };
+
+                  const serialCards = [
+                    {
+                      key: "super_admin",
+                      title: tt("serial_super_admin_title", "1. Super Admin Order Serial"),
+                      subtitle: tt("serial_super_admin_sub", "Global Multi-Branch Unique Identifier"),
+                      val: serials.superAdminSerial,
+                      badge: "Global Enterprise",
+                      badgeClass: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300",
+                      icon: ShieldCheck
+                    },
+                    {
+                      key: "country_admin",
+                      title: tt("serial_country_admin_title", "2. Country Admin Order Serial"),
+                      subtitle: tt("serial_country_admin_sub", "Country Operations Ref (AE / PK / AF / etc.)"),
+                      val: serials.countrySerial,
+                      badge: "Country HQ",
+                      badgeClass: "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300",
+                      icon: Globe2
+                    },
+                    {
+                      key: "branch_admin",
+                      title: tt("serial_branch_admin_title", "3. Branch Admin Order Serial"),
+                      subtitle: tt("serial_branch_admin_sub", "City Branch Operational Serial (DXB / KHI / etc.)"),
+                      val: serials.branchSerial,
+                      badge: "City Branch",
+                      badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300",
+                      icon: Building2
+                    },
+                    {
+                      key: "entry_serial",
+                      title: tt("serial_entry_title", "4. System Entry / Voucher Number"),
+                      subtitle: tt("serial_entry_sub", "Primary Registry Key & Workflow Ref"),
+                      val: serials.entrySerial,
+                      badge: "System Entry",
+                      badgeClass: "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300",
+                      icon: Hash
+                    }
+                  ];
+
+                  return (
+                    <div className="space-y-4 pt-3.5">
+                      {/* The 4 Serials List */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        {serialCards.map((sc) => {
+                          const Icon = sc.icon;
+                          const isCopied = copiedSerialKey === sc.key;
+                          return (
+                            <div
+                              key={sc.key}
+                              className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-850/50 flex flex-col justify-between space-y-2 hover:border-blue-300 dark:hover:border-blue-700 transition"
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                                  <Icon className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                                  <span>{sc.title}</span>
+                                </div>
+                                <span className={`text-[9.5px] font-bold px-1.5 py-0.5 rounded border ${sc.badgeClass}`}>
+                                  {sc.badge}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center justify-between gap-2 bg-white dark:bg-slate-900 px-2.5 py-1.5 rounded-lg border border-slate-200/80 dark:border-slate-800 font-mono text-xs font-black text-slate-900 dark:text-slate-100">
+                                <span className="truncate">{sc.val}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleCopy(sc.val, sc.key)}
+                                  className="shrink-0 p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-blue-600 transition"
+                                  title={tt("copy_to_clipboard", "Copy to clipboard")}
+                                >
+                                  {isCopied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+                                </button>
+                              </div>
+
+                              <p className="text-[10px] text-slate-400 truncate">{sc.subtitle}</p>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Quick Order & Customer Summary Box */}
+                      <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 p-3 space-y-2">
+                        <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
+                          {tt("order_quick_details", "Customer & Order Summary")}
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+                          <div>
+                            <span className="text-[10px] text-slate-400 block">{tt("label_customer", "Customer")}</span>
+                            <span className="font-bold text-slate-900 dark:text-white truncate block">
+                              {order.customer_name || linkedCust?.name || "-"}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-slate-400 block">{tt("label_account", "Linked Account")}</span>
+                            <span className="font-bold text-emerald-600 dark:text-emerald-400 truncate block">
+                              {linkedAcc ? `#${linkedAcc.account_number || (linkedAcc as any).code} - ${linkedAcc.name}` : "—"}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-slate-400 block">{tt("label_stage", "Current Stage")}</span>
+                            <span className="font-semibold text-slate-800 dark:text-slate-200 truncate block">
+                              {order.current_stage || order.status || "Pending"}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-slate-400 block">{tt("label_weight", "Cargo & Weight")}</span>
+                            <span className="font-semibold text-slate-800 dark:text-slate-200 truncate block">
+                              {order.goods_name || "Goods"} • {order.goods_gross_weight ? `${order.goods_gross_weight} kg` : "—"}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-slate-400 block">{tt("label_corridor", "Route / Corridor")}</span>
+                            <span className="font-semibold text-slate-800 dark:text-slate-200 truncate block">
+                              {order.loading_country_name || "Origin"} &rarr; {order.receiving_country_name || "Destination"}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-slate-400 block">{tt("label_created_at", "Booking Date")}</span>
+                            <span className="font-semibold text-slate-800 dark:text-slate-200 truncate block">
+                              {order.created_at ? new Date(order.created_at).toLocaleDateString() : "—"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Modal Actions */}
+                      <div className="flex items-center justify-between pt-2">
+                        <a
+                          href={`/dashboard/clearing-agent/customer-order/${order.id}/workflow`}
+                          className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-700 transition shadow-xs"
+                        >
+                          <span>{tt("open_order_workflow", "Open Order Workflow & Pipeline")}</span>
+                          <ArrowRight className="h-3.5 w-3.5" />
+                        </a>
+
+                        <button
+                          type="button"
+                          onClick={() => setSelectedOrderForSerials(null)}
+                          className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                        >
+                          {tt("close", "Close")}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          ) : null}
         </div>
       ) : (
         /* ========================================================================= */
