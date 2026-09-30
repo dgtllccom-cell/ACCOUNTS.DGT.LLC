@@ -246,8 +246,10 @@ const LEG_TRUCK_REG_TYPES = new Set(["registered", "temporary"]);
 const LEG_CLEARANCE_TYPES = new Set(["import", "export", "transit"]);
 const LEG_DUTY_TREATMENTS = new Set(["duty_payable", "no_duty_exempt", "transit_bonded", "pending"]);
 const LEG_CUSTOMS_STATUSES = new Set(["not_applicable", "pending", "submitted", "cleared", "held", "rejected"]);
+const LEG_HANDLER_TYPES = new Set(["our_branch", "external_partner"]);
+const LEG_PARTNER_TYPES = new Set(["customs_agent", "transporter", "shipping_provider", "airline", "railway", "other_partner"]);
 
-function normalizeLegs(legs: OrderLegInput[] | undefined | null): OrderLegInput[] {
+export function normalizeLegs(legs: OrderLegInput[] | undefined | null): OrderLegInput[] {
   return (legs ?? [])
     .map((leg, index) => ({
       id: trimOrNull(leg.id),
@@ -311,9 +313,64 @@ function normalizeLegs(legs: OrderLegInput[] | undefined | null): OrderLegInput[
       airwayBillNo: trimOrNull(leg.airwayBillNo),
       railwayOperator: trimOrNull(leg.railwayOperator),
       wagonNumber: trimOrNull(leg.wagonNumber),
-      railContainerNumber: trimOrNull(leg.railContainerNumber)
+      railContainerNumber: trimOrNull(leg.railContainerNumber),
+      handlerType: (() => {
+        const raw = String(leg.handlerType ?? leg.handler_type ?? "our_branch");
+        return LEG_HANDLER_TYPES.has(raw) ? raw : "our_branch";
+      })(),
+      partnerType: (() => {
+        const raw = trimOrNull(leg.partnerType ?? leg.partner_type);
+        return raw && LEG_PARTNER_TYPES.has(raw) ? raw : null;
+      })(),
+      partnerName: trimOrNull(leg.partnerName ?? leg.partner_name),
+      partnerAccountId: trimOrNull(leg.partnerAccountId ?? leg.partner_account_id),
+      partnerAccountNumber: trimOrNull(leg.partnerAccountNumber ?? leg.partner_account_number),
+      partnerCountryName: trimOrNull(leg.partnerCountryName ?? leg.partner_country_name)
     }))
     .filter((leg) => leg.fromCountryId || leg.toCountryId || leg.fromLocationText || leg.toLocationText || leg.transportMode);
+}
+
+export class RouteContinuityError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "RouteContinuityError";
+  }
+}
+
+/**
+ * Server-side route/corridor validation: rejects leg sets that don't form a
+ * single continuous corridor. The route builder UI always derives leg N's
+ * origin from leg N-1's destination, but nothing previously stopped the API
+ * from accepting a discontinuous, backtracking, or out-of-order leg set sent
+ * directly (bypassing the UI). This does not validate real-world border
+ * legality (no country-adjacency master exists yet) — only that the legs, as
+ * submitted, form one unbroken chain in leg_no order.
+ */
+export function assertRouteContinuity(legs: OrderLegInput[]): void {
+  if (legs.length < 2) return;
+  const ordered = [...legs].sort((a, b) => (a.legNo ?? 0) - (b.legNo ?? 0));
+
+  const seenLegNos = new Set<number>();
+  for (const leg of ordered) {
+    if (leg.legNo == null || seenLegNos.has(leg.legNo)) {
+      throw new RouteContinuityError(`Duplicate or missing leg number (leg_no=${leg.legNo}). Each leg must have a unique, sequential leg number.`);
+    }
+    seenLegNos.add(leg.legNo);
+  }
+
+  for (let i = 1; i < ordered.length; i++) {
+    const prev = ordered[i - 1];
+    const curr = ordered[i];
+    const prevDestination = prev.toCountryId;
+    const currOrigin = curr.fromCountryId;
+    if (!prevDestination || !currOrigin) continue; // legacy/partial legs without country ids can't be checked
+    if (prevDestination !== currOrigin) {
+      throw new RouteContinuityError(
+        `Route is not continuous: leg ${prev.legNo} ends in a different country than leg ${curr.legNo} starts in. ` +
+          `Each leg's destination country must match the next leg's origin country.`
+      );
+    }
+  }
 }
 
 function normalizeLoadingAllocations(rows: LoadingAllocationInput[] | undefined | null): LoadingAllocationInput[] {
@@ -865,6 +922,7 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
       let legRows: ClearingCustomerOrderLegRow[] = [];
       if (hasLegsPayload) {
         const normalizedLegs = normalizeLegs(input.legs);
+        assertRouteContinuity(normalizedLegs);
 
         // Upsert BY ID rather than delete-all-then-reinsert: a leg's id must stay
         // stable across saves, because DocumentAttachmentIcon (generic documents

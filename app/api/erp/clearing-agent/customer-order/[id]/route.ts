@@ -6,7 +6,8 @@ import { getRequestLanguage } from "@/lib/i18n/server";
 import {
   deleteCustomerOrder,
   getCustomerOrderById,
-  saveCustomerOrder
+  saveCustomerOrder,
+  RouteContinuityError
 } from "@/lib/services/clearing-customer-order-service";
 import { canAccessOrder } from "@/lib/services/clearing-customer-order-scope";
 
@@ -141,6 +142,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ success: true, data: result.order, party_links: result.partyLinks, legs: result.legs, loading_allocations: result.loadingAllocations });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
+    if (error instanceof RouteContinuityError) {
+      return NextResponse.json({ success: false, error: error.message, code: "ROUTE_NOT_CONTINUOUS" }, { status: 400 });
+    }
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

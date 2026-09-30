@@ -182,15 +182,15 @@ export function CustomerOrderRouteBuilder({
   const getModeLabel = (m: string) => {
     switch (m) {
       case "by_sea":
-        return "Sea";
+        return tt("mode_sea", "Sea");
       case "by_road":
-        return "Road";
+        return tt("mode_road", "Road");
       case "by_air":
-        return "Air";
+        return tt("mode_air", "Air");
       case "by_rail":
-        return "Rail";
+        return tt("mode_rail", "Rail");
       default:
-        return "Road";
+        return tt("mode_road", "Road");
     }
   };
 
@@ -607,10 +607,10 @@ export function CustomerOrderRouteBuilder({
                     onChange={(e) => handleUpdateStop(idx, { mode: e.target.value as any })}
                     className="w-full h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs font-bold text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                   >
-                    <option value="by_road">Road (Truck)</option>
-                    <option value="by_sea">Sea (Vessel)</option>
-                    <option value="by_air">Air (Flight)</option>
-                    <option value="by_rail">Rail (Train)</option>
+                    <option value="by_road">{tt("opt_road_truck", "Road (Truck)")}</option>
+                    <option value="by_sea">{tt("opt_sea_vessel", "Sea (Vessel)")}</option>
+                    <option value="by_air">{tt("opt_air_flight", "Air (Flight)")}</option>
+                    <option value="by_rail">{tt("opt_rail_train", "Rail (Train)")}</option>
                   </select>
                 </div>
 
@@ -625,7 +625,7 @@ export function CustomerOrderRouteBuilder({
                   }`}
                 >
                   <Building2 className="h-3 w-3" />
-                  <span>{st.handlerType === "external_partner" ? "External Partner" : "Our Branch"}</span>
+                  <span>{st.handlerType === "external_partner" ? tt("handler_external_partner", "External Partner") : tt("handler_our_branch", "Our Branch")}</span>
                   {expandedStopIdx === idx ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
                 </button>
 

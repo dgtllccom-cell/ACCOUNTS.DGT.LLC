@@ -8,6 +8,7 @@ import {
   getCustomerOrderById,
   listCustomerOrders,
   saveCustomerOrder,
+  RouteContinuityError,
   type CustomerOrderScopeFilter
 } from "@/lib/services/clearing-customer-order-service";
 
@@ -176,6 +177,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, data: result.order, party_links: result.partyLinks, legs: result.legs, loading_allocations: result.loadingAllocations });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
+    if (error instanceof RouteContinuityError) {
+      return NextResponse.json({ success: false, error: error.message, code: "ROUTE_NOT_CONTINUOUS" }, { status: 400 });
+    }
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
