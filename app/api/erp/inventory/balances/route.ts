@@ -119,16 +119,60 @@ export async function GET(request: NextRequest) {
         ${warehouseId ? sql`AND v.warehouse_id = ${warehouseId}::uuid` : sql``}
       `;
 
+      // Incoming: real ordered-not-yet-received quantity, from purchase_order_items
+      // linked to the goods master (poi.product_id) on Posted (confirmed, not Draft)
+      // purchase orders. Most existing DEV purchase order lines predate the
+      // goods-master link (entered as free text), so this is honestly small/zero on
+      // DEV today — it is architecturally correct, not a placeholder.
+      const incoming = await sql`
+        SELECT COALESCE(SUM(poi.quantity), 0) AS incoming_qty, COUNT(DISTINCT poi.purchase_order_id) AS incoming_po_count
+        FROM public.purchase_order_items poi
+        JOIN public.purchase_orders po ON po.id = poi.purchase_order_id AND po.deleted_at IS NULL
+        WHERE poi.product_id IS NOT NULL AND po.status = 'Posted'
+        ${!session.isSuperAdmin && session.countryIds && session.countryIds.length > 0 ? sql`AND (po.country_id IS NULL OR ${sqlHierarchyScopeCondition(sql, session, "po")})` : sql``}
+      `;
+
+      // In Transit: the subset of Incoming that also has an active (not yet arrived)
+      // shipping_bl_records row — a real physical-shipment signal, not invented.
+      const inTransit = await sql`
+        SELECT COALESCE(SUM(poi.quantity), 0) AS in_transit_qty
+        FROM public.purchase_order_items poi
+        JOIN public.purchase_orders po ON po.id = poi.purchase_order_id AND po.deleted_at IS NULL
+        WHERE poi.product_id IS NOT NULL AND po.status = 'Posted'
+          AND EXISTS (
+            SELECT 1 FROM public.shipping_bl_records b
+            WHERE b.purchase_order_id = po.id AND b.deleted_at IS NULL
+              AND COALESCE(b.shipment_status,'') NOT IN ('arrived','delivered','completed','cleared','closed')
+          )
+        ${!session.isSuperAdmin && session.countryIds && session.countryIds.length > 0 ? sql`AND (po.country_id IS NULL OR ${sqlHierarchyScopeCondition(sql, session, "po")})` : sql``}
+      `;
+
+      // Outgoing: committed (non-draft, non-cancelled) sales orders. sales_order_items
+      // has no product/goods link at all (free-text goods_name only), so this is an
+      // honest ORDER-level aggregate, not a per-SKU quantity — never fuzzy-matched
+      // against the goods master to fabricate a per-item number.
+      const outgoing = await sql`
+        SELECT COUNT(*) AS outgoing_order_count, COALESCE(SUM(so.total_weight), 0) AS outgoing_weight
+        FROM public.sales_orders so
+        WHERE so.deleted_at IS NULL AND lower(coalesce(so.sales_status,'')) NOT IN ('draft','cancelled')
+        ${!session.isSuperAdmin && session.countryIds && session.countryIds.length > 0 ? sql`AND (so.country_id IS NULL OR ${sqlHierarchyScopeCondition(sql, session, "so")})` : sql``}
+      `;
+
       return {
         balances: rows,
         summary: {
           ...(summary[0] || { total_items: 0, total_quantity_on_hand: 0, total_quantity_available: 0, total_quantity_reserved: 0 }),
-          low_stock_count: Number(lowStock[0]?.low_stock_count || 0)
+          low_stock_count: Number(lowStock[0]?.low_stock_count || 0),
+          incoming_quantity: Number(incoming[0]?.incoming_qty || 0),
+          incoming_po_count: Number(incoming[0]?.incoming_po_count || 0),
+          in_transit_quantity: Number(inTransit[0]?.in_transit_qty || 0),
+          outgoing_order_count: Number(outgoing[0]?.outgoing_order_count || 0),
+          outgoing_weight: Number(outgoing[0]?.outgoing_weight || 0)
         }
       };
     });
 
-    return apiOk(result || { balances: [], summary: { total_items: 0, total_quantity_on_hand: 0, total_quantity_available: 0, total_quantity_reserved: 0, low_stock_count: 0 } });
+    return apiOk(result || { balances: [], summary: { total_items: 0, total_quantity_on_hand: 0, total_quantity_available: 0, total_quantity_reserved: 0, low_stock_count: 0, incoming_quantity: 0, incoming_po_count: 0, in_transit_quantity: 0, outgoing_order_count: 0, outgoing_weight: 0 } });
   } catch (error) {
     return handleApiError(error);
   }

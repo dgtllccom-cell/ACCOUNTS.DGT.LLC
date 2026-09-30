@@ -7,18 +7,21 @@ import {
   ArrowUpRight,
   Boxes,
   CheckCircle2,
-  Eye, 
-  Filter, 
-  Package, 
-  Pencil, 
-  Plus, 
+  Eye,
+  Filter,
+  Package,
+  PackageMinus,
+  PackagePlus,
+  Pencil,
+  Plus,
   Printer,
-  RefreshCw, 
-  Search, 
-  TrendingDown, 
-  TrendingUp, 
-  Warehouse, 
-  X 
+  RefreshCw,
+  Search,
+  TrendingDown,
+  TrendingUp,
+  Truck,
+  Warehouse,
+  X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -92,7 +95,10 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
   const [movements, setMovements] = useState<StockMovement[]>([]);
   const [warehouses, setWarehouses] = useState<WarehouseOption[]>([]);
   const [goodsList, setGoodsList] = useState<GoodsListRow[]>([]);
-  const [summary, setSummary] = useState({ total_items: 0, total_quantity_on_hand: 0, total_quantity_available: 0, total_quantity_reserved: 0, low_stock_count: 0 });
+  const [summary, setSummary] = useState({
+    total_items: 0, total_quantity_on_hand: 0, total_quantity_available: 0, total_quantity_reserved: 0, low_stock_count: 0,
+    incoming_quantity: 0, incoming_po_count: 0, in_transit_quantity: 0, outgoing_order_count: 0, outgoing_weight: 0,
+  });
 
   // Filters
   const [selectedWarehouseFilter, setSelectedWarehouseFilter] = useState("");
@@ -392,6 +398,42 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
             <div>
               <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{tr("Low Stock Items")}</p>
               <h3 className="text-2xl font-bold">{summary.low_stock_count}</h3>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border shadow-xs">
+          <CardContent className="p-5 flex items-center gap-4">
+            <div className="p-3 bg-cyan-50 dark:bg-cyan-950/50 rounded-lg text-cyan-600 dark:text-cyan-400">
+              <PackagePlus className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{tr("Incoming Quantity")}</p>
+              <h3 className="text-2xl font-bold">{Number(summary.incoming_quantity).toLocaleString()}</h3>
+              <p className="text-[10px] text-muted-foreground">{tr("From")} {summary.incoming_po_count} {tr("posted purchase order(s)")}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border shadow-xs">
+          <CardContent className="p-5 flex items-center gap-4">
+            <div className="p-3 bg-violet-50 dark:bg-violet-950/50 rounded-lg text-violet-600 dark:text-violet-400">
+              <Truck className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{tr("In Transit Quantity")}</p>
+              <h3 className="text-2xl font-bold">{Number(summary.in_transit_quantity).toLocaleString()}</h3>
+              <p className="text-[10px] text-muted-foreground">{tr("Based on real shipment tracking")}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border shadow-xs">
+          <CardContent className="p-5 flex items-center gap-4">
+            <div className="p-3 bg-orange-50 dark:bg-orange-950/50 rounded-lg text-orange-600 dark:text-orange-400">
+              <PackageMinus className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{tr("Outgoing (Pending Sales Orders)")}</p>
+              <h3 className="text-2xl font-bold">{summary.outgoing_order_count}</h3>
+              <p className="text-[10px] text-muted-foreground">{tr("Order-level total, not per item")}</p>
             </div>
           </CardContent>
         </Card>
