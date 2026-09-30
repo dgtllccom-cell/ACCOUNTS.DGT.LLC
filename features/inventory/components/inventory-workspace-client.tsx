@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { 
-  ArrowDownLeft, 
-  ArrowUpRight, 
-  Boxes, 
-  CheckCircle2, 
+import {
+  AlertTriangle,
+  ArrowDownLeft,
+  ArrowUpRight,
+  Boxes,
+  CheckCircle2,
   Eye, 
   Filter, 
   Package, 
@@ -91,7 +92,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
   const [movements, setMovements] = useState<StockMovement[]>([]);
   const [warehouses, setWarehouses] = useState<WarehouseOption[]>([]);
   const [goodsList, setGoodsList] = useState<GoodsListRow[]>([]);
-  const [summary, setSummary] = useState({ total_items: 0, total_quantity_on_hand: 0, total_quantity_available: 0 });
+  const [summary, setSummary] = useState({ total_items: 0, total_quantity_on_hand: 0, total_quantity_available: 0, total_quantity_reserved: 0, low_stock_count: 0 });
 
   // Filters
   const [selectedWarehouseFilter, setSelectedWarehouseFilter] = useState("");
@@ -338,7 +339,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
       )}
 
       {/* Summary KPI Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-5">
         <Card className="border shadow-xs">
           <CardContent className="p-5 flex items-center gap-4">
             <div className="p-3 bg-blue-50 dark:bg-blue-950/50 rounded-lg text-blue-600 dark:text-blue-400">
@@ -363,12 +364,34 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
         </Card>
         <Card className="border shadow-xs">
           <CardContent className="p-5 flex items-center gap-4">
+            <div className="p-3 bg-amber-50 dark:bg-amber-950/50 rounded-lg text-amber-600 dark:text-amber-400">
+              <TrendingDown className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{tr("Reserved Quantity")}</p>
+              <h3 className="text-2xl font-bold">{Number(summary.total_quantity_reserved).toLocaleString()}</h3>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border shadow-xs">
+          <CardContent className="p-5 flex items-center gap-4">
             <div className="p-3 bg-indigo-50 dark:bg-indigo-950/50 rounded-lg text-indigo-600 dark:text-indigo-400">
               <Package className="h-6 w-6" />
             </div>
             <div>
               <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{tr("Total Available Quantity")}</p>
               <h3 className="text-2xl font-bold">{Number(summary.total_quantity_available).toLocaleString()}</h3>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border shadow-xs">
+          <CardContent className="p-5 flex items-center gap-4">
+            <div className="p-3 bg-rose-50 dark:bg-rose-950/50 rounded-lg text-rose-600 dark:text-rose-400">
+              <AlertTriangle className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{tr("Low Stock Items")}</p>
+              <h3 className="text-2xl font-bold">{summary.low_stock_count}</h3>
             </div>
           </CardContent>
         </Card>

@@ -95,10 +95,11 @@ export async function GET(request: NextRequest) {
       }
 
       const summary = await sql`
-        SELECT 
+        SELECT
           COUNT(DISTINCT pib.product_id) as total_items,
           COALESCE(SUM(pib.quantity_on_hand), 0) as total_quantity_on_hand,
-          COALESCE(SUM(pib.quantity_available), 0) as total_quantity_available
+          COALESCE(SUM(pib.quantity_available), 0) as total_quantity_available,
+          COALESCE(SUM(pib.quantity_reserved), 0) as total_quantity_reserved
         FROM public.product_inventory_balances pib
         LEFT JOIN public.goods g ON g.id = pib.product_id
         LEFT JOIN public.warehouses w ON w.id = pib.warehouse_id
@@ -107,13 +108,27 @@ export async function GET(request: NextRequest) {
         ${warehouseId ? sql`AND pib.warehouse_id = ${warehouseId}::uuid` : sql``}
       `;
 
+      // Real low-stock count from the already-built product_low_stock_v view (same
+      // reorder/min-stock config a user enters on the goods master, mirrored onto its
+      // products shadow row on stock receive — see 20261027_goods_reorder_barcode.sql).
+      const lowStock = await sql`
+        SELECT COUNT(*) as low_stock_count
+        FROM public.product_low_stock_v v
+        WHERE v.stock_status IN ('reorder', 'low')
+        ${!session.isSuperAdmin && session.countryIds && session.countryIds.length > 0 ? sql`AND (v.country_id IS NULL OR ${sqlHierarchyScopeCondition(sql, session, "v")})` : sql``}
+        ${warehouseId ? sql`AND v.warehouse_id = ${warehouseId}::uuid` : sql``}
+      `;
+
       return {
         balances: rows,
-        summary: summary[0] || { total_items: 0, total_quantity_on_hand: 0, total_quantity_available: 0 }
+        summary: {
+          ...(summary[0] || { total_items: 0, total_quantity_on_hand: 0, total_quantity_available: 0, total_quantity_reserved: 0 }),
+          low_stock_count: Number(lowStock[0]?.low_stock_count || 0)
+        }
       };
     });
 
-    return apiOk(result || { balances: [], summary: { total_items: 0, total_quantity_on_hand: 0, total_quantity_available: 0 } });
+    return apiOk(result || { balances: [], summary: { total_items: 0, total_quantity_on_hand: 0, total_quantity_available: 0, total_quantity_reserved: 0, low_stock_count: 0 } });
   } catch (error) {
     return handleApiError(error);
   }
