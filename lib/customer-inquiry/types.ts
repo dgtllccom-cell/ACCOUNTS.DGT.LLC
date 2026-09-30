@@ -11,6 +11,21 @@ export const INQUIRY_STATUSES = [
 ] as const;
 export type InquiryStatus = (typeof INQUIRY_STATUSES)[number];
 
+/**
+ * Real sales-pipeline stage — separate from `status` (the data-entry / confirmation
+ * workflow above). Added by migration 20261221_crm_lead_pipeline.sql.
+ */
+export const PIPELINE_STAGES = [
+  "new_lead",
+  "contacted",
+  "qualified",
+  "quotation_sent",
+  "negotiation",
+  "won",
+  "lost",
+] as const;
+export type PipelineStage = (typeof PIPELINE_STAGES)[number];
+
 export const INQUIRY_SOURCES = [
   "meeting",
   "phone",
@@ -85,6 +100,11 @@ export type InquiryRow = {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
+  pipeline_stage: PipelineStage;
+  pipeline_stage_updated_at: string;
+  quotation_sent_at: string | null;
+  quotation_value: number | null;
+  quotation_currency: string | null;
 };
 
 /** The structured draft the AI extractor produces for Preview / Confirm. */

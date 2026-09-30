@@ -1,6 +1,6 @@
 import type { ErpSession } from "@/lib/auth/session";
 import { resolveReportScope } from "@/lib/permissions/middleware";
-import type { InquiryRow, InquiryStatus } from "./types";
+import type { InquiryRow, InquiryStatus, PipelineStage } from "./types";
 
 /**
  * CUSTOMER INQUIRY access model — enforced SERVER-SIDE on every read & mutation.
@@ -111,5 +111,38 @@ export function allowedNextStatuses(session: ErpSession, row: InquiryRow): Inqui
     out.add("closed");
     out.add("lost");
   }
+  return [...out];
+}
+
+/**
+ * Next pipeline stages `session` may set on `row` from its current stage.
+ * Forward-only funnel: new_lead -> contacted -> qualified -> quotation_sent
+ * -> negotiation -> won. "lost" is reachable from any non-terminal stage —
+ * a deal can be lost at any point. won/lost are terminal.
+ */
+export function allowedNextPipelineStages(session: ErpSession, row: InquiryRow): PipelineStage[] {
+  if (!canEditInquiry(session, row)) return [];
+  const s = row.pipeline_stage;
+  const out = new Set<PipelineStage>();
+  switch (s) {
+    case "new_lead":
+      out.add("contacted");
+      break;
+    case "contacted":
+      out.add("qualified");
+      break;
+    case "qualified":
+      out.add("quotation_sent");
+      break;
+    case "quotation_sent":
+      out.add("negotiation");
+      break;
+    case "negotiation":
+      out.add("won");
+      break;
+    default:
+      break;
+  }
+  if (s !== "won" && s !== "lost") out.add("lost");
   return [...out];
 }

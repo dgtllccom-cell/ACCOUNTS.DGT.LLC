@@ -8,7 +8,7 @@ import {
   Phone, Mail, MoreVertical, FileSpreadsheet,
   FileText, Send, MessageCircle, Printer, RefreshCw,
   Eye, Edit3, Filter, X, ChevronDown, CheckCircle2,
-  XCircle, Loader2, LayoutList, Plus, ArrowLeft, ChevronRight, Layers, ArrowUpDown
+  XCircle, Loader2, LayoutList, Plus, ArrowLeft, ChevronRight, Layers, ArrowUpDown, Calendar
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { rtlLanguages, type SupportedLanguage } from "@/lib/i18n/languages";
@@ -182,7 +182,32 @@ export function AccountSetupReport({
 
   const [actionMenuOpen, setActionMenuOpen] = useState(false);
   const actionRef = useRef<HTMLDivElement>(null);
+  const filterMenuRef = useRef<HTMLDivElement>(null);
   const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({});
+
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (country !== "all") count++;
+    if (branch !== "all") count++;
+    if (accType !== "all") count++;
+    if (currencyFilter !== "all") count++;
+    if (statusFilter !== "all") count++;
+    return count;
+  }, [country, branch, accType, currencyFilter, statusFilter]);
+
+  const resetFilters = () => {
+    setCountry("all");
+    setBranch("all");
+    setAccType("all");
+    setCurrencyFilter("all");
+    setStatusFilter("all");
+    setDraftCountry("all");
+    setDraftBranch("all");
+    setDraftType("all");
+    setDraftSub("all");
+    setDateFrom("");
+    setDateTo("");
+  };
 
   /* Fetch */
   async function fetchSessionInfo() {
@@ -232,14 +257,15 @@ export function AccountSetupReport({
     setTitlePortalNode(document.getElementById("erp-page-title-slot"));
   }, [lang]);
 
-  /* Close action menu on outside click */
+  /* Close action menu and filter popover on outside click */
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (actionRef.current && !actionRef.current.contains(e.target as Node)) setActionMenuOpen(false);
+      if (filterMenuRef.current && !filterMenuRef.current.contains(e.target as Node)) setFiltersOpen(false);
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
-  }, [lang]);
+  }, []);
 
   /* Filter options */
   const uniqueCountries = useMemo(() => [...new Set(rows.map(r => r.countryName).filter(Boolean))].sort(), [rows]);
@@ -515,6 +541,52 @@ export function AccountSetupReport({
               </p>
             </div>
           </div>
+
+          {/* Right Header Actions: Date-to-Date + New Account Entry */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Date Range (Date to Date) */}
+            <div className="flex items-center gap-1.5 h-9 px-3 rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-600 dark:text-slate-300 shadow-xs">
+              <Calendar className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                className="bg-transparent outline-none w-[110px] text-xs font-medium cursor-pointer text-slate-700 dark:text-slate-200"
+                title={t(lang, "common.from_date", "From Date")}
+              />
+              <span className="text-slate-400 font-bold">–</span>
+              <input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                className="bg-transparent outline-none w-[110px] text-xs font-medium cursor-pointer text-slate-700 dark:text-slate-200"
+                title={t(lang, "common.to_date", "To Date")}
+              />
+              {(dateFrom || dateTo) && (
+                <button
+                  type="button"
+                  onClick={() => { setDateFrom(""); setDateTo(""); }}
+                  className="p-0.5 text-slate-400 hover:text-rose-600 rounded transition cursor-pointer"
+                  title={t(lang, "common.clear", "Clear dates")}
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+
+            {/* + New Account Button */}
+            <button
+              type="button"
+              onClick={() => {
+                if (onNewAccount) onNewAccount();
+                else router.push("/dashboard/accounts/setup?mode=new");
+              }}
+              className="h-9 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-bold flex items-center gap-2 shadow-sm transition cursor-pointer"
+            >
+              <Plus className="h-4 w-4" />
+              <span>{t(lang, "asr.new_account", "New Account")}</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -607,7 +679,7 @@ export function AccountSetupReport({
       {/* ── FILTER & ACTION ROW ── */}
       <div className="flex flex-wrap items-center gap-2.5 bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200/90 dark:border-slate-800 shadow-xs">
         {/* Search */}
-        <div className="relative flex-1 min-w-[220px]">
+        <div className="relative flex-1 min-w-[240px]">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
           <input
             type="text"
@@ -616,90 +688,199 @@ export function AccountSetupReport({
               setAccNo(e.target.value);
               setDraftAccNo(e.target.value);
             }}
-            placeholder={t(lang, "asr.search_placeholder", "Search by account code or name...")}
+            placeholder={t(lang, "asr.search_placeholder", "Search by account code, name, manual ref...")}
             className="w-full h-9 pl-9 pr-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800 text-xs font-semibold placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
-        {/* All Countries */}
-        <select
-          value={country}
-          onChange={(e) => setCountry(e.target.value)}
-          className="h-9 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800 px-2.5 text-xs font-semibold outline-none text-slate-700 dark:text-slate-200"
-        >
-          <option value="all">{t(lang, "common.all_countries", "All Countries")}</option>
-          {uniqueCountries.map(c => <option key={c} value={c}>{c}</option>)}
-        </select>
+        {/* Filter Curtain / Dropdown (Pardah) */}
+        <div className="relative" ref={filterMenuRef}>
+          <button
+            type="button"
+            onClick={() => setFiltersOpen(!filtersOpen)}
+            className={cn(
+              "h-9 px-3.5 rounded-lg border text-xs font-bold flex items-center gap-2 transition cursor-pointer shadow-2xs",
+              activeFilterCount > 0
+                ? "border-blue-600 bg-blue-50/80 text-blue-700 dark:border-blue-500 dark:bg-blue-950/60 dark:text-blue-300"
+                : "border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700"
+            )}
+            title={t(lang, "asr.filters", "Filters")}
+          >
+            <Filter className="h-3.5 w-3.5 text-blue-600" />
+            <span>{t(lang, "asr.filters", "Filters")}</span>
+            {activeFilterCount > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-blue-600 text-white">
+                {activeFilterCount}
+              </span>
+            )}
+            <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform duration-200", filtersOpen && "rotate-180")} />
+          </button>
 
-        {/* All Branches */}
-        <select
-          value={branch}
-          onChange={(e) => setBranch(e.target.value)}
-          className="h-9 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800 px-2.5 text-xs font-semibold outline-none text-slate-700 dark:text-slate-200"
-        >
-          <option value="all">{t(lang, "common.all_branches", "All Branches")}</option>
-          {uniqueBranches.map(b => <option key={b} value={b}>{b}</option>)}
-        </select>
+          {/* Curtain / Dropdown Panel */}
+          {filtersOpen && (
+            <div className="absolute top-full start-0 mt-2 w-80 sm:w-96 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 space-y-3.5 font-sans">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-blue-600" />
+                  <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                    {t(lang, "asr.filter_options", "Account Filters")}
+                  </span>
+                </div>
+                {activeFilterCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={resetFilters}
+                    className="text-[11px] font-bold text-rose-600 hover:text-rose-700 hover:underline cursor-pointer"
+                  >
+                    {t(lang, "asr.reset_all", "Reset All")}
+                  </button>
+                )}
+              </div>
 
-        {/* All Types */}
-        <select
-          value={accType}
-          onChange={(e) => setAccType(e.target.value)}
-          className="h-9 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800 px-2.5 text-xs font-semibold outline-none text-slate-700 dark:text-slate-200"
-        >
-          <option value="all">{t(lang, "asr.all_types", "All Types")}</option>
-          {uniqueTypes.map(ty => <option key={ty} value={ty}>{tv(ty)}</option>)}
-        </select>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                {/* Country */}
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                    {t(lang, "common.country", "Country")}
+                  </label>
+                  <select
+                    value={country}
+                    onChange={(e) => setCountry(e.target.value)}
+                    className="w-full h-8.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-2 text-xs font-semibold outline-none cursor-pointer"
+                  >
+                    <option value="all">{t(lang, "common.all_countries", "All Countries")}</option>
+                    {uniqueCountries.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
 
-        {/* All Currencies */}
-        <select
-          value={currencyFilter}
-          onChange={(e) => setCurrencyFilter(e.target.value)}
-          className="h-9 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800 px-2.5 text-xs font-semibold outline-none text-slate-700 dark:text-slate-200"
-        >
-          <option value="all">{t(lang, "asr.all_currencies", "All Currencies")}</option>
-          {uniqueCurrencies.map(cur => <option key={cur} value={cur}>{cur}</option>)}
-        </select>
+                {/* Branch */}
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                    {t(lang, "common.branch", "Branch")}
+                  </label>
+                  <select
+                    value={branch}
+                    onChange={(e) => setBranch(e.target.value)}
+                    className="w-full h-8.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-2 text-xs font-semibold outline-none cursor-pointer"
+                  >
+                    <option value="all">{t(lang, "common.all_branches", "All Branches")}</option>
+                    {uniqueBranches.map(b => <option key={b} value={b}>{b}</option>)}
+                  </select>
+                </div>
 
-        {/* All Statuses */}
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="h-9 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800 px-2.5 text-xs font-semibold outline-none text-slate-700 dark:text-slate-200"
-        >
-          <option value="all">{t(lang, "common.all_statuses", "All Statuses")}</option>
-          <option value="active">{t(lang, "common.active", "Active")}</option>
-          <option value="inactive">{t(lang, "common.inactive", "Inactive")}</option>
-        </select>
+                {/* Account Type */}
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                    {t(lang, "asr.account_type", "Account Type")}
+                  </label>
+                  <select
+                    value={accType}
+                    onChange={(e) => setAccType(e.target.value)}
+                    className="w-full h-8.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-2 text-xs font-semibold outline-none cursor-pointer"
+                  >
+                    <option value="all">{t(lang, "asr.all_types", "All Types")}</option>
+                    {uniqueTypes.map(ty => <option key={ty} value={ty}>{tv(ty)}</option>)}
+                  </select>
+                </div>
 
-        {/* Date Range */}
-        <div className="flex items-center gap-1.5 h-9 px-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-300">
-          <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="bg-transparent outline-none w-[110px]" />
-          <span>–</span>
-          <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="bg-transparent outline-none w-[110px]" />
+                {/* Currency */}
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                    {t(lang, "asr.currency", "Currency")}
+                  </label>
+                  <select
+                    value={currencyFilter}
+                    onChange={(e) => setCurrencyFilter(e.target.value)}
+                    className="w-full h-8.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-2 text-xs font-semibold outline-none cursor-pointer"
+                  >
+                    <option value="all">{t(lang, "asr.all_currencies", "All Currencies")}</option>
+                    {uniqueCurrencies.map(cur => <option key={cur} value={cur}>{cur}</option>)}
+                  </select>
+                </div>
+
+                {/* Status */}
+                <div className="sm:col-span-2">
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                    {t(lang, "common.status", "Status")}
+                  </label>
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="w-full h-8.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-2 text-xs font-semibold outline-none cursor-pointer"
+                  >
+                    <option value="all">{t(lang, "common.all_statuses", "All Statuses")}</option>
+                    <option value="active">{t(lang, "common.active", "Active")}</option>
+                    <option value="inactive">{t(lang, "common.inactive", "Inactive")}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <span className="text-[11px] text-slate-500 font-medium">
+                  {filtered.length} {t(lang, "asr.matching_accounts", "matching accounts")}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setFiltersOpen(false)}
+                  className="h-7 px-3.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition cursor-pointer"
+                >
+                  {t(lang, "common.apply", "Done")}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
+
+        {/* Active Filter Pills (Chips) for quick remove */}
+        {country !== "all" && (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800">
+            <span>{country}</span>
+            <button type="button" onClick={() => setCountry("all")} className="hover:text-blue-900 cursor-pointer">
+              <X className="h-3 w-3" />
+            </button>
+          </span>
+        )}
+        {branch !== "all" && (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800">
+            <span>{branch}</span>
+            <button type="button" onClick={() => setBranch("all")} className="hover:text-blue-900 cursor-pointer">
+              <X className="h-3 w-3" />
+            </button>
+          </span>
+        )}
+        {accType !== "all" && (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800">
+            <span>{tv(accType)}</span>
+            <button type="button" onClick={() => setAccType("all")} className="hover:text-blue-900 cursor-pointer">
+              <X className="h-3 w-3" />
+            </button>
+          </span>
+        )}
+        {currencyFilter !== "all" && (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800">
+            <span>{currencyFilter}</span>
+            <button type="button" onClick={() => setCurrencyFilter("all")} className="hover:text-blue-900 cursor-pointer">
+              <X className="h-3 w-3" />
+            </button>
+          </span>
+        )}
+        {statusFilter !== "all" && (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 text-xs font-semibold border border-blue-200 dark:border-blue-800">
+            <span>{statusFilter}</span>
+            <button type="button" onClick={() => setStatusFilter("all")} className="hover:text-blue-900 cursor-pointer">
+              <X className="h-3 w-3" />
+            </button>
+          </span>
+        )}
 
         {/* Refresh */}
         <button
           type="button"
           onClick={fetchReport}
           title={t(lang, "asr.refresh", "Refresh")}
-          className="h-9 w-9 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+          className="h-9 w-9 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition cursor-pointer"
         >
           <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
-        </button>
-
-        {/* + New Account Button */}
-        <button
-          type="button"
-          onClick={() => {
-            if (onNewAccount) onNewAccount();
-            else router.push("/dashboard/accounts/setup?mode=new");
-          }}
-          className="h-9 px-3.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition"
-        >
-          <Plus className="h-4 w-4" />
-          <span>{t(lang, "asr.new_account", "New Account")}</span>
         </button>
       </div>
 

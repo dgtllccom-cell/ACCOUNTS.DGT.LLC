@@ -15,15 +15,18 @@ import {
   canViewInquiry,
   inquiryScope,
   allowedNextStatuses,
+  allowedNextPipelineStages,
 } from "./access";
 import {
   INQUIRY_SOURCES,
   INQUIRY_STATUSES,
   INQUIRY_TRANSLATABLE_FIELDS,
   ORIGINAL_LANGS,
+  PIPELINE_STAGES,
   type InquiryDraft,
   type InquiryRow,
   type InquiryStatus,
+  type PipelineStage,
 } from "./types";
 
 function isSchemaMissing(error: unknown): boolean {
@@ -309,6 +312,39 @@ export async function listInquiries(
   return localizeRecordFields(list as any[], "customer_inquiries", [...INQUIRY_TRANSLATABLE_FIELDS] as any, opts.lang);
 }
 
+// ─── sales pipeline board ─────────────────────────────────────────────────────
+/** Every open (non-won/lost by default) inquiry in scope, grouped by real pipeline_stage. */
+export async function pipelineBoard(
+  session: ErpSession,
+  opts: { lang: SupportedLanguage; original?: boolean; includeClosed?: boolean; countryId?: string | null }
+): Promise<Record<PipelineStage, any[]>> {
+  const rows = await withLocalPg(async (sql) => {
+    const vis = visibilityClause(session);
+    const where: string[] = ["i.deleted_at is null", vis.text];
+    const params: any[] = [...vis.params];
+    if (!opts.includeClosed) { where.push("i.pipeline_stage not in ('won','lost')"); }
+    if (opts.countryId) { where.push("i.country_id = $P"); params.push(opts.countryId); }
+    const q = build(
+      `select ${LIST_SELECT} ${LIST_JOINS}
+       where ${where.join(" AND ")}
+       order by i.pipeline_stage_updated_at desc
+       limit 500`,
+      params,
+    );
+    return (await sql.unsafe(q.text, q.values)) as unknown as any[];
+  });
+  let list = rows ?? [];
+  if (!opts.original && opts.lang !== "en") {
+    list = await localizeRecordFields(list as any[], "customer_inquiries", [...INQUIRY_TRANSLATABLE_FIELDS] as any, opts.lang);
+  }
+  const board = Object.fromEntries(PIPELINE_STAGES.map((s) => [s, [] as any[]])) as Record<PipelineStage, any[]>;
+  for (const r of list) {
+    const stage = (PIPELINE_STAGES as readonly string[]).includes(r.pipeline_stage) ? (r.pipeline_stage as PipelineStage) : "new_lead";
+    board[stage].push(r);
+  }
+  return board;
+}
+
 // ─── detail ──────────────────────────────────────────────────────────────────
 export async function getInquiry(session: ErpSession, id: string, opts: { lang: SupportedLanguage; original?: boolean }) {
   return withLocalPg(async (sql) => {
@@ -341,6 +377,7 @@ export async function getInquiry(session: ErpSession, id: string, opts: { lang: 
       out.attachments = attachments;
     }
     out.allowedNextStatuses = allowedNextStatuses(session, row);
+    out.allowedNextPipelineStages = allowedNextPipelineStages(session, row);
     out.isManager = canManageInquiries(session);
     out.canEdit = canEditInquiry(session, row);
     return out;
@@ -360,6 +397,40 @@ export async function event(sql: any, inquiryId: string, type: string, payload: 
             ${type}, ${payload.from ?? null}, ${payload.to ?? null}, ${payload.note ?? null},
             ${sql.json((payload.meta ?? {}) as any)})
   `;
+}
+
+async function pipelineEvent(sql: any, inquiryId: string, from: string | null, to: string, note: string | null | undefined, session: ErpSession) {
+  await sql`
+    insert into public.customer_inquiry_pipeline_events (inquiry_id, from_stage, to_stage, note, actor_id, actor_name)
+    values (${inquiryId}::uuid, ${from}, ${to}, ${note ?? null}, ${session.userId}::uuid, ${session.fullName ?? session.email ?? null})
+  `;
+}
+
+// ─── pipeline-stage transition ────────────────────────────────────────────────
+export async function setPipelineStage(
+  session: ErpSession,
+  id: string,
+  to: string,
+  opts?: { note?: string | null; lostReason?: string | null; quotationValue?: number | null; quotationCurrency?: string | null },
+): Promise<void> {
+  await withLocalPg(async (sql) => {
+    const row = await loadRow(sql, id);
+    const allowed = allowedNextPipelineStages(session, row);
+    if (!allowed.includes(to as PipelineStage)) {
+      throw new ApiClientError(`Cannot move this lead to "${to}" from "${row.pipeline_stage}".`, { status: 409, code: "BAD_TRANSITION" });
+    }
+    const stamps: string[] = ["pipeline_stage = $P", "pipeline_stage_updated_at = now()"];
+    const vals: any[] = [to];
+    if (to === "quotation_sent") {
+      stamps.push("quotation_sent_at = now()");
+      if (opts?.quotationValue != null) { stamps.push("quotation_value = $P"); vals.push(opts.quotationValue); }
+      if (opts?.quotationCurrency) { stamps.push("quotation_currency = $P"); vals.push(opts.quotationCurrency); }
+    }
+    if (to === "lost" && opts?.lostReason) { stamps.push("lost_reason = $P"); vals.push(opts.lostReason); }
+    const q = build(`update public.customer_inquiries set ${stamps.join(", ")} where id = $P`, [...vals, id], 1);
+    await sql.unsafe(q.text, q.values);
+    await pipelineEvent(sql, id, row.pipeline_stage, to, opts?.note ?? opts?.lostReason ?? null, session);
+  });
 }
 
 // ─── update fields (partial) ─────────────────────────────────────────────────

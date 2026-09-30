@@ -129,7 +129,8 @@ export function ErpPageActions({ children, backLink, title: titleOverride, subti
     pathname?.startsWith("/dashboard/new-entry/users/all") ||
     pathname?.startsWith("/dashboard/communication-center") ||
     pathname?.startsWith("/dashboard/messages") ||
-    pathname?.startsWith("/dashboard/email");
+    pathname?.startsWith("/dashboard/email") ||
+    pathname?.startsWith("/dashboard/accounts/setup");
 
   const title = titleOverride || titleFromPath(pathname || "/dashboard", lang);
   const subtitle = subtitleOverride || t(lang, "pa.subtitle", "Standard ERP navigation and page actions");
