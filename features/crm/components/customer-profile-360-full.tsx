@@ -41,7 +41,7 @@ import {
   DialogFooter
 } from "@/components/ui/dialog";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
-import { getCrmTranslation } from "@/lib/crm/crm-i18n";
+import { t as tUi } from "@/lib/i18n/ui";
 
 interface CustomerProfile360FullProps {
   customerId: string;
@@ -51,7 +51,7 @@ interface CustomerProfile360FullProps {
 export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile360FullProps) {
   const lang = useActiveLanguage();
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
-  const t = getCrmTranslation(lang);
+  const ct = (key: string, fallback: string) => tUi(lang, `crm360.${key}`, fallback);
 
   const [loading, setLoading] = useState(true);
   const [profileData, setProfileData] = useState<any>(null);
@@ -217,7 +217,7 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
             className="h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 font-bold text-xs gap-1.5"
           >
             <ArrowLeft className={`h-4 w-4 ${isRtl ? "rotate-180" : ""}`} />
-            <span>{t.backToRegister}</span>
+            <span>{ct("backToRegister", "Back to Customer Register")}</span>
           </Button>
           <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 hidden sm:block" />
           <div>
@@ -229,7 +229,7 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
                 {customer.customerCode}
               </Badge>
               <Badge className={`text-[11px] font-bold ${customer.isActive ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-amber-50 text-amber-700 border-amber-200"}`}>
-                {customer.isActive ? t.statusActive : t.statusAtRisk}
+                {customer.isActive ? ct("statusActive", "Active") : ct("statusAtRisk", "At Risk")}
               </Badge>
             </div>
             <p className="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
@@ -251,7 +251,7 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
             className="h-9 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold gap-1.5 px-4 shadow-xs"
           >
             <Plus className="h-3.5 w-3.5" />
-            <span>{t.logNewActivity}</span>
+            <span>{ct("logNewActivity", "Log Interaction")}</span>
           </Button>
 
           <Button
@@ -261,7 +261,7 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
             className="h-9 border-slate-200 dark:border-slate-800 text-emerald-700 dark:text-emerald-300 bg-emerald-50/50 hover:bg-emerald-100/70 rounded-xl text-xs font-bold gap-1.5 px-3"
           >
             <Download className="h-3.5 w-3.5 text-emerald-600" />
-            <span>{t.downloadFullStatement}</span>
+            <span>{ct("downloadFullStatement", "Download Full 360 Statement")}</span>
           </Button>
 
           <Button
@@ -271,7 +271,7 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
             className="h-9 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold gap-1.5 px-3"
           >
             <Printer className="h-3.5 w-3.5 text-amber-500" />
-            <span>{t.printReport}</span>
+            <span>{ct("printReport", "Print")}</span>
           </Button>
 
           <Button
@@ -290,7 +290,7 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
         {/* Total Receivables */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4.5 shadow-xs">
           <div className="flex items-center justify-between text-slate-500 text-xs font-bold mb-2">
-            <span>{t.totalReceivable}</span>
+            <span>{ct("totalReceivable", "Total Receivable")}</span>
             <div className="p-1.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 rounded-lg">
               <DollarSign className="h-4 w-4" />
             </div>
@@ -299,14 +299,14 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
             {financialSummary.currency} {Number(financialSummary.totalReceivable || 0).toLocaleString()}
           </div>
           <p className="text-[11px] text-emerald-600 font-semibold mt-1">
-            {financialSummary.salesOrdersCount} {t.salesOrders}
+            {financialSummary.salesOrdersCount} {ct("salesOrders", "Quotations & Sales Records")}
           </p>
         </div>
 
         {/* Total Payables */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4.5 shadow-xs">
           <div className="flex items-center justify-between text-slate-500 text-xs font-bold mb-2">
-            <span>{t.totalPayable}</span>
+            <span>{ct("totalPayable", "Total Payable")}</span>
             <div className="p-1.5 bg-blue-50 dark:bg-blue-950/40 text-blue-600 rounded-lg">
               <ShoppingCart className="h-4 w-4" />
             </div>
@@ -315,14 +315,14 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
             {financialSummary.currency} {Number(financialSummary.totalPayable || 0).toLocaleString()}
           </div>
           <p className="text-[11px] text-blue-600 font-semibold mt-1">
-            {financialSummary.purchaseOrdersCount} {t.purchases}
+            {financialSummary.purchaseOrdersCount} {ct("purchases", "Purchase & Payment References")}
           </p>
         </div>
 
         {/* Net Position */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4.5 shadow-xs">
           <div className="flex items-center justify-between text-slate-500 text-xs font-bold mb-2">
-            <span>{t.netPosition}</span>
+            <span>{ct("netPosition", "Net Position")}</span>
             <div className="p-1.5 bg-purple-50 dark:bg-purple-950/40 text-purple-600 rounded-lg">
               <TrendingUp className="h-4 w-4" />
             </div>
@@ -338,7 +338,7 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
         {/* Cheques Outstanding */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4.5 shadow-xs">
           <div className="flex items-center justify-between text-slate-500 text-xs font-bold mb-2">
-            <span>{t.chequesBalance}</span>
+            <span>{ct("chequesBalance", "Cheques Outstanding")}</span>
             <div className="p-1.5 bg-amber-50 dark:bg-amber-950/40 text-amber-600 rounded-lg">
               <CreditCard className="h-4 w-4" />
             </div>
@@ -366,7 +366,7 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
             }`}
           >
             <Clock className="h-3.5 w-3.5" />
-            <span>{t.activityTimeline} ({timeline.length})</span>
+            <span>{ct("activityTimeline", "Complete Activity History & Follow-Up Timeline")} ({timeline.length})</span>
           </button>
 
           <button
@@ -379,7 +379,7 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
             }`}
           >
             <FileSpreadsheet className="h-3.5 w-3.5" />
-            <span>{t.salesOrders} ({salesOrders.length})</span>
+            <span>{ct("salesOrders", "Quotations & Sales Records")} ({salesOrders.length})</span>
           </button>
 
           <button
@@ -392,7 +392,7 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
             }`}
           >
             <ShoppingCart className="h-3.5 w-3.5" />
-            <span>{t.purchases} ({purchaseOrders.length})</span>
+            <span>{ct("purchases", "Purchase & Payment References")} ({purchaseOrders.length})</span>
           </button>
 
           <button
@@ -405,7 +405,7 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
             }`}
           >
             <CreditCard className="h-3.5 w-3.5" />
-            <span>{t.cheques} ({cheques.length})</span>
+            <span>{ct("cheques", "Cheques & Recoveries")} ({cheques.length})</span>
           </button>
 
           <button
@@ -418,7 +418,7 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
             }`}
           >
             <Ship className="h-3.5 w-3.5" />
-            <span>{t.shippingClearing} ({shippingAndClearing.length})</span>
+            <span>{ct("shippingClearing", "Shipping & Clearing Records")} ({shippingAndClearing.length})</span>
           </button>
         </div>
 
@@ -429,7 +429,7 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                  {t.activityTimeline}
+                  {ct("activityTimeline", "Complete Activity History & Follow-Up Timeline")}
                 </h3>
                 <Button
                   size="sm"
@@ -437,7 +437,7 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
                   className="h-8 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-lg gap-1"
                 >
                   <Plus className="h-3 w-3" />
-                  {t.logNewActivity}
+                  {ct("logNewActivity", "Log Interaction")}
                 </Button>
               </div>
 
@@ -499,7 +499,7 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                  {t.salesOrders} ({salesOrders.length})
+                  {ct("salesOrders", "Quotations & Sales Records")} ({salesOrders.length})
                 </h3>
               </div>
 
@@ -542,7 +542,7 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
                               target="_blank"
                               className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-800 bg-blue-50 px-2.5 py-1 rounded-md"
                             >
-                              <span>{t.openOriginalRecord}</span>
+                              <span>{ct("openOriginalRecord", "Open ERP Record")}</span>
                               <ExternalLink className="h-3 w-3" />
                             </Link>
                           </td>
@@ -559,7 +559,7 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
           {activeTab === "purchases" && (
             <div className="space-y-4">
               <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                {t.purchases} ({purchaseOrders.length})
+                {ct("purchases", "Purchase & Payment References")} ({purchaseOrders.length})
               </h3>
               {purchaseOrders.length === 0 ? (
                 <div className="p-8 text-center text-slate-400 text-sm">
@@ -598,7 +598,7 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
                               target="_blank"
                               className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-800 bg-blue-50 px-2.5 py-1 rounded-md"
                             >
-                              <span>{t.openOriginalRecord}</span>
+                              <span>{ct("openOriginalRecord", "Open ERP Record")}</span>
                               <ExternalLink className="h-3 w-3" />
                             </Link>
                           </td>
@@ -615,7 +615,7 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
           {activeTab === "cheques" && (
             <div className="space-y-4">
               <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                {t.cheques} ({cheques.length})
+                {ct("cheques", "Cheques & Recoveries")} ({cheques.length})
               </h3>
               {cheques.length === 0 ? (
                 <div className="p-8 text-center text-slate-400 text-sm">
@@ -656,7 +656,7 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
                               target="_blank"
                               className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-800 bg-blue-50 px-2.5 py-1 rounded-md"
                             >
-                              <span>{t.openOriginalRecord}</span>
+                              <span>{ct("openOriginalRecord", "Open ERP Record")}</span>
                               <ExternalLink className="h-3 w-3" />
                             </Link>
                           </td>
@@ -673,7 +673,7 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
           {activeTab === "shipping" && (
             <div className="space-y-4">
               <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                {t.shippingClearing} ({shippingAndClearing.length})
+                {ct("shippingClearing", "Shipping & Clearing Records")} ({shippingAndClearing.length})
               </h3>
               {shippingAndClearing.length === 0 ? (
                 <div className="p-8 text-center text-slate-400 text-sm">
@@ -714,7 +714,7 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
                               target="_blank"
                               className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-800 bg-blue-50 px-2.5 py-1 rounded-md"
                             >
-                              <span>{t.openOriginalRecord}</span>
+                              <span>{ct("openOriginalRecord", "Open ERP Record")}</span>
                               <ExternalLink className="h-3 w-3" />
                             </Link>
                           </td>
@@ -734,14 +734,14 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
         <DialogContent className="max-w-md rounded-3xl p-6 font-sans">
           <DialogHeader>
             <DialogTitle className="text-base font-bold text-slate-900">
-              {t.logNewActivity}
+              {ct("logNewActivity", "Log Interaction")}
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-2 text-xs">
             {/* Type selector */}
             <div className="space-y-1.5">
-              <label className="font-bold text-slate-700">{t.selectType}</label>
+              <label className="font-bold text-slate-700">{ct("selectType", "Select Activity Type")}</label>
               <div className="grid grid-cols-4 gap-2">
                 {(["Call", "Meeting", "Message", "Note"] as const).map((type) => (
                   <button
@@ -762,9 +762,9 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
 
             {/* Note text */}
             <div className="space-y-1.5">
-              <label className="font-bold text-slate-700">{t.noteText}</label>
+              <label className="font-bold text-slate-700">{ct("noteText", "Activity Note / Summary")}</label>
               <textarea
-                placeholder={t.noteText || "Enter details..."}
+                placeholder={ct("noteText", "Activity Note / Summary")}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={4}
@@ -803,7 +803,7 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
               onClick={() => setLogModalOpen(false)}
               className="text-xs rounded-xl"
             >
-              {t.cancel}
+              {ct("cancel", "Cancel")}
             </Button>
             <Button
               type="button"
@@ -811,7 +811,7 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
               disabled={savingActivity || !notes.trim()}
               className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl"
             >
-              {savingActivity ? "Saving..." : t.saveActivity}
+              {savingActivity ? "Saving..." : ct("saveActivity", "Save Activity")}
             </Button>
           </DialogFooter>
         </DialogContent>

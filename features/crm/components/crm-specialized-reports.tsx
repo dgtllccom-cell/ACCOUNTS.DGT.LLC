@@ -29,7 +29,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
-import { getCrmTranslation } from "@/lib/crm/crm-i18n";
 import { t as tUi } from "@/lib/i18n/ui";
 
 interface SpecializedReportProps {
@@ -39,7 +38,6 @@ interface SpecializedReportProps {
 export function CrmSpecializedReportView({ reportType }: SpecializedReportProps) {
   const lang = useActiveLanguage();
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
-  const t = getCrmTranslation(lang);
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
@@ -78,31 +76,31 @@ export function CrmSpecializedReportView({ reportType }: SpecializedReportProps)
 
   const reportTitles: Record<string, { title: string; subtitle: string; icon: any; color: string }> = {
     executive: {
-      title: t.executiveDashboard,
+      title: tUi(lang, "crm360.executiveDashboard", "Executive Dashboard"),
       subtitle: "High-level CRM metrics, executive revenue forecasts, and cross-module performance summaries.",
       icon: BarChart3,
       color: "text-blue-600 bg-blue-50"
     },
     pipeline: {
-      title: t.leadPipeline,
+      title: tUi(lang, "crm360.leadPipeline", "Lead Pipeline"),
       subtitle: "Active deal stages, lead qualification funnels, and conversion opportunities.",
       icon: Filter,
       color: "text-indigo-600 bg-indigo-50"
     },
     "payments-recovery": {
-      title: t.paymentsRecovery,
+      title: tUi(lang, "crm360.paymentsRecovery", "Payments & Recovery"),
       subtitle: "Receivable ageing, collection tracking, promised recovery dates, and cheque maturities.",
       icon: DollarSign,
       color: "text-emerald-600 bg-emerald-50"
     },
     "city-branch": {
-      title: t.cityBranchAnalysis,
+      title: tUi(lang, "crm360.cityBranchAnalysis", "City & Branch Analysis"),
       subtitle: "Branch-wise portfolio distribution across UAE, Saudi Arabia, Pakistan, Afghanistan, and Oman.",
       icon: Building2,
       color: "text-rose-600 bg-rose-50"
     },
     "team-performance": {
-      title: t.teamPerformance,
+      title: tUi(lang, "crm360.teamPerformance", "Team Performance"),
       subtitle: "Assigned sales reps, daily follow-up completion rates, and response velocity.",
       icon: Award,
       color: "text-teal-600 bg-teal-50"
@@ -152,7 +150,7 @@ export function CrmSpecializedReportView({ reportType }: SpecializedReportProps)
           <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium mb-1">
             <Link href="/dashboard" className="hover:text-blue-600">ERP</Link>
             <span>&gt;</span>
-            <Link href="/dashboard/crm" className="hover:text-blue-600">{t.crmReports}</Link>
+            <Link href="/dashboard/crm" className="hover:text-blue-600">{tUi(lang, "crm360.crmReports", "CRM Reports")}</Link>
             <span>&gt;</span>
             <span className="font-bold text-slate-800 dark:text-slate-200">{currentMeta.title}</span>
           </div>
@@ -181,7 +179,7 @@ export function CrmSpecializedReportView({ reportType }: SpecializedReportProps)
               onClick={() => setReportsMenuOpen(!reportsMenuOpen)}
               className="h-9 px-3.5 rounded-xl border-slate-200 text-xs font-bold gap-2 bg-white"
             >
-              <span>{t.allCrmReports}</span>
+              <span>{tUi(lang, "crm360.allCrmReports", "All CRM Reports")}</span>
               <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
             </Button>
             {reportsMenuOpen && (
@@ -190,36 +188,36 @@ export function CrmSpecializedReportView({ reportType }: SpecializedReportProps)
                 <div className="absolute right-0 mt-1.5 w-56 z-50 rounded-2xl p-1.5 shadow-xl bg-white border border-slate-200 font-sans animate-in fade-in zoom-in-95 duration-100">
                   <button type="button" onClick={() => { setReportsMenuOpen(false); router.push("/dashboard/crm?report=executive"); }} className="w-full text-left flex items-center px-3 py-2 text-xs font-semibold rounded-xl hover:bg-slate-50 cursor-pointer">
                     <BarChart3 className="h-4 w-4 mr-2 text-blue-600" />
-                    {t.executiveDashboard}
+                    {tUi(lang, "crm360.executiveDashboard", "Executive Dashboard")}
                   </button>
                   <button type="button" onClick={() => { setReportsMenuOpen(false); router.push("/dashboard/crm?report=pipeline"); }} className="w-full text-left flex items-center px-3 py-2 text-xs font-semibold rounded-xl hover:bg-slate-50 cursor-pointer">
                     <Filter className="h-4 w-4 mr-2 text-indigo-600" />
-                    {t.leadPipeline}
+                    {tUi(lang, "crm360.leadPipeline", "Lead Pipeline")}
                   </button>
                   <button type="button" onClick={() => { setReportsMenuOpen(false); router.push("/dashboard/crm?report=customer-360"); }} className="w-full text-left flex items-center px-3 py-2 text-xs font-semibold rounded-xl hover:bg-slate-50 cursor-pointer">
                     <Users className="h-4 w-4 mr-2 text-purple-600" />
-                    {t.customer360}
+                    {tUi(lang, "crm360.customer360", "Customer 360")}
                   </button>
                   <button type="button" onClick={() => { setReportsMenuOpen(false); router.push("/dashboard/crm?report=due-followup"); }} className="w-full text-left flex items-center px-3 py-2 text-xs font-semibold rounded-xl hover:bg-slate-50 cursor-pointer">
                     <Clock className="h-4 w-4 mr-2 text-amber-600" />
-                    {t.dueFollowUp}
+                    {tUi(lang, "crm360.dueFollowUp", "Due & Follow-Up")}
                   </button>
                   <button type="button" onClick={() => { setReportsMenuOpen(false); router.push("/dashboard/crm?report=payments-recovery"); }} className="w-full text-left flex items-center px-3 py-2 text-xs font-semibold rounded-xl hover:bg-slate-50 cursor-pointer">
                     <DollarSign className="h-4 w-4 mr-2 text-emerald-600" />
-                    {t.paymentsRecovery}
+                    {tUi(lang, "crm360.paymentsRecovery", "Payments & Recovery")}
                   </button>
                   <button type="button" onClick={() => { setReportsMenuOpen(false); router.push("/dashboard/crm?report=city-branch"); }} className="w-full text-left flex items-center px-3 py-2 text-xs font-semibold rounded-xl hover:bg-slate-50 cursor-pointer">
                     <Building2 className="h-4 w-4 mr-2 text-rose-600" />
-                    {t.cityBranchAnalysis}
+                    {tUi(lang, "crm360.cityBranchAnalysis", "City & Branch Analysis")}
                   </button>
                   <button type="button" onClick={() => { setReportsMenuOpen(false); router.push("/dashboard/crm?report=team-performance"); }} className="w-full text-left flex items-center px-3 py-2 text-xs font-semibold rounded-xl hover:bg-slate-50 cursor-pointer">
                     <Award className="h-4 w-4 mr-2 text-teal-600" />
-                    {t.teamPerformance}
+                    {tUi(lang, "crm360.teamPerformance", "Team Performance")}
                   </button>
                   <div className="my-1 border-t border-slate-100" />
                   <button type="button" onClick={() => { setReportsMenuOpen(false); router.push("/dashboard/crm/reports"); }} className="w-full text-left flex items-center px-3 py-2 text-xs font-semibold rounded-xl hover:bg-slate-50 cursor-pointer">
                     <FileText className="h-4 w-4 mr-2 text-slate-600" />
-                    {t.universalReports}
+                    {tUi(lang, "crm360.universalReports", "Universal Reports Hub")}
                   </button>
                 </div>
               </>
@@ -233,7 +231,7 @@ export function CrmSpecializedReportView({ reportType }: SpecializedReportProps)
             className="h-9 px-3 rounded-xl border-slate-200 text-xs font-bold gap-1.5"
           >
             <Printer className="h-3.5 w-3.5 text-amber-500" />
-            <span>{t.printReport}</span>
+            <span>{tUi(lang, "crm360.printReport", "Print")}</span>
           </Button>
         </div>
       </div>
@@ -241,25 +239,25 @@ export function CrmSpecializedReportView({ reportType }: SpecializedReportProps)
       {/* KPI Highlight Strip */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-slate-900 border border-slate-200 rounded-2xl p-4 shadow-xs">
-          <div className="text-xs font-bold text-slate-500 mb-1">{t.totalCustomers}</div>
+          <div className="text-xs font-bold text-slate-500 mb-1">{tUi(lang, "crm360.totalCustomers", "Total Customers")}</div>
           <div className="text-2xl font-black text-slate-900 dark:text-slate-100">{kpis.totalCustomers.toLocaleString()}</div>
           <p className="text-[11px] text-emerald-600 font-semibold mt-1">{(kpis as any).totalCustomersTrend || "—"}</p>
         </div>
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200 rounded-2xl p-4 shadow-xs">
-          <div className="text-xs font-bold text-slate-500 mb-1">{t.activeCustomers}</div>
+          <div className="text-xs font-bold text-slate-500 mb-1">{tUi(lang, "crm360.activeCustomers", "Active Customers")}</div>
           <div className="text-2xl font-black text-slate-900 dark:text-slate-100">{kpis.activeCustomers.toLocaleString()}</div>
           <p className="text-[11px] text-emerald-600 font-semibold mt-1">{(kpis as any).activeCustomersTrend || "—"}</p>
         </div>
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200 rounded-2xl p-4 shadow-xs">
-          <div className="text-xs font-bold text-slate-500 mb-1">{t.receivableDue}</div>
+          <div className="text-xs font-bold text-slate-500 mb-1">{tUi(lang, "crm360.receivableDue", "Receivable Due")}</div>
           <div className="text-2xl font-black text-slate-900 dark:text-slate-100">{kpis.receivableDueCurrency} {Number(kpis.receivableDue).toLocaleString()}</div>
           <p className="text-[11px] text-rose-600 font-semibold mt-1">{(kpis as any).receivableDueTrend || "—"}</p>
         </div>
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200 rounded-2xl p-4 shadow-xs">
-          <div className="text-xs font-bold text-slate-500 mb-1">{t.customerHealth}</div>
+          <div className="text-xs font-bold text-slate-500 mb-1">{tUi(lang, "crm360.customerHealth", "Customer Health")}</div>
           <div className="text-2xl font-black text-slate-900 dark:text-slate-100">{kpis.customerHealth}%</div>
           <p className="text-[11px] text-teal-600 font-semibold mt-1">{(kpis as any).customerHealthTrend || "—"}</p>
         </div>

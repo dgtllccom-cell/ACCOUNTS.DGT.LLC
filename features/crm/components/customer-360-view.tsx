@@ -48,14 +48,14 @@ import {
   DialogFooter
 } from "@/components/ui/dialog";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
-import { getCrmTranslation } from "@/lib/crm/crm-i18n";
+import { t as tUi } from "@/lib/i18n/ui";
 import { CustomerProfile360Full } from "./customer-profile-360-full";
 import type { Customer360Payload, Customer360Row, UpcomingFollowUpRow } from "@/lib/crm/customer-360-service";
 
 export function Customer360View() {
   const lang = useActiveLanguage();
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
-  const t = getCrmTranslation(lang);
+  const ct = (key: string, fallback: string) => tUi(lang, `crm360.${key}`, fallback);
   const router = useRouter();
 
   // Selected customer for full profile view
@@ -324,7 +324,7 @@ export function Customer360View() {
           <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium mb-1">
             <Link href="/dashboard/crm" className="hover:text-blue-600 font-semibold">CRM</Link>
             <span>&gt;</span>
-            <span className="font-bold text-slate-800 dark:text-slate-200">{t.customer360}</span>
+            <span className="font-bold text-slate-800 dark:text-slate-200">{ct("customer360", "Customer 360")}</span>
           </div>
 
           {/* Heading */}
@@ -335,19 +335,19 @@ export function Customer360View() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
-                  {t.customer360Title}
+                  {ct("customer360Title", "CRM Reports — Customer 360")}
                 </h1>
                 <button
                   type="button"
                   onClick={toggleFullScreen}
-                  title={isFullScreen ? t.exitFullScreen : t.fullScreen}
+                  title={isFullScreen ? ct("exitFullScreen", "Exit Full Screen") : ct("fullScreen", "Full Screen")}
                   className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                 >
                   {isFullScreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
                 </button>
               </div>
               <p className="text-xs text-slate-500 mt-0.5">
-                {t.customer360Subtitle}
+                {ct("customer360Subtitle", "A complete 360° view of your customers, relationships, activities, deals, and financials.")}
               </p>
             </div>
           </div>
@@ -365,7 +365,7 @@ export function Customer360View() {
               onClick={() => setReportsMenuOpen(!reportsMenuOpen)}
               className="h-9 px-3 rounded-xl border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 gap-2 bg-slate-50/60 dark:bg-slate-850"
             >
-              <span>{t.allCrmReports}</span>
+              <span>{ct("allCrmReports", "All CRM Reports")}</span>
               <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
             </Button>
             {reportsMenuOpen && (
@@ -374,36 +374,36 @@ export function Customer360View() {
                 <div className="absolute left-0 mt-1.5 w-56 z-50 rounded-2xl p-1.5 shadow-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 font-sans animate-in fade-in zoom-in-95 duration-100">
                   <button type="button" onClick={() => { setReportsMenuOpen(false); router.push("/dashboard/crm?report=executive"); }} className="w-full text-left flex items-center px-3 py-2 text-xs font-semibold rounded-xl hover:bg-slate-50 cursor-pointer">
                     <BarChart3 className="h-4 w-4 mr-2 text-blue-600" />
-                    {t.executiveDashboard}
+                    {ct("executiveDashboard", "Executive Dashboard")}
                   </button>
                   <button type="button" onClick={() => { setReportsMenuOpen(false); router.push("/dashboard/crm?report=pipeline"); }} className="w-full text-left flex items-center px-3 py-2 text-xs font-semibold rounded-xl hover:bg-slate-50 cursor-pointer">
                     <Filter className="h-4 w-4 mr-2 text-indigo-600" />
-                    {t.leadPipeline}
+                    {ct("leadPipeline", "Lead Pipeline")}
                   </button>
                   <button type="button" onClick={() => { setReportsMenuOpen(false); router.push("/dashboard/crm?report=customer-360"); }} className="w-full text-left flex items-center px-3 py-2 text-xs font-bold rounded-xl bg-purple-50 text-purple-700 cursor-pointer">
                     <Users className="h-4 w-4 mr-2 text-purple-600" />
-                    {t.customer360}
+                    {ct("customer360", "Customer 360")}
                   </button>
                   <button type="button" onClick={() => { setReportsMenuOpen(false); router.push("/dashboard/crm?report=due-followup"); }} className="w-full text-left flex items-center px-3 py-2 text-xs font-semibold rounded-xl hover:bg-slate-50 cursor-pointer">
                     <Clock className="h-4 w-4 mr-2 text-amber-600" />
-                    {t.dueFollowUp}
+                    {ct("dueFollowUp", "Due & Follow-Up")}
                   </button>
                   <button type="button" onClick={() => { setReportsMenuOpen(false); router.push("/dashboard/crm?report=payments-recovery"); }} className="w-full text-left flex items-center px-3 py-2 text-xs font-semibold rounded-xl hover:bg-slate-50 cursor-pointer">
                     <DollarSign className="h-4 w-4 mr-2 text-emerald-600" />
-                    {t.paymentsRecovery}
+                    {ct("paymentsRecovery", "Payments & Recovery")}
                   </button>
                   <button type="button" onClick={() => { setReportsMenuOpen(false); router.push("/dashboard/crm?report=city-branch"); }} className="w-full text-left flex items-center px-3 py-2 text-xs font-semibold rounded-xl hover:bg-slate-50 cursor-pointer">
                     <Building2 className="h-4 w-4 mr-2 text-rose-600" />
-                    {t.cityBranchAnalysis}
+                    {ct("cityBranchAnalysis", "City & Branch Analysis")}
                   </button>
                   <button type="button" onClick={() => { setReportsMenuOpen(false); router.push("/dashboard/crm?report=team-performance"); }} className="w-full text-left flex items-center px-3 py-2 text-xs font-semibold rounded-xl hover:bg-slate-50 cursor-pointer">
                     <Sparkles className="h-4 w-4 mr-2 text-teal-600" />
-                    {t.teamPerformance}
+                    {ct("teamPerformance", "Team Performance")}
                   </button>
                   <div className="my-1 border-t border-slate-100" />
                   <button type="button" onClick={() => { setReportsMenuOpen(false); router.push("/dashboard/crm/reports"); }} className="w-full text-left flex items-center px-3 py-2 text-xs font-semibold rounded-xl hover:bg-slate-50 cursor-pointer">
                     <FileText className="h-4 w-4 mr-2 text-slate-600" />
-                    {t.universalReports}
+                    {ct("universalReports", "Universal Reports Hub")}
                   </button>
                 </div>
               </>
@@ -414,7 +414,7 @@ export function Customer360View() {
           <Link href="/dashboard/crm/customers/new">
             <Button className="h-9 px-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold gap-1.5 shadow-xs">
               <Plus className="h-3.5 w-3.5" />
-              <span>{t.newCustomer}</span>
+              <span>{ct("newCustomer", "+ New Customer")}</span>
             </Button>
           </Link>
 
@@ -423,7 +423,7 @@ export function Customer360View() {
             <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
             <Input
               type="text"
-              placeholder={t.searchPlaceholder}
+              placeholder={ct("searchPlaceholder", "Search customer by name, ID, phone, email...")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && fetchData()}
@@ -437,7 +437,7 @@ export function Customer360View() {
             onChange={(e) => setSelectedCountry(e.target.value)}
             className="h-9 text-xs px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-850 text-slate-700 dark:text-slate-300 font-semibold focus:outline-none"
           >
-            <option value="all">{t.allCountries}</option>
+            <option value="all">{ct("allCountries", "All Countries")}</option>
             {payload?.filterOptions?.countries?.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -451,7 +451,7 @@ export function Customer360View() {
             onChange={(e) => setSelectedBranch(e.target.value)}
             className="h-9 text-xs px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-850 text-slate-700 dark:text-slate-300 font-semibold focus:outline-none"
           >
-            <option value="all">{t.allBranches}</option>
+            <option value="all">{ct("allBranches", "All Branches")}</option>
             {payload?.filterOptions?.branches?.map((b) => (
               <option key={b.id} value={b.id}>
                 {b.name}
@@ -465,7 +465,7 @@ export function Customer360View() {
             onChange={(e) => setSelectedUser(e.target.value)}
             className="h-9 text-xs px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-850 text-slate-700 dark:text-slate-300 font-semibold focus:outline-none"
           >
-            <option value="all">{t.assignedUser}</option>
+            <option value="all">{ct("assignedUser", "Assigned User")}</option>
             {payload?.filterOptions?.users?.map((u) => (
               <option key={u.id} value={u.name}>
                 {u.name}
@@ -481,7 +481,7 @@ export function Customer360View() {
             className="h-9 px-3 rounded-xl border-slate-200 dark:border-slate-800 text-xs font-bold gap-1.5"
           >
             <Filter className="h-3.5 w-3.5 text-blue-600" />
-            <span>{t.searchFilter}</span>
+            <span>{ct("searchFilter", "Search & Filter")}</span>
           </Button>
         </div>
 
@@ -497,7 +497,7 @@ export function Customer360View() {
               className="h-9 px-3.5 rounded-xl border-slate-200 dark:border-slate-800 text-xs font-bold gap-2 bg-emerald-50/60 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100/70"
             >
               <Download className="h-3.5 w-3.5 text-emerald-600" />
-              <span>{isExporting ? t.downloading : t.downloadDetails}</span>
+              <span>{isExporting ? ct("downloading", "Downloading...") : ct("downloadDetails", "Download Details")}</span>
               <ChevronDown className="h-3 w-3 text-emerald-500" />
             </Button>
             {exportMenuOpen && (
@@ -514,7 +514,7 @@ export function Customer360View() {
                   >
                     <FileSpreadsheet className="h-4 w-4 mr-2.5 text-emerald-600 shrink-0" />
                     <div>
-                      <div className="font-bold text-emerald-700 dark:text-emerald-400">{t.exportDetailedCsv}</div>
+                      <div className="font-bold text-emerald-700 dark:text-emerald-400">{ct("exportDetailedCsv", "Export Detailed Excel (.csv)")}</div>
                       <div className="text-[10px] text-slate-400">All columns, full commercial data</div>
                     </div>
                   </button>
@@ -529,7 +529,7 @@ export function Customer360View() {
                   >
                     <Download className="h-4 w-4 mr-2.5 text-blue-600 shrink-0" />
                     <div>
-                      <div className="font-semibold">{t.exportCsv} (Current View)</div>
+                      <div className="font-semibold">{ct("exportCsv", "Export CSV")} (Current View)</div>
                       <div className="text-[10px] text-slate-400">Current page records only</div>
                     </div>
                   </button>
@@ -546,7 +546,7 @@ export function Customer360View() {
                   >
                     <Printer className="h-4 w-4 mr-2.5 text-amber-500 shrink-0" />
                     <div>
-                      <div className="font-semibold">{t.printReport}</div>
+                      <div className="font-semibold">{ct("printReport", "Print")}</div>
                       <div className="text-[10px] text-slate-400">Print or save as PDF</div>
                     </div>
                   </button>
@@ -562,7 +562,7 @@ export function Customer360View() {
         {/* Card 1: Total Customers */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4 shadow-xs">
           <div className="flex items-center justify-between text-slate-500 text-xs font-bold mb-1.5">
-            <span>{t.totalCustomers}</span>
+            <span>{ct("totalCustomers", "Total Customers")}</span>
             <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg">
               <Users className="h-4 w-4" />
             </div>
@@ -588,7 +588,7 @@ export function Customer360View() {
         {/* Card 2: Active Customers */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4 shadow-xs">
           <div className="flex items-center justify-between text-slate-500 text-xs font-bold mb-1.5">
-            <span>{t.activeCustomers}</span>
+            <span>{ct("activeCustomers", "Active Customers")}</span>
             <div className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg">
               <CheckCircle2 className="h-4 w-4" />
             </div>
@@ -614,7 +614,7 @@ export function Customer360View() {
         {/* Card 3: Follow-Ups Today */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4 shadow-xs">
           <div className="flex items-center justify-between text-slate-500 text-xs font-bold mb-1.5">
-            <span>{t.followUpsToday}</span>
+            <span>{ct("followUpsToday", "Follow-Ups Today")}</span>
             <div className="p-1.5 bg-purple-50 text-purple-600 rounded-lg">
               <Calendar className="h-4 w-4" />
             </div>
@@ -625,14 +625,14 @@ export function Customer360View() {
             </span>
           </div>
           <p className="text-[10.5px] text-slate-500 font-semibold mt-1.5 truncate">
-            {kpis.followUpsCalls} {t.calls} • {kpis.followUpsMeetings} {t.meetings} • {kpis.followUpsOthers} {t.others}
+            {kpis.followUpsCalls} {ct("calls", "calls")} • {kpis.followUpsMeetings} {ct("meetings", "meetings")} • {kpis.followUpsOthers} {ct("others", "others")}
           </p>
         </div>
 
         {/* Card 4: Receivable Due */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4 shadow-xs">
           <div className="flex items-center justify-between text-slate-500 text-xs font-bold mb-1.5">
-            <span>{t.receivableDue}</span>
+            <span>{ct("receivableDue", "Receivable Due")}</span>
             <div className="p-1.5 bg-amber-50 text-amber-600 rounded-lg">
               <DollarSign className="h-4 w-4" />
             </div>
@@ -650,7 +650,7 @@ export function Customer360View() {
         {/* Card 5: Customer Health */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4 shadow-xs">
           <div className="flex items-center justify-between text-slate-500 text-xs font-bold mb-1.5">
-            <span>{t.customerHealth}</span>
+            <span>{ct("customerHealth", "Customer Health")}</span>
             <div className="p-1.5 bg-teal-50 text-teal-600 rounded-lg">
               <Heart className="h-4 w-4" />
             </div>
@@ -678,8 +678,8 @@ export function Customer360View() {
         {/* Table Title Bar */}
         <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
           <h2 className="text-sm font-black text-slate-900 dark:text-slate-100">
-            {t.customerRegister}{" "}
-            <span className="text-slate-400 font-medium">({totalRecords} {t.customersCount})</span>
+            {ct("customerRegister", "Customer Register")}{" "}
+            <span className="text-slate-400 font-medium">({totalRecords} {ct("customersCount", "customers")})</span>
           </h2>
           <div className="flex items-center gap-2">
             <Button
@@ -714,17 +714,17 @@ export function Customer360View() {
                     }}
                   />
                 </th>
-                <th className="p-3.5 w-12 text-center">{t.srNo}</th>
-                <th className="p-3.5">{t.customerId}</th>
-                <th className="p-3.5">{t.company}</th>
-                <th className="p-3.5">{t.country}</th>
-                <th className="p-3.5">{t.branch}</th>
-                <th className="p-3.5">{t.assignedUser}</th>
-                <th className="p-3.5">{t.lastContact}</th>
-                <th className="p-3.5">{t.nextAction}</th>
-                <th className="p-3.5 text-center">{t.health}</th>
-                <th className="p-3.5 text-center">{t.status}</th>
-                <th className="p-3.5 text-right">{t.actions}</th>
+                <th className="p-3.5 w-12 text-center">{ct("srNo", "#")}</th>
+                <th className="p-3.5">{ct("customerId", "CUSTOMER ID")}</th>
+                <th className="p-3.5">{ct("company", "COMPANY")}</th>
+                <th className="p-3.5">{ct("country", "COUNTRY")}</th>
+                <th className="p-3.5">{ct("branch", "BRANCH")}</th>
+                <th className="p-3.5">{ct("assignedUser", "Assigned User")}</th>
+                <th className="p-3.5">{ct("lastContact", "LAST CONTACT")}</th>
+                <th className="p-3.5">{ct("nextAction", "NEXT ACTION")}</th>
+                <th className="p-3.5 text-center">{ct("health", "HEALTH")}</th>
+                <th className="p-3.5 text-center">{ct("status", "STATUS")}</th>
+                <th className="p-3.5 text-right">{ct("actions", "ACTIONS")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -877,12 +877,12 @@ export function Customer360View() {
                             className="h-7 px-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold rounded-lg border border-blue-200/80 gap-1 cursor-pointer"
                           >
                             <Eye className="h-3 w-3" />
-                            <span>{t.view360}</span>
+                            <span>{ct("view360", "View 360")}</span>
                           </Button>
                           <button
                             type="button"
                             onClick={() => setSelectedCustomerId(c.id)}
-                            title={t.view360 || "View 360"}
+                            title={ct("view360", "View 360")}
                             className="p-1 rounded-md text-slate-400 hover:text-blue-600 hover:bg-slate-100 transition-colors"
                           >
                             <Maximize2 className="h-3.5 w-3.5" />
@@ -916,7 +916,7 @@ export function Customer360View() {
             <span>per page</span>
             <span className="mx-2 text-slate-300">|</span>
             <span>
-              Showing {totalRecords === 0 ? 0 : (page - 1) * pageSize + 1} to {Math.min(page * pageSize, totalRecords)} of {totalRecords} {t.customersCount}
+              Showing {totalRecords === 0 ? 0 : (page - 1) * pageSize + 1} to {Math.min(page * pageSize, totalRecords)} of {totalRecords} {ct("customersCount", "customers")}
             </span>
           </div>
 
@@ -962,14 +962,14 @@ export function Customer360View() {
         <div className="lg:col-span-8 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-5 shadow-xs space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
-              <span>{t.upcomingFollowUps}</span>
+              <span>{ct("upcomingFollowUps", "Upcoming Follow-Ups")}</span>
               <span className="text-slate-400 font-medium text-xs">({upcomingFollowUps.length})</span>
             </h3>
             <Link
               href="/dashboard/crm?tab=today"
               className="text-xs font-bold text-blue-600 hover:text-blue-800 hover:underline"
             >
-              {t.viewAll}
+              {ct("viewAll", "View All")}
             </Link>
           </div>
 
@@ -1049,7 +1049,7 @@ export function Customer360View() {
                           }}
                           className="h-6 px-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-[11px] rounded border border-blue-200"
                         >
-                          {t.startAction}
+                          {ct("startAction", "Start")}
                         </Button>
                       </td>
                     </tr>
@@ -1063,7 +1063,7 @@ export function Customer360View() {
         {/* Right: Quick Actions (4-button grid matching design) */}
         <div className="lg:col-span-4 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-5 shadow-xs space-y-4">
           <h3 className="text-sm font-black text-slate-900 dark:text-slate-100">
-            {t.quickActions}
+            {ct("quickActions", "Quick Actions")}
           </h3>
 
           <div className="grid grid-cols-2 gap-3">
@@ -1079,8 +1079,8 @@ export function Customer360View() {
               <div className="h-11 w-11 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md mb-2 group-hover:scale-105 transition-transform">
                 <Phone className="h-5 w-5" />
               </div>
-              <span className="font-bold text-xs text-slate-800 dark:text-slate-200">{t.logCall}</span>
-              <span className="text-[10px] text-slate-400 mt-0.5">{t.logCallDesc}</span>
+              <span className="font-bold text-xs text-slate-800 dark:text-slate-200">{ct("logCall", "Call")}</span>
+              <span className="text-[10px] text-slate-400 mt-0.5">{ct("logCallDesc", "Log a call")}</span>
             </button>
 
             {/* Quick Action 2: Message */}
@@ -1095,8 +1095,8 @@ export function Customer360View() {
               <div className="h-11 w-11 rounded-full bg-teal-500 text-white flex items-center justify-center shadow-md mb-2 group-hover:scale-105 transition-transform">
                 <MessageSquare className="h-5 w-5" />
               </div>
-              <span className="font-bold text-xs text-slate-800 dark:text-slate-200">{t.message}</span>
-              <span className="text-[10px] text-slate-400 mt-0.5">{t.messageDesc}</span>
+              <span className="font-bold text-xs text-slate-800 dark:text-slate-200">{ct("message", "Message")}</span>
+              <span className="text-[10px] text-slate-400 mt-0.5">{ct("messageDesc", "WhatsApp / Email")}</span>
             </button>
 
             {/* Quick Action 3: Meeting */}
@@ -1111,8 +1111,8 @@ export function Customer360View() {
               <div className="h-11 w-11 rounded-full bg-purple-500 text-white flex items-center justify-center shadow-md mb-2 group-hover:scale-105 transition-transform">
                 <Calendar className="h-5 w-5" />
               </div>
-              <span className="font-bold text-xs text-slate-800 dark:text-slate-200">{t.scheduleMeeting}</span>
-              <span className="text-[10px] text-slate-400 mt-0.5">{t.meetingDesc}</span>
+              <span className="font-bold text-xs text-slate-800 dark:text-slate-200">{ct("scheduleMeeting", "Meeting")}</span>
+              <span className="text-[10px] text-slate-400 mt-0.5">{ct("meetingDesc", "Schedule meeting")}</span>
             </button>
 
             {/* Quick Action 4: Add Note */}
@@ -1127,8 +1127,8 @@ export function Customer360View() {
               <div className="h-11 w-11 rounded-full bg-blue-500 text-white flex items-center justify-center shadow-md mb-2 group-hover:scale-105 transition-transform">
                 <FileText className="h-5 w-5" />
               </div>
-              <span className="font-bold text-xs text-slate-800 dark:text-slate-200">{t.addNote}</span>
-              <span className="text-[10px] text-slate-400 mt-0.5">{t.noteDesc}</span>
+              <span className="font-bold text-xs text-slate-800 dark:text-slate-200">{ct("addNote", "Add Note")}</span>
+              <span className="text-[10px] text-slate-400 mt-0.5">{ct("noteDesc", "Add activity note")}</span>
             </button>
           </div>
         </div>
@@ -1164,9 +1164,9 @@ export function Customer360View() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="font-bold text-slate-700">{t.noteText}</label>
+              <label className="font-bold text-slate-700">{ct("noteText", "Activity Note / Summary")}</label>
               <textarea
-                placeholder={t.noteText || "Enter details..."}
+                placeholder={ct("noteText", "Activity Note / Summary")}
                 value={quickActionNotes}
                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setQuickActionNotes(e.target.value)}
                 rows={4}
@@ -1182,7 +1182,7 @@ export function Customer360View() {
               onClick={() => setQuickActionModalOpen(false)}
               className="text-xs rounded-xl"
             >
-              {t.cancel}
+              {ct("cancel", "Cancel")}
             </Button>
             <Button
               type="button"
@@ -1190,7 +1190,7 @@ export function Customer360View() {
               disabled={quickActionSaving || !quickActionNotes.trim()}
               className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl"
             >
-              {quickActionSaving ? "Saving..." : t.saveActivity}
+              {quickActionSaving ? "Saving..." : ct("saveActivity", "Save Activity")}
             </Button>
           </DialogFooter>
         </DialogContent>

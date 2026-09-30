@@ -89,7 +89,6 @@ import { t as tUi } from "@/lib/i18n/ui";
 import { SafeSupportAssistant } from "@/components/support/safe-support-assistant";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { fetchBranding, brandingName } from "@/lib/branding/client";
-import { getCrmTranslation } from "@/lib/crm/crm-i18n";
 
 /* ---------------- Types ---------------- */
 export type SidebarDeepChild = {
@@ -1579,7 +1578,7 @@ export function DigitalDockPremiumSidebar({
           {/* Panel Header */}
           <div className="flex items-center justify-between px-1 pb-2 border-b border-slate-100 dark:border-slate-800">
             <span className="text-[11.5px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
-              {getCrmTranslation(lang).crmReportCenter}
+              {tUi(lang, "crm360.crmReportCenter", "CRM REPORT CENTER")}
             </span>
             <span className="text-[10px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-950/40 px-1.5 py-0.5 rounded">
               8 Reports
@@ -1591,7 +1590,7 @@ export function DigitalDockPremiumSidebar({
             <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
             <input
               type="text"
-              placeholder={getCrmTranslation(lang).searchCrmReport}
+              placeholder={tUi(lang, "crm360.searchCrmReport", "Search CRM report...")}
               value={crmSearchText}
               onChange={(e) => setCrmSearchText(e.target.value)}
               className="w-full h-8 pl-8 pr-2.5 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -1602,16 +1601,15 @@ export function DigitalDockPremiumSidebar({
           <div className="space-y-1 max-h-[300px] overflow-y-auto [scrollbar-width:thin] py-1">
             {CRM_REPORT_CENTER_OPTIONS
               .map((opt) => {
-                const cTrans = getCrmTranslation(lang);
                 let label = opt.label;
-                if (opt.key === "executive") label = cTrans.executiveDashboard;
-                else if (opt.key === "pipeline") label = cTrans.leadPipeline;
-                else if (opt.key === "customer-360") label = cTrans.customer360;
-                else if (opt.key === "due-followup") label = cTrans.dueFollowUp;
-                else if (opt.key === "payments-recovery") label = cTrans.paymentsRecovery;
-                else if (opt.key === "city-branch") label = cTrans.cityBranchAnalysis;
-                else if (opt.key === "team-performance") label = cTrans.teamPerformance;
-                else if (opt.key === "reports") label = cTrans.universalReports;
+                if (opt.key === "executive") label = tUi(lang, "crm360.executiveDashboard", "Executive Dashboard");
+                else if (opt.key === "pipeline") label = tUi(lang, "crm360.leadPipeline", "Lead Pipeline");
+                else if (opt.key === "customer-360") label = tUi(lang, "crm360.customer360", "Customer 360");
+                else if (opt.key === "due-followup") label = tUi(lang, "crm360.dueFollowUp", "Due & Follow-Up");
+                else if (opt.key === "payments-recovery") label = tUi(lang, "crm360.paymentsRecovery", "Payments & Recovery");
+                else if (opt.key === "city-branch") label = tUi(lang, "crm360.cityBranchAnalysis", "City & Branch Analysis");
+                else if (opt.key === "team-performance") label = tUi(lang, "crm360.teamPerformance", "Team Performance");
+                else if (opt.key === "reports") label = tUi(lang, "crm360.universalReports", "Universal Reports Hub");
                 return { ...opt, localizedLabel: label };
               })
               .filter((opt) => opt.localizedLabel.toLowerCase().includes(crmSearchText.toLowerCase().trim()) || opt.label.toLowerCase().includes(crmSearchText.toLowerCase().trim()))
@@ -1646,7 +1644,7 @@ export function DigitalDockPremiumSidebar({
           {/* Footer Hint */}
           <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center gap-1.5 text-[11px] text-slate-500">
             <Info className="h-3.5 w-3.5 text-blue-500 shrink-0" />
-            <span>{getCrmTranslation(lang).clickReportFullScreen}</span>
+            <span>{tUi(lang, "crm360.clickReportFullScreen", "Click any report to open full screen.")}</span>
           </div>
         </div>,
         document.body
