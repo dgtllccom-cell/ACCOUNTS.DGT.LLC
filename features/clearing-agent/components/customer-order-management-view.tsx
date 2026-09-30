@@ -903,6 +903,7 @@ export function CustomerOrderManagementView() {
   const [loadingCities, setLoadingCities] = useState<CityRow[]>([]);
   const [receivingCities, setReceivingCities] = useState<CityRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState("");
@@ -1061,18 +1062,25 @@ export function CustomerOrderManagementView() {
 
   const fetchInitialData = async () => {
     setLoading(true);
+    setLoadError(null);
     try {
+      // Every fetch below is individually guarded: one slow/reset connection
+      // (transient network blip, not a scope or data bug) must not blank the
+      // whole page's orders list — it previously did, because a single failed
+      // fetch inside this Promise.all rejected the whole batch, leaving
+      // `orders` at its initial [] with no visible error ("0 Orders" that
+      // looked like an empty register instead of a failed load).
       const [orderRes, customerRes, companyRes, countryRes, portRes, agentRes, lineRes, countryBranchRes, cityBranchRes, assigneeRes, accountRes, truckRes, warehouseRes, goodsRes] = await Promise.all([
-        fetch("/api/erp/clearing-agent/customer-order"),
-        fetch("/api/erp/customers?limit=250"),
-        fetch("/api/erp/companies?limit=250"),
-        fetch("/api/erp/locations/countries"),
-        fetch("/api/erp/ports"),
-        fetch("/api/erp/clearing-agents?limit=200"),
-        fetch("/api/erp/shipping-lines?limit=200"),
-        fetch("/api/branch-management/country-branches"),
-        fetch("/api/branch-management/city-branches"),
-        fetch("/api/erp/user-tasks/assignees"),
+        fetch("/api/erp/clearing-agent/customer-order").catch(() => null),
+        fetch("/api/erp/customers?limit=250").catch(() => null),
+        fetch("/api/erp/companies?limit=250").catch(() => null),
+        fetch("/api/erp/locations/countries").catch(() => null),
+        fetch("/api/erp/ports").catch(() => null),
+        fetch("/api/erp/clearing-agents?limit=200").catch(() => null),
+        fetch("/api/erp/shipping-lines?limit=200").catch(() => null),
+        fetch("/api/branch-management/country-branches").catch(() => null),
+        fetch("/api/branch-management/city-branches").catch(() => null),
+        fetch("/api/erp/user-tasks/assignees").catch(() => null),
         fetch("/api/erp/accounting/accounts?limit=1000").catch(() => null),
         fetch("/api/erp/master-data/trucks?selectable=true&limit=250").catch(() => null),
         fetch("/api/erp/master-data/warehouses?limit=250").catch(() => null),
@@ -1080,21 +1088,29 @@ export function CustomerOrderManagementView() {
       ]);
 
       const [orderJson, customerJson, companyJson, countryJson, portJson, agentJson, lineJson, countryBranchJson, cityBranchJson, assigneeJson, accountJson, truckJson, warehouseJson, goodsJson] = await Promise.all([
-        orderRes.json(),
-        customerRes.json(),
-        companyRes.json(),
-        countryRes.json(),
-        portRes.json(),
-        agentRes.json(),
-        lineRes.json(),
-        countryBranchRes.json().catch(() => null),
-        cityBranchRes.json().catch(() => null),
-        assigneeRes.json().catch(() => null),
+        orderRes ? orderRes.json().catch(() => null) : null,
+        customerRes ? customerRes.json().catch(() => null) : null,
+        companyRes ? companyRes.json().catch(() => null) : null,
+        countryRes ? countryRes.json().catch(() => null) : null,
+        portRes ? portRes.json().catch(() => null) : null,
+        agentRes ? agentRes.json().catch(() => null) : null,
+        lineRes ? lineRes.json().catch(() => null) : null,
+        countryBranchRes ? countryBranchRes.json().catch(() => null) : null,
+        cityBranchRes ? cityBranchRes.json().catch(() => null) : null,
+        assigneeRes ? assigneeRes.json().catch(() => null) : null,
         accountRes ? accountRes.json().catch(() => null) : null,
         truckRes ? truckRes.json().catch(() => null) : null,
         warehouseRes ? warehouseRes.json().catch(() => null) : null,
         goodsRes ? goodsRes.json().catch(() => null) : null
       ]);
+
+      // The orders list is the one piece of data this whole page exists to
+      // show — if it genuinely failed to load (network reset, non-200, bad
+      // JSON), say so instead of rendering a silent, empty-looking "0 Orders"
+      // register that a real orders shortage would look identical to.
+      if (!orderRes || !orderRes.ok || !orderJson) {
+        setLoadError(tt("orders_load_error", "Could not load the orders register. Check your connection and try again."));
+      }
 
       const extractArray = (json: any, keys: string[]) => {
         if (!json) return [];
@@ -2704,6 +2720,14 @@ export function CustomerOrderManagementView() {
                       {orders.length} {tt("orders_badge", "Orders")}
                     </span>
                   </div>
+                  {loadError && (
+                    <div data-testid="customer-order-load-error" className="mt-1 flex items-center gap-2 rounded-lg bg-rose-50 px-2.5 py-1.5 text-[11px] font-semibold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
+                      <span>{loadError}</span>
+                      <button type="button" onClick={() => void fetchInitialData()} className="rounded-md border border-rose-300 px-2 py-0.5 text-[10px] font-bold hover:bg-rose-100 dark:border-rose-800 dark:hover:bg-rose-950">
+                        {tt("retry", "Retry")}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
 

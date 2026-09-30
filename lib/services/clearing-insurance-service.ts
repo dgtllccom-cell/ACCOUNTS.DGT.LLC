@@ -270,6 +270,65 @@ export async function createInsurancePremiumBill(policyId: string, actorId: stri
 }
 
 /**
+ * Route, Border & Insurance report: one row per real route leg, joined to its
+ * customs/border fields (already on the leg — clearance happens at a specific
+ * border/port so these are kept per-leg, not a separate table) and to whatever
+ * REAL insurance policy actually covers that leg (if any). Never invents a
+ * policy or a duty figure — a leg with no covering policy shows insuranceStatus
+ * "missing"/"not_required" rather than a blank-looking fabricated row.
+ */
+export interface RouteBorderInsuranceFilters {
+  countryId?: string | null;
+  fromDate?: string | null;
+  toDate?: string | null;
+  clearanceType?: string | null;
+}
+
+export async function getRouteBorderInsuranceReport(scope: OrderScope, filters: RouteBorderInsuranceFilters = {}) {
+  return withLocalPg(async (sql) => {
+    const scopeClause = scope.isSuperAdmin
+      ? sql`true`
+      : sql`(
+          (${scope.cityBranchId ?? null}::uuid IS NOT NULL AND o.city_branch_id = ${scope.cityBranchId ?? null}::uuid)
+          OR (${scope.countryBranchId ?? null}::uuid IS NOT NULL AND o.country_branch_id = ${scope.countryBranchId ?? null}::uuid)
+          OR (${scope.countryId ?? null}::uuid IS NOT NULL AND o.country_id = ${scope.countryId ?? null}::uuid)
+        )`;
+
+    const rows = await sql`
+      SELECT
+        o.id AS order_id, o.order_no, o.customer_name,
+        l.id AS leg_id, l.leg_no, l.from_country_name, l.to_country_name,
+        l.from_location_text, l.to_location_text, l.transport_mode, l.status AS leg_status,
+        l.customs_point_text, l.clearance_type, l.duty_treatment, l.duty_amount, l.duty_currency,
+        l.customs_status, l.customs_clearance_date, l.bill_of_entry_no,
+        l.insurance_required, l.planned_departure, l.planned_arrival,
+        p.id AS policy_id, p.policy_no, p.insurer_name, p.coverage_from, p.coverage_to, p.status AS policy_status,
+        CASE
+          WHEN p.id IS NULL AND l.insurance_required THEN 'missing'
+          WHEN p.id IS NULL THEN 'not_required'
+          WHEN p.status != 'active' THEN 'cancelled'
+          WHEN p.coverage_to < current_date THEN 'expired'
+          WHEN p.coverage_to <= (current_date + interval '14 days') THEN 'expiring'
+          ELSE 'covered'
+        END AS insurance_status
+      FROM public.clearing_customer_order_legs l
+      JOIN public.clearing_customer_orders o ON o.id = l.order_id AND o.deleted_at IS NULL
+      LEFT JOIN public.clearing_order_insurance_policies p
+        ON p.order_id = l.order_id AND p.deleted_at IS NULL AND p.status = 'active'
+        AND l.leg_no BETWEEN p.from_leg_no AND p.to_leg_no
+      WHERE l.deleted_at IS NULL
+        AND ${scopeClause}
+        AND (${filters.countryId ?? null}::uuid IS NULL OR l.from_country_id = ${filters.countryId ?? null}::uuid OR l.to_country_id = ${filters.countryId ?? null}::uuid OR l.customs_country_id = ${filters.countryId ?? null}::uuid)
+        AND (${filters.fromDate ?? null}::date IS NULL OR l.planned_departure::date >= ${filters.fromDate ?? null}::date)
+        AND (${filters.toDate ?? null}::date IS NULL OR l.planned_departure::date <= ${filters.toDate ?? null}::date)
+        AND (${filters.clearanceType ?? null}::text IS NULL OR l.clearance_type = ${filters.clearanceType ?? null}::text)
+      ORDER BY o.created_at DESC, l.leg_no ASC
+    `;
+    return rows;
+  });
+}
+
+/**
  * Real, queryable exceptions — no fabricated alert text, every row traces back
  * to an actual order/leg/policy. Two kinds:
  *  - a leg is flagged insurance_required but no ACTIVE, currently-in-coverage

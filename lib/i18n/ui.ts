@@ -10539,6 +10539,53 @@ export type UiKey =
   | "crm360.selectType"
   | "crm360.close"
   | "crm360.backToRegister"
+  | "nav.route_border_insurance_report"
+  | "rbi.title"
+  | "rbi.subtitle"
+  | "rbi.filter_country"
+  | "rbi.filter_from_date"
+  | "rbi.filter_to_date"
+  | "rbi.filter_clearance_type"
+  | "rbi.all_countries"
+  | "rbi.all_types"
+  | "rbi.apply"
+  | "rbi.refresh"
+  | "rbi.col_order"
+  | "rbi.col_customer"
+  | "rbi.col_leg"
+  | "rbi.col_route"
+  | "rbi.col_mode"
+  | "rbi.col_border"
+  | "rbi.col_clearance_type"
+  | "rbi.col_customs_status"
+  | "rbi.col_duty"
+  | "rbi.col_insurance"
+  | "rbi.col_coverage"
+  | "rbi.no_rows"
+  | "rbi.ins_covered"
+  | "rbi.ins_expiring"
+  | "rbi.ins_expired"
+  | "rbi.ins_missing"
+  | "rbi.ins_not_required"
+  | "rbi.ins_cancelled"
+  | "rbi.clearance_import"
+  | "rbi.clearance_export"
+  | "rbi.clearance_transit"
+  | "rbi.mode_by_sea"
+  | "rbi.mode_by_road"
+  | "rbi.mode_by_air"
+  | "rbi.mode_by_rail"
+  | "rbi.customs_not_applicable"
+  | "rbi.customs_pending"
+  | "rbi.customs_submitted"
+  | "rbi.customs_cleared"
+  | "rbi.customs_held"
+  | "rbi.customs_rejected"
+  | "rbi.total_legs"
+  | "rbi.legs_missing_insurance"
+  | "rbi.legs_expiring"
+  | "com.orders_load_error"
+  | "com.retry"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -32353,6 +32400,53 @@ const en: Dict = {
   "crm360.selectType": "Select Activity Type",
   "crm360.close": "Close",
   "crm360.backToRegister": "Back to Customer Register",
+  "nav.route_border_insurance_report": "Route, Border & Insurance Report",
+  "rbi.title": "Route, Border & Insurance Report",
+  "rbi.subtitle": "Real per-leg route, customs/border and cargo insurance status across every customer order.",
+  "rbi.filter_country": "Country",
+  "rbi.filter_from_date": "From date",
+  "rbi.filter_to_date": "To date",
+  "rbi.filter_clearance_type": "Clearance type",
+  "rbi.all_countries": "All Countries",
+  "rbi.all_types": "All Types",
+  "rbi.apply": "Apply",
+  "rbi.refresh": "Refresh",
+  "rbi.col_order": "Order No.",
+  "rbi.col_customer": "Customer",
+  "rbi.col_leg": "Leg",
+  "rbi.col_route": "Route",
+  "rbi.col_mode": "Mode",
+  "rbi.col_border": "Border / Customs Point",
+  "rbi.col_clearance_type": "Clearance",
+  "rbi.col_customs_status": "Customs Status",
+  "rbi.col_duty": "Duty",
+  "rbi.col_insurance": "Insurance",
+  "rbi.col_coverage": "Coverage To",
+  "rbi.no_rows": "No route legs found for the selected filters.",
+  "rbi.ins_covered": "Covered",
+  "rbi.ins_expiring": "Expiring Soon",
+  "rbi.ins_expired": "Expired",
+  "rbi.ins_missing": "Required — Missing",
+  "rbi.ins_not_required": "Not Required",
+  "rbi.ins_cancelled": "Cancelled",
+  "rbi.clearance_import": "Import",
+  "rbi.clearance_export": "Export",
+  "rbi.clearance_transit": "Transit",
+  "rbi.mode_by_sea": "Sea",
+  "rbi.mode_by_road": "Road",
+  "rbi.mode_by_air": "Air",
+  "rbi.mode_by_rail": "Rail",
+  "rbi.customs_not_applicable": "N/A",
+  "rbi.customs_pending": "Pending",
+  "rbi.customs_submitted": "Submitted",
+  "rbi.customs_cleared": "Cleared",
+  "rbi.customs_held": "Held",
+  "rbi.customs_rejected": "Rejected",
+  "rbi.total_legs": "Total Legs",
+  "rbi.legs_missing_insurance": "Missing Insurance",
+  "rbi.legs_expiring": "Expiring Soon",
+  "com.orders_load_error": "Could not load the orders register. Check your connection and try again.",
+  "com.retry": "Retry",
 };
 
 const ur: Dict = {
@@ -54136,6 +54230,53 @@ const ur: Dict = {
   "crm360.selectType": "سرگرمی کی قسم منتخب کریں",
   "crm360.close": "بند کریں",
   "crm360.backToRegister": "کسٹمر رجسٹر پر واپس جائیں",
+  "nav.route_border_insurance_report": "روٹ، سرحد اور انشورنس رپورٹ",
+  "rbi.title": "روٹ، سرحد اور انشورنس رپورٹ",
+  "rbi.subtitle": "ہر کسٹمر آرڈر میں فی لیگ روٹ، کسٹمز/سرحدی اور کارگو انشورنس کی اصل حیثیت۔",
+  "rbi.filter_country": "ملک",
+  "rbi.filter_from_date": "تاریخ از",
+  "rbi.filter_to_date": "تاریخ تا",
+  "rbi.filter_clearance_type": "کلیئرنس کی قسم",
+  "rbi.all_countries": "تمام ممالک",
+  "rbi.all_types": "تمام اقسام",
+  "rbi.apply": "لاگو کریں",
+  "rbi.refresh": "ریفریش",
+  "rbi.col_order": "آرڈر نمبر",
+  "rbi.col_customer": "کسٹمر",
+  "rbi.col_leg": "لیگ",
+  "rbi.col_route": "روٹ",
+  "rbi.col_mode": "ذریعہ",
+  "rbi.col_border": "سرحد / کسٹمز پوائنٹ",
+  "rbi.col_clearance_type": "کلیئرنس",
+  "rbi.col_customs_status": "کسٹمز حیثیت",
+  "rbi.col_duty": "ڈیوٹی",
+  "rbi.col_insurance": "انشورنس",
+  "rbi.col_coverage": "کوریج تا",
+  "rbi.no_rows": "منتخب فلٹرز کے مطابق کوئی روٹ لیگ نہیں ملی۔",
+  "rbi.ins_covered": "کور شدہ",
+  "rbi.ins_expiring": "جلد ختم ہو رہی ہے",
+  "rbi.ins_expired": "ختم ہو چکی",
+  "rbi.ins_missing": "لازمی — موجود نہیں",
+  "rbi.ins_not_required": "ضروری نہیں",
+  "rbi.ins_cancelled": "منسوخ",
+  "rbi.clearance_import": "درآمد",
+  "rbi.clearance_export": "برآمد",
+  "rbi.clearance_transit": "ٹرانزٹ",
+  "rbi.mode_by_sea": "سمندری",
+  "rbi.mode_by_road": "روڈ",
+  "rbi.mode_by_air": "ہوائی",
+  "rbi.mode_by_rail": "ریل",
+  "rbi.customs_not_applicable": "لاگو نہیں",
+  "rbi.customs_pending": "زیر التواء",
+  "rbi.customs_submitted": "جمع کرائی گئی",
+  "rbi.customs_cleared": "کلیئر",
+  "rbi.customs_held": "روک دی گئی",
+  "rbi.customs_rejected": "مسترد",
+  "rbi.total_legs": "کل لیگز",
+  "rbi.legs_missing_insurance": "انشورنس موجود نہیں",
+  "rbi.legs_expiring": "جلد ختم ہونے والی",
+  "com.orders_load_error": "آرڈرز رجسٹر لوڈ نہیں ہو سکا۔ اپنا کنکشن چیک کریں اور دوبارہ کوشش کریں۔",
+  "com.retry": "دوبارہ کوشش کریں",
 };
 
 const ar: Dict = {
@@ -75920,6 +76061,53 @@ const ar: Dict = {
   "crm360.selectType": "نوع النشاط",
   "crm360.close": "إغلاق",
   "crm360.backToRegister": "العودة إلى سجل العملاء",
+  "nav.route_border_insurance_report": "تقرير المسار والحدود والتأمين",
+  "rbi.title": "تقرير المسار والحدود والتأمين",
+  "rbi.subtitle": "الحالة الفعلية لكل مرحلة مسار، والجمارك/الحدود، وتأمين البضائع عبر جميع طلبات العملاء.",
+  "rbi.filter_country": "الدولة",
+  "rbi.filter_from_date": "من تاريخ",
+  "rbi.filter_to_date": "إلى تاريخ",
+  "rbi.filter_clearance_type": "نوع التخليص",
+  "rbi.all_countries": "جميع الدول",
+  "rbi.all_types": "جميع الأنواع",
+  "rbi.apply": "تطبيق",
+  "rbi.refresh": "تحديث",
+  "rbi.col_order": "رقم الطلب",
+  "rbi.col_customer": "العميل",
+  "rbi.col_leg": "المرحلة",
+  "rbi.col_route": "المسار",
+  "rbi.col_mode": "وسيلة النقل",
+  "rbi.col_border": "الحدود / نقطة الجمارك",
+  "rbi.col_clearance_type": "التخليص",
+  "rbi.col_customs_status": "حالة الجمارك",
+  "rbi.col_duty": "الرسوم",
+  "rbi.col_insurance": "التأمين",
+  "rbi.col_coverage": "التغطية حتى",
+  "rbi.no_rows": "لا توجد مراحل مسار مطابقة للفلاتر المحددة.",
+  "rbi.ins_covered": "مغطّى",
+  "rbi.ins_expiring": "قارب على الانتهاء",
+  "rbi.ins_expired": "منتهي",
+  "rbi.ins_missing": "مطلوب — غير موجود",
+  "rbi.ins_not_required": "غير مطلوب",
+  "rbi.ins_cancelled": "ملغى",
+  "rbi.clearance_import": "استيراد",
+  "rbi.clearance_export": "تصدير",
+  "rbi.clearance_transit": "عبور",
+  "rbi.mode_by_sea": "بحري",
+  "rbi.mode_by_road": "بري",
+  "rbi.mode_by_air": "جوي",
+  "rbi.mode_by_rail": "سكة حديد",
+  "rbi.customs_not_applicable": "غير منطبق",
+  "rbi.customs_pending": "قيد الانتظار",
+  "rbi.customs_submitted": "مُقدَّم",
+  "rbi.customs_cleared": "مُخلَّص",
+  "rbi.customs_held": "محتجز",
+  "rbi.customs_rejected": "مرفوض",
+  "rbi.total_legs": "إجمالي المراحل",
+  "rbi.legs_missing_insurance": "بدون تأمين",
+  "rbi.legs_expiring": "قارب على الانتهاء",
+  "com.orders_load_error": "تعذّر تحميل سجل الطلبات. تحقق من اتصالك وحاول مرة أخرى.",
+  "com.retry": "إعادة المحاولة",
 };
 
 const fa: Dict = {
@@ -97703,6 +97891,53 @@ const fa: Dict = {
   "crm360.selectType": "نوع فعالیت",
   "crm360.close": "بستن",
   "crm360.backToRegister": "بازگشت به فهرست مشتریان",
+  "nav.route_border_insurance_report": "گزارش مسیر، مرز و بیمه",
+  "rbi.title": "گزارش مسیر، مرز و بیمه",
+  "rbi.subtitle": "وضعیت واقعی هر مرحله مسیر، گمرک/مرز و بیمه محموله در تمام سفارش‌های مشتری.",
+  "rbi.filter_country": "کشور",
+  "rbi.filter_from_date": "از تاریخ",
+  "rbi.filter_to_date": "تا تاریخ",
+  "rbi.filter_clearance_type": "نوع ترخیص",
+  "rbi.all_countries": "همه کشورها",
+  "rbi.all_types": "همه انواع",
+  "rbi.apply": "اعمال",
+  "rbi.refresh": "تازه‌سازی",
+  "rbi.col_order": "شماره سفارش",
+  "rbi.col_customer": "مشتری",
+  "rbi.col_leg": "مرحله",
+  "rbi.col_route": "مسیر",
+  "rbi.col_mode": "روش حمل",
+  "rbi.col_border": "مرز / نقطه گمرکی",
+  "rbi.col_clearance_type": "ترخیص",
+  "rbi.col_customs_status": "وضعیت گمرکی",
+  "rbi.col_duty": "عوارض",
+  "rbi.col_insurance": "بیمه",
+  "rbi.col_coverage": "پوشش تا",
+  "rbi.no_rows": "برای فیلترهای انتخابی هیچ مرحله مسیری یافت نشد.",
+  "rbi.ins_covered": "تحت پوشش",
+  "rbi.ins_expiring": "نزدیک به پایان",
+  "rbi.ins_expired": "منقضی شده",
+  "rbi.ins_missing": "الزامی — موجود نیست",
+  "rbi.ins_not_required": "غیرضروری",
+  "rbi.ins_cancelled": "لغو شده",
+  "rbi.clearance_import": "واردات",
+  "rbi.clearance_export": "صادرات",
+  "rbi.clearance_transit": "ترانزیت",
+  "rbi.mode_by_sea": "دریایی",
+  "rbi.mode_by_road": "جاده‌ای",
+  "rbi.mode_by_air": "هوایی",
+  "rbi.mode_by_rail": "ریلی",
+  "rbi.customs_not_applicable": "غیرقابل اجرا",
+  "rbi.customs_pending": "در انتظار",
+  "rbi.customs_submitted": "ارسال شده",
+  "rbi.customs_cleared": "ترخیص شده",
+  "rbi.customs_held": "متوقف شده",
+  "rbi.customs_rejected": "رد شده",
+  "rbi.total_legs": "کل مراحل",
+  "rbi.legs_missing_insurance": "بدون بیمه",
+  "rbi.legs_expiring": "نزدیک به پایان",
+  "com.orders_load_error": "بارگذاری فهرست سفارش‌ها ناموفق بود. اتصال خود را بررسی کرده و دوباره تلاش کنید.",
+  "com.retry": "تلاش مجدد",
 };
 
 const ps: Dict = {
@@ -119493,6 +119728,53 @@ const ps: Dict = {
   "crm360.selectType": "د فعالیت ډول",
   "crm360.close": "بندول",
   "crm360.backToRegister": "بیرته راجستر ته",
+  "nav.route_border_insurance_report": "د لارې، پولې او بیمې راپور",
+  "rbi.title": "د لارې، پولې او بیمې راپور",
+  "rbi.subtitle": "د هر کسټمر امر په هره پړاو کې د لارې، ګمرک/پولې او بار بیمې اصلي حالت.",
+  "rbi.filter_country": "هیواد",
+  "rbi.filter_from_date": "د نېټې نه",
+  "rbi.filter_to_date": "تر نېټې",
+  "rbi.filter_clearance_type": "د خلاصون ډول",
+  "rbi.all_countries": "ټول هیوادونه",
+  "rbi.all_types": "ټول ډولونه",
+  "rbi.apply": "پلي کول",
+  "rbi.refresh": "تازه کول",
+  "rbi.col_order": "د امر شمېره",
+  "rbi.col_customer": "پیرودونکی",
+  "rbi.col_leg": "پړاو",
+  "rbi.col_route": "لار",
+  "rbi.col_mode": "د لېږد طریقه",
+  "rbi.col_border": "پوله / ګمرکي ځای",
+  "rbi.col_clearance_type": "خلاصون",
+  "rbi.col_customs_status": "د ګمرک حالت",
+  "rbi.col_duty": "محصول",
+  "rbi.col_insurance": "بیمه",
+  "rbi.col_coverage": "پوښښ تر",
+  "rbi.no_rows": "د ټاکل شویو فلترونو لپاره هیڅ لاره پړاو ونه موندل شو.",
+  "rbi.ins_covered": "پوښل شوی",
+  "rbi.ins_expiring": "ژر پای ته رسېږي",
+  "rbi.ins_expired": "پای ته رسېدلی",
+  "rbi.ins_missing": "اړین — نشته",
+  "rbi.ins_not_required": "اړین نه دی",
+  "rbi.ins_cancelled": "لغوه شوی",
+  "rbi.clearance_import": "واردول",
+  "rbi.clearance_export": "صادرول",
+  "rbi.clearance_transit": "ترانزیټ",
+  "rbi.mode_by_sea": "سمندري",
+  "rbi.mode_by_road": "سړکي",
+  "rbi.mode_by_air": "هوايي",
+  "rbi.mode_by_rail": "اورګاډی",
+  "rbi.customs_not_applicable": "پلي نه کېږي",
+  "rbi.customs_pending": "پاتې",
+  "rbi.customs_submitted": "وسپارل شوی",
+  "rbi.customs_cleared": "خلاص شوی",
+  "rbi.customs_held": "ودرول شوی",
+  "rbi.customs_rejected": "رد شوی",
+  "rbi.total_legs": "ټول پړاوونه",
+  "rbi.legs_missing_insurance": "پرته له بیمې",
+  "rbi.legs_expiring": "ژر پای ته رسېدونکي",
+  "com.orders_load_error": "د امرونو راجستر نه شو لوډ کېدی. خپل اتصال وګورئ او بیا هڅه وکړئ.",
+  "com.retry": "بیا هڅه",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

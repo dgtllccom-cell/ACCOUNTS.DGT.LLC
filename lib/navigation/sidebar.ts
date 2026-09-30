@@ -770,6 +770,13 @@ export const sidebarTree: SidebarNode[] = [
         permission: { resource: "shipping_records", action: "read" }
       },
       {
+        key: "clearing-route-border-insurance-report",
+        labelKey: "nav.route_border_insurance_report",
+        href: "/dashboard/clearing-agent/route-border-insurance-report" as Route,
+        roles: ["super_admin", "agent_user"],
+        permission: { resource: "shipping_records", action: "read" }
+      },
+      {
         key: "shipping-handover-inbox",
         labelKey: "dintake.hi_nav" as any,
         href: "/dashboard/shipping-line/handover-inbox" as Route,
