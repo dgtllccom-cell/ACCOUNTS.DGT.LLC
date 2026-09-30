@@ -62,6 +62,7 @@ export function ControlChecksPanel() {
       incomplete_workflow: s.t("d_incomplete", "Incomplete purchase / sales workflow"),
       pending_approval: s.t("d_approval", "Pending approval (over 2 days)"),
       stale_crm_followup: s.t("d_crm", "Stale CRM follow-up"),
+      low_stock_alert: s.t("d_low_stock", "Low stock / reorder alert"),
       eta_passed_no_update: s.t("d_eta", "ETA passed without tracking update"),
       missing_shipping_document: s.t("d_ship_doc", "Missing shipping / clearing document data"),
       payroll_exception: s.t("d_payroll", "Payroll exception"),
@@ -72,7 +73,7 @@ export function ControlChecksPanel() {
       wps_exception: s.t("d_wps", "WPS exception"),
     })[d] ?? d;
   const groupName = (g: string) =>
-    ({ all: s.t("g_all", "All"), accounting: s.t("g_accounting", "Accounting"), receivables: s.t("g_receivables", "Receivables, Payables & Workflow"), crm: s.t("g_crm", "CRM"), shipping: s.t("g_shipping", "Shipping & Clearing"), hr: s.t("g_hr", "HR & Payroll"), compliance: s.t("g_compliance", "Company & Tax Compliance") })[g] ?? g;
+    ({ all: s.t("g_all", "All"), accounting: s.t("g_accounting", "Accounting"), receivables: s.t("g_receivables", "Receivables, Payables & Workflow"), crm: s.t("g_crm", "CRM"), inventory: s.t("g_inventory", "Inventory"), shipping: s.t("g_shipping", "Shipping & Clearing"), hr: s.t("g_hr", "HR & Payroll"), compliance: s.t("g_compliance", "Company & Tax Compliance") })[g] ?? g;
   const sevName = (v: string) =>
     ({ all: s.t("s_all", "All"), critical: s.t("s_critical", "Critical"), needs_review: s.t("s_review", "Needs review"), reminder: s.t("s_reminder", "Reminder"), resolved: s.t("s_resolved", "Resolved") })[v] ?? v;
 
@@ -89,7 +90,7 @@ export function ControlChecksPanel() {
       resolved: r.filter((x) => x.count === 0 && !x.error).length,
     };
   }, [data]);
-  const groups = ["all", "accounting", "receivables", "crm", "shipping", "hr", "compliance"];
+  const groups = ["all", "accounting", "receivables", "crm", "inventory", "shipping", "hr", "compliance"];
 
   return (
     <section dir={s.dir} data-testid="control-checks" className="mb-5 rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">

@@ -9439,6 +9439,8 @@ export type UiKey =
   | "sops.d_approval"
   | "sops.d_attendance"
   | "sops.d_company"
+  | "sops.d_low_stock"
+  | "sops.g_inventory"
   | "sops.d_crm"
   | "sops.d_dup_invoice"
   | "sops.d_emp_doc"
@@ -31078,6 +31080,8 @@ const en: Dict = {
   "sops.d_approval": "Pending approval (over 2 days)",
   "sops.d_attendance": "Missing attendance before payroll",
   "sops.d_company": "Company licence expired / expiring",
+  "sops.d_low_stock": "Low stock / reorder alert",
+  "sops.g_inventory": "Inventory",
   "sops.d_crm": "Stale CRM follow-up",
   "sops.d_dup_invoice": "Duplicate invoice / bill number",
   "sops.d_emp_doc": "Employee document expired / expiring",
@@ -52686,6 +52690,8 @@ const ur: Dict = {
   "sops.d_approval": "زیر التوا منظوری (2 دن سے زیادہ)",
   "sops.d_attendance": "پے رول سے پہلے حاضری موجود نہیں",
   "sops.d_company": "کمپنی لائسنس ختم / ختم ہونے والا",
+  "sops.d_low_stock": "کم اسٹاک / دوبارہ آرڈر الرٹ",
+  "sops.g_inventory": "انوینٹری",
   "sops.d_crm": "پرانا CRM فالو اپ",
   "sops.d_dup_invoice": "دہرا انوائس / بل نمبر",
   "sops.d_emp_doc": "ملازم کی دستاویز ختم / ختم ہونے والی",
@@ -74295,6 +74301,8 @@ const ar: Dict = {
   "sops.d_approval": "موافقة معلقة (أكثر من يومين)",
   "sops.d_attendance": "الحضور مفقود قبل الرواتب",
   "sops.d_company": "رخصة شركة منتهية / قاربت على الانتهاء",
+  "sops.d_low_stock": "تنبيه انخفاض المخزون / إعادة الطلب",
+  "sops.g_inventory": "المخزون",
   "sops.d_crm": "متابعة CRM متأخرة",
   "sops.d_dup_invoice": "رقم فاتورة / فاتورة مكرر",
   "sops.d_emp_doc": "مستند موظف منتهٍ / قارب على الانتهاء",
@@ -95903,6 +95911,8 @@ const fa: Dict = {
   "sops.d_approval": "تأیید معلق (بیش از ۲ روز)",
   "sops.d_attendance": "حضور پیش از حقوق ثبت نشده",
   "sops.d_company": "مجوز شرکت منقضی / در حال انقضا",
+  "sops.d_low_stock": "هشدار موجودی کم / سفارش مجدد",
+  "sops.g_inventory": "موجودی",
   "sops.d_crm": "پیگیری CRM عقب‌افتاده",
   "sops.d_dup_invoice": "شماره فاکتور / صورتحساب تکراری",
   "sops.d_emp_doc": "سند کارمند منقضی / در حال انقضا",
@@ -117518,6 +117528,8 @@ const ps: Dict = {
   "sops.d_approval": "ځنډېدلی تایید (له ۲ ورځو زیات)",
   "sops.d_attendance": "له معاش مخکې حاضري نشته",
   "sops.d_company": "د شرکت جواز پای ته رسېدلی / رسېدونکی",
+  "sops.d_low_stock": "د کم ذخیرې / بیا امر خبرداری",
+  "sops.g_inventory": "ذخیره",
   "sops.d_crm": "زوړ CRM تعقیب",
   "sops.d_dup_invoice": "تکراري بل / فاکتور شمېره",
   "sops.d_emp_doc": "د کارکوونکي سند پای ته رسېدلی / رسېدونکی",

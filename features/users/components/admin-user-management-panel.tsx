@@ -24,6 +24,7 @@ import {
   Layers,
   Building,
   Check,
+  Radio,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -496,6 +497,13 @@ export function AdminUserManagementPanel() {
             </Button>
           </Link>
 
+          <Link href="/dashboard/users/live">
+            <Button size="sm" className="gap-2 bg-cyan-600 hover:bg-cyan-700 text-white font-medium shadow-sm">
+              <Radio className="h-4 w-4 animate-pulse" />
+              <span>{tt("live_users_work", "Live Users / Current Work")}</span>
+            </Button>
+          </Link>
+
           <Link href="/dashboard/users/new">
             <Button size="sm" className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-sm">
               <UserPlus className="h-4 w-4" />
@@ -593,6 +601,14 @@ export function AdminUserManagementPanel() {
             <ShieldCheck className="h-4 w-4" />
             <span>{tt("nav.roles", "System Role Matrix")}</span>
           </button>
+
+          <Link
+            href="/dashboard/users/live"
+            className="flex items-center gap-2 rounded-md px-3.5 py-1.5 text-xs font-semibold transition-all text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 hover:bg-slate-200 dark:hover:bg-slate-700"
+          >
+            <Radio className="h-3.5 w-3.5 animate-pulse" />
+            <span>{tt("live_users_work", "Live Users / Current Work")}</span>
+          </Link>
         </div>
 
         {activeTab !== "roles" && (

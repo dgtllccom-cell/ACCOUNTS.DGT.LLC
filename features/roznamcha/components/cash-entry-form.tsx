@@ -621,66 +621,7 @@ export function CashEntryForm({
   const [ledgerRefreshCount, setLedgerRefreshCount] = useState(0);
   const [showPaymentWorkReport, setShowPaymentWorkReport] = useState(false);
 
-  // Live Users / Current Work states
-  const [liveUsersRoleFilter, setLiveUsersRoleFilter] = useState("all");
-  const [liveUsersOpFilter, setLiveUsersOpFilter] = useState("all");
-  const [liveUsersList, setLiveUsersList] = useState<any[]>([
-    {
-      id: "live-1",
-      userId: "BE340D15",
-      branchCode: "HQ-001",
-      date: "25/09/2026",
-      time: "12:45",
-      userType: "Business",
-      userName: "Super Admin",
-      currentWork: "Roznamcha / Global Review",
-      status: "Online",
-    },
-    {
-      id: "live-2",
-      userId: "PK-A102",
-      branchCode: "PK-001",
-      date: "25/09/2026",
-      time: "12:41",
-      userType: "Business",
-      userName: "Country Admin",
-      currentWork: "Daily Payment Entry",
-      status: "Online",
-    },
-    {
-      id: "live-3",
-      userId: "PK-S207",
-      branchCode: "PK-001",
-      date: "25/09/2026",
-      time: "12:38",
-      userType: "Shipping Line",
-      userName: "Shipping Admin",
-      currentWork: "Shipping Ledger",
-      status: "Online",
-    },
-    {
-      id: "live-4",
-      userId: "DXB-B31",
-      branchCode: "DXB-01",
-      date: "25/09/2026",
-      time: "12:36",
-      userType: "Business",
-      userName: "Branch Admin",
-      currentWork: "Cash Entry",
-      status: "Online",
-    },
-    {
-      id: "live-5",
-      userId: "DXB-S44",
-      branchCode: "DXB-01",
-      date: "25/09/2026",
-      time: "12:30",
-      userType: "Shipping Line",
-      userName: "Shipping User",
-      currentWork: "Shipping Payment",
-      status: "Online",
-    },
-  ]);
+
 
   // Serial Numbers & Country Rates states
   const [serialRoleFilter, setSerialRoleFilter] = useState("Super Admin");
@@ -707,20 +648,7 @@ export function CashEntryForm({
     { country: "IR", creditLocal: "600,000,000 IRR", debitLocal: "610,000,000 IRR", creditUsd: "$14,533.91", debitUsd: "$14,832.01" },
   ]);
 
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/erp/users/live-presence")
-      .then((r) => r.json())
-      .then((res) => {
-        if (!cancelled && res?.ok && Array.isArray(res.data) && res.data.length > 0) {
-          setLiveUsersList(res.data);
-        }
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+
 
   const handleStartEditRate = (r: any) => {
     setEditingRateCountry(r.country);
@@ -745,21 +673,7 @@ export function CashEntryForm({
     setEditingRateCountry(null);
   };
 
-  const filteredLiveUsers = useMemo(() => {
-    return liveUsersList.filter((u) => {
-      if (liveUsersRoleFilter !== "all" && !u.userName.toLowerCase().includes(liveUsersRoleFilter.toLowerCase())) {
-        return false;
-      }
-      if (
-        liveUsersOpFilter !== "all" &&
-        !u.userType.toLowerCase().includes(liveUsersOpFilter.toLowerCase()) &&
-        !u.currentWork.toLowerCase().includes(liveUsersOpFilter.toLowerCase())
-      ) {
-        return false;
-      }
-      return true;
-    });
-  }, [liveUsersList, liveUsersRoleFilter, liveUsersOpFilter]);
+
 
   const filteredCashPositions = useMemo(() => {
     if (cashPositionCountryFilter === "all") return cashPositionsList;
@@ -2828,95 +2742,6 @@ export function CashEntryForm({
             </div>
           </div>
 
-          {/* Card 1B: Live Users / Current Work (Dark theme matching screenshot) */}
-          <div className="flex flex-col rounded-xl border border-slate-800 bg-[#0b1626] text-white shadow-md overflow-hidden">
-            <div className="flex flex-wrap items-center justify-between px-3.5 py-2.5 border-b border-slate-800/80 bg-[#07111e]">
-              <div className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-cyan-400 inline-block" />
-                <h4 className="text-xs font-black uppercase tracking-wider text-white">
-                  LIVE USERS / CURRENT WORK
-                </h4>
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-black text-emerald-400">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  {filteredLiveUsers.length} Online
-                </span>
-              </div>
-
-              <div className="flex items-center gap-1.5">
-                <select
-                  value={liveUsersRoleFilter}
-                  onChange={(e) => setLiveUsersRoleFilter(e.target.value)}
-                  className="bg-[#112238] border border-slate-700/80 rounded px-2 py-0.5 text-[11px] font-semibold text-slate-200 outline-none cursor-pointer"
-                >
-                  <option value="all">Super Admin</option>
-                  <option value="country">Country Admin</option>
-                  <option value="branch">Branch Admin</option>
-                  <option value="shipping">Shipping</option>
-                </select>
-                <select
-                  value={liveUsersOpFilter}
-                  onChange={(e) => setLiveUsersOpFilter(e.target.value)}
-                  className="bg-[#112238] border border-slate-700/80 rounded px-2 py-0.5 text-[11px] font-semibold text-slate-200 outline-none cursor-pointer"
-                >
-                  <option value="all">All Operations</option>
-                  <option value="Business">Business</option>
-                  <option value="Shipping Line">Shipping Line</option>
-                  <option value="Payment">Payment</option>
-                  <option value="Ledger">Ledger</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-[11px] border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-800 bg-[#0d1c2e] text-[10px] font-black uppercase tracking-wider text-slate-400">
-                    <th className="py-2 px-2.5 whitespace-nowrap">USER ID</th>
-                    <th className="py-2 px-2 whitespace-nowrap">BRANCH CODE</th>
-                    <th className="py-2 px-2 whitespace-nowrap">DATE</th>
-                    <th className="py-2 px-2 whitespace-nowrap">TIME</th>
-                    <th className="py-2 px-2 whitespace-nowrap">USER TYPE</th>
-                    <th className="py-2 px-2 whitespace-nowrap">USER NAME</th>
-                    <th className="py-2 px-2.5 whitespace-nowrap">CURRENT WORK</th>
-                    <th className="py-2 px-2 whitespace-nowrap text-center">STATUS</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800/60 font-medium">
-                  {filteredLiveUsers.map((user) => (
-                    <tr key={user.id} className="hover:bg-slate-800/40 transition-colors">
-                      <td className="py-2 px-2.5 font-mono font-bold text-cyan-300 whitespace-nowrap">
-                        {user.userId}
-                      </td>
-                      <td className="py-2 px-2 font-mono font-bold text-white whitespace-nowrap">
-                        {user.branchCode}
-                      </td>
-                      <td className="py-2 px-2 text-slate-300 whitespace-nowrap">
-                        {user.date}
-                      </td>
-                      <td className="py-2 px-2 text-slate-300 font-mono whitespace-nowrap">
-                        {user.time}
-                      </td>
-                      <td className="py-2 px-2 text-slate-300 whitespace-nowrap">
-                        {user.userType}
-                      </td>
-                      <td className="py-2 px-2 font-bold text-white whitespace-nowrap">
-                        {user.userName}
-                      </td>
-                      <td className="py-2 px-2.5 text-slate-300 whitespace-nowrap">
-                        {user.currentWork}
-                      </td>
-                      <td className="py-2 px-2 text-center whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400">
-                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                          Online
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
         </div>
 
         {/* ════════ COLUMN 2: SERIAL NUMBERS & COUNTRY RATES (xl:col-span-4) ════════ */}

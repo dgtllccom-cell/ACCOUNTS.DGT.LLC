@@ -173,6 +173,26 @@ const DETECTORS: Def[] = [
       ORDER BY 3 LIMIT ${LIMIT}`,
     map: (r) => ({ reference: r.ref ?? "—", detail: r.customer_name, date: iso(r.d), href: r.kind === "inquiry" ? `/dashboard/customer-inquiries?id=${r.id}` : "/dashboard/crm?report=due-followup", country: r.country }),
   },
+  // ── Inventory ────────────────────────────────────────────────────────
+  {
+    // Reads the already-built product_low_stock_v view (real product_inventory_balances
+    // data vs each product's own configured min_stock_level/reorder_level — a product with
+    // neither configured is never flagged, no invented thresholds). Never writes anything;
+    // Smart Operations only ever detects and deep-links, per its own contract.
+    detector: "low_stock_alert", group: "inventory", severity: "needs_review",
+    run: (sql, scope) => sql`
+      SELECT v.product_name, v.sku, v.stock_status, v.quantity_available, v.suggested_restock_qty, v.updated_at, c.name AS country
+      FROM public.product_low_stock_v v LEFT JOIN public.countries c ON c.id = v.country_id
+      WHERE v.stock_status IN ('reorder', 'low') AND ${sqlScopeCondition(sql, scope, "v")}
+      ORDER BY v.stock_status, v.quantity_available LIMIT ${LIMIT}`,
+    map: (r) => ({
+      reference: r.sku ?? r.product_name ?? "—",
+      detail: `${r.product_name ?? ""} · available ${Number(r.quantity_available ?? 0).toLocaleString("en-US")} · suggest restock ${Number(r.suggested_restock_qty ?? 0).toLocaleString("en-US")}`,
+      date: iso(r.updated_at),
+      href: `/dashboard/inventory?q=${encodeURIComponent(r.sku ?? r.product_name ?? "")}`,
+      country: r.country
+    }),
+  },
   // ── Shipping / clearing ───────────────────────────────────────────────
   {
     detector: "eta_passed_no_update", group: "shipping", severity: "needs_review",
