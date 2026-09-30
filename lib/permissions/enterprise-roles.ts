@@ -105,7 +105,9 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "currency_rates:read",
     "audit_logs:read",
     "uae_tax:read",
+    "pk_tax:read",
     "uae_tax_filing:read",
+    "pk_tax_filing:read",
     "uae_tax_settings:read",
     "contracts:read"
   ],
@@ -240,9 +242,13 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "documents:export",
     "documents:print",
     "uae_tax:read",
+    "pk_tax:read",
     "uae_tax:write",
+    "pk_tax:write",
     "uae_tax_filing:read",
+    "pk_tax_filing:read",
     "uae_tax_filing:write",
+    "pk_tax_filing:write",
     "uae_tax_settings:read",
     "uae_tax_settings:write",
     "contracts:read",
@@ -283,6 +289,7 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "documents:read",
     "documents:create",
     "uae_tax:read",
+    "pk_tax:read",
     "contracts:read",
     "location_master:read",
     "route_templates:read"
@@ -383,8 +390,11 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "documents:export",
     "documents:print",
     "uae_tax:read",
+    "pk_tax:read",
     "uae_tax:write",
+    "pk_tax:write",
     "uae_tax_filing:read",
+    "pk_tax_filing:read",
     "contracts:read",
     "contracts:write"
   ],
@@ -479,7 +489,9 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "documents:export",
     "documents:print",
     "uae_tax:read",
+    "pk_tax:read",
     "uae_tax:write",
+    "pk_tax:write",
     "contracts:read",
     "contracts:write"
   ],
@@ -550,9 +562,13 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "approvals:approve",
     "reports:read",
     "uae_tax:read",
+    "pk_tax:read",
     "uae_tax:write",
+    "pk_tax:write",
     "uae_tax_filing:read",
+    "pk_tax_filing:read",
     "uae_tax_filing:write",
+    "pk_tax_filing:write",
     "contracts:read",
     "contracts:write"
   ],
@@ -603,7 +619,7 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     ...SHIPPING_APPROVED_BUNDLE
   ],
   staff_user: ["transactions:create", "transactions:read", "customers:read", "companies:read", "shipping_records:read", "whatsapp:read", "location_master:read", "route_templates:read"],
-  auditor_viewer: ["reports:read", "audit_logs:read", "ledgers:read", "companies:read", "kyc:read", "documents:read", "uae_tax:read", "uae_tax_filing:read", "contracts:read"]
+  auditor_viewer: ["reports:read", "audit_logs:read", "ledgers:read", "companies:read", "kyc:read", "documents:read", "uae_tax:read", "uae_tax_filing:read", "pk_tax:read", "pk_tax_filing:read", "contracts:read"]
 };
 
 export const dashboardByRole: Record<EnterpriseRole, string> = {

@@ -655,6 +655,22 @@ export const permissionCatalog: PermissionDefinition[] = [
     actions: ["read", "write"]
   },
   {
+    key: "pk_tax.manage",
+    label: "Pakistan Tax — Manage",
+    description: "Prepare Pakistan annual Income/Corporate Tax and monthly Sales Tax returns, enter figures, and manage the document checklist.",
+    group: "Pakistan Tax",
+    resources: ["pk_tax"],
+    actions: ["read", "write"]
+  },
+  {
+    key: "pk_tax.filing",
+    label: "Pakistan Tax — Review, Confirm Rates & File",
+    description: "Confirm accountant-reviewed rates, review a prepared return (four-eyes), and record the FBR/IRIS filing and payment reference.",
+    group: "Pakistan Tax",
+    resources: ["pk_tax_filing"],
+    actions: ["read", "write"]
+  },
+  {
     key: "contracts.view",
     label: "Central Contract Control — View",
     description: "View the linked contract register (employee, purchase, sales) and open source records, KYC, payments, journal, loading and audit trail.",

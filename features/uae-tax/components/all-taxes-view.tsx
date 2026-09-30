@@ -14,7 +14,7 @@ type CountryCard = {
 
 const COUNTRIES: CountryCard[] = [
   { key: "uae", nameKey: "uae", href: "/dashboard/tax-einvoicing/uae/dashboard", status: "active" },
-  { key: "pakistan", nameKey: "country_pakistan", href: "/dashboard/tax-einvoicing/coming-soon?country=pakistan", status: "planned" },
+  { key: "pakistan", nameKey: "country_pakistan", href: "/dashboard/tax-einvoicing/pakistan/income-tax", status: "active" },
   { key: "afghanistan", nameKey: "country_afghanistan", href: "/dashboard/tax-einvoicing/coming-soon?country=afghanistan", status: "planned" },
   { key: "india", nameKey: "country_india", href: "/dashboard/tax-einvoicing/coming-soon?country=india", status: "planned" },
   { key: "other", nameKey: "country_other", href: "/dashboard/tax-einvoicing/coming-soon?country=other", status: "planned" },

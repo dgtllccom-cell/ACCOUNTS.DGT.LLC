@@ -68,6 +68,7 @@
     "app/api/erp/uae-tax/e-invoices/route.ts": "UAE tax: VAT returns / tax numbers / e-invoice codes / periods / rules — figures and codes only, no translatable master text",
     "app/api/erp/uae-tax/entities/[id]/route.ts": "UAE tax: VAT returns / tax numbers / e-invoice codes / periods / rules — figures and codes only, no translatable master text",
     "app/api/erp/uae-tax/entities/route.ts": "UAE tax: VAT returns / tax numbers / e-invoice codes / periods / rules — figures and codes only, no translatable master text",
+    "app/api/erp/pk-tax/entities/route.ts": "Pakistan tax: reuses uaeTaxService's generic entity CRUD (see uae-tax/entities/route.ts above) — company legal_name/NTN are business names/codes, not translatable master text",
     "app/api/erp/uae-tax/lines/[id]/route.ts": "UAE tax: VAT returns / tax numbers / e-invoice codes / periods / rules — figures and codes only, no translatable master text",
     "app/api/erp/uae-tax/periods/route.ts": "UAE tax: VAT returns / tax numbers / e-invoice codes / periods / rules — figures and codes only, no translatable master text",
     "app/api/erp/uae-tax/reconciliation/route.ts": "UAE tax: VAT returns / tax numbers / e-invoice codes / periods / rules — figures and codes only, no translatable master text",

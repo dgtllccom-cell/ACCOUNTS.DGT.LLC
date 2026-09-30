@@ -1175,7 +1175,16 @@ export const sidebarTree: SidebarNode[] = [
           { key: "tax-uae-settings", labelKey: "tax_einv.nav_settings", iconKey: "settings", href: "/dashboard/tax-einvoicing/uae/settings" as Route, roles: ["super_admin", "country_admin"] }
         ]
       },
-      { key: "tax-einv-pakistan", labelKey: "tax_einv.country_pakistan", iconKey: "globe", href: "/dashboard/tax-einvoicing/coming-soon?country=pakistan" as Route, roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "accountant"] },
+      {
+        key: "tax-einv-pakistan",
+        labelKey: "tax_einv.country_pakistan",
+        iconKey: "globe",
+        roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "accountant"],
+        children: [
+          { key: "tax-pk-income-tax", labelKey: "tax_einv.nav_income_tax", iconKey: "clipboard-list", href: "/dashboard/tax-einvoicing/pakistan/income-tax" as Route, roles: ["super_admin", "country_admin", "accountant"] },
+          { key: "tax-pk-sales-tax", labelKey: "tax_einv.nav_sales_tax", iconKey: "coins", href: "/dashboard/tax-einvoicing/pakistan/sales-tax" as Route, roles: ["super_admin", "country_admin", "accountant"] }
+        ]
+      },
       { key: "tax-einv-afghanistan", labelKey: "tax_einv.country_afghanistan", iconKey: "globe", href: "/dashboard/tax-einvoicing/coming-soon?country=afghanistan" as Route, roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "accountant"] },
       { key: "tax-einv-india", labelKey: "tax_einv.country_india", iconKey: "globe", href: "/dashboard/tax-einvoicing/coming-soon?country=india" as Route, roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "accountant"] },
       { key: "tax-einv-other", labelKey: "tax_einv.country_other", iconKey: "globe", href: "/dashboard/tax-einvoicing/coming-soon?country=other" as Route, roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "accountant"] }
