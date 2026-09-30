@@ -884,12 +884,28 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
 
       let partyRows: ClearingCustomerOrderPartyRow[] = [];
       if (hasPartyLinksPayload) {
-        const normalizedLinks = normalizeLinks(input.partyLinks, orderPayload.customer_name).map((link) => ({
+        const rawLinks = normalizeLinks(input.partyLinks, orderPayload.customer_name);
+        const candidateCompanyIds = rawLinks.map((l) => l.partyCompanyId).filter(Boolean);
+        const candidateCustomerIds = rawLinks.map((l) => l.partyCustomerId).filter(Boolean);
+
+        let validCompanyIdSet = new Set<string>();
+        if (candidateCompanyIds.length > 0) {
+          const compRows = await tx`select id from public.companies where id = ANY(${candidateCompanyIds}::uuid[]) and deleted_at is null`;
+          validCompanyIdSet = new Set(compRows.map((r: any) => r.id));
+        }
+
+        let validCustomerIdSet = new Set<string>();
+        if (candidateCustomerIds.length > 0) {
+          const custRows = await tx`select id from public.customers where id = ANY(${candidateCustomerIds}::uuid[]) and deleted_at is null`;
+          validCustomerIdSet = new Set(custRows.map((r: any) => r.id));
+        }
+
+        const normalizedLinks = rawLinks.map((link) => ({
           order_id: orderRow.id,
           role_key: link.roleKey,
-          party_customer_id: link.partyCustomerId,
+          party_customer_id: link.partyCustomerId && validCustomerIdSet.has(link.partyCustomerId) ? link.partyCustomerId : null,
           party_customer_name: link.partyCustomerName?.trim() || orderPayload.customer_name,
-          party_company_id: link.partyCompanyId,
+          party_company_id: link.partyCompanyId && validCompanyIdSet.has(link.partyCompanyId) ? link.partyCompanyId : null,
           party_company_name: trimOrNull(link.partyCompanyName),
           selected_address_text: trimOrNull(link.selectedAddressText),
           selected_address_source: trimOrNull(link.selectedAddressSource),

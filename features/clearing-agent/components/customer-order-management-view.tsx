@@ -267,6 +267,7 @@ type AccountRow = {
 type CustomerRow = {
   id: string;
   customer_name: string;
+  name?: string;
   company_name: string | null;
   contact_person: string | null;
   mobile: string | null;
@@ -329,6 +330,7 @@ export type CustomerOrderGoodsItem = {
   warehouseSourceType: "same" | "company_warehouse" | "customer_warehouse" | "other";
   warehouseType?: "company" | "customer" | "other" | string;
   warehouseId: string;
+  warehouseAccountId?: string;
   warehouseName: string;
   warehouseAddressText: string;
   photoUrl?: string;
@@ -2306,8 +2308,8 @@ export function CustomerOrderManagementView() {
     handlePartyChange("supplier", {
       customerId,
       customerName: effectiveCustName,
-      companyId: cust?.country_id || "",
-      companyName: cust?.company_name || "",
+      companyId: (cust as any)?.company_id || (cust as any)?.companyId || "",
+      companyName: (cust as any)?.company_name || "",
       addressText: cust?.address || "",
       addressSource: "customer"
     });
@@ -6743,79 +6745,99 @@ function Step1BookingCustomer({
             </div>
           </div>
 
-          {/* Read-Only Summary of 1A & 1B for Goods User */}
-          <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-slate-50/50 p-4 space-y-3 dark:border-slate-800 dark:bg-slate-900/90 shadow-2xs">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/70 pb-2 dark:border-slate-800">
-              <div className="flex items-center gap-2">
-                <span className="rounded-md bg-emerald-600 px-2.5 py-0.5 text-xs font-black uppercase tracking-wider text-white shadow-xs">
-                  1A & 1B Verified Summary (Read-Only)
-                </span>
-                <span className="text-xs font-bold text-slate-500">
-                  Order: <span className="font-mono font-black text-emerald-700 dark:text-emerald-400">{formData.order_no || activeOrder?.order_no || "Draft"}</span>
+          {/* 3 Compact Distinct Status Boxes for Verified Order & Fleet */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {/* Box 1: Order & Account Ref */}
+            <div className="rounded-xl border border-slate-200/90 bg-white p-3 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-1.5 dark:border-slate-800">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                  <FileText className="h-3.5 w-3.5 text-blue-600" />
+                  <span>{tt("box_order_account", "1. Order & Customer Account")}</span>
+                </div>
+                <span className="font-mono text-[10px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-1.5 py-0.2 rounded border border-blue-200 dark:border-blue-800">
+                  {formData.order_no || "Draft"}
                 </span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 px-2.5 py-0.5 text-[11px] font-bold">
-                  <CheckCircle2 className="h-3 w-3" />
-                  <span>{tt("truck_confirmed", "Truck Confirmed")}</span>
-                </span>
-                <button
-                  type="button"
-                  onClick={() => selectSub("1B")}
-                  className="text-[11px] font-bold text-blue-600 hover:text-blue-700 underline"
-                >
-                  [{tt("view_1b_truck", "View 1B Truck")}]
-                </button>
+              <div className="space-y-1 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-bold text-slate-400">{tt("label_customer", "Customer")}</span>
+                  <span className="font-bold text-slate-900 dark:text-white truncate max-w-[170px]">{formData.customer_name || "—"}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-bold text-slate-400">{tt("label_account", "Account")}</span>
+                  <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 truncate max-w-[170px]">
+                    {selectedAccount ? `#${selectedAccount.account_number || (selectedAccount as any).code} - ${selectedAccount.name || (selectedAccount as any).account_name}` : "—"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-bold text-slate-400">{tt("label_movement", "Movement")}</span>
+                  <span className="font-bold text-purple-700 dark:text-purple-300 capitalize">{formData.movement_type?.replace("_", " ") || "Import"}</span>
+                </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 text-xs">
-              <div>
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("customer_account_label", "Customer")}</span>
-                <span className="font-bold text-slate-900 dark:text-white truncate block">{formData.customer_name || "—"}</span>
-              </div>
-              <div>
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("movement_type_route", "Movement")}</span>
-                <span className="font-bold text-purple-700 dark:text-purple-300 capitalize block">{formData.movement_type?.replace("_", " ")}</span>
-              </div>
-              <div>
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("truck_number_label", "Truck Number")}</span>
-                <span className="font-mono font-black text-blue-700 dark:text-blue-300 block">{formData.truck_number || "TO BE ASSIGNED"}</span>
-              </div>
-              <div>
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("driver_name", "Driver")}</span>
-                <span className="font-medium text-slate-800 dark:text-slate-200 truncate block">
-                  {formData.truck_driver_name || "—"} {formData.truck_driver_mobile ? `(${formData.truck_driver_mobile})` : ""}
+            {/* Box 2: Verified Fleet & Driver */}
+            <div className="rounded-xl border border-slate-200/90 bg-white p-3 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-1.5 dark:border-slate-800">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                  <Truck className="h-3.5 w-3.5 text-indigo-600" />
+                  <span>{tt("box_fleet_driver", "2. Verified Fleet & Driver")}</span>
+                </div>
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.2 rounded border border-emerald-200 dark:border-emerald-800">
+                  <CheckCircle2 className="h-2.5 w-2.5" />
+                  <span>{tt("truck_confirmed", "Confirmed")}</span>
                 </span>
               </div>
-              <div>
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("loading_place", "Loading Place")}</span>
-                <span className="font-medium text-slate-700 dark:text-slate-300 truncate block">
-                  {formData.truck_loading_location || formData.loading_source_name || "Terminal Yard"}
-                </span>
+              <div className="space-y-1 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-bold text-slate-400">{tt("label_truck", "Truck No")}</span>
+                  <span className="font-mono font-black text-blue-700 dark:text-blue-300">{formData.truck_number || "TO BE ASSIGNED"}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-bold text-slate-400">{tt("label_driver", "Driver")}</span>
+                  <span className="font-medium text-slate-800 dark:text-slate-200 truncate max-w-[170px]">
+                    {formData.truck_driver_name || "—"} {formData.truck_driver_mobile ? `(${formData.truck_driver_mobile})` : ""}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-bold text-slate-400">{tt("label_loading_point", "Loading Place")}</span>
+                  <span className="font-medium text-slate-700 dark:text-slate-300 truncate max-w-[170px]">
+                    {formData.truck_loading_location || formData.loading_source_name || "Terminal Yard"}
+                  </span>
+                </div>
               </div>
-              <div>
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("vehicle_type", "Vehicle Type")}</span>
-                <span className="font-medium text-slate-700 dark:text-slate-300 block">{formData.truck_vehicle_type || "Container Trailer"}</span>
+            </div>
+
+            {/* Box 3: Transit Route & Customs Gate */}
+            <div className="rounded-xl border border-slate-200/90 bg-white p-3 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-1.5 dark:border-slate-800">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                  <Route className="h-3.5 w-3.5 text-emerald-600" />
+                  <span>{tt("box_corridor_customs", "3. Route & Customs Gate")}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => selectSub("1B")}
+                  className="text-[10px] font-bold text-blue-600 hover:underline"
+                >
+                  [{tt("edit_fleet", "Edit Fleet")}]
+                </button>
               </div>
-              <div>
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("truck_confirmed_by", "Truck Confirmed By")}</span>
-                <span className="font-medium text-slate-700 dark:text-slate-300 truncate block">
-                  {(activeOrder as any)?.truck_details?.confirmedByName || ctx?.userName || "Truck Desk User"}
-                </span>
-              </div>
-              <div>
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("confirmation_date_time", "Confirmation Date/Time")}</span>
-                <span className="font-medium text-slate-700 dark:text-slate-300 block">
-                  {(activeOrder as any)?.truck_details?.confirmedAt ? new Date((activeOrder as any).truck_details.confirmedAt).toLocaleString() : new Date().toLocaleString()}
-                </span>
-              </div>
-              <div className="col-span-2 sm:col-span-3 lg:col-span-4">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("route_via_corridor", "Complete Route")}</span>
-                <span className="font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-1">
-                  <Route className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                  <span className="truncate">{formData.route_name || "Direct Route"}</span>
-                </span>
+              <div className="space-y-1 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-bold text-slate-400">{tt("label_route", "Route")}</span>
+                  <span className="font-bold text-emerald-700 dark:text-emerald-300 truncate max-w-[170px]">{formData.route_name || "Direct Route"}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-bold text-slate-400">{tt("label_customs_point", "Clearance Gate")}</span>
+                  <span className="font-medium text-slate-700 dark:text-slate-300 truncate max-w-[170px]">
+                    {formData.customs_clearance_office || formData.entry_border_port_name || formData.exit_border_port_name || "Customs Gate"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-bold text-slate-400">{tt("label_stage_status", "Stage")}</span>
+                  <span className="font-semibold text-slate-600 dark:text-slate-400">{tt("ready_for_goods_entry", "Ready for Goods Manifest")}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -6918,9 +6940,70 @@ function Step1BookingCustomer({
                 )}
 
                 {draftGoodsItem.warehouseSourceType === "customer_warehouse" && (
-                  <div className="mt-1.5 p-2 rounded-lg border border-emerald-200 bg-emerald-50/50 dark:border-emerald-900/50 dark:bg-emerald-950/20 text-xs">
-                    <span className="font-bold text-emerald-900 dark:text-emerald-300">{tt("customer_facility", "Customer Facility")}: </span>
-                    <span className="text-slate-700 dark:text-slate-300">{draftGoodsItem.warehouseAddressText || selectedCustomer?.address || tt("address_from_customer_account", "Address from customer account")}</span>
+                  <div className="mt-1.5 p-3 rounded-xl border border-emerald-200 bg-emerald-50/50 dark:border-emerald-900/50 dark:bg-emerald-950/20 text-xs space-y-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {/* Customer Account Number Selector */}
+                      <div>
+                        <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
+                          {tt("customer_account_num", "Customer Account Number")} *
+                        </label>
+                        <select
+                          value={draftGoodsItem.warehouseAccountId || selectedAccount?.id || ""}
+                          onChange={(e) => {
+                            const accId = e.target.value;
+                            const acc = accounts.find((a) => a.id === accId);
+                            handleDraftGoodsChange("warehouseAccountId", accId);
+                            if (acc) {
+                              const whName = `${acc.name || (acc as any).account_name} Warehouse`;
+                              handleDraftGoodsChange("warehouseName", whName);
+                            }
+                          }}
+                          className={selectClass}
+                        >
+                          <option value="">{tt("select_account_ph", "Select Customer Account...")}</option>
+                          {accounts
+                            .filter((a) => !formData.customer_id || a.customer_id === formData.customer_id || a.id === formData.customer_id || (selectedCustomer && a.id === (selectedCustomer as any).account_id))
+                            .map((a) => (
+                              <option key={a.id} value={a.id}>
+                                #{a.account_number || (a as any).code || a.id.slice(0, 6)} - {a.name || (a as any).account_name}
+                              </option>
+                            ))}
+                          {accounts.slice(0, 10).map((a) => (
+                            <option key={`fb-${a.id}`} value={a.id}>
+                              #{a.account_number || (a as any).code || a.id.slice(0, 6)} - {a.name || (a as any).account_name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Customer Warehouse Name / Facility Selector */}
+                      <div>
+                        <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
+                          {tt("customer_warehouse_name", "Customer Warehouse / Depot")} *
+                        </label>
+                        <input
+                          type="text"
+                          placeholder={tt("customer_warehouse_ph", "e.g. Warehouse #1 (Client Central Yard)")}
+                          value={draftGoodsItem.warehouseName}
+                          onChange={(e) => handleDraftGoodsChange("warehouseName", e.target.value)}
+                          className={inputClass}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Facility Address */}
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
+                        {tt("facility_delivery_address", "Warehouse Location & Address")}
+                      </label>
+                      <input
+                        type="text"
+                        placeholder={tt("facility_delivery_address_ph", "Full Address / Industrial Area / Gate No")}
+                        value={draftGoodsItem.warehouseAddressText || selectedCustomer?.address || ""}
+                        onChange={(e) => handleDraftGoodsChange("warehouseAddressText", e.target.value)}
+                        className={inputClass}
+                      />
+                    </div>
                   </div>
                 )}
 

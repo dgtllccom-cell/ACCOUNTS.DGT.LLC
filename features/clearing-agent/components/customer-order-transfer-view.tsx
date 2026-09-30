@@ -31,7 +31,8 @@ import {
   Filter,
   ExternalLink,
   ShieldCheck,
-  AlertCircle
+  AlertCircle,
+  X
 } from "lucide-react";
 
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
@@ -1150,29 +1151,6 @@ export function CustomerOrderTransferView() {
           </div>
         </div>
       )}
-
-      {/* Task Handover Modal */}
-      {handoverModalOpen && selectedOrder ? (
-        <TaskHandoverModal
-          open={handoverModalOpen}
-          onClose={() => setHandoverModalOpen(false)}
-          orderReference={selectedOrder.order_no}
-          sourceTable="clearing_customer_orders"
-          sourceId={selectedOrder.id}
-          targetUrl={`/dashboard/clearing-agent/order-transfer?orderId=${selectedOrder.id}`}
-          defaultTask={tt("handover_transfer_task", "Please review and process expense transfers for customer order {orderNo}.").replace("{orderNo}", selectedOrder.order_no)}
-          sourceCountryId={selectedOrder.country_id || selectedOrder.loading_country_id || null}
-          domain="business"
-          onSuccess={() => {
-            setHandoverModalOpen(false);
-            fetchOrders();
-          }}
-          lang={lang}
-        />
-      ) : null}
-    </div>
-  );
-}
 
       {/* Task Handover Modal */}
       {handoverModalOpen && selectedOrder ? (
