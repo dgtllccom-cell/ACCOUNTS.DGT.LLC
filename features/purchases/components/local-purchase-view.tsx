@@ -457,7 +457,7 @@ export function LocalPurchaseView({
 
   // Branch & Country Hierarchy Selection State
   const [selectedCountryId, setSelectedCountryId] = useState("");
-  const isSuperAdminView = viewScopeMode === "super_admin" || (viewScopeMode === "auto" && isSuperAdmin && !selectedCountryId);
+  const isSuperAdminView = viewScopeMode === "super_admin" || (viewScopeMode === "auto" && isSuperAdmin);
   const [selectedBranchId, setSelectedBranchId] = useState("");
   const [selectedCityBranchId, setSelectedCityBranchId] = useState("");
 
@@ -663,18 +663,75 @@ export function LocalPurchaseView({
     }
   }, []);
 
-  // Derived Country options
+  // Canonical helper to normalize country keys (prevents duplicate UAE vs United Arab Emirates)
+  const normalizeCountryKey = (nameOrCode?: string | null): string => {
+    const s = String(nameOrCode || "").toUpperCase().trim();
+    if (s.includes("EMIRATES") || s.includes("UAE") || s === "AE" || s.includes("DUBAI")) return "uae";
+    if (s.includes("PAKISTAN") || s === "PK" || s.includes("PAK")) return "pakistan";
+    if (s.includes("AFGHANISTAN") || s === "AF" || s.includes("AFG")) return "afghanistan";
+    if (s.includes("IRAN") || s === "IR") return "iran";
+    if (s.includes("UZBEKISTAN") || s === "UZ") return "uzbekistan";
+    if (s.includes("INDIA") || s === "IN") return "india";
+    if (s.includes("OMAN") || s === "OM") return "oman";
+    if (s.includes("CHINA") || s === "CN") return "china";
+    if (s.includes("UNITED STATES") || s === "USA" || s === "US") return "usa";
+    return s.toLowerCase();
+  };
+
+  // Derived Country options from canonical countries table (never branch names)
   const countryOptions = useMemo(() => {
-    const map = new Map<string, string>();
-    countryBranches.forEach(b => {
-      const cId = b.countryId || b.country_id;
-      const cName = b.countryName || b.country_name || b.name;
-      if (cId && !map.has(cId)) {
-        map.set(cId, cName);
+    const options: Array<{ id: string; name: string; code: string; currency: string }> = [];
+    const seenKeys = new Set<string>();
+
+    if (countries && countries.length > 0) {
+      countries.forEach((c: any) => {
+        const key = normalizeCountryKey(c.name || c.iso2 || c.code);
+        if (!seenKeys.has(key)) {
+          seenKeys.add(key);
+          options.push({
+            id: String(c.id),
+            name: c.name || key.toUpperCase(),
+            code: c.currency_code || c.currency || c.iso2 || c.code || "USD",
+            currency: c.currency_code || c.currency || "USD",
+          });
+        }
+      });
+    }
+
+    // Standard business countries fallback if not populated
+    const standardDefs = [
+      { name: "United Arab Emirates", code: "AED", currency: "AED" },
+      { name: "Pakistan", code: "PKR", currency: "PKR" },
+      { name: "Afghanistan", code: "AFN", currency: "AFN" },
+      { name: "Iran", code: "IRR", currency: "IRR" },
+      { name: "Uzbekistan", code: "UZS", currency: "UZS" },
+      { name: "India", code: "INR", currency: "INR" },
+      { name: "Oman", code: "OMR", currency: "OMR" },
+    ];
+    standardDefs.forEach(sd => {
+      const key = normalizeCountryKey(sd.name);
+      if (!seenKeys.has(key)) {
+        seenKeys.add(key);
+        const branchWithCountry = countryBranches.find(b => {
+          const bCName = b.countryName || b.country_name || "";
+          return normalizeCountryKey(bCName) === key;
+        });
+        options.push({
+          id: String(branchWithCountry?.countryId || branchWithCountry?.country_id || key),
+          name: sd.name,
+          code: sd.code,
+          currency: sd.currency,
+        });
       }
     });
-    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
-  }, [countryBranches]);
+
+    return options;
+  }, [countries, countryBranches]);
+
+  const activeCountryObj = useMemo(() => {
+    if (!selectedCountryId) return null;
+    return countryOptions.find(c => String(c.id) === String(selectedCountryId)) || null;
+  }, [selectedCountryId, countryOptions]);
 
   // Scoped Country Branches
   const filteredCountryBranches = useMemo(() => {
@@ -881,9 +938,12 @@ export function LocalPurchaseView({
     try {
       let query = "/api/erp/purchases/local-purchase";
       const params = new URLSearchParams();
-      if (selectedCountryId) params.append("countryId", selectedCountryId);
-      if (selectedBranchId) params.append("countryBranchId", selectedBranchId);
-      if (selectedCityBranchId) params.append("cityBranchId", selectedCityBranchId);
+      // For Super Admin in global overview mode, do not restrict the query so summary cards retain all countries
+      if (!isGlobalUser || viewScopeMode === "single_country") {
+        if (selectedCountryId) params.append("countryId", selectedCountryId);
+        if (selectedBranchId) params.append("countryBranchId", selectedBranchId);
+        if (selectedCityBranchId) params.append("cityBranchId", selectedCityBranchId);
+      }
       if (params.toString()) query += `?${params.toString()}`;
 
       const res = await fetch(query);
@@ -900,7 +960,7 @@ export function LocalPurchaseView({
 
   useEffect(() => {
     void loadHistory();
-  }, [selectedCountryId, selectedBranchId, selectedCityBranchId]);
+  }, [viewScopeMode, isGlobalUser ? "" : selectedCountryId, selectedBranchId, selectedCityBranchId]);
 
   const selectedGood = useMemo(() => {
     return goodsList.find(g => g.id === goodsId);
@@ -1725,7 +1785,29 @@ export function LocalPurchaseView({
       // 2. Scope filters (Country, Main Branch, City Branch)
       if (selectedCountryId) {
         const rowCId = String(p.countryId || p.country_id || "");
-        if (rowCId && rowCId !== String(selectedCountryId)) return false;
+        const targetCountry = countryOptions.find(c => String(c.id) === String(selectedCountryId));
+        const targetKey = targetCountry ? normalizeCountryKey(targetCountry.name) : normalizeCountryKey(selectedCountryId);
+
+        let matchesCountry = false;
+        if (rowCId && (rowCId === String(selectedCountryId) || (targetCountry && rowCId === String(targetCountry.id)))) {
+          matchesCountry = true;
+        } else {
+          const pCName = p.country_name || p.countryName || "";
+          if (pCName && normalizeCountryKey(pCName) === targetKey) {
+            matchesCountry = true;
+          } else {
+            const pBranchId = String(p.country_branch_id || p.countryBranchId || "");
+            const branch = countryBranches.find(b => String(b.id) === pBranchId);
+            if (branch) {
+              if (String(branch.country_id || branch.countryId) === String(selectedCountryId)) {
+                matchesCountry = true;
+              } else if (normalizeCountryKey(branch.country_name || branch.countryName || branch.name) === targetKey) {
+                matchesCountry = true;
+              }
+            }
+          }
+        }
+        if (!matchesCountry) return false;
       }
       if (selectedBranchId) {
         const rowBId = String(p.countryBranchId || p.country_branch_id || p.branchId || p.branch_id || "");
@@ -1924,44 +2006,18 @@ export function LocalPurchaseView({
   }, [purchases]);
 
   const superAdminCountrySummary = useMemo(() => {
-    const standardCountries = [
-      { name: "UAE", code: "AED", currency: "AED" },
-      { name: "Pakistan", code: "PKR", currency: "PKR" },
-      { name: "Afghanistan", code: "AFN", currency: "AFN" },
-      { name: "Iran", code: "IRR", currency: "IRR" },
-      { name: "Uzbekistan", code: "UZS", currency: "UZS" },
-      { name: "Oman", code: "OMR", currency: "OMR" },
-    ];
-
+    // Map normalized country key -> country summary object
     const countryMap = new Map<string, any>();
-    standardCountries.forEach(sc => {
-      countryMap.set(sc.name.toLowerCase(), {
-        id: sc.name.toLowerCase(),
-        country: sc.name,
-        code: sc.code,
-        currency: sc.currency,
-        totalPurchases: 0,
-        totalAmountLocal: 0,
-        totalAmountUsd: 0,
-        paidAmount: 0,
-        remainingAmount: 0,
-        posted: 0,
-        draft: 0,
-        pending: 0,
-        branches: new Map<string, any>(),
-      });
-    });
 
+    // 1. Seed from canonical countryOptions
     countryOptions.forEach(opt => {
-      const lower = opt.name.toLowerCase();
-      let matchedKey = Array.from(countryMap.keys()).find(k => lower.includes(k) || k.includes(lower));
-      if (!matchedKey) {
-        matchedKey = lower;
-        countryMap.set(matchedKey, {
-          id: opt.id || lower,
+      const key = normalizeCountryKey(opt.name);
+      if (!countryMap.has(key)) {
+        countryMap.set(key, {
+          id: opt.id,
           country: opt.name,
-          code: opt.name.slice(0, 3).toUpperCase(),
-          currency: "USD",
+          code: opt.code,
+          currency: opt.currency,
           totalPurchases: 0,
           totalAmountLocal: 0,
           totalAmountUsd: 0,
@@ -1972,18 +2028,27 @@ export function LocalPurchaseView({
           pending: 0,
           branches: new Map<string, any>(),
         });
-      } else {
-        const existing = countryMap.get(matchedKey);
-        if (existing && opt.id) existing.id = opt.id;
       }
     });
 
+    // 2. Associate branches into their parent country
     countryBranches.forEach(b => {
-      const cName = (b.countryName || b.country_name || "").toLowerCase();
-      let matchedEntry = Array.from(countryMap.values()).find(c => cName.includes(c.country.toLowerCase()) || c.country.toLowerCase().includes(cName));
-      if (matchedEntry) {
-        matchedEntry.branches.set(b.id, {
-          id: b.id,
+      const bCountryId = String(b.countryId || b.country_id || "");
+      let target: any = null;
+      if (bCountryId) {
+        target = Array.from(countryMap.values()).find(c => String(c.id) === bCountryId);
+      }
+      if (!target) {
+        const bCName = b.countryName || b.country_name || "";
+        if (bCName) target = countryMap.get(normalizeCountryKey(bCName));
+      }
+      if (!target && b.name) {
+        target = countryMap.get(normalizeCountryKey(b.name));
+      }
+
+      if (target) {
+        target.branches.set(String(b.id), {
+          id: String(b.id),
           name: b.name || b.code || "Main Branch",
           code: b.code || "—",
           billsCount: 0,
@@ -1994,8 +2059,10 @@ export function LocalPurchaseView({
       }
     });
 
+    // 3. Accumulate purchases
     purchases.forEach((p) => {
-      const pCountry = String(p.country_name || p.countryName || "").toLowerCase();
+      const pCountryId = String(p.country_id || p.countryId || "");
+      const pCountryName = String(p.country_name || p.countryName || "");
       const pBranchId = String(p.country_branch_id || p.countryBranchId || "");
       const st = String(p.status || p.bill_status || "").toLowerCase();
       const curr = p.purchase_currency || p.localCurrency || p.local_currency || "AFN";
@@ -2003,12 +2070,20 @@ export function LocalPurchaseView({
       const cost = Number(p.final_cost || p.finalCost || p.purchase_cost || 0);
       const costUsd = convertToUsd(cost, curr, exRate);
 
-      let targetCountry = Array.from(countryMap.values()).find(c =>
-        pCountry.includes(c.country.toLowerCase()) || c.country.toLowerCase().includes(pCountry)
-      );
-
-      if (!targetCountry && countryMap.size > 0) {
-        targetCountry = countryMap.get("afghanistan") || Array.from(countryMap.values())[0];
+      let targetCountry: any = null;
+      if (pCountryId) {
+        targetCountry = Array.from(countryMap.values()).find(c => String(c.id) === pCountryId);
+      }
+      if (!targetCountry && pCountryName) {
+        targetCountry = countryMap.get(normalizeCountryKey(pCountryName));
+      }
+      if (!targetCountry && pBranchId) {
+        for (const c of countryMap.values()) {
+          if (c.branches.has(pBranchId)) {
+            targetCountry = c;
+            break;
+          }
+        }
       }
 
       if (targetCountry) {
@@ -2045,6 +2120,12 @@ export function LocalPurchaseView({
       branchList: Array.from(c.branches.values()),
     }));
   }, [countryOptions, countryBranches, purchases]);
+
+  const activeCountrySummary = useMemo(() => {
+    if (!activeCountryObj) return null;
+    const targetKey = normalizeCountryKey(activeCountryObj.name);
+    return superAdminCountrySummary.find(c => normalizeCountryKey(c.country) === targetKey) || null;
+  }, [activeCountryObj, superAdminCountrySummary]);
 
   return (
     <div className="w-full px-3 sm:px-6 py-4 space-y-6" dir={isRtl ? "rtl" : "ltr"}>
@@ -2557,8 +2638,8 @@ export function LocalPurchaseView({
               <div className="h-7 w-7 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
                 <TrendingUp className="h-4 w-4" />
               </div>
-              <p className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                {t(lang, "lp.financial_summary", "PURCHASE SUMMARY")}
+              <p className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 truncate">
+                {activeCountryObj ? `${activeCountryObj.name.toUpperCase()} FINANCIAL SUMMARY` : t(lang, "lp.financial_summary", "PURCHASE SUMMARY")}
               </p>
             </div>
             <div className="py-2 space-y-1.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
@@ -2580,6 +2661,27 @@ export function LocalPurchaseView({
                     <span className="text-slate-400 font-medium">Total Tax :</span>
                     <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
                       {localCurrency} {localPurchaseDashboard.totalTax.toLocaleString()}
+                    </span>
+                  </div>
+                </>
+              ) : activeCountrySummary ? (
+                <>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400 font-medium">Total Purchases :</span>
+                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
+                      {activeCountrySummary.totalPurchases}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400 font-medium">Total Amount ({activeCountrySummary.currency}) :</span>
+                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
+                      {activeCountrySummary.currency} {activeCountrySummary.totalAmountLocal.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400 font-medium">Total Amount (USD) :</span>
+                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
+                      $ {activeCountrySummary.totalAmountUsd.toLocaleString()}
                     </span>
                   </div>
                 </>
@@ -2611,7 +2713,9 @@ export function LocalPurchaseView({
               <span className="font-mono font-black text-emerald-600 dark:text-emerald-400">
                 {!isSuperAdminView
                   ? `${localCurrency} ${localPurchaseDashboard.totalFinal.toLocaleString()}`
-                  : `$ ${superAdminStats.totalUsdFinal.toLocaleString()}`}
+                  : activeCountrySummary
+                    ? `${activeCountrySummary.currency} ${activeCountrySummary.totalAmountLocal.toLocaleString()}`
+                    : `$ ${superAdminStats.totalUsdFinal.toLocaleString()}`}
               </span>
             </div>
           </div>
@@ -2622,34 +2726,50 @@ export function LocalPurchaseView({
               <div className="h-7 w-7 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-2xs">
                 <Receipt className="h-4 w-4" />
               </div>
-              <p className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                {t(lang, "lp.bill_entry_summary", "BILL ENTRY SUMMARY")}
+              <p className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 truncate">
+                {activeCountryObj ? `${activeCountryObj.name.toUpperCase()} ENTRY SUMMARY` : t(lang, "lp.bill_entry_summary", "BILL ENTRY SUMMARY")}
               </p>
             </div>
             <div className="py-2 space-y-1.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
               <div className="flex justify-between items-center">
                 <span className="text-slate-400 font-medium">{t(lang, "lp.total_bills", "Total Bills")} :</span>
                 <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                  {!isSuperAdminView ? localPurchaseDashboard.totalBills : superAdminStats.totalPurchasesCount}
+                  {!isSuperAdminView
+                    ? localPurchaseDashboard.totalBills
+                    : activeCountrySummary
+                      ? activeCountrySummary.totalPurchases
+                      : superAdminStats.totalPurchasesCount}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-slate-400 font-medium">{t(lang, "lp.posted_accepted", "Posted / Accepted")} :</span>
                 <span className="font-mono font-bold text-emerald-600">
-                  {!isSuperAdminView ? localPurchaseDashboard.postedBills : superAdminStats.posted}
+                  {!isSuperAdminView
+                    ? localPurchaseDashboard.postedBills
+                    : activeCountrySummary
+                      ? activeCountrySummary.posted
+                      : superAdminStats.posted}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-slate-400 font-medium">{t(lang, "lp.draft_bills", "Draft Bills")} :</span>
                 <span className="font-mono font-bold text-amber-600">
-                  {!isSuperAdminView ? localPurchaseDashboard.draftBills : superAdminStats.draft}
+                  {!isSuperAdminView
+                    ? localPurchaseDashboard.draftBills
+                    : activeCountrySummary
+                      ? activeCountrySummary.draft
+                      : superAdminStats.draft}
                 </span>
               </div>
             </div>
             <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-[11px]">
               <span className="text-slate-400 font-medium">{t(lang, "lp.pending_bills", "Pending Bills")} :</span>
               <span className="font-mono font-black text-rose-600">
-                {!isSuperAdminView ? localPurchaseDashboard.pendingBills : superAdminStats.pending}
+                {!isSuperAdminView
+                  ? localPurchaseDashboard.pendingBills
+                  : activeCountrySummary
+                    ? activeCountrySummary.pending
+                    : superAdminStats.pending}
               </span>
             </div>
           </div>
@@ -2661,43 +2781,121 @@ export function LocalPurchaseView({
                 <div className="h-7 w-7 rounded-xl bg-rose-500 text-white flex items-center justify-center shrink-0 shadow-2xs">
                   <Globe className="h-4 w-4" />
                 </div>
-                <p className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                  {!isSuperAdminView ? "BRANCH BREAKDOWN" : t(lang, "lp.all_countries_report", "ALL COUNTRIES REPORT")}
-                </p>
+                <div>
+                  <p className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                    {!isSuperAdminView ? "BRANCH BREAKDOWN" : t(lang, "lp.all_countries_report", "ALL COUNTRIES REPORT")}
+                  </p>
+                  <p className="text-[9.5px] text-slate-400 font-medium">
+                    {selectedCountryId ? "1 Country Filtered (Click to reset)" : "Click country to view bills"}
+                  </p>
+                </div>
               </div>
-              <select
-                value={selectedCountryReportId}
-                onChange={(e) => setSelectedCountryReportId(e.target.value)}
-                className="h-6 text-[10px] font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-1.5 text-slate-700 dark:text-slate-200 outline-none cursor-pointer max-w-[110px]"
-              >
-                <option value="">{t(lang, "lp.all_purchases", "All Purchases")}</option>
-                {countryOptions.map(c => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
+              {selectedCountryId && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedCountryId("");
+                    setSelectedBranchId("");
+                  }}
+                  className="px-2 py-0.5 text-[9.5px] font-bold rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 transition cursor-pointer"
+                  title={tr("Show all countries")}
+                >
+                  ✕ Show All
+                </button>
+              )}
             </div>
 
-            <div className="py-1 space-y-1 text-xs">
+            <div className="py-1 space-y-1 text-xs max-h-[120px] overflow-y-auto">
               {!isSuperAdminView ? (
-                filteredCountryBranches.slice(0, 4).map((b) => {
+                filteredCountryBranches.slice(0, 5).map((b) => {
                   const bPurchases = purchases.filter(p => String(p.country_branch_id || p.countryBranchId) === String(b.id));
+                  const isSelected = selectedBranchId === b.id;
                   return (
-                    <div key={b.id} className="flex justify-between items-center py-0.5 border-b border-slate-100 dark:border-slate-800/60 last:border-0">
-                      <span className="text-slate-600 dark:text-slate-400 font-medium truncate max-w-[140px]">{b.name || b.code}</span>
-                      <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{bPurchases.length}</span>
-                    </div>
+                    <button
+                      key={b.id}
+                      type="button"
+                      onClick={() => setSelectedBranchId(prev => prev === b.id ? "" : b.id)}
+                      className={cn(
+                        "w-full flex justify-between items-center py-1 px-1.5 rounded-lg border transition text-left cursor-pointer",
+                        isSelected
+                          ? "bg-blue-50 border-blue-300 dark:bg-blue-950/60 dark:border-blue-700 text-blue-700 dark:text-blue-300 font-bold"
+                          : "border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-600 dark:text-slate-400 font-medium"
+                      )}
+                    >
+                      <span className="truncate max-w-[140px] text-[11px]">{b.name || b.code}</span>
+                      <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-[11px]">{bPurchases.length}</span>
+                    </button>
                   );
                 })
               ) : (
-                superAdminCountrySummary.slice(0, 5).map((c) => (
-                  <div key={c.country} className="flex justify-between items-center py-0.5 border-b border-slate-100 dark:border-slate-800/60 last:border-0">
-                    <span className="text-slate-600 dark:text-slate-400 font-medium flex items-center gap-1.5">
-                      <span>{getCountryFlag(c.country)}</span>
-                      <span>{c.country}</span>
+                <>
+                  {/* All Countries Toggle */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedCountryId("");
+                      setSelectedBranchId("");
+                    }}
+                    className={cn(
+                      "w-full flex justify-between items-center py-1 px-2 rounded-lg border transition text-left cursor-pointer",
+                      !selectedCountryId
+                        ? "bg-blue-600 border-blue-600 text-white font-bold shadow-2xs"
+                        : "border-transparent hover:bg-blue-50/70 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-300 font-medium"
+                    )}
+                  >
+                    <span className="flex items-center gap-1.5 text-[11px]">
+                      <span>🌐</span>
+                      <span>{tr("All Countries")}</span>
                     </span>
-                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{c.totalPurchases}</span>
-                  </div>
-                ))
+                    <span className={cn(
+                      "font-mono font-bold text-[10.5px] px-1.5 py-0.5 rounded",
+                      !selectedCountryId ? "bg-white/20 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                    )}>
+                      {superAdminStats.totalPurchasesCount}
+                    </span>
+                  </button>
+
+                  {/* Individual Countries */}
+                  {superAdminCountrySummary.map((c) => {
+                    const isSelected = selectedCountryId === c.id || (activeCountryObj && normalizeCountryKey(activeCountryObj.name) === normalizeCountryKey(c.country));
+                    return (
+                      <button
+                        key={c.country}
+                        type="button"
+                        onClick={() => {
+                          if (isSelected) {
+                            setSelectedCountryId("");
+                            setSelectedBranchId("");
+                          } else {
+                            setSelectedCountryId(c.id);
+                            setSelectedBranchId("");
+                          }
+                        }}
+                        className={cn(
+                          "w-full flex justify-between items-center py-1 px-2 rounded-lg border transition text-left cursor-pointer",
+                          isSelected
+                            ? "bg-blue-600 border-blue-600 text-white font-bold shadow-2xs"
+                            : "border-transparent hover:bg-blue-50/70 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-300 font-medium"
+                        )}
+                        title={`Click to show ${c.country} bills below`}
+                      >
+                        <span className="flex items-center gap-1.5 text-[11px] truncate">
+                          <span>{getCountryFlag(c.country)}</span>
+                          <span className="truncate">{c.country}</span>
+                        </span>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <span className={cn(
+                            "font-mono font-bold text-[10.5px] px-1.5 py-0.5 rounded",
+                            isSelected ? "bg-white/20 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                          )}>
+                            {c.totalPurchases}
+                          </span>
+                          {isSelected && <Check className="h-3 w-3 text-white" />}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </>
               )}
             </div>
           </div>
@@ -4561,14 +4759,25 @@ export function LocalPurchaseView({
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11px]">
                       {superAdminCountrySummary.map((c, idx) => {
                         const isExpanded = expandedCountryKey === c.country;
+                        const isSelected = selectedCountryId === c.id || (activeCountryObj && normalizeCountryKey(activeCountryObj.name) === normalizeCountryKey(c.country));
                         return (
                           <React.Fragment key={c.country}>
                             <tr
-                              onClick={() => setExpandedCountryKey(prev => prev === c.country ? null : c.country)}
+                              onClick={() => {
+                                if (isSelected) {
+                                  setSelectedCountryId("");
+                                  setSelectedBranchId("");
+                                } else {
+                                  setSelectedCountryId(c.id);
+                                  setSelectedBranchId("");
+                                }
+                              }}
                               className={cn(
                                 "hover:bg-blue-50/50 dark:hover:bg-slate-800/60 transition-colors cursor-pointer",
-                                isExpanded && "bg-blue-50/40 dark:bg-blue-950/20 font-semibold"
+                                isExpanded && "bg-blue-50/30 dark:bg-blue-950/20 font-semibold",
+                                isSelected && "bg-blue-50/80 dark:bg-blue-950/40 border-l-4 border-l-blue-600 font-bold"
                               )}
+                              title={`Click to filter bills list below for ${c.country}`}
                             >
                               <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-400">
                                 <div className="flex items-center justify-center gap-1">
@@ -4584,6 +4793,11 @@ export function LocalPurchaseView({
                                 <span className="inline-flex items-center gap-1.5">
                                   <span>{getCountryFlag(c.country)}</span>
                                   <span>{c.country}</span>
+                                  {isSelected && (
+                                    <span className="px-1.5 py-0.2 rounded text-[9px] font-black uppercase bg-blue-600 text-white">
+                                      Active Filter
+                                    </span>
+                                  )}
                                 </span>
                               </td>
                               <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-600 dark:text-slate-400">{c.code}</td>
@@ -4610,14 +4824,24 @@ export function LocalPurchaseView({
                                   <button
                                     type="button"
                                     onClick={() => {
-                                      const matched = countryOptions.find(opt => opt.name.toLowerCase().includes(c.country.toLowerCase()));
-                                      if (matched) setSelectedCountryId(matched.id);
-                                      setViewScopeMode("single_country");
+                                      if (isSelected) {
+                                        setSelectedCountryId("");
+                                        setSelectedBranchId("");
+                                      } else {
+                                        setSelectedCountryId(c.id);
+                                        setSelectedBranchId("");
+                                      }
                                     }}
-                                    className="h-6 w-6 rounded bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-400 flex items-center justify-center transition border border-blue-200/60 dark:border-blue-800 cursor-pointer shadow-2xs"
-                                    title={`Drill down to ${c.country} branch view`}
+                                    className={cn(
+                                      "h-6 px-2 rounded text-[10px] font-bold flex items-center gap-1 transition cursor-pointer border shadow-2xs",
+                                      isSelected
+                                        ? "bg-blue-600 text-white border-blue-600 font-extrabold"
+                                        : "bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-400 border-blue-200/60 dark:border-blue-800"
+                                    )}
+                                    title={`Filter bills below for ${c.country}`}
                                   >
-                                    <Eye className="h-3.5 w-3.5" />
+                                    <Eye className="h-3 w-3" />
+                                    <span>{isSelected ? "Showing" : "Bills"}</span>
                                   </button>
                                 </div>
                               </td>
@@ -4744,38 +4968,64 @@ export function LocalPurchaseView({
               {/* TABLE 2: ALL COUNTRIES LOCAL PURCHASE LIST */}
               <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xs overflow-hidden">
                 <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-2.5 flex-wrap">
                     <div className="h-7 w-7 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
                       <ShoppingCart className="h-4 w-4" />
                     </div>
-                    <h3 className="text-xs font-black uppercase text-slate-900 dark:text-slate-100 tracking-wider">
-                      {th("ALL COUNTRIES LOCAL PURCHASE LIST")}
-                    </h3>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="text-xs font-black uppercase text-slate-900 dark:text-slate-100 tracking-wider">
+                        {activeCountryObj
+                          ? `${activeCountryObj.name.toUpperCase()} LOCAL PURCHASE LIST`
+                          : th("ALL COUNTRIES LOCAL PURCHASE LIST")}
+                      </h3>
+                      {activeCountryObj && (
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                          <span>{getCountryFlag(activeCountryObj.name)}</span>
+                          <span>{activeCountryObj.name}</span>
+                          <span className="opacity-75 font-mono">({filteredPurchases.length} {filteredPurchases.length === 1 ? "Bill" : "Bills"})</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedCountryId("");
+                              setSelectedBranchId("");
+                            }}
+                            className="hover:text-red-600 ms-1 cursor-pointer font-black"
+                            title={tr("Clear country filter")}
+                          >
+                            ✕
+                          </button>
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   <JournalPrintButton
-                            title={t(lang, "lp.local_branch_purchase_register", "LOCAL BRANCH PURCHASE REGISTER")}
-                            subtitle={t(lang, "lp.a4_print_title", "Official A4 ERP Journal Print Report — Local Purchase Register")}
-                            columns={[
-                              { key: "voucherNo", label: t(lang, "lp.col_voucher_no", "Voucher No"), align: "left" },
-                              { key: "date", label: t(lang, "lp.col_date", "Date"), align: "left" },
-                              { key: "supplier", label: t(lang, "lp.col_supplier", "Supplier"), align: "left" },
-                              { key: "goods", label: t(lang, "lp.col_goods_name", "Goods Name"), align: "left" },
-                              { key: "qty", label: t(lang, "lp.col_quantity", "Quantity"), align: "right" },
-                              { key: "finalAmount", label: t(lang, "lp.col_final_amount", "Final Amount ($)"), align: "right", format: "currency" },
-                              { key: "status", label: t(lang, "lp.col_status", "Status"), align: "center" }
-                            ]}
-                            rows={filteredPurchases.map((p) => ({
-                              voucherNo: p.journal_serial_no || p.serial_no || p.bill_no || "—",
-                              date: p.created_at ? new Date(p.created_at).toLocaleDateString("en-GB") : "—",
-                              supplier: p.supplier_name || "—",
-                              goods: p.goods_name || "—",
-                              qty: `${Number(p.quantity_kgs || 0).toLocaleString()} ${p.quantity_name || "—"}`,
-                              finalAmount: Number(p.final_cost || p.purchase_cost || 0),
-                              status: (p.status || "DRAFT").toUpperCase()
-                            }))}
-                            variant="outline" size="sm" className="h-8"
-                          />
+                    title={activeCountryObj ? `${activeCountryObj.name.toUpperCase()} LOCAL PURCHASE REGISTER` : t(lang, "lp.local_branch_purchase_register", "LOCAL BRANCH PURCHASE REGISTER")}
+                    subtitle={t(lang, "lp.a4_print_title", "Official A4 ERP Journal Print Report — Local Purchase Register")}
+                    columns={[
+                      { key: "voucherNo", label: t(lang, "lp.col_voucher_no", "Voucher No"), align: "left" },
+                      { key: "date", label: t(lang, "lp.col_date", "Date"), align: "left" },
+                      { key: "supplier", label: t(lang, "lp.col_supplier", "Supplier"), align: "left" },
+                      { key: "goods", label: t(lang, "lp.col_goods_name", "Goods Name"), align: "left" },
+                      { key: "qty", label: t(lang, "lp.col_quantity", "Quantity"), align: "right" },
+                      { key: "finalAmount", label: t(lang, "lp.col_final_amount", "Final Amount"), align: "right" },
+                      { key: "status", label: t(lang, "lp.col_status", "Status"), align: "center" }
+                    ]}
+                    rows={filteredPurchases.map((p) => {
+                      const billCurr = p.purchase_currency || p.local_currency || p.localCurrency || "AED";
+                      const billAmt = Number(p.final_cost || p.purchase_cost || 0);
+                      return {
+                        voucherNo: p.journal_serial_no || p.serial_no || p.bill_no || "—",
+                        date: p.created_at ? new Date(p.created_at).toLocaleDateString("en-GB") : "—",
+                        supplier: p.supplier_name || "—",
+                        goods: p.goods_name || "—",
+                        qty: `${Number(p.quantity_kgs || 0).toLocaleString()} ${p.quantity_name || "—"}`,
+                        finalAmount: `${billCurr} ${billAmt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                        status: (p.status || "DRAFT").toUpperCase()
+                      };
+                    })}
+                    variant="outline" size="sm" className="h-8"
+                  />
                   {/* Table Actions Popover */}
                   <div className="relative">
                     <button
@@ -4825,7 +5075,7 @@ export function LocalPurchaseView({
 
                         <div className="p-1">
                           <JournalPrintButton
-                            title={t(lang, "lp.local_branch_purchase_register", "LOCAL BRANCH PURCHASE REGISTER")}
+                            title={activeCountryObj ? `${activeCountryObj.name.toUpperCase()} LOCAL PURCHASE REGISTER` : t(lang, "lp.local_branch_purchase_register", "LOCAL BRANCH PURCHASE REGISTER")}
                             subtitle={t(lang, "lp.a4_print_title", "Official A4 ERP Journal Print Report — Local Purchase Register")}
                             columns={[
                               { key: "voucherNo", label: t(lang, "lp.col_voucher_no", "Voucher No"), align: "left" },
@@ -4833,18 +5083,22 @@ export function LocalPurchaseView({
                               { key: "supplier", label: t(lang, "lp.col_supplier", "Supplier"), align: "left" },
                               { key: "goods", label: t(lang, "lp.col_goods_name", "Goods Name"), align: "left" },
                               { key: "qty", label: t(lang, "lp.col_quantity", "Quantity"), align: "right" },
-                              { key: "finalAmount", label: t(lang, "lp.col_final_amount", "Final Amount ($)"), align: "right", format: "currency" },
+                              { key: "finalAmount", label: t(lang, "lp.col_final_amount", "Final Amount"), align: "right" },
                               { key: "status", label: t(lang, "lp.col_status", "Status"), align: "center" }
                             ]}
-                            rows={filteredPurchases.map((p) => ({
-                              voucherNo: p.journal_serial_no || p.serial_no || p.bill_no || "—",
-                              date: p.created_at ? new Date(p.created_at).toLocaleDateString("en-GB") : "—",
-                              supplier: p.supplier_name || "—",
-                              goods: p.goods_name || "—",
-                              qty: `${Number(p.quantity_kgs || 0).toLocaleString()} ${p.quantity_name || "—"}`,
-                              finalAmount: Number(p.final_cost || p.purchase_cost || 0),
-                              status: (p.status || "DRAFT").toUpperCase()
-                            }))}
+                            rows={filteredPurchases.map((p) => {
+                              const billCurr = p.purchase_currency || p.local_currency || p.localCurrency || "AED";
+                              const billAmt = Number(p.final_cost || p.purchase_cost || 0);
+                              return {
+                                voucherNo: p.journal_serial_no || p.serial_no || p.bill_no || "—",
+                                date: p.created_at ? new Date(p.created_at).toLocaleDateString("en-GB") : "—",
+                                supplier: p.supplier_name || "—",
+                                goods: p.goods_name || "—",
+                                qty: `${Number(p.quantity_kgs || 0).toLocaleString()} ${p.quantity_name || "—"}`,
+                                finalAmount: `${billCurr} ${billAmt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                                status: (p.status || "DRAFT").toUpperCase()
+                              };
+                            })}
                             variant="ghost"
                             className="w-full justify-start text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 h-8 px-2"
                           />
@@ -4880,7 +5134,7 @@ export function LocalPurchaseView({
                         <th className="px-3 py-2.5">{t(lang, "lp.col_goods_name", "GOODS NAME")}</th>
                         <th className="px-2.5 py-2.5 text-right">{t(lang, "lp.col_qty", "QTY")}</th>
                         <th className="px-2.5 py-2.5 text-center">{t(lang, "lp.col_unit", "UNIT")}</th>
-                        <th className="px-3 py-2.5 text-right">{th("FINAL AMOUNT (USD)")}</th>
+                        <th className="px-3 py-2.5 text-right">{th("FINAL AMOUNT")}</th>
                         <th className="px-3 py-2.5 text-center">{t(lang, "lp.col_status", "STATUS")}</th>
                         <th className="px-3 py-2.5 text-center w-16">{t(lang, "common.actions", "ACTIONS")}</th>
                       </tr>
@@ -4902,6 +5156,8 @@ export function LocalPurchaseView({
                         </tr>
                       ) : (
                         paginatedPurchases.map((p, idx) => {
+                          const billCurr = p.purchase_currency || p.local_currency || p.localCurrency || "AED";
+                          const billAmt = Number(p.final_cost || p.purchase_cost || 0);
                           const row = {
                             id: p.id,
                             country: p.country_name || p.countryName || "—",
@@ -4912,7 +5168,7 @@ export function LocalPurchaseView({
                             goods: p.goods_name || p.goodsName || "—",
                             qty: Number(p.quantity_kgs || p.quantityKgs || 0),
                             unit: p.quantity_name || p.quantityName || "—",
-                            amountFormatted: `$ ${convertToUsd(Number(p.final_cost || p.purchase_cost || 0), p.purchase_currency || p.localCurrency || "AFN", Number(p.exchange_rate || 1)).toLocaleString()}`,
+                            amountFormatted: `${billCurr} ${billAmt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
                             status: p.status || "—",
                             raw: p,
                           };
