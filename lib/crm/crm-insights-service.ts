@@ -121,9 +121,9 @@ async function staleLeads(session: ErpSession): Promise<InsightGroup> {
       id: r.id,
       title: r.customer_name,
       subtitle: r.company_name,
-      detail: `Stuck at "${r.pipeline_stage.replace(/_/g, " ")}" for ${daysAgo(r.pipeline_stage_updated_at)}`,
+      detail: `Stuck at "${r.pipeline_stage.replace(/_/g, " ")}" for ${duration(r.pipeline_stage_updated_at)}`,
       href: `/dashboard/customer-inquiries?id=${r.id}`,
-      nextBestAction: `Re-engage — no pipeline movement in ${daysAgo(r.pipeline_stage_updated_at)}. Confirm it is still active or mark it lost.`,
+      nextBestAction: `Re-engage — no pipeline movement in ${duration(r.pipeline_stage_updated_at)}. Confirm it is still active or mark it lost.`,
       country: r.country_name,
     })),
   };
@@ -319,6 +319,12 @@ async function noNextAction(session: ErpSession): Promise<InsightGroup> {
 function daysAgo(ts: string | Date): string {
   const d = Math.max(0, Math.round((Date.now() - new Date(ts).getTime()) / 86400000));
   return d === 0 ? "today" : d === 1 ? "1 day ago" : `${d} days ago`;
+}
+
+/** Same real day count as daysAgo(), without the trailing "ago" — for use after "for"/"in". */
+function duration(ts: string | Date): string {
+  const d = Math.max(0, Math.round((Date.now() - new Date(ts).getTime()) / 86400000));
+  return d === 0 ? "less than a day" : d === 1 ? "1 day" : `${d} days`;
 }
 
 export async function getCrmInsights(session: ErpSession): Promise<InsightGroup[]> {
