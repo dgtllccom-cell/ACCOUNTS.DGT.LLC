@@ -187,13 +187,16 @@ export function AccountSetupReport({
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
+    if (accNo) count++;
+    if (accName) count++;
     if (country !== "all") count++;
     if (branch !== "all") count++;
     if (accType !== "all") count++;
+    if (subType !== "all") count++;
     if (currencyFilter !== "all") count++;
     if (statusFilter !== "all") count++;
     return count;
-  }, [country, branch, accType, currencyFilter, statusFilter]);
+  }, [accNo, accName, country, branch, accType, subType, currencyFilter, statusFilter]);
 
   const resetFilters = () => {
     setAccNo("");
@@ -427,9 +430,6 @@ export function AccountSetupReport({
     setFiltersOpen(false);
   }
   const hasActiveFilters = accNo || accName || country !== "all" || branch !== "all" || accType !== "all" || subType !== "all";
-
-  const activeFiltersObj = { accNo, accName, country, branch, accType, subType };
-  const activeFilterCount = Object.values(activeFiltersObj).filter(v => v && v !== "all").length;
 
   const reportSeed = filtered[0] ?? rows[0] ?? null;
   
