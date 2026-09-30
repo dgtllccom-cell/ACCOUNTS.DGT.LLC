@@ -1282,6 +1282,13 @@ export const sidebarTree: SidebarNode[] = [
         iconKey: "trending-up",
         href: "/dashboard/customer-inquiries/pipeline" as Route,
         roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "agent_user"]
+      },
+      {
+        key: "crm-stock-availability",
+        labelKey: "cstock.title" as any,
+        iconKey: "package",
+        href: "/dashboard/crm/stock-availability" as Route,
+        roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "cashier", "agent_user"]
       }
     ]
   },

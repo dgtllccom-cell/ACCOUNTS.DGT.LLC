@@ -589,7 +589,9 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "roznamcha:post",
     "customer_receipts:create",
     "customer_receipts:read",
-    "customer_receipts:post"
+    "customer_receipts:post",
+    // Read-only stock visibility for CRM/Sales screens — never a write action.
+    "inventory:read"
   ],
   agent_user: [
     "transactions:create",
@@ -616,6 +618,8 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "messages:read",
     "whatsapp:read",
     "whatsapp:create",
+    // Read-only stock visibility for CRM/Sales screens — never a write action.
+    "inventory:read",
     ...SHIPPING_APPROVED_BUNDLE
   ],
   staff_user: ["transactions:create", "transactions:read", "customers:read", "companies:read", "shipping_records:read", "whatsapp:read", "location_master:read", "route_templates:read"],

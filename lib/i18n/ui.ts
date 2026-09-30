@@ -3124,6 +3124,15 @@ export type UiKey =
   | "inv.trace"
   | "inv.trace_note"
   | "inv.no_movements"
+  | "cstock.title"
+  | "cstock.subtitle"
+  | "cstock.search_ph"
+  | "cstock.th_goods"
+  | "cstock.th_warehouse"
+  | "cstock.th_country"
+  | "cstock.th_available"
+  | "cstock.loading"
+  | "cstock.empty"
   | "kyc.kycManagement"
   | "kyc.applyRange"
   | "bankroz.update_status_clear"
@@ -27098,6 +27107,15 @@ const en: Dict = {
   "inv.trace": "Trace",
   "inv.trace_note": "Every real stock movement recorded against this item at this warehouse — its source/reference traceability.",
   "inv.no_movements": "No stock movements recorded yet for this item at this warehouse.",
+  "cstock.title": "Stock Availability",
+  "cstock.subtitle": "Real available quantity, read-only. To receive, issue or adjust stock, use the Inventory module.",
+  "cstock.search_ph": "Search goods name or CHS code...",
+  "cstock.th_goods": "Goods",
+  "cstock.th_warehouse": "Warehouse",
+  "cstock.th_country": "Country",
+  "cstock.th_available": "Available",
+  "cstock.loading": "Loading...",
+  "cstock.empty": "No matching stock found.",
   "kyc.kycManagement": "KYC Management",
 
 
@@ -48614,6 +48632,15 @@ const ur: Dict = {
   "inv.trace": "ٹریس",
   "inv.trace_note": "اس آئٹم کے خلاف اس گودام میں درج تمام حقیقی اسٹاک حرکات — اس کی ماخذ/حوالہ سراغ رسانی۔",
   "inv.no_movements": "اس گودام میں اس آئٹم کے لیے ابھی تک کوئی اسٹاک حرکت درج نہیں ہوئی۔",
+  "cstock.title": "اسٹاک کی دستیابی",
+  "cstock.subtitle": "حقیقی دستیاب مقدار، صرف پڑھنے کے لیے۔ اسٹاک وصول کرنے، جاری کرنے یا ایڈجسٹ کرنے کے لیے انوینٹری ماڈیول استعمال کریں۔",
+  "cstock.search_ph": "سامان کا نام یا سی ایچ ایس کوڈ تلاش کریں...",
+  "cstock.th_goods": "سامان",
+  "cstock.th_warehouse": "گودام",
+  "cstock.th_country": "ملک",
+  "cstock.th_available": "دستیاب",
+  "cstock.loading": "لوڈ ہو رہا ہے...",
+  "cstock.empty": "کوئی مماثل اسٹاک نہیں ملا۔",
   "kyc.kycManagement": "KYC انتظام",
 
 
@@ -70212,6 +70239,15 @@ const ar: Dict = {
   "inv.trace": "تتبع",
   "inv.trace_note": "كل حركة مخزون حقيقية مسجلة لهذا الصنف في هذا المستودع — تتبع المصدر/المرجع الخاص به.",
   "inv.no_movements": "لم يتم تسجيل أي حركة مخزون بعد لهذا الصنف في هذا المستودع.",
+  "cstock.title": "توفر المخزون",
+  "cstock.subtitle": "الكمية المتاحة الحقيقية، للقراءة فقط. لاستلام أو صرف أو تعديل المخزون، استخدم وحدة المخزون.",
+  "cstock.search_ph": "ابحث باسم البضاعة أو رمز CHS...",
+  "cstock.th_goods": "البضاعة",
+  "cstock.th_warehouse": "المستودع",
+  "cstock.th_country": "الدولة",
+  "cstock.th_available": "المتاح",
+  "cstock.loading": "جارٍ التحميل...",
+  "cstock.empty": "لم يتم العثور على مخزون مطابق.",
   "kyc.kycManagement": "إدارة اعرف عميلك",
 
 
@@ -91860,6 +91896,15 @@ const fa: Dict = {
   "inv.trace": "ردیابی",
   "inv.trace_note": "هر حرکت موجودی واقعی ثبت‌شده برای این قلم در این انبار — ردیابی منبع/مرجع آن.",
   "inv.no_movements": "هنوز هیچ حرکت موجودی برای این قلم در این انبار ثبت نشده است.",
+  "cstock.title": "موجودی در دسترس",
+  "cstock.subtitle": "مقدار واقعی در دسترس، فقط خواندنی. برای دریافت، صدور یا تعدیل موجودی از ماژول موجودی استفاده کنید.",
+  "cstock.search_ph": "جستجوی نام کالا یا کد CHS...",
+  "cstock.th_goods": "کالا",
+  "cstock.th_warehouse": "انبار",
+  "cstock.th_country": "کشور",
+  "cstock.th_available": "در دسترس",
+  "cstock.loading": "در حال بارگذاری...",
+  "cstock.empty": "هیچ موجودی مطابقی یافت نشد.",
   "kyc.kycManagement": "مدیریت احراز هویت مشتری",
 
 
@@ -113506,6 +113551,15 @@ const ps: Dict = {
   "inv.trace": "تعقیب",
   "inv.trace_note": "د دې توکي لپاره په دې ګدام کې ثبت شوې هره ریښتینې د سټاک حرکت — د هغې د سرچینې/حواله تعقیب.",
   "inv.no_movements": "تر اوسه د دې توکي لپاره په دې ګدام کې هیڅ د سټاک حرکت نه دی ثبت شوی.",
+  "cstock.title": "د سټاک شتون",
+  "cstock.subtitle": "ریښتینې شته مقدار، یوازې لوستل کیدونکی. د سټاک ترلاسه کولو، صادرولو یا سمون لپاره د انوینٹري ماډول وکاروئ.",
+  "cstock.search_ph": "د توکو نوم یا CHS کوډ ولټوئ...",
+  "cstock.th_goods": "توکي",
+  "cstock.th_warehouse": "ګدام",
+  "cstock.th_country": "هیواد",
+  "cstock.th_available": "شته",
+  "cstock.loading": "لوډ کیږي...",
+  "cstock.empty": "هیڅ سازګار سټاک ونه موندل شو.",
   "kyc.kycManagement": "د KYC مدیریت",
 
 
