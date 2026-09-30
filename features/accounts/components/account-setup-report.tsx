@@ -196,11 +196,16 @@ export function AccountSetupReport({
   }, [country, branch, accType, currencyFilter, statusFilter]);
 
   const resetFilters = () => {
+    setAccNo("");
+    setAccName("");
     setCountry("all");
     setBranch("all");
     setAccType("all");
+    setSubType("all");
     setCurrencyFilter("all");
     setStatusFilter("all");
+    setDraftAccNo("");
+    setDraftName("");
     setDraftCountry("all");
     setDraftBranch("all");
     setDraftType("all");
@@ -420,12 +425,6 @@ export function AccountSetupReport({
     setAccNo(draftAccNo); setAccName(draftName); setCountry(draftCountry);
     setBranch(draftBranch); setAccType(draftType); setSubType(draftSub);
     setFiltersOpen(false);
-  }
-  function resetFilters() {
-    setDraftAccNo(""); setDraftName(""); setDraftCountry("all");
-    setDraftBranch("all"); setDraftType("all"); setDraftSub("all");
-    setAccNo(""); setAccName(""); setCountry("all");
-    setBranch("all"); setAccType("all"); setSubType("all");
   }
   const hasActiveFilters = accNo || accName || country !== "all" || branch !== "all" || accType !== "all" || subType !== "all";
 
