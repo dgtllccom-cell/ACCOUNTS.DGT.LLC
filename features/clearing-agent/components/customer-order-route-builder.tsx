@@ -36,6 +36,7 @@ export type RouteStop = {
   partnerAccountId?: string;
   partnerAccountNumber?: string;
   partnerCountryName?: string;
+  insuranceRequired?: boolean;
 };
 
 interface CustomerOrderRouteBuilderProps {
@@ -97,6 +98,7 @@ export function CustomerOrderRouteBuilder({
   const [directPartnerType, setDirectPartnerType] = useState(() => legs?.[0]?.partnerType || legs?.[0]?.partner_type || "");
   const [directPartnerName, setDirectPartnerName] = useState(() => legs?.[0]?.partnerName || legs?.[0]?.partner_name || "");
   const [directPartnerAccountId, setDirectPartnerAccountId] = useState(() => legs?.[0]?.partnerAccountId || legs?.[0]?.partner_account_id || "");
+  const [directInsuranceRequired, setDirectInsuranceRequired] = useState(() => Boolean(legs?.[0]?.insuranceRequired ?? legs?.[0]?.insurance_required));
 
   // Final leg partner state (for destination leg of multi-stop routes)
   const [finalLegHandlerType, setFinalLegHandlerType] = useState<"our_branch" | "external_partner">(() => {
@@ -114,6 +116,10 @@ export function CustomerOrderRouteBuilder({
   const [finalLegPartnerAccountId, setFinalLegPartnerAccountId] = useState(() => {
     const lastLeg = legs && legs.length > 1 ? legs[legs.length - 1] : null;
     return lastLeg?.partnerAccountId || lastLeg?.partner_account_id || "";
+  });
+  const [finalLegInsuranceRequired, setFinalLegInsuranceRequired] = useState(() => {
+    const lastLeg = legs && legs.length > 1 ? legs[legs.length - 1] : null;
+    return Boolean(lastLeg?.insuranceRequired ?? lastLeg?.insurance_required);
   });
 
   // Track expanded stop index for partner configuration
@@ -140,7 +146,8 @@ export function CustomerOrderRouteBuilder({
         partnerName: leg.partnerName || leg.partner_name || "",
         partnerAccountId: leg.partnerAccountId || leg.partner_account_id || "",
         partnerAccountNumber: leg.partnerAccountNumber || leg.partner_account_number || "",
-        partnerCountryName: leg.partnerCountryName || leg.partner_country_name || ""
+        partnerCountryName: leg.partnerCountryName || leg.partner_country_name || "",
+        insuranceRequired: Boolean(leg.insuranceRequired ?? leg.insurance_required)
       }));
     }
     return [];
@@ -161,7 +168,8 @@ export function CustomerOrderRouteBuilder({
           partnerName: leg.partnerName || leg.partner_name || "",
           partnerAccountId: leg.partnerAccountId || leg.partner_account_id || "",
           partnerAccountNumber: leg.partnerAccountNumber || leg.partner_account_number || "",
-          partnerCountryName: leg.partnerCountryName || leg.partner_country_name || ""
+          partnerCountryName: leg.partnerCountryName || leg.partner_country_name || "",
+          insuranceRequired: Boolean(leg.insuranceRequired ?? leg.insurance_required)
         }))
       );
       const lastLeg = legs[legs.length - 1];
@@ -170,6 +178,7 @@ export function CustomerOrderRouteBuilder({
         setFinalLegPartnerType(lastLeg.partnerType || lastLeg.partner_type || "");
         setFinalLegPartnerName(lastLeg.partnerName || lastLeg.partner_name || "");
         setFinalLegPartnerAccountId(lastLeg.partnerAccountId || lastLeg.partner_account_id || "");
+        setFinalLegInsuranceRequired(Boolean(lastLeg.insuranceRequired ?? lastLeg.insurance_required));
       }
     } else if (legs && legs.length === 1) {
       setDirectHandlerType(legs[0].handlerType || legs[0].handler_type || "our_branch");
@@ -218,10 +227,12 @@ export function CustomerOrderRouteBuilder({
       dPType?: string;
       dPName?: string;
       dPAccount?: string;
+      dInsuranceRequired?: boolean;
       fHandler?: "our_branch" | "external_partner";
       fPType?: string;
       fPName?: string;
       fPAccount?: string;
+      fInsuranceRequired?: boolean;
     }
   ) => {
     const originLocation = loadingCityName || loadingCountryName || "Origin";
@@ -231,11 +242,13 @@ export function CustomerOrderRouteBuilder({
     const effDPType = overrides?.dPType ?? directPartnerType;
     const effDPName = overrides?.dPName ?? directPartnerName;
     const effDPAccount = overrides?.dPAccount ?? directPartnerAccountId;
+    const effDInsuranceRequired = overrides?.dInsuranceRequired ?? directInsuranceRequired;
 
     const effFHandler = overrides?.fHandler ?? finalLegHandlerType;
     const effFPType = overrides?.fPType ?? finalLegPartnerType;
     const effFPName = overrides?.fPName ?? finalLegPartnerName;
     const effFPAccount = overrides?.fPAccount ?? finalLegPartnerAccountId;
+    const effFInsuranceRequired = overrides?.fInsuranceRequired ?? finalLegInsuranceRequired;
 
     if (direct || currentStops.length === 0) {
       const modeStr = getModeLabel(transportMode);
@@ -259,6 +272,7 @@ export function CustomerOrderRouteBuilder({
               ? activeLedgers.find((l) => l.id === effDPAccount)?.code || null
               : null,
           partnerCountryName: effDHandler === "external_partner" ? receivingCountryName || null : null,
+          insuranceRequired: effDInsuranceRequired,
           status: "pending"
         }
       ];
@@ -297,6 +311,7 @@ export function CustomerOrderRouteBuilder({
         partnerAccountNumber: st.handlerType === "external_partner" ? pAcc?.code || null : null,
         partnerCountryName:
           st.handlerType === "external_partner" ? st.partnerCountryName || st.countryName || null : null,
+        insuranceRequired: Boolean(st.insuranceRequired),
         status: "pending"
       });
 
@@ -324,6 +339,7 @@ export function CustomerOrderRouteBuilder({
       partnerAccountId: effFHandler === "external_partner" ? effFPAccount || null : null,
       partnerAccountNumber: effFHandler === "external_partner" ? finalPAcc?.code || null : null,
       partnerCountryName: effFHandler === "external_partner" ? receivingCountryName || null : null,
+      insuranceRequired: effFInsuranceRequired,
       status: "pending"
     });
 
@@ -475,6 +491,21 @@ export function CustomerOrderRouteBuilder({
             </div>
           </div>
 
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={directInsuranceRequired}
+              onChange={(e) => {
+                setDirectInsuranceRequired(e.target.checked);
+                syncRoute([], true, { dInsuranceRequired: e.target.checked });
+              }}
+              className="h-3.5 w-3.5 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+            />
+            <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+              {tt("insurance_required_toggle", "Cargo insurance required for this leg")}
+            </span>
+          </label>
+
           {directHandlerType === "external_partner" && (
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
               <div>
@@ -487,7 +518,7 @@ export function CustomerOrderRouteBuilder({
                   }}
                   className="w-full h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs dark:border-slate-700 dark:bg-slate-800"
                 >
-                  <option value="">-- Select Partner Type --</option>
+                  <option value="">{tt("select_partner_type_placeholder", "-- Select Partner Type --")}</option>
                   <option value="customs_agent">{tt("pt_customs_agent", "Customs Clearing Agent")}</option>
                   <option value="transporter">{tt("pt_transporter", "Transporter / Trucking Carrier")}</option>
                   <option value="shipping_provider">{tt("pt_shipping_provider", "Shipping Line / Sea Provider")}</option>
@@ -672,6 +703,18 @@ export function CustomerOrderRouteBuilder({
                       </button>
                     </div>
                   </div>
+
+                  <label className="flex items-center gap-2 pt-1">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(st.insuranceRequired)}
+                      onChange={(e) => handleUpdateStop(idx, { insuranceRequired: e.target.checked })}
+                      className="h-3.5 w-3.5 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+                    />
+                    <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                      {tt("insurance_required_toggle", "Cargo insurance required for this leg")}
+                    </span>
+                  </label>
 
                   {st.handlerType === "external_partner" && (
                     <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 pt-1 border-t border-slate-200 dark:border-slate-700">

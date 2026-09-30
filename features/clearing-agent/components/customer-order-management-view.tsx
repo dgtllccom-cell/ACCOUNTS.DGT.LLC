@@ -87,6 +87,7 @@ import { CustomerOrderReturnCorrectionModal } from "@/features/clearing-agent/co
 import { CustomerOrderStageAssignmentModal } from "@/features/clearing-agent/components/customer-order-stage-assignment-modal";
 import { CustomerOrderRouteBuilder } from "@/features/clearing-agent/components/customer-order-route-builder";
 import { CustomerOrderPartnerBillsPanel } from "@/features/clearing-agent/components/customer-order-partner-bills-panel";
+import { CustomerOrderInsurancePanel } from "@/features/clearing-agent/components/customer-order-insurance-panel";
 
 type TransportMode = "by_sea" | "by_road" | "by_air" | "by_rail";
 type MovementType = "import" | "export" | "transit" | "up_transit" | "down_transit" | "domestic";
@@ -5824,6 +5825,16 @@ function Step1BookingCustomer({
               lang={lang}
             />
           </div>
+
+          {/* ORDER-LEVEL CARGO & ROUTE INSURANCE (covers a single leg or a leg range) */}
+          {activeOrder?.id && (formData.legs || []).length > 0 && (
+            <CustomerOrderInsurancePanel
+              orderId={activeOrder.id}
+              legs={(formData.legs || []).map((l: any) => ({ legNo: l.legNo }))}
+              ledgers={accounts.map((a) => ({ id: a.id, name: a.name, code: a.code, currency: a.currency || undefined }))}
+              lang={lang}
+            />
+          )}
 
           {/* 1A Action Footer */}
           <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">

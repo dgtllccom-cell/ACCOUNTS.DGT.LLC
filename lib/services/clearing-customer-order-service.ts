@@ -182,6 +182,8 @@ export type OrderLegInput = {
   partner_account_number?: string | null;
   partnerCountryName?: string | null;
   partner_country_name?: string | null;
+  insuranceRequired?: boolean | null;
+  insurance_required?: boolean | null;
 };
 
 export type ClearingCustomerOrderLegRow = Record<string, any> & { id: string; order_id: string };
@@ -325,7 +327,8 @@ export function normalizeLegs(legs: OrderLegInput[] | undefined | null): OrderLe
       partnerName: trimOrNull(leg.partnerName ?? leg.partner_name),
       partnerAccountId: trimOrNull(leg.partnerAccountId ?? leg.partner_account_id),
       partnerAccountNumber: trimOrNull(leg.partnerAccountNumber ?? leg.partner_account_number),
-      partnerCountryName: trimOrNull(leg.partnerCountryName ?? leg.partner_country_name)
+      partnerCountryName: trimOrNull(leg.partnerCountryName ?? leg.partner_country_name),
+      insuranceRequired: Boolean(leg.insuranceRequired ?? leg.insurance_required ?? false)
     }))
     .filter((leg) => leg.fromCountryId || leg.toCountryId || leg.fromLocationText || leg.toLocationText || leg.transportMode);
 }
@@ -1005,6 +1008,7 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
             partner_account_id: leg.partnerAccountId ?? leg.partner_account_id ?? null,
             partner_account_number: leg.partnerAccountNumber ?? leg.partner_account_number ?? null,
             partner_country_name: leg.partnerCountryName ?? leg.partner_country_name ?? null,
+            insurance_required: Boolean(leg.insuranceRequired ?? leg.insurance_required ?? false),
             updated_at: now
           };
 
