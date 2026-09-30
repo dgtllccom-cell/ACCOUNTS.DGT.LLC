@@ -552,7 +552,7 @@ export function AccountSetupReport({
                 value={dateFrom}
                 onChange={(e) => setDateFrom(e.target.value)}
                 className="bg-transparent outline-none w-[110px] text-xs font-medium cursor-pointer text-slate-700 dark:text-slate-200"
-                title={t(lang, "common.from_date", "From Date")}
+                title={tr("From Date")}
               />
               <span className="text-slate-400 font-bold">–</span>
               <input
@@ -560,7 +560,7 @@ export function AccountSetupReport({
                 value={dateTo}
                 onChange={(e) => setDateTo(e.target.value)}
                 className="bg-transparent outline-none w-[110px] text-xs font-medium cursor-pointer text-slate-700 dark:text-slate-200"
-                title={t(lang, "common.to_date", "To Date")}
+                title={tr("To Date")}
               />
               {(dateFrom || dateTo) && (
                 <button
@@ -704,10 +704,10 @@ export function AccountSetupReport({
                 ? "border-blue-600 bg-blue-50/80 text-blue-700 dark:border-blue-500 dark:bg-blue-950/60 dark:text-blue-300"
                 : "border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700"
             )}
-            title={t(lang, "asr.filters", "Filters")}
+            title={tr("Filters")}
           >
             <Filter className="h-3.5 w-3.5 text-blue-600" />
-            <span>{t(lang, "asr.filters", "Filters")}</span>
+            <span>{tr("Filters")}</span>
             {activeFilterCount > 0 && (
               <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-blue-600 text-white">
                 {activeFilterCount}
@@ -723,7 +723,7 @@ export function AccountSetupReport({
                 <div className="flex items-center gap-2">
                   <Filter className="h-4 w-4 text-blue-600" />
                   <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                    {t(lang, "asr.filter_options", "Account Filters")}
+                    {tr("Account Filters")}
                   </span>
                 </div>
                 {activeFilterCount > 0 && (
@@ -732,7 +732,7 @@ export function AccountSetupReport({
                     onClick={resetFilters}
                     className="text-[11px] font-bold text-rose-600 hover:text-rose-700 hover:underline cursor-pointer"
                   >
-                    {t(lang, "asr.reset_all", "Reset All")}
+                    {tr("Reset All")}
                   </button>
                 )}
               </div>
@@ -771,7 +771,7 @@ export function AccountSetupReport({
                 {/* Account Type */}
                 <div>
                   <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
-                    {t(lang, "asr.account_type", "Account Type")}
+                    {tr("Account Type")}
                   </label>
                   <select
                     value={accType}
@@ -817,14 +817,14 @@ export function AccountSetupReport({
 
               <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
                 <span className="text-[11px] text-slate-500 font-medium">
-                  {filtered.length} {t(lang, "asr.matching_accounts", "matching accounts")}
+                  {filtered.length} {tr("matching accounts")}
                 </span>
                 <button
                   type="button"
                   onClick={() => setFiltersOpen(false)}
                   className="h-7 px-3.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition cursor-pointer"
                 >
-                  {t(lang, "common.apply", "Done")}
+                  {tr("Done")}
                 </button>
               </div>
             </div>
