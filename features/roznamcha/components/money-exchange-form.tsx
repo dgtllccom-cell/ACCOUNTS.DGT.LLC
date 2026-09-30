@@ -36,6 +36,7 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { cn } from "@/lib/utils";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { PersonPicker } from "@/components/erp/person-picker";
 import { BankPicker } from "@/features/banks/components/bank-picker";
 import { getBankById } from "@/features/banks/bank-api";
@@ -551,11 +552,17 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
         </div>
         <div className="space-y-1">
           <Label className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{tr("money_exchange.dash_date_range", "Date Range")}</Label>
-          <div className="flex items-center gap-1.5">
-            <input type="date" value={dashDateFrom} onChange={e => setDashDateFrom(e.target.value)} className="h-9 flex-1 rounded-md border border-input bg-background px-2 text-xs font-bold" />
-            <span className="text-slate-400">–</span>
-            <input type="date" value={dashDateTo} onChange={e => setDashDateTo(e.target.value)} className="h-9 flex-1 rounded-md border border-input bg-background px-2 text-xs font-bold" />
-          </div>
+          <ErpDatePicker
+            mode="range"
+            size="sm"
+            lang={lang}
+            value={{ from: dashDateFrom || null, to: dashDateTo || null }}
+            onApply={(v) => {
+              setDashDateFrom(v.from ?? "");
+              setDashDateTo(v.to ?? "");
+            }}
+            applyLabel="update"
+          />
         </div>
         <div className="space-y-1">
           <Label className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{tr("money_exchange.dash_transaction_type", "Transaction Type")}</Label>
@@ -894,7 +901,16 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
                     </div>
                     <div className="space-y-1">
                       <Label className="text-[10px] font-bold uppercase text-slate-500">{tr("money_exchange.date_label", "Date")}</Label>
-                      <input type="date" value={entryDate} onChange={e => setEntryDate(e.target.value)} className="h-9 w-full rounded-md border border-input bg-background px-2 text-xs font-bold" />
+                      <ErpDatePicker
+                        mode="single"
+                        size="sm"
+                        lang={lang}
+                        value={entryDate || null}
+                        onApply={(v) => {
+                          if (typeof v === "string") setEntryDate(v);
+                        }}
+                        applyLabel="update"
+                      />
                     </div>
                   </div>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

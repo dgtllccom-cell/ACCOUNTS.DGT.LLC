@@ -18,6 +18,7 @@ import {
 } from "./default-config";
 import { JournalReportingCharts, type JournalChartsData } from "./journal-reporting-charts";
 import { JournalReportingCustomize, columnLabel } from "./journal-reporting-customize";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 
 // Mirrors lib/services/journal-report-service.ts's JournalRegisterRow — NOT imported directly
 // because that module pulls in withLocalPg/ErpSession (server-only) which must never reach the
@@ -476,24 +477,20 @@ export function JournalReportingView({ context, langProp }: { context: ReportCon
         </div>
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6">
-          <label className="flex flex-col text-xs text-slate-500">
-            {s.t("from_date", "From Date")}
-            <input
-              type="date"
-              value={filters.fromDate}
-              onChange={(e) => setFilter("fromDate", e.target.value)}
-              className="mt-1 rounded border border-slate-300 px-2 py-1 text-sm dark:border-slate-700 dark:bg-slate-800"
+          <div className="col-span-2 flex flex-col text-xs text-slate-500">
+            <span className="mb-1 font-semibold">{s.t("date_range", "Date Range")}</span>
+            <ErpDatePicker
+              mode="range"
+              lang={s.lang}
+              size="sm"
+              applyLabel="update"
+              value={{ from: filters.fromDate || null, to: filters.toDate || null }}
+              onApply={(v) => {
+                setFilter("fromDate", v.from ?? "");
+                setFilter("toDate", v.to ?? "");
+              }}
             />
-          </label>
-          <label className="flex flex-col text-xs text-slate-500">
-            {s.t("to_date", "To Date")}
-            <input
-              type="date"
-              value={filters.toDate}
-              onChange={(e) => setFilter("toDate", e.target.value)}
-              className="mt-1 rounded border border-slate-300 px-2 py-1 text-sm dark:border-slate-700 dark:bg-slate-800"
-            />
-          </label>
+          </div>
 
           <SelectFilter label={s.t("filter_country", "Country")} value={filters.countryId} onChange={(v) => setFilter("countryId", v)} options={meta?.countries ?? []} allLabel={s.t("filter_all", "All")} />
           <SelectFilter label={s.t("filter_country_branch", "Country Branch (Main Branch)")} value={filters.countryBranchId} onChange={(v) => setFilter("countryBranchId", v)} options={meta?.countryBranches ?? []} allLabel={s.t("filter_all", "All")} />

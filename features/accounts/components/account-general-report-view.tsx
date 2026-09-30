@@ -2456,26 +2456,16 @@ export function AccountGeneralReportView({
               <Label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">
                 {tr("Creation Date Range")}
               </Label>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <span className="text-[10px] text-slate-500 font-semibold mb-1 block">{tr("From Date")}</span>
-                  <Input
-                    type="date"
-                    value={draftFromDate}
-                    onChange={(e) => setDraftFromDate(e.target.value)}
-                    className="h-9 rounded-xl text-xs"
-                  />
-                </div>
-                <div>
-                  <span className="text-[10px] text-slate-500 font-semibold mb-1 block">{tr("To Date")}</span>
-                  <Input
-                    type="date"
-                    value={draftToDate}
-                    onChange={(e) => setDraftToDate(e.target.value)}
-                    className="h-9 rounded-xl text-xs"
-                  />
-                </div>
-              </div>
+              <ErpDatePicker
+                mode="range"
+                lang={lang}
+                value={{ from: draftFromDate || null, to: draftToDate || null }}
+                onApply={(v) => {
+                  setDraftFromDate(v.from ?? "");
+                  setDraftToDate(v.to ?? "");
+                }}
+                applyLabel="update"
+              />
             </div>
 
             <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">

@@ -28,6 +28,7 @@ import { t } from "@/lib/i18n/ui";
 import { apiGet } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { UniversalReportModal } from "@/components/ui/universal-report-modal";
 import { WarehouseForm } from "@/features/warehouses/components/warehouse-form";
@@ -485,20 +486,17 @@ export function WarehouseManagement() {
             </select>
 
             {/* Date Range Input */}
-            <div className="flex items-center gap-1 text-xs text-slate-500">
-              <Calendar className="h-3.5 w-3.5 text-slate-400" />
-              <input
-                type="date"
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-                className="rounded-xl border border-slate-200 bg-slate-50/50 px-2 py-1 text-xs text-slate-700 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-              />
-              <span>–</span>
-              <input
-                type="date"
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
-                className="rounded-xl border border-slate-200 bg-slate-50/50 px-2 py-1 text-xs text-slate-700 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+            <div className="w-[13rem]">
+              <ErpDatePicker
+                mode="range"
+                size="sm"
+                lang={lang}
+                value={{ from: dateFrom || null, to: dateTo || null }}
+                onApply={(v) => {
+                  setDateFrom(v.from ?? "");
+                  setDateTo(v.to ?? "");
+                }}
+                applyLabel="update"
               />
             </div>
 

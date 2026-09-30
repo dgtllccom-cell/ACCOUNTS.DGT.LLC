@@ -59,6 +59,7 @@ import type { RoznamchaType } from "@/lib/accounting/roznamcha-flow";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
 import { cn } from "@/lib/utils";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { BankPicker } from "@/features/banks/components/bank-picker";
 import { getBankById } from "@/features/banks/bank-api";
 import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
@@ -4112,14 +4113,18 @@ export function CashEntryForm({
               >
                 ◀ {t(lang, "roz.prev_day", "Prev Day")}
               </Button>
-              <input
-                type="date"
-                value={tableDate}
-                onChange={(e) => {
-                  setTableDate(e.target.value);
-                  setEntryDate(e.target.value);
+              <ErpDatePicker
+                mode="single"
+                size="sm"
+                lang={lang}
+                value={tableDate || null}
+                onApply={(val) => {
+                  if (typeof val === "string") {
+                    setTableDate(val);
+                    setEntryDate(val);
+                  }
                 }}
-                className="h-7 px-2 text-xs font-bold bg-transparent border-x border-slate-200 dark:border-slate-800 outline-none text-slate-900 dark:text-slate-100 cursor-pointer"
+                applyLabel="update"
               />
               <Button
                 type="button"
@@ -4148,51 +4153,20 @@ export function CashEntryForm({
 
           {tableDateMode === "range" && (
             <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-1.5 bg-white dark:bg-slate-950 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-800 shadow-2xs text-xs">
-                <span className="text-[11px] font-bold text-slate-500">{t(lang, "cef.from_colon", "From:")}</span>
-                <input
-                  type="date"
-                  value={tableFromDate}
-                  onChange={(e) => setTableFromDate(e.target.value)}
-                  className="h-6 text-xs font-bold bg-transparent outline-none text-slate-900 dark:text-slate-100 cursor-pointer"
-                />
-                <span className="text-[11px] font-bold text-slate-500 ms-1">{t(lang, "cef.to_colon", "To:")}</span>
-                <input
-                  type="date"
-                  value={tableToDate}
-                  onChange={(e) => setTableToDate(e.target.value)}
-                  className="h-6 text-xs font-bold bg-transparent outline-none text-slate-900 dark:text-slate-100 cursor-pointer"
-                />
-              </div>
-              <div className="flex items-center gap-1">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-7 px-2 text-[11px] font-semibold"
-                  onClick={() => setTableDatePreset("this_week")}
-                >
-                  {t(lang, "cef.this_week", "This Week")}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-7 px-2 text-[11px] font-semibold"
-                  onClick={() => setTableDatePreset("this_month")}
-                >
-                  {t(lang, "cef.this_month", "This Month")}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-7 px-2 text-[11px] font-semibold"
-                  onClick={() => setTableDatePreset("last_30_days")}
-                >
-                  {t(lang, "cef.last_30_days", "Last 30 Days")}
-                </Button>
-              </div>
+              <ErpDatePicker
+                mode="range"
+                size="sm"
+                lang={lang}
+                value={{
+                  from: tableFromDate || null,
+                  to: tableToDate || null,
+                }}
+                onApply={(val) => {
+                  setTableFromDate(val.from ?? "");
+                  setTableToDate(val.to ?? "");
+                }}
+                applyLabel="update"
+              />
             </div>
           )}
         </div>

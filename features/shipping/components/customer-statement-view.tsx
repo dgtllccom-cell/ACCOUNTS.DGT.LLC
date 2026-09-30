@@ -9,6 +9,7 @@ import { getLanguageDirection } from "@/lib/i18n/languages";
 import { Th } from "@/components/ui/translated-th";
 import { CustomerPicker } from "@/features/customers/components/customer-picker";
 import { openCustomerLedgerPrintReport, type CustomerLedgerReportData } from "@/lib/reports/open-customer-ledger-print-report";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 
 export function CustomerStatementView({ lang: langProp }: { lang: SupportedLanguage }) {
   const activeLang = useActiveLanguage();
@@ -74,22 +75,19 @@ export function CustomerStatementView({ lang: langProp }: { lang: SupportedLangu
             <label className="block text-xs font-semibold text-slate-300 mb-2">{tt("customer", "Customer")} *</label>
             <CustomerPicker label="" value={customerId} onValueChange={setCustomerId} />
           </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-2">{tt("from_date", "From Date")}</label>
-            <input
-              type="date"
-              value={from}
-              onChange={(e) => setFrom(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-2">{tt("to_date", "To Date")}</label>
-            <input
-              type="date"
-              value={to}
-              onChange={(e) => setTo(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 text-sm"
+          <div className="md:col-span-2">
+            <label className="block text-xs font-semibold text-slate-300 mb-2">{tt("date_range", "Date Range")}</label>
+            <ErpDatePicker
+              mode="range"
+              lang={lang}
+              size="md"
+              applyLabel="update"
+              value={{ from: from || null, to: to || null }}
+              onApply={(v) => {
+                setFrom(v.from ?? "");
+                setTo(v.to ?? "");
+              }}
+              triggerClassName="bg-slate-950 border-slate-800 text-slate-200 h-[42px] rounded-xl hover:border-slate-700"
             />
           </div>
         </div>

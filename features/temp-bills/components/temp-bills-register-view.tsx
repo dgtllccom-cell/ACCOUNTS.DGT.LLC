@@ -13,6 +13,7 @@ import {
   type TempBillSummary,
   type TempBillInput,
 } from "@/features/temp-bills/temp-bills-api";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 
 const CCY = ["USD", "AED", "PKR", "AFN", "EUR", "GBP", "INR", "CNY", "SAR", "IRR"];
 const UNITS = ["kg", "carton", "bag", "ton", "pcs", "box", "pallet"];
@@ -177,16 +178,22 @@ export function TempBillsRegisterView({ lang: langProp, section = "all" }: { lan
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={s.t("f_search_ph", "Party, reference, bill no, goods, container…")}
             className={`w-64 rounded-md border border-border bg-background px-2 py-1.5 text-sm ${textStart}`} />
         </label>
-        <label className="flex flex-col gap-1 text-xs font-semibold">
-          {s.t("f_from", "From")}
-          <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
-        </label>
-        <label className="flex flex-col gap-1 text-xs font-semibold">
-          {s.t("f_to", "To")}
-          <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
-        </label>
+        <div className="flex flex-col gap-1 text-xs font-semibold min-w-[17rem]">
+          <span>{s.t("f_date_range", "Date Range")}</span>
+          <ErpDatePicker
+            mode="range"
+            lang={lang}
+            size="sm"
+            applyLabel="update"
+            value={{ from: fromDate || null, to: toDate || null }}
+            onApply={(v) => {
+              setFromDate(v.from ?? "");
+              setToDate(v.to ?? "");
+            }}
+          />
+        </div>
         {(q || fromDate || toDate) && (
-          <button onClick={() => { setQ(""); setFromDate(""); setToDate(""); }} className="rounded-md border border-border px-2 py-1.5 text-xs font-semibold">
+          <button onClick={() => { setQ(""); setFromDate(""); setToDate(""); }} className="h-9 self-end rounded-md border border-border px-2.5 text-xs font-semibold hover:bg-muted transition-colors">
             {s.t("f_reset", "Reset")}
           </button>
         )}
@@ -407,10 +414,16 @@ function TempBillForm({
               <option value="sale">{s.t("kind_sale", "Sale")}</option>
             </select>
           </label>
-          <label className="flex flex-col gap-1 text-xs font-semibold">
-            {s.t("col_date", "Date")}
-            <input type="date" value={f.billDate || ""} onChange={(e) => set("billDate", e.target.value)} className="rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
-          </label>
+          <div className="flex flex-col gap-1 text-xs font-semibold">
+            <span>{s.t("col_date", "Date")}</span>
+            <ErpDatePicker
+              mode="single"
+              lang={lang}
+              size="sm"
+              value={{ from: f.billDate || null }}
+              onApply={(v) => set("billDate", v.from ?? "")}
+            />
+          </div>
           <div className="flex flex-col gap-1 text-xs font-semibold sm:col-span-2">
             {s.t("col_party", "Party / Account")}
             <MasterCombo source="account" lang={lang} value={f.partyName} linkedId={partyLinkedId}
