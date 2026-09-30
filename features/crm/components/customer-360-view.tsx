@@ -288,20 +288,23 @@ export function Customer360View() {
     );
   }
 
+  // No fabricated fallback: while payload is still loading (or failed), every
+  // KPI renders as "—" / 0 rather than a fake dataset that looked like real
+  // numbers ("1,284 customers", "↑ 12%") on a slow connection or API error.
   const kpis = payload?.kpis || {
-    totalCustomers: 1284,
-    totalCustomersTrend: "↑ 12% vs last period",
-    activeCustomers: 892,
-    activeCustomersTrend: "↑ 8% vs last period",
-    followUpsToday: 28,
-    followUpsCalls: 12,
-    followUpsMeetings: 10,
-    followUpsOthers: 6,
-    receivableDue: 1245680,
+    totalCustomers: 0,
+    totalCustomersTrend: "—",
+    activeCustomers: 0,
+    activeCustomersTrend: "—",
+    followUpsToday: 0,
+    followUpsCalls: 0,
+    followUpsMeetings: 0,
+    followUpsOthers: 0,
+    receivableDue: 0,
     receivableDueCurrency: "AED",
-    receivableDueTrend: "↑ 5% vs last period",
-    customerHealth: 78,
-    customerHealthTrend: "↑ 6% healthy accounts"
+    receivableDueTrend: "—",
+    customerHealth: 0,
+    customerHealthTrend: "—"
   };
 
   const customers = payload?.customers || [];

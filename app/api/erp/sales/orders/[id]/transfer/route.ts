@@ -376,11 +376,14 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       await withLocalPg(async (sql) => {
         if (lotNo.startsWith("WH-") || form.saleSource === "warehouse" || form.warehouseId) {
           let updatedBalances: any[] = [];
+          // quantity_available is a Postgres GENERATED ALWAYS AS (quantity_on_hand -
+          // quantity_reserved) STORED column (see supabase/production-schema.sql) —
+          // it recomputes itself the instant quantity_on_hand changes and cannot be
+          // assigned directly; Postgres rejects any UPDATE that tries to SET it.
           if (lotId) {
             updatedBalances = await sql`
               UPDATE public.product_inventory_balances
               SET quantity_on_hand = GREATEST(0, quantity_on_hand - ${soldQty}),
-                  quantity_available = GREATEST(0, coalesce(quantity_available, quantity_on_hand) - ${soldQty}),
                   updated_at = ${now}
               WHERE id = ${lotId}::uuid
               RETURNING id, product_id, warehouse_id, quantity_on_hand
@@ -390,7 +393,6 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
             updatedBalances = await sql`
               UPDATE public.product_inventory_balances
               SET quantity_on_hand = GREATEST(0, quantity_on_hand - ${soldQty}),
-                  quantity_available = GREATEST(0, coalesce(quantity_available, quantity_on_hand) - ${soldQty}),
                   updated_at = ${now}
               WHERE id::text LIKE ${shortId + '%'}
               RETURNING id, product_id, warehouse_id, quantity_on_hand

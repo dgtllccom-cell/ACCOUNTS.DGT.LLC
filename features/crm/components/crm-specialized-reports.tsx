@@ -223,25 +223,25 @@ export function CrmSpecializedReportView({ reportType }: SpecializedReportProps)
         <div className="bg-white dark:bg-slate-900 border border-slate-200 rounded-2xl p-4 shadow-xs">
           <div className="text-xs font-bold text-slate-500 mb-1">{t.totalCustomers}</div>
           <div className="text-2xl font-black text-slate-900 dark:text-slate-100">{kpis.totalCustomers.toLocaleString()}</div>
-          <p className="text-[11px] text-emerald-600 font-semibold mt-1">↑ 12% vs last quarter</p>
+          <p className="text-[11px] text-emerald-600 font-semibold mt-1">{(kpis as any).totalCustomersTrend || "—"}</p>
         </div>
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200 rounded-2xl p-4 shadow-xs">
           <div className="text-xs font-bold text-slate-500 mb-1">{t.activeCustomers}</div>
           <div className="text-2xl font-black text-slate-900 dark:text-slate-100">{kpis.activeCustomers.toLocaleString()}</div>
-          <p className="text-[11px] text-emerald-600 font-semibold mt-1">Healthy Active Accounts</p>
+          <p className="text-[11px] text-emerald-600 font-semibold mt-1">{(kpis as any).activeCustomersTrend || "—"}</p>
         </div>
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200 rounded-2xl p-4 shadow-xs">
           <div className="text-xs font-bold text-slate-500 mb-1">{t.receivableDue}</div>
           <div className="text-2xl font-black text-slate-900 dark:text-slate-100">{kpis.receivableDueCurrency} {Number(kpis.receivableDue).toLocaleString()}</div>
-          <p className="text-[11px] text-rose-600 font-semibold mt-1">Due for Collection</p>
+          <p className="text-[11px] text-rose-600 font-semibold mt-1">{(kpis as any).receivableDueTrend || "—"}</p>
         </div>
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200 rounded-2xl p-4 shadow-xs">
           <div className="text-xs font-bold text-slate-500 mb-1">{t.customerHealth}</div>
           <div className="text-2xl font-black text-slate-900 dark:text-slate-100">{kpis.customerHealth}%</div>
-          <p className="text-[11px] text-teal-600 font-semibold mt-1">High Retention Score</p>
+          <p className="text-[11px] text-teal-600 font-semibold mt-1">{(kpis as any).customerHealthTrend || "—"}</p>
         </div>
       </div>
 
@@ -253,21 +253,26 @@ export function CrmSpecializedReportView({ reportType }: SpecializedReportProps)
             <h3 className="text-sm font-black text-slate-900 dark:text-slate-100">
               Executive CRM Portfolio &amp; Financial Velocity
             </h3>
+            {/* Pipeline value / closed-won / conversion rate require a real deal-stage
+                data model, which does not exist yet (see the CRM pipeline strengthening
+                work). Previously these three cards showed fixed literals (AED 4,820,000 /
+                AED 3,240,000 / 68.4%) that never changed with real data — an honest
+                no-data state is shown instead until that model is built. */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="p-4 rounded-xl border border-blue-100 bg-blue-50/50 space-y-2">
                 <span className="text-xs font-bold text-blue-900">Total Pipeline Value</span>
-                <div className="text-xl font-black text-blue-700">AED 4,820,000</div>
-                <p className="text-[11px] text-blue-600">Across 6 operational territories</p>
+                <div className="text-xl font-black text-slate-400">—</div>
+                <p className="text-[11px] text-slate-400">Requires the deal-pipeline data model (not yet built)</p>
               </div>
               <div className="p-4 rounded-xl border border-emerald-100 bg-emerald-50/50 space-y-2">
                 <span className="text-xs font-bold text-emerald-900">Closed Won This Period</span>
-                <div className="text-xl font-black text-emerald-700">AED 3,240,000</div>
-                <p className="text-[11px] text-emerald-600">82 completed purchase/sales contracts</p>
+                <div className="text-xl font-black text-slate-400">—</div>
+                <p className="text-[11px] text-slate-400">Requires the deal-pipeline data model (not yet built)</p>
               </div>
               <div className="p-4 rounded-xl border border-purple-100 bg-purple-50/50 space-y-2">
                 <span className="text-xs font-bold text-purple-900">Follow-Up Conversion Rate</span>
-                <div className="text-xl font-black text-purple-700">68.4%</div>
-                <p className="text-[11px] text-purple-600">From inquiry to confirmed contract</p>
+                <div className="text-xl font-black text-slate-400">—</div>
+                <p className="text-[11px] text-slate-400">Requires the deal-pipeline data model (not yet built)</p>
               </div>
             </div>
 
@@ -322,42 +327,12 @@ export function CrmSpecializedReportView({ reportType }: SpecializedReportProps)
             <h3 className="text-sm font-black text-slate-900 dark:text-slate-100">
               Commercial Deal Pipeline by Stage
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-700">1. New Lead</span>
-                  <Badge className="bg-blue-100 text-blue-700">0</Badge>
-                </div>
-                <div className="text-sm font-black text-slate-900">AED 0</div>
-                <div className="text-[11px] text-slate-500">Initial requirements logged</div>
-              </div>
-
-              <div className="p-4 rounded-2xl border border-purple-200 bg-purple-50/30 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-purple-800">2. Proposal Sent</span>
-                  <Badge className="bg-purple-100 text-purple-700">0</Badge>
-                </div>
-                <div className="text-sm font-black text-slate-900">AED 0</div>
-                <div className="text-[11px] text-purple-600">Quotations pending review</div>
-              </div>
-
-              <div className="p-4 rounded-2xl border border-amber-200 bg-amber-50/30 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-amber-800">3. Negotiation</span>
-                  <Badge className="bg-amber-100 text-amber-700">0</Badge>
-                </div>
-                <div className="text-sm font-black text-slate-900">AED 0</div>
-                <div className="text-[11px] text-amber-600">Terms &amp; payment condition</div>
-              </div>
-
-              <div className="p-4 rounded-2xl border border-emerald-200 bg-emerald-50/30 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-emerald-800">4. Confirmed Contract</span>
-                  <Badge className="bg-emerald-100 text-emerald-700">0</Badge>
-                </div>
-                <div className="text-sm font-black text-slate-900">AED 0</div>
-                <div className="text-[11px] text-emerald-600">Sales order posted</div>
-              </div>
+            {/* No lead/deal-stage table exists yet — this previously showed 4 fixed
+                "0" / "AED 0" stage cards that could never reflect real data no matter
+                how many leads existed. Shown honestly as not-yet-built rather than as
+                a live-looking but permanently-empty pipeline. */}
+            <div className="p-8 text-center text-slate-500 border border-slate-200 rounded-xl">
+              Deal-stage pipeline tracking is not yet built for this CRM. No fabricated stage counts are shown.
             </div>
           </div>
         )}
@@ -370,24 +345,18 @@ export function CrmSpecializedReportView({ reportType }: SpecializedReportProps)
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50/40">
-                <span className="text-xs font-bold text-emerald-800">Current (Not Overdue)</span>
+                <span className="text-xs font-bold text-emerald-800">Total Receivable Due</span>
                 <div className="text-xl font-black text-emerald-700 mt-1">AED {Number(kpis.receivableDue || 0).toLocaleString()}</div>
                 <p className="text-[11px] text-emerald-600 mt-1">Pending recovery balances</p>
               </div>
-              <div className="p-4 rounded-xl border border-amber-200 bg-amber-50/40">
-                <span className="text-xs font-bold text-amber-800">1 - 30 Days Due</span>
-                <div className="text-xl font-black text-amber-700 mt-1">AED 0</div>
-                <p className="text-[11px] text-amber-600 mt-1">0 active follow-ups</p>
-              </div>
-              <div className="p-4 rounded-xl border border-orange-200 bg-orange-50/40">
-                <span className="text-xs font-bold text-orange-800">31 - 60 Days Overdue</span>
-                <div className="text-xl font-black text-orange-700 mt-1">AED 0</div>
-                <p className="text-[11px] text-orange-600 mt-1">0 overdue accounts</p>
-              </div>
-              <div className="p-4 rounded-xl border border-rose-200 bg-rose-50/40">
-                <span className="text-xs font-bold text-rose-800">60+ Days Critical</span>
-                <div className="text-xl font-black text-rose-700 mt-1">AED 0</div>
-                <p className="text-[11px] text-rose-600 mt-1">0 critical accounts</p>
+              {/* Day-range ageing buckets (1-30/31-60/60+) require a real per-item due-date
+                  calculation that doesn't exist yet — the three cards here previously showed
+                  fixed "AED 0" regardless of actual receivables. This one real, currently
+                  available figure (all overdue items, no day split) replaces them. */}
+              <div className="p-4 rounded-xl border border-rose-200 bg-rose-50/40 md:col-span-3">
+                <span className="text-xs font-bold text-rose-800">Overdue (All)</span>
+                <div className="text-xl font-black text-rose-700 mt-1">AED {Number((data?.dashboard?.kpis?.overdueAmount) || 0).toLocaleString()}</div>
+                <p className="text-[11px] text-rose-600 mt-1">{Number((data?.dashboard?.kpis?.overdueCount) || 0).toLocaleString()} overdue item(s) — day-range ageing (1-30/31-60/60+) not yet built</p>
               </div>
             </div>
           </div>

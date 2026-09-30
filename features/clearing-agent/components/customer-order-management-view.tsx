@@ -3338,13 +3338,22 @@ export function CustomerOrderManagementView() {
                                 {tt("click_to_inspect_serials", "Click for SA / Country / Branch")}
                               </span>
                             </button>
-                            <div className="text-[10px] text-slate-400 mt-1">
+                            <div className="text-[10px] text-slate-400 mt-1 flex items-center gap-1.5">
                               <a
                                 href={`/dashboard/clearing-agent/customer-order/${order.id}/workflow`}
                                 className="text-slate-500 hover:text-blue-600 hover:underline inline-flex items-center gap-0.5"
                                 title={tt("shipping_clearing_pipeline", "Shipping / Clearing pipeline — truck, goods verification, customs, handover")}
                               >
                                 <span>{tt("workflow_link", "Workflow")}</span>
+                                <span>&rarr;</span>
+                              </a>
+                              <span className="text-slate-300 dark:text-slate-600">•</span>
+                              <a
+                                href={`/dashboard/clearing-agent/order-transfer?orderId=${order.id}`}
+                                className="text-blue-600 hover:text-blue-800 hover:underline inline-flex items-center gap-0.5 font-semibold"
+                                title={tt("transfer_expenses_link_title", "Transfer order & route expenses to General Received Bills, Customs, Truck, Customer, Other")}
+                              >
+                                <span>{tt("transfer_link", "Transfer")}</span>
                                 <span>&rarr;</span>
                               </a>
                             </div>
@@ -3937,14 +3946,24 @@ export function CustomerOrderManagementView() {
                       </div>
 
                       {/* Modal Actions */}
-                      <div className="flex items-center justify-between pt-2">
-                        <a
-                          href={`/dashboard/clearing-agent/customer-order/${order.id}/workflow`}
-                          className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-700 transition shadow-xs"
-                        >
-                          <span>{tt("open_order_workflow", "Open Order Workflow & Pipeline")}</span>
-                          <ArrowRight className="h-3.5 w-3.5" />
-                        </a>
+                      <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
+                        <div className="flex items-center gap-2">
+                          <a
+                            href={`/dashboard/clearing-agent/customer-order/${order.id}/workflow`}
+                            className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-blue-700 transition shadow-xs"
+                          >
+                            <span>{tt("open_order_workflow", "Open Order Workflow & Pipeline")}</span>
+                            <ArrowRight className="h-3.5 w-3.5" />
+                          </a>
+
+                          <a
+                            href={`/dashboard/clearing-agent/order-transfer?orderId=${order.id}`}
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-300 transition"
+                          >
+                            <ArrowRightLeft className="h-3.5 w-3.5" />
+                            <span>{tt("order_transfer", "Transfer & Route Expenses")}</span>
+                          </a>
+                        </div>
 
                         <button
                           type="button"
