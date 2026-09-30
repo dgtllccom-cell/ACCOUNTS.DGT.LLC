@@ -1,4 +1,4 @@
-const CACHE_NAME = "digital-dock-erp-v3";
+const CACHE_NAME = "digital-dock-erp-v4";
 const ASSETS_TO_CACHE = [
   "/manifest.webmanifest",
   "/icons/digital-dock-icon.svg",

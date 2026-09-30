@@ -2607,19 +2607,19 @@ export function CashEntryForm({
         </Button>
       </div>
 
-      {/* Scope & Session Cards - Branch/User Info, Live Users, Serial Numbers, Daily Cash Position */}
+      {/* Scope & Session Cards - Branch Details, Serial Numbers, Daily Cash Position */}
       {showFormSection && (
       <div className="mx-4 mb-4 grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
 
-        {/* ════════ COLUMN 1: BRANCH / USER INFO + LIVE USERS / CURRENT WORK (xl:col-span-4) ════════ */}
+        {/* ════════ COLUMN 1: BRANCH DETAILS (xl:col-span-4) ════════ */}
         <div className="xl:col-span-4 flex flex-col gap-4">
 
-          {/* Card 1A: Branch & User Information */}
+          {/* Card 1A: Branch Information */}
           <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
             <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-blue-50/50 dark:bg-blue-900/10">
               <span className="h-2 w-2 rounded-full bg-blue-600 inline-block" />
               <h4 className="text-xs font-black uppercase tracking-wider text-blue-900 dark:text-blue-300">
-                {t(lang, "roz.branch_user_info", "BRANCH / USER INFORMATION")}
+                {t(lang, "cbs.branch_information", "BRANCH INFORMATION")}
               </h4>
             </div>
             <div className="p-3.5 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
@@ -2705,11 +2705,11 @@ export function CashEntryForm({
                 />
               </div>
 
-              {/* Right Column: User Context & Approval */}
-              <div className="grid grid-cols-[90px_1fr] gap-x-2 gap-y-1.5 font-semibold sm:border-l sm:border-slate-100 sm:pl-3 dark:sm:border-slate-800">
+              {/* Right Column: Voucher Audit & Status */}
+              <div className="grid grid-cols-[90px_1fr] gap-x-2 gap-y-2 font-semibold sm:border-l sm:border-slate-100 sm:pl-3 dark:sm:border-slate-800 content-start">
                 <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-left">CREATED BY</span>
-                <span className="font-extrabold text-slate-850 dark:text-slate-150 truncate" title={activeCreator || session?.user?.fullName || "Super Admin (Global Group)"}>
-                  {activeCreator || session?.user?.fullName || "Super Admin (Global Group)"}
+                <span className="font-extrabold text-slate-850 dark:text-slate-150 truncate" title={activeCreator || session?.user?.fullName || "Super Admin"}>
+                  {activeCreator || session?.user?.fullName || "Super Admin"}
                 </span>
 
                 <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-left">APPROVED BY</span>
@@ -2723,21 +2723,6 @@ export function CashEntryForm({
                     {activeStatus?.toUpperCase() || "DRAFT"}
                   </span>
                 </div>
-
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-left">USER NAME</span>
-                <span className="font-extrabold text-slate-850 dark:text-slate-150 truncate">
-                  {session?.user?.fullName || "Super Admin (Global Group)"}
-                </span>
-
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-left">USER ID</span>
-                <span className="font-extrabold text-slate-850 dark:text-slate-150 font-mono">
-                  {session?.user?.id?.slice(0, 8).toUpperCase() || "BE340D15"}
-                </span>
-
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-left">TIME</span>
-                <span className="font-extrabold text-slate-850 dark:text-slate-150">
-                  {loginTimeText || "12:46:46 AM"}
-                </span>
               </div>
             </div>
           </div>
