@@ -9721,6 +9721,24 @@ export type UiKey =
   | "wps.issue_establishment_mismatch"
   | "wps.issue_establishment_unassigned"
   | "wps.issue_duplicate_person_id"
+  | "wps.pay_title"
+  | "wps.pay_hint"
+  | "wps.pay_ledger"
+  | "wps.pay_date"
+  | "wps.pay_result"
+  | "wps.pay_unset"
+  | "wps.pay_rejected"
+  | "wps.pay_reason_ph"
+  | "wps.pay_bankref_ph"
+  | "wps.pay_amount"
+  | "wps.pay_submit"
+  | "wps.pay_submit_ok"
+  | "wps.pay_need_ledger"
+  | "wps.pay_need_one"
+  | "wps.pay_not_reconcilable"
+  | "wps.pay_already_badge"
+  | "wps.pay_outcome_error"
+  | "wps.pay_outcome_skipped"
   | "nav.wps_sif"
   | "perf.ack_placeholder"
   | "perf.acknowledge"
@@ -31409,6 +31427,24 @@ const en: Dict = {
   "wps.issue_establishment_mismatch": "Employee is registered under a different WPS establishment.",
   "wps.issue_establishment_unassigned": "No establishment on the employee record — included under the selected establishment.",
   "wps.issue_duplicate_person_id": "The same person ID is used by another employee in this run.",
+  "wps.pay_title": "Payment Results (bank reconciliation)",
+  "wps.pay_hint": "Record what the bank/WPS agent reported for each employee. Paid posts the real accounting entry and closes the payroll line; Rejected records the reason with no accounting impact.",
+  "wps.pay_ledger": "Payment ledger (cash / bank)",
+  "wps.pay_date": "Payment date",
+  "wps.pay_result": "Result",
+  "wps.pay_unset": "— not reported —",
+  "wps.pay_rejected": "Rejected",
+  "wps.pay_reason_ph": "Reason (if rejected)",
+  "wps.pay_bankref_ph": "Bank reference",
+  "wps.pay_amount": "Amount",
+  "wps.pay_submit": "Submit payment results",
+  "wps.pay_submit_ok": "Payment results recorded.",
+  "wps.pay_need_ledger": "Select a payment ledger first.",
+  "wps.pay_need_one": "Report at least one employee's result.",
+  "wps.pay_not_reconcilable": "Payment results can be recorded once this file has been submitted to the WPS agent.",
+  "wps.pay_already_badge": "Already recorded",
+  "wps.pay_outcome_error": "Error",
+  "wps.pay_outcome_skipped": "No matching SIF line",
   "nav.wps_sif": "UAE WPS & SIF",
   "perf.ack_placeholder": "Your comments (optional)",
   "perf.acknowledge": "Acknowledge",
@@ -53066,6 +53102,24 @@ const ur: Dict = {
   "wps.issue_establishment_mismatch": "ملازم کسی دوسرے WPS ادارے کے تحت رجسٹرڈ ہے۔",
   "wps.issue_establishment_unassigned": "ملازم کے ریکارڈ پر کوئی ادارہ نہیں — منتخب ادارے کے تحت شامل کیا گیا۔",
   "wps.issue_duplicate_person_id": "یہی پرسن آئی ڈی اس رن میں کسی دوسرے ملازم کی ہے۔",
+  "wps.pay_title": "ادائیگی کے نتائج (بینک مطابقت)",
+  "wps.pay_hint": "بینک/WPS ایجنٹ نے ہر ملازم کے بارے میں جو رپورٹ دی اسے یہاں درج کریں۔ ادا شدہ اصل اکاؤنٹنگ اندراج پوسٹ کرتا ہے اور پے رول لائن بند کرتا ہے؛ مسترد صرف وجہ ریکارڈ کرتا ہے، کوئی اکاؤنٹنگ اثر نہیں۔",
+  "wps.pay_ledger": "ادائیگی کھاتہ (نقد / بینک)",
+  "wps.pay_date": "ادائیگی کی تاریخ",
+  "wps.pay_result": "نتیجہ",
+  "wps.pay_unset": "— رپورٹ نہیں ہوا —",
+  "wps.pay_rejected": "مسترد",
+  "wps.pay_reason_ph": "وجہ (اگر مسترد ہو)",
+  "wps.pay_bankref_ph": "بینک حوالہ",
+  "wps.pay_amount": "رقم",
+  "wps.pay_submit": "ادائیگی کے نتائج جمع کریں",
+  "wps.pay_submit_ok": "ادائیگی کے نتائج محفوظ ہو گئے۔",
+  "wps.pay_need_ledger": "پہلے ادائیگی کھاتہ منتخب کریں۔",
+  "wps.pay_need_one": "کم از کم ایک ملازم کا نتیجہ درج کریں۔",
+  "wps.pay_not_reconcilable": "ادائیگی کے نتائج تب ریکارڈ کیے جا سکتے ہیں جب یہ فائل WPS ایجنٹ کو جمع کرائی جا چکی ہو۔",
+  "wps.pay_already_badge": "پہلے سے ریکارڈ شدہ",
+  "wps.pay_outcome_error": "خرابی",
+  "wps.pay_outcome_skipped": "متعلقہ SIF لائن نہیں ملی",
   "nav.wps_sif": "یو اے ای WPS اور SIF",
   "perf.ack_placeholder": "آپ کے تبصرے (اختیاری)",
   "perf.acknowledge": "تسلیم کریں",
@@ -74724,6 +74778,24 @@ const ar: Dict = {
   "wps.issue_establishment_mismatch": "الموظف مسجل تحت منشأة WPS أخرى.",
   "wps.issue_establishment_unassigned": "لا توجد منشأة في سجل الموظف — أُدرج ضمن المنشأة المختارة.",
   "wps.issue_duplicate_person_id": "رقم الشخص نفسه مستخدم لموظف آخر في هذه الدورة.",
+  "wps.pay_title": "نتائج الدفع (تسوية بنكية)",
+  "wps.pay_hint": "سجّل ما أبلغ عنه البنك أو وكيل WPS لكل موظف. \"مدفوع\" يُرحّل القيد المحاسبي الفعلي ويُغلق سطر الرواتب؛ \"مرفوض\" يسجّل السبب فقط دون أي أثر محاسبي.",
+  "wps.pay_ledger": "حساب الدفع (نقدًا / بنك)",
+  "wps.pay_date": "تاريخ الدفع",
+  "wps.pay_result": "النتيجة",
+  "wps.pay_unset": "— لم يُبلَّغ —",
+  "wps.pay_rejected": "مرفوض",
+  "wps.pay_reason_ph": "السبب (إن رُفض)",
+  "wps.pay_bankref_ph": "المرجع البنكي",
+  "wps.pay_amount": "المبلغ",
+  "wps.pay_submit": "إرسال نتائج الدفع",
+  "wps.pay_submit_ok": "تم تسجيل نتائج الدفع.",
+  "wps.pay_need_ledger": "اختر حساب الدفع أولاً.",
+  "wps.pay_need_one": "سجّل نتيجة موظف واحد على الأقل.",
+  "wps.pay_not_reconcilable": "يمكن تسجيل نتائج الدفع بعد تقديم هذا الملف إلى وكيل WPS.",
+  "wps.pay_already_badge": "مسجّل مسبقًا",
+  "wps.pay_outcome_error": "خطأ",
+  "wps.pay_outcome_skipped": "لا يوجد سطر SIF مطابق",
   "nav.wps_sif": "نظام حماية الأجور وملف SIF - الإمارات",
   "perf.ack_placeholder": "تعليقاتك (اختياري)",
   "perf.acknowledge": "إقرار",
@@ -96381,6 +96453,24 @@ const fa: Dict = {
   "wps.issue_establishment_mismatch": "کارمند زیر مؤسسه WPS دیگری ثبت شده است.",
   "wps.issue_establishment_unassigned": "هیچ مؤسسه‌ای در رکورد کارمند نیست — زیر مؤسسه انتخاب‌شده گنجانده شد.",
   "wps.issue_duplicate_person_id": "همین شناسه شخص برای کارمند دیگری در این اجرا استفاده شده است.",
+  "wps.pay_title": "نتایج پرداخت (تطبیق بانکی)",
+  "wps.pay_hint": "آنچه بانک یا نماینده WPS برای هر کارمند گزارش کرده را ثبت کنید. «پرداخت‌شده» سند حسابداری واقعی را ثبت و ردیف حقوق را می‌بندد؛ «رد شده» فقط دلیل را ثبت می‌کند و هیچ اثر حسابداری ندارد.",
+  "wps.pay_ledger": "حساب پرداخت (نقد / بانک)",
+  "wps.pay_date": "تاریخ پرداخت",
+  "wps.pay_result": "نتیجه",
+  "wps.pay_unset": "— گزارش نشده —",
+  "wps.pay_rejected": "رد شده",
+  "wps.pay_reason_ph": "دلیل (در صورت رد)",
+  "wps.pay_bankref_ph": "شماره پیگیری بانکی",
+  "wps.pay_amount": "مبلغ",
+  "wps.pay_submit": "ثبت نتایج پرداخت",
+  "wps.pay_submit_ok": "نتایج پرداخت ثبت شد.",
+  "wps.pay_need_ledger": "ابتدا یک حساب پرداخت انتخاب کنید.",
+  "wps.pay_need_one": "دست‌کم نتیجه یک کارمند را وارد کنید.",
+  "wps.pay_not_reconcilable": "پس از ارسال این فایل به نماینده WPS می‌توان نتایج پرداخت را ثبت کرد.",
+  "wps.pay_already_badge": "قبلاً ثبت شده",
+  "wps.pay_outcome_error": "خطا",
+  "wps.pay_outcome_skipped": "ردیف SIF منطبق یافت نشد",
   "nav.wps_sif": "WPS و SIF امارات",
   "perf.ack_placeholder": "نظرات شما (اختیاری)",
   "perf.acknowledge": "تأیید دریافت",
@@ -118045,6 +118135,24 @@ const ps: Dict = {
   "wps.issue_establishment_mismatch": "کارکوونکی د بلې WPS ادارې لاندې ثبت دی.",
   "wps.issue_establishment_unassigned": "د کارکوونکي په ثبت کې اداره نشته — د ټاکل شوې ادارې لاندې شامل شو.",
   "wps.issue_duplicate_person_id": "همدا د شخص پېژند په دې چلون کې د بل کارکوونکي لپاره کارېدلی.",
+  "wps.pay_title": "د تادیې پایلې (بانکي تطبیق)",
+  "wps.pay_hint": "هغه څه ثبت کړئ چې بانک یا WPS استازي د هر کارمند په اړه راپور ورکړی. \"تادیه شوی\" اصلي محاسبې قید ثبتوي او د معاش کرښه بندوي؛ \"رد شوی\" یوازې دلیل ثبتوي، هیڅ محاسبوي اغیز نلري.",
+  "wps.pay_ledger": "د تادیې حساب (نغدي / بانک)",
+  "wps.pay_date": "د تادیې نېټه",
+  "wps.pay_result": "پایله",
+  "wps.pay_unset": "— راپور نه دی شوی —",
+  "wps.pay_rejected": "رد شوی",
+  "wps.pay_reason_ph": "دلیل (که رد شوی وي)",
+  "wps.pay_bankref_ph": "بانکي حواله",
+  "wps.pay_amount": "اندازه",
+  "wps.pay_submit": "د تادیې پایلې وسپارئ",
+  "wps.pay_submit_ok": "د تادیې پایلې ثبت شوې.",
+  "wps.pay_need_ledger": "لومړی د تادیې حساب وټاکئ.",
+  "wps.pay_need_one": "لږترلږه د یو کارمند پایله ثبت کړئ.",
+  "wps.pay_not_reconcilable": "د تادیې پایلې وروسته له دې چې دا فایل WPS استازي ته وسپارل شي، ثبتېدلی شي.",
+  "wps.pay_already_badge": "مخکې ثبت شوی",
+  "wps.pay_outcome_error": "تېروتنه",
+  "wps.pay_outcome_skipped": "مطابق SIF کرښه ونه موندل شوه",
   "nav.wps_sif": "د امارات WPS او SIF",
   "perf.ack_placeholder": "ستاسو نظرونه (اختیاري)",
   "perf.acknowledge": "تصدیق کړئ",

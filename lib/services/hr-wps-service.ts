@@ -19,8 +19,9 @@ import type { ErpSession } from "@/lib/auth/session";
 import { withLocalPg, withReadPg } from "@/lib/db/local-postgres";
 import { ApiClientError } from "@/lib/api/response";
 import { recordInSessionScope, sessionSqlScope, sqlScopeCondition } from "@/lib/api/scope-middleware";
-import { assertEmployeeAccess } from "@/lib/services/hr-api";
+import { assertEmployeeAccess, hrScopeFromSession } from "@/lib/services/hr-api";
 import { companyInSessionScope, loadCompanyScopeRow } from "@/lib/services/company-master-service";
+import { hrPayrollPosting } from "@/lib/services/hr-payroll-posting";
 
 export type WpsIssue = { level: "error" | "warning"; code: string; employeeId?: string; employeeCode?: string; message: string };
 export type SifStatus = "generated" | "downloaded" | "submitted" | "accepted" | "rejected" | "partially_paid" | "paid" | "cancelled";
@@ -344,15 +345,16 @@ async function loadSif(session: ErpSession, id: string) {
 
 export async function getSif(session: ErpSession, id: string) {
   const f = await loadSif(session, id);
-  const [lines, events] = await Promise.all([
+  const [lines, events, paymentResults] = await Promise.all([
     withReadPg((sql) => sql`
       SELECT l.*, e.employee_code, COALESCE(c.customer_name, c.company_name, e.employee_code) AS employee_name
       FROM public.hr_wps_sif_lines l JOIN public.employees e ON e.id = l.employee_id LEFT JOIN public.customers c ON c.id = e.person_master_id
       WHERE l.sif_id = ${id}::uuid ORDER BY l.line_no`),
     withReadPg((sql) => sql`SELECT * FROM public.hr_wps_sif_events WHERE sif_id = ${id}::uuid ORDER BY created_at DESC`),
+    withReadPg((sql) => sql`SELECT employee_id, result_status, result_reason, bank_reference, amount, payment_roznamcha_id, recorded_by_name, created_at FROM public.hr_wps_payment_results WHERE sif_id = ${id}::uuid`),
   ]);
   const { content: _content, ...file } = f;
-  return { file, lines: lines ?? [], events: events ?? [] };
+  return { file, lines: lines ?? [], events: events ?? [], paymentResults: paymentResults ?? [] };
 }
 
 export async function downloadSif(session: ErpSession, id: string) {
@@ -393,4 +395,99 @@ export async function transitionSif(session: ErpSession, id: string, action: Sif
              VALUES (${id}::uuid, ${action}, ${f.status}, ${t.to}, ${tx.json({ reference, response } as any)}, ${session.userId}::uuid, ${session.fullName ?? null})`;
   }));
   return { id, status: t.to };
+}
+
+// ── Payment-result reconciliation (loop-back into the payroll run) ──────────
+
+export type WpsPaymentResultInput = {
+  employeeId: string;
+  resultStatus: "paid" | "rejected";
+  resultReason?: string | null;
+  bankReference?: string | null;
+  amount?: number | null;
+};
+
+export type WpsPaymentResultOutcome = {
+  employeeId: string;
+  outcome: "posted_paid" | "marked_rejected" | "already_reconciled" | "skipped_no_sif_line" | "error";
+  detail?: string;
+};
+
+/**
+ * Real per-employee WPS payment-result loop-back. The bank/WPS agent reports,
+ * per person id, whether the salary was actually credited or rejected — this
+ * records that real outcome and, for 'paid', posts the real accounting entry
+ * and marks the payroll line paid (reusing hrPayrollPosting.payOneLine); for
+ * 'rejected', marks the line 'payment_failed' with the real reason — no money
+ * is posted for a line that was not actually paid.
+ *
+ * Duplicate-posting protection: a SIF line that already has a
+ * hr_wps_payment_results row is skipped (reported as already_reconciled), and
+ * the database's UNIQUE(sif_line_id) constraint is the hard backstop even
+ * against a concurrent double-submit of the same bank response file.
+ */
+export async function reconcileWpsPaymentResults(
+  session: ErpSession,
+  sifId: string,
+  results: WpsPaymentResultInput[],
+  opts: { paymentLedgerId: string; paymentDate: string },
+): Promise<{ sifId: string; outcomes: WpsPaymentResultOutcome[] }> {
+  const f = await loadSif(session, sifId);
+  if (!["submitted", "accepted", "partially_paid"].includes(f.status)) {
+    throw bad(`A '${f.status}' SIF has no bank response to reconcile yet.`, "WPS_NOT_SUBMITTED");
+  }
+  const scope = hrScopeFromSession(session);
+  const outcomes: WpsPaymentResultOutcome[] = [];
+  let voucherSeq = 0;
+
+  for (const r of results) {
+    try {
+      const sifLine = (await withReadPg((sql) => sql`
+        SELECT id, payroll_line_id FROM public.hr_wps_sif_lines
+        WHERE sif_id = ${sifId}::uuid AND employee_id = ${r.employeeId}::uuid`) as any[])?.[0];
+      if (!sifLine || !sifLine.payroll_line_id) {
+        outcomes.push({ employeeId: r.employeeId, outcome: "skipped_no_sif_line", detail: "No matching SIF line for this employee on this file." });
+        continue;
+      }
+
+      const already = (await withReadPg((sql) => sql`SELECT id FROM public.hr_wps_payment_results WHERE sif_line_id = ${sifLine.id}::uuid`) as any[])?.length;
+      if (already) {
+        outcomes.push({ employeeId: r.employeeId, outcome: "already_reconciled" });
+        continue;
+      }
+
+      let roznamchaId: string | null = null;
+      if (r.resultStatus === "paid") {
+        voucherSeq += 1;
+        const res = await hrPayrollPosting.payOneLine(
+          sifLine.payroll_line_id,
+          { paymentLedgerId: opts.paymentLedgerId, paymentDate: opts.paymentDate, voucherSuffix: String(voucherSeq).padStart(3, "0"), narrationSuffix: r.bankReference ? ` (bank ref ${r.bankReference})` : null },
+          session.userId,
+          scope,
+        );
+        roznamchaId = (res as any).roznamchaId ?? null;
+      } else {
+        await withLocalPg((sql) => sql`
+          UPDATE public.hr_payroll_run_lines
+          SET payment_failure_reason = ${r.resultReason || "Rejected by WPS agent/bank"}, updated_at = now()
+          WHERE id = ${sifLine.payroll_line_id}::uuid AND status <> 'paid'`);
+      }
+
+      // The UNIQUE(sif_line_id) constraint is the real, DB-level duplicate-posting guard.
+      await withLocalPg((sql) => sql`
+        INSERT INTO public.hr_wps_payment_results
+          (sif_id, sif_line_id, payroll_line_id, employee_id, result_status, result_reason, bank_reference, amount, currency, payment_roznamcha_id, recorded_by, recorded_by_name)
+        VALUES (${sifId}::uuid, ${sifLine.id}::uuid, ${sifLine.payroll_line_id}::uuid, ${r.employeeId}::uuid, ${r.resultStatus}, ${r.resultReason ?? null}, ${r.bankReference ?? null}, ${r.amount ?? null}, ${f.currency ?? "AED"}, ${roznamchaId}, ${session.userId}::uuid, ${session.fullName ?? null})`);
+
+      outcomes.push({ employeeId: r.employeeId, outcome: r.resultStatus === "paid" ? "posted_paid" : "marked_rejected" });
+    } catch (e) {
+      outcomes.push({ employeeId: r.employeeId, outcome: "error", detail: e instanceof Error ? e.message : String(e) });
+    }
+  }
+
+  await withLocalPg((sql) => sql`
+    INSERT INTO public.hr_wps_sif_events (sif_id, action, from_status, to_status, detail, actor_id, actor_name)
+    VALUES (${sifId}::uuid, 'payment_reconciled', ${f.status}, ${f.status}, ${sql.json({ outcomes } as any)}, ${session.userId}::uuid, ${session.fullName ?? null})`);
+
+  return { sifId, outcomes };
 }

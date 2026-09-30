@@ -8,7 +8,7 @@
  * Setup: MOHRE establishments (per company) and each UAE employee's WPS details.
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AlertTriangle, CheckCircle2, Download, FileCheck2, History, Landmark, Loader2, Plus, RefreshCw, ShieldCheck, X, XCircle } from "lucide-react";
+import { AlertTriangle, Banknote, CheckCircle2, Download, FileCheck2, History, Landmark, Loader2, Plus, RefreshCw, ShieldCheck, X, XCircle } from "lucide-react";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { apiGet, apiPatch, apiPost } from "@/lib/api/client";
 import { Th } from "@/components/ui/translated-th";
@@ -315,6 +315,10 @@ function RegisterTab({ s, setError, setNotice, statusLabel }: TabProps & { statu
               </tbody>
             </table>
           </div>
+          <div className="mt-4">
+            <PaymentResultsSection s={s} detail={detail} onReconciled={async () => { await Promise.all([openDetail(detail.file.id), load()]); }} />
+          </div>
+
           <h4 className="mt-4 text-xs font-bold uppercase tracking-wide text-slate-500">{s.t("history", "Audit history")}</h4>
           <ul className="mt-2 space-y-1 text-xs" data-testid="wps-events">
             {(detail.events as Row[]).map((e) => (
@@ -331,6 +335,137 @@ function RegisterTab({ s, setError, setNotice, statusLabel }: TabProps & { statu
         </section>
       )}
     </div>
+  );
+}
+
+type PayRowState = { status: "" | "paid" | "rejected"; reason: string; bankRef: string; amount: string };
+
+function PaymentResultsSection({ s, detail, onReconciled }: { s: ReturnType<typeof useErpScreen>; detail: Row; onReconciled: () => Promise<void> }) {
+  const file = detail.file as Row;
+  const lines = (detail.lines ?? []) as Row[];
+  const existing = (detail.paymentResults ?? []) as Row[];
+  const existingByEmp = useMemo(() => new Map(existing.map((r) => [r.employee_id, r])), [existing]);
+  const reconcilable = ["submitted", "accepted", "partially_paid"].includes(file.status);
+
+  const [ledgers, setLedgers] = useState<Row[]>([]);
+  const [paymentLedgerId, setPaymentLedgerId] = useState("");
+  const [paymentDate, setPaymentDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [rows, setRows] = useState<Record<string, PayRowState>>({});
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!reconcilable || ledgers.length) return;
+    apiGet<{ ledgers?: Row[]; rows?: Row[] }>("/api/erp/ledgers").then((l) => setLedgers(l.ledgers ?? l.rows ?? [])).catch(() => {});
+  }, [reconcilable, ledgers.length]);
+
+  const defaultFor = (l: Row): PayRowState => ({ status: "", reason: "", bankRef: "", amount: String(Number(l.fixed_amount || 0) + Number(l.variable_amount || 0)) });
+  const set = (l: Row, patch: Partial<PayRowState>) =>
+    setRows((p) => ({ ...p, [l.employee_id]: { ...defaultFor(l), ...p[l.employee_id], ...patch } }));
+
+  const submit = async () => {
+    setErr(null); setNotice(null);
+    if (!paymentLedgerId) { setErr(s.t("pay_need_ledger", "Select a payment ledger first.")); return; }
+    const results = lines
+      .filter((l) => !existingByEmp.has(l.employee_id) && rows[l.employee_id]?.status)
+      .map((l) => {
+        const r = rows[l.employee_id];
+        return {
+          employeeId: l.employee_id,
+          resultStatus: r.status as "paid" | "rejected",
+          resultReason: r.reason.trim() || null,
+          bankReference: r.bankRef.trim() || null,
+          amount: r.amount.trim() ? Number(r.amount) : null,
+        };
+      });
+    if (results.length === 0) { setErr(s.t("pay_need_one", "Report at least one employee's result.")); return; }
+    setBusy(true);
+    try {
+      await apiPost(`/api/erp/hr/wps/sif/${file.id}/payment-results`, { paymentLedgerId, paymentDate, results });
+      setNotice(s.t("pay_submit_ok", "Payment results recorded."));
+      setRows({});
+      await onReconciled();
+    } catch (e) { setErr(e instanceof Error ? e.message : String(e)); }
+    finally { setBusy(false); }
+  };
+
+  if (!reconcilable) {
+    return (
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900" data-testid="wps-pay-section">
+        <h4 className="text-xs font-bold uppercase tracking-wide text-slate-500">{s.t("pay_title", "Payment Results (bank reconciliation)")}</h4>
+        <p className="mt-2 text-xs text-slate-500">{s.t("pay_not_reconcilable", "Payment results can be recorded once this file has been submitted to the WPS agent.")}</p>
+      </section>
+    );
+  }
+
+  return (
+    <section className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900" data-testid="wps-pay-section">
+      <h4 className="text-xs font-bold uppercase tracking-wide text-slate-500">{s.t("pay_title", "Payment Results (bank reconciliation)")}</h4>
+      <p className="mt-1 text-[11px] text-slate-500">{s.t("pay_hint", "Record what the bank/WPS agent reported for each employee. Paid posts the real accounting entry and closes the payroll line; Rejected records the reason with no accounting impact.")}</p>
+      {err && <p data-testid="wps-pay-error" className="mt-2 rounded-lg bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">{err}</p>}
+      {notice && <p data-testid="wps-pay-notice" className="mt-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">{notice}</p>}
+      <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
+        <div>
+          <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{s.t("pay_ledger", "Payment ledger (cash / bank)")}</label>
+          <select data-testid="wps-pay-ledger" className={INP} value={paymentLedgerId} onChange={(e) => setPaymentLedgerId(e.target.value)}>
+            <option value="">{s.t("select", "Select…")}</option>
+            {ledgers.map((l) => <option key={l.id} value={l.id}>{l.code} — {l.name}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">{s.t("pay_date", "Payment date")}</label>
+          <input data-testid="wps-pay-date" type="date" className={INP} value={paymentDate} onChange={(e) => setPaymentDate(e.target.value)} />
+        </div>
+      </div>
+      <div className="mt-3 overflow-x-auto">
+        <table className="w-full min-w-[880px] text-xs" data-testid="wps-pay-rows">
+          <thead className="bg-slate-50 dark:bg-slate-800/60">
+            <tr>{[s.t("employee", "Employee"), s.t("pay_result", "Result"), s.t("pay_reason_ph", "Reason (if rejected)"), s.t("pay_bankref_ph", "Bank reference"), s.t("pay_amount", "Amount")].map((h) => <Th key={h} className={`px-3 py-2 font-bold ${s.textStart}`}>{h}</Th>)}</tr>
+          </thead>
+          <tbody>
+            {lines.map((l) => {
+              const ex = existingByEmp.get(l.employee_id);
+              if (ex) {
+                return (
+                  <tr key={l.id} data-testid="wps-pay-row" data-status="recorded" className="border-t border-slate-100 dark:border-slate-800">
+                    <td className="px-3 py-1.5">{l.employee_name}<div className="font-mono text-[10px] text-slate-400">{l.employee_code}</div></td>
+                    <td className="px-3 py-1.5">
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${ex.result_status === "paid" ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300" : "bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300"}`}>
+                        {ex.result_status === "paid" ? s.t("st_paid", "Paid") : s.t("pay_rejected", "Rejected")}
+                      </span>
+                      <div className="mt-0.5 text-[10px] text-slate-400">{s.t("pay_already_badge", "Already recorded")}</div>
+                    </td>
+                    <td className="px-3 py-1.5 text-slate-500">{ex.result_reason ?? "—"}</td>
+                    <td className="px-3 py-1.5 font-mono text-slate-500" dir="ltr">{ex.bank_reference ?? "—"}</td>
+                    <td className="px-3 py-1.5 tabular-nums text-slate-500" dir="ltr">{ex.amount != null ? AMT(ex.amount) : "—"}</td>
+                  </tr>
+                );
+              }
+              const r = rows[l.employee_id] ?? defaultFor(l);
+              return (
+                <tr key={l.id} data-testid="wps-pay-row" data-status="pending" className="border-t border-slate-100 dark:border-slate-800">
+                  <td className="px-3 py-1.5">{l.employee_name}<div className="font-mono text-[10px] text-slate-400">{l.employee_code}</div></td>
+                  <td className="px-3 py-1.5">
+                    <select data-testid="wps-pay-status" className={`${INP} w-32`} value={r.status} onChange={(e) => set(l, { status: e.target.value as PayRowState["status"] })}>
+                      <option value="">{s.t("pay_unset", "— not reported —")}</option>
+                      <option value="paid">{s.t("st_paid", "Paid")}</option>
+                      <option value="rejected">{s.t("pay_rejected", "Rejected")}</option>
+                    </select>
+                  </td>
+                  <td className="px-3 py-1.5"><input data-testid="wps-pay-reason" className={`${INP} w-40`} disabled={r.status !== "rejected"} value={r.reason} onChange={(e) => set(l, { reason: e.target.value })} /></td>
+                  <td className="px-3 py-1.5"><input data-testid="wps-pay-bankref" className={`${INP} w-32 font-mono`} dir="ltr" disabled={!r.status} value={r.bankRef} onChange={(e) => set(l, { bankRef: e.target.value })} /></td>
+                  <td className="px-3 py-1.5"><input data-testid="wps-pay-amount" type="number" step="0.01" className={`${INP} w-24 font-mono`} dir="ltr" disabled={!r.status} value={r.amount} onChange={(e) => set(l, { amount: e.target.value })} /></td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <button type="button" data-testid="wps-pay-submit" disabled={busy} onClick={() => void submit()} className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-teal-700 px-3.5 py-2 text-xs font-bold text-white hover:bg-teal-800 disabled:opacity-50">
+        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Banknote className="h-4 w-4" />} {s.t("pay_submit", "Submit payment results")}
+      </button>
+    </section>
   );
 }
 

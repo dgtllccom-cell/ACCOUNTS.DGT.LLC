@@ -252,6 +252,91 @@ export class HrPayrollPosting {
     });
   }
 
+  /**
+   * Post the payment accounting entry for ONE payroll run line — used by the WPS
+   * payment-result reconciliation loop-back (a bank reports employees paid one
+   * at a time / in partial batches, not the whole run at once like markPaid()).
+   * Independent of markPaid()'s bulk loop on purpose: payroll accounting-posting
+   * code is high-risk to regress, so this does not touch markPaid() at all — it
+   * mirrors the same Dr payable / Cr bank pattern for a single line.
+   * Idempotent: a line that is already 'paid' is a no-op (returns alreadyPaid).
+   */
+  async payOneLine(
+    runLineId: string,
+    opts: { paymentLedgerId: string; paymentDate: string; voucherSuffix: string; narrationSuffix?: string | null },
+    actorId: string,
+    scope: HrScope,
+  ) {
+    if (!opts.paymentLedgerId) throw new Error("A cash/bank payment ledger is required.");
+    return withLocalPg(async (sql) => {
+      await sql`BEGIN`;
+      try {
+        // FOR UPDATE OF l only — locking across the LEFT JOIN to customers is
+        // rejected by Postgres ("FOR UPDATE cannot be applied to the nullable
+        // side of an outer join"); the row lock only needs to cover the actual
+        // payroll line being paid.
+        const line = (await sql`
+          SELECT l.*, e.employee_payable_account_id,
+                 COALESCE(c.customer_name, c.company_name, e.employee_code) AS employee_name
+          FROM public.hr_payroll_run_lines l
+          JOIN public.hr_payroll_runs r ON r.id = l.run_id
+          JOIN public.employees e ON e.id = l.employee_id
+          LEFT JOIN public.customers c ON c.id = e.person_master_id
+          WHERE l.id = ${runLineId} AND r.deleted_at IS NULL
+          FOR UPDATE OF l`)?.[0];
+        if (!line) throw new Error("Payroll run line not found.");
+        await assertRunInScope(sql, line.run_id, scope);
+        if (line.status === "paid") { await sql`ROLLBACK`; return { runLineId, alreadyPaid: true }; }
+        if (line.status !== "posted") throw new Error(`Only a posted line can be paid (line is ${line.status}).`);
+
+        const run = (await sql`SELECT * FROM public.hr_payroll_runs WHERE id = ${line.run_id}`)?.[0];
+        const net = Number(line.net_salary);
+        if (net <= 0) {
+          await sql`UPDATE public.hr_payroll_run_lines SET status = 'paid', updated_at = now() WHERE id = ${runLineId}`;
+          await sql`COMMIT`;
+          return { runLineId, paid: true, roznamchaId: null };
+        }
+        const rate = Number(line.exchange_rate) || 1;
+        const scopeType: "country" | "branch" = run.country_branch_id ? "branch" : "country";
+        const paymentLines = [
+          { ledgerId: line.employee_payable_account_id, debit: net, credit: 0, currency: line.currency, exchangeRate: rate, paymentEntryType: "debit", description: `Clear payable ${line.employee_name} (${run.period_month})${opts.narrationSuffix ?? ""}` },
+          { ledgerId: opts.paymentLedgerId, debit: 0, credit: net, currency: line.currency, exchangeRate: rate, paymentEntryType: "credit", description: `Salary paid ${line.employee_name} via WPS (${run.period_month})${opts.narrationSuffix ?? ""}` },
+        ];
+        const pid = await postEntry(sql, {
+          type: scopeType,
+          countryId: run.country_id,
+          countryBranchId: run.country_branch_id,
+          entryDate: opts.paymentDate,
+          journalNo: "JO-PAYROLL-PAYMENT",
+          voucherNo: `${run.run_no}-WPS${opts.voucherSuffix}`,
+          referenceNo: `Payroll Run ${run.run_no} (WPS)`,
+          narration: `WPS salary payment ${line.employee_name} — ${run.period_month} (${run.run_no})`,
+          lines: paymentLines,
+        });
+
+        if (Number(line.advance_recovery) > 0) {
+          await sql`
+            UPDATE public.employee_advances_loans SET
+              remaining_balance = GREATEST(0, remaining_balance - LEAST(monthly_deduction, remaining_balance)),
+              status = CASE WHEN remaining_balance - LEAST(monthly_deduction, remaining_balance) <= 0 THEN 'Closed' ELSE status END,
+              updated_at = now()
+            WHERE employee_id = ${line.employee_id} AND deleted_at IS NULL AND lower(status) = 'active' AND lower(type) = 'advance' AND remaining_balance > 0`;
+        }
+        if (line.salary_due_id) {
+          await sql`UPDATE public.employee_salaries_due SET status = 'Paid', payment_account_id = ${opts.paymentLedgerId},
+            paid_date = ${opts.paymentDate}, transferred_by = ${actorId}, updated_at = now()
+            WHERE id = ${line.salary_due_id}`;
+        }
+        await sql`UPDATE public.hr_payroll_run_lines SET status = 'paid', payment_roznamcha_id = ${pid}, payment_failure_reason = NULL, updated_at = now() WHERE id = ${runLineId}`;
+        await sql`COMMIT`;
+        return { runLineId, paid: true, roznamchaId: pid };
+      } catch (e) {
+        await sql`ROLLBACK`;
+        throw e;
+      }
+    });
+  }
+
   /** Controlled reversal — contra entry, run marked 'reversed'. Never deletes journal rows. */
   async reverse(runId: string, reason: string, actorId: string, actorName: string | null, scope: HrScope) {
     return withLocalPg(async (sql) => {
