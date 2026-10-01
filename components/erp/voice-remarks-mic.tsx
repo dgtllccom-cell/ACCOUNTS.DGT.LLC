@@ -31,9 +31,13 @@ const SPEECH_LANG_MAP: Record<SupportedLanguage, string> = {
 export interface VoiceRemarksMicProps {
   context?: VoiceContext;
   lang?: SupportedLanguage;
+  language?: SupportedLanguage;
   value?: string | null;
-  onChange: (nextValue: string) => void;
+  currentValue?: string | null;
+  onChange?: (nextValue: string) => void;
+  onTranscribed?: (transcript: string, mode: "append" | "replace") => void;
   label?: string;
+  title?: string;
   placeholder?: string;
   className?: string;
   disabled?: boolean;
@@ -42,15 +46,22 @@ export interface VoiceRemarksMicProps {
 export function VoiceRemarksMic({
   context = "accounts",
   lang: langProp,
-  value,
+  language: languageProp,
+  value: valueProp,
+  currentValue,
   onChange,
-  label = "Voice Entry",
+  onTranscribed,
+  label,
+  title,
   placeholder = "Spoken text will appear here...",
   className = "",
   disabled = false,
 }: VoiceRemarksMicProps) {
-  const s = useErpScreen("voice", langProp);
-  const activeLang = (langProp || s.lang || "en") as SupportedLanguage;
+  const value = valueProp ?? currentValue ?? "";
+  const effectiveLabel = label ?? title ?? "Voice Entry";
+  const activeLangProp = langProp ?? languageProp;
+  const s = useErpScreen("voice", activeLangProp);
+  const activeLang = (activeLangProp || s.lang || "en") as SupportedLanguage;
 
   const [isOpen, setIsOpen] = useState(false);
   const [selectedLang, setSelectedLang] = useState<SupportedLanguage>(activeLang);
@@ -226,14 +237,18 @@ export function VoiceRemarksMic({
       return;
     }
 
-    const currentVal = (value || "").trim();
-    let finalVal = cleanText;
+    if (onTranscribed) {
+      onTranscribed(cleanText, insertMode);
+    } else if (onChange) {
+      const currentVal = (value || "").trim();
+      let finalVal = cleanText;
 
-    if (insertMode === "append" && currentVal) {
-      finalVal = `${currentVal}\n${cleanText}`;
+      if (insertMode === "append" && currentVal) {
+        finalVal = `${currentVal}\n${cleanText}`;
+      }
+
+      onChange(finalVal);
     }
-
-    onChange(finalVal);
     handleClose();
   }
 

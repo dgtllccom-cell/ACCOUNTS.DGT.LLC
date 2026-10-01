@@ -25,6 +25,7 @@ import {
   Compass,
   BookOpen,
   BookOpenText,
+  Bot,
   Boxes,
   Building2,
   CalendarCheck,
@@ -150,6 +151,13 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     href: "/dashboard/smart-operations",
     upgraded: true,
     roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "agent_user"],
+  },
+  {
+    key: "ai-assistant",
+    label: nt("AI Business Assistant"),
+    icon: Bot,
+    href: "/dashboard/ai-assistant",
+    upgraded: true,
   },
   {
     key: "new-entry",
@@ -728,6 +736,7 @@ export interface DigitalDockPremiumSidebarProps {
 export const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/dashboard": ["dashboard:read", "route:/dashboard"],
   "/dashboard/smart-operations": ["dashboard:read", "route:/dashboard/smart-operations"],
+  "/dashboard/ai-assistant": ["dashboard:read", "route:/dashboard/ai-assistant"],
   "/dashboard/super-admin": ["dashboard:read", "super_admin", "route:/dashboard/super-admin"],
   "/dashboard/country": ["dashboard:read", "country_admin", "country_user", "route:/dashboard/country"],
   "/dashboard/city": ["dashboard:read", "main_branch_admin", "city_branch_admin", "staff_user", "accountant", "cashier", "route:/dashboard/city"],

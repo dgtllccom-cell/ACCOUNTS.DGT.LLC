@@ -2,10 +2,12 @@ import { NextRequest } from "next/server";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { withLocalPg, getSharedPg } from "@/lib/db/local-postgres";
+import { getRequestLanguage } from "@/lib/i18n/server";
 
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang") || session.preferredLanguage);
 
     const isSuperAdmin = session.isSuperAdmin || session.roles?.includes("super_admin_reports");
     const countryId = session.countryIds?.[0] ?? null;
