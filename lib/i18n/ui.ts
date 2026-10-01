@@ -10586,6 +10586,33 @@ export type UiKey =
   | "rbi.legs_expiring"
   | "com.orders_load_error"
   | "com.retry"
+  | "bank.type_customer_account"
+  | "bank.type_business_account"
+  | "bank.type_personal_account"
+  | "bank.type_credit_card"
+  | "bank.type_debit_card"
+  | "bank.type_commercial_bank"
+  | "bank.type_islamic_bank"
+  | "bank.type_central_bank"
+  | "bank.type_exchange_company"
+  | "bank.atype_business_account"
+  | "bank.atype_company_account"
+  | "bank.atype_personal_account"
+  | "bank.atype_current_account"
+  | "bank.atype_savings_account"
+  | "bank.atype_fixed_deposit"
+  | "bank.atype_joint_account"
+  | "bank.bctype_swift_code"
+  | "bank.bctype_routing_number"
+  | "bank.bctype_ifsc_code"
+  | "bank.bctype_sort_code"
+  | "bank.bctype_bsb_number"
+  | "bank.bctype_branch_code"
+  | "bank.bctype_iban_prefix"
+  | "bank.status_active"
+  | "bank.status_inactive"
+  | "bank.status_frozen"
+  | "bank.status_closed"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -32447,6 +32474,33 @@ const en: Dict = {
   "rbi.legs_expiring": "Expiring Soon",
   "com.orders_load_error": "Could not load the orders register. Check your connection and try again.",
   "com.retry": "Retry",
+  "bank.type_customer_account": "Customer Account",
+  "bank.type_business_account": "Business Account",
+  "bank.type_personal_account": "Personal Account",
+  "bank.type_credit_card": "Credit Card",
+  "bank.type_debit_card": "Debit Card",
+  "bank.type_commercial_bank": "Commercial Bank",
+  "bank.type_islamic_bank": "Islamic Bank",
+  "bank.type_central_bank": "Central Bank",
+  "bank.type_exchange_company": "Exchange Company",
+  "bank.atype_business_account": "Business Account",
+  "bank.atype_company_account": "Company Account",
+  "bank.atype_personal_account": "Personal Account",
+  "bank.atype_current_account": "Current Account",
+  "bank.atype_savings_account": "Savings Account",
+  "bank.atype_fixed_deposit": "Fixed Deposit",
+  "bank.atype_joint_account": "Joint Account",
+  "bank.bctype_swift_code": "SWIFT Code",
+  "bank.bctype_routing_number": "Routing Number",
+  "bank.bctype_ifsc_code": "IFSC Code",
+  "bank.bctype_sort_code": "Sort Code",
+  "bank.bctype_bsb_number": "BSB Number",
+  "bank.bctype_branch_code": "Branch Code",
+  "bank.bctype_iban_prefix": "IBAN Prefix",
+  "bank.status_active": "Active",
+  "bank.status_inactive": "Inactive",
+  "bank.status_frozen": "Frozen",
+  "bank.status_closed": "Closed",
 };
 
 const ur: Dict = {
@@ -54277,6 +54331,33 @@ const ur: Dict = {
   "rbi.legs_expiring": "جلد ختم ہونے والی",
   "com.orders_load_error": "آرڈرز رجسٹر لوڈ نہیں ہو سکا۔ اپنا کنکشن چیک کریں اور دوبارہ کوشش کریں۔",
   "com.retry": "دوبارہ کوشش کریں",
+  "bank.type_customer_account": "کسٹمر اکاؤنٹ",
+  "bank.type_business_account": "بزنس اکاؤنٹ",
+  "bank.type_personal_account": "ذاتی اکاؤنٹ",
+  "bank.type_credit_card": "کریڈٹ کارڈ",
+  "bank.type_debit_card": "ڈیبٹ کارڈ",
+  "bank.type_commercial_bank": "کمرشل بینک",
+  "bank.type_islamic_bank": "اسلامی بینک",
+  "bank.type_central_bank": "مرکزی بینک",
+  "bank.type_exchange_company": "ایکسچینج کمپنی",
+  "bank.atype_business_account": "بزنس اکاؤنٹ",
+  "bank.atype_company_account": "کمپنی اکاؤنٹ",
+  "bank.atype_personal_account": "ذاتی اکاؤنٹ",
+  "bank.atype_current_account": "کرنٹ اکاؤنٹ",
+  "bank.atype_savings_account": "سیونگ اکاؤنٹ",
+  "bank.atype_fixed_deposit": "فکسڈ ڈپازٹ",
+  "bank.atype_joint_account": "مشترکہ اکاؤنٹ",
+  "bank.bctype_swift_code": "سوئفٹ کوڈ",
+  "bank.bctype_routing_number": "راؤٹنگ نمبر",
+  "bank.bctype_ifsc_code": "آئی ایف ایس سی کوڈ",
+  "bank.bctype_sort_code": "سورٹ کوڈ",
+  "bank.bctype_bsb_number": "بی ایس بی نمبر",
+  "bank.bctype_branch_code": "برانچ کوڈ",
+  "bank.bctype_iban_prefix": "آئی بین پریفکس",
+  "bank.status_active": "فعال",
+  "bank.status_inactive": "غیر فعال",
+  "bank.status_frozen": "منجمد",
+  "bank.status_closed": "بند",
 };
 
 const ar: Dict = {
@@ -76108,6 +76189,33 @@ const ar: Dict = {
   "rbi.legs_expiring": "قارب على الانتهاء",
   "com.orders_load_error": "تعذّر تحميل سجل الطلبات. تحقق من اتصالك وحاول مرة أخرى.",
   "com.retry": "إعادة المحاولة",
+  "bank.type_customer_account": "حساب العميل",
+  "bank.type_business_account": "حساب تجاري",
+  "bank.type_personal_account": "حساب شخصي",
+  "bank.type_credit_card": "بطاقة ائتمان",
+  "bank.type_debit_card": "بطاقة الخصم",
+  "bank.type_commercial_bank": "بنك تجاري",
+  "bank.type_islamic_bank": "مصرف إسلامي",
+  "bank.type_central_bank": "البنك المركزي",
+  "bank.type_exchange_company": "شركة صرافة",
+  "bank.atype_business_account": "حساب تجاري",
+  "bank.atype_company_account": "حساب شركة",
+  "bank.atype_personal_account": "حساب شخصي",
+  "bank.atype_current_account": "حساب جاري",
+  "bank.atype_savings_account": "حساب توفير",
+  "bank.atype_fixed_deposit": "وديعة لأجل",
+  "bank.atype_joint_account": "حساب مشترك",
+  "bank.bctype_swift_code": "رمز سويفت",
+  "bank.bctype_routing_number": "رقم التوجيه",
+  "bank.bctype_ifsc_code": "رمز IFSC",
+  "bank.bctype_sort_code": "رمز الفرز",
+  "bank.bctype_bsb_number": "رقم BSB",
+  "bank.bctype_branch_code": "رمز الفرع",
+  "bank.bctype_iban_prefix": "بادئة الآيبان",
+  "bank.status_active": "نشط",
+  "bank.status_inactive": "غير نشط",
+  "bank.status_frozen": "مجمد",
+  "bank.status_closed": "مغلق",
 };
 
 const fa: Dict = {
@@ -97938,6 +98046,33 @@ const fa: Dict = {
   "rbi.legs_expiring": "نزدیک به پایان",
   "com.orders_load_error": "بارگذاری فهرست سفارش‌ها ناموفق بود. اتصال خود را بررسی کرده و دوباره تلاش کنید.",
   "com.retry": "تلاش مجدد",
+  "bank.type_customer_account": "حساب مشتری",
+  "bank.type_business_account": "حساب تجاری",
+  "bank.type_personal_account": "حساب شخصی",
+  "bank.type_credit_card": "کارت اعتباری",
+  "bank.type_debit_card": "کارت نقدی",
+  "bank.type_commercial_bank": "بانک تجاری",
+  "bank.type_islamic_bank": "بانک اسلامی",
+  "bank.type_central_bank": "بانک مرکزی",
+  "bank.type_exchange_company": "شرکت صرافی",
+  "bank.atype_business_account": "حساب تجاری",
+  "bank.atype_company_account": "حساب شرکت",
+  "bank.atype_personal_account": "حساب شخصی",
+  "bank.atype_current_account": "حساب جاری",
+  "bank.atype_savings_account": "حساب پس‌انداز",
+  "bank.atype_fixed_deposit": "سپرده ثابت",
+  "bank.atype_joint_account": "حساب مشترک",
+  "bank.bctype_swift_code": "کد سویفت",
+  "bank.bctype_routing_number": "شماره مسیریابی",
+  "bank.bctype_ifsc_code": "کد IFSC",
+  "bank.bctype_sort_code": "سورت کد",
+  "bank.bctype_bsb_number": "شماره BSB",
+  "bank.bctype_branch_code": "کد شعبه",
+  "bank.bctype_iban_prefix": "پیشوند شبا",
+  "bank.status_active": "فعال",
+  "bank.status_inactive": "غیرفعال",
+  "bank.status_frozen": "مسدود",
+  "bank.status_closed": "بسته",
 };
 
 const ps: Dict = {
@@ -119775,6 +119910,33 @@ const ps: Dict = {
   "rbi.legs_expiring": "ژر پای ته رسېدونکي",
   "com.orders_load_error": "د امرونو راجستر نه شو لوډ کېدی. خپل اتصال وګورئ او بیا هڅه وکړئ.",
   "com.retry": "بیا هڅه",
+  "bank.type_customer_account": "د پیرودونکي حساب",
+  "bank.type_business_account": "تجارتي حساب",
+  "bank.type_personal_account": "شخصي حساب",
+  "bank.type_credit_card": "کریډیټ کارت",
+  "bank.type_debit_card": "ډیبیټ کارت",
+  "bank.type_commercial_bank": "سوداګریز بانک",
+  "bank.type_islamic_bank": "اسلامي بانک",
+  "bank.type_central_bank": "مرکزي بانک",
+  "bank.type_exchange_company": "د تبادلې شرکت",
+  "bank.atype_business_account": "تجارتي حساب",
+  "bank.atype_company_account": "د شرکت حساب",
+  "bank.atype_personal_account": "شخصي حساب",
+  "bank.atype_current_account": "روان حساب",
+  "bank.atype_savings_account": "د سپما حساب",
+  "bank.atype_fixed_deposit": "ثابت امانت",
+  "bank.atype_joint_account": "ګډ حساب",
+  "bank.bctype_swift_code": "سویفټ کوډ",
+  "bank.bctype_routing_number": "روټینګ شمیره",
+  "bank.bctype_ifsc_code": "د IFSC کوډ",
+  "bank.bctype_sort_code": "سارټ کوډ",
+  "bank.bctype_bsb_number": "د BSB شمیره",
+  "bank.bctype_branch_code": "د څانګې کوډ",
+  "bank.bctype_iban_prefix": "د IBAN مختاړی",
+  "bank.status_active": "فعال",
+  "bank.status_inactive": "غیر فعال",
+  "bank.status_frozen": "کنګل شوی",
+  "bank.status_closed": "تړل شوی",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
