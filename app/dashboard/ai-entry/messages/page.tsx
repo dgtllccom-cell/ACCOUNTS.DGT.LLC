@@ -15,7 +15,8 @@ import {
   AlertTriangle,
   Clock,
   ExternalLink,
-  RotateCcw
+  RotateCcw,
+  ArrowRight
 } from "lucide-react";
 import { ErpVoiceInputButton, type VoiceTranscriptionResult } from "@/components/erp-voice-input-button";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
@@ -28,6 +29,8 @@ type Message = {
   timestamp: Date;
   language: SupportedLanguage;
   audioDuration?: number;
+  action?: { label: string; url: string } | null;
+  sourceRecord?: any;
 };
 
 const SUGGESTED_PROMPTS = [
@@ -138,7 +141,9 @@ export default function AIMessagesPage() {
           type: "ai",
           content: data.reply,
           timestamp: new Date(),
-          language: s.lang as SupportedLanguage
+          language: s.lang as SupportedLanguage,
+          action: data.action || null,
+          sourceRecord: data.sourceRecord || null
         };
         setMessages(prev => [...prev, aiMessage]);
       } else {
@@ -331,6 +336,18 @@ export default function AIMessagesPage() {
                   </div>
                 </div>
                 <p className="whitespace-pre-wrap font-sans">{msg.content}</p>
+
+                {msg.action && (
+                  <div className="mt-2.5 pt-2 border-t border-blue-900/60">
+                    <a
+                      href={msg.action.url}
+                      className="inline-flex items-center justify-center gap-1.5 w-full py-2 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition text-xs shadow-md"
+                    >
+                      <span>{msg.action.label}</span>
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </a>
+                  </div>
+                )}
               </div>
 
               {msg.type === "user" && (

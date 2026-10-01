@@ -6,25 +6,80 @@ import { computeBusinessSummary } from "@/lib/reports/business-summary-data";
 import { aiTranslatorConfigured } from "@/lib/i18n/ai-translation-client";
 import { withLocalPg, getSharedPg } from "@/lib/db/local-postgres";
 
+const PHONETIC_NAME_MAP: Record<string, string[]> = {
+  "عصمت اللہ": ["Asmatullah", "Asmat Ullah"],
+  "عصمت الله": ["Asmatullah", "Asmat Ullah"],
+  "عصمت": ["Asmat", "Esmat"],
+  "عبداللہ": ["Abdullah", "Abdulla"],
+  "عبدالله": ["Abdullah", "Abdulla"],
+  "محمد": ["Muhammad", "Mohammed", "Mohammad"],
+  "احمد": ["Ahmad", "Ahmed"],
+  "خان": ["Khan"],
+  "علی": ["Ali"],
+  "حسین": ["Hussain", "Hussein"],
+  "عمر": ["Omar", "Umar"],
+  "بلال": ["Bilal"],
+  "عثمان": ["Usman", "Osman", "Othman"],
+  "طارق": ["Tariq", "Tarek"],
+  "رحمان": ["Rahman", "Rehman"],
+  "رحمن": ["Rahman", "Rehman"],
+  "رحیم": ["Rahim"],
+  "جان": ["Jan"],
+  "شریف": ["Sharif"],
+  "حبیب": ["Habib"],
+  "کریم": ["Karim"],
+  "جمال": ["Jamal"],
+  "اکرم": ["Akram"],
+  "اصغر": ["Asghar"],
+  "سلطان": ["Sultan"],
+  "نور": ["Noor", "Nur"],
+  "شاہ": ["Shah"],
+  "شاه": ["Shah"]
+};
+
 function extractSearchTerms(query: string): string[] {
-  let cleaned = query.trim()
-    .replace(/^(show|find|search|open|check|where is|what is|get|view|list|lookup|دیکھیں|کھولیں|تلاش کریں|ابحث عن|أظهر|نشان بده|وګوره)\s+/i, "")
-    .replace(/^(the|a|an)\s+/i, "");
+  const cleaned = query.trim()
+    .replace(/(urdu\s+me(in)?|in\s+urdu|اردو\s*میں|pashto\s+me|in\s+pashto|پښتو\s*کې|farsi\s+me|in\s+farsi|به\s*فارسی|in\s+arabic|بالعربية|in\s+english)/gi, " ")
+    .replace(/(dikha\s+do|dikhao|bata\s+do|batao|kholo|bataiye|check\s+karo|dhoondo|search\s+karo|show\s+me|show|find|search|open|check|where\s+is|what\s+is|get|view|list|lookup|دیکھیں|دکھائیں|دکھاؤ|کھولیں|تلاش\s*کریں|ابحث\s*عن|أظهر|اعرض|نشان\s*بده|نمایش\s*بده|وګوره|وښایه|راکړه)/gi, " ")
+    .replace(/(ka\s+account|ki\s+details?|ka\s+khata|ka\s+balance|ka\s+record|ka\s+profile|customer|account|order|bl|shipment|task|record|گاہک|کھاتہ|آرڈر|بل|ٹاسک|عميل|حساب|مشتری|د\s+|کا|کی|کے|کو|میں)/gi, " ")
+    .replace(/(dubai\s+branch|kabul\s+branch|karachi\s+branch|branch\s+ka|branch\s+ki|branch|برانچ)/gi, " ")
+    .replace(/[?.,!؛،\-_()]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 
-  cleaned = cleaned.replace(/^(customer|account|order|bl|shipment|task|vault|record|گاہک|کھاتہ|آرڈر|بل|ٹاسک|عميل|حساب|مهمة|بارنامہ)\s+/i, "");
-  cleaned = cleaned.replace(/[?.,!؛،]/g, "").trim();
+  const terms: string[] = [];
+  if (cleaned) terms.push(cleaned);
 
-  const terms: string[] = [cleaned];
   const codeMatches = query.match(/[A-Za-z0-9]+-[A-Za-z0-9\-]+/g);
   if (codeMatches) {
     for (const code of codeMatches) {
       if (!terms.includes(code)) terms.push(code);
     }
   }
+
+  // Cross-lingual phonetic translation (Urdu/Arabic/Persian script to Latin names)
+  const phoneticMatches: string[] = [];
+  for (const [arabicPattern, latinVariants] of Object.entries(PHONETIC_NAME_MAP)) {
+    if (query.includes(arabicPattern) || cleaned.includes(arabicPattern)) {
+      phoneticMatches.push(...latinVariants);
+    }
+  }
+
+  if (phoneticMatches.length > 0) {
+    // Combine multi-word matches if present
+    if (phoneticMatches.length >= 2) {
+      terms.push(`${phoneticMatches[0]} ${phoneticMatches[1]}`);
+    }
+    for (const pm of phoneticMatches) {
+      if (!terms.includes(pm)) terms.push(pm);
+    }
+  }
+
   const words = cleaned.split(/\s+/).filter(w => w.length >= 3);
   for (const w of words) {
     if (!terms.includes(w)) terms.push(w);
   }
+
   return terms.filter(Boolean);
 }
 
@@ -119,17 +174,41 @@ function normalize(s: string) {
   return (s || "").toLowerCase();
 }
 
+export function detectRequestedLanguage(q: string): SupportedLanguage | null {
+  const text = q || "";
+  // Explicit directive: "urdu me", "in urdu", "اردو میں", "اردو"
+  if (/(urdu\s+me|urdu\s+mein|in\s+urdu|اردو\s*میں|اردو)/i.test(text)) return "ur";
+  if (/(pashto\s+me|pashto\s+ke|in\s+pashto|پښتو\s*کې|په\s*پښتو|پښتو)/i.test(text)) return "ps";
+  if (/(farsi\s+me|in\s+farsi|به\s*فارسی|فارسی|persian)/i.test(text)) return "fa";
+  if (/(in\s+arabic|بالعربية|عربي|عربية)/i.test(text)) return "ar";
+  if (/(in\s+english)/i.test(text)) return "en";
+
+  // Pashto unique characters & words
+  if (/[\u0696\u0681\u0685\u06cd\u06d0\u0689\u0693\u06bc]/.test(text)) return "ps";
+  if (/(پښتو|وښایه|راکړه|کې|دی|دا|دلته|څنګه|څه)/.test(text)) return "ps";
+
+  // Urdu unique characters & words
+  if (/[\u06d2\u0679\u0688\u0691\u06ba\u06be]/.test(text)) return "ur";
+  if (/(کھاتہ|دکھائیں|دکھاؤ|دکھا|بتائیں|بتاؤ|گاہک|کا|کی|کے|کو|ہے|ہیں|تھا|تھی)/.test(text)) return "ur";
+
+  // Farsi unique characters & words
+  if (/[\u06af\u0686\u067e\u0698]/.test(text)) return "fa";
+  if (/(نشان\s*بده|نمایش|مشتری|است|برای|اینجا|چقدر|کجاست)/.test(text)) return "fa";
+
+  // General Arabic words
+  if (/(أظهر|اعرض|عميل|حساب|رصيد|كشف|أين|كم)/.test(text)) return "ar";
+
+  // Roman Urdu / Hindi / South Asian transliteration
+  if (/(dikha\s*do|dikhao|bata\s*do|batao|kholo|ka\s+account|ki\s+details|ka\s+khata|ka\s+balance|kahan\s+hai|kiska\s+hai|chahiye|mujhe|bataiye|karwado|karein)/i.test(text)) return "ur";
+
+  // General Arabic script check fallback
+  if (/[\u0600-\u06ff]/.test(text)) return "ar";
+
+  return null;
+}
+
 export function detectLanguage(text: string): SupportedLanguage {
-  const t = text || "";
-  // Pashto specific characters: ښ, ځ, څ, ږ, ۍ, ې, ډ, ړ, ڼ
-  if (/[\u0696\u0681\u0685\u0696\u06cd\u06d0\u0689\u0693\u06bc]/i.test(t)) return "ps";
-  // Urdu specific characters: ے, ٹ, ڈ, ڑ, ں, ہ, ھے
-  if (/[\u06d2\u0679\u0688\u0691\u06ba\u06c1\u06be]/i.test(t)) return "ur";
-  // Farsi specific characters: گ, چ, پ, ژ, ک, ی
-  if (/[\u06af\u0686\u067e\u0698]/i.test(t)) return "fa";
-  // Arabic detection: general arabic block with typical vowels/letters
-  if (/[\u0600-\u06ff]/.test(t)) return "ar";
-  return "en";
+  return detectRequestedLanguage(text) || "en";
 }
 
 export function resolveLedgerScopeForSession(session: ErpSession): {
@@ -321,21 +400,64 @@ async function searchRealErpRecords(
 
       // 1. Search Customers
       const customerMatches = await sql`
-        SELECT id, customer_name, company_name, contact_person, mobile, email, country_id, is_active
+        SELECT id, customer_name, first_name, last_name, father_name, person_code, company_name, contact_person, mobile, email, country_id, is_active, notes
         FROM customers
         WHERE deleted_at IS NULL
-          AND (customer_name ILIKE ${searchPattern} OR company_name ILIKE ${searchPattern} OR mobile ILIKE ${searchPattern} OR contact_person ILIKE ${searchPattern})
+          AND (customer_name ILIKE ${searchPattern} OR company_name ILIKE ${searchPattern} OR person_code ILIKE ${searchPattern} OR mobile ILIKE ${searchPattern} OR contact_person ILIKE ${searchPattern})
           ${isSuperAdmin ? sql`` : countryId ? sql`AND (country_id = ${countryId} OR country_id IS NULL)` : sql`AND false`}
         LIMIT 1;
       `;
 
       if (customerMatches.length > 0) {
         const c = customerMatches[0];
-        const answer = lang === "ur"
-          ? `✅ ERP تصدیق شدہ کسٹمر ریکارڈ:\n• نام: ${c.customer_name}\n• کمپنی: ${c.company_name || "—"}\n• رابطہ کار: ${c.contact_person || "—"}\n• موبائل: ${c.mobile || "—"}\n• اسٹیٹس: ${c.is_active ? "فعال (Active)" : "غیر فعال"}`
+
+        // Check if an enterprise account or ledger is linked to this customer
+        const eaMatches = await sql`
+          SELECT id, code, name, kind, currency, opening_balance, current_balance, status, country_id, country_branch_id
+          FROM enterprise_accounts
+          WHERE deleted_at IS NULL
+            AND (customer_id = ${c.id} OR name ILIKE ${searchPattern})
+          LIMIT 1;
+        `;
+        const ea = eaMatches.length > 0 ? eaMatches[0] : null;
+
+        let countryName = "";
+        if (c.country_id) {
+          const cRows = await sql`SELECT name FROM countries WHERE id = ${c.country_id} LIMIT 1;`;
+          if (cRows.length > 0) countryName = cRows[0].name;
+        }
+        let branchName = "";
+        if (ea?.country_branch_id) {
+          const bRows = await sql`SELECT name FROM country_branches WHERE id = ${ea.country_branch_id} LIMIT 1;`;
+          if (bRows.length > 0) branchName = bRows[0].name;
+        }
+
+        let answer = "";
+        if (lang === "ur") {
+          answer = `✅ ERP تصدیق شدہ کسٹمر و کھاتہ ریکارڈ:\n• نام: ${c.customer_name}\n• کوڈ: ${c.person_code || "—"}${c.father_name ? `\n• ولدیت: ${c.father_name}` : ""}\n• کمپنی: ${c.company_name || "—"}\n• موبائل: ${c.mobile || "—"}\n• برانچ / ملک: ${branchName || countryName || "—"}\n• اسٹیٹس: ${c.is_active ? "فعال (Active)" : "غیر فعال"}${ea ? `\n• لنک شدہ کاروباری کھاتہ: ${ea.name} (${ea.code})\n• کرنسی: ${ea.currency}\n• موجودہ بیلنس: ${ea.currency} ${fmt(ea.current_balance)}` : "\n• کھاتہ نوٹ: کسٹمر کا مرکزی ریکارڈ موجود ہے (الگ سے کاروباری لیجر سیٹ اپ نہیں ہوا)"}`;
+        } else if (lang === "ps") {
+          answer = `✅ د ERP باوري کسٹمر او حساب ریکارډ:\n• نوم: ${c.customer_name}\n• شخصي کوډ: ${c.person_code || "—"}${c.father_name ? `\n• د پلار نوم: ${c.father_name}` : ""}\n• شرکت: ${c.company_name || "—"}\n• موبایل: ${c.mobile || "—"}\n• څانګه / هیواد: ${branchName || countryName || "—"}\n• حالت: ${c.is_active ? "فعال" : "غیر فعال"}${ea ? `\n• تړل شوی سوداګریز حساب: ${ea.name} (${ea.code})\n• اسعار: ${ea.currency}\n• اوسنی بیلانس: ${ea.currency} ${fmt(ea.current_balance)}` : "\n• د حساب یادښت: د پیرودونکي بنسټیز ریکارډ شتون لري (جلا سوداګریز حساب نه دی جوړ شوی)"}`;
+        } else if (lang === "fa") {
+          answer = `✅ رکورد تایید شده مشتری و حساب در ERP:\n• نام: ${c.customer_name}\n• کد پرسنلی: ${c.person_code || "—"}${c.father_name ? `\n• نام پدر: ${c.father_name}` : ""}\n• شرکت: ${c.company_name || "—"}\n• موبایل: ${c.mobile || "—"}\n• شعبه / کشور: ${branchName || countryName || "—"}\n• وضعیت: ${c.is_active ? "فعال" : "غیرفعال"}${ea ? `\n• حساب تجاری متصل: ${ea.name} (${ea.code})\n• ارز: ${ea.currency}\n• موجودی فعلی: ${ea.currency} ${fmt(ea.current_balance)}` : "\n• وضعیت حساب: پروفایل مشتری فعال است (حساب تجاری مجزا هنوز ثبت نشده است)"}`;
+        } else if (lang === "ar") {
+          answer = `✅ سجل عميل وحساب معتمد في النظام:\n• الاسم: ${c.customer_name}\n• الرمز: ${c.person_code || "—"}${c.father_name ? `\n• اسم الأب: ${c.father_name}` : ""}\n• الشركة: ${c.company_name || "—"}\n• الجوال: ${c.mobile || "—"}\n• الفرع / الدولة: ${branchName || countryName || "—"}\n• الحالة: ${c.is_active ? "نشط" : "غير نشط"}${ea ? `\n• الحساب التجاري المرتبط: ${ea.name} (${ea.code})\n• العملة: ${ea.currency}\n• الرصيد الحالي: ${ea.currency} ${fmt(ea.current_balance)}` : "\n• ملاحظة الحساب: ملف العميل نشط (لم يتم إنشاء حساب تجاري مستقل بعد)"}`;
+        } else {
+          answer = `✅ Verified ERP Customer & Account Record:\n• Name: ${c.customer_name}\n• Code: ${c.person_code || "—"}${c.father_name ? `\n• Father Name: ${c.father_name}` : ""}\n• Company: ${c.company_name || "—"}\n• Mobile: ${c.mobile || "—"}\n• Branch / Country: ${branchName || countryName || "—"}\n• Status: ${c.is_active ? "Active" : "Inactive"}${ea ? `\n• Linked Business Account: ${ea.name} (${ea.code})\n• Currency: ${ea.currency}\n• Current Balance: ${ea.currency} ${fmt(ea.current_balance)}` : "\n• Account Note: Customer profile is active (separate enterprise ledger not yet assigned)"}`;
+        }
+
+        const actionUrl = ea
+          ? `/dashboard/accounts?search=${encodeURIComponent(ea.code || c.customer_name)}`
+          : `/dashboard/customers?search=${encodeURIComponent(c.customer_name)}`;
+
+        const actionLabel = lang === "ur"
+          ? (ea ? "اکاؤنٹ اور لیجر کھولیں" : "کسٹمر اور کھاتہ کھولیں")
+          : lang === "ps"
+          ? (ea ? "حساب او لیجر خلاص کړئ" : "د پیرودونکي او حساب پاڼه خلاص کړئ")
+          : lang === "fa"
+          ? (ea ? "مشاهده حساب و دفتر کل" : "مشاهده جزئیات مشتری و حساب")
           : lang === "ar"
-          ? `✅ سجل عميل معتمد في النظام:\n• الاسم: ${c.customer_name}\n• الشركة: ${c.company_name || "—"}\n• جهة الاتصال: ${c.contact_person || "—"}\n• الجوال: ${c.mobile || "—"}\n• الحالة: ${c.is_active ? "نشط" : "غير نشط"}`
-          : `✅ Verified ERP Customer Record:\n• Name: ${c.customer_name}\n• Company: ${c.company_name || "—"}\n• Contact Person: ${c.contact_person || "—"}\n• Mobile: ${c.mobile || "—"}\n• Status: ${c.is_active ? "Active" : "Inactive"}`;
+          ? (ea ? "فتح الحساب ودفتر الأستاذ" : "فتح ملف العميل والحساب")
+          : (ea ? "Open Account & Ledger" : "Open Customer & Account");
 
         return {
           intent: "erp_record" as AssistantIntent,
@@ -343,22 +465,81 @@ async function searchRealErpRecords(
           answer,
           scopeLabel: isSuperAdmin ? "Global ERP" : "Country / Branch Scoped",
           sourceRecord: {
-            table: "customers",
-            id: c.id,
+            table: ea ? "enterprise_accounts" : "customers",
+            id: ea ? ea.id : c.id,
             title: c.customer_name,
-            ref: c.company_name || c.id.slice(0, 8),
+            ref: ea ? ea.code : (c.person_code || c.id.slice(0, 8)),
             status: c.is_active ? "Active" : "Inactive",
-            details: { mobile: c.mobile, contact: c.contact_person }
+            details: { mobile: c.mobile, contact: c.contact_person, balance: ea?.current_balance }
           },
           action: {
-            label: lang === "ur" ? "کسٹمر ریکارڈ کھولیں" : lang === "ar" ? "فتح ملف العميل" : "Open Customer",
-            url: `/dashboard/customers?search=${encodeURIComponent(c.customer_name)}`
+            label: actionLabel,
+            url: actionUrl
           },
-          data: c
+          data: { customer: c, account: ea }
         };
       }
 
-      // 2. Search Accounts
+      // 2. Search Enterprise Accounts
+      const eaMatches = await sql`
+        SELECT id, code, name, kind, currency, opening_balance, current_balance, status, country_id, country_branch_id, customer_id
+        FROM enterprise_accounts
+        WHERE deleted_at IS NULL
+          AND (code ILIKE ${searchPattern} OR name ILIKE ${searchPattern})
+          ${isSuperAdmin ? sql`` : countryId ? sql`AND (country_id = ${countryId} OR country_id IS NULL)` : sql``}
+        LIMIT 1;
+      `;
+
+      if (eaMatches.length > 0) {
+        const a = eaMatches[0];
+        let custName = "";
+        if (a.customer_id) {
+          const cRows = await sql`SELECT customer_name FROM customers WHERE id = ${a.customer_id} LIMIT 1;`;
+          if (cRows.length > 0) custName = cRows[0].customer_name;
+        }
+        let branchName = "";
+        if (a.country_branch_id) {
+          const bRows = await sql`SELECT name FROM country_branches WHERE id = ${a.country_branch_id} LIMIT 1;`;
+          if (bRows.length > 0) branchName = bRows[0].name;
+        }
+
+        let answer = "";
+        if (lang === "ur") {
+          answer = `✅ ERP تصدیق شدہ کاروباری کھاتہ (Business Account):\n• کھاتہ کوڈ: ${a.code}\n• کھاتہ کا عنوان: ${a.name}\n• گاہک / تعلق: ${custName || "—"}\n• برانچ: ${branchName || "—"}\n• کرنسی: ${a.currency}\n• ابتدائی بیلنس: ${a.currency} ${fmt(a.opening_balance)}\n• موجودہ بیلنس: ${a.currency} ${fmt(a.current_balance)}\n• اسٹیٹس: ${a.status}`;
+        } else if (lang === "ps") {
+          answer = `✅ د ERP باوري سوداګریز حساب:\n• د حساب کوډ: ${a.code}\n• د حساب عنوان: ${a.name}\n• پیرودونکی / اړیکه: ${custName || "—"}\n• څانګه: ${branchName || "—"}\n• اسعار: ${a.currency}\n• لومړنی بیلانس: ${a.currency} ${fmt(a.opening_balance)}\n• اوسنی بیلانس: ${a.currency} ${fmt(a.current_balance)}\n• حالت: ${a.status}`;
+        } else if (lang === "fa") {
+          answer = `✅ حساب تجاری تایید شده در ERP:\n• کد حساب: ${a.code}\n• عنوان حساب: ${a.name}\n• مشتری / طرف حساب: ${custName || "—"}\n• شعبه: ${branchName || "—"}\n• ارز: ${a.currency}\n• مانده افتتاحیه: ${a.currency} ${fmt(a.opening_balance)}\n• موجودی فعلی: ${a.currency} ${fmt(a.current_balance)}\n• وضعیت: ${a.status}`;
+        } else if (lang === "ar") {
+          answer = `✅ سجل حساب تجاري معتمد في النظام:\n• رمز الحساب: ${a.code}\n• اسم الحساب: ${a.name}\n• العميل: ${custName || "—"}\n• الفرع: ${branchName || "—"}\n• العملة: ${a.currency}\n• رصيد الافتتاح: ${a.currency} ${fmt(a.opening_balance)}\n• الرصيد الحالي: ${a.currency} ${fmt(a.current_balance)}\n• الحالة: ${a.status}`;
+        } else {
+          answer = `✅ Verified ERP Business Account Record:\n• Code: ${a.code}\n• Account Name: ${a.name}\n• Customer / Relation: ${custName || "—"}\n• Branch: ${branchName || "—"}\n• Currency: ${a.currency}\n• Opening Balance: ${a.currency} ${fmt(a.opening_balance)}\n• Current Balance: ${a.currency} ${fmt(a.current_balance)}\n• Status: ${a.status}`;
+        }
+
+        const actionLabel = lang === "ur" ? "اکاؤنٹ پروفائل دیکھیں" : lang === "ps" ? "د حساب پروفایل وګورئ" : lang === "fa" ? "مشاهده پروفایل حساب" : lang === "ar" ? "عرض ملف الحساب" : "View Account Profile";
+
+        return {
+          intent: "erp_record" as AssistantIntent,
+          answerType: "erp_record" as AnswerType,
+          answer,
+          scopeLabel: isSuperAdmin ? "Global ERP" : "Branch Scoped",
+          sourceRecord: {
+            table: "enterprise_accounts",
+            id: a.id,
+            title: a.name,
+            ref: a.code,
+            status: a.status,
+            details: { kind: a.kind, currency: a.currency, balance: a.current_balance, customer: custName }
+          },
+          action: {
+            label: actionLabel,
+            url: `/dashboard/accounts?search=${encodeURIComponent(a.code || a.name)}`
+          },
+          data: a
+        };
+      }
+
+      // 3. Fallback: Search Legacy Accounts
       const accountMatches = await sql`
         SELECT id, code, name, kind, currency, status, branch_id
         FROM accounts
@@ -372,9 +553,15 @@ async function searchRealErpRecords(
         const a = accountMatches[0];
         const answer = lang === "ur"
           ? `✅ ERP تصدیق شدہ کھاتہ (Account):\n• کھاتہ کوڈ: ${a.code}\n• کھاتہ کا عنوان: ${a.name}\n• قسم: ${a.kind}\n• کرنسی: ${a.currency}\n• اسٹیٹس: ${a.status}`
+          : lang === "ps"
+          ? `✅ د ERP باوري حساب:\n• د حساب کوډ: ${a.code}\n• د حساب عنوان: ${a.name}\n• ډول: ${a.kind}\n• اسعار: ${a.currency}\n• حالت: ${a.status}`
+          : lang === "fa"
+          ? `✅ حساب تایید شده در ERP:\n• کد حساب: ${a.code}\n• عنوان حساب: ${a.name}\n• نوع: ${a.kind}\n• ارز: ${a.currency}\n• وضعیت: ${a.status}`
           : lang === "ar"
           ? `✅ سجل حساب معتمد في النظام:\n• رمز الحساب: ${a.code}\n• اسم الحساب: ${a.name}\n• النوع: ${a.kind}\n• العملة: ${a.currency}\n• الحالة: ${a.status}`
           : `✅ Verified ERP Account Record:\n• Code: ${a.code}\n• Name: ${a.name}\n• Kind: ${a.kind}\n• Currency: ${a.currency}\n• Status: ${a.status}`;
+
+        const actionLabel = lang === "ur" ? "اکاؤنٹ کھولیں" : lang === "ps" ? "حساب خلاص کړئ" : lang === "fa" ? "مشاهده حساب" : lang === "ar" ? "فتح الحساب" : "Open Account";
 
         return {
           intent: "erp_record" as AssistantIntent,
@@ -390,14 +577,14 @@ async function searchRealErpRecords(
             details: { kind: a.kind, currency: a.currency }
           },
           action: {
-            label: lang === "ur" ? "اکاؤنٹ کھولیں" : lang === "ar" ? "فتح الحساب" : "Open Account",
-            url: `/dashboard/accounts?code=${encodeURIComponent(a.code)}`
+            label: actionLabel,
+            url: `/dashboard/accounts?search=${encodeURIComponent(a.code || a.name)}`
           },
           data: a
         };
       }
 
-      // 3. Search Shipping BL & Containers
+      // 4. Search Shipping BL & Containers
       const blMatches = await sql`
         SELECT id, bl_number, container_number, vessel_name, voyage_number, shipping_line_name, country_id
         FROM shipping_bl_records
@@ -410,7 +597,15 @@ async function searchRealErpRecords(
         const b = blMatches[0];
         const answer = lang === "ur"
           ? `✅ ERP تصدیق شدہ شپنگ و کنٹینر ریکارڈ:\n• B/L نمبر: ${b.bl_number}\n• کنٹینر نمبر: ${b.container_number || "—"}\n• بحری جہاز (Vessel): ${b.vessel_name || "—"}\n• شپنگ لائن: ${b.shipping_line_name || "—"}\n• سفر نمبر: ${b.voyage_number || "—"}`
+          : lang === "ps"
+          ? `✅ د ERP باوري بار وړلو ریکارډ:\n• د بارنامې شمېره: ${b.bl_number}\n• کانټینر نمبر: ${b.container_number || "—"}\n• کښتۍ: ${b.vessel_name || "—"}\n• د کښتۍ لاین: ${b.shipping_line_name || "—"}\n• د سفر نمبر: ${b.voyage_number || "—"}`
+          : lang === "fa"
+          ? `✅ رکورد تایید شده حمل و نقل و کانتینر در ERP:\n• شماره بارنامه: ${b.bl_number}\n• شماره کانتینر: ${b.container_number || "—"}\n• نام کشتی: ${b.vessel_name || "—"}\n• خط کشتیرانی: ${b.shipping_line_name || "—"}\n• شماره سفر: ${b.voyage_number || "—"}`
+          : lang === "ar"
+          ? `✅ سجل شحن وبوليصة معتمد في النظام:\n• رقم بوليصة الشحن: ${b.bl_number}\n• رقم الحاوية: ${b.container_number || "—"}\n• الباخرة: ${b.vessel_name || "—"}\n• خط الملاحة: ${b.shipping_line_name || "—"}\n• رقم الرحلة: ${b.voyage_number || "—"}`
           : `✅ Verified ERP Shipping & BL Record:\n• B/L Number: ${b.bl_number}\n• Container Number: ${b.container_number || "—"}\n• Vessel: ${b.vessel_name || "—"}\n• Shipping Line: ${b.shipping_line_name || "—"}\n• Voyage: ${b.voyage_number || "—"}`;
+
+        const actionLabel = lang === "ur" ? "شپنگ ریکارڈ کھولیں" : lang === "ps" ? "د بار وړلو ریکارډ خلاص کړئ" : lang === "fa" ? "مشاهده رکورد بارنامه" : lang === "ar" ? "فتح سجل الشحن" : "Open Shipment Record";
 
         return {
           intent: "erp_record" as AssistantIntent,
@@ -426,14 +621,14 @@ async function searchRealErpRecords(
             details: { vessel: b.vessel_name, container: b.container_number }
           },
           action: {
-            label: lang === "ur" ? "شپنگ ریکارڈ کھولیں" : "Open Shipment",
+            label: actionLabel,
             url: `/dashboard/shipping?search=${encodeURIComponent(b.bl_number)}`
           },
           data: b
         };
       }
 
-      // 4. Search Customer Orders
+      // 5. Search Customer Orders
       const orderMatches = await sql`
         SELECT id, order_no, customer_name, route_name, shipment_type, transport_mode, movement_type, loading_country_name, receiving_country_name
         FROM clearing_customer_orders
@@ -445,7 +640,15 @@ async function searchRealErpRecords(
         const o = orderMatches[0];
         const answer = lang === "ur"
           ? `✅ ERP تصدیق شدہ کسٹمر آرڈر ریکارڈ:\n• آرڈر نمبر: ${o.order_no}\n• گاہک: ${o.customer_name || "—"}\n• روٹ: ${o.route_name || "—"}\n• قسم: ${o.shipment_type} (${o.transport_mode})\n• روانگی تا وصولی: ${o.loading_country_name || "—"} تا ${o.receiving_country_name || "—"}`
+          : lang === "ps"
+          ? `✅ د ERP باوري پیرودونکي امر ریکارډ:\n• د امر شمېره: ${o.order_no}\n• پیرودونکی: ${o.customer_name || "—"}\n• لاره: ${o.route_name || "—"}\n• ډول: ${o.shipment_type} (${o.transport_mode})\n• له مبدا څخه تر مقصده: ${o.loading_country_name || "—"} تر ${o.receiving_country_name || "—"}`
+          : lang === "fa"
+          ? `✅ رکورد تایید شده سفارش مشتری در ERP:\n• شماره سفارش: ${o.order_no}\n• مشتری: ${o.customer_name || "—"}\n• مسیر: ${o.route_name || "—"}\n• نوع: ${o.shipment_type} (${o.transport_mode})\n• مبدأ تا مقصد: ${o.loading_country_name || "—"} تا ${o.receiving_country_name || "—"}`
+          : lang === "ar"
+          ? `✅ سجل طلب عميل معتمد في النظام:\n• رقم الطلب: ${o.order_no}\n• العميل: ${o.customer_name || "—"}\n• المسار: ${o.route_name || "—"}\n• النوع: ${o.shipment_type} (${o.transport_mode})\n• من وإلى: ${o.loading_country_name || "—"} إلى ${o.receiving_country_name || "—"}`
           : `✅ Verified ERP Customer Order Record:\n• Order No: ${o.order_no}\n• Customer: ${o.customer_name || "—"}\n• Route: ${o.route_name || "—"}\n• Mode: ${o.shipment_type} via ${o.transport_mode}\n• Corridor: ${o.loading_country_name || "—"} → ${o.receiving_country_name || "—"}`;
+
+        const actionLabel = lang === "ur" ? "آرڈر ٹریکنگ کھولیں" : lang === "ps" ? "د امر تعقیب خلاص کړئ" : lang === "fa" ? "پیگیری و مشاهده سفارش" : lang === "ar" ? "فتح تتبع الطلب" : "Open Customer Order";
 
         return {
           intent: "erp_record" as AssistantIntent,
@@ -461,14 +664,14 @@ async function searchRealErpRecords(
             details: { customer: o.customer_name, route: o.route_name }
           },
           action: {
-            label: lang === "ur" ? "آرڈر ٹریکنگ کھولیں" : "Open Customer Order",
+            label: actionLabel,
             url: `/dashboard/smart-operations?search=${encodeURIComponent(o.order_no)}`
           },
           data: o
         };
       }
 
-      // 5. Search User Tasks
+      // 6. Search User Tasks
       const taskMatches = await sql`
         SELECT id, task_no, title, description, instructions, department, assigned_to
         FROM user_tasks
@@ -481,7 +684,15 @@ async function searchRealErpRecords(
         const tsk = taskMatches[0];
         const answer = lang === "ur"
           ? `✅ ERP تصدیق شدہ ٹاسک ریکارڈ:\n• ٹاسک نمبر: ${tsk.task_no}\n• عنوان: ${tsk.title}\n• شعبہ: ${tsk.department || "—"}\n• تفصیل: ${tsk.description || "—"}`
+          : lang === "ps"
+          ? `✅ د ERP باوري دنده ریکارډ:\n• د دندې شمېره: ${tsk.task_no}\n• عنوان: ${tsk.title}\n• څانګه: ${tsk.department || "—"}\n• تفصیل: ${tsk.description || "—"}`
+          : lang === "fa"
+          ? `✅ رکورد تایید شده وظیفه در ERP:\n• شماره وظیفه: ${tsk.task_no}\n• عنوان: ${tsk.title}\n• بخش: ${tsk.department || "—"}\n• توضیحات: ${tsk.description || "—"}`
+          : lang === "ar"
+          ? `✅ سجل مهمة معتمد في النظام:\n• رقم المهمة: ${tsk.task_no}\n• العنوان: ${tsk.title}\n• القسم: ${tsk.department || "—"}\n• الوصف: ${tsk.description || "—"}`
           : `✅ Verified ERP User Task Record:\n• Task No: ${tsk.task_no}\n• Title: ${tsk.title}\n• Department: ${tsk.department || "—"}\n• Description: ${tsk.description || "—"}`;
+
+        const actionLabel = lang === "ur" ? "ٹاسک کھولیں" : lang === "ps" ? "دنده خلاصه کړئ" : lang === "fa" ? "مشاهده وظیفه" : lang === "ar" ? "فتح المهمة" : "Open Task";
 
         return {
           intent: "erp_record" as AssistantIntent,
@@ -497,7 +708,7 @@ async function searchRealErpRecords(
             details: { department: tsk.department }
           },
           action: {
-            label: lang === "ur" ? "ٹاسک کھولیں" : "Open Task",
+            label: actionLabel,
             url: `/dashboard/user-tasks?search=${encodeURIComponent(tsk.task_no)}`
           },
           data: tsk
@@ -507,13 +718,13 @@ async function searchRealErpRecords(
 
     // No Record Found in Authorized Scope
     const noRecordMsg = lang === "ur"
-      ? `🔍 آپ کے مجاز دائرہ کار (Scope) میں "${query}" سے متعلق کوئی تصدیق شدہ ERP ریکارڈ موجود نہیں ہے۔\n• Digital Dock ERP میں AI فرضی یا خود ساختہ ریکارڈ نہیں بناتا۔ براہ کرم کوڈ، نام، یا آرڈر نمبر دوبارہ چیک کریں۔`
-      : lang === "ar"
-      ? `🔍 لم يتم العثور على أي سجل معتمد في نطاق صلاحياتك لـ "${query}".\n• لا يقوم المساعد الذكي بتوليد أو فبركة بيانات أعمال غير حقيقية. يرجى التحقق من الرمز أو الاسم.`
-      : lang === "fa"
-      ? `🔍 هیچ رکورد تایید شده‌ای در حیطه اختیارات شما برای "${query}" یافت نشد.\n• سیستم هوشمند هرگز اطلاعات ساختگی ایجاد نمی‌کند. لطفاً کد یا نام را بررسی کنید.`
+      ? `🔍 آپ کے مجاز دائرہ کار (Scope) میں "${query}" سے متعلق کوئی تصدیق شدہ ERP ریکارڈ موجود نہیں ہے۔\n• Digital Dock ERP میں AI فرضی یا خود ساختہ ریکارڈ نہیں بناتا۔ براہ کرم کوڈ، نام، یا ریفرنس دوبارہ چیک کریں۔`
       : lang === "ps"
-      ? `🔍 ستاسو په واک لرونکې ساحه کې د "${query}" په اړه هیڅ باوري ERP ریکارډ ونه موندل شو.\n• هوښیار همکار هیڅکله جعلي ارقام نه جوړوي. مهرباني وکړئ کوډ یا نوم بیا وګورئ.`
+      ? `🔍 ستاسو په مجاز ساحه کې د "${query}" په اړه هیڅ تایید شوی ERP ریکارډ ونه موندل شو.\n• Digital Dock ERP هیڅکله جعلي یا تصادفي ریکارډونه نه جوړوي. مهرباني وکړئ نوم یا کوډ بیا وګورئ.`
+      : lang === "fa"
+      ? `🔍 هیچ رکورد تایید شده‌ای در حیطه اختیارات شما برای "${query}" یافت نشد.\n• سیستم ERP هرگز داده‌های ساختگی یا فرضی ایجاد نمی‌کند. لطفاً نام یا کد را دوباره بررسی فرمایید.`
+      : lang === "ar"
+      ? `🔍 لم يتم العثور على أي سجل معتمد في نطاق صلاحياتك لـ "${query}".\n• لا يقوم مساعد النظام بتوليد أو فبركة بيانات وهمية. يرجى التحقق من الاسم أو الرمز.`
       : `🔍 No verified record was found in your authorized ERP scope for "${query}".\n• Digital Dock ERP AI never fabricates or hallucinates business records. Please verify the identifier, name, or reference.`;
 
     return {
@@ -572,7 +783,8 @@ export async function runErpAssistantQuery(
     pageContext?: string;
   }
 ): Promise<AssistantAnswer> {
-  const lang: SupportedLanguage = opts.lang || session.preferredLanguage || detectLanguage(opts.question);
+  const detectedQueryLang = detectRequestedLanguage(opts.question);
+  const lang: SupportedLanguage = detectedQueryLang || opts.lang || session.preferredLanguage || "en";
   const q = normalize(opts.question).trim();
   const ledgerScope = resolveLedgerScopeForSession(session);
 

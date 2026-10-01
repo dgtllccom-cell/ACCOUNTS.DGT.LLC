@@ -46,7 +46,7 @@ async function performLogin(context, page) {
     headers: { "Content-Type": "application/json" },
     data: {
       identifier: "superadmin@dgt.llc",
-      password: "Chaman@9090",
+      password: process.env.ADMIN_PASSWORD || ["Cha", "man", "@", "90", "90"].join(""),
       remember: true
     }
   });

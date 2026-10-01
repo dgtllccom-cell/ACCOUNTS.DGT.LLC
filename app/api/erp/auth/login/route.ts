@@ -64,10 +64,10 @@ export async function POST(request: NextRequest) {
         return `${forwardedProto}://${forwardedHost}`;
       }
       const origin = request.nextUrl?.origin;
-      if (origin && !origin.includes("0.0.0.0") && !origin.includes("127.0.0.1")) {
+      if (origin && !origin.includes("0.0.0.0")) {
         return origin;
       }
-      return "http://72.60.209.121";
+      return "http://localhost:3000";
     };
 
     const respondError = (message: string, status: number) => {

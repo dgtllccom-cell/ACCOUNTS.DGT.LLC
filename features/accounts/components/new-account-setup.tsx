@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
@@ -454,6 +454,20 @@ export function NewAccountSetup({
   const [companyRequired, setCompanyRequired] = useState(true);
   const [bankRequired, setBankRequired] = useState(false);
   const [warehouseRequired, setWarehouseRequired] = useState(false);
+  const [linkedMastersMenuOpen, setLinkedMastersMenuOpen] = useState(false);
+  const linkedMastersRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (linkedMastersRef.current && !linkedMastersRef.current.contains(event.target as Node)) {
+        setLinkedMastersMenuOpen(false);
+      }
+    }
+    if (linkedMastersMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [linkedMastersMenuOpen]);
 
   // Dynamic active steps list based on accountTitle, category and subType + requirements
   const activeStepDefs = useMemo(() => {
@@ -1740,21 +1754,238 @@ export function NewAccountSetup({
 
               {/* ── Setup Requirements & Linked Masters Toggles ─────────────────── */}
               <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40 p-4 space-y-3">
-                <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800 pb-2.5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/80 dark:border-slate-800 pb-2.5">
                   <div className="flex items-center gap-2">
-                    <Layers className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <Layers className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
                     <div>
-                      <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                      <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                         {getLabel("accountRequirementsTitle", lang)}
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">
+                          {[companyRequired, bankRequired, warehouseRequired].filter(Boolean).length} / 3 {getLabel("linkedMastersActive", lang)}
+                        </span>
                       </h4>
                       <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                        {getLabel("accountRequirementsDesc", lang)}
+                        {getLabel("tickToIncludeStep", lang)}
                       </p>
                     </div>
                   </div>
-                  <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-                    {activeStepDefs.length} {lang === "ur" ? "مراحل فعال" : "Steps Active"}
-                  </span>
+
+                  {/* ── Interactive Linked Masters Dropdown ── */}
+                  <div className="relative" ref={linkedMastersRef}>
+                    <button
+                      type="button"
+                      onClick={() => setLinkedMastersMenuOpen((v) => !v)}
+                      className={cn(
+                        "w-full sm:w-auto inline-flex items-center justify-between gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg border shadow-xs transition-colors",
+                        linkedMastersMenuOpen
+                          ? "bg-blue-600 text-white border-blue-600 ring-2 ring-blue-500/20"
+                          : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/60"
+                      )}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <Layers className="h-3.5 w-3.5 text-blue-500" />
+                        <span>{getLabel("selectLinkedMastersDropdown", lang)}</span>
+                        <span className="ml-1 px-1.5 py-0.2 text-[10px] font-bold rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-200">
+                          {[companyRequired, bankRequired, warehouseRequired].filter(Boolean).length}
+                        </span>
+                      </div>
+                      {linkedMastersMenuOpen ? (
+                        <ChevronUp className="h-3.5 w-3.5" />
+                      ) : (
+                        <ChevronDown className="h-3.5 w-3.5" />
+                      )}
+                    </button>
+
+                    {linkedMastersMenuOpen && (
+                      <div className="absolute right-0 ltr:right-0 rtl:left-0 rtl:right-auto mt-2 w-80 sm:w-88 z-30 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl p-2.5 space-y-2 animate-in fade-in-50 zoom-in-95">
+                        <div className="flex items-center justify-between px-2 py-1 border-b border-slate-100 dark:border-slate-800">
+                          <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                            {getLabel("selectLinkedMastersDropdown", lang)}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setCompanyRequired(true);
+                                setBankRequired(true);
+                                setWarehouseRequired(true);
+                              }}
+                              className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline font-semibold"
+                            >
+                              {getLabel("selectAll", lang)}
+                            </button>
+                            <span className="text-slate-300 dark:text-slate-700">|</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setCompanyRequired(false);
+                                setBankRequired(false);
+                                setWarehouseRequired(false);
+                              }}
+                              className="text-[10px] text-slate-500 hover:underline font-semibold"
+                            >
+                              {getLabel("clearAll", lang)}
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Dropdown Item 1: Company */}
+                        <div
+                          className={cn(
+                            "group flex items-start justify-between p-2 rounded-lg cursor-pointer transition-colors border",
+                            companyRequired
+                              ? "bg-blue-50/70 dark:bg-blue-950/30 border-blue-200 dark:border-blue-900"
+                              : "hover:bg-slate-50 dark:hover:bg-slate-800/60 border-transparent"
+                          )}
+                          onClick={() => setCompanyRequired((v) => !v)}
+                        >
+                          <div className="flex items-start gap-2.5">
+                            <div className="mt-0.5">
+                              {companyRequired ? (
+                                <CheckSquare className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                              ) : (
+                                <Square className="h-4 w-4 text-slate-400" />
+                              )}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-1.5">
+                                <Building2 className={cn("h-3.5 w-3.5", companyRequired ? "text-blue-600" : "text-slate-400")} />
+                                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                                  {getLabel("companyRequiredLabel", lang)}
+                                </span>
+                                <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-semibold">
+                                  Step 3
+                                </span>
+                              </div>
+                              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 leading-tight">
+                                {getLabel("companyRequiredDesc", lang)}
+                              </p>
+                            </div>
+                          </div>
+                          {companyRequired && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setLinkedMastersMenuOpen(false);
+                                setCurrentStep(3);
+                              }}
+                              className="shrink-0 text-[10px] font-semibold text-blue-600 dark:text-blue-400 hover:underline px-1.5 py-0.5 bg-blue-100/70 dark:bg-blue-900/50 rounded"
+                            >
+                              {getLabel("openStepDirectly", lang)} →
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Dropdown Item 2: Bank */}
+                        <div
+                          className={cn(
+                            "group flex items-start justify-between p-2 rounded-lg cursor-pointer transition-colors border",
+                            bankRequired
+                              ? "bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900"
+                              : "hover:bg-slate-50 dark:hover:bg-slate-800/60 border-transparent"
+                          )}
+                          onClick={() => setBankRequired((v) => !v)}
+                        >
+                          <div className="flex items-start gap-2.5">
+                            <div className="mt-0.5">
+                              {bankRequired ? (
+                                <CheckSquare className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                              ) : (
+                                <Square className="h-4 w-4 text-slate-400" />
+                              )}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-1.5">
+                                <Landmark className={cn("h-3.5 w-3.5", bankRequired ? "text-emerald-600" : "text-slate-400")} />
+                                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                                  {getLabel("bankRequiredLabel", lang)}
+                                </span>
+                                <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-semibold">
+                                  Step 4
+                                </span>
+                              </div>
+                              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 leading-tight">
+                                {getLabel("bankRequiredDesc", lang)}
+                              </p>
+                            </div>
+                          </div>
+                          {bankRequired && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setLinkedMastersMenuOpen(false);
+                                setCurrentStep(4);
+                              }}
+                              className="shrink-0 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 hover:underline px-1.5 py-0.5 bg-emerald-100/70 dark:bg-emerald-900/50 rounded"
+                            >
+                              {getLabel("openStepDirectly", lang)} →
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Dropdown Item 3: Warehouse */}
+                        <div
+                          className={cn(
+                            "group flex items-start justify-between p-2 rounded-lg cursor-pointer transition-colors border",
+                            warehouseRequired
+                              ? "bg-purple-50/70 dark:bg-purple-950/30 border-purple-200 dark:border-purple-900"
+                              : "hover:bg-slate-50 dark:hover:bg-slate-800/60 border-transparent"
+                          )}
+                          onClick={() => setWarehouseRequired((v) => !v)}
+                        >
+                          <div className="flex items-start gap-2.5">
+                            <div className="mt-0.5">
+                              {warehouseRequired ? (
+                                <CheckSquare className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                              ) : (
+                                <Square className="h-4 w-4 text-slate-400" />
+                              )}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-1.5">
+                                <Warehouse className={cn("h-3.5 w-3.5", warehouseRequired ? "text-purple-600" : "text-slate-400")} />
+                                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                                  {getLabel("warehouseRequiredLabel", lang)}
+                                </span>
+                                <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-semibold">
+                                  Step 5
+                                </span>
+                              </div>
+                              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 leading-tight">
+                                {getLabel("warehouseRequiredDesc", lang)}
+                              </p>
+                            </div>
+                          </div>
+                          {warehouseRequired && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setLinkedMastersMenuOpen(false);
+                                setCurrentStep(5);
+                              }}
+                              className="shrink-0 text-[10px] font-semibold text-purple-600 dark:text-purple-400 hover:underline px-1.5 py-0.5 bg-purple-100/70 dark:bg-purple-900/50 rounded"
+                            >
+                              {getLabel("openStepDirectly", lang)} →
+                            </button>
+                          )}
+                        </div>
+
+                        <div className="pt-1.5 px-2 border-t border-slate-100 dark:border-slate-800 text-[10px] text-slate-500 dark:text-slate-400 flex items-center justify-between">
+                          <span>{activeStepDefs.length} {lang === "ur" ? "مراحل شامل" : "total steps active"}</span>
+                          <button
+                            type="button"
+                            onClick={() => setLinkedMastersMenuOpen(false)}
+                            className="font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                          >
+                            {lang === "ur" ? "مکمل" : "Done"}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

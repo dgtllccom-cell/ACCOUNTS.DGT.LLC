@@ -205,6 +205,14 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
     if (searchParams?.get("view") === "journal") {
       setShowUniversalDirectory(true);
     }
+    const q = searchParams?.get("search") || searchParams?.get("q");
+    if (q) {
+      setSearchQuery(q);
+    }
+    const id = searchParams?.get("id");
+    if (id) {
+      setSelectedCustomerId(id);
+    }
   }, [searchParams]);
 
   // Fetch customers from API

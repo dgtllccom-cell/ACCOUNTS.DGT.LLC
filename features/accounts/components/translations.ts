@@ -1933,6 +1933,41 @@ export const accountTranslations: Record<string, Record<SupportedLanguage, strin
     fa: "نادیده‌گرفته شده",
     ps: "پرېښودل شوی"
   },
+  selectLinkedMastersDropdown: {
+    en: "Linked Masters & Workflow Steps",
+    ur: "منسلک ماسٹرز اور ورک فلو مراحل",
+    ar: "الكيانات المرتبطة وخطوات العمل",
+    fa: "داده‌های اصلی و مراحل گردش کار",
+    ps: "تړل شوي ماسټران او کاري پړاوونه"
+  },
+  linkedMastersActive: {
+    en: "Active",
+    ur: "فعال",
+    ar: "نشط",
+    fa: "فعال",
+    ps: "فعال"
+  },
+  tickToIncludeStep: {
+    en: "Tick mark any entity to include & open its workflow step",
+    ur: "جس پر بھی ٹک مارک کریں گے وہ مرحلہ شامل اور اوپن ہو جائے گا",
+    ar: "ضع علامة لاختيار أي كيان وتضمين خطوته وفتحها",
+    fa: "برای گنجاندن و باز شدن مرحله، تیک بزنید",
+    ps: "د مرحلې د شاملولو او خلاصولو لپاره نښه ووهئ"
+  },
+  openStepDirectly: {
+    en: "Open Step",
+    ur: "مرحلہ کھولیں",
+    ar: "فتح الخطوة",
+    fa: "باز کردن مرحله",
+    ps: "مرحله پرانیزئ"
+  },
+  noMastersSelectedHint: {
+    en: "No linked masters selected (Basic direct account)",
+    ur: "کوئی ماسٹر منتخب نہیں (براہ راست بنیادی اکاؤنٹ)",
+    ar: "لم يتم تحديد سجلات (حساب مباشر أساسي)",
+    fa: "هیچ داده متصلی انتخاب نشده (حساب پایه مستقیم)",
+    ps: "هیڅ تړل شوی ماسټر ندی ټاکل شوی (بنسټیز مستقیم حساب)"
+  },
   linkedWarehousesTitle: {
     en: "Linked Warehouses (Canonical Multi-Warehouse)",
     ur: "منسلک گودام (کثیر گودام تخصیص)",
