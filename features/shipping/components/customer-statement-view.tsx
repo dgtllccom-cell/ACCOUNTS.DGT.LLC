@@ -12,8 +12,7 @@ import { openCustomerLedgerPrintReport, type CustomerLedgerReportData } from "@/
 import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 
 export function CustomerStatementView({ lang: langProp }: { lang: SupportedLanguage }) {
-  const activeLang = useActiveLanguage();
-  const lang = activeLang !== "en" ? activeLang : langProp;
+  const lang = useActiveLanguage(langProp);
   const tt = (key: string, fallback: string) => t(lang, ("shipstmt." + key) as never, fallback);
   const dir = getLanguageDirection(lang);
 

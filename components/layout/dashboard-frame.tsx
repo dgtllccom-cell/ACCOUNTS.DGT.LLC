@@ -88,7 +88,9 @@ export function DashboardFrame({
   // language; fall back to the server prop during SSR/first render (useActiveLanguage returns "en" on
   // the server, matching SSR, so this introduces no hydration mismatch).
   const activeLang = useActiveLanguage();
-  const lang: SupportedLanguage = activeLang !== "en" ? activeLang : langProp;
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  const lang: SupportedLanguage = mounted ? activeLang : (langProp || activeLang || "en");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);

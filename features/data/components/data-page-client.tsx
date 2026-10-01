@@ -25,8 +25,7 @@ function valueText(value: unknown) {
 }
 
 export function DataPageClient({ lang: _lang }: { lang: SupportedLanguage }) {
-  const activeLang = useActiveLanguage();
-  const lang = activeLang !== "en" ? activeLang : (_lang || "en");
+  const lang = useActiveLanguage(_lang || "en");
   const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
 

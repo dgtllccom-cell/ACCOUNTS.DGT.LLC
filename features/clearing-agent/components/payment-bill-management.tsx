@@ -67,8 +67,7 @@ const EMPTY_BILL: any = {
 };
 
 export function PaymentBillManagementView({ lang: langProp }: { lang: SupportedLanguage }) {
-  const activeLang = useActiveLanguage();
-  const lang = activeLang !== "en" ? activeLang : langProp;
+  const lang = useActiveLanguage(langProp);
   const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   const dir = getLanguageDirection(lang);
   const [rows, setRows] = useState<PaymentBillRow[]>([]);

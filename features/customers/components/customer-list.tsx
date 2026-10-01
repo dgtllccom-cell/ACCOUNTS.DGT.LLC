@@ -160,8 +160,7 @@ const STATUS_TABS = [
 
 export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
   const router = useRouter();
-  const activeLang = useActiveLanguage();
-  const lang = (activeLang !== "en" ? activeLang : langProp) as SupportedLanguage;
+  const lang = useActiveLanguage(langProp);
   const isRtl = lang !== "en";
 
   const [loading, setLoading] = useState(true);

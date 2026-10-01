@@ -105,10 +105,15 @@ function getSnapshot(): SupportedLanguage {
   return currentLang;
 }
 
-function getServerSnapshot(): SupportedLanguage {
-  return "en";
-}
+const serverSnapshots: Record<SupportedLanguage, () => SupportedLanguage> = {
+  en: () => "en",
+  ur: () => "ur",
+  ar: () => "ar",
+  fa: () => "fa",
+  ps: () => "ps"
+};
 
-export function useActiveLanguage(): SupportedLanguage {
-  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+export function useActiveLanguage(ssrFallback: SupportedLanguage = "en"): SupportedLanguage {
+  const ssrFn = serverSnapshots[ssrFallback] || serverSnapshots.en;
+  return useSyncExternalStore(subscribe, getSnapshot, ssrFn);
 }

@@ -905,9 +905,10 @@ export function MoneyExchangeForm({ lang: _initialLang }: { lang: SupportedLangu
                         mode="single"
                         size="sm"
                         lang={lang}
-                        value={entryDate || null}
-                        onApply={(v) => {
-                          if (typeof v === "string") setEntryDate(v);
+                        value={{ from: entryDate || null }}
+                        onApply={(v: any) => {
+                          const dateStr = typeof v === "string" ? v : v?.from;
+                          if (dateStr) setEntryDate(dateStr);
                         }}
                         applyLabel="update"
                       />

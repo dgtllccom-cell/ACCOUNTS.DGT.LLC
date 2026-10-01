@@ -23,6 +23,7 @@ import {
   FileText
 } from "lucide-react";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
 
 interface VersionEvent {
@@ -62,8 +63,7 @@ export function EntityVersionTimelineDialog({
   referenceNo,
   language = "en"
 }: Props) {
-  const activeLang = useActiveLanguage();
-  const lang = activeLang !== "en" ? activeLang : language;
+  const lang = useActiveLanguage((language as SupportedLanguage) || "en");
   const tt = (key: string, fallback: string) => t(lang as never, key as never, fallback);
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
 

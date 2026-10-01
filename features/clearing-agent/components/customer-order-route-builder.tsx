@@ -180,13 +180,21 @@ export function CustomerOrderRouteBuilder({
         setFinalLegPartnerAccountId(lastLeg.partnerAccountId || lastLeg.partner_account_id || "");
         setFinalLegInsuranceRequired(Boolean(lastLeg.insuranceRequired ?? lastLeg.insurance_required));
       }
+      if (legs[0]) {
+        setDirectHandlerType(legs[0].handlerType || legs[0].handler_type || "our_branch");
+        setDirectPartnerType(legs[0].partnerType || legs[0].partner_type || "");
+        setDirectPartnerName(legs[0].partnerName || legs[0].partner_name || "");
+        setDirectPartnerAccountId(legs[0].partnerAccountId || legs[0].partner_account_id || "");
+        setDirectInsuranceRequired(Boolean(legs[0].insuranceRequired ?? legs[0].insurance_required));
+      }
     } else if (legs && legs.length === 1) {
       setDirectHandlerType(legs[0].handlerType || legs[0].handler_type || "our_branch");
       setDirectPartnerType(legs[0].partnerType || legs[0].partner_type || "");
       setDirectPartnerName(legs[0].partnerName || legs[0].partner_name || "");
       setDirectPartnerAccountId(legs[0].partnerAccountId || legs[0].partner_account_id || "");
+      setDirectInsuranceRequired(Boolean(legs[0].insuranceRequired ?? legs[0].insurance_required));
     }
-  }, [legs?.length, routeName]);
+  }, [legs, routeName]);
 
   const getModeLabel = (m: string) => {
     switch (m) {

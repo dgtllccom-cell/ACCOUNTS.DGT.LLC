@@ -56,13 +56,11 @@ export interface ErpScreen {
  * @param langProp   optional server-threaded language prop; reconciled per CLAUDE.md.
  */
 export function useErpScreen(namespace: string, langProp?: string | null): ErpScreen {
-  const activeLang = useActiveLanguage();
-  const lang: SupportedLanguage =
-    activeLang !== "en"
-      ? activeLang
-      : (langProp && (["en", "ur", "ar", "fa", "ps"] as string[]).includes(langProp)
-          ? (langProp as SupportedLanguage)
-          : "en");
+  const ssrFallback: SupportedLanguage =
+    langProp && (["en", "ur", "ar", "fa", "ps"] as string[]).includes(langProp)
+      ? (langProp as SupportedLanguage)
+      : "en";
+  const lang: SupportedLanguage = useActiveLanguage(ssrFallback);
 
   const isRtl = isRtlLanguage(lang);
 

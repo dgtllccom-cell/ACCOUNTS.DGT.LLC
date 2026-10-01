@@ -42,8 +42,7 @@ const EMPTY_FORM = {
 };
 
 export function CustomerReceiptsManagementView({ lang: langProp }: { lang: SupportedLanguage }) {
-  const activeLang = useActiveLanguage();
-  const lang = activeLang !== "en" ? activeLang : langProp;
+  const lang = useActiveLanguage(langProp);
   const tt = (key: string, fallback: string) => t(lang, ("shiprcpt." + key) as never, fallback);
   const dir = getLanguageDirection(lang);
 

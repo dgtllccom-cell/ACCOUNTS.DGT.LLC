@@ -29,13 +29,15 @@ import { PersonPicker } from "@/components/erp/person-picker";
 import { CompanyPicker } from "@/features/companies/components/company-picker";
 
 const DEFAULT_BANK_TYPES = [
+  "Commercial Bank",
+  "Commercial",
+  "Islamic Bank",
+  "Islamic",
   "Customer Account",
   "Business Account",
   "Personal Account",
   "Credit Card",
   "Debit Card",
-  "Commercial Bank",
-  "Islamic Bank",
   "Central Bank",
   "Exchange Company"
 ];
@@ -53,17 +55,21 @@ const BANK_TYPE_KEYS: Record<string, UiKey> = {
   "Credit Card": "bank.type_credit_card",
   "Debit Card": "bank.type_debit_card",
   "Commercial Bank": "bank.type_commercial_bank",
+  "Commercial": "bank.type_commercial_bank",
   "Islamic Bank": "bank.type_islamic_bank",
+  "Islamic": "bank.type_islamic_bank",
   "Central Bank": "bank.type_central_bank",
   "Exchange Company": "bank.type_exchange_company"
 };
 
 const DEFAULT_ACCOUNT_TYPES = [
+  "Current Account",
+  "Current",
+  "Savings Account",
+  "Savings",
   "Business Account",
   "Company Account",
   "Personal Account",
-  "Current Account",
-  "Savings Account",
   "Fixed Deposit",
   "Joint Account"
 ];
@@ -73,18 +79,21 @@ const ACCOUNT_TYPE_KEYS: Record<string, UiKey> = {
   "Company Account": "bank.atype_company_account",
   "Personal Account": "bank.atype_personal_account",
   "Current Account": "bank.atype_current_account",
+  "Current": "bank.atype_current_account",
   "Savings Account": "bank.atype_savings_account",
+  "Savings": "bank.atype_savings_account",
   "Fixed Deposit": "bank.atype_fixed_deposit",
   "Joint Account": "bank.atype_joint_account"
 };
 
 const DEFAULT_BRANCH_CODE_TYPES = [
+  "Branch Code",
+  "Internal",
   "SWIFT Code",
   "Routing Number",
   "IFSC Code",
   "Sort Code",
   "BSB Number",
-  "Branch Code",
   "IBAN Prefix"
 ];
 
@@ -95,6 +104,7 @@ const BRANCH_CODE_TYPE_KEYS: Record<string, UiKey> = {
   "Sort Code": "bank.bctype_sort_code",
   "BSB Number": "bank.bctype_bsb_number",
   "Branch Code": "bank.bctype_branch_code",
+  "Internal": "bank.bctype_branch_code",
   "IBAN Prefix": "bank.bctype_iban_prefix"
 };
 

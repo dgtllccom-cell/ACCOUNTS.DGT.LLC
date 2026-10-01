@@ -691,17 +691,19 @@ export async function POST(request: NextRequest) {
         }
 
         let validCompanyId = null;
-        if (body.companyId) {
+        const targetCompanyId = body.companyId || (body.linkedCompanies?.find((c: any) => c.isPrimary)?.id || body.linkedCompanies?.[0]?.id || body.companyIds?.[0]) || null;
+        if (targetCompanyId) {
           try {
-            const rows = await tx`select id from companies where id = ${body.companyId}::uuid limit 1;`;
+            const rows = await tx`select id from companies where id = ${targetCompanyId}::uuid limit 1;`;
             if (rows.length > 0) validCompanyId = rows[0].id;
           } catch {}
         }
 
         let validBankId = null;
-        if (body.bankId) {
+        const targetBankId = body.bankId || (body.linkedBanks?.find((b: any) => b.isPrimary)?.id || body.linkedBanks?.[0]?.id || body.bankIds?.[0]) || null;
+        if (targetBankId) {
           try {
-            const rows = await tx`select id from banks where id = ${body.bankId}::uuid limit 1;`;
+            const rows = await tx`select id from banks where id = ${targetBankId}::uuid limit 1;`;
             if (rows.length > 0) validBankId = rows[0].id;
           } catch {}
         }
@@ -722,6 +724,15 @@ export async function POST(request: NextRequest) {
           } catch {}
         }
 
+        const dedupedCompanies = (body.linkedCompanies || []).filter((item: any, idx: number, arr: any[]) => {
+          const id = item?.id ? String(item.id).trim() : null;
+          return id ? arr.findIndex((x: any) => String(x?.id).trim() === id) === idx : true;
+        });
+        const dedupedBanks = (body.linkedBanks || []).filter((item: any, idx: number, arr: any[]) => {
+          const id = item?.id ? String(item.id).trim() : null;
+          return id ? arr.findIndex((x: any) => String(x?.id).trim() === id) === idx : true;
+        });
+
         const accountRows = await tx`
           insert into enterprise_accounts ${tx({
             scope: body.scope || "super_admin",
@@ -736,7 +747,9 @@ export async function POST(request: NextRequest) {
             company_id: validCompanyId,
             bank_id: validBankId,
             shipping_line_id: validShippingLineId,
-            linked_countries: JSON.stringify(body.linkedCountries || []),
+            linked_countries: tx.json(body.linkedCountries || []),
+            linked_companies: tx.json(dedupedCompanies),
+            linked_banks: tx.json(dedupedBanks),
             code: issuedCode,
             account_number: issuedCode,
             customer_number: customerNumber,
@@ -780,6 +793,14 @@ export async function POST(request: NextRequest) {
         );
 
         if (warehousesToLink.length > 0) {
+          let validCcpId: string | null = null;
+          if (validCompanyId) {
+            try {
+              const ccpRows = await tx`select id from country_company_profiles where id = ${validCompanyId}::uuid limit 1;`;
+              if (ccpRows.length > 0) validCcpId = ccpRows[0].id;
+            } catch {}
+          }
+
           for (let i = 0; i < warehousesToLink.length; i++) {
             const whId = warehousesToLink[i];
             try {
@@ -793,7 +814,7 @@ export async function POST(request: NextRequest) {
                 ) values (
                   ${accountId}::uuid,
                   ${whId}::uuid,
-                  ${validCompanyId ? validCompanyId : null},
+                  ${validCcpId},
                   ${validCustomerId ? validCustomerId : null},
                   ${i === 0}
                 )
@@ -806,7 +827,7 @@ export async function POST(request: NextRequest) {
               await tx`
                 update warehouses
                 set account_id = ${accountId}::uuid,
-                    company_id = coalesce(${validCompanyId ? validCompanyId : null}, company_id)
+                    company_id = coalesce(${validCcpId}, company_id)
                 where id = ${whId}::uuid;
               `;
             } catch (whErr) {

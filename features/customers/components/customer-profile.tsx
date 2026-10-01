@@ -59,8 +59,7 @@ export function CustomerProfile({
   // Prefer the reactive client-side language store over the server-rendered prop — otherwise
   // switching language after this page has loaded (without a full navigation) leaves it stuck
   // on whatever language was active at SSR time. See CLAUDE.md's i18n component pattern.
-  const activeLang = useActiveLanguage();
-  const lang = activeLang !== "en" ? activeLang : langProp;
+  const lang = useActiveLanguage(langProp);
   const [loading, setLoading] = useState(true);
   const [customer, setCustomer] = useState<CustomerRow | null>(null);
   const [error, setError] = useState<string | null>(null);

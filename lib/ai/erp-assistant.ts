@@ -530,7 +530,16 @@ async function searchRealErpRecords(
   if (sharedPg) {
     return await runWithSql(sharedPg);
   }
-  return await withLocalPg(runWithSql);
+  const result = await withLocalPg(runWithSql);
+  if (result) return result;
+  return {
+    intent: "chat" as AssistantIntent,
+    answerType: "text" as AnswerType,
+    answer: "Database service temporarily unavailable.",
+    scopeLabel: isSuperAdmin ? "Global ERP" : "Scoped ERP",
+    sourceRecord: null,
+    data: null
+  };
 }
 
 function fmt(v: any) {

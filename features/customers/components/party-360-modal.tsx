@@ -48,8 +48,7 @@ export function Party360Modal({
   onClose
 }: Party360ModalProps) {
   const router = useRouter();
-  const activeLang = useActiveLanguage();
-  const lang = (activeLang !== "en" ? activeLang : langProp) as SupportedLanguage;
+  const lang = useActiveLanguage(langProp);
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState<PartyAffiliationSummary | null>(null);
   const [activeTab, setActiveTab] = useState<"all" | "companies" | "employees" | "banks" | "warehouses" | "trucks" | "clearingAgents">("all");

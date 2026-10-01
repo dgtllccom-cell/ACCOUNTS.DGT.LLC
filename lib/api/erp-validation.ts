@@ -691,7 +691,11 @@ export const enterpriseAccountCreateSchema = scopeSchema.extend({
   isControlAccount: z.coerce.boolean().default(false),
   customerId: optionalUuidSchema,
   companyId: optionalUuidSchema,
+  companyIds: z.array(z.string()).optional().default([]),
+  linkedCompanies: z.array(z.any()).optional().default([]),
   bankId: optionalUuidSchema,
+  bankIds: z.array(z.string()).optional().default([]),
+  linkedBanks: z.array(z.any()).optional().default([]),
   warehouseId: optionalUuidSchema,
   warehouseIds: z.array(z.string()).default([]),
   requirements: z.object({

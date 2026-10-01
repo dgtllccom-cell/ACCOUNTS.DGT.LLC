@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChevronDown, Download, Loader2, MoreVertical, Printer, RefreshCcw, Search, ChevronRight, Globe, SlidersHorizontal, Info } from "lucide-react";
+import { ChevronDown, Download, Loader2, MoreVertical, Printer, RefreshCcw, Search, ChevronRight, Globe, SlidersHorizontal, Info, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -458,9 +458,11 @@ export function LedgerReportView({
     if (!nextLedgerId) {
       setStatement(null);
       setSelectedLedger(null);
+      setDrawerOpen(false);
       return;
     }
 
+    setDrawerOpen(true);
     setLoadingStatement(true);
     try {
       const res = await getLedgerStatement({
@@ -883,7 +885,7 @@ export function LedgerReportView({
         </div>,
         actionsSlot
       )}
-      <div className="mx-auto w-full max-w-[1800px] p-4 sm:p-6 lg:p-8 space-y-4">
+      <div className="w-full max-w-none px-4 sm:px-6 py-4 space-y-4">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <ReportHeader
           title={pageTitle}
@@ -1806,19 +1808,34 @@ export function LedgerReportView({
                 header: t(effectiveLang, "lgr.action", "Action"),
                 align: "center",
                 render: (row) => (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 text-slate-400 hover:text-slate-700 hover:bg-slate-200 no-print"
-                    title={t(lang, "ledger.view_ledger", "View Ledger")}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      router.push(`/dashboard/ledger/new?account=${encodeURIComponent(row.accountCode || row.ledgerCode)}`);
-                    }}
-                  >
-                    <Search className="h-3.5 w-3.5" aria-hidden />
-                  </Button>
+                  <div className="flex items-center justify-center gap-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 text-blue-600 hover:text-blue-800 hover:bg-blue-50 dark:hover:bg-blue-950/40 no-print"
+                      title={t(lang, "ledger.view_statement", "View Statement")}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        void loadSelectedStatement(row.ledgerId);
+                      }}
+                    >
+                      <Eye className="h-3.5 w-3.5" aria-hidden />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 text-slate-400 hover:text-slate-700 hover:bg-slate-200 no-print"
+                      title={t(lang, "ledger.view_ledger", "View Ledger")}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        router.push(`/dashboard/ledger/new?account=${encodeURIComponent(row.accountCode || row.ledgerCode)}`);
+                      }}
+                    >
+                      <Search className="h-3.5 w-3.5" aria-hidden />
+                    </Button>
+                  </div>
                 )
               }
             ];
@@ -1827,7 +1844,12 @@ export function LedgerReportView({
               <>
                 <ReportTable headers={columns.map(c => c.header)}>
                   {tableRows.slice((page - 1) * pageSize, page * pageSize).map((row, idx) => (
-                    <tr key={row.ledgerId} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                    <tr
+                      key={row.ledgerId}
+                      onClick={() => void loadSelectedStatement(row.ledgerId)}
+                      className="hover:bg-blue-50/50 dark:hover:bg-slate-800/70 cursor-pointer transition-colors"
+                      title={t(lang, "ledger.click_to_view_statement", "Click to view ledger statement")}
+                    >
                       {columns.map((c, cIdx) => (
                         <Td key={cIdx} className={c.align === "right" ? "text-right" : c.align === "center" ? "text-center" : ""}>
                           {c.render ? c.render(row, idx) : (row as any)[c.key]}

@@ -65,8 +65,7 @@ type Props = {
 };
 
 export function CountryTaxManagementView({ lang: langProp, initialCountryId }: Props) {
-  const activeLang = useActiveLanguage();
-  const lang = activeLang !== "en" ? activeLang : langProp;
+  const lang = useActiveLanguage(langProp);
   const _ = (key: UiKey, fallback?: string) => t(lang, key, fallback);
   const isRTL = ["ar", "ur", "fa", "ps"].includes(lang);
 

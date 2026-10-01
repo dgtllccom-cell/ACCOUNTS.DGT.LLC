@@ -90,8 +90,7 @@ const INBOX_TABS: ReadonlyArray<{ key: string; labelKey: UiKey }> = [
 type BranchScopeOption = { value: string; label: string };
 
 export function UnifiedInboxView({ lang: langProp }: Props) {
-  const activeLang = useActiveLanguage();
-  const lang = (activeLang !== "en" ? activeLang : langProp) as SupportedLanguage;
+  const lang = useActiveLanguage(langProp);
   const _ = (key: UiKey, fallback?: string) => t(lang, key, fallback);
   const th = (s: string) => translateHeader(lang, s);
   const isRTL = ["ar", "ur", "fa", "ps"].includes(lang);

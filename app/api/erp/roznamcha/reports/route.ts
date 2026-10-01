@@ -134,8 +134,8 @@ export async function GET(request: NextRequest) {
           and (${scope.countryId ? sql`e.country_id = ${scope.countryId}` : sql`true`})
           and (${scope.countryBranchId ? sql`e.country_branch_id = ${scope.countryBranchId}` : sql`true`})
           and (${scope.cityBranchId ? sql`e.city_branch_id = ${scope.cityBranchId}` : sql`true`})
-          and (${fromDate ? sql`e.entry_date >= ${fromDate}` : sql`true`})
-          and (${toDate ? sql`e.entry_date <= ${toDate}` : sql`true`})
+          and (${fromDate ? sql`e.entry_date::date >= ${fromDate}::date` : sql`true`})
+          and (${toDate ? sql`e.entry_date::date <= ${toDate}::date` : sql`true`})
           and (${userId ? sql`e.created_by = ${userId}` : sql`true`})
           and (${status ? sql`e.status = ${status}` : sql`true`})
           and (${safeRef ? sql`e.reference_no ilike ${"%" + safeRef + "%"}` : sql`true`})
@@ -206,8 +206,8 @@ export async function GET(request: NextRequest) {
       if (scope.countryId) query = query.eq("country_id", scope.countryId);
       if (scope.countryBranchId) query = query.eq("country_branch_id", scope.countryBranchId);
       if (scope.cityBranchId) query = query.eq("city_branch_id", scope.cityBranchId);
-      if (fromDate) query = query.gte("entry_date", fromDate);
-      if (toDate) query = query.lte("entry_date", toDate);
+      if (fromDate) query = query.gte("entry_date", fromDate.includes("T") ? fromDate : `${fromDate}T00:00:00.000Z`);
+      if (toDate) query = query.lte("entry_date", toDate.includes("T") ? toDate : `${toDate}T23:59:59.999Z`);
       if (userId) query = query.eq("created_by", userId);
       if (status) query = query.eq("status", status);
       if (referenceNo) query = query.ilike("reference_no", `%${referenceNo.replace(/[%,]/g, "")}%`);

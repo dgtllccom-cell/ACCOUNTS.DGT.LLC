@@ -47,8 +47,7 @@ const EMPTY_AGENT: any = {
 };
 
 export function ShippingAgentEntryView({ lang: langProp }: { lang: SupportedLanguage }) {
-  const activeLang = useActiveLanguage();
-  const lang = activeLang !== "en" ? activeLang : langProp;
+  const lang = useActiveLanguage(langProp);
   const dir = getLanguageDirection(lang);
   const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   const [rows, setRows] = useState<ShippingAgentRow[]>([]);

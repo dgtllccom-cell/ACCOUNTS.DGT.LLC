@@ -19,6 +19,18 @@ import {
 import { JournalReportingCharts, type JournalChartsData } from "./journal-reporting-charts";
 import { JournalReportingCustomize, columnLabel } from "./journal-reporting-customize";
 import { ErpDatePicker } from "@/components/ui/erp-date-picker";
+import { cn } from "@/lib/utils";
+import {
+  ChevronDown,
+  Download,
+  Eye,
+  Filter,
+  Printer,
+  RefreshCw,
+  SlidersHorizontal,
+  ExternalLink,
+  X
+} from "lucide-react";
 
 // Mirrors lib/services/journal-report-service.ts's JournalRegisterRow — NOT imported directly
 // because that module pulls in withLocalPg/ErpSession (server-only) which must never reach the
@@ -127,6 +139,9 @@ export function JournalReportingView({ context, langProp }: { context: ReportCon
   const [emailRecipients, setEmailRecipients] = useState("");
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
   const [busyAction, setBusyAction] = useState<string | null>(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
+  const [selectedDetailRow, setSelectedDetailRow] = useState<JournalRegisterRow | null>(null);
 
   useEffect(() => {
     apiGet<MetaResponse>("/api/erp/reports/journal/meta")
@@ -431,7 +446,7 @@ export function JournalReportingView({ context, langProp }: { context: ReportCon
   const totalPages = data ? Math.max(1, Math.ceil(data.table.totalCount / PAGE_SIZE)) : 1;
 
   return (
-    <div dir={s.dir} className="space-y-5 p-4 md:p-6">
+    <div dir={s.dir} className="w-full max-w-none px-4 sm:px-6 space-y-5 pb-12">
       {/* Header / context banner */}
       <div className="rounded-xl bg-gradient-to-r from-slate-800 to-slate-700 p-5 text-white shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -456,114 +471,215 @@ export function JournalReportingView({ context, langProp }: { context: ReportCon
         </div>
       )}
 
-      {/* Filters */}
+      {/* Filters (Collapsible) */}
       <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-        <div className="mb-3 flex flex-wrap items-center gap-2">
-          <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">{s.t("date_range", "Date Range")}:</span>
-          {DATE_PRESETS.map(([value, key, fallback]) => (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2">
             <button
-              key={value}
               type="button"
-              onClick={() => applyPreset(value)}
-              className={`rounded-full border px-3 py-1 text-xs ${
-                filters.datePreset === value
-                  ? "border-blue-600 bg-blue-600 text-white"
-                  : "border-slate-300 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
-              }`}
+              onClick={() => setFiltersOpen((v) => !v)}
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold transition-colors",
+                filtersOpen
+                  ? "border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300"
+                  : "border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+              )}
             >
-              {s.t(key, fallback)}
+              <Filter className="h-3.5 w-3.5" />
+              <span>{filtersOpen ? s.t("hide_filters", "Hide Filters") : s.t("filters", "Filters")}</span>
+              <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", filtersOpen && "rotate-180")} />
             </button>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6">
-          <div className="col-span-2 flex flex-col text-xs text-slate-500">
-            <span className="mb-1 font-semibold">{s.t("date_range", "Date Range")}</span>
-            <ErpDatePicker
-              mode="range"
-              lang={s.lang}
-              size="sm"
-              applyLabel="update"
-              value={{ from: filters.fromDate || null, to: filters.toDate || null }}
-              onApply={(v) => {
-                setFilter("fromDate", v.from ?? "");
-                setFilter("toDate", v.to ?? "");
-              }}
-            />
+            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              📅 {filters.fromDate || "All"} → {filters.toDate || "All"}
+            </span>
           </div>
 
-          <SelectFilter label={s.t("filter_country", "Country")} value={filters.countryId} onChange={(v) => setFilter("countryId", v)} options={meta?.countries ?? []} allLabel={s.t("filter_all", "All")} />
-          <SelectFilter label={s.t("filter_country_branch", "Country Branch (Main Branch)")} value={filters.countryBranchId} onChange={(v) => setFilter("countryBranchId", v)} options={meta?.countryBranches ?? []} allLabel={s.t("filter_all", "All")} />
-          <SelectFilter label={s.t("filter_city_branch", "City Branch")} value={filters.cityBranchId} onChange={(v) => setFilter("cityBranchId", v)} options={meta?.cityBranches ?? []} allLabel={s.t("filter_all", "All")} />
-          <SelectFilter label={s.t("filter_company", "Company")} value={filters.companyId} onChange={(v) => setFilter("companyId", v)} options={meta?.companies ?? []} allLabel={s.t("filter_all", "All")} />
-          <SelectFilter label={s.t("filter_account", "Account / Ledger")} value={filters.ledgerId} onChange={(v) => setFilter("ledgerId", v)} options={meta?.accounts ?? []} allLabel={s.t("filter_all", "All")} />
-          <SelectFilter label={s.t("filter_customer", "Customer / Supplier")} value={filters.customerId} onChange={(v) => setFilter("customerId", v)} options={meta?.customers ?? []} allLabel={s.t("filter_all", "All")} />
-          <SelectStringFilter label={s.t("filter_journal_type", "Journal Type")} value={filters.journalType} onChange={(v) => setFilter("journalType", v)} options={meta?.journalTypes ?? []} allLabel={s.t("filter_all", "All")} />
-          <SelectStringFilter label={s.t("filter_voucher_type", "Voucher Type")} value={filters.voucherType} onChange={(v) => setFilter("voucherType", v)} options={meta?.voucherTypes ?? []} allLabel={s.t("filter_all", "All")} />
-          <SelectStringFilter label={s.t("filter_currency", "Currency")} value={filters.currency} onChange={(v) => setFilter("currency", v)} options={meta?.currencies ?? []} allLabel={s.t("filter_all", "All")} />
-          <SelectFilter label={s.t("filter_created_by", "Created By")} value={filters.createdBy} onChange={(v) => setFilter("createdBy", v)} options={meta?.users ?? []} allLabel={s.t("filter_all", "All")} />
-          <SelectFilter label={s.t("filter_approved_by", "Approved By")} value={filters.approvedBy} onChange={(v) => setFilter("approvedBy", v)} options={meta?.users ?? []} allLabel={s.t("filter_all", "All")} />
-
-          <label className="flex flex-col text-xs text-slate-500">
-            {s.t("filter_approval_status", "Approval Status")}
-            <select value={filters.approvalStatus} onChange={(e) => setFilter("approvalStatus", e.target.value)} className="mt-1 rounded border border-slate-300 px-2 py-1 text-sm dark:border-slate-700 dark:bg-slate-800">
-              <option value="">{s.t("filter_all", "All")}</option>
-              <option value="approved">{s.t("approval_approved", "Approved")}</option>
-              <option value="pending">{s.t("approval_pending", "Pending")}</option>
-            </select>
-          </label>
-
-          <label className="flex flex-col text-xs text-slate-500">
-            {s.t("filter_status", "Transaction Status")}
-            <select value={filters.status} onChange={(e) => setFilter("status", e.target.value)} className="mt-1 rounded border border-slate-300 px-2 py-1 text-sm dark:border-slate-700 dark:bg-slate-800">
-              <option value="">{s.t("filter_all", "All")}</option>
-              <option value="draft">{s.t("status_draft", "Draft")}</option>
-              <option value="posted">{s.t("status_posted", "Posted")}</option>
-              <option value="cancelled">{s.t("status_cancelled", "Cancelled")}</option>
-            </select>
-          </label>
-
-          <label className="flex flex-col text-xs text-slate-500">
-            {s.t("filter_dr_cr", "Debit / Credit")}
-            <select value={filters.drCr} onChange={(e) => setFilter("drCr", e.target.value)} className="mt-1 rounded border border-slate-300 px-2 py-1 text-sm dark:border-slate-700 dark:bg-slate-800">
-              <option value="">{s.t("filter_all", "All")}</option>
-              <option value="debit">{s.t("dr_cr_debit", "Debit")}</option>
-              <option value="credit">{s.t("dr_cr_credit", "Credit")}</option>
-            </select>
-          </label>
-
-          <label className="flex flex-col text-xs text-slate-500">
-            {s.t("filter_reference_no", "Reference Number")}
-            <input
-              type="text"
-              value={filters.referenceNo}
-              onChange={(e) => setFilter("referenceNo", e.target.value)}
-              className="mt-1 rounded border border-slate-300 px-2 py-1 text-sm dark:border-slate-700 dark:bg-slate-800"
-            />
-          </label>
+          <div className="flex flex-wrap items-center gap-1">
+            {DATE_PRESETS.map(([value, key, fallback]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => applyPreset(value)}
+                className={`rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition-colors ${
+                  filters.datePreset === value
+                    ? "border-blue-600 bg-blue-600 text-white font-bold"
+                    : "border-slate-300 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                }`}
+              >
+                {s.t(key, fallback)}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="mt-3 flex flex-wrap gap-2">
-          <button type="button" onClick={applyFilters} className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700">
-            {s.t("apply_filters", "Apply Filters")}
-          </button>
-          <button type="button" onClick={resetFilters} className="rounded border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800">
-            {s.t("reset_filters", "Reset Filters")}
-          </button>
-        </div>
+        {filtersOpen && (
+          <div className="mt-3 border-t border-slate-100 dark:border-slate-800 pt-3">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6">
+              <div className="col-span-2 flex flex-col text-xs text-slate-500">
+                <span className="mb-1 font-semibold">{s.t("date_range", "Date Range")}</span>
+                <ErpDatePicker
+                  mode="range"
+                  lang={s.lang}
+                  size="sm"
+                  applyLabel="update"
+                  value={{ from: filters.fromDate || null, to: filters.toDate || null }}
+                  onApply={(v) => {
+                    setFilter("fromDate", v.from ?? "");
+                    setFilter("toDate", v.to ?? "");
+                  }}
+                />
+              </div>
+
+              <SelectFilter label={s.t("filter_country", "Country")} value={filters.countryId} onChange={(v) => setFilter("countryId", v)} options={meta?.countries ?? []} allLabel={s.t("filter_all", "All")} />
+              <SelectFilter label={s.t("filter_country_branch", "Country Branch (Main Branch)")} value={filters.countryBranchId} onChange={(v) => setFilter("countryBranchId", v)} options={meta?.countryBranches ?? []} allLabel={s.t("filter_all", "All")} />
+              <SelectFilter label={s.t("filter_city_branch", "City Branch")} value={filters.cityBranchId} onChange={(v) => setFilter("cityBranchId", v)} options={meta?.cityBranches ?? []} allLabel={s.t("filter_all", "All")} />
+              <SelectFilter label={s.t("filter_company", "Company")} value={filters.companyId} onChange={(v) => setFilter("companyId", v)} options={meta?.companies ?? []} allLabel={s.t("filter_all", "All")} />
+              <SelectFilter label={s.t("filter_account", "Account / Ledger")} value={filters.ledgerId} onChange={(v) => setFilter("ledgerId", v)} options={meta?.accounts ?? []} allLabel={s.t("filter_all", "All")} />
+              <SelectFilter label={s.t("filter_customer", "Customer / Supplier")} value={filters.customerId} onChange={(v) => setFilter("customerId", v)} options={meta?.customers ?? []} allLabel={s.t("filter_all", "All")} />
+              <SelectStringFilter label={s.t("filter_journal_type", "Journal Type")} value={filters.journalType} onChange={(v) => setFilter("journalType", v)} options={meta?.journalTypes ?? []} allLabel={s.t("filter_all", "All")} />
+              <SelectStringFilter label={s.t("filter_voucher_type", "Voucher Type")} value={filters.voucherType} onChange={(v) => setFilter("voucherType", v)} options={meta?.voucherTypes ?? []} allLabel={s.t("filter_all", "All")} />
+              <SelectStringFilter label={s.t("filter_currency", "Currency")} value={filters.currency} onChange={(v) => setFilter("currency", v)} options={meta?.currencies ?? []} allLabel={s.t("filter_all", "All")} />
+              <SelectFilter label={s.t("filter_created_by", "Created By")} value={filters.createdBy} onChange={(v) => setFilter("createdBy", v)} options={meta?.users ?? []} allLabel={s.t("filter_all", "All")} />
+              <SelectFilter label={s.t("filter_approved_by", "Approved By")} value={filters.approvedBy} onChange={(v) => setFilter("approvedBy", v)} options={meta?.users ?? []} allLabel={s.t("filter_all", "All")} />
+
+              <label className="flex flex-col text-xs text-slate-500">
+                {s.t("filter_approval_status", "Approval Status")}
+                <select value={filters.approvalStatus} onChange={(e) => setFilter("approvalStatus", e.target.value)} className="mt-1 rounded border border-slate-300 px-2 py-1 text-sm dark:border-slate-700 dark:bg-slate-800">
+                  <option value="">{s.t("filter_all", "All")}</option>
+                  <option value="approved">{s.t("approval_approved", "Approved")}</option>
+                  <option value="pending">{s.t("approval_pending", "Pending")}</option>
+                </select>
+              </label>
+
+              <label className="flex flex-col text-xs text-slate-500">
+                {s.t("filter_status", "Transaction Status")}
+                <select value={filters.status} onChange={(e) => setFilter("status", e.target.value)} className="mt-1 rounded border border-slate-300 px-2 py-1 text-sm dark:border-slate-700 dark:bg-slate-800">
+                  <option value="">{s.t("filter_all", "All")}</option>
+                  <option value="draft">{s.t("status_draft", "Draft")}</option>
+                  <option value="posted">{s.t("status_posted", "Posted")}</option>
+                  <option value="cancelled">{s.t("status_cancelled", "Cancelled")}</option>
+                </select>
+              </label>
+
+              <label className="flex flex-col text-xs text-slate-500">
+                {s.t("filter_dr_cr", "Debit / Credit")}
+                <select value={filters.drCr} onChange={(e) => setFilter("drCr", e.target.value)} className="mt-1 rounded border border-slate-300 px-2 py-1 text-sm dark:border-slate-700 dark:bg-slate-800">
+                  <option value="">{s.t("filter_all", "All")}</option>
+                  <option value="debit">{s.t("dr_cr_debit", "Debit")}</option>
+                  <option value="credit">{s.t("dr_cr_credit", "Credit")}</option>
+                </select>
+              </label>
+
+              <label className="flex flex-col text-xs text-slate-500">
+                {s.t("filter_reference_no", "Reference Number")}
+                <input
+                  type="text"
+                  value={filters.referenceNo}
+                  onChange={(e) => setFilter("referenceNo", e.target.value)}
+                  className="mt-1 rounded border border-slate-300 px-2 py-1 text-sm dark:border-slate-700 dark:bg-slate-800"
+                />
+              </label>
+            </div>
+
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button type="button" onClick={applyFilters} className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 shadow-sm">
+                {s.t("apply_filters", "Apply Filters")}
+              </button>
+              <button type="button" onClick={resetFilters} className="rounded border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800">
+                {s.t("reset_filters", "Reset Filters")}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Actions toolbar */}
-      <div className="flex flex-wrap items-center gap-2">
-        <ToolbarButton onClick={handlePreview} busy={busyAction === "preview"}>{s.t("action_preview", "Preview")}</ToolbarButton>
-        <ToolbarButton onClick={handlePrint} busy={busyAction === "print"}>{s.t("action_print", "Print")}</ToolbarButton>
-        <ToolbarButton onClick={handlePdf} busy={busyAction === "pdf"}>{s.t("action_pdf", "PDF")}</ToolbarButton>
-        <ToolbarButton onClick={handleExcel} busy={busyAction === "excel"}>{s.t("action_excel", "Excel")}</ToolbarButton>
-        <ToolbarButton onClick={() => setShowEmail(true)}>{s.t("action_email", "Email")}</ToolbarButton>
-        <ToolbarButton onClick={() => setShowSaveView(true)}>{s.t("action_save_view", "Save View")}</ToolbarButton>
-        <ToolbarButton onClick={() => setShowSavedList((v) => !v)}>{s.t("saved_views", "Saved Report Views")}</ToolbarButton>
-        <ToolbarButton onClick={() => setShowCustomize(true)}>{s.t("action_customize", "Customize Report")}</ToolbarButton>
-        <ToolbarButton onClick={() => load(appliedFilters, page)} busy={loading}>{s.t("action_refresh", "Refresh")}</ToolbarButton>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Actions / Export Dropdown */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setActionsMenuOpen((v) => !v)}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-1.5 text-xs font-bold shadow-sm"
+            >
+              <Download className="h-3.5 w-3.5" />
+              <span>{s.t("actions_export", "Actions / Export")}</span>
+              <ChevronDown className="h-3 w-3" />
+            </button>
+            {actionsMenuOpen && (
+              <div
+                className="absolute left-0 top-full mt-1.5 z-30 w-48 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl py-1 text-xs"
+                onClick={() => setActionsMenuOpen(false)}
+              >
+                <button
+                  type="button"
+                  onClick={handlePreview}
+                  className="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2 font-medium"
+                >
+                  <Eye className="h-3.5 w-3.5 text-blue-600" />
+                  <span>{s.t("action_preview", "Preview Report")}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handlePrint}
+                  className="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2 font-medium"
+                >
+                  <Printer className="h-3.5 w-3.5 text-slate-600" />
+                  <span>{s.t("action_print", "Print Report")}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handlePdf}
+                  className="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2 font-medium"
+                >
+                  <Download className="h-3.5 w-3.5 text-red-600" />
+                  <span>{s.t("action_pdf", "Export to PDF")}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleExcel}
+                  className="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2 font-medium"
+                >
+                  <Download className="h-3.5 w-3.5 text-emerald-600" />
+                  <span>{s.t("action_excel", "Export to Excel")}</span>
+                </button>
+                <div className="border-t border-slate-100 dark:border-slate-800 my-1" />
+                <button
+                  type="button"
+                  onClick={() => setShowEmail(true)}
+                  className="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2 font-medium"
+                >
+                  <span>📧</span>
+                  <span>{s.t("action_email", "Email Report")}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowSaveView(true)}
+                  className="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2 font-medium"
+                >
+                  <span>💾</span>
+                  <span>{s.t("action_save_view", "Save View")}</span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          <ToolbarButton onClick={() => setShowCustomize(true)}>
+            <SlidersHorizontal className="h-3.5 w-3.5 me-1 inline" />
+            {s.t("action_customize", "Customize Columns")}
+          </ToolbarButton>
+          <ToolbarButton onClick={() => setShowSavedList((v) => !v)}>
+            {s.t("saved_views", "Saved Views")} ({savedViews.length})
+          </ToolbarButton>
+        </div>
+
+        <div>
+          <ToolbarButton onClick={() => load(appliedFilters, page)} busy={loading}>
+            <RefreshCw className={cn("h-3.5 w-3.5 me-1 inline", loading && "animate-spin")} />
+            {s.t("action_refresh", "Refresh")}
+          </ToolbarButton>
+        </div>
       </div>
 
       {showSavedList && (
@@ -631,16 +747,37 @@ export function JournalReportingView({ context, langProp }: { context: ReportCon
               </tr>
             ) : (
               data!.table.rows.map((row) => (
-                <tr key={row.id} className="border-t border-slate-100 dark:border-slate-800">
+                <tr
+                  key={row.id}
+                  onClick={() => setSelectedDetailRow(row)}
+                  className="border-t border-slate-100 dark:border-slate-800 hover:bg-blue-50/50 dark:hover:bg-slate-800/60 cursor-pointer transition-colors"
+                >
                   {visibleColumns.map((c) => (
                     <td key={c.key} style={{ width: c.width }} className="px-3 py-2 text-slate-700 dark:text-slate-300">
                       {columnValue(row, c.key)}
                     </td>
                   ))}
-                  <td className="px-3 py-2">
-                    <button type="button" onClick={() => viewOriginal(row)} className="text-xs text-blue-600 hover:underline">
-                      {s.t("view_original", "View Original")}
-                    </button>
+                  <td className="px-3 py-2 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedDetailRow(row)}
+                        className="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1"
+                        title={s.t("view_details", "View Details")}
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                        <span>{s.t("view_action", "View")}</span>
+                      </button>
+                      <span className="text-slate-300 dark:text-slate-700">|</span>
+                      <button
+                        type="button"
+                        onClick={() => viewOriginal(row)}
+                        className="text-xs text-slate-500 hover:text-blue-600 flex items-center gap-0.5"
+                        title={s.t("open_source", "Open Source")}
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -752,6 +889,88 @@ export function JournalReportingView({ context, langProp }: { context: ReportCon
             >
               {busyAction === "email" ? s.t("email_sending", "Sending…") : s.t("email_send", "Send")}
             </button>
+          </div>
+        </Modal>
+      )}
+
+      {selectedDetailRow && (
+        <Modal onClose={() => setSelectedDetailRow(null)} dir={s.dir}>
+          <div className="space-y-4 text-xs">
+            <div className="flex items-center justify-between border-b pb-2">
+              <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                Transaction Detail — {selectedDetailRow.referenceNo || selectedDetailRow.voucherNo || selectedDetailRow.journalNo || selectedDetailRow.id.slice(0, 8)}
+              </h2>
+              <button
+                type="button"
+                onClick={() => setSelectedDetailRow(null)}
+                className="text-slate-400 hover:text-slate-600 p-1"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 rounded-lg border bg-slate-50 dark:bg-slate-900/50 p-3">
+              <div>
+                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Date</span>
+                <span className="font-semibold text-slate-900 dark:text-slate-100">{selectedDetailRow.date}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Source</span>
+                <span className="font-semibold capitalize text-blue-600 dark:text-blue-400">{selectedDetailRow.sourceTable.replace("_", " ")}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Status</span>
+                <span className="font-semibold capitalize text-emerald-600">{selectedDetailRow.status}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Account</span>
+                <span className="font-semibold text-slate-900 dark:text-slate-100">{selectedDetailRow.accountName || selectedDetailRow.accountCode || "-"}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Customer / Party</span>
+                <span className="font-semibold text-slate-900 dark:text-slate-100">{selectedDetailRow.customerName || "-"}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-muted-foreground uppercase font-bold block">Amount</span>
+                <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
+                  {selectedDetailRow.debit > 0 ? `DR ${numberFmt(selectedDetailRow.debit)}` : `CR ${numberFmt(selectedDetailRow.credit)}`} {selectedDetailRow.currency}
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <span className="text-[10px] text-muted-foreground uppercase font-bold block">Description</span>
+              <p className="mt-1 text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-900 border rounded p-2">
+                {selectedDetailRow.description || "No description provided."}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-slate-600 dark:text-slate-400 text-[11px]">
+              <div>Branch: <b className="text-slate-800 dark:text-slate-200">{selectedDetailRow.cityBranchName || selectedDetailRow.countryBranchName || "-"}</b></div>
+              <div>Country: <b className="text-slate-800 dark:text-slate-200">{selectedDetailRow.countryName || "-"}</b></div>
+              <div>Created By: <b className="text-slate-800 dark:text-slate-200">{selectedDetailRow.createdByName || "-"}</b></div>
+            </div>
+
+            <div className="flex justify-end gap-2 border-t pt-3">
+              <button
+                type="button"
+                onClick={() => setSelectedDetailRow(null)}
+                className="rounded border border-slate-300 dark:border-slate-700 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-50"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  viewOriginal(selectedDetailRow);
+                  setSelectedDetailRow(null);
+                }}
+                className="rounded bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 flex items-center gap-1.5"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                <span>Open Original Source</span>
+              </button>
+            </div>
           </div>
         </Modal>
       )}

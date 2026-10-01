@@ -215,11 +215,11 @@ export function computeDatePreset(preset: string): { fromDate: string; toDate: s
 }
 
 export function defaultJournalFilters(): JournalFilters {
-  const { fromDate, toDate } = computeDatePreset("this_month");
+  const { fromDate, toDate } = computeDatePreset("this_year");
   return {
     fromDate,
     toDate,
-    datePreset: "this_month",
+    datePreset: "this_year",
     countryId: "",
     countryBranchId: "",
     cityBranchId: "",

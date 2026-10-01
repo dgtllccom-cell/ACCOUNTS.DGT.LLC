@@ -638,6 +638,51 @@ export function CashEntryForm({
   const [editDrRateVal, setEditDrRateVal] = useState("");
   const [editCrRateVal, setEditCrRateVal] = useState("");
 
+  // Small independent Roznamcha Bank / Payment Master (Parts 9 & 10)
+  const DEFAULT_ROZNAMCHA_BANKS: Record<string, string[]> = {
+    AE: ["Emirates NBD", "Abu Dhabi Commercial Bank (ADCB)", "Dubai Islamic Bank (DIB)", "First Abu Dhabi Bank (FAB)", "Mashreq Bank", "RAKBank", "Commercial Bank of Dubai"],
+    PK: ["Habib Bank Limited (HBL)", "Meezan Bank", "MCB Bank", "United Bank Limited (UBL)", "Allied Bank Limited (ABL)", "Bank Alfalah", "Faysal Bank", "Askari Bank"],
+    AF: ["Afghanistan International Bank (AIB)", "Azizi Bank", "New Kabul Bank", "Ghazanfar Bank", "Maiwand Bank", "Bank-e-Millie Afghan"],
+    IR: ["Bank Melli Iran", "Bank Mellat", "Bank Saderat Iran", "Bank Tejarat", "Parsian Bank", "Pasargad Bank"],
+    IN: ["State Bank of India (SBI)", "HDFC Bank", "ICICI Bank", "Axis Bank", "Punjab National Bank", "Kotak Mahindra Bank"],
+    DEFAULT: ["International Bank", "Standard Chartered", "Citibank", "HSBC", "Other Payment Channel"]
+  };
+  const [customRoznamchaBanks, setCustomRoznamchaBanks] = useState<Record<string, string[]>>({});
+  const [showNewBankModal, setShowNewBankModal] = useState(false);
+  const [newBankNameInput, setNewBankNameInput] = useState("");
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("erp_roznamcha_custom_banks_v1");
+      if (stored) setCustomRoznamchaBanks(JSON.parse(stored));
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const availableRoznamchaBanks = useMemo(() => {
+    const iso = (activeCountryIso || "DEFAULT").toUpperCase();
+    const defaults = DEFAULT_ROZNAMCHA_BANKS[iso] || DEFAULT_ROZNAMCHA_BANKS.DEFAULT;
+    const custom = customRoznamchaBanks[iso] || [];
+    return [...new Set([...defaults, ...custom])];
+  }, [activeCountryIso, customRoznamchaBanks]);
+
+  const handleAddCustomBank = (name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    const iso = (activeCountryIso || "DEFAULT").toUpperCase();
+    setCustomRoznamchaBanks((prev) => {
+      const next = { ...prev, [iso]: [...new Set([...(prev[iso] || []), trimmed])] };
+      try {
+        localStorage.setItem("erp_roznamcha_custom_banks_v1", JSON.stringify(next));
+      } catch { /* ignore */ }
+      return next;
+    });
+    setTypeDetails((p) => ({ ...p, bankName: trimmed }));
+    setShowNewBankModal(false);
+    setNewBankNameInput("");
+  };
+
   // Daily Cash Position states
   const [cashPositionRoleFilter, setCashPositionRoleFilter] = useState("Super Admin");
   const [cashPositionCountryFilter, setCashPositionCountryFilter] = useState("all");
@@ -2790,7 +2835,7 @@ export function CashEntryForm({
                   <thead>
                     <tr className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 text-[10px] font-black uppercase tracking-wider text-slate-500">
                       <th className="py-2 px-3">Country</th>
-                      <th className="py-2 px-2.5">Date</th>
+                      <th className="py-2 px-2.5">Date/Time</th>
                       <th className="py-2 px-2.5">DR Rate</th>
                       <th className="py-2 px-2.5">CR Rate</th>
                       <th className="py-2 px-2 text-center">Action</th>
@@ -3417,8 +3462,6 @@ export function CashEntryForm({
                           <p className="text-[10px] text-slate-400 font-medium">
                             {paymentType === "bank"
                               ? `Bank account, method and reference for ${activeCountryIso || "local"} banking`
-                              : paymentType === "business" || paymentType === "invoice"
-                              ? "Invoice number, vendor and receipt information"
                               : paymentType === "transfer"
                               ? "Transfer source, destination and reference"
                               : "Receiver / Sender identification and contact information"}
@@ -3430,43 +3473,52 @@ export function CashEntryForm({
                         <div className="space-y-2.5">
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                             <div className="space-y-1">
-                              <Label className="text-[10px] font-bold text-slate-500 uppercase">
-                                Bank ({activeCountryIso || "Bank"}) <span className="text-red-500">*</span>
-                              </Label>
-                              <BankPicker
-                                label=""
-                                value={typeDetails.bankId || ""}
-                                countryId={countryId || undefined}
-                                onValueChange={async (bankId) => {
-                                  setTypeDetails((p) => ({ ...p, bankId }));
-                                  if (!bankId) return;
-                                  try {
-                                    const bank = await getBankById(bankId);
-                                    setTypeDetails((p) => ({
-                                      ...p,
-                                      bankName: bank?.bank_name || p.bankName,
-                                      bankAccount: bank?.account_number || bank?.iban_number || p.bankAccount
-                                    }));
-                                  } catch {
-                                    // ignore — bankId is still saved, account/name populate on next successful lookup
+                              <div className="flex items-center justify-between">
+                                <Label className="text-[10px] font-bold text-slate-500 uppercase">
+                                  Bank ({activeCountryIso || "Bank"}) <span className="text-red-500">*</span>
+                                </Label>
+                                <button
+                                  type="button"
+                                  onClick={() => setShowNewBankModal(true)}
+                                  className="text-[10px] font-black text-blue-600 hover:text-blue-800 dark:text-blue-400 hover:underline cursor-pointer flex items-center gap-0.5"
+                                >
+                                  <Plus className="h-2.5 w-2.5" /> New Bank
+                                </button>
+                              </div>
+                              <select
+                                value={typeDetails.bankName || ""}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  if (val === "__ADD_NEW__") {
+                                    setShowNewBankModal(true);
+                                  } else {
+                                    setTypeDetails((p) => ({ ...p, bankName: val }));
                                   }
                                 }}
-                              />
+                                className="h-8.5 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-2 text-[11px] font-bold text-slate-800 dark:text-slate-200 outline-none"
+                              >
+                                <option value="">Select Bank / Channel</option>
+                                {availableRoznamchaBanks.map((b) => (
+                                  <option key={b} value={b}>
+                                    {b}
+                                  </option>
+                                ))}
+                                <option value="__ADD_NEW__">+ New Bank...</option>
+                              </select>
                             </div>
 
                             <div className="space-y-1">
-                              <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cef.bank_account_iban", "Bank Account / IBAN")}</Label>
+                              <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cef.bank_account_iban", "Bank Account / IBAN (Optional)")}</Label>
                               <Input
                                 value={typeDetails.bankAccount || ""}
-                                readOnly
-                                placeholder={t(lang, "cef.select_bank_autofill_ph", "Select a bank to auto-fill")}
-                                title={t(lang, "cef.bank_autofill_title", "Populated automatically from the Bank Master — edit the bank record to change it")}
-                                className="h-8.5 text-xs font-mono font-bold bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 cursor-not-allowed"
+                                onChange={(e) => setTypeDetails((p) => ({ ...p, bankAccount: e.target.value }))}
+                                placeholder="Optional (e.g. PK36... / AE07...)"
+                                className="h-8.5 text-xs font-mono font-bold bg-white dark:bg-slate-950"
                               />
                             </div>
 
                             <div className="space-y-1">
-                              <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cef.transfer_method", "Transfer Method")}</Label>
+                              <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cef.transfer_method", "Transfer Mode")}</Label>
                               <select
                                 value={typeDetails.method || "Online Transfer"}
                                 onChange={(e) => setTypeDetails((p) => ({ ...p, method: e.target.value }))}
@@ -3477,6 +3529,8 @@ export function CashEntryForm({
                                 <option value="Wire Transfer / TT">{t(lang, "cef.opt_wire_transfer", "Wire Transfer / TT")}</option>
                                 <option value="Cash Deposit">{t(lang, "cef.opt_cash_deposit_slip", "Cash Deposit Slip")}</option>
                                 <option value="RTGS / NEFT">{t(lang, "cef.opt_rtgs_neft", "RTGS / NEFT")}</option>
+                                <option value="IBFT">IBFT</option>
+                                <option value="Other">Other</option>
                               </select>
                             </div>
                           </div>
@@ -3508,6 +3562,40 @@ export function CashEntryForm({
                               </label>
                             </div>
                           </div>
+
+                          {/* Inline + New Bank modal */}
+                          {showNewBankModal && (
+                            <div className="p-3 rounded-xl border border-blue-200 bg-blue-50/80 dark:border-blue-900 dark:bg-blue-950/30 flex flex-wrap items-center gap-2 animate-in fade-in">
+                              <span className="text-xs font-bold text-blue-900 dark:text-blue-200">
+                                + Add New Bank ({activeCountryIso}):
+                              </span>
+                              <input
+                                type="text"
+                                value={newBankNameInput}
+                                onChange={(e) => setNewBankNameInput(e.target.value)}
+                                placeholder="Enter Bank Name (e.g. Dubai Islamic Bank)"
+                                className="flex-1 min-w-[200px] h-8 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 text-xs font-bold outline-none"
+                              />
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={() => handleAddCustomBank(newBankNameInput)}
+                                disabled={!newBankNameInput.trim()}
+                                className="h-8 bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs px-3"
+                              >
+                                Save Bank
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setShowNewBankModal(false)}
+                                className="h-8 text-xs text-slate-600"
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       ) : paymentType === "business" || paymentType === "invoice" ? (
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
@@ -3767,6 +3855,14 @@ export function CashEntryForm({
                             onClick={() => {
                               setPaymentMode("DEBIT");
                               setRoznamchaBookType("branch_payment_voucher");
+                              if (!isLocalCurrency) {
+                                const match = countryRatesList.find((c) => c.country === activeCountryIso || c.country === (selectedCountry as any)?.iso2);
+                                if (match?.drRate && Number(match.drRate) > 0) {
+                                  setExchangeRate(String(match.drRate));
+                                } else if (dailyUsdRates?.debitRate && Number(dailyUsdRates.debitRate) > 0) {
+                                  setExchangeRate(String(dailyUsdRates.debitRate));
+                                }
+                              }
                             }}
                             className={cn(
                               "flex-1 flex items-center justify-center gap-2 h-10 px-4 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer",
@@ -3784,6 +3880,14 @@ export function CashEntryForm({
                             onClick={() => {
                               setPaymentMode("CREDIT");
                               setRoznamchaBookType("branch_payment_voucher");
+                              if (!isLocalCurrency) {
+                                const match = countryRatesList.find((c) => c.country === activeCountryIso || c.country === (selectedCountry as any)?.iso2);
+                                if (match?.crRate && Number(match.crRate) > 0) {
+                                  setExchangeRate(String(match.crRate));
+                                } else if (dailyUsdRates?.creditRate && Number(dailyUsdRates.creditRate) > 0) {
+                                  setExchangeRate(String(dailyUsdRates.creditRate));
+                                }
+                              }
                             }}
                             className={cn(
                               "flex-1 flex items-center justify-center gap-2 h-10 px-4 rounded-xl text-xs font-bold transition cursor-pointer",
@@ -4050,15 +4154,31 @@ export function CashEntryForm({
           <div className="inline-flex rounded-lg bg-slate-200/80 p-1 dark:bg-slate-800">
             <button
               type="button"
-              onClick={() => setTableDateMode("day")}
+              onClick={() => {
+                setTableDateMode("day");
+                setTableDate(todayIso());
+                setEntryDate(todayIso());
+              }}
               className={cn(
                 "px-3 py-1 text-xs font-bold rounded-md transition-all",
-                tableDateMode === "day"
+                tableDateMode === "day" && tableDate === todayIso()
                   ? "bg-white text-blue-700 shadow-sm dark:bg-slate-700 dark:text-blue-300"
                   : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
               )}
             >
-              📅 {t(lang, "roz.filter_one_day", "1 Day (Single Date)")}
+              📅 {t(lang, "roz.today", "Today")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setTableDateMode("day")}
+              className={cn(
+                "px-3 py-1 text-xs font-bold rounded-md transition-all",
+                tableDateMode === "day" && tableDate !== todayIso()
+                  ? "bg-white text-blue-700 shadow-sm dark:bg-slate-700 dark:text-blue-300"
+                  : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
+              )}
+            >
+              📅 {t(lang, "roz.filter_one_day", "Single Date")}
             </button>
             <button
               type="button"
@@ -4070,7 +4190,7 @@ export function CashEntryForm({
                   : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
               )}
             >
-              📆 {t(lang, "roz.filter_date_range", "Date Range (From - To)")}
+              📆 {t(lang, "roz.filter_date_range", "From Date → To Date")}
             </button>
             <button
               type="button"
@@ -4117,11 +4237,12 @@ export function CashEntryForm({
                 mode="single"
                 size="sm"
                 lang={lang}
-                value={tableDate || null}
-                onApply={(val) => {
-                  if (typeof val === "string") {
-                    setTableDate(val);
-                    setEntryDate(val);
+                value={{ from: tableDate || null }}
+                onApply={(val: any) => {
+                  const dateStr = typeof val === "string" ? val : val?.from;
+                  if (dateStr) {
+                    setTableDate(dateStr);
+                    setEntryDate(dateStr);
                   }
                 }}
                 applyLabel="update"

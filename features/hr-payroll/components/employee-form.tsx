@@ -199,9 +199,7 @@ export function EmployeeForm({
   defaultCityBranchId
 }: EmployeeFormProps) {
   const router = useRouter();
-  const activeLang = useActiveLanguage();
-  // Prefer an explicit non-"en" language from the host; otherwise follow the reactive store.
-  const lang = (langProp && langProp !== "en") ? langProp : activeLang;
+  const lang = useActiveLanguage(langProp || "en");
   const th = (s: string) => translateHeader(lang, s);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);

@@ -59,8 +59,7 @@ const EMPTY_ENTRY: any = {
 
 export function AgentCustomEntryManagementView({ lang: langProp }: { lang: SupportedLanguage }) {
   const router = useRouter();
-  const activeLang = useActiveLanguage();
-  const lang = activeLang !== "en" ? activeLang : langProp;
+  const lang = useActiveLanguage(langProp);
   const dir = getLanguageDirection(lang);
   const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   const [rows, setRows] = useState<AgentCustomEntryRow[]>([]);

@@ -124,8 +124,7 @@ export function PersonPicker({
   createLabel?: string;
   createButtonPlacement?: "modal" | "trigger" | "both" | "below" | "inside";
 }) {
-  const activeLang = useActiveLanguage();
-  const lang = (langProp && langProp !== "en") ? langProp : activeLang;
+  const lang = useActiveLanguage(langProp || "en");
   const [filterByCountry, setFilterByCountry] = useState(defaultFilterByCountry);
   const [loading, setLoading] = useState(false);
   const [people, setPeople] = useState<PersonRow[]>([]);

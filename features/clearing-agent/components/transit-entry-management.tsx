@@ -131,8 +131,7 @@ const DEFAULT_ENTRY: TransitEntryData = {
 };
 
 export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: SupportedLanguage }) {
-  const activeLang = useActiveLanguage();
-  const lang = (activeLang && activeLang !== "en") ? activeLang : langProp;
+  const lang = useActiveLanguage(langProp);
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const dir = isRtl ? "rtl" : "ltr";
   const tt = (key: string, fallback: string) => t(lang, key as never, fallback);

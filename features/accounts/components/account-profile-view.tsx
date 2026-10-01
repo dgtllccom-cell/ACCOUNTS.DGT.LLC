@@ -34,7 +34,11 @@ import {
   Pencil,
   Star,
   Award,
-  Send
+  Send,
+  Warehouse,
+  ExternalLink,
+  Eye,
+  Info
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { apiGet } from "@/lib/api/client";
@@ -142,7 +146,7 @@ function fmtDateTime(value: string | null | undefined) {
   }).format(d);
 }
 
-/** Official Golden Damaan ERP Seal SVG Emblem (Matching Image 2) */
+/** Official Golden Damaan ERP Seal SVG Emblem */
 function DamaanOfficialSeal({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 100 100" className={cn("w-16 h-16 sm:w-20 sm:h-20 shrink-0 select-none", className)}>
@@ -196,6 +200,7 @@ export function AccountProfileView({
   const isRtl = useMemo(() => rtlLanguages.includes(lang), [lang]);
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<AccountGeneralReportResponse | null>(null);
+  const [liveAccountData, setLiveAccountData] = useState<{ account: any; ledger: any } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<"all" | "01" | "02" | "03" | "04" | "05">("all");
   const [selectedReportType, setSelectedReportType] = useState<string>("certificate");
@@ -207,11 +212,22 @@ export function AccountProfileView({
       try {
         setLoading(true);
         setError(null);
-        const res = await apiGet<AccountGeneralReportResponse>(
+
+        const fetchReportPromise = apiGet<AccountGeneralReportResponse>(
           "/api/erp/accounting/reports/accounts/general?limit=500"
-        );
+        ).catch(() => null);
+
+        const fetchLiveAccountPromise = accountId
+          ? apiGet<{ account: any; ledger: any }>(
+              `/api/erp/accounting/accounts/${encodeURIComponent(accountId)}?language=${encodeURIComponent(lang)}`
+            ).catch(() => null)
+          : Promise.resolve(null);
+
+        const [repRes, liveRes] = await Promise.all([fetchReportPromise, fetchLiveAccountPromise]);
+
         if (!cancelled) {
-          setData(res);
+          if (repRes) setData(repRes);
+          if (liveRes) setLiveAccountData(liveRes);
         }
       } catch (err) {
         if (!cancelled)
@@ -228,12 +244,21 @@ export function AccountProfileView({
     return () => {
       cancelled = true;
     };
-  }, [accountId]);
+  }, [accountId, lang]);
+
+  const liveAccount = liveAccountData?.account;
+  const liveLedger = liveAccountData?.ledger;
+
+  const reportRow = useMemo(() => {
+    if (!data?.rows || data.rows.length === 0) return null;
+    if (!accountId) return data.rows[0];
+    return data.rows.find((row) => row.accountId === accountId || row.accountCode === accountId) ?? data.rows[0];
+  }, [data, accountId]);
 
   const selectedRow = useMemo(() => {
-    if (!data?.rows || data.rows.length === 0) {
+    if (!reportRow && !liveAccount) {
       return {
-        accountId: "preview-1",
+        accountId: accountId || "preview-1",
         accountCode: "UAE-DEI-AC-0002",
         accountName: "ABC TRADING L.L.C",
         customerName: "ABC TRADING L.L.C",
@@ -251,11 +276,14 @@ export function AccountProfileView({
         branchSerialNumber: "01",
         countryName: "United Arab Emirates",
         countryId: "AE",
-        mainBranchName: "Main Branch",
-        cityBranchName: "Main Branch",
+        countryCode: "AE",
+        stateName: "Dubai",
+        stateCode: "DXB",
+        cityName: "Dubai",
+        cityCode: "DXB",
         branchName: "Main Branch",
         branchCode: "BR-001",
-        cityName: "Dubai",
+        branchType: "City Branch",
         bankName: "Emirates NBD",
         openingBalance: 12500,
         debitTotal: 980750,
@@ -265,14 +293,82 @@ export function AccountProfileView({
         journalActivityCount: 14,
         latestJournalNo: "JV-2026-00142",
         latestActivityAt: "2026-09-10T14:30:00.000Z",
+        ledgerId: null,
         ledgerName: "Trade Debtors Ledger",
         ledgerStatus: "active",
         ledgerCurrency: "AED",
-      } as AccountGeneralReportRow;
+        companies: [],
+        banks: [],
+        warehouses: [],
+        customer: null,
+        contacts: [],
+        linkedCountries: [],
+        shippingLineId: null,
+        operationalDomain: "business"
+      };
     }
-    if (!accountId) return data.rows[0];
-    return data.rows.find((row) => row.accountId === accountId) ?? data.rows[0];
-  }, [data, accountId]);
+
+    return {
+      accountId: liveAccount?.id || reportRow?.accountId || accountId,
+      accountCode: liveAccount?.code || liveAccount?.account_number || reportRow?.accountCode || "",
+      rawAccountCode: reportRow?.rawAccountCode,
+      customerId: liveAccount?.customer_id ?? reportRow?.customerId,
+      customerName: liveAccount?.customer?.customer_name || reportRow?.customerName || null,
+      companyId: liveAccount?.company_id ?? reportRow?.companyId,
+      bankId: liveAccount?.bank_id ?? reportRow?.bankId,
+      customerNumber: liveAccount?.customer_number || reportRow?.customerNumber || liveAccount?.code,
+      countrySerialNumber: liveAccount?.country_serial_number || reportRow?.countrySerialNumber,
+      branchSerialNumber: liveAccount?.branch_serial_number || reportRow?.branchSerialNumber,
+      manualReferenceNumber: liveAccount?.manual_reference_number ?? reportRow?.manualReferenceNumber,
+      accountName: liveAccount?.name || reportRow?.accountName || "Account",
+      journalCode: reportRow?.journalCode || "JRN-2026-0089",
+      ledgerId: liveLedger?.id || reportRow?.ledgerId || null,
+      ledgerName: liveLedger?.name || reportRow?.ledgerName || "Account Ledger",
+      ledgerStatus: liveLedger?.is_active ? "active" : (reportRow?.ledgerStatus || "active"),
+      ledgerCurrency: liveLedger?.currency || reportRow?.ledgerCurrency || liveAccount?.currency || "AED",
+      branchType: reportRow?.branchType || (liveAccount?.city_branch_id ? "City Branch" : "Main Branch"),
+      branchName: reportRow?.branchName || liveAccount?.branch_code || "Main Branch",
+      mainBranchName: reportRow?.mainBranchName,
+      cityBranchName: reportRow?.cityBranchName,
+      branchCode: reportRow?.branchCode || liveAccount?.branch_code || "BR-001",
+      countryId: liveAccount?.country_id || reportRow?.countryId || null,
+      countryName: reportRow?.countryName || "United Arab Emirates",
+      countryCode: reportRow?.countryCode || "AE",
+      stateName: reportRow?.stateName || "",
+      stateCode: reportRow?.stateCode || "",
+      cityId: liveAccount?.city_branch_id || reportRow?.cityId || null,
+      cityName: reportRow?.cityName || "Dubai",
+      cityCode: reportRow?.cityCode || "",
+      currency: liveAccount?.currency || reportRow?.currency || "AED",
+      accountCategory: reportRow?.accountCategory || (liveAccount?.kind ? `${liveAccount.kind.toUpperCase()} Account` : "Purchase Sales Account"),
+      subType: reportRow?.subType || (liveAccount?.operational_domain === "shipping" ? "Shipping Line Account" : "Corporate Business (LLC)"),
+      status: liveAccount?.status || reportRow?.status || "active",
+      createdAt: liveAccount?.created_at || reportRow?.createdAt || new Date().toISOString(),
+      openingBalance: Number(liveAccount?.opening_balance ?? reportRow?.openingBalance ?? 0),
+      debitTotal: Number(liveLedger?.debit_total ?? reportRow?.debitTotal ?? 0),
+      creditTotal: Number(liveLedger?.credit_total ?? reportRow?.creditTotal ?? 0),
+      currentBalance: Number(liveAccount?.current_balance ?? liveLedger?.current_balance ?? reportRow?.currentBalance ?? 0),
+      linkedLedgerCount: reportRow?.linkedLedgerCount || (liveLedger ? 1 : 0),
+      journalActivityCount: reportRow?.journalActivityCount || 0,
+      latestJournalNo: reportRow?.latestJournalNo || null,
+      latestActivityAt: reportRow?.latestActivityAt || null,
+      companyName: liveAccount?.companies?.[0]?.name || reportRow?.companyName || "",
+      companyCode: liveAccount?.companies?.[0]?.code || reportRow?.companyCode || "",
+      companyOwner: liveAccount?.customer?.customer_name || reportRow?.companyOwner || "",
+      bankName: liveAccount?.banks?.[0]?.name || reportRow?.bankName || "",
+      recentActivityLabel: reportRow?.recentActivityLabel || null,
+      recentActivityAt: reportRow?.recentActivityAt || null,
+      // Attached resolved arrays
+      companies: (liveAccount?.companies || []) as Array<{ id: string; name: string; code?: string; country?: string; isPrimary?: boolean }>,
+      banks: (liveAccount?.banks || []) as Array<{ id: string; name: string; branchName?: string; accountNumber?: string; currency?: string; isPrimary?: boolean }>,
+      warehouses: (liveAccount?.warehouses || []) as Array<{ id: string; name: string; code?: string; address?: string; isPrimary?: boolean }>,
+      customer: liveAccount?.customer || null,
+      contacts: (liveAccount?.contacts || []) as Array<{ type: string; value: string }>,
+      linkedCountries: (liveAccount?.linked_countries || []) as string[],
+      shippingLineId: liveAccount?.shipping_line_id || null,
+      operationalDomain: liveAccount?.operational_domain || "business"
+    };
+  }, [liveAccount, liveLedger, reportRow, accountId]);
 
   function exportSingleAccountCSV() {
     if (!selectedRow) return;
@@ -291,8 +387,11 @@ export function AccountProfileView({
       ["Branch Code", selectedRow.branchCode],
       ["Branch Serial", selectedRow.branchSerialNumber || "-"],
       ["City", selectedRow.cityName],
-      ["Company Name", selectedRow.companyName || "-"],
-      ["Bank Name", selectedRow.bankName || "-"],
+      ["Primary Company", selectedRow.companyName || "-"],
+      ["Total Companies Linked", String(selectedRow.companies?.length || 1)],
+      ["Primary Bank", selectedRow.bankName || "-"],
+      ["Total Banks Linked", String(selectedRow.banks?.length || 1)],
+      ["Total Warehouses Linked", String(selectedRow.warehouses?.length || 0)],
       ["Currency", selectedRow.currency],
       ["Status", selectedRow.status],
       ["Opening Balance", selectedRow.openingBalance],
@@ -399,6 +498,48 @@ export function AccountProfileView({
     });
   }
 
+  function handleOpenCustomerProfile() {
+    if (!selectedRow?.customer) return;
+    const cust = selectedRow.customer;
+    void openMasterProfile({
+      entity: "customer",
+      lang,
+      record: {
+        id: cust.id,
+        customer_name: cust.customer_name,
+        company_name: cust.company_name || "",
+        customer_number: cust.customer_code || "",
+        mobile: cust.mobile_number || cust.phone_number || "",
+        email: cust.email_address || "",
+        trn: cust.tax_number || "",
+        address: cust.address || "",
+        is_active: true
+      },
+      scope: {
+        countryId: selectedRow.countryId,
+        countryName: selectedRow.countryName,
+        branchName: selectedRow.branchName
+      }
+    });
+  }
+
+  function handleOpenCompanyProfile(comp: { id: string; name: string; code?: string }) {
+    void openMasterProfile({
+      entity: "company",
+      lang,
+      record: {
+        id: comp.id,
+        name: comp.name,
+        code: comp.code || "",
+        is_active: true
+      },
+      scope: {
+        countryId: selectedRow?.countryId || null,
+        countryName: selectedRow?.countryName || ""
+      }
+    });
+  }
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] text-slate-500 gap-3">
@@ -440,8 +581,8 @@ export function AccountProfileView({
     {
       id: "02",
       number: "02",
-      title: getLabel("locationInformation", lang) || "LOCATION INFORMATION",
-      subtitle: lang === "ur" ? "پتہ اور مقام کی تفصیلات" : "Address & Location Details",
+      title: getLabel("locationInformation", lang) || "LOCATION & ALLOCATION",
+      subtitle: lang === "ur" ? "پتہ، کمپنیاں، بینک اور گودام" : "Companies, Banks & Warehouses",
       icon: MapPin,
       badgeColor: "bg-emerald-600 text-white",
       borderColor: "border-emerald-600",
@@ -509,7 +650,7 @@ export function AccountProfileView({
         }
       `}</style>
 
-      {/* ── Top Header Navigation Bar (Matching Image 2 Top Bar) ────── */}
+      {/* ── Top Header Navigation Bar ───────────────────────────────── */}
       <div className="sticky top-0 z-40 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-xs px-4 sm:px-8 py-3 no-print">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
           {/* Back & Profile Title */}
@@ -528,7 +669,7 @@ export function AccountProfileView({
             </div>
           </div>
 
-          {/* Actions: Select Report dropdown + Print, Download, Email, WhatsApp, Export PDF */}
+          {/* Actions: Select Section dropdown + Edit, Print, Download, Email, WhatsApp, Export PDF */}
           <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-end">
             <div className="relative">
               <select
@@ -546,13 +687,26 @@ export function AccountProfileView({
               >
                 <option value="certificate">Select Report: Official Certificate</option>
                 <option value="all">View Complete Full Certificate (All Sections)</option>
-                <option value="01">01 Personal Information</option>
-                <option value="02">02 Location Information</option>
+                <option value="01">01 Personal & Customer Details</option>
+                <option value="02">02 Location, Companies, Banks & Warehouses</option>
                 <option value="03">03 Contact Information</option>
                 <option value="04">04 Document Information</option>
-                <option value="05">05 Financial Summary</option>
+                <option value="05">05 Financial Summary & Ledger</option>
               </select>
             </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              asChild
+              className="h-8 px-2.5 text-xs font-bold text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-900 hover:bg-blue-50 dark:hover:bg-blue-950/60"
+            >
+              <Link href={`/dashboard/accounts/setup?accountId=${selectedRow.accountId}`}>
+                <Pencil className="h-3.5 w-3.5 mr-1" />
+                {getLabel("edit", lang) || "Edit"}
+              </Link>
+            </Button>
 
             <Button
               type="button"
@@ -647,37 +801,59 @@ export function AccountProfileView({
 
         {/* ── Official Branded Certificate Top Band (Matching Image 2) ── */}
         <div className="rounded-2xl border border-amber-200/70 dark:border-amber-900/40 bg-gradient-to-r from-amber-50/60 via-white to-amber-50/50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900 p-6 shadow-xs flex flex-col md:flex-row items-center justify-between gap-5">
-          {/* Left: Gold Seal Emblem */}
+          {/* Left: Gold Seal Emblem + Account Header Details */}
           <div className="flex items-center gap-4 text-center sm:text-left">
             <DamaanOfficialSeal />
             <div>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-950 dark:text-white uppercase tracking-tight">
-                {selectedRow.accountName}
-              </h2>
+              <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start">
+                <h2 className="text-xl sm:text-2xl font-black text-slate-950 dark:text-white uppercase tracking-tight">
+                  {selectedRow.accountName}
+                </h2>
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                  {selectedRow.status.toUpperCase()}
+                </span>
+              </div>
               <p className="text-xs sm:text-sm font-extrabold text-amber-800 dark:text-amber-400 uppercase tracking-wider mt-0.5">
                 {getLabel("officialCertificateTitle", lang)}
               </p>
-              <div className="flex flex-wrap items-center gap-2.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 mt-1">
-                <span>Generated: <strong className="text-slate-800 dark:text-slate-200" suppressHydrationWarning>{fmtDateTime(new Date().toISOString())}</strong></span>
+              <div className="flex flex-wrap items-center gap-2.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 mt-1 justify-center sm:justify-start">
+                <span>Code: <strong className="font-mono text-blue-600 dark:text-blue-400 font-bold">{selectedRow.accountCode}</strong></span>
                 <span className="text-slate-300 dark:text-slate-700">|</span>
-                <span>Ref: <strong className="font-mono text-blue-600 dark:text-blue-400 font-bold">{selectedRow.accountCode}</strong></span>
+                <span>Type: <strong className="text-slate-800 dark:text-slate-200">{selectedRow.accountCategory} ({selectedRow.subType})</strong></span>
+                <span className="text-slate-300 dark:text-slate-700">|</span>
+                <span>Branch: <strong className="text-slate-800 dark:text-slate-200">{selectedRow.branchName}</strong></span>
+                <span className="text-slate-300 dark:text-slate-700">|</span>
+                <span>Currency: <strong className="text-emerald-600 dark:text-emerald-400 font-bold">{selectedRow.currency}</strong></span>
               </div>
             </div>
           </div>
 
-          {/* Right: Trust Badge */}
-          <div className="rounded-xl border border-amber-200 dark:border-amber-900/60 bg-white/90 dark:bg-slate-850 px-5 py-3 text-center shadow-2xs shrink-0">
-            <div className="flex items-center justify-center gap-1 text-amber-500 mb-1">
-              <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-              <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-              <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+          {/* Right: Trust Badge & Edit Link */}
+          <div className="flex flex-col items-center sm:items-end gap-2 shrink-0">
+            <div className="rounded-xl border border-amber-200 dark:border-amber-900/60 bg-white/90 dark:bg-slate-850 px-5 py-3 text-center shadow-2xs">
+              <div className="flex items-center justify-center gap-1 text-amber-500 mb-1">
+                <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+              </div>
+              <p className="text-[11px] font-black tracking-widest text-slate-800 dark:text-slate-200 uppercase">
+                {getLabel("trustComplianceGrowth", lang)}
+              </p>
+              <span className="inline-block mt-1 text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                Global Verified Profile
+              </span>
             </div>
-            <p className="text-[11px] font-black tracking-widest text-slate-800 dark:text-slate-200 uppercase">
-              {getLabel("trustComplianceGrowth", lang)}
-            </p>
-            <span className="inline-block mt-1 text-[9px] font-bold text-slate-400 uppercase tracking-wider">
-              Global Verified Profile
-            </span>
+            <Button
+              asChild
+              size="sm"
+              variant="outline"
+              className="text-xs font-bold border-blue-200 text-blue-600 dark:border-blue-900 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950 no-print"
+            >
+              <Link href={`/dashboard/accounts/setup?accountId=${selectedRow.accountId}`}>
+                <Pencil className="h-3.5 w-3.5 mr-1" />
+                {getLabel("edit", lang) || "Edit Account"}
+              </Link>
+            </Button>
           </div>
         </div>
 
@@ -725,7 +901,7 @@ export function AccountProfileView({
         {/* ── 6 Section Cards Grid (Matching Image 2 Structure) ──────── */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
 
-          {/* ── Card 1: PERSONAL INFORMATION ── */}
+          {/* ── Card 1: PERSONAL INFORMATION & CUSTOMER DETAILS ── */}
           {(activeSection === "all" || activeSection === "01") && (
             <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 sm:p-6 shadow-xs space-y-4">
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
@@ -738,22 +914,36 @@ export function AccountProfileView({
                       {getLabel("personalInformation", lang)}
                     </h3>
                     <p className="text-[11px] font-medium text-slate-400">
-                      Customer Basic Details
+                      {selectedRow.customer ? "Customer & Primary Party Details" : "Customer Basic Details"}
                     </p>
                   </div>
                 </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  asChild
-                  className="h-7 px-2.5 text-[11px] font-bold border-slate-200 dark:border-slate-700 hover:bg-blue-50 dark:hover:bg-blue-950 text-blue-600 dark:text-blue-400 rounded-lg gap-1"
-                >
-                  <Link href={`/dashboard/accounts/setup?accountId=${selectedRow.accountId}`}>
-                    <Pencil className="h-3 w-3" />
-                    {getLabel("edit", lang) || "Edit"}
-                  </Link>
-                </Button>
+                <div className="flex items-center gap-2">
+                  {selectedRow.customer && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleOpenCustomerProfile}
+                      className="h-7 px-2 text-[11px] font-bold border-blue-200 dark:border-blue-900 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/60 rounded-lg gap-1"
+                    >
+                      <Eye className="h-3 w-3" />
+                      {getLabel("viewCustomer", lang)}
+                    </Button>
+                  )}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    asChild
+                    className="h-7 px-2.5 text-[11px] font-bold border-slate-200 dark:border-slate-700 hover:bg-blue-50 dark:hover:bg-blue-950 text-blue-600 dark:text-blue-400 rounded-lg gap-1"
+                  >
+                    <Link href={`/dashboard/accounts/setup?accountId=${selectedRow.accountId}`}>
+                      <Pencil className="h-3 w-3" />
+                      {getLabel("edit", lang) || "Edit"}
+                    </Link>
+                  </Button>
+                </div>
               </div>
 
               <div className="space-y-2 text-xs">
@@ -765,10 +955,36 @@ export function AccountProfileView({
                   <span className="text-slate-500 font-medium">Full Name:</span>
                   <span className="font-bold text-slate-900 dark:text-slate-100">{selectedRow.accountName}</span>
                 </div>
-                <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 dark:bg-slate-850">
-                  <span className="text-slate-500 font-medium">Father Name / Representative:</span>
-                  <span className="font-semibold text-slate-800 dark:text-slate-200">{selectedRow.companyOwner || selectedRow.customerName || "Muhammad Tariq"}</span>
-                </div>
+                {selectedRow.customer ? (
+                  <>
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 dark:bg-slate-850">
+                      <span className="text-slate-500 font-medium">Linked Customer Entity:</span>
+                      <span className="font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
+                        {selectedRow.customer.customer_name}
+                        {selectedRow.customer.customer_code && (
+                          <span className="font-mono text-[10px] text-slate-400">({selectedRow.customer.customer_code})</span>
+                        )}
+                      </span>
+                    </div>
+                    {selectedRow.customer.company_name && (
+                      <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 dark:bg-slate-850">
+                        <span className="text-slate-500 font-medium">Business / Trade Name:</span>
+                        <span className="font-semibold text-slate-800 dark:text-slate-200">{selectedRow.customer.company_name}</span>
+                      </div>
+                    )}
+                    {selectedRow.customer.tax_number && (
+                      <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 dark:bg-slate-850">
+                        <span className="text-slate-500 font-medium">Tax Registration (TRN):</span>
+                        <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">{selectedRow.customer.tax_number}</span>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 dark:bg-slate-850">
+                    <span className="text-slate-500 font-medium">Father Name / Representative:</span>
+                    <span className="font-semibold text-slate-800 dark:text-slate-200">{selectedRow.companyOwner || selectedRow.customerName || "Representative"}</span>
+                  </div>
+                )}
                 <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 dark:bg-slate-850">
                   <span className="text-slate-500 font-medium">Date of Birth / Est.:</span>
                   <span className="font-semibold text-slate-800 dark:text-slate-200">{fmtDate(selectedRow.createdAt)}</span>
@@ -778,7 +994,7 @@ export function AccountProfileView({
                   <span className="font-semibold text-slate-800 dark:text-slate-200">{selectedRow.countryName || "United Arab Emirates"}</span>
                 </div>
                 <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 dark:bg-slate-850">
-                  <span className="text-slate-500 font-medium">Customer Type / Gender:</span>
+                  <span className="text-slate-500 font-medium">Customer Type / Category:</span>
                   <span className="font-semibold text-slate-800 dark:text-slate-200">{selectedRow.subType || "Corporate / Business Entity"}</span>
                 </div>
                 <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 dark:bg-slate-850">
@@ -830,20 +1046,40 @@ export function AccountProfileView({
                   <span className="font-semibold text-slate-800 dark:text-slate-200">{selectedRow.subType || "Business Account"}</span>
                 </div>
                 <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 dark:bg-slate-850">
-                  <span className="text-slate-500 font-medium">Account Category:</span>
-                  <span className="font-semibold text-slate-800 dark:text-slate-200">{selectedRow.accountCategory || "P/S (Purchase / Sales)"}</span>
-                </div>
-                <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 dark:bg-slate-850">
                   <span className="text-slate-500 font-medium">Linked Ledger Name:</span>
-                  <span className="font-bold text-blue-600 dark:text-blue-400">{selectedRow.ledgerName || "Customer Receivables Ledger"}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-blue-600 dark:text-blue-400">{selectedRow.ledgerName || "Customer Receivables Ledger"}</span>
+                    {selectedRow.ledgerId && (
+                      <Link
+                        href={`/dashboard/accounting/ledgers?ledgerId=${selectedRow.ledgerId}`}
+                        className="text-[10px] text-blue-500 hover:underline flex items-center gap-0.5 font-bold"
+                        title="View Ledger Statement"
+                      >
+                        <ExternalLink className="h-2.5 w-2.5" />
+                      </Link>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 dark:bg-slate-850">
                   <span className="text-slate-500 font-medium">Journal Code:</span>
-                  <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">{selectedRow.journalCode || "JRN-2026-0089"}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">{selectedRow.journalCode || "JRN-2026-0089"}</span>
+                    <Link
+                      href="/dashboard/accounting/journal-entries"
+                      className="text-[10px] text-slate-400 hover:text-blue-500 flex items-center gap-0.5"
+                      title="View Journal Activity"
+                    >
+                      <ExternalLink className="h-2.5 w-2.5" />
+                    </Link>
+                  </div>
                 </div>
                 <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 dark:bg-slate-850">
                   <span className="text-slate-500 font-medium">Ledger Currency:</span>
                   <span className="font-semibold text-slate-800 dark:text-slate-200">{selectedRow.currency} ({selectedRow.currency} Ledger)</span>
+                </div>
+                <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 dark:bg-slate-850">
+                  <span className="text-slate-500 font-medium">Operational Domain:</span>
+                  <span className="font-bold uppercase text-slate-800 dark:text-slate-200 text-[11px]">{selectedRow.operationalDomain}</span>
                 </div>
                 <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 dark:bg-slate-850">
                   <span className="text-slate-500 font-medium">Account Status:</span>
@@ -855,9 +1091,9 @@ export function AccountProfileView({
             </div>
           )}
 
-          {/* ── Card 3: LOCATION INFORMATION ── */}
+          {/* ── Card 3: LOCATION INFORMATION, MULTI-COMPANY, MULTI-BANK & WAREHOUSES ── */}
           {(activeSection === "all" || activeSection === "02") && (
-            <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 sm:p-6 shadow-xs space-y-4">
+            <div className="lg:col-span-2 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 sm:p-6 shadow-xs space-y-6">
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                 <div className="flex items-center gap-2.5">
                   <div className="h-7 w-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shadow-xs">
@@ -865,10 +1101,10 @@ export function AccountProfileView({
                   </div>
                   <div>
                     <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight">
-                      {getLabel("locationInformation", lang)}
+                      {getLabel("locationInformation", lang)} & Entity Relationships
                     </h3>
                     <p className="text-[11px] font-medium text-slate-400">
-                      Address & Branch Allocation
+                      Address, Assigned Branch, Multi-Companies, Banks & Warehouses
                     </p>
                   </div>
                 </div>
@@ -886,39 +1122,333 @@ export function AccountProfileView({
                 </Button>
               </div>
 
-              <div className="space-y-2 text-xs">
-                <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 dark:bg-slate-850">
-                  <span className="text-slate-500 font-medium">Country Name:</span>
-                  <span className="font-bold text-slate-900 dark:text-slate-100">{selectedRow.countryName} ({selectedRow.countryCode || "-"})</span>
+              {/* Single Canonical Account Identity Notice */}
+              <div className="rounded-xl border border-blue-200/80 dark:border-blue-900/50 bg-blue-50/60 dark:bg-blue-950/30 p-3.5 flex items-start gap-3">
+                <ShieldCheck className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+                <div className="text-xs">
+                  <p className="font-bold text-blue-950 dark:text-blue-200">
+                    Single Account Identity: {selectedRow.accountName} ({selectedRow.accountCode})
+                  </p>
+                  <p className="text-slate-600 dark:text-slate-300 mt-0.5 leading-relaxed text-[11px]">
+                    {getLabel("singleAccountIdentityNote", lang)}
+                  </p>
                 </div>
-                <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 dark:bg-slate-850">
-                  <span className="text-slate-500 font-medium">State / Emirate:</span>
-                  <span className="font-semibold text-slate-800 dark:text-slate-200">{selectedRow.stateName || selectedRow.cityName || "Dubai"}</span>
+              </div>
+
+              {/* 1. Branch & Location Allocation Grid */}
+              <div>
+                <h4 className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5 text-emerald-600" />
+                  Branch & Location Allocation
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                  <div className="p-2.5 rounded-lg bg-slate-50/60 dark:bg-slate-850 border border-slate-100 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase block">Country</span>
+                    <span className="font-bold text-slate-900 dark:text-slate-100">{selectedRow.countryName} ({selectedRow.countryCode || "-"})</span>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-slate-50/60 dark:bg-slate-850 border border-slate-100 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase block">State / Region</span>
+                    <span className="font-semibold text-slate-800 dark:text-slate-200">{selectedRow.stateName || selectedRow.cityName || "Dubai"}</span>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-slate-50/60 dark:bg-slate-850 border border-slate-100 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase block">Assigned Branch</span>
+                    <span className="font-bold text-emerald-600 dark:text-emerald-400">{selectedRow.branchName} ({selectedRow.branchCode})</span>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-slate-50/60 dark:bg-slate-850 border border-slate-100 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase block">Serials</span>
+                    <span className="font-mono text-slate-700 dark:text-slate-300">C:{selectedRow.countrySerialNumber || "01"} / B:{selectedRow.branchSerialNumber || "01"}</span>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 dark:bg-slate-850">
-                  <span className="text-slate-500 font-medium">City Region:</span>
-                  <span className="font-semibold text-slate-800 dark:text-slate-200">{selectedRow.cityName || "Deira"}</span>
+              </div>
+
+              {/* 2. Linked Companies (Multi-Company) */}
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-amber-600" />
+                    <h4 className="text-xs font-black uppercase tracking-tight text-slate-900 dark:text-white">
+                      {getLabel("linkedCompaniesTitle", lang)}
+                    </h4>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                      {selectedRow.companies?.length || (selectedRow.companyName ? 1 : 0)} Linked
+                    </span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    asChild
+                    className="h-6 px-2 text-[10px] font-bold text-amber-700 dark:text-amber-400 hover:bg-amber-50"
+                  >
+                    <Link href={`/dashboard/accounts/setup?accountId=${selectedRow.accountId}`}>
+                      + Add Company
+                    </Link>
+                  </Button>
                 </div>
-                <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 dark:bg-slate-850">
-                  <span className="text-slate-500 font-medium">Assigned Branch Name:</span>
-                  <span className="font-bold text-emerald-600 dark:text-emerald-400">{selectedRow.branchName}</span>
+
+                {selectedRow.companies && selectedRow.companies.length > 0 ? (
+                  <div className="overflow-x-auto border border-slate-200/80 dark:border-slate-800 rounded-xl">
+                    <table className="w-full text-xs text-left">
+                      <thead className="bg-slate-50 dark:bg-slate-850 text-slate-500 font-bold uppercase text-[10px] border-b border-slate-200 dark:border-slate-800">
+                        <tr>
+                          <th className="py-2 px-3">Company Name</th>
+                          <th className="py-2 px-3">Code</th>
+                          <th className="py-2 px-3">Country</th>
+                          <th className="py-2 px-3">Role</th>
+                          <th className="py-2 px-3 text-right">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                        {selectedRow.companies.map((comp, idx) => (
+                          <tr key={comp.id || idx} className="hover:bg-slate-50/60 dark:hover:bg-slate-850/50">
+                            <td className="py-2.5 px-3 font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                              <Building2 className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+                              {comp.name}
+                            </td>
+                            <td className="py-2.5 px-3 font-mono text-slate-600 dark:text-slate-300">
+                              {comp.code || "-"}
+                            </td>
+                            <td className="py-2.5 px-3 text-slate-600 dark:text-slate-300">
+                              {comp.country || selectedRow.countryName || "-"}
+                            </td>
+                            <td className="py-2.5 px-3">
+                              {comp.isPrimary ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300">
+                                  <Star className="h-2.5 w-2.5 fill-amber-500 text-amber-500" />
+                                  {getLabel("primaryCompany", lang)}
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                                  {getLabel("linked", lang)}
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-2.5 px-3 text-right">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleOpenCompanyProfile(comp)}
+                                className="h-6 px-2 text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950"
+                              >
+                                <Eye className="h-3 w-3 mr-1" />
+                                {getLabel("viewDetails", lang)}
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="p-3 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 text-slate-500 text-xs text-center">
+                    {selectedRow.companyName ? (
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                          <Building2 className="h-3.5 w-3.5 text-amber-600" />
+                          {selectedRow.companyName}
+                        </span>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
+                          {getLabel("primaryCompany", lang)}
+                        </span>
+                      </div>
+                    ) : (
+                      getLabel("noCompaniesLinked", lang)
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* 3. Linked Banks (Multi-Bank) */}
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Landmark className="h-4 w-4 text-blue-600" />
+                    <h4 className="text-xs font-black uppercase tracking-tight text-slate-900 dark:text-white">
+                      {getLabel("linkedBanksTitle", lang)}
+                    </h4>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                      {selectedRow.banks?.length || (selectedRow.bankName ? 1 : 0)} Linked
+                    </span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    asChild
+                    className="h-6 px-2 text-[10px] font-bold text-blue-700 dark:text-blue-400 hover:bg-blue-50"
+                  >
+                    <Link href={`/dashboard/accounts/setup?accountId=${selectedRow.accountId}`}>
+                      + Add Bank
+                    </Link>
+                  </Button>
                 </div>
-                <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 dark:bg-slate-850">
-                  <span className="text-slate-500 font-medium">Branch Code:</span>
-                  <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">{selectedRow.branchCode}</span>
+
+                {selectedRow.banks && selectedRow.banks.length > 0 ? (
+                  <div className="overflow-x-auto border border-slate-200/80 dark:border-slate-800 rounded-xl">
+                    <table className="w-full text-xs text-left">
+                      <thead className="bg-slate-50 dark:bg-slate-850 text-slate-500 font-bold uppercase text-[10px] border-b border-slate-200 dark:border-slate-800">
+                        <tr>
+                          <th className="py-2 px-3">Bank Name</th>
+                          <th className="py-2 px-3">Branch</th>
+                          <th className="py-2 px-3">Account Number / IBAN</th>
+                          <th className="py-2 px-3">Currency</th>
+                          <th className="py-2 px-3">Role</th>
+                          <th className="py-2 px-3 text-right">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                        {selectedRow.banks.map((bank, idx) => (
+                          <tr key={bank.id || idx} className="hover:bg-slate-50/60 dark:hover:bg-slate-850/50">
+                            <td className="py-2.5 px-3 font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                              <Landmark className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+                              {bank.name}
+                            </td>
+                            <td className="py-2.5 px-3 text-slate-600 dark:text-slate-300">
+                              {bank.branchName || "-"}
+                            </td>
+                            <td className="py-2.5 px-3 font-mono font-semibold text-slate-700 dark:text-slate-200">
+                              {bank.accountNumber || "-"}
+                            </td>
+                            <td className="py-2.5 px-3 text-slate-600 dark:text-slate-300">
+                              {bank.currency || selectedRow.currency}
+                            </td>
+                            <td className="py-2.5 px-3">
+                              {bank.isPrimary ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-blue-900 border border-blue-300">
+                                  <Star className="h-2.5 w-2.5 fill-blue-500 text-blue-500" />
+                                  {getLabel("primaryBank", lang)}
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                                  {getLabel("linked", lang)}
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-2.5 px-3 text-right">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                asChild
+                                className="h-6 px-2 text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950"
+                              >
+                                <Link href={`/dashboard/banks?bankId=${bank.id}`}>
+                                  <Eye className="h-3 w-3 mr-1" />
+                                  {getLabel("viewDetails", lang)}
+                                </Link>
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="p-3 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 text-slate-500 text-xs text-center">
+                    {selectedRow.bankName ? (
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                          <Landmark className="h-3.5 w-3.5 text-blue-600" />
+                          {selectedRow.bankName}
+                        </span>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800">
+                          {getLabel("primaryBank", lang)}
+                        </span>
+                      </div>
+                    ) : (
+                      getLabel("noBanksLinked", lang)
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* 4. Linked Warehouses (Multi-Warehouse) */}
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Warehouse className="h-4 w-4 text-emerald-600" />
+                    <h4 className="text-xs font-black uppercase tracking-tight text-slate-900 dark:text-white">
+                      {getLabel("linkedWarehousesTitle", lang)}
+                    </h4>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                      {selectedRow.warehouses?.length || 0} Linked
+                    </span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    asChild
+                    className="h-6 px-2 text-[10px] font-bold text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50"
+                  >
+                    <Link href={`/dashboard/accounts/setup?accountId=${selectedRow.accountId}`}>
+                      + Add Warehouse
+                    </Link>
+                  </Button>
                 </div>
-                <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 dark:bg-slate-850">
-                  <span className="text-slate-500 font-medium">Branch Type / Scope:</span>
-                  <span className="font-semibold text-slate-800 dark:text-slate-200">{selectedRow.branchType || "City Branch"}</span>
-                </div>
-                <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 dark:bg-slate-850">
-                  <span className="text-slate-500 font-medium">Country Serial No.:</span>
-                  <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">{selectedRow.countrySerialNumber || "001"}</span>
-                </div>
-                <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 dark:bg-slate-850">
-                  <span className="text-slate-500 font-medium">Branch Serial ID:</span>
-                  <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">{selectedRow.branchSerialNumber || "0002"}</span>
-                </div>
+
+                {selectedRow.warehouses && selectedRow.warehouses.length > 0 ? (
+                  <div className="overflow-x-auto border border-slate-200/80 dark:border-slate-800 rounded-xl">
+                    <table className="w-full text-xs text-left">
+                      <thead className="bg-slate-50 dark:bg-slate-850 text-slate-500 font-bold uppercase text-[10px] border-b border-slate-200 dark:border-slate-800">
+                        <tr>
+                          <th className="py-2 px-3">Warehouse Name</th>
+                          <th className="py-2 px-3">Code</th>
+                          <th className="py-2 px-3">Address</th>
+                          <th className="py-2 px-3">Role</th>
+                          <th className="py-2 px-3 text-right">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                        {selectedRow.warehouses.map((wh, idx) => (
+                          <tr key={wh.id || idx} className="hover:bg-slate-50/60 dark:hover:bg-slate-850/50">
+                            <td className="py-2.5 px-3 font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                              <Warehouse className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                              {wh.name}
+                            </td>
+                            <td className="py-2.5 px-3 font-mono text-slate-600 dark:text-slate-300">
+                              {wh.code || "-"}
+                            </td>
+                            <td className="py-2.5 px-3 text-slate-600 dark:text-slate-300 truncate max-w-xs">
+                              {wh.address || "-"}
+                            </td>
+                            <td className="py-2.5 px-3">
+                              {wh.isPrimary ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300">
+                                  <Star className="h-2.5 w-2.5 fill-emerald-500 text-emerald-500" />
+                                  {getLabel("primaryWarehouse", lang)}
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                                  {getLabel("linked", lang)}
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-2.5 px-3 text-right">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                asChild
+                                className="h-6 px-2 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950"
+                              >
+                                <Link href={`/dashboard/warehouses?warehouseId=${wh.id}`}>
+                                  <Eye className="h-3 w-3 mr-1" />
+                                  {getLabel("viewDetails", lang)}
+                                </Link>
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="p-3 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 text-slate-500 text-xs text-center">
+                    {getLabel("noWarehousesLinked", lang)}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -936,7 +1466,7 @@ export function AccountProfileView({
                       {getLabel("contactInformation", lang)}
                     </h3>
                     <p className="text-[11px] font-medium text-slate-400">
-                      Communication & Bank Coordinates
+                      Communication & Operational Coordinates
                     </p>
                   </div>
                 </div>
@@ -957,19 +1487,44 @@ export function AccountProfileView({
               <div className="space-y-2 text-xs">
                 <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 dark:bg-slate-850">
                   <span className="text-slate-500 font-medium">Contact Person:</span>
-                  <span className="font-bold text-slate-900 dark:text-slate-100">{(selectedRow as any).contactPerson || selectedRow.companyOwner || "Tariq Mehmood (General Manager)"}</span>
+                  <span className="font-bold text-slate-900 dark:text-slate-100">
+                    {selectedRow.customer?.customer_name || (selectedRow as any).contactPerson || selectedRow.companyOwner || "General Representative"}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 dark:bg-slate-850">
                   <span className="text-slate-500 font-medium">Mobile / WhatsApp:</span>
-                  <span className="font-mono font-semibold text-emerald-600 dark:text-emerald-400">{(selectedRow as any).contactPhone || (selectedRow as any).phone || "+971 50 123 4567"}</span>
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={`tel:${selectedRow.customer?.mobile_number || selectedRow.customer?.phone_number || "+971501234567"}`}
+                      className="font-mono font-semibold text-emerald-600 dark:text-emerald-400 hover:underline"
+                    >
+                      {selectedRow.customer?.mobile_number || selectedRow.customer?.phone_number || (selectedRow as any).contactPhone || "+971 50 123 4567"}
+                    </a>
+                    <a
+                      href={`https://wa.me/${(selectedRow.customer?.mobile_number || "+971501234567").replace(/[^0-9]/g, "")}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-1 rounded bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+                      title="Direct WhatsApp"
+                    >
+                      <MessageCircle className="h-3 w-3" />
+                    </a>
+                  </div>
                 </div>
                 <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 dark:bg-slate-850">
                   <span className="text-slate-500 font-medium">Official Email:</span>
-                  <span className="font-mono font-semibold text-blue-600 dark:text-blue-400">{(selectedRow as any).contactEmail || (selectedRow as any).email || "contact@abctrading.ae"}</span>
+                  <a
+                    href={`mailto:${selectedRow.customer?.email_address || "contact@abctrading.ae"}`}
+                    className="font-mono font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                  >
+                    {selectedRow.customer?.email_address || (selectedRow as any).contactEmail || "contact@abctrading.ae"}
+                  </a>
                 </div>
                 <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 dark:bg-slate-850">
-                  <span className="text-slate-500 font-medium">Registered Office:</span>
-                  <span className="font-semibold text-slate-800 dark:text-slate-200">Office 402, Al Ras Tower, Deira, Dubai, UAE</span>
+                  <span className="text-slate-500 font-medium">Registered Address:</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">
+                    {selectedRow.customer?.address || "Office 402, Al Ras Tower, Deira, Dubai, UAE"}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 dark:bg-slate-850">
                   <span className="text-slate-500 font-medium">Primary Bank Name:</span>
@@ -979,15 +1534,22 @@ export function AccountProfileView({
                   <span className="text-slate-500 font-medium">Bank Account Title:</span>
                   <span className="font-semibold text-slate-800 dark:text-slate-200">{selectedRow.accountName}</span>
                 </div>
-                <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 dark:bg-slate-850">
-                  <span className="text-slate-500 font-medium">IBAN / Account No.:</span>
-                  <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">AE12 0260 0000 1234 5678 901</span>
-                </div>
+                {selectedRow.contacts && selectedRow.contacts.length > 0 && (
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase block">Additional Communication Channels:</span>
+                    {selectedRow.contacts.map((c, i) => (
+                      <div key={i} className="flex items-center justify-between p-1.5 rounded bg-slate-50 dark:bg-slate-850">
+                        <span className="font-medium text-slate-500 uppercase text-[10px]">{c.type}:</span>
+                        <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">{c.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
 
-          {/* ── Card 5: DOCUMENT INFORMATION (Clean Table Matching Image 2) ── */}
+          {/* ── Card 5: DOCUMENT INFORMATION ── */}
           {(activeSection === "all" || activeSection === "04") && (
             <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 sm:p-6 shadow-xs space-y-4">
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
@@ -1052,7 +1614,7 @@ export function AccountProfileView({
                         Tax Registration (TRN)
                       </td>
                       <td className="py-2.5 font-mono font-semibold text-slate-600 dark:text-slate-300">
-                        100293847500003
+                        {selectedRow.customer?.tax_number || "100293847500003"}
                       </td>
                       <td className="py-2.5 text-slate-500 dark:text-slate-400">
                         Permanent
@@ -1103,9 +1665,9 @@ export function AccountProfileView({
             </div>
           )}
 
-          {/* ── Card 6: FINANCIAL SNAPSHOT (Matching Image 2) ─────────── */}
+          {/* ── Card 6: FINANCIAL SNAPSHOT & LEDGER AUDIT ── */}
           {(activeSection === "all" || activeSection === "05") && (
-            <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 sm:p-6 shadow-xs space-y-4">
+            <div className="lg:col-span-2 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 sm:p-6 shadow-xs space-y-4">
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                 <div className="flex items-center gap-2.5">
                   <div className="h-7 w-7 rounded-lg bg-teal-600 text-white flex items-center justify-center font-bold text-xs shadow-xs">
@@ -1113,48 +1675,64 @@ export function AccountProfileView({
                   </div>
                   <div>
                     <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight">
-                      {getLabel("financialSnapshot", lang)}
+                      {getLabel("financialSnapshot", lang)} & Ledger Balance
                     </h3>
                     <p className="text-[11px] font-medium text-slate-400">
-                      Real-time Balances & Activity
+                      Real-time Balances, Audit Verification & Journal Activity
                     </p>
                   </div>
                 </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  asChild
-                  className="h-7 px-2.5 text-[11px] font-bold border-slate-200 dark:border-slate-700 hover:bg-teal-50 dark:hover:bg-teal-950 text-teal-600 dark:text-teal-400 rounded-lg gap-1"
-                >
-                  <Link href={`/dashboard/accounts/setup?accountId=${selectedRow.accountId}`}>
-                    <Pencil className="h-3 w-3" />
-                    {getLabel("edit", lang) || "Edit"}
-                  </Link>
-                </Button>
+                <div className="flex items-center gap-2">
+                  {selectedRow.ledgerId && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      asChild
+                      className="h-7 px-2 text-[11px] font-bold border-teal-200 dark:border-teal-900 text-teal-700 dark:text-teal-300 hover:bg-teal-50"
+                    >
+                      <Link href={`/dashboard/accounting/ledgers?ledgerId=${selectedRow.ledgerId}`}>
+                        <ExternalLink className="h-3 w-3 mr-1" />
+                        {getLabel("viewLedgerStatement", lang)}
+                      </Link>
+                    </Button>
+                  )}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    asChild
+                    className="h-7 px-2 text-[11px] font-bold border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50"
+                  >
+                    <Link href="/dashboard/accounting/journal-entries">
+                      <ExternalLink className="h-3 w-3 mr-1" />
+                      {getLabel("viewJournalEntries", lang)}
+                    </Link>
+                  </Button>
+                </div>
               </div>
 
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40">
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="p-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40">
                     <p className="text-[10px] font-bold text-slate-400 uppercase">{getLabel("oldBalance", lang)}</p>
                     <p className="text-xs font-black text-slate-800 dark:text-slate-200 mt-0.5 font-mono">
                       {fmtNumber(selectedRow.openingBalance)} {selectedRow.currency}
                     </p>
                   </div>
-                  <div className="p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40">
+                  <div className="p-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40">
                     <p className="text-[10px] font-bold text-slate-400 uppercase">{getLabel("creditLimit", lang)}</p>
                     <p className="text-xs font-black text-slate-800 dark:text-slate-200 mt-0.5 font-mono">
                       500,000.00 {selectedRow.currency}
                     </p>
                   </div>
-                  <div className="p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40">
+                  <div className="p-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40">
                     <p className="text-[10px] font-bold text-slate-400 uppercase">{getLabel("totalDebits", lang)}</p>
                     <p className="text-xs font-black text-rose-600 dark:text-rose-400 mt-0.5 font-mono">
                       {fmtNumber(selectedRow.debitTotal)} {selectedRow.currency}
                     </p>
                   </div>
-                  <div className="p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40">
+                  <div className="p-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40">
                     <p className="text-[10px] font-bold text-slate-400 uppercase">{getLabel("totalCredits", lang)}</p>
                     <p className="text-xs font-black text-emerald-600 dark:text-emerald-400 mt-0.5 font-mono">
                       {fmtNumber(selectedRow.creditTotal)} {selectedRow.currency}
@@ -1162,18 +1740,21 @@ export function AccountProfileView({
                   </div>
                 </div>
 
-                {/* Highlighted Current Net Balance Container (Matching Image 2) */}
-                <div className="rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/70 dark:bg-blue-950/40 p-3.5 flex items-center justify-between">
+                {/* Highlighted Current Net Balance Container */}
+                <div className="rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/70 dark:bg-blue-950/40 p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
                   <div>
                     <p className="text-xs font-black text-blue-900 dark:text-blue-200 uppercase tracking-tight">
                       {getLabel("currentNetBalance", lang)}
                     </p>
                     <p className="text-[11px] text-blue-600/80 dark:text-blue-400 mt-0.5">
-                      {selectedRow.journalActivityCount || 14} {getLabel("ledgerActivity", lang)}
+                      {selectedRow.journalActivityCount || 0} {getLabel("ledgerActivity", lang)}
+                      {selectedRow.latestJournalNo && (
+                        <span> · Latest Voucher: <strong className="font-mono">{selectedRow.latestJournalNo}</strong></span>
+                      )}
                     </p>
                   </div>
                   <div className="text-right">
-                    <span className="text-base sm:text-lg font-black text-blue-600 dark:text-blue-400 font-mono tracking-tight">
+                    <span className="text-lg sm:text-xl font-black text-blue-600 dark:text-blue-400 font-mono tracking-tight">
                       {fmtNumber(selectedRow.currentBalance)} {selectedRow.currency}
                     </span>
                   </div>
@@ -1184,7 +1765,7 @@ export function AccountProfileView({
 
         </div>
 
-        {/* ── Certificate Official Verification Footer Strip (Matching Image 2) ── */}
+        {/* ── Certificate Official Verification Footer Strip ────────────────────────── */}
         <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/60 p-5 sm:p-6 grid grid-cols-1 sm:grid-cols-3 gap-6 text-xs">
           {/* 1. Date */}
           <div className="flex items-center gap-3.5">

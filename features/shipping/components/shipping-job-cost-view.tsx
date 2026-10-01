@@ -81,8 +81,7 @@ interface JobCostReport {
 }
 
 export function ShippingJobCostView({ lang: langProp }: { lang: SupportedLanguage }) {
-  const activeLang = useActiveLanguage();
-  const lang = activeLang !== "en" ? activeLang : langProp;
+  const lang = useActiveLanguage(langProp);
   const tt = (key: string, fallback: string) => t(lang, ("shipjc." + key) as never, fallback);
   const dir = getLanguageDirection(lang);
 

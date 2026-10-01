@@ -496,8 +496,7 @@ export const DEVELOPMENT_MILESTONES = [
 ];
 
 export function SystemAuditAndFormsDirectoryView({ lang: langProp = "en" }: { lang?: SupportedLanguage }) {
-  const activeLang = useActiveLanguage();
-  const lang: SupportedLanguage = activeLang !== "en" ? activeLang : langProp;
+  const lang = useActiveLanguage(langProp);
   const dir = getLanguageDirection(lang);
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState("");

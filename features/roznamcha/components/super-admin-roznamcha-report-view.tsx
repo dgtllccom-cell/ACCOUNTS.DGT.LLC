@@ -1213,9 +1213,8 @@ function SuperAdminRoznamchaReportViewContent({
   const filtersRef = useRef<HTMLDivElement | null>(null);
 
   // Prefer the live client language over the (possibly stale) server-threaded `lang` prop —
-  // see CLAUDE.md multilingual-architecture reconciliation rule.
-  const activeLang = useActiveLanguage();
-  const effectiveLang = activeLang !== "en" ? activeLang : lang;
+  const activeLang = useActiveLanguage(lang);
+  const effectiveLang = activeLang;
   const th = (label: string) => translateHeader(effectiveLang, label);
   const isRtl = ["ur", "ar", "fa", "ps"].includes(effectiveLang);
 

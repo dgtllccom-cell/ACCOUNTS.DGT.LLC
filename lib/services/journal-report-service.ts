@@ -216,7 +216,7 @@ export class JournalReportService {
           left join enterprise_accounts ea on ea.id = rl.enterprise_account_id
           where re.deleted_at is null
             and ${scopeCondRoz} and ${scopeTabRoz}
-            and re.entry_date >= ${input.fromDate} and re.entry_date <= ${input.toDate}
+            and re.entry_date::date >= ${input.fromDate}::date and re.entry_date::date <= ${input.toDate}::date
             and ${countryCondRoz} and ${countryBranchCondRoz} and ${cityBranchCondRoz}
             and ${ledgerCondRoz} and ${companyCondRoz} and ${customerCondRoz}
             and ${currencyCondRoz} and ${createdByCondRoz} and ${approvedByCondRoz}
@@ -241,7 +241,7 @@ export class JournalReportService {
           left join enterprise_accounts ea2 on ea2.id = lpl.enterprise_account_id
           where lpb.deleted_at is null
             and ${scopeCondLpb} and ${scopeTabLpb}
-            and lpb.entry_date >= ${input.fromDate} and lpb.entry_date <= ${input.toDate}
+            and lpb.entry_date::date >= ${input.fromDate}::date and lpb.entry_date::date <= ${input.toDate}::date
             and ${countryCondLpb} and ${countryBranchCondLpb} and ${cityBranchCondLpb}
             and ${ledgerCondLpb} and ${companyCondLpb} and ${customerCondLpb}
             and ${currencyCondLpb} and ${createdByCondLpb} and ${approvedByCondLpb}

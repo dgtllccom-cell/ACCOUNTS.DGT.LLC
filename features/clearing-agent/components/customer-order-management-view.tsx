@@ -222,6 +222,8 @@ type RouteLeg = {
   partnerAccountId?: string;
   partnerAccountNumber?: string;
   partnerCountryName?: string;
+  insuranceRequired?: boolean;
+  insurance_required?: boolean;
 };
 
 function emptyLeg(legNo: number, transportMode: LegTransportMode | "" = ""): RouteLeg {
@@ -1159,6 +1161,7 @@ export function CustomerOrderManagementView() {
       );
     } catch (error) {
       console.error("Error loading customer-order data:", error);
+      setLoadError(tt("orders_load_error", "Could not load the orders register. Check your connection and try again."));
     } finally {
       setLoading(false);
     }
@@ -2114,7 +2117,9 @@ export function CustomerOrderManagementView() {
               partnerName: leg.partnerName || null,
               partnerAccountId: leg.partnerAccountId || null,
               partnerAccountNumber: leg.partnerAccountNumber || null,
-              partnerCountryName: leg.partnerCountryName || null
+              partnerCountryName: leg.partnerCountryName || null,
+              insuranceRequired: Boolean(leg.insuranceRequired ?? leg.insurance_required),
+              insurance_required: Boolean(leg.insuranceRequired ?? leg.insurance_required)
             }))
           : [
               {
@@ -2137,7 +2142,9 @@ export function CustomerOrderManagementView() {
                 plannedDeparture: formData.planned_departure_date || null,
                 actualDeparture: formData.actual_departure_date || null,
                 plannedArrival: formData.planned_arrival_date || null,
-                actualArrival: formData.actual_arrival_date || null
+                actualArrival: formData.actual_arrival_date || null,
+                insuranceRequired: Boolean((formData.legs?.[0] as any)?.insuranceRequired ?? (formData.legs?.[0] as any)?.insurance_required),
+                insurance_required: Boolean((formData.legs?.[0] as any)?.insuranceRequired ?? (formData.legs?.[0] as any)?.insurance_required)
               }
             ];
 

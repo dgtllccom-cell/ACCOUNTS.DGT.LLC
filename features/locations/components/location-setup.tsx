@@ -70,8 +70,7 @@ function pillClassName() {
 }
 
 export function LocationSetup({ lang: langProp = "en" }: { lang?: SupportedLanguage }) {
-  const activeLang = useActiveLanguage();
-  const lang = activeLang !== "en" ? activeLang : langProp;
+  const lang = useActiveLanguage(langProp);
   const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const [loading, setLoading] = useState(true);

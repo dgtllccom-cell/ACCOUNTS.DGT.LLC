@@ -205,8 +205,7 @@ function paymentConfigFor(scope: JournalScope): { postingType: RoznamchaType; sc
 }
 
 function AstraJournalReportViewContent({ lang: langProp, scope }: { lang: SupportedLanguage; scope: JournalScope }) {
-  const activeLang = useActiveLanguage();
-  const lang = activeLang !== "en" ? activeLang : langProp;
+  const lang = useActiveLanguage(langProp);
   const _ = (key: string, fallback: string) => t(lang as never, key as never, fallback);
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const router = useRouter();

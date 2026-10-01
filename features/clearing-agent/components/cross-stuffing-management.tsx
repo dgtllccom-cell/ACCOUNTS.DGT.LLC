@@ -48,8 +48,8 @@ function emptyLine(): LineDraft {
 }
 
 export function CrossStuffingManagement({ lang: langProp }: { lang?: string }) {
-  const activeLang = useActiveLanguage();
-  const lang = (activeLang && activeLang !== "en" ? activeLang : langProp || "en") as any;
+  const activeLang = useActiveLanguage((langProp as any) || "en");
+  const lang = activeLang as any;
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const dir = getLanguageDirection(lang);
   const tt = (key: string, fallback: string) => t(lang, key as never, fallback);

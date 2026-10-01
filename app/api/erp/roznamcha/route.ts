@@ -111,8 +111,8 @@ export async function GET(request: NextRequest) {
             ? sql`true`
             : sql`(e.city_branch_id = any(${cityIds}) or e.country_branch_id = any(${countryBranchIds}) or e.country_id = any(${countryIds}))`})
           and (${domainAllowed ? sql`(e.operational_domain is null or e.operational_domain = any(${domainAllowed}))` : sql`true`})
-          and (${fromDate ? sql`e.entry_date >= ${fromDate}` : sql`true`})
-          and (${toDate ? sql`e.entry_date <= ${toDate}` : sql`true`})
+          and (${fromDate ? sql`e.entry_date::date >= ${fromDate}::date` : sql`true`})
+          and (${toDate ? sql`e.entry_date::date <= ${toDate}::date` : sql`true`})
           and (${safeSearch ? sql`(
                 e.journal_no ilike ${"%" + safeSearch + "%"}
                 or e.voucher_no ilike ${"%" + safeSearch + "%"}
@@ -211,8 +211,8 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    if (fromDate) query = (query as any).gte("entry_date", fromDate);
-    if (toDate) query = (query as any).lte("entry_date", toDate);
+    if (fromDate) query = (query as any).gte("entry_date", fromDate.includes("T") ? fromDate : `${fromDate}T00:00:00.000Z`);
+    if (toDate) query = (query as any).lte("entry_date", toDate.includes("T") ? toDate : `${toDate}T23:59:59.999Z`);
 
     if (search) {
       const safeSearch = search.replace(/[%,]/g, "");

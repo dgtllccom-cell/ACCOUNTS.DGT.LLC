@@ -909,24 +909,25 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
         setReceivingCountryState(receivingCountry !== "-" ? receivingCountry : "");
         setReceivingPortState(receivingPort !== "-" ? receivingPort : "");
         setReceivingDateState(form.receivedDate || form.arrivalDate || "");
-        setVesselName("");
-        setOriginCountry("");
-        setGoodsName("");
-        setHsCode("0000");
+        const defaultGood = goods?.[0] || {};
+        setVesselName(form.vesselName || poRow.carrier_name || "");
+        setOriginCountry(defaultGood.originCountry || defaultGood.origin || form.originCountry || form.origin || "");
+        setGoodsName(defaultGood.itemName || defaultGood.goodsName || defaultGood.item || form.goodsName || "");
+        setHsCode(defaultGood.hsCode || form.hsCode || "0000");
         setAllotName("ALT-4733");
-        setBrand("");
-        setSizeSpec("");
-        setQtyName("BAGS");
+        setBrand(defaultGood.brandName || defaultGood.brand || form.brand || "");
+        setSizeSpec(defaultGood.sizeSpec || defaultGood.size || form.size || "");
+        setQtyName(defaultGood.qtyName || defaultGood.unit || form.qtyName || "BAGS");
         setQuantityNo("");
-        setOneQtyKgs("");
-        setOneEmptyKgs("");
-        setDivideType("D/KGs");
-        setDivideWeightValue("1");
-        setPriceType("P/KGs");
-        setPriceRateC1("");
+        setOneQtyKgs(defaultGood.qtyKgs ? String(defaultGood.qtyKgs) : (form.qtyKgs ? String(form.qtyKgs) : ""));
+        setOneEmptyKgs(defaultGood.emptyKgs ? String(defaultGood.emptyKgs) : (form.emptyKgs ? String(form.emptyKgs) : ""));
+        setDivideType(defaultGood.divideType || form.divideType || "D/KGs");
+        setDivideWeightValue(defaultGood.divideWeightValue ? String(defaultGood.divideWeightValue) : (form.divideWeightValue ? String(form.divideWeightValue) : "1"));
+        setPriceType(defaultGood.priceType || form.priceType || "P/KGs");
+        setPriceRateC1(defaultGood.coursePrice ? String(defaultGood.coursePrice) : (defaultGood.price ? String(defaultGood.price) : (form.priceRate || form.rate || "")));
         setQualityReportRef("");
-        setPricingCurrency("USD");
-        setExchangeRatePKR(defaultExRate);
+        setPricingCurrency(defaultGood.pricingCurrency || form.currency || poRow.currency_code || "USD");
+        setExchangeRatePKR(poExchangeRate || defaultExRate || "287");
       }
       setQualityReportRef("");
       setPricingCurrency("USD");
@@ -952,32 +953,51 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
             if (!showNewLoading) {
                setEditingLoadingId(null);
                setFormStep(1);
-               setLoadingCountryState(loadingCountry !== "-" ? loadingCountry : "");
-               setLoadingPortState(loadingPort !== "-" ? loadingPort : "");
-               setReceivingCountryState(receivingCountry !== "-" ? receivingCountry : "");
-               setReceivingPortState(receivingPort !== "-" ? receivingPort : "");
+               const defaultGood = goods?.[0] || {};
+               const dOrigin = defaultGood.originCountry || defaultGood.origin || form.originCountry || form.origin || (loadingCountry !== "-" ? loadingCountry : "");
+               const dGoodsName = defaultGood.itemName || defaultGood.goodsName || defaultGood.item || form.goodsName || "";
+               const dHsCode = defaultGood.hsCode || form.hsCode || "0000";
+               const dBrand = defaultGood.brandName || defaultGood.brand || form.brand || "";
+               const dSizeSpec = defaultGood.sizeSpec || defaultGood.size || form.size || "";
+               const dQtyName = defaultGood.qtyName || defaultGood.unit || form.qtyName || "BAGS";
+               const dOneQtyKgs = defaultGood.qtyKgs ? String(defaultGood.qtyKgs) : (form.qtyKgs ? String(form.qtyKgs) : "");
+               const dOneEmptyKgs = defaultGood.emptyKgs ? String(defaultGood.emptyKgs) : (form.emptyKgs ? String(form.emptyKgs) : "");
+               const dDivideType = defaultGood.divideType || form.divideType || "D/KGs";
+               const dDivideWeightValue = defaultGood.divideWeightValue ? String(defaultGood.divideWeightValue) : (form.divideWeightValue ? String(form.divideWeightValue) : "1");
+               const dPriceType = defaultGood.priceType || form.priceType || "P/KGs";
+               const dPriceRate = defaultGood.coursePrice ? String(defaultGood.coursePrice) : (defaultGood.price ? String(defaultGood.price) : (form.priceRate || form.rate || ""));
+               const dCurrency = defaultGood.pricingCurrency || form.currency || poRow.currency_code || "USD";
+               const dExRate = poExchangeRate || defaultExRate || "287";
+               const dTransportMode = (form.shippingMode as "By Road" | "By Sea" | "By Air") || "By Sea";
+
+               setLoadingCountryState(loadingCountry !== "-" ? loadingCountry : (form.loadingCountry || ""));
+               setLoadingPortState(loadingPort !== "-" ? loadingPort : (form.loadingPort || ""));
+               setReceivingCountryState(receivingCountry !== "-" ? receivingCountry : (form.receivedCountry || form.destinationCountry || ""));
+               setReceivingPortState(receivingPort !== "-" ? receivingPort : (form.receivedPort || form.destinationPort || ""));
                setReceivingDateState(form.receivedDate || form.arrivalDate || "");
                setNewLoadingDate(form.loadingDate || new Date().toISOString().slice(0, 10));
                setBlNumber("");
+               setTransportReference("");
                setContainerCount("1");
-               setVesselName("");
-               setOriginCountry("");
-               setGoodsName("");
-               setHsCode("0000");
+               setVesselName(form.vesselName || poRow.carrier_name || "");
+               setOriginCountry(dOrigin);
+               setGoodsName(dGoodsName);
+               setHsCode(dHsCode);
                setAllotName("ALT-4733");
-               setBrand("");
-               setSizeSpec("");
-               setQtyName("BAGS");
+               setBrand(dBrand);
+               setSizeSpec(dSizeSpec);
+               setQtyName(dQtyName);
                setQuantityNo("");
-               setOneQtyKgs("");
-               setOneEmptyKgs("");
-               setDivideType("D/KGs");
-               setDivideWeightValue("1");
-               setPriceType("P/KGs");
-               setPriceRateC1("");
+               setOneQtyKgs(dOneQtyKgs);
+               setOneEmptyKgs(dOneEmptyKgs);
+               setDivideType(dDivideType);
+               setDivideWeightValue(dDivideWeightValue);
+               setPriceType(dPriceType);
+               setPriceRateC1(dPriceRate);
                setQualityReportRef("");
-               setPricingCurrency("USD");
-               setExchangeRatePKR("287");
+               setPricingCurrency(dCurrency);
+               setExchangeRatePKR(dExRate);
+               setTransportMode(dTransportMode);
                setNewLoadingQuantity("");
                setNewLoadingNote("");
             }
@@ -1041,244 +1061,446 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
 
                   {formStep === 1 ? (
                     <>
+                      {/* Source Bill Banner */}
+                      <div className="mb-3 rounded-lg border border-slate-200 bg-white p-3 shadow-xs dark:border-slate-800 dark:bg-slate-900">
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-2 dark:border-slate-800">
+                          <div className="flex items-center gap-2">
+                            <span className="rounded bg-indigo-100 px-2 py-0.5 text-[10px] font-black text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300">
+                              {poRow.purchase_order_no || record.purchase_order_no || "PO"}
+                            </span>
+                            <span className="text-xs font-black text-slate-800 dark:text-slate-200 truncate max-w-[180px]">
+                              {form.supplierName || poRow.supplier_name || tt("plr.unknown_supplier", "Supplier")}
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-bold text-slate-500">
+                            {goodsName || goods?.[0]?.itemName || goods?.[0]?.goodsName || "-"}
+                          </span>
+                        </div>
+                        <div className="mt-2 grid grid-cols-3 gap-2 text-center text-[10px]">
+                          <div>
+                            <div className="text-[9px] font-bold text-slate-400 uppercase">{tt("plr.contract_qty", "Contract")}</div>
+                            <div className="font-mono font-black text-slate-800 dark:text-slate-200">{totalQuantity.toLocaleString()}</div>
+                          </div>
+                          <div>
+                            <div className="text-[9px] font-bold text-emerald-600 uppercase">{tt("plr.loaded_qty", "Loaded")}</div>
+                            <div className="font-mono font-black text-emerald-600">{totalLoadedQuantity.toLocaleString()}</div>
+                          </div>
+                          <div>
+                            <div className="text-[9px] font-bold text-amber-600 uppercase">{tt("plr.remaining_qty", "Remaining")}</div>
+                            <div className="font-mono font-black text-amber-600">{remainingToLoadQuantity.toLocaleString()}</div>
+                          </div>
+                        </div>
+                        {/* Progress Bar */}
+                        <div className="mt-2.5 space-y-1">
+                          <div className="flex justify-between text-[9px] font-bold text-slate-500">
+                            <span>{tt("plr.loading_progress", "Loading Progress")}</span>
+                            <span className="font-mono">{loadingProgress.toFixed(1)}%</span>
+                          </div>
+                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                            <div
+                              className="h-full rounded-full bg-emerald-500 transition-all duration-300"
+                              style={{ width: `${Math.min(100, Math.max(0, loadingProgress))}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Entry Counter Banner */}
+                      <div className="mb-3 flex items-center justify-between rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 text-[11px]">
+                        <div className="flex items-center gap-1.5 font-bold text-emerald-800 dark:text-emerald-200">
+                          <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                          <span>{tt("plr.entry_counter", "Entry")} <strong>#{(history.length || 0) + 1}</strong></span>
+                          <span className="text-[10px] text-emerald-600/80 dark:text-emerald-300/80">
+                            ({history.length} {tt("plr.completed", "completed")}, {remainingToLoadQuantity.toLocaleString()} {unitLabel} {tt("plr.remaining", "remaining")})
+                          </span>
+                        </div>
+                        <span className="rounded bg-emerald-600 px-2 py-0.5 text-[9px] font-black uppercase text-white tracking-wider">
+                          {tt("plr.step_1_of_2", "Step 1/2")}
+                        </span>
+                      </div>
+
                       <div className="grid grid-cols-2 gap-3 pr-1 pb-2">
                         <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 col-span-2">
-                          {tt("plr.bl_number", "B/L Number")}
-                      <input
-                        value={blNumber}
-                        onChange={(e) => setBlNumber(e.target.value)}
-                        placeholder={tt("plr.ph_e_g__bl12345", "e.g. BL12345")}
-                        className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold normal-case tracking-normal outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-slate-800 dark:bg-slate-950"
-                      />
-                    </label>
-                    <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 col-span-2">
-                      {tt("plr.entry_count", "Entry Count")}
-                      <select
-                        value={containerCount}
-                        onChange={(e) => setContainerCount(e.target.value)}
-                        className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold normal-case tracking-normal outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-slate-800 dark:bg-slate-950"
-                      >
-                        <option value="1">{tt("plr.entry_1", "1 Entry")}</option>
-                        <option value="2">{tt("plr.entry_2", "2 Entries")}</option>
-                      </select>
-                    </label>
+                          {tt("plr.entry_count", "Entry Count")}
+                          <select
+                            value={containerCount}
+                            onChange={(e) => setContainerCount(e.target.value)}
+                            className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold normal-case tracking-normal outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-slate-800 dark:bg-slate-950"
+                          >
+                            <option value="1">{tt("plr.entry_1", "1 Entry")}</option>
+                            <option value="2">{tt("plr.entry_2", "2 Entries")}</option>
+                          </select>
+                        </label>
 
-                    <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
-                      {tt("plr.loading_country", "Loading Country")}
-                      <SearchableSelect
-                        value={loadingCountryState}
-                        onChange={(val) => {
-                          if (val === "__ADD_NEW__") {
-                            void handleAddNewLocationItem("country", "loadingCountry");
-                          } else {
-                            setLoadingCountryState(val);
-                            setLoadingPortState("");
-                          }
-                        }}
-                        options={allCountries.map((c) => ({ label: `${c.name} ${c.iso2 ? `(${c.iso2})` : ""}`, value: c.name }))}
-                        placeholder={tt("plr.sel_country", "Select Country")}
-                        addOptionLabel={tt("plr.add_country", "Add New Country")}
-                      />
-                    </label>
-                    <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
-                      {tt("plr.loading_port", "Loading Port / Border")}
-                      <SearchableSelect
-                        value={loadingPortState}
-                        onChange={(val) => {
-                          if (val === "__ADD_NEW__") {
-                            void handleAddNewLocationItem("port", "loadingPort");
-                          } else {
-                            setLoadingPortState(val);
-                          }
-                        }}
-                        options={currentLoadingPorts.map((p) => ({ label: `${p.port_name} ${p.port_code ? `[${p.port_code}]` : ""}`, value: p.port_name }))}
-                        placeholder={form.shippingMode === "By Road" ? tt("plr.sel_border", "Select Border") : tt("plr.sel_port", "Select Port")}
-                        addOptionLabel={form.shippingMode === "By Road" ? tt("plr.add_border", "Add New Border") : tt("plr.add_port", "Add New Port")}
-                        disabled={!loadingCountryState && currentLoadingPorts.length === 0}
-                      />
-                    </label>
+                        <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                          {tt("plr.loading_country", "Loading Country")}
+                          <SearchableSelect
+                            value={loadingCountryState}
+                            onChange={(val) => {
+                              if (val === "__ADD_NEW__") {
+                                void handleAddNewLocationItem("country", "loadingCountry");
+                              } else {
+                                setLoadingCountryState(val);
+                                setLoadingPortState("");
+                              }
+                            }}
+                            options={allCountries.map((c) => ({ label: `${c.name} ${c.iso2 ? `(${c.iso2})` : ""}`, value: c.name }))}
+                            placeholder={tt("plr.sel_country", "Select Country")}
+                            addOptionLabel={tt("plr.add_country", "Add New Country")}
+                          />
+                        </label>
+                        <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                          {tt("plr.loading_port", "Loading Port / Border")}
+                          <SearchableSelect
+                            value={loadingPortState}
+                            onChange={(val) => {
+                              if (val === "__ADD_NEW__") {
+                                void handleAddNewLocationItem("port", "loadingPort");
+                              } else {
+                                setLoadingPortState(val);
+                              }
+                            }}
+                            options={currentLoadingPorts.map((p) => ({ label: `${p.port_name} ${p.port_code ? `[${p.port_code}]` : ""}`, value: p.port_name }))}
+                            placeholder={form.shippingMode === "By Road" ? tt("plr.sel_border", "Select Border") : tt("plr.sel_port", "Select Port")}
+                            addOptionLabel={form.shippingMode === "By Road" ? tt("plr.add_border", "Add New Border") : tt("plr.add_port", "Add New Port")}
+                            disabled={!loadingCountryState && currentLoadingPorts.length === 0}
+                          />
+                        </label>
 
-                    <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
-                      {tt("plr.receiving_country", "Receiving Country")}
-                      <SearchableSelect
-                        value={receivingCountryState}
-                        onChange={(val) => {
-                          if (val === "__ADD_NEW__") {
-                            void handleAddNewLocationItem("country", "receivingCountry");
-                          } else {
-                            setReceivingCountryState(val);
-                            setReceivingPortState("");
-                          }
-                        }}
-                        options={allCountries.map((c) => ({ label: `${c.name} ${c.iso2 ? `(${c.iso2})` : ""}`, value: c.name }))}
-                        placeholder={tt("plr.sel_country", "Select Country")}
-                        addOptionLabel={tt("plr.add_country", "Add New Country")}
-                      />
-                    </label>
-                    <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
-                      {tt("plr.receiving_port", "Receiving Port / Border")}
-                      <SearchableSelect
-                        value={receivingPortState}
-                        onChange={(val) => {
-                          if (val === "__ADD_NEW__") {
-                            void handleAddNewLocationItem("port", "receivingPort");
-                          } else {
-                            setReceivingPortState(val);
-                          }
-                        }}
-                        options={currentReceivedPorts.map((p) => ({ label: `${p.port_name} ${p.port_code ? `[${p.port_code}]` : ""}`, value: p.port_name }))}
-                        placeholder={form.shippingMode === "By Road" ? tt("plr.sel_border", "Select Border") : tt("plr.sel_port", "Select Port")}
-                        addOptionLabel={form.shippingMode === "By Road" ? tt("plr.add_border", "Add New Border") : tt("plr.add_port", "Add New Port")}
-                        disabled={!receivingCountryState && currentReceivedPorts.length === 0}
-                      />
-                    </label>
-                    
-                    <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
-                      {tt("plr.loading_date", "Loading Date")}
-                      <input
-                        type="date"
-                        value={newLoadingDate}
-                        onChange={(e) => setNewLoadingDate(e.target.value)}
-                        className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold normal-case tracking-normal outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-slate-800 dark:bg-slate-950"
-                      />
-                    </label>
-                    <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
-                      {tt("plr.receiving_date", "Receiving Date")}
-                      <input
-                        type="date"
-                        value={receivingDateState}
-                        onChange={(e) => setReceivingDateState(e.target.value)}
-                        className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold normal-case tracking-normal outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-slate-800 dark:bg-slate-950"
-                      />
-                    </label>
-
-                    <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 col-span-2">
-                      {tt("plr.vessel_name", "Vessel Name")}
-                      <input
-                        value={vesselName}
-                        onChange={(e) => setVesselName(e.target.value)}
-                        placeholder={tt("plr.ph_e_g__msc_alina", "e.g. MSC Alina")}
-                        className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold normal-case tracking-normal outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-slate-800 dark:bg-slate-950"
-                      />
-                    </label>
-
+                        <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                          {tt("plr.receiving_country", "Receiving Country")}
+                          <SearchableSelect
+                            value={receivingCountryState}
+                            onChange={(val) => {
+                              if (val === "__ADD_NEW__") {
+                                void handleAddNewLocationItem("country", "receivingCountry");
+                              } else {
+                                setLoadingCountryState(val);
+                                setLoadingPortState("");
+                              }
+                            }}
+                            options={allCountries.map((c) => ({ label: `${c.name} ${c.iso2 ? `(${c.iso2})` : ""}`, value: c.name }))}
+                            placeholder={tt("plr.sel_country", "Select Country")}
+                            addOptionLabel={tt("plr.add_country", "Add New Country")}
+                          />
+                        </label>
+                        <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                          {tt("plr.receiving_port", "Receiving Port / Border")}
+                          <SearchableSelect
+                            value={receivingPortState}
+                            onChange={(val) => {
+                              if (val === "__ADD_NEW__") {
+                                void handleAddNewLocationItem("port", "receivingPort");
+                              } else {
+                                setReceivingPortState(val);
+                              }
+                            }}
+                            options={currentReceivedPorts.map((p) => ({ label: `${p.port_name} ${p.port_code ? `[${p.port_code}]` : ""}`, value: p.port_name }))}
+                            placeholder={form.shippingMode === "By Road" ? tt("plr.sel_border", "Select Border") : tt("plr.sel_port", "Select Port")}
+                            addOptionLabel={form.shippingMode === "By Road" ? tt("plr.add_border", "Add New Border") : tt("plr.add_port", "Add New Port")}
+                            disabled={!receivingCountryState && currentReceivedPorts.length === 0}
+                          />
+                        </label>
+                        
+                        <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                          {tt("plr.loading_date", "Loading Date")}
+                          <input
+                            type="date"
+                            value={newLoadingDate}
+                            onChange={(e) => setNewLoadingDate(e.target.value)}
+                            className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold normal-case tracking-normal outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-slate-800 dark:bg-slate-950"
+                          />
+                        </label>
+                        <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                          {tt("plr.receiving_date", "Receiving Date")}
+                          <input
+                            type="date"
+                            value={receivingDateState}
+                            onChange={(e) => setReceivingDateState(e.target.value)}
+                            className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold normal-case tracking-normal outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-slate-800 dark:bg-slate-950"
+                          />
+                        </label>
                       </div>
 
                       {/* Country-to-Country Purchase — Transportation */}
                       <div className="mt-4 rounded-lg border border-indigo-200 bg-indigo-50/40 p-3 dark:border-indigo-900/50 dark:bg-indigo-950/10">
-                        <div className="mb-3 flex items-center gap-2 border-b border-indigo-100 pb-2 dark:border-indigo-900/40">
-                          <span className="h-2.5 w-2.5 rounded-full bg-indigo-500" />
-                          <h5 className="text-[10px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">{tt("plr.transport_title", "Transportation")}</h5>
+                        <div className="mb-3 flex items-center justify-between border-b border-indigo-100 pb-2 dark:border-indigo-900/40">
+                          <div className="flex items-center gap-2">
+                            <span className="h-2.5 w-2.5 rounded-full bg-indigo-500" />
+                            <h5 className="text-[10px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
+                              {tt("plr.transport_title", "Transportation Details")}
+                            </h5>
+                          </div>
+                          <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 uppercase">
+                            {transportMode}
+                          </span>
                         </div>
-                        <div className="grid gap-3 sm:grid-cols-3">
-                          <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 sm:col-span-2">
                             {tt("plr.transport_mode", "Transport Mode")}
                             <select
                               value={transportMode}
-                              onChange={(e) => setTransportMode(e.target.value as "By Road" | "By Sea" | "By Air")}
+                              onChange={(e) => {
+                                const mode = e.target.value as "By Road" | "By Sea" | "By Air";
+                                setTransportMode(mode);
+                              }}
                               className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
                             >
-                              <option value="By Road">{tt("plr.by_road", "By Road")}</option>
-                              <option value="By Sea">{tt("plr.by_sea", "By Sea")}</option>
-                              <option value="By Air">{tt("plr.by_air", "By Air")}</option>
+                              <option value="By Sea">{tt("plr.by_sea", "By Sea (Ocean Freight)")}</option>
+                              <option value="By Road">{tt("plr.by_road", "By Road (Truck / Trailer)")}</option>
+                              <option value="By Air">{tt("plr.by_air", "By Air (Air Freight)")}</option>
                             </select>
                           </label>
-                          <div className="space-y-1">
-                            <CompanyPicker
-                              label={tt("plr.transport_company", "Transport Company")}
-                              value={transportCompanyId}
-                              onValueChange={async (companyId) => {
-                                setTransportCompanyId(companyId);
-                                if (!companyId) return;
-                                try {
-                                  const res = await fetch(`/api/erp/companies/${companyId}`);
-                                  const json = await res.json();
-                                  if (json?.company?.name) setTransportCompany(json.company.name);
-                                } catch { /* ignore */ }
-                              }}
-                            />
-                          </div>
+
+                          {/* Sea Mode Layout */}
+                          {transportMode === "By Sea" && (
+                            <>
+                              <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                                {tt("plr.bl_number", "B/L Reference No.")}
+                                <input
+                                  value={blNumber}
+                                  onChange={(e) => {
+                                    setBlNumber(e.target.value);
+                                    setTransportReference(e.target.value);
+                                  }}
+                                  placeholder={tt("plr.ph_e_g__bl12345", "e.g. BL12345")}
+                                  className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
+                                />
+                              </label>
+
+                              <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                                {tt("plr.vessel_name", "Vessel Name")}
+                                <input
+                                  value={vesselName}
+                                  onChange={(e) => setVesselName(e.target.value)}
+                                  placeholder={tt("plr.ph_e_g__msc_alina", "e.g. MSC Alina")}
+                                  className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
+                                />
+                              </label>
+
+                              <div className="space-y-1 sm:col-span-2">
+                                <ShippingLinePicker
+                                  label={tt("plr.shipping_line", "Shipping Line")}
+                                  value={shippingLineId}
+                                  onValueChange={async (id) => {
+                                    setShippingLineId(id);
+                                    if (!id) return;
+                                    try {
+                                      const res = await fetch(`/api/erp/shipping-lines/${id}`);
+                                      const json = await res.json();
+                                      if (json?.shippingLine?.name) setShippingLine(json.shippingLine.name);
+                                    } catch { /* ignore */ }
+                                  }}
+                                />
+                              </div>
+                            </>
+                          )}
+
+                          {/* Road Mode Layout */}
+                          {transportMode === "By Road" && (
+                            <>
+                              <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                                {tt("plr.bilty_ref", "Bilty / Waybill No.")}
+                                <input
+                                  value={transportReference || blNumber}
+                                  onChange={(e) => {
+                                    setTransportReference(e.target.value);
+                                    setBlNumber(e.target.value);
+                                  }}
+                                  placeholder={tt("plr.ph_bilty", "e.g. BTY-9801")}
+                                  className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
+                                />
+                              </label>
+
+                              <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                                {tt("plr.vehicle_no", "Truck / Vehicle No.")}
+                                <input
+                                  value={vehicleNo}
+                                  onChange={(e) => setVehicleNo(e.target.value)}
+                                  placeholder="e.g. T-8492"
+                                  className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
+                                />
+                              </label>
+
+                              {truckOptions.length > 0 && (
+                                <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 sm:col-span-2">
+                                  {tt("plr.registered_truck", "Select From Registered Trucks")}
+                                  <select
+                                    value={truckId}
+                                    onChange={(e) => {
+                                      const id = e.target.value;
+                                      setTruckId(id);
+                                      const tr = truckOptions.find((x) => x.id === id);
+                                      if (tr) {
+                                        setVehicleNo(tr.truck_number || vehicleNo);
+                                        if (tr.driver_name) setDriverName(tr.driver_name);
+                                      }
+                                    }}
+                                    className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
+                                  >
+                                    <option value="">{tt("plr.select_truck", "Select Truck (optional)")}</option>
+                                    {truckOptions.map((tr) => (
+                                      <option key={tr.id} value={tr.id}>
+                                        {tr.truck_number} {tr.driver_name ? `(${tr.driver_name})` : ""}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </label>
+                              )}
+
+                              <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                                {tt("plr.driver_name", "Driver Name")}
+                                <input
+                                  value={driverName}
+                                  onChange={(e) => setDriverName(e.target.value)}
+                                  placeholder="Driver name"
+                                  className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
+                                />
+                              </label>
+
+                              <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                                {tt("plr.driver_mobile", "Driver Contact / Mobile")}
+                                <input
+                                  value={driverMobile}
+                                  onChange={(e) => setDriverMobile(e.target.value)}
+                                  placeholder="+971 / +92 ..."
+                                  className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
+                                />
+                              </label>
+
+                              <div className="space-y-1 sm:col-span-2">
+                                <CompanyPicker
+                                  label={tt("plr.transport_company", "Transport Company")}
+                                  value={transportCompanyId}
+                                  onValueChange={async (companyId) => {
+                                    setTransportCompanyId(companyId);
+                                    if (!companyId) return;
+                                    try {
+                                      const res = await fetch(`/api/erp/companies/${companyId}`);
+                                      const json = await res.json();
+                                      if (json?.company?.name) setTransportCompany(json.company.name);
+                                    } catch { /* ignore */ }
+                                  }}
+                                />
+                              </div>
+                            </>
+                          )}
+
+                          {/* Air Mode Layout */}
+                          {transportMode === "By Air" && (
+                            <>
+                              <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                                {tt("plr.awb_no", "AWB Number / Ref")}
+                                <input
+                                  value={transportReference || blNumber}
+                                  onChange={(e) => {
+                                    setTransportReference(e.target.value);
+                                    setBlNumber(e.target.value);
+                                  }}
+                                  placeholder="e.g. AWB-12345678"
+                                  className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
+                                />
+                              </label>
+
+                              <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                                {tt("plr.flight_carrier", "Flight No. / Carrier")}
+                                <input
+                                  value={vesselName}
+                                  onChange={(e) => setVesselName(e.target.value)}
+                                  placeholder="e.g. EK-601"
+                                  className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
+                                />
+                              </label>
+
+                              <div className="space-y-1 sm:col-span-2">
+                                <CompanyPicker
+                                  label={tt("plr.airline_forwarder", "Airline / Air Forwarder")}
+                                  value={transportCompanyId}
+                                  onValueChange={async (companyId) => {
+                                    setTransportCompanyId(companyId);
+                                    if (!companyId) return;
+                                    try {
+                                      const res = await fetch(`/api/erp/companies/${companyId}`);
+                                      const json = await res.json();
+                                      if (json?.company?.name) setTransportCompany(json.company.name);
+                                    } catch { /* ignore */ }
+                                  }}
+                                />
+                              </div>
+                            </>
+                          )}
+
+                          {/* Common Dates */}
                           <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
-                            {transportMode === "By Road" ? tt("plr.vehicle_no", "Vehicle No.") : tt("plr.transport_reference", "BL / Transport Ref.")}
+                            {tt("plr.departure_date", "Departure Date")}
                             <input
-                              value={transportMode === "By Road" ? vehicleNo : transportReference}
-                              onChange={(e) => transportMode === "By Road" ? setVehicleNo(e.target.value) : setTransportReference(e.target.value)}
+                              type="date"
+                              value={departureDate}
+                              onChange={(e) => setDepartureDate(e.target.value)}
                               className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
                             />
                           </label>
-                          {transportMode === "By Road" ? (
-                            <>
-                              <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
-                                {tt("plr.registered_truck", "Registered Truck")}
+
+                          <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                            {tt("plr.expected_arrival_date", "Expected Arrival Date")}
+                            <input
+                              type="date"
+                              value={expectedArrivalDate}
+                              onChange={(e) => setExpectedArrivalDate(e.target.value)}
+                              className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
+                            />
+                          </label>
+
+                          {/* Transport Expense with Rate & Conversion */}
+                          <div className="sm:col-span-2 rounded-lg border border-indigo-100 bg-white p-2.5 dark:border-indigo-900/60 dark:bg-slate-900/80">
+                            <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 block">
+                              {tt("plr.transport_expense", "Transport Expense")}
+                              <div className="flex gap-2 mt-1">
+                                <input
+                                  type="number"
+                                  min="0"
+                                  step="0.01"
+                                  value={transportExpenseAmount}
+                                  onChange={(e) => setTransportExpenseAmount(e.target.value)}
+                                  placeholder="0.00"
+                                  className="h-9 flex-1 rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
+                                />
                                 <select
-                                  value={truckId}
-                                  onChange={(e) => {
-                                    const id = e.target.value;
-                                    setTruckId(id);
-                                    const tr = truckOptions.find((x) => x.id === id);
-                                    if (tr) {
-                                      setVehicleNo(tr.truck_number || vehicleNo);
-                                      if (tr.driver_name) setDriverName(tr.driver_name);
-                                    }
-                                  }}
-                                  className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
+                                  value={transportExpenseCurrency}
+                                  onChange={(e) => setTransportExpenseCurrency(e.target.value)}
+                                  className="h-9 w-24 rounded-lg border border-slate-200 bg-white px-2 text-xs font-bold outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
                                 >
-                                  <option value="">{tt("plr.select_truck", "Select Truck (optional)")}</option>
-                                  {truckOptions.map((tr) => (
-                                    <option key={tr.id} value={tr.id}>
-                                      {tr.truck_number} {tr.driver_name ? `(${tr.driver_name})` : ""}
-                                    </option>
-                                  ))}
+                                  <option value="USD">USD</option>
+                                  <option value="AED">AED</option>
+                                  <option value="PKR">PKR</option>
+                                  <option value="EUR">EUR</option>
                                 </select>
-                              </label>
-                              <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
-                                {tt("plr.driver_name", "Driver Name")}
-                                <input value={driverName} onChange={(e) => setDriverName(e.target.value)} className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950" />
-                              </label>
-                              <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
-                                {tt("plr.driver_mobile", "Driver Mobile")}
-                                <input value={driverMobile} onChange={(e) => setDriverMobile(e.target.value)} className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950" />
-                              </label>
-                            </>
-                          ) : (
-                            <div className="space-y-1">
-                              <ShippingLinePicker
-                                label={tt("plr.shipping_line", "Shipping Line")}
-                                value={shippingLineId}
-                                onValueChange={async (id) => {
-                                  setShippingLineId(id);
-                                  if (!id) return;
-                                  try {
-                                    const res = await fetch(`/api/erp/shipping-lines/${id}`);
-                                    const json = await res.json();
-                                    if (json?.shippingLine?.name) setShippingLine(json.shippingLine.name);
-                                  } catch { /* ignore */ }
-                                }}
-                              />
-                            </div>
-                          )}
-                          <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
-                            {tt("plr.departure_date", "Departure Date")}
-                            <input type="date" value={departureDate} onChange={(e) => setDepartureDate(e.target.value)} className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950" />
-                          </label>
-                          <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
-                            {tt("plr.expected_arrival_date", "Expected Arrival")}
-                            <input type="date" value={expectedArrivalDate} onChange={(e) => setExpectedArrivalDate(e.target.value)} className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950" />
-                          </label>
-                          <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
-                            {tt("plr.transport_expense", "Transport Expense")}
-                            <div className="flex gap-1.5">
-                              <input type="number" min="0" step="0.01" value={transportExpenseAmount} onChange={(e) => setTransportExpenseAmount(e.target.value)} className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950" />
-                              <select value={transportExpenseCurrency} onChange={(e) => setTransportExpenseCurrency(e.target.value)} className="h-9 w-20 rounded-lg border border-slate-200 bg-white px-1 text-xs font-bold outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950">
-                                <option value="USD">USD</option>
-                                <option value="AED">AED</option>
-                                <option value="PKR">PKR</option>
-                              </select>
-                            </div>
-                          </label>
-                          <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 col-span-3">
+                              </div>
+                            </label>
+                            {Number(transportExpenseAmount || 0) > 0 && (
+                              <div className="mt-2 flex items-center justify-between text-[10px] font-bold text-slate-500">
+                                <span>{tt("plr.converted_expense", "Converted Total")}:</span>
+                                <div className="font-mono text-indigo-700 dark:text-indigo-300 font-black">
+                                  {((Number(transportExpenseAmount) || 0) * (transportExpenseCurrency === localCurrency ? 1 : Number(exchangeRatePKR || 1))).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {localCurrency}
+                                  {transportExpenseCurrency !== localCurrency && (
+                                    <span className="text-[9px] text-slate-400 font-normal ml-1">
+                                      (@ {exchangeRatePKR || 1} {localCurrency}/{transportExpenseCurrency})
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 sm:col-span-2">
                             {tt("plr.transport_remarks", "Transport Remarks")}
-                            <input value={transportRemarksInput} onChange={(e) => setTransportRemarksInput(e.target.value)} className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950" />
+                            <input
+                              value={transportRemarksInput}
+                              onChange={(e) => setTransportRemarksInput(e.target.value)}
+                              placeholder="Optional transport notes..."
+                              className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
+                            />
                           </label>
                         </div>
                       </div>

@@ -136,8 +136,7 @@ function formatError(err: unknown): string {
 }
 
 export function TruckLoadingManagementView({ lang: langProp }: { lang: SupportedLanguage }) {
-  const activeLang = useActiveLanguage();
-  const lang = activeLang !== "en" ? activeLang : langProp;
+  const lang = useActiveLanguage(langProp);
   const dir = getLanguageDirection(lang);
   const th = (x: string) => translateHeader(lang, x);
   const [rows, setRows] = useState<Loading[]>([]);

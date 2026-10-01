@@ -51,7 +51,7 @@ export function BankRegistry() {
     setLoading(true);
     try {
       const res = await apiGet<{ banks: BankRecord[]; summary: typeof summary }>(
-        `/api/erp/banks?limit=500&status=${statusFilter === "all" ? "" : statusFilter}`
+        `/api/erp/banks?limit=500&status=${statusFilter === "all" ? "" : statusFilter}&lang=${lang}`
       );
       setBanks(res.banks || []);
       setSummary(res.summary || { total: 0, active: 0, inactive: 0 });
@@ -65,7 +65,7 @@ export function BankRegistry() {
 
   useEffect(() => {
     loadBanks();
-  }, [statusFilter]);
+  }, [statusFilter, lang]);
 
   const filtered = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();

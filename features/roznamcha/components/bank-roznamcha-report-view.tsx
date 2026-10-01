@@ -172,6 +172,12 @@ function monthStartIso() {
   return d.toISOString().slice(0, 10);
 }
 
+function yearStartIso() {
+  const d = new Date();
+  d.setMonth(0, 1);
+  return d.toISOString().slice(0, 10);
+}
+
 function formatTimeOnly(timeStr?: string | null) {
   if (!timeStr) return "";
   try {
@@ -202,8 +208,8 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
   const [cityBranches, setCityBranches] = useState<ScopeOption[]>([]);
   const [bankList, setBankList] = useState<Array<{ id: string; bank_name: string; short_name: string }>>([]);
 
-  // Active Filter state
-  const [fromDate, setFromDate] = useState(monthStartIso());
+  // Active Filter state — default to year start so all active 2026 data loads immediately
+  const [fromDate, setFromDate] = useState(yearStartIso());
   const [toDate, setToDate] = useState(todayIso());
   const [companyId, setCompanyId] = useState("all");
   const [countryId, setCountryId] = useState("all");
@@ -512,7 +518,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
   const totalPages = Math.ceil((data?.totalCount || 0) / pageSize) || 1;
 
   return (
-    <div className={cn("space-y-4 pb-12", isRtl && "font-sans")} dir={isRtl ? "rtl" : "ltr"}>
+    <div className={cn("w-full max-w-none px-4 sm:px-6 space-y-4 pb-12", isRtl && "font-sans")} dir={isRtl ? "rtl" : "ltr"}>
       {/* Top Header & Breadcrumb Bar */}
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between border-b pb-3 pt-1">
         <div>
@@ -545,7 +551,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
           <div className="flex items-center gap-2 rounded-lg border bg-card px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm dark:text-slate-300">
             <CalendarDays className="h-4 w-4 text-blue-600" />
             <span>
-              {formatShortDate(fromDate)} - {formatShortDate(toDate)}
+              {fromDate ? formatShortDate(fromDate) : "All"} - {toDate ? formatShortDate(toDate) : "All"}
             </span>
           </div>
 
@@ -598,7 +604,44 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
           <CardContent className="p-4 space-y-3">
             <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6">
               <div className="space-y-1 sm:col-span-2">
-                <Label className="text-[11px] font-semibold text-muted-foreground">{tt("datepick.date_range", "Date Range")}</Label>
+                <div className="flex items-center justify-between">
+                  <Label className="text-[11px] font-semibold text-muted-foreground">{tt("datepick.date_range", "Date Range")}</Label>
+                  <div className="flex items-center gap-1 text-[10px]">
+                    <button
+                      type="button"
+                      onClick={() => { setFromDate(todayIso()); setToDate(todayIso()); }}
+                      className="px-1.5 py-0.5 rounded bg-slate-200/70 hover:bg-blue-600 hover:text-white transition font-medium"
+                    >
+                      Today
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const d = new Date();
+                        d.setDate(d.getDate() - 30);
+                        setFromDate(d.toISOString().slice(0, 10));
+                        setToDate(todayIso());
+                      }}
+                      className="px-1.5 py-0.5 rounded bg-slate-200/70 hover:bg-blue-600 hover:text-white transition font-medium"
+                    >
+                      30d
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setFromDate(yearStartIso()); setToDate(todayIso()); }}
+                      className="px-1.5 py-0.5 rounded bg-blue-600 text-white font-bold transition"
+                    >
+                      2026
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setFromDate(""); setToDate(""); }}
+                      className="px-1.5 py-0.5 rounded bg-slate-200/70 hover:bg-blue-600 hover:text-white transition font-medium"
+                    >
+                      All
+                    </button>
+                  </div>
+                </div>
                 <ErpDatePicker
                   mode="range"
                   lang={activeLang}
@@ -896,6 +939,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
                 <th className="py-3 px-2 text-center w-12 border-r">{tt("bankroz.sr", "Sr #")}</th>
                 <th className="py-3 px-2 text-center w-24 border-r">{tt("bankroz.entry_no", "Entry #")}</th>
                 <th className="py-3 px-3 text-start w-32 border-r">{tt("bankroz.date_time", "Date / Time")}</th>
+                <th className="py-3 px-2.5 text-center w-24 border-r">{tt("bankroz.country", "Country")}</th>
                 <th className="py-3 px-2 text-center w-24 border-r">{tt("bankroz.branch_no", "Branch No.")}</th>
                 <th className="py-3 px-3 text-start w-32 border-r">{tt("bankroz.branch_name", "Branch Name")}</th>
                 <th className="py-3 px-3 text-start w-28 border-r bg-blue-50/40 dark:bg-blue-950/20 text-blue-900 dark:text-blue-300">
@@ -918,7 +962,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
                 <tr>
-                  <td colSpan={16} className="py-12 text-center text-slate-500 font-semibold">
+                  <td colSpan={17} className="py-12 text-center text-slate-500 font-semibold">
                     <div className="inline-flex items-center gap-2">
                       <RefreshCw className="h-4 w-4 animate-spin text-blue-600" />
                       <span>{tt("bankroz.loading", "Loading Bank Roznamcha records...")}</span>
@@ -927,7 +971,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
-                  <td colSpan={16} className="py-12 text-center text-slate-500 font-semibold">
+                  <td colSpan={17} className="py-12 text-center text-slate-500 font-semibold">
                     {tt("bankroz.no_transactions", "No bank transactions found matching the selected criteria.")}
                   </td>
                 </tr>
@@ -962,7 +1006,14 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
                         <div className="text-[10px] text-slate-500 font-mono">{formatTimeOnly(row.entry_time)}</div>
                       </td>
 
-                      {/* 4. Branch No. */}
+                      {/* 4. Country */}
+                      <td className="py-2.5 px-2.5 text-center border-r whitespace-nowrap">
+                        <span className="inline-block rounded px-2 py-0.5 text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                          {row.country?.name || "Global"}
+                        </span>
+                      </td>
+
+                      {/* 5. Branch No. */}
                       <td className="py-2.5 px-2 text-center font-mono text-slate-700 dark:text-slate-300 border-r">
                         {row.city_branch?.code || row.country_branch?.code || "BR-001"}
                       </td>

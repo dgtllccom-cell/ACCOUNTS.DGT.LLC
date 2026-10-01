@@ -127,10 +127,8 @@ export function RoznamchaReportView({
   typeFilter: RoznamchaType;
 }) {
   const router = useRouter();
-  // Prefer the live client language over the (possibly stale) server-threaded `lang` prop —
-  // see CLAUDE.md multilingual-architecture reconciliation rule.
-  const activeLang = useActiveLanguage();
-  const effectiveLang = activeLang !== "en" ? activeLang : lang;
+  const activeLang = useActiveLanguage(lang);
+  const effectiveLang = activeLang;
   const th = (s: string) => translateHeader(effectiveLang, s);
   const [loading, setLoading] = useState(true);
   const [entries, setEntries] = useState<RoznamchaEntryRow[]>([]);

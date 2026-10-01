@@ -34,7 +34,11 @@ const updateSchema = scopeSchema.extend({
   isControlAccount: z.coerce.boolean().optional(),
   customerId: optionalUuidSchema,
   companyId: optionalUuidSchema,
+  companyIds: z.array(z.string()).optional(),
+  linkedCompanies: z.array(z.any()).optional(),
   bankId: optionalUuidSchema,
+  bankIds: z.array(z.string()).optional(),
+  linkedBanks: z.array(z.any()).optional(),
   shippingLineId: optionalUuidSchema,
   warehouseId: optionalUuidSchema,
   warehouseIds: z.array(z.string()).optional(),
@@ -46,7 +50,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 async function loadAccount(id: string) {
   const admin = createSupabaseAdminClient() as any;
-  const selectFields = "id, scope, operational_domain, country_id, country_branch_id, city_branch_id, parent_id, customer_id, company_id, bank_id, shipping_line_id, linked_countries, code, account_number, customer_number, account_serial_number, country_serial_number, branch_serial_number, manual_reference_number, creation_date, branch_code, branch_account_sequence, name, kind, currency, opening_balance, current_balance, status, is_control_account, contacts, created_at, updated_at, deleted_at";
+  const selectFields = "id, scope, operational_domain, country_id, country_branch_id, city_branch_id, parent_id, customer_id, company_id, bank_id, shipping_line_id, linked_countries, linked_companies, linked_banks, code, account_number, customer_number, account_serial_number, country_serial_number, branch_serial_number, manual_reference_number, creation_date, branch_code, branch_account_sequence, name, kind, currency, opening_balance, current_balance, status, is_control_account, contacts, created_at, updated_at, deleted_at";
 
   let data = null;
   if (isUuid(id)) {
@@ -70,7 +74,12 @@ async function loadAccount(id: string) {
   }
 
   let warehouses: any[] = [];
+  let companies: any[] = [];
+  let banks: any[] = [];
+  let customer: any = null;
+
   if (data?.id) {
+    // 1. Warehouses
     try {
       const { data: whRows } = await admin
         .from("enterprise_account_warehouses")
@@ -79,19 +88,127 @@ async function loadAccount(id: string) {
       if (whRows) {
         warehouses = whRows.map((r: any) => ({
           warehouseId: r.warehouse_id,
+          id: r.warehouse_id,
           isPrimary: r.is_primary,
           warehouseName: r.warehouses?.warehouse_name,
+          name: r.warehouses?.warehouse_name,
           warehouseCode: r.warehouses?.warehouse_code,
+          code: r.warehouses?.warehouse_code,
           fullAddress: r.warehouses?.full_address,
+          address: r.warehouses?.full_address,
           status: r.warehouses?.status
         }));
       }
     } catch {}
+
+    // 2. Companies
+    const parseJsonArray = (val: any): any[] => {
+      if (Array.isArray(val)) return val;
+      if (typeof val === "string") {
+        try {
+          const parsed = JSON.parse(val);
+          if (Array.isArray(parsed)) return parsed;
+        } catch {}
+      }
+      return [];
+    };
+
+    // 2. Companies
+    try {
+      const rawLinkedCompanies = parseJsonArray(data.linked_companies);
+      const companyIds = Array.from(new Set([
+        ...rawLinkedCompanies.map((c: any) => c.id || c.companyId).filter(Boolean),
+        ...(data.company_id ? [data.company_id] : [])
+      ]));
+
+      if (companyIds.length > 0) {
+        const { data: compRows } = await admin
+          .from("companies")
+          .select("id, name, legal_name, company_code, country_id, countries(name)")
+          .in("id", companyIds);
+
+        const compMap = new Map((compRows || []).map((c: any) => [c.id, c]));
+
+        companies = companyIds.map((cid, idx) => {
+          const comp: any = compMap.get(cid);
+          const rawItem = rawLinkedCompanies.find((r: any) => (r.id || r.companyId) === cid);
+          const isPrimary = rawItem ? Boolean(rawItem.isPrimary) : (cid === data.company_id || idx === 0);
+          return {
+            id: cid,
+            companyId: cid,
+            name: comp?.name || comp?.legal_name || rawItem?.name || "Company",
+            code: comp?.company_code || rawItem?.code || "",
+            country: comp?.countries?.name || rawItem?.country || "",
+            countryId: comp?.country_id || rawItem?.countryId || null,
+            isPrimary
+          };
+        });
+      }
+    } catch (compErr) {
+      console.error("Error loading linked companies:", compErr);
+    }
+
+    // 3. Banks
+    try {
+      const rawLinkedBanks = parseJsonArray(data.linked_banks);
+      const bankIds = Array.from(new Set([
+        ...rawLinkedBanks.map((b: any) => b.id || b.bankId).filter(Boolean),
+        ...(data.bank_id ? [data.bank_id] : [])
+      ]));
+
+      if (bankIds.length > 0) {
+        const { data: bankRows } = await admin
+          .from("banks")
+          .select("id, bank_name, branch_name, account_number, currency, swift_bic, iban_number")
+          .in("id", bankIds);
+
+        const bankMap = new Map((bankRows || []).map((b: any) => [b.id, b]));
+
+        banks = bankIds.map((bid, idx) => {
+          const b: any = bankMap.get(bid);
+          const rawItem = rawLinkedBanks.find((r: any) => (r.id || r.bankId) === bid);
+          const isPrimary = rawItem ? Boolean(rawItem.isPrimary) : (bid === data.bank_id || idx === 0);
+          return {
+            id: bid,
+            bankId: bid,
+            name: b?.bank_name || rawItem?.name || "Bank",
+            branchName: b?.branch_name || rawItem?.branchName || "",
+            accountNumber: b?.account_number || rawItem?.accountNumber || "",
+            currency: b?.currency || rawItem?.currency || "",
+            swiftBic: b?.swift_bic || rawItem?.swiftBic || "",
+            ibanNumber: b?.iban_number || rawItem?.ibanNumber || "",
+            isPrimary
+          };
+        });
+      }
+    } catch (bankErr) {
+      console.error("Error loading linked banks:", bankErr);
+    }
+
+    // 4. Customer
+    if (data.customer_id) {
+      try {
+        const { data: custRow } = await admin
+          .from("customers")
+          .select("id, customer_name, company_name, mobile, whatsapp, email, address, country_id, person_code")
+          .eq("id", data.customer_id)
+          .maybeSingle();
+        if (custRow) {
+          customer = {
+            ...custRow,
+            phone_number: custRow.mobile || custRow.whatsapp || "",
+            mobile_number: custRow.mobile || "",
+            email_address: custRow.email || "",
+            customer_code: custRow.person_code || ""
+          };
+        }
+      } catch {}
+    }
   }
 
   if (!data) return null;
 
-  return { ...data, warehouses } as
+  return { ...data, warehouses, companies, banks, customer } as
     | {
         id: string;
         scope: "super_admin" | "country" | "main_branch" | "city_branch";
@@ -104,6 +221,8 @@ async function loadAccount(id: string) {
         bank_id?: string | null;
         shipping_line_id?: string | null;
         linked_countries?: any;
+        linked_companies?: any[];
+        linked_banks?: any[];
         operational_domain?: string | null;
         code: string;
         account_number?: string | null;
@@ -123,6 +242,9 @@ async function loadAccount(id: string) {
         status: "active" | "archived";
         is_control_account: boolean;
         warehouses?: any[];
+        companies?: any[];
+        banks?: any[];
+        customer?: any;
         created_at: string;
         updated_at: string;
         deleted_at: string | null;
@@ -279,6 +401,32 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     if (rawHas("bankId")) updatePayload.bank_id = body.bankId;
     if (rawHas("shippingLineId")) updatePayload.shipping_line_id = body.shippingLineId;
     if (body.linkedCountries !== undefined) updatePayload.linked_countries = body.linkedCountries;
+    if (rawHas("linkedCompanies")) {
+      const dedupedComps = (body.linkedCompanies || []).filter((item: any, idx: number, arr: any[]) => {
+        const id = item?.id ? String(item.id).trim() : null;
+        return id ? arr.findIndex((x: any) => String(x?.id).trim() === id) === idx : true;
+      });
+      updatePayload.linked_companies = dedupedComps;
+      if (!rawHas("companyId")) {
+        const primaryComp = dedupedComps.find((c: any) => c.isPrimary) || dedupedComps[0];
+        if (primaryComp?.id) {
+          updatePayload.company_id = primaryComp.id;
+        }
+      }
+    }
+    if (rawHas("linkedBanks")) {
+      const dedupedBnks = (body.linkedBanks || []).filter((item: any, idx: number, arr: any[]) => {
+        const id = item?.id ? String(item.id).trim() : null;
+        return id ? arr.findIndex((x: any) => String(x?.id).trim() === id) === idx : true;
+      });
+      updatePayload.linked_banks = dedupedBnks;
+      if (!rawHas("bankId")) {
+        const primaryBank = dedupedBnks.find((b: any) => b.isPrimary) || dedupedBnks[0];
+        if (primaryBank?.id) {
+          updatePayload.bank_id = primaryBank.id;
+        }
+      }
+    }
     if (body.contacts !== undefined) updatePayload.contacts = body.contacts;
     if (nextScope === "super_admin") {
       updatePayload.country_id = null;
@@ -303,7 +451,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       .update(updatePayload)
       .eq("id", targetId)
       .select(
-        "id, scope, country_id, country_branch_id, city_branch_id, parent_id, customer_id, company_id, bank_id, code, account_number, customer_number, account_serial_number, country_serial_number, branch_serial_number, manual_reference_number, creation_date, branch_code, branch_account_sequence, name, kind, currency, opening_balance, current_balance, status, is_control_account, created_at, updated_at, deleted_at"
+        "id, scope, country_id, country_branch_id, city_branch_id, parent_id, customer_id, company_id, bank_id, shipping_line_id, linked_countries, linked_companies, linked_banks, code, account_number, customer_number, account_serial_number, country_serial_number, branch_serial_number, manual_reference_number, creation_date, branch_code, branch_account_sequence, name, kind, currency, opening_balance, current_balance, status, is_control_account, created_at, updated_at, deleted_at"
       )
       .single();
 
@@ -364,18 +512,25 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
 
       try {
         await admin.from("enterprise_account_warehouses").delete().eq("account_id", targetId);
+        let validCcpId: string | null = null;
+        const candidateCompanyId = (updatedAccount as any)?.company_id || current.company_id || null;
+        if (candidateCompanyId) {
+          const { data: ccp } = await admin.from("country_company_profiles").select("id").eq("id", candidateCompanyId).maybeSingle();
+          if (ccp) validCcpId = ccp.id;
+        }
+
         for (let i = 0; i < warehousesToUpdate.length; i++) {
           const whId = warehousesToUpdate[i];
           await admin.from("enterprise_account_warehouses").insert({
             account_id: targetId,
             warehouse_id: whId,
-            company_id: (updatedAccount as any)?.company_id || current.company_id || null,
+            company_id: validCcpId,
             customer_id: (updatedAccount as any)?.customer_id || current.customer_id || null,
             is_primary: i === 0
           });
           await admin.from("warehouses").update({
             account_id: targetId,
-            company_id: (updatedAccount as any)?.company_id || current.company_id || null
+            company_id: validCcpId
           }).eq("id", whId);
         }
       } catch (whErr) {
