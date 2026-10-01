@@ -23,7 +23,8 @@ import { createBank, updateBank, getBankById, type BankRecord } from "@/features
 import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
 import { VoiceFormFill } from "@/components/voice-form-fill";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
-import { t } from "@/lib/i18n/ui";
+import { t, type UiKey } from "@/lib/i18n/ui";
+import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { PersonPicker } from "@/components/erp/person-picker";
 import { CompanyPicker } from "@/features/companies/components/company-picker";
 
@@ -39,16 +40,22 @@ const DEFAULT_BANK_TYPES = [
   "Exchange Company"
 ];
 
-const BANK_TYPE_TRANSLATIONS: Record<string, Record<string, string>> = {
-  "Customer Account": { ur: "کسٹمر اکاؤنٹ", ar: "حساب العميل", fa: "حساب مشتری", ps: "د پیرودونکي حساب" },
-  "Business Account": { ur: "بزنس اکاؤنٹ", ar: "حساب تجاري", fa: "حساب تجاری", ps: "تجارتي حساب" },
-  "Personal Account": { ur: "ذاتی اکاؤنٹ", ar: "حساب شخصي", fa: "حساب شخصی", ps: "شخصي حساب" },
-  "Credit Card": { ur: "کریڈٹ کارڈ", ar: "بطاقة ائتمان", fa: "کارت اعتباری", ps: "کریډیټ کارت" },
-  "Debit Card": { ur: "ڈیبٹ کارڈ", ar: "بطاقة الخصم", fa: "کارت نقدی", ps: "ډیبیټ کارت" },
-  "Commercial Bank": { ur: "کمرشل بینک", ar: "بنك تجاري", fa: "بانک تجاری", ps: "سوداګریز بانک" },
-  "Islamic Bank": { ur: "اسلامی بینک", ar: "مصرف إسلامي", fa: "بانک اسلامی", ps: "اسلامي بانک" },
-  "Central Bank": { ur: "مرکزی بینک", ar: "البنك المركزي", fa: "بانک مرکزی", ps: "مرکزي بانک" },
-  "Exchange Company": { ur: "ایکسچینج کمپنی", ar: "شركة صرافة", fa: "شرکت صرافی", ps: "د تبادلې شرکت" }
+// Canonical English value -> central i18n key (lib/i18n/ui.ts). The STORED value
+// (in form.bankType / the DB) is always one of the English strings above, never a
+// translated label — only the DISPLAYED label changes with the active language.
+// A value typed in via "+ Add New Type" has no entry here and is deliberately
+// never translated (it's user-authored free text, same rule as any other
+// user-entered name — see CLAUDE.md "what is NOT translated").
+const BANK_TYPE_KEYS: Record<string, UiKey> = {
+  "Customer Account": "bank.type_customer_account",
+  "Business Account": "bank.type_business_account",
+  "Personal Account": "bank.type_personal_account",
+  "Credit Card": "bank.type_credit_card",
+  "Debit Card": "bank.type_debit_card",
+  "Commercial Bank": "bank.type_commercial_bank",
+  "Islamic Bank": "bank.type_islamic_bank",
+  "Central Bank": "bank.type_central_bank",
+  "Exchange Company": "bank.type_exchange_company"
 };
 
 const DEFAULT_ACCOUNT_TYPES = [
@@ -61,14 +68,14 @@ const DEFAULT_ACCOUNT_TYPES = [
   "Joint Account"
 ];
 
-const ACCOUNT_TYPE_TRANSLATIONS: Record<string, Record<string, string>> = {
-  "Business Account": { ur: "بزنس اکاؤنٹ", ar: "حساب تجاري", fa: "حساب تجاری", ps: "تجارتي حساب" },
-  "Company Account": { ur: "کمپنی اکاؤنٹ", ar: "حساب شركة", fa: "حساب شرکت", ps: "د شرکت حساب" },
-  "Personal Account": { ur: "ذاتی اکاؤنٹ", ar: "حساب شخصي", fa: "حساب شخصی", ps: "شخصي حساب" },
-  "Current Account": { ur: "کرنٹ اکاؤنٹ", ar: "حساب جاري", fa: "حساب جاری", ps: "روان حساب" },
-  "Savings Account": { ur: "سیونگ اکاؤنٹ", ar: "حساب توفير", fa: "حساب پس‌انداز", ps: "د سپما حساب" },
-  "Fixed Deposit": { ur: "فکسڈ ڈپازٹ", ar: "وديعة لأجل", fa: "سپرده ثابت", ps: "ثابت امانت" },
-  "Joint Account": { ur: "مشترکہ اکاؤنٹ", ar: "حساب مشترك", fa: "حساب مشترک", ps: "ګډ حساب" }
+const ACCOUNT_TYPE_KEYS: Record<string, UiKey> = {
+  "Business Account": "bank.atype_business_account",
+  "Company Account": "bank.atype_company_account",
+  "Personal Account": "bank.atype_personal_account",
+  "Current Account": "bank.atype_current_account",
+  "Savings Account": "bank.atype_savings_account",
+  "Fixed Deposit": "bank.atype_fixed_deposit",
+  "Joint Account": "bank.atype_joint_account"
 };
 
 const DEFAULT_BRANCH_CODE_TYPES = [
@@ -81,14 +88,14 @@ const DEFAULT_BRANCH_CODE_TYPES = [
   "IBAN Prefix"
 ];
 
-const BRANCH_CODE_TYPE_TRANSLATIONS: Record<string, Record<string, string>> = {
-  "SWIFT Code": { ur: "سوئفٹ کوڈ (SWIFT Code)", ar: "رمز سويفت (SWIFT)", fa: "کد سویفت", ps: "سویفټ کوډ" },
-  "Routing Number": { ur: "راؤٹنگ نمبر (Routing Number)", ar: "رقم التوجيه", fa: "شماره مسیریابی", ps: "روټینګ شمیره" },
-  "IFSC Code": { ur: "آئی ایف ایس سی کوڈ (IFSC Code)", ar: "رمز IFSC", fa: "کد IFSC", ps: "د IFSC کوډ" },
-  "Sort Code": { ur: "سورٹ کوڈ (Sort Code)", ar: "رمز الفرز", fa: "سورت کد", ps: "سارټ کوډ" },
-  "BSB Number": { ur: "بی ایس بی نمبر (BSB Number)", ar: "رقم BSB", fa: "شماره BSB", ps: "د BSB شمیره" },
-  "Branch Code": { ur: "برانچ کوڈ (Branch Code)", ar: "رمز الفرع", fa: "کد شعبه", ps: "د څانګې کوډ" },
-  "IBAN Prefix": { ur: "آئی بین پریفکس (IBAN Prefix)", ar: "بادئة الآيبان", fa: "پیشوند شبا", ps: "د IBAN مختاړی" }
+const BRANCH_CODE_TYPE_KEYS: Record<string, UiKey> = {
+  "SWIFT Code": "bank.bctype_swift_code",
+  "Routing Number": "bank.bctype_routing_number",
+  "IFSC Code": "bank.bctype_ifsc_code",
+  "Sort Code": "bank.bctype_sort_code",
+  "BSB Number": "bank.bctype_bsb_number",
+  "Branch Code": "bank.bctype_branch_code",
+  "IBAN Prefix": "bank.bctype_iban_prefix"
 };
 
 const CURRENCIES = [
@@ -98,16 +105,22 @@ const CURRENCIES = [
 
 const STATUS_OPTIONS = ["Active", "Inactive", "Frozen", "Closed"];
 
-const STATUS_TRANSLATIONS: Record<string, Record<string, string>> = {
-  "Active": { ur: "فعال (Active)", ar: "نشط", fa: "فعال", ps: "فعال" },
-  "Inactive": { ur: "غیر فعال (Inactive)", ar: "غير نشط", fa: "غیرفعال", ps: "غیر فعال" },
-  "Frozen": { ur: "منجمد (Frozen)", ar: "مجمد", fa: "مسدود", ps: "کنګل شوی" },
-  "Closed": { ur: "بند (Closed)", ar: "مغلق", fa: "بسته", ps: "تړل شوی" }
+const STATUS_KEYS: Record<string, UiKey> = {
+  "Active": "bank.status_active",
+  "Inactive": "bank.status_inactive",
+  "Frozen": "bank.status_frozen",
+  "Closed": "bank.status_closed"
 };
 
-function localizeOption(val: string, dict: Record<string, Record<string, string>>, lang: string): string {
-  if (lang === "en") return val;
-  return dict[val]?.[lang] || val;
+/**
+ * Resolves the DISPLAY label for a stored option value through the one central
+ * i18n dictionary. A value outside the canonical map is a user-added custom
+ * type (free text) and is shown as-is in every language — never guessed or
+ * mistranslated via a string match against a different field's vocabulary.
+ */
+function translateBankOption(val: string, keyMap: Record<string, UiKey>, lang: SupportedLanguage): string {
+  const key = keyMap[val];
+  return key ? t(lang, key, val) : val;
 }
 
 type BankFormState = {
@@ -552,7 +565,7 @@ export function BankForm({
                   className={selectClass}
                 >
                   <option value="">{tr("bank.select_bank_type", "Select Bank Type")}</option>
-                  {bankTypes.map((bt) => <option key={bt} value={bt}>{localizeOption(bt, BANK_TYPE_TRANSLATIONS, lang)}</option>)}
+                  {bankTypes.map((bt) => <option key={bt} value={bt}>{translateBankOption(bt, BANK_TYPE_KEYS, lang)}</option>)}
                   <option value="__new__">{tr("bank.add_new_type", "+ Add New Type")}</option>
                 </select>
               </div>
@@ -569,7 +582,7 @@ export function BankForm({
                   className={selectClass}
                 >
                   <option value="">{tr("bank.select_account_type", "Select Account Type")}</option>
-                  {accountTypes.map((at) => <option key={at} value={at}>{localizeOption(at, ACCOUNT_TYPE_TRANSLATIONS, lang)}</option>)}
+                  {accountTypes.map((at) => <option key={at} value={at}>{translateBankOption(at, ACCOUNT_TYPE_KEYS, lang)}</option>)}
                   <option value="__new__">{tr("bank.add_new_type", "+ Add New Type")}</option>
                 </select>
               </div>
@@ -588,7 +601,7 @@ export function BankForm({
             {/* Branch Code & Short Name */}
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="space-y-1.5 sm:col-span-2">
-                <Label className="text-xs font-semibold">{localizeOption(form.branchCodeType, BRANCH_CODE_TYPE_TRANSLATIONS, lang) || tr("bank.branch_code_generic", "Branch Code")} *</Label>
+                <Label className="text-xs font-semibold">{translateBankOption(form.branchCodeType, BRANCH_CODE_TYPE_KEYS, lang) || tr("bank.branch_code_generic", "Branch Code")} *</Label>
                 <div className="flex gap-1.5">
                   <select
                     value={form.branchCodeType}
@@ -598,13 +611,13 @@ export function BankForm({
                     }}
                     className="h-10 rounded-md border border-input bg-background px-2 text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring shrink-0"
                   >
-                    {branchCodeTypes.map((bct) => <option key={bct} value={bct}>{localizeOption(bct, BRANCH_CODE_TYPE_TRANSLATIONS, lang)}</option>)}
+                    {branchCodeTypes.map((bct) => <option key={bct} value={bct}>{translateBankOption(bct, BRANCH_CODE_TYPE_KEYS, lang)}</option>)}
                     <option value="__new__">{tr("bank.add_new_type", "+ Add New Type")}</option>
                   </select>
                   <Input
                     value={form.branchCode}
                     onChange={(e) => set("branchCode", e.target.value)}
-                    placeholder={`${tr("bank.enter_prefix", "Enter")} ${localizeOption(form.branchCodeType, BRANCH_CODE_TYPE_TRANSLATIONS, lang).toLowerCase()}`}
+                    placeholder={`${tr("bank.enter_prefix", "Enter")} ${translateBankOption(form.branchCodeType, BRANCH_CODE_TYPE_KEYS, lang).toLowerCase()}`}
                     className="flex-1"
                   />
                 </div>
@@ -691,7 +704,7 @@ export function BankForm({
                   onChange={(e) => set("accountStatus", e.target.value)}
                   className={selectClass}
                 >
-                  {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{localizeOption(s, STATUS_TRANSLATIONS, lang)}</option>)}
+                  {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{translateBankOption(s, STATUS_KEYS, lang)}</option>)}
                 </select>
               </div>
             </div>
@@ -898,13 +911,13 @@ export function BankForm({
             <div className="flex justify-between">
               <span className="text-muted-foreground">{tr("bank.branch_label", "Branch")}</span>
               <span className="font-semibold text-slate-800">
-                {savedBank ? savedBank.branch_name : (form.branchCode ? `${localizeOption(form.branchCodeType, BRANCH_CODE_TYPE_TRANSLATIONS, lang)} - ${form.branchCode}` : "-")}
+                {savedBank ? savedBank.branch_name : (form.branchCode ? `${translateBankOption(form.branchCodeType, BRANCH_CODE_TYPE_KEYS, lang)} - ${form.branchCode}` : "-")}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">{tr("common.status", "Status")}</span>
               <span className={`font-bold ${savedBank ? (savedBank.account_status === "Active" ? "text-emerald-600" : "text-amber-600") : (form.accountStatus === "Active" ? "text-emerald-600" : "text-amber-600")}`}>
-                {localizeOption(savedBank ? (savedBank.account_status || "Active") : form.accountStatus, STATUS_TRANSLATIONS, lang)}
+                {translateBankOption(savedBank ? (savedBank.account_status || "Active") : form.accountStatus, STATUS_KEYS, lang)}
               </span>
             </div>
 
