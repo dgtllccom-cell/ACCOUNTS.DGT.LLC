@@ -1,6 +1,6 @@
 import postgres from "postgres";
 
-const dbUrl = "postgresql://postgres.csesvyxxjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres";
+const dbUrl = process.env.DATABASE_URL || "";
 if (!dbUrl.includes("csesvyxxjivnkkozgopt")) {
   throw new Error("SAFETY CHECK FAILED: Must run only on dev database!");
 }
