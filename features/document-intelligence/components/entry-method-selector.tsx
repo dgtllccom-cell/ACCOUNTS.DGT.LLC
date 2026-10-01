@@ -27,21 +27,46 @@ import type { VoiceInterpretationResult } from "@/lib/services/voice-context-int
 
 /** Map a targetModule string to a VoiceContext for the interpreter. */
 const MODULE_VOICE_CONTEXT: Record<string, VoiceContext> = {
-  purchase_orders: "purchase",
-  sales_orders: "sales",
-  roznamcha: "roznamcha",
-  expenses: "expenses",
+  account_master: "accounts",
   accounts: "accounts",
+  new_account: "accounts",
+  ledger_master: "accounts",
+  ledgers: "accounts",
+  purchase_orders: "purchase",
+  purchase: "purchase",
+  purchases: "purchase",
+  local_purchase: "purchase",
+  sales_orders: "sales",
+  sales: "sales",
+  sales_order: "sales",
+  roznamcha: "roznamcha",
+  cash_entry: "roznamcha",
+  daily_cash: "roznamcha",
+  money_exchange: "roznamcha",
+  bank_payment: "roznamcha",
+  expenses: "expenses",
+  expense_bills: "expenses",
   customers: "customer",
+  customer: "customer",
   companies: "company",
+  company: "company",
+  suppliers: "company",
+  supplier: "company",
   banks: "bank",
+  bank: "bank",
   employees: "employee",
+  employee: "employee",
   goods: "goods",
+  goods_master: "goods",
   purchase_loading: "loading",
+  loading: "loading",
   goods_received: "receiving",
+  receiving: "receiving",
   shipping: "shipping",
   clearing: "clearing",
-  customer_orders: "clearing",
+  customer_orders: "customer_orders",
+  warehouses: "warehouses",
+  temp_bills: "temp_bills",
   document_intake: "document_intake",
 };
 
@@ -430,7 +455,17 @@ export function EntryMethodSelector({
               {s.t("em_voice_panel_desc", "Once you apply the voice fields below, the form will open pre-filled. Review all values before saving.")}
             </p>
             <VoiceFormFill
-              context={MODULE_VOICE_CONTEXT[targetModule] ?? "purchase"}
+              context={
+                MODULE_VOICE_CONTEXT[targetModule] ||
+                (targetModule.includes("account") ? "accounts" :
+                 targetModule.includes("sale") ? "sales" :
+                 targetModule.includes("purchase") ? "purchase" :
+                 targetModule.includes("roznamcha") || targetModule.includes("cash") ? "roznamcha" :
+                 targetModule.includes("order") ? "customer_orders" :
+                 targetModule.includes("expense") ? "expenses" :
+                 targetModule.includes("shipping") ? "shipping" :
+                 "accounts")
+              }
               lang={s.lang as any}
               onApply={(fields, interp) => {
                 // Store voice result in sessionStorage so the form can read it on mount

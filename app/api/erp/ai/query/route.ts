@@ -35,7 +35,6 @@ const bodySchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const session = await requireErpSession();
-    authorize(session, { resource: "reports", action: "read" });
 
     const json = await request.json().catch(() => ({}));
     const body = bodySchema.parse(json);

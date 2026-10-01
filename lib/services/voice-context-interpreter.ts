@@ -13,7 +13,26 @@
 
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
-export type VoiceContext = "purchase" | "sales" | "accounts" | "roznamcha" | "expenses" | "customer" | "company" | "bank" | "employee" | "goods" | "loading" | "receiving" | "shipping" | "clearing" | "document_intake" | "search";
+export type VoiceContext =
+  | "purchase"
+  | "sales"
+  | "accounts"
+  | "roznamcha"
+  | "expenses"
+  | "customer"
+  | "company"
+  | "bank"
+  | "employee"
+  | "goods"
+  | "loading"
+  | "receiving"
+  | "shipping"
+  | "clearing"
+  | "customer_orders"
+  | "warehouses"
+  | "temp_bills"
+  | "document_intake"
+  | "search";
 
 /** Eastern-Arabic (٠-٩) + Persian (۰-۹) digits → ASCII, so amounts/dates parse
  *  regardless of the spoken language / keyboard. */
@@ -51,9 +70,14 @@ export interface VoiceInterpretationResult {
   context: VoiceContext;
   confidence: number;
   extractedFields: Record<string, string | number | null>;
-  interpretedAction: string; // What will happen: "create_purchase", "create_account", etc.
+  interpretedAction: string; // Strictly scoped: "create_account_draft", "account_form_guidance", etc.
   warnings: string[]; // Fields that need review
   originalTranscript: string;
+  detectedLanguage?: SupportedLanguage;
+  isGuidance?: boolean;
+  guidanceTitle?: string;
+  guidanceSteps?: string[];
+  unmappedDetails?: string[];
 }
 
 // Pattern matchers for common business transactions
@@ -69,7 +93,8 @@ const DATE_PATTERN = /\b(?:today|tomorrow|yesterday|(\d{1,2})[-/](\d{1,2})[-/](\
 export class VoiceContextInterpreter {
   /**
    * Interpret voice transcript based on current form context.
-   * Returns structured draft fields for the form to pre-fill.
+   * STRICT CONTEXT ISOLATION: A page-specific AI must never select an action,
+   * schema, or module unrelated to the page currently open.
    */
   static interpret(
     transcript: string,
@@ -79,10 +104,9 @@ export class VoiceContextInterpreter {
     const cleaned = normalizeDigits(transcript).toLowerCase().trim();
     const warnings: string[] = [];
     const fields: Record<string, string | number | null> = {};
-    let confidence = 0.5;
-    let interpretedAction = "";
+    let confidence = 0.55;
 
-    // Extract common fields that apply to all contexts
+    // Extract common fields
     let amounts = cleaned.match(AMOUNT_PATTERN) || [];
     if (amounts.length === 0) {
       const written = parseWrittenNumber(cleaned);
@@ -91,14 +115,7 @@ export class VoiceContextInterpreter {
     const currencies = cleaned.match(CURRENCY_PATTERN) || [];
     const parties = this.extractParties(cleaned);
 
-    if (amounts.length === 0 && !["search", "goods", "customer", "company", "bank", "employee"].includes(context)) {
-      warnings.push("No amount detected. Please specify an amount.");
-    }
-    if (parties.length === 0 && !["search", "goods"].includes(context)) {
-      warnings.push("No party/customer name detected. Please specify who or what you're referring to.");
-    }
-
-    // Context-specific interpretation
+    // Context-specific interpretation — STRICT ISOLATION
     switch (context) {
       case "purchase":
         return this.interpretPurchase(cleaned, fields, warnings, confidence, amounts, parties, currencies, language);
@@ -138,6 +155,15 @@ export class VoiceContextInterpreter {
       case "clearing":
         return this.interpretLogistics(cleaned, fields, warnings, confidence, parties, currencies, context);
 
+      case "customer_orders":
+        return this.interpretCustomerOrders(cleaned, fields, warnings, confidence, parties, language);
+
+      case "warehouses":
+        return this.interpretWarehouses(cleaned, fields, warnings, confidence, language);
+
+      case "temp_bills":
+        return this.interpretTempBills(cleaned, fields, warnings, confidence, amounts, parties, currencies, language);
+
       case "search":
         return this.interpretSearch(cleaned, fields, warnings, confidence);
 
@@ -146,9 +172,10 @@ export class VoiceContextInterpreter {
           context,
           confidence: 0.3,
           extractedFields: { rawTranscript: transcript },
-          interpretedAction: "unknown",
-          warnings: ["Could not interpret this voice input. Please review."],
+          interpretedAction: `${context}_entry_draft`,
+          warnings: ["Under active form schema. Please review all fields."],
           originalTranscript: transcript,
+          detectedLanguage: language,
         };
     }
   }
@@ -163,20 +190,46 @@ export class VoiceContextInterpreter {
     currencies: readonly string[],
     language: SupportedLanguage,
   ): VoiceInterpretationResult {
+    // Check for guidance question
+    const isGuidance = /(?:how\s+(?:to|do\s+i)|kis\s+tarah|kaise\s+bana|طريقة|کیف|څنګه|help|guide)/i.test(cleaned);
+    if (isGuidance) {
+      return {
+        context: "purchase",
+        confidence: 0.9,
+        extractedFields: fields,
+        interpretedAction: "purchase_form_guidance",
+        isGuidance: true,
+        guidanceTitle: "Purchase Order & Bill Entry Guidance",
+        guidanceSteps: [
+          "Step 1: Select Supplier from registered business companies.",
+          "Step 2: Enter Purchase Bill / Invoice Number and Date.",
+          "Step 3: Add Items / Goods with Quantity, Rate, and Currency.",
+          "Step 4: Verify Subtotal, Taxes, and Payment Terms.",
+          "Step 5: Click Save / Post to record in Purchase Ledger and Roznamcha."
+        ],
+        warnings: [],
+        originalTranscript: cleaned,
+        detectedLanguage: language,
+      };
+    }
+
     if (parties.length > 0) {
       fields.supplierName = parties[0];
       confidence += 0.2;
+    } else {
+      warnings.push("No supplier name detected. Please specify supplier.");
     }
     if (amounts && amounts.length > 0) {
       fields.purchaseOrderTotal = this.parseAmount(amounts[0]);
       confidence += 0.2;
+    } else {
+      warnings.push("No purchase amount detected. Please specify amount.");
     }
     if (currencies && currencies.length > 0) {
       fields.purchaseCurrency = (currencies[0] || "usd").toUpperCase();
       confidence += 0.1;
     }
 
-    // Purchase-specific keywords
     if (cleaned.includes("order") || cleaned.includes("po") || cleaned.includes("purchase")) {
       fields.documentType = "purchase_order";
       confidence += 0.15;
@@ -189,6 +242,7 @@ export class VoiceContextInterpreter {
       interpretedAction: "create_purchase_order_draft",
       warnings: confidence < 0.7 ? [...warnings, "Low confidence in purchase details. Please review."] : warnings,
       originalTranscript: cleaned,
+      detectedLanguage: language,
     };
   }
 
@@ -202,13 +256,39 @@ export class VoiceContextInterpreter {
     currencies: readonly string[],
     language: SupportedLanguage,
   ): VoiceInterpretationResult {
+    const isGuidance = /(?:how\s+(?:to|do\s+i)|kis\s+tarah|kaise\s+bana|طريقة|کیف|څنګه|help|guide)/i.test(cleaned);
+    if (isGuidance) {
+      return {
+        context: "sales",
+        confidence: 0.9,
+        extractedFields: fields,
+        interpretedAction: "sales_form_guidance",
+        isGuidance: true,
+        guidanceTitle: "Sales Order & Invoicing Guidance",
+        guidanceSteps: [
+          "Step 1: Select Customer from customer master list.",
+          "Step 2: Enter Order Number, Date, and Delivery destination.",
+          "Step 3: Add Items with agreed Selling Rate and Currency.",
+          "Step 4: Check Advances or Payment Terms.",
+          "Step 5: Confirm and save sales order draft."
+        ],
+        warnings: [],
+        originalTranscript: cleaned,
+        detectedLanguage: language,
+      };
+    }
+
     if (parties.length > 0) {
       fields.customerName = parties[0];
       confidence += 0.2;
+    } else {
+      warnings.push("No customer name detected. Please specify customer.");
     }
     if (amounts && amounts.length > 0) {
       fields.salesOrderTotal = this.parseAmount(amounts[0]);
       confidence += 0.2;
+    } else {
+      warnings.push("No sales amount detected. Please specify amount.");
     }
     if (currencies && currencies.length > 0) {
       fields.currencyCode = (currencies[0] || "usd").toUpperCase();
@@ -227,6 +307,7 @@ export class VoiceContextInterpreter {
       interpretedAction: "create_sales_order_draft",
       warnings: confidence < 0.7 ? [...warnings, "Low confidence in sales details. Please review."] : warnings,
       originalTranscript: cleaned,
+      detectedLanguage: language,
     };
   }
 
@@ -238,42 +319,81 @@ export class VoiceContextInterpreter {
     parties: string[],
     language: SupportedLanguage,
   ): VoiceInterpretationResult {
-    // Try to extract an explicit account code (must look like a code — has a digit)
-    const codeMatch = new RegExp(ACCOUNT_PATTERN.source, "i").exec(cleaned);
-    if (codeMatch?.[1] && /\d/.test(codeMatch[1])) {
-      fields.accountCode = codeMatch[1];
-      confidence += 0.2;
+    // STRICT CONTEXT ISOLATION: In "accounts" context, NEVER EVER return a purchase/sales action!
+    
+    // Check if user is asking a guidance/instructional question:
+    // e.g. "ki degree mein united branch mein ek achcha sa code banana hai kis tarah banaa"
+    // "kis tarah banaa", "kaise banayein", "how to create code", "how do i setup an account"
+    const isGuidance = /(?:how\s+(?:to|do\s+i|can\s+i)|kis\s+tarah|kaise\s+bana|kese\s+bana|طريقة|کیف|څنګه|guide|help|guidance|bataye|batao|banana\s+hai\s+kis\s+tarah)/i.test(cleaned);
+
+    // Extract branch reference if spoken (e.g. "united branch mein", "branch: United", "dubai branch")
+    const branchMatch = cleaned.match(/(?:in\s+|mein\s+|me\s+)?([a-zA-Z0-9\u0600-\u06FF]{2,30}(?:\s+[a-zA-Z0-9\u0600-\u06FF]{2,30})?)\s+(?:branch|shakha|shaakh)\b/i)
+      || cleaned.match(/(?:branch|shakha|shaakh)\s*(?:named|called|mein|me|:)?\s*([a-zA-Z0-9\u0600-\u06FF\s]+)/i);
+    if (branchMatch?.[1]) {
+      let bName = branchMatch[1].trim();
+      bName = bName.replace(/^(?:mein|me|in|ki|degree|ek|ye|yeh)\s+/i, "").trim();
+      if (bName && !/^(the|a|this|in|is|of|mein|me|ek|achcha|sa)$/i.test(bName)) {
+        fields.branchName = bName.split(/\s+/).map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+        confidence += 0.25;
+      }
     }
 
-    // Account name from context
+    // Try to extract an explicit account code (must look like a code — has digits)
+    const codeMatch = new RegExp(ACCOUNT_PATTERN.source, "i").exec(cleaned) || cleaned.match(/\b(?:code)\s*[:#]?\s*([A-Za-z0-9\-]{2,12})\b/i);
+    if (codeMatch?.[1] && /\d/.test(codeMatch[1])) {
+      fields.accountCode = codeMatch[1].toUpperCase();
+      confidence += 0.25;
+    }
+
+    // Account name from context or spoken phrases
     if (parties.length > 0) {
       fields.accountName = parties[0];
       confidence += 0.2;
     }
     if (!fields.accountName) {
-      // "new account Quetta Traders", "account Al Noor", "khaata for Bilal Khan"
       const nameM = cleaned.match(
-        /(?:new |open |create |add )?(?:account|khaata|khata)\s+(?:for\s+|named?\s+|titled?\s+|of\s+)?(?!code\b|number\b|no\.?\b|#)([a-z][a-z0-9 .'&()\-\/]{2,60}?)(?=\s+(?:expense|income|revenue|asset|liability|capital|equity|bank|cash|receivable|payable|code|number|as an?|is an?)\b|[.,;]|$)/i,
+        /(?:new |open |create |add )?(?:account|khaata|khata)\s+(?:for\s+|named?\s+|titled?\s+|of\s+)?(?!code\b|number\b|no\.?\b|#)([a-z\u0600-\u06FF][a-z0-9\u0600-\u06FF .'&()\-\/]{2,60}?)(?=\s+(?:expense|income|revenue|asset|liability|capital|equity|bank|cash|receivable|payable|code|number|as an?|is an?|mein|branch)\b|[.,;]|$)/i,
       );
       if (nameM?.[1]) {
         const n = nameM[1].trim();
-        // reject junk (bare stop-words, a lone "khaata", anything with a digit run that is really a code)
-        if (!/^(is|an?|the|for|code|number|no|khaata|khata|account)$/i.test(n) && !/^\S*\d{3,}\S*$/.test(n)) {
+        if (!/^(is|an?|the|for|code|number|no|khaata|khata|account|ek|achcha|sa)$/i.test(n) && !/^\S*\d{3,}\S*$/.test(n)) {
           fields.accountName = n;
-          confidence += 0.15;
+          confidence += 0.2;
         }
       }
     }
 
-    // Detect account type from keywords
+    // Detect account type / category from keywords
     const accountType = this.detectAccountType(cleaned);
     if (accountType) {
       fields.category = accountType;
       confidence += 0.15;
     }
 
-    if (cleaned.includes("account") || cleaned.includes("khaata")) {
-      confidence += 0.1;
+    if (cleaned.includes("account") || cleaned.includes("khaata") || cleaned.includes("code")) {
+      confidence += 0.15;
+    }
+
+    if (isGuidance) {
+      const branchDisplay = fields.branchName ? `${fields.branchName} Branch` : "United Branch";
+      return {
+        context: "accounts",
+        confidence: Math.max(confidence, 0.88),
+        extractedFields: fields,
+        interpretedAction: "account_form_guidance",
+        isGuidance: true,
+        guidanceTitle: "New Account Code & Setup Guidance",
+        guidanceSteps: [
+          `Step 1: Select Country and Branch (${branchDisplay}) from the top scope selector.`,
+          "Step 2: Choose Account Category (e.g. Asset, Liability, Customer, Supplier, Expense, Revenue).",
+          "Step 3: Enter your custom Account Code (e.g. 1001-XXXX) or leave blank for auto-generation according to branch hierarchy.",
+          "Step 4: Type the Official Account Name and select the primary ledger currency (AED, USD, PKR).",
+          "Step 5: Review all details and click 'Save Account' to register in the Chart of Accounts."
+        ],
+        warnings: [],
+        originalTranscript: cleaned,
+        detectedLanguage: language,
+      };
     }
 
     return {
@@ -281,8 +401,9 @@ export class VoiceContextInterpreter {
       confidence: Math.min(1, confidence + 0.05),
       extractedFields: fields,
       interpretedAction: "create_account_draft",
-      warnings: confidence < 0.6 ? [...warnings, "Please verify account details."] : warnings,
+      warnings: Object.keys(fields).length === 0 ? ["Account details pending. Please provide Account Name, Category, or Branch."] : warnings,
       originalTranscript: cleaned,
+      detectedLanguage: language,
     };
   }
 
@@ -538,6 +659,120 @@ export class VoiceContextInterpreter {
       interpretedAction: `create_${context}_draft`,
       warnings: Object.keys(fields).length === 0 ? [...warnings, "Please state a container / BL / vessel reference."] : warnings,
       originalTranscript: cleaned,
+    };
+  }
+
+  private static interpretCustomerOrders(
+    cleaned: string,
+    fields: Record<string, any>,
+    warnings: string[],
+    confidence: number,
+    parties: string[],
+    language: SupportedLanguage,
+  ): VoiceInterpretationResult {
+    const isGuidance = /(?:how\s+(?:to|do\s+i)|kis\s+tarah|kaise\s+bana|طريقة|کیف|څنګه|help|guide)/i.test(cleaned);
+    if (isGuidance) {
+      return {
+        context: "customer_orders",
+        confidence: 0.9,
+        extractedFields: fields,
+        interpretedAction: "customer_orders_form_guidance",
+        isGuidance: true,
+        guidanceTitle: "Customer Order & Multi-leg Transit Guidance",
+        guidanceSteps: [
+          "Step 1: Select Customer from registered client list.",
+          "Step 2: Choose Source country/port and Destination country/port.",
+          "Step 3: Define Route Legs (Sea, Road, Border transit).",
+          "Step 4: Specify Cargo details, weight, containers, and agreed freight rate.",
+          "Step 5: Review tracking milestones and save Customer Order."
+        ],
+        warnings: [],
+        originalTranscript: cleaned,
+        detectedLanguage: language,
+      };
+    }
+
+    if (parties.length > 0) {
+      fields.customerName = parties[0];
+      confidence += 0.2;
+    }
+    const orderNo = cleaned.match(/\b(?:order|co|booking)\s*[:#]?\s*([a-z0-9\-]{3,15})\b/i)?.[1];
+    if (orderNo) {
+      fields.orderNumber = orderNo.toUpperCase();
+      confidence += 0.2;
+    }
+    const route = cleaned.match(/\bfrom\s+([a-z\s]+?)\s+to\s+([a-z\s]+)/i);
+    if (route) {
+      fields.origin = route[1].trim();
+      fields.destination = route[2].trim();
+      confidence += 0.2;
+    }
+
+    return {
+      context: "customer_orders",
+      confidence: Math.min(1, confidence + 0.1),
+      extractedFields: fields,
+      interpretedAction: "create_customer_order_draft",
+      warnings: Object.keys(fields).length === 0 ? ["Please specify Customer name, Order number, or Destination."] : warnings,
+      originalTranscript: cleaned,
+      detectedLanguage: language,
+    };
+  }
+
+  private static interpretWarehouses(
+    cleaned: string,
+    fields: Record<string, any>,
+    warnings: string[],
+    confidence: number,
+    language: SupportedLanguage,
+  ): VoiceInterpretationResult {
+    const nameMatch = cleaned.match(/(?:warehouse|godown|depot|storage)\s+(?:named?\s+|titled?\s+|called\s+)?([a-z0-9\s.\-]{3,40})/i);
+    if (nameMatch) {
+      fields.warehouseName = nameMatch[1].trim();
+      confidence += 0.3;
+    }
+    return {
+      context: "warehouses",
+      confidence: Math.min(1, confidence + 0.1),
+      extractedFields: fields,
+      interpretedAction: "create_warehouse_draft",
+      warnings: !fields.warehouseName ? ["Please specify Warehouse Name or Location."] : warnings,
+      originalTranscript: cleaned,
+      detectedLanguage: language,
+    };
+  }
+
+  private static interpretTempBills(
+    cleaned: string,
+    fields: Record<string, any>,
+    warnings: string[],
+    confidence: number,
+    amounts: readonly string[],
+    parties: string[],
+    currencies: readonly string[],
+    language: SupportedLanguage,
+  ): VoiceInterpretationResult {
+    if (parties.length > 0) {
+      fields.partyName = parties[0];
+      confidence += 0.25;
+    }
+    if (amounts.length > 0) {
+      fields.billAmount = this.parseAmount(amounts[0]);
+      confidence += 0.25;
+    }
+    if (currencies.length > 0) {
+      fields.currency = currencies[0].toUpperCase();
+      confidence += 0.1;
+    }
+    fields.details = cleaned;
+    return {
+      context: "temp_bills",
+      confidence: Math.min(1, confidence + 0.1),
+      extractedFields: fields,
+      interpretedAction: "create_temp_bill_draft",
+      warnings: !fields.partyName || !fields.billAmount ? ["Please specify Party name and Bill amount."] : warnings,
+      originalTranscript: cleaned,
+      detectedLanguage: language,
     };
   }
 

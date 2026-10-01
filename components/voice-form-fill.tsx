@@ -116,69 +116,111 @@ export function VoiceFormFill({
             <p className="mt-1 text-xs text-slate-100 font-medium">{result.originalTranscript}</p>
           </div>
 
-          <div className="flex items-center gap-2 text-[11px] text-slate-400">
+          <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
             <span className="font-bold text-slate-300">{s.t("understood_as", "Understood as")}:</span>
             <span className="rounded-md bg-cyan-500/10 border border-cyan-400/20 px-2 py-0.5 font-mono text-[10px] font-black text-cyan-300">
               {result.interpretedAction}
             </span>
+            <span className="rounded-md bg-indigo-500/15 border border-indigo-400/30 px-2 py-0.5 font-mono text-[10px] font-black text-indigo-300 uppercase">
+              SCHEMA: {context}
+            </span>
             <span>· {s.t("confidence", "Confidence")} {(result.confidence * 100).toFixed(0)}%</span>
           </div>
 
-          {/* proposed fields — editable */}
-          {Object.keys(edited).length > 0 ? (
-            <div className="space-y-1.5 rounded-xl bg-[#070f21] border border-blue-900/40 p-3">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
-                <Pencil className="h-3 w-3 text-cyan-400" /> {s.t("proposed_fields", "Proposed values — correct before applying")}
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-                {Object.entries(edited).map(([k, v]) => (
-                  <label key={k} className="flex items-center gap-2 bg-[#0a152e] px-2.5 py-1.5 rounded-lg border border-blue-800/30">
-                    <span className="w-24 shrink-0 text-[10px] font-bold text-slate-400 uppercase">{label(k)}</span>
-                    <input
-                      value={v}
-                      onChange={(e) => setEdited((prev) => ({ ...prev, [k]: e.target.value }))}
-                      className="flex-1 rounded border border-blue-700/40 bg-[#050b17] px-2 py-1 text-xs text-white outline-none focus:border-cyan-400"
-                    />
-                  </label>
+          {/* Visual Form Guidance Mode */}
+          {result.isGuidance && result.guidanceSteps && result.guidanceSteps.length > 0 ? (
+            <div className="space-y-3 rounded-xl bg-gradient-to-br from-indigo-950/80 to-[#070f21] border border-cyan-500/40 p-4">
+              <div className="flex items-center gap-2">
+                <div className="h-6 w-6 rounded-lg bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center">
+                  <Sparkles className="h-3.5 w-3.5 text-cyan-300" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-black text-white">{result.guidanceTitle || "Interactive Form Guidance"}</h4>
+                  <p className="text-[10px] text-cyan-300">Live page-specific step-by-step instructions for this active form</p>
+                </div>
+              </div>
+
+              <div className="space-y-2 pt-1">
+                {result.guidanceSteps.map((step, idx) => (
+                  <div key={idx} className="flex items-start gap-2.5 rounded-lg bg-slate-900/60 border border-slate-800 p-2.5 text-xs text-slate-200">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-cyan-500/20 text-[10px] font-black text-cyan-300 border border-cyan-400/30">
+                      {idx + 1}
+                    </span>
+                    <span className="font-medium text-[11px] leading-relaxed">{step}</span>
+                  </div>
                 ))}
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={() => setResult(null)}
+                  className="px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-xs font-bold text-white transition flex items-center gap-1.5 shadow-sm"
+                >
+                  <Check className="h-3.5 w-3.5" />
+                  <span>Understood · Back to Form</span>
+                </button>
               </div>
             </div>
           ) : (
-            <p className="text-[11px] text-amber-400">
-              {s.t("nothing_extracted", "Nothing could be mapped to a field — please type the details into the form directly.")}
-            </p>
-          )}
+            <>
+              {/* proposed fields — editable */}
+              {Object.keys(edited).length > 0 ? (
+                <div className="space-y-1.5 rounded-xl bg-[#070f21] border border-blue-900/40 p-3">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+                    <Pencil className="h-3 w-3 text-cyan-400" /> {s.t("proposed_fields", "Proposed values — correct before applying")}
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                    {Object.entries(edited).map(([k, v]) => (
+                      <label key={k} className="flex items-center gap-2 bg-[#0a152e] px-2.5 py-1.5 rounded-lg border border-blue-800/30">
+                        <span className="w-24 shrink-0 text-[10px] font-bold text-slate-400 uppercase">{label(k)}</span>
+                        <input
+                          value={v}
+                          onChange={(e) => setEdited((prev) => ({ ...prev, [k]: e.target.value }))}
+                          className="flex-1 rounded border border-blue-700/40 bg-[#050b17] px-2 py-1 text-xs text-white outline-none focus:border-cyan-400"
+                        />
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-[11px] text-amber-400">
+                  {s.t("nothing_extracted", "Nothing could be mapped to a field — please type the details into the form directly.")}
+                </p>
+              )}
 
-          {result.warnings.length > 0 && (
-            <ul className="space-y-0.5 rounded-lg bg-amber-950/30 border border-amber-900/50 p-2 text-[11px] text-amber-300">
-              {result.warnings.map((w, i) => (
-                <li key={i} className="flex gap-1.5"><AlertTriangle className="h-3 w-3 shrink-0 mt-0.5 text-amber-400" />{w}</li>
-              ))}
-            </ul>
-          )}
+              {result.warnings.length > 0 && (
+                <ul className="space-y-0.5 rounded-lg bg-amber-950/30 border border-amber-900/50 p-2 text-[11px] text-amber-300">
+                  {result.warnings.map((w, i) => (
+                    <li key={i} className="flex gap-1.5"><AlertTriangle className="h-3 w-3 shrink-0 mt-0.5 text-amber-400" />{w}</li>
+                  ))}
+                </ul>
+              )}
 
-          <div className="flex justify-end gap-2 pt-1">
-            <button
-              type="button"
-              onClick={() => { setResult(null); setEdited({}); }}
-              className="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition flex items-center gap-1"
-            >
-              <X className="h-3.5 w-3.5" />
-              <span>{s.t("discard", "Discard")}</span>
-            </button>
-            <button
-              type="button"
-              onClick={apply}
-              disabled={Object.keys(edited).length === 0}
-              className="px-4 py-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-xs font-black text-white shadow-md shadow-blue-600/20 disabled:opacity-40 transition flex items-center gap-1.5"
-            >
-              <Check className="h-3.5 w-3.5" />
-              <span>{s.t("apply_to_form", "Apply to form")}</span>
-            </button>
-          </div>
-          <p className="text-[10px] text-slate-400">
-            {s.t("voice_safety_note", "Applying only fills the form. You still review every field and press Save — nothing posts until you confirm.")}
-          </p>
+              <div className="flex justify-end gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => { setResult(null); setEdited({}); }}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition flex items-center gap-1"
+                >
+                  <X className="h-3.5 w-3.5" />
+                  <span>{s.t("discard", "Discard")}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={apply}
+                  disabled={Object.keys(edited).length === 0}
+                  className="px-4 py-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-xs font-black text-white shadow-md shadow-blue-600/20 disabled:opacity-40 transition flex items-center gap-1.5"
+                >
+                  <Check className="h-3.5 w-3.5" />
+                  <span>{s.t("apply_to_form", "Apply to form")}</span>
+                </button>
+              </div>
+              <p className="text-[10px] text-slate-400">
+                {s.t("voice_safety_note", "Applying only fills the form. You still review every field and press Save — nothing posts until you confirm.")}
+              </p>
+            </>
+          )}
         </div>
       )}
     </div>
