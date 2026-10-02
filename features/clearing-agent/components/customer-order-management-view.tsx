@@ -2069,6 +2069,12 @@ export function CustomerOrderManagementView() {
       const firstGoods = goodsItems[0] ?? defaultGoodsItem();
       const totalQuantity = goodsItems.reduce((acc, g) => acc + (Number(g.quantity) || 0), 0);
       const totalGrossKg = goodsItems.reduce((acc, g) => acc + (Number(g.totalKg) || 0), 0);
+      // Real per-row weights: gross, tare and NET are three different numbers. The aggregate net
+      // used to be written from the gross total, so a 1C Save Draft stored gross in `goods_net_weight`.
+      const sumKg = (pick: (g: CustomerOrderGoodsItem) => unknown) => goodsItems.reduce((acc, g) => acc + (Number(pick(g)) || 0), 0);
+      const aggGrossKg = sumKg((g) => g.grossWeight || g.totalKg);
+      const aggEmptyKg = sumKg((g) => g.emptyWeight);
+      const aggNetKg = sumKg((g) => g.netWeight || g.totalKg);
       const aggregatedGoodsNames = goodsItems.map((g) => g.goodsName).filter(Boolean).join(", ") || formData.goods_name || null;
 
       // Determine effective truck values based on truck_assignment_mode
@@ -2202,15 +2208,15 @@ export function CustomerOrderManagementView() {
         goods_name: aggregatedGoodsNames,
         goods_chs_code: firstGoods.goodsChsCode || formData.goods_chs_code || null,
         goods_variation_label: firstGoods.goodsVariationLabel || formData.goods_variation_label || null,
-        goods_brand: formData.goods_brand || null,
-        goods_size: formData.goods_size || null,
-        goods_origin_country_name: formData.goods_origin_country_name || null,
+        goods_brand: firstGoods.brandQuality || formData.goods_brand || null,
+        goods_size: firstGoods.size || formData.goods_size || null,
+        goods_origin_country_name: firstGoods.originCountry || formData.goods_origin_country_name || null,
         goods_quantity: totalQuantity || (formData.goods_quantity ? Number(formData.goods_quantity) : null),
         goods_unit: firstGoods.unit || formData.goods_unit || "Bags",
         goods_bags_cartons: totalQuantity || (formData.goods_bags_cartons ? Number(formData.goods_bags_cartons) : null),
-        goods_gross_weight: totalGrossKg || (formData.goods_gross_weight ? Number(formData.goods_gross_weight) : null),
-        goods_empty_weight: formData.goods_empty_weight ? Number(formData.goods_empty_weight) : null,
-        goods_net_weight: totalGrossKg || (formData.goods_net_weight ? Number(formData.goods_net_weight) : null),
+        goods_gross_weight: aggGrossKg || (formData.goods_gross_weight ? Number(formData.goods_gross_weight) : null),
+        goods_empty_weight: goodsItems.length ? aggEmptyKg : (formData.goods_empty_weight ? Number(formData.goods_empty_weight) : null),
+        goods_net_weight: aggNetKg || (formData.goods_net_weight ? Number(formData.goods_net_weight) : null),
         truck_id: effTruckId,
         truck_number: effTruckNumber,
         truck_driver_name: effDriverName,
@@ -5892,7 +5898,7 @@ function Step1BookingCustomer({
         >
           <Boxes className={`h-3.5 w-3.5 shrink-0 ${step1SubStep === "1C" ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400"}`} />
           <span className="truncate">1C — Goods Entry</span>
-          {(formData.goods_items || []).filter((g) => g.goodsName || g.quantity).length > 0 ? (
+          {(formData.goods_items || []).filter((g) => String(g.goodsName || "").trim()).length > 0 ? (
             <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" />
           ) : null}
         </button>
