@@ -417,6 +417,11 @@ function orderStatusLabel(lang: string, status: string | null | undefined): stri
   return s ? s.replace(/_/g, " ") : comT(lang, "ord_pending_confirmation", "Pending Confirmation");
 }
 
+function partyRoleLabel(lang: string, roleKey: string | null | undefined): string {
+  const k = String(roleKey || "");
+  return k ? comT(lang, "role_" + k, k.replace(/_/g, " ")) : "";
+}
+
 function loadingSourceLabel(lang: string, source: string | null | undefined): string {
   const s = String(source || "");
   if (!s) return "—";
@@ -2032,8 +2037,8 @@ export function CustomerOrderManagementView() {
       o.customer_name || "-",
       o.goods_name || "-",
       o.goods_chs_code || "-",
-      o.movement_type || "-",
-      o.transport_mode || "-",
+      o.movement_type ? movementTypeLabel(lang, o.movement_type) : "-",
+      o.transport_mode ? transportModeLabel(lang, o.transport_mode) : "-",
       o.shipment_type || "-",
       o.loading_source_name || o.loading_source || "-",
       o.route_name || "-",
@@ -2069,13 +2074,13 @@ export function CustomerOrderManagementView() {
       <p><strong>${tt("party", "Party")}:</strong> ${order.customer_name || "-"}</p>
       <p><strong>${tt("print_goods", "Goods")}:</strong> ${[order.goods_name, order.goods_chs_code ? `CHS ${order.goods_chs_code}` : "", order.goods_variation_label, order.goods_origin_country_name].filter(Boolean).join(" • ") || "-"}</p>
       <p><strong>${tt("print_route", "Route")}:</strong> ${order.route_name || "-"}</p>
-      <p><strong>${tt("print_movement", "Movement")}:</strong> ${order.movement_type || "-"}</p>
+      <p><strong>${tt("print_movement", "Movement")}:</strong> ${order.movement_type ? movementTypeLabel(lang, order.movement_type) : "-"}</p>
       <table>
         <thead><tr><th>${tt("print_role", "Role")}</th><th>${tt("party", "Party")}</th><th>${tt("print_company", "Company")}</th><th>${tt("print_address", "Address")}</th></tr></thead>
         <tbody>
           ${(order.party_links || []).map((link) => `
             <tr>
-              <td>${link.role_key}</td>
+              <td>${partyRoleLabel(lang, link.role_key)}</td>
               <td>${link.party_customer_name || "-"}</td>
               <td>${link.party_company_name || "-"}</td>
               <td>${link.selected_address_text || "-"}</td>
@@ -3484,7 +3489,7 @@ export function CustomerOrderManagementView() {
                   { key: "goods_name", label: tt("th_goods", "Goods & Qty") },
                   { key: (r) => (r as any).goods_quantity ? `${(r as any).goods_quantity} ${(r as any).goods_unit || ""}`.trim() : "", label: pl("Quantity"), align: "right" },
                   { key: (r) => String((r as any).route_name || [(r as any).loading_country_name, (r as any).receiving_country_name].filter(Boolean).join(" -> ")), label: tt("th_route", "Route / Ports") },
-                  { key: (r) => `${(r as any).movement_type || ""} ${String((r as any).transport_mode || "").replace("_", " ")}`.trim(), label: tt("th_movement", "Mode & Movement") },
+                  { key: (r) => `${(r as any).movement_type ? movementTypeLabel(lang, (r as any).movement_type) : ""} ${(r as any).transport_mode ? transportModeLabel(lang, (r as any).transport_mode) : ""}`.trim(), label: tt("th_movement", "Mode & Movement") },
                   { key: (r) => tt(getOrderProgress(r as any).labelKey, String((r as any).status ?? "")), label: tt("th_step_status", "Status"), align: "center" },
                   { key: "branch_name", label: tt("th_branch", "Branch / Agent") },
                 ]}
@@ -4803,10 +4808,10 @@ export function CustomerOrderManagementView() {
                               ? "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800"
                               : "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800"
                           }`}>
-                            {formData.movement_type || "Import"}
+                            {movementTypeLabel(lang, formData.movement_type)}
                           </span>
                           <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800 uppercase">
-                            {formData.transport_mode?.replace("by_", "By ") || "By Road"}
+                            {transportModeLabel(lang, formData.transport_mode || "by_road")}
                           </span>
                         </div>
                         <div className="text-[11px] text-slate-600 dark:text-slate-300 flex items-center gap-1.5 mt-1">
@@ -5484,7 +5489,7 @@ export function CustomerOrderManagementView() {
                 {(viewOrder.party_links ?? []).map((link, idx) => (
                   <div key={idx} className="p-2.5 flex justify-between items-center bg-white dark:bg-slate-900">
                     <div>
-                      <span className="font-bold uppercase text-[10px] text-blue-600 mr-2">{link.role_key}:</span>
+                      <span className="font-bold uppercase text-[10px] text-blue-600 me-2">{partyRoleLabel(lang, link.role_key)}:</span>
                       <span className="font-semibold">{link.party_customer_name}</span>
                       {link.party_company_name ? <span className="text-slate-500"> ({link.party_company_name})</span> : null}
                     </div>
@@ -6584,7 +6589,7 @@ function Step1BookingCustomer({
               </div>
               <div>
                 <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("shipping_transport_mode", "Transport Mode")}</span>
-                <span className="font-bold text-blue-700 dark:text-blue-300 capitalize block">{formData.transport_mode?.replace("by_", "")}</span>
+                <span className="font-bold text-blue-700 dark:text-blue-300 capitalize block">{transportModeLabel(lang, formData.transport_mode)}</span>
               </div>
               <div>
                 <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("loading_location", "Loading Location")}</span>
@@ -7084,7 +7089,7 @@ function Step1BookingCustomer({
               <div className="space-y-1 text-xs">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] uppercase font-bold text-slate-400">{tt("label_route", "Route")}</span>
-                  <span className="font-bold text-emerald-700 dark:text-emerald-300 truncate max-w-[170px]">{formData.route_name || "Direct Route"}</span>
+                  <span className="font-bold text-emerald-700 dark:text-emerald-300 truncate max-w-[170px]">{formData.route_name || tt("direct_route_short", "Direct Route")}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] uppercase font-bold text-slate-400">{tt("label_customs_point", "Clearance Gate")}</span>
