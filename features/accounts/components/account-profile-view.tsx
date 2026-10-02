@@ -38,7 +38,8 @@ import {
   Warehouse,
   ExternalLink,
   Eye,
-  Info
+  Info,
+  Ship
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { apiGet } from "@/lib/api/client";
@@ -366,6 +367,7 @@ export function AccountProfileView({
       contacts: (liveAccount?.contacts || []) as Array<{ type: string; value: string }>,
       linkedCountries: (liveAccount?.linked_countries || []) as string[],
       shippingLineId: liveAccount?.shipping_line_id || null,
+      shippingLine: liveAccount?.shippingLine || null,
       operationalDomain: liveAccount?.operational_domain || "business"
     };
   }, [liveAccount, liveLedger, reportRow, accountId]);
@@ -959,12 +961,18 @@ export function AccountProfileView({
                   <>
                     <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 dark:bg-slate-850">
                       <span className="text-slate-500 font-medium">Linked Customer Entity:</span>
-                      <span className="font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={handleOpenCustomerProfile}
+                        className="font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1.5 text-left"
+                        title="Click to view Customer Master Profile"
+                      >
                         {selectedRow.customer.customer_name}
                         {selectedRow.customer.customer_code && (
                           <span className="font-mono text-[10px] text-slate-400">({selectedRow.customer.customer_code})</span>
                         )}
-                      </span>
+                        <ExternalLink className="h-3 w-3 shrink-0" />
+                      </button>
                     </div>
                     {selectedRow.customer.company_name && (
                       <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50/50 dark:bg-slate-850">
@@ -1051,7 +1059,7 @@ export function AccountProfileView({
                     <span className="font-bold text-blue-600 dark:text-blue-400">{selectedRow.ledgerName || "Customer Receivables Ledger"}</span>
                     {selectedRow.ledgerId && (
                       <Link
-                        href={`/dashboard/accounting/ledgers?ledgerId=${selectedRow.ledgerId}`}
+                        href={`/dashboard/ledger?ledgerId=${selectedRow.ledgerId}`}
                         className="text-[10px] text-blue-500 hover:underline flex items-center gap-0.5 font-bold"
                         title="View Ledger Statement"
                       >
@@ -1065,7 +1073,7 @@ export function AccountProfileView({
                   <div className="flex items-center gap-2">
                     <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">{selectedRow.journalCode || "JRN-2026-0089"}</span>
                     <Link
-                      href="/dashboard/accounting/journal-entries"
+                      href="/dashboard/roznamcha"
                       className="text-[10px] text-slate-400 hover:text-blue-500 flex items-center gap-0.5"
                       title="View Journal Activity"
                     >
@@ -1203,7 +1211,14 @@ export function AccountProfileView({
                           <tr key={comp.id || idx} className="hover:bg-slate-50/60 dark:hover:bg-slate-850/50">
                             <td className="py-2.5 px-3 font-bold text-slate-900 dark:text-white flex items-center gap-2">
                               <Building2 className="h-3.5 w-3.5 text-amber-600 shrink-0" />
-                              {comp.name}
+                              <button
+                                type="button"
+                                onClick={() => handleOpenCompanyProfile(comp)}
+                                className="hover:underline text-left"
+                                title="Open Company Profile"
+                              >
+                                {comp.name}
+                              </button>
                             </td>
                             <td className="py-2.5 px-3 font-mono text-slate-600 dark:text-slate-300">
                               {comp.code || "-"}
@@ -1302,7 +1317,13 @@ export function AccountProfileView({
                           <tr key={bank.id || idx} className="hover:bg-slate-50/60 dark:hover:bg-slate-850/50">
                             <td className="py-2.5 px-3 font-bold text-slate-900 dark:text-white flex items-center gap-2">
                               <Landmark className="h-3.5 w-3.5 text-blue-600 shrink-0" />
-                              {bank.name}
+                              <Link
+                                href={`/dashboard/settings/bank?bankId=${bank.id}`}
+                                className="hover:underline"
+                                title="Open Bank Details"
+                              >
+                                {bank.name}
+                              </Link>
                             </td>
                             <td className="py-2.5 px-3 text-slate-600 dark:text-slate-300">
                               {bank.branchName || "-"}
@@ -1405,7 +1426,13 @@ export function AccountProfileView({
                           <tr key={wh.id || idx} className="hover:bg-slate-50/60 dark:hover:bg-slate-850/50">
                             <td className="py-2.5 px-3 font-bold text-slate-900 dark:text-white flex items-center gap-2">
                               <Warehouse className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                              {wh.name}
+                              <Link
+                                href={`/dashboard/settings/warehouse?warehouseId=${wh.id}`}
+                                className="hover:underline"
+                                title="Open Warehouse Details"
+                              >
+                                {wh.name}
+                              </Link>
                             </td>
                             <td className="py-2.5 px-3 font-mono text-slate-600 dark:text-slate-300">
                               {wh.code || "-"}
@@ -1450,6 +1477,54 @@ export function AccountProfileView({
                   </div>
                 )}
               </div>
+
+              {/* Shipping & Multi-Country Operations (if applicable) */}
+              {(selectedRow.shippingLine || selectedRow.operationalDomain === "shipping" || (selectedRow.linkedCountries && selectedRow.linkedCountries.length > 0)) && (
+                <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Ship className="h-4 w-4 text-sky-600" />
+                      <h4 className="text-xs font-black uppercase tracking-tight text-slate-900 dark:text-white">
+                        Shipping & Regional Operations
+                      </h4>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+                    {selectedRow.shippingLine && (
+                      <div className="p-3 rounded-xl bg-sky-50/50 dark:bg-sky-950/30 border border-sky-100 dark:border-sky-900">
+                        <span className="text-[10px] text-sky-700 dark:text-sky-300 font-bold uppercase block">Shipping Line</span>
+                        <Link
+                          href={`/dashboard/shipping-line?id=${selectedRow.shippingLine.id}`}
+                          className="font-bold text-sky-900 dark:text-sky-100 hover:underline flex items-center gap-1 mt-1"
+                        >
+                          {selectedRow.shippingLine.name}
+                          {selectedRow.shippingLine.shipping_line_code && (
+                            <span className="font-mono text-[10px]">({selectedRow.shippingLine.shipping_line_code})</span>
+                          )}
+                          <ExternalLink className="h-3 w-3" />
+                        </Link>
+                        {selectedRow.shippingLine.contact_person && (
+                          <span className="text-[11px] text-slate-500 block mt-1">
+                            Contact: {selectedRow.shippingLine.contact_person} {selectedRow.shippingLine.phone ? `(${selectedRow.shippingLine.phone})` : ""}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    {selectedRow.linkedCountries && selectedRow.linkedCountries.length > 0 && (
+                      <div className="p-3 rounded-xl bg-slate-50/60 dark:bg-slate-850 border border-slate-100 dark:border-slate-800 col-span-2">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase block mb-1.5">Linked Operating Countries</span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {selectedRow.linkedCountries.map((c, i) => (
+                            <span key={i} className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200">
+                              {c}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -1691,7 +1766,7 @@ export function AccountProfileView({
                       asChild
                       className="h-7 px-2 text-[11px] font-bold border-teal-200 dark:border-teal-900 text-teal-700 dark:text-teal-300 hover:bg-teal-50"
                     >
-                      <Link href={`/dashboard/accounting/ledgers?ledgerId=${selectedRow.ledgerId}`}>
+                      <Link href={`/dashboard/ledger?ledgerId=${selectedRow.ledgerId}`}>
                         <ExternalLink className="h-3 w-3 mr-1" />
                         {getLabel("viewLedgerStatement", lang)}
                       </Link>
@@ -1704,7 +1779,7 @@ export function AccountProfileView({
                     asChild
                     className="h-7 px-2 text-[11px] font-bold border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50"
                   >
-                    <Link href="/dashboard/accounting/journal-entries">
+                    <Link href="/dashboard/roznamcha">
                       <ExternalLink className="h-3 w-3 mr-1" />
                       {getLabel("viewJournalEntries", lang)}
                     </Link>

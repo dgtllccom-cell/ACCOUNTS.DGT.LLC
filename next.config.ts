@@ -191,6 +191,21 @@ const nextConfig: NextConfig = {
         permanent: false,
       },
       {
+        source: "/dashboard/warehouses",
+        destination: "/dashboard/settings/warehouse",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/accounting/ledgers",
+        destination: "/dashboard/ledger",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/accounting/journal-entries",
+        destination: "/dashboard/roznamcha",
+        permanent: false,
+      },
+      {
         source: "/dashboard/ai",
         destination: "/dashboard/ai-entry/voice-text",
         permanent: false,

@@ -77,6 +77,7 @@ async function loadAccount(id: string) {
   let companies: any[] = [];
   let banks: any[] = [];
   let customer: any = null;
+  let shippingLine: any = null;
 
   if (data?.id) {
     // 1. Warehouses
@@ -204,11 +205,25 @@ async function loadAccount(id: string) {
         }
       } catch {}
     }
+
+    // 5. Shipping Line
+    if (data.shipping_line_id) {
+      try {
+        const { data: shipRow } = await admin
+          .from("shipping_lines")
+          .select("id, name, shipping_line_code, contact_person, phone, email")
+          .eq("id", data.shipping_line_id)
+          .maybeSingle();
+        if (shipRow) {
+          shippingLine = shipRow;
+        }
+      } catch {}
+    }
   }
 
   if (!data) return null;
 
-  return { ...data, warehouses, companies, banks, customer } as
+  return { ...data, warehouses, companies, banks, customer, shippingLine } as
     | {
         id: string;
         scope: "super_admin" | "country" | "main_branch" | "city_branch";
