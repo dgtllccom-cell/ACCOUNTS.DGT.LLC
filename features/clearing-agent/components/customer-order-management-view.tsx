@@ -3517,6 +3517,7 @@ export function CustomerOrderManagementView() {
                   <option value="export">{tt("mv_export", "Export")}</option>
                   <option value="domestic">{tt("mv_domestic", "Domestic")}</option>
                   <option value="transit">{t(lang, "comv.mv_transit", "Transit")}</option>
+                  <option value="re_export">{tt("mv_re_export", "Re-export")}</option>
                 </select>
 
                 {(statusFilter !== "all" || modeFilter !== "all" || movementFilter !== "all" || searchQuery) ? (
@@ -8898,6 +8899,7 @@ function Step3RouteVesselCustoms({
                       <option value="import">{tt("mv_import", "Import")}</option>
                       <option value="export">{tt("mv_export", "Export")}</option>
                       <option value="transit">{t(lang, "comv.mv_transit", "Transit")}</option>
+                      <option value="re_export">{tt("mv_re_export", "Re-export")}</option>
                     </select>
                   </div>
                   <div>
