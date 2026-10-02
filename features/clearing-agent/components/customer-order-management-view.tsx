@@ -5261,7 +5261,7 @@ export function CustomerOrderManagementView() {
                         <div className="flex items-center justify-between">
                           <span className="text-slate-500 font-medium">{tt("transporter_label", "Transporter:")}</span>
                           <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[200px]">
-                            {formData.truck_transport_company || formData.truck_owner_name || tt("internal_fleet", "Internal Fleet")}
+                            {formData.truck_transport_company || formData.truck_owner_name || (formData.truck_assignment_mode === "permanent" ? tt("internal_fleet", "Internal Fleet") : "—")}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
@@ -7602,7 +7602,7 @@ function Step1BookingCustomer({
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. 1006.30 / 7208.51"
+                    placeholder={tt("ph_chs_code", "e.g. 1006.30 / 7208.51")}
                     value={draftGoodsItem.goodsChsCode || ""}
                     onChange={(e) => handleDraftGoodsChange("goodsChsCode", e.target.value)}
                     className={inputClass}

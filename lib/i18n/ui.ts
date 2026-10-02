@@ -10588,6 +10588,7 @@ export type UiKey =
   | "com.retry"
   | "com.order_assigned_to"
   | "com.err_save_before_return"
+  | "com.ph_chs_code"
   | "com.asg_title"
   | "com.asg_assigned_by"
   | "com.asg_assigned_at"
@@ -32885,6 +32886,7 @@ const en: Dict = {
   "com.retry": "Retry",
   "com.order_assigned_to": "Order assigned to {user} successfully!",
   "com.err_save_before_return": "Please save the order before returning for correction.",
+  "com.ph_chs_code": "e.g. 1006.30 / 7208.51",
   "com.asg_title": "Assignment",
   "com.asg_assigned_by": "Assigned by",
   "com.asg_assigned_at": "Assigned on",
@@ -55151,6 +55153,7 @@ const ur: Dict = {
   "com.retry": "دوبارہ کوشش کریں",
   "com.order_assigned_to": "آرڈر کامیابی سے {user} کو تفویض کر دیا گیا!",
   "com.err_save_before_return": "اصلاح کے لیے واپس بھیجنے سے پہلے آرڈر محفوظ کریں۔",
+  "com.ph_chs_code": "مثلاً 1006.30 / 7208.51",
   "com.asg_title": "تفویض",
   "com.asg_assigned_by": "تفویض کنندہ",
   "com.asg_assigned_at": "تفویض کی تاریخ",
@@ -77418,6 +77421,7 @@ const ar: Dict = {
   "com.retry": "إعادة المحاولة",
   "com.order_assigned_to": "تم إسناد الطلب إلى {user} بنجاح!",
   "com.err_save_before_return": "يرجى حفظ الطلب قبل إعادته للتصحيح.",
+  "com.ph_chs_code": "مثال: 1006.30 / 7208.51",
   "com.asg_title": "الإسناد",
   "com.asg_assigned_by": "أُسند بواسطة",
   "com.asg_assigned_at": "تاريخ الإسناد",
@@ -99684,6 +99688,7 @@ const fa: Dict = {
   "com.retry": "تلاش مجدد",
   "com.order_assigned_to": "سفارش با موفقیت به {user} واگذار شد!",
   "com.err_save_before_return": "لطفاً پیش از بازگرداندن برای اصلاح، سفارش را ذخیره کنید.",
+  "com.ph_chs_code": "مثلاً 1006.30 / 7208.51",
   "com.asg_title": "تخصیص",
   "com.asg_assigned_by": "تخصیص‌دهنده",
   "com.asg_assigned_at": "تاریخ تخصیص",
@@ -121957,6 +121962,7 @@ const ps: Dict = {
   "com.retry": "بیا هڅه",
   "com.order_assigned_to": "امر په بریالیتوب سره {user} ته وسپارل شو!",
   "com.err_save_before_return": "مهرباني وکړئ د سمون لپاره بیرته استولو دمخه امر خوندي کړئ.",
+  "com.ph_chs_code": "لکه 1006.30 / 7208.51",
   "com.asg_title": "ګمارنه",
   "com.asg_assigned_by": "ګمارونکی",
   "com.asg_assigned_at": "د ګمارنې نېټه",
