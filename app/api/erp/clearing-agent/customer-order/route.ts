@@ -7,6 +7,7 @@ import { getRequestLanguage } from "@/lib/i18n/server";
 import {
   CROSS_BORDER_TRUCK_MESSAGE,
   collectTruckDetailsFromBody,
+  httpStatusOfError,
   isCrossBorderTruckViolation
 } from "@/lib/services/clearing-customer-order-workflow-rules";
 import {
@@ -75,7 +76,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: true, data });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message }, { status: httpStatusOfError(error) });
   }
 }
 
@@ -189,6 +190,6 @@ export async function POST(req: NextRequest) {
     if (isCrossBorderTruckViolation(error)) {
       return NextResponse.json({ success: false, error: CROSS_BORDER_TRUCK_MESSAGE, code: "CROSS_BORDER_TRUCK_RULE" }, { status: 422 });
     }
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message }, { status: httpStatusOfError(error) });
   }
 }

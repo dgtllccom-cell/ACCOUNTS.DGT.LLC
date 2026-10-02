@@ -233,3 +233,13 @@ export function isCrossBorderTruckViolation(error: unknown): boolean {
   if (!e || e.code !== "23514") return false;
   return /cross_border_truck/i.test(`${e.constraint_name ?? ""} ${e.constraint ?? ""} ${e.message ?? ""}`);
 }
+
+/**
+ * HTTP status to report for a caught route error: an error that carries its own 4xx status
+ * (e.g. ErpPermissionError = 403) keeps it, so a permission denial is not reported as a
+ * 500 "server error". Anything else stays 500.
+ */
+export function httpStatusOfError(error: unknown): number {
+  const status = (error as { status?: unknown } | null)?.status;
+  return typeof status === "number" && status >= 400 && status < 500 ? status : 500;
+}

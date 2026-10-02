@@ -116,21 +116,21 @@ async function main() {
     check("[CountryAdmin-UAE] cannot overwrite a Pakistan order (403)", uaeSave.status === 403, { http: uaeSave.status });
   }
 
-  console.log("\n==== Branch user (Quetta city admin) + assigned operational user ====");
-  const q = await api(WHO.quetta, "POST", ORD(), form(`quetta-${Date.now()}`));
+  console.log("\n==== Branch user (Chaman city admin) + assigned operational user ====");
+  const q = await api(WHO.chaman, "POST", ORD(), form(`chaman-${Date.now()}`));
   const qid = q.json?.data?.id as string | undefined;
-  check("[Quetta] 1A create accepted (branch-scoped)", q.status === 200 && !!qid, { http: q.status, body: q.text.slice(0, 200) });
+  check("[Chaman] 1A create accepted (branch-scoped)", q.status === 200 && !!qid, { http: q.status, body: q.text.slice(0, 200) });
   if (qid) {
     const o = await dbOrder(qid);
-    check("[Quetta] order carries the Quetta city/branch scope", o.city_branch_id === WHO.quetta.city && o.country_id === PK, { city: o.city_branch_id, country: o.country_id });
+    check("[Chaman] order carries the Chaman city/branch scope", o.city_branch_id === WHO.chaman.city && o.country_id === PK, { city: o.city_branch_id, country: o.country_id });
     const dub = await api(WHO.dubai, "GET", ORD(qid));
     check("[Dubai] is outside the order's scope before assignment (403)", dub.status === 403, { http: dub.status });
 
-    // Quetta assigns Stage 1B to the Dubai user (outside branch scope) — the "assigned operational user".
-    const h = await api(WHO.quetta, "POST", WF(qid), { action: "handover_1a", toUserId: WHO.dubai.userId, toCountryId: WHO.dubai.countryId, toCountryBranchId: WHO.dubai.cb, toCityBranchId: WHO.dubai.city, instructions: "DEV TEST ONLY — confirm truck" });
-    check("[Quetta] Assign to Another User (1B) accepted", h.status === 200 && h.json?.success === true, { http: h.status, body: h.text.slice(0, 220) });
+    // Chaman assigns Stage 1B to the Dubai user (outside branch scope) — the "assigned operational user".
+    const h = await api(WHO.chaman, "POST", WF(qid), { action: "handover_1a", toUserId: WHO.dubai.userId, toCountryId: WHO.dubai.countryId, toCountryBranchId: WHO.dubai.cb, toCityBranchId: WHO.dubai.city, instructions: "DEV TEST ONLY — confirm truck" });
+    check("[Chaman] Assign to Another User (1B) accepted", h.status === 200 && h.json?.success === true, { http: h.status, body: h.text.slice(0, 220) });
     const after = await dbOrder(qid);
-    check("[Quetta] order moved to booking_confirmed / truck_assignment", after.status === "booking_confirmed" && after.current_stage === "truck_assignment", { s: after.status, st: after.current_stage });
+    check("[Chaman] order moved to booking_confirmed / truck_assignment", after.status === "booking_confirmed" && after.current_stage === "truck_assignment", { s: after.status, st: after.current_stage });
 
     const dubGet = await api(WHO.dubai, "GET", ORD(qid));
     check("[Dubai/assignee] can now open the assigned order", dubGet.status === 200, { http: dubGet.status, body: dubGet.text.slice(0, 160) });
@@ -146,10 +146,12 @@ async function main() {
     check("[Assigned flow] the handover transfer is closed (completed)", xfers.length > 0 && xfers.every((t) => t.status === "completed"), xfers);
   }
 
-  console.log("\n==== Same-branch peer (Chaman) vs Quetta order ====");
+  console.log("\n==== Quetta city admin (DEV account has a hand-set 4-permission list, no shipping_records:*) ====");
+  const qDeny = await api(WHO.quetta, "POST", ORD(), form(`quetta-${Date.now()}`));
+  check("[Quetta] create is refused with a clean 403 (a permission denial is not a 500)", qDeny.status === 403 && /Missing permission/i.test(qDeny.json?.error ?? ""), { http: qDeny.status, body: qDeny.text.slice(0, 200) });
   if (qid) {
-    const ch = await api(WHO.chaman, "GET", ORD(qid));
-    check("[Chaman] sees the order only if inside its scope (same country branch → allowed by design; different city)", ch.status === 200 || ch.status === 403, { http: ch.status });
+    const peer = await api(WHO.quetta, "GET", ORD(qid));
+    check("[Quetta] cannot read a Chaman order without shipping permission (403)", peer.status === 403, { http: peer.status });
   }
 
   const failed = results.filter((r) => !r.ok);
