@@ -90,6 +90,7 @@ import { CustomerOrderReturnCorrectionModal } from "@/features/clearing-agent/co
 import { CustomerOrderStageAssignmentModal } from "@/features/clearing-agent/components/customer-order-stage-assignment-modal";
 import { CustomerOrderRouteBuilder } from "@/features/clearing-agent/components/customer-order-route-builder";
 import { CustomerOrderTempTruckModal } from "@/features/clearing-agent/components/customer-order-temp-truck-modal";
+import { CustomerOrderAssignmentCard } from "@/features/clearing-agent/components/customer-order-assignment-card";
 import { CustomerOrderPartnerBillsPanel } from "@/features/clearing-agent/components/customer-order-partner-bills-panel";
 import { CustomerOrderInsurancePanel } from "@/features/clearing-agent/components/customer-order-insurance-panel";
 import {
@@ -1567,13 +1568,13 @@ export function CustomerOrderManagementView() {
     if (queueTab === "assigned_to_me") {
       list = list.filter(
         (o: any) =>
-          (o.latest_handover?.receiver_user_id === currentUserId && o.latest_handover?.status === "pending") ||
+          (o.latest_handover?.receiver_user_id === currentUserId && (o.latest_handover?.status === "pending" || o.latest_handover?.status === "accepted")) ||
           (o.responsible_user_id === currentUserId && o.status !== "completed")
       );
     } else if (queueTab === "pending_with_me") {
       list = list.filter(
         (o: any) =>
-          (o.latest_handover?.receiver_user_id === currentUserId && o.latest_handover?.status === "pending") ||
+          (o.latest_handover?.receiver_user_id === currentUserId && (o.latest_handover?.status === "pending" || o.latest_handover?.status === "accepted")) ||
           (o.created_by === currentUserId && (o.current_stage === "returned_for_correction" || o.status === "draft" || o.current_stage === "1a_draft"))
       );
     } else if (queueTab === "completed_by_me") {
@@ -1653,12 +1654,12 @@ export function CustomerOrderManagementView() {
     const currentUserId = userContext.context?.userId;
     const assignedToMe = orders.filter(
       (o: any) =>
-        (o.latest_handover?.receiver_user_id === currentUserId && o.latest_handover?.status === "pending") ||
+        (o.latest_handover?.receiver_user_id === currentUserId && (o.latest_handover?.status === "pending" || o.latest_handover?.status === "accepted")) ||
         (o.responsible_user_id === currentUserId && o.status !== "completed")
     ).length;
     const pendingWithMe = orders.filter(
       (o: any) =>
-        (o.latest_handover?.receiver_user_id === currentUserId && o.latest_handover?.status === "pending") ||
+        (o.latest_handover?.receiver_user_id === currentUserId && (o.latest_handover?.status === "pending" || o.latest_handover?.status === "accepted")) ||
         (o.created_by === currentUserId && (o.current_stage === "returned_for_correction" || o.status === "draft" || o.current_stage === "1a_draft"))
     ).length;
     const completedByMe = orders.filter(
@@ -2586,6 +2587,28 @@ export function CustomerOrderManagementView() {
     return json;
   };
 
+  /** The stage assigned to the current user, if they still have to ACCEPT it before working on it. */
+  const needsAcceptance = (stage: "1B" | "1C"): boolean => {
+    const row = editingOrderId ? orders.find((o) => o.id === editingOrderId) : null;
+    const h: any = (row as any)?.latest_handover;
+    const wanted = stage === "1B" ? "truck_task" : "goods_verification";
+    return Boolean(h && h.transfer_type === wanted && h.status === "pending" && h.receiver_user_id && h.receiver_user_id === userContext.context?.userId);
+  };
+
+  const handleAcceptStage = async () => {
+    if (saving || !editingOrderId) return;
+    setSaving(true);
+    try {
+      await postWorkflow(editingOrderId, { action: "accept_stage" }, tt("err_accept_stage", "Could not accept the assignment"));
+      setSuccessMessage(tt("asg_accepted_msg", "Assignment accepted."));
+      await refreshOrders();
+    } catch (err: any) {
+      alert(err.message || tt("err_accept_stage", "Could not accept the assignment"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleAssignStage1A = async () => {
     const problem = validateStage1A();
     if (problem) {
@@ -2641,6 +2664,10 @@ export function CustomerOrderManagementView() {
 
   const handleConfirmTruckContinueMyself = async () => {
     if (saving) return;
+    if (needsAcceptance("1B")) {
+      alert(tt("err_accept_first", "Please accept this assignment before confirming."));
+      return;
+    }
     const problem = truckProblem();
     if (problem) {
       alert(problem);
@@ -2669,6 +2696,10 @@ export function CustomerOrderManagementView() {
 
   const handleConfirmTruckAssignGoods = async () => {
     if (saving) return;
+    if (needsAcceptance("1B")) {
+      alert(tt("err_accept_first", "Please accept this assignment before confirming."));
+      return;
+    }
     const problem = truckProblem();
     if (problem) {
       alert(problem);
@@ -2719,6 +2750,10 @@ export function CustomerOrderManagementView() {
 
   const handleCompleteGoodsEntry = async () => {
     if (saving) return;
+    if (needsAcceptance("1C")) {
+      alert(tt("err_accept_first", "Please accept this assignment before confirming."));
+      return;
+    }
     // A row typed into the "Add goods" form but never added to the manifest would be silently lost.
     if (draftGoodsItem.goodsName && !draftGoodsItem.goodsId && editingGoodsIdx === null && !(formData.goods_items || []).some((g) => g.goodsName === draftGoodsItem.goodsName)) {
       alert(tt("err_unadded_goods_row", "You have a goods row that is not added to the manifest yet. Click \"Add to Manifest\" first."));
@@ -4585,6 +4620,9 @@ export function CustomerOrderManagementView() {
                       onReturnForCorrection={handleTriggerReturnModal}
                       onCompleteGoodsEntry={handleCompleteGoodsEntry}
                       activeOrder={editingOrderId ? orders.find((o) => o.id === editingOrderId) || null : null}
+                      currentUserId={userContext.context?.userId ?? null}
+                      onAcceptStage={() => void handleAcceptStage()}
+                      acceptBusy={saving}
                       draftGoodsItem={draftGoodsItem}
                       setDraftGoodsItem={setDraftGoodsItem}
                       editingGoodsIdx={editingGoodsIdx}
@@ -5719,6 +5757,9 @@ function Step1BookingCustomer({
   formData,
   setFormData,
   activeOrder,
+  currentUserId,
+  onAcceptStage,
+  acceptBusy,
   step1SubStep,
   setStep1SubStep,
   onSelectSubStep,
@@ -5764,6 +5805,9 @@ function Step1BookingCustomer({
   formData: FormDataState;
   setFormData: SetFormData;
   activeOrder?: ClearingCustomerOrderRow | null;
+  currentUserId?: string | null;
+  onAcceptStage?: () => void;
+  acceptBusy?: boolean;
   step1SubStep: "1A" | "1B" | "1C";
   setStep1SubStep: (sub: "1A" | "1B" | "1C") => void;
   onSelectSubStep?: (sub: "1A" | "1B" | "1C") => void;
@@ -6051,6 +6095,30 @@ function Step1BookingCustomer({
   };
   const locLabel = (role: "loading" | "entry" | "exit" | "discharge") => locationRoleLabel(lang, role, formData.transport_mode);
   const arrivedAtEntry = formData.movement_type === "import" && formData.import_scenario === "arrived_at_entry";
+
+  // What is still to be done in 1B / 1C — shown to the user the stage was assigned to.
+  const remaining1B = (): string[] => {
+    if (activeOrder?.status === "truck_confirmed" || activeOrder?.status === "completed") return [];
+    const out: string[] = [];
+    if (!formData.truck_number || isTruckPlaceholder(formData.truck_number)) out.push(tt("asg_rem_truck", "Select or enter the truck"));
+    if (formData.truck_assignment_mode !== "later" && (!String(formData.truck_driver_name || "").trim() || !String(formData.truck_driver_mobile || "").trim())) {
+      out.push(tt("asg_rem_driver", "Driver name and mobile number"));
+    }
+    out.push(tt("asg_rem_confirm_truck", "Confirm the truck"));
+    return out;
+  };
+  const remaining1C = (): string[] => {
+    if (activeOrder?.status === "completed") return [];
+    const out: string[] = [];
+    if (!(formData.goods_items || []).some((g) => String(g.goodsName || "").trim())) out.push(tt("asg_rem_goods", "Add the goods (name, quantity, weights)"));
+    out.push(tt("asg_rem_complete_goods", "Complete goods entry"));
+    return out;
+  };
+  const truckLegLabel = (() => {
+    const i = resolveTruckLegIndex(formData.legs, formData.truck_leg_no);
+    const l: any = i >= 0 ? formData.legs[i] : null;
+    return l ? `${tt("leg_word", "Leg")} ${l.legNo}: ${l.fromLocationText || l.fromCountryName || "—"} ${["ur", "ar", "fa", "ps"].includes(lang) ? "←" : "→"} ${l.toLocationText || l.toCountryName || "—"}` : null;
+  })();
 
   return (
     <div className="space-y-4 animate-in fade-in duration-150">
@@ -6701,6 +6769,17 @@ function Step1BookingCustomer({
       {/* ========================================================================= */}
       {step1SubStep === "1B" && (
         <div className="space-y-4 animate-in fade-in duration-150">
+          <CustomerOrderAssignmentCard
+            lang={lang}
+            stage="1B"
+            orderNo={formData.order_no || activeOrder?.order_no || ""}
+            handover={(activeOrder as any)?.latest_handover ?? null}
+            currentUserId={currentUserId}
+            remaining={remaining1B()}
+            legLabel={truckLegLabel}
+            busy={Boolean(acceptBusy)}
+            onAccept={() => onAcceptStage?.()}
+          />
           {/* Read-Only Stage 1A Summary Card */}
           <div className="rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50/70 via-white to-blue-50/40 p-4 space-y-3 dark:border-blue-900/70 dark:bg-slate-900/90 shadow-2xs">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-blue-200/70 pb-2 dark:border-blue-900/60">
@@ -7147,6 +7226,16 @@ function Step1BookingCustomer({
       {/* ========================================================================= */}
       {step1SubStep === "1C" && (
         <div className="space-y-4 animate-in fade-in duration-150">
+          <CustomerOrderAssignmentCard
+            lang={lang}
+            stage="1C"
+            orderNo={formData.order_no || activeOrder?.order_no || ""}
+            handover={(activeOrder as any)?.latest_handover ?? null}
+            currentUserId={currentUserId}
+            remaining={remaining1C()}
+            busy={Boolean(acceptBusy)}
+            onAccept={() => onAcceptStage?.()}
+          />
           {/* Prominent Stage 1C Notification Banner */}
           <div className="flex items-center justify-between gap-3 rounded-2xl border border-emerald-300 bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 p-3.5 shadow-xs dark:border-emerald-800/80 dark:from-emerald-950/40 dark:via-teal-950/30 dark:to-emerald-950/40">
             <div className="flex items-center gap-3">

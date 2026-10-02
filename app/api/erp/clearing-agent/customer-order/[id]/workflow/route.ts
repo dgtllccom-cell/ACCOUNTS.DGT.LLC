@@ -345,7 +345,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
             'clearing_customer_orders',
             ${id}::uuid,
             ${(order as any).order_no},
-            '/dashboard/clearing-agent/customer-order',
+            ${'/dashboard/clearing-agent/customer-order?id=' + id},
             'high',
             'new',
             ${dueDate ? new Date(dueDate).toISOString() : null},
@@ -452,7 +452,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
           where source_id = ${id}::uuid
             and source_table = 'clearing_customer_orders'
             and transfer_type = 'truck_task'
-            and status = 'pending'
+            and status in ('pending', 'accepted')
         `;
 
         // Complete any open 1B user task (user_tasks use new/accepted/in_progress/waiting — never 'pending')
@@ -590,7 +590,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
               'clearing_customer_orders',
               ${id}::uuid,
               ${(order as any).order_no},
-              '/dashboard/clearing-agent/customer-order',
+              ${'/dashboard/clearing-agent/customer-order?id=' + id},
               'high',
               'new',
               ${effectiveDueDate ? new Date(effectiveDueDate).toISOString() : null},
@@ -638,6 +638,59 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
     }
 
     // ─────────────────────────────────────────────────────────────────────────────
+    // 2b. ACCEPT THE ASSIGNED STAGE (the receiving user acknowledges 1B / 1C before working on it)
+    // ─────────────────────────────────────────────────────────────────────────────
+    else if (action === "accept_stage") {
+      const accepted = await withLocalPg(async (sql) => {
+        const [tr] = (await sql`
+          select id, transfer_type, sender_user_id, receiver_user_id, status
+          from public.inter_country_transfers
+          where source_id = ${id}::uuid and source_table = 'clearing_customer_orders'
+            and transfer_type in ('truck_task', 'goods_verification') and deleted_at is null
+          order by created_at desc limit 1
+        `) as unknown as any[];
+        if (!tr) return { error: "There is no assignment on this order to accept.", status: 404 };
+        if (tr.receiver_user_id !== session.userId && !session.isSuperAdmin) {
+          return { error: "This stage is assigned to another user.", status: 403 };
+        }
+        if (tr.status === "accepted") return { already: true, stage: tr.transfer_type === "goods_verification" ? "1C" : "1B" };
+        if (tr.status !== "pending") return { error: `This assignment is already ${tr.status}.`, status: 409 };
+        await sql`
+          update public.inter_country_transfers
+          set status = 'accepted', accepted_at = now(), accepted_by = ${session.userId}::uuid, updated_at = now()
+          where id = ${tr.id}::uuid
+        `;
+        const [task] = (await sql`
+          select id from public.user_tasks
+          where related_record_id = ${id}::uuid and related_record_table = 'clearing_customer_orders'
+            and assigned_to = ${tr.receiver_user_id}::uuid and status = 'new' and deleted_at is null
+          order by created_at desc limit 1
+        `) as unknown as any[];
+        return { transferId: tr.id, taskId: task?.id ?? null, stage: tr.transfer_type === "goods_verification" ? "1C" : "1B" };
+      });
+      if (accepted && (accepted as any).error) {
+        throw new ApiClientError((accepted as any).error, { status: (accepted as any).status, code: "ACCEPT_REFUSED" });
+      }
+      const info: any = accepted || {};
+      if (info.taskId) {
+        // Same transition the Tasks module uses, so its audit trail and notifications stay consistent.
+        const { transition } = await import("@/lib/user-tasks/service");
+        try { await transition(session, info.taskId, "accept", {}); } catch { /* task already accepted/started elsewhere */ }
+      }
+      if (!info.already) {
+        await withLocalPg(async (sql) => {
+          await sql`
+            insert into public.erp_activity_events (actor_id, action, resource, record_table, record_id, country_id, metadata)
+            values (${session.userId}, 'stage_accepted', 'shipping', 'clearing_customer_orders', ${id}::uuid,
+                    ${(order as any).country_id}::uuid,
+                    ${sql.json({ stage: info.stage, actionText: `Stage ${info.stage} Accepted`, acceptedBy: session.fullName, date: now })})
+          `;
+        });
+      }
+      return wfOk({ success: true, stage: info.stage, alreadyAccepted: Boolean(info.already), message: `Stage ${info.stage} accepted.` });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────
     // 3. RETURN FOR CORRECTION (MANDATORY REASON)
     // ─────────────────────────────────────────────────────────────────────────────
     else if (action === "return_for_correction") {
@@ -656,7 +709,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
               updated_at = now()
           where source_id = ${id}::uuid
             and source_table = 'clearing_customer_orders'
-            and status = 'pending'
+            and status in ('pending', 'accepted')
           returning id, sender_user_id, transfer_no
         `;
 
@@ -771,7 +824,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
           set status = 'completed', completed_at = now(), updated_at = now()
           where source_id = ${id}::uuid
             and source_table = 'clearing_customer_orders'
-            and status = 'pending'
+            and status in ('pending', 'accepted')
         `;
 
         // Complete any open task
