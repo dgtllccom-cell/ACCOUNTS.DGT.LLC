@@ -359,6 +359,70 @@ export type CustomerOrderGoodsItem = {
   warehouse_name?: string;
 };
 
+// ── Enum → localized label helpers ─────────────────────────────────────────────
+// Raw enum values ("by_sea", "import", "truck_confirmed", "shipping_warehouse") are data, not UI.
+// Every place that shows one must go through these so the screen follows the active language.
+const comT = (lang: string, key: string, fallback: string) => t(lang as never, ("com." + key) as never, fallback);
+
+function transportModeLabel(lang: string, mode: string | null | undefined): string {
+  const m = String(mode || "by_sea").toLowerCase();
+  const k = m.includes("air") ? "by_air" : m.includes("road") ? "by_road" : m.includes("rail") || m.includes("train") ? "by_rail" : "by_sea";
+  const fb: Record<string, string> = { by_sea: "By Sea", by_road: "By Road", by_air: "By Air", by_rail: "By Train" };
+  return comT(lang, "mode_" + k, fb[k]);
+}
+
+function transportModeDescLabel(lang: string, mode: string | null | undefined): string {
+  const m = String(mode || "by_sea").toLowerCase();
+  if (m.includes("air")) return comT(lang, "mode_desc_air", "Air Cargo");
+  if (m.includes("road")) return comT(lang, "mode_desc_road", "Land / Trucking");
+  if (m.includes("rail") || m.includes("train")) return comT(lang, "mode_desc_rail", "Rail Freight");
+  return comT(lang, "mode_desc_sea", "Ocean Vessel");
+}
+
+function movementTypeLabel(lang: string, movement: string | null | undefined): string {
+  const m = String(movement || "import").toLowerCase();
+  const fb: Record<string, string> = { import: "Import", export: "Export", up_transit: "Up Transit", down_transit: "Down Transit", transit: "Transit", domestic: "Domestic" };
+  return comT(lang, "mv_" + (fb[m] ? m : "import"), fb[m] || "Import");
+}
+
+function movementFlowLabel(lang: string, movement: string | null | undefined): string {
+  const m = String(movement || "import").toLowerCase();
+  if (m === "export") return comT(lang, "mv_flow_export", "Local → Foreign");
+  if (m.includes("transit")) return comT(lang, "mv_flow_transit", "Cross-Border");
+  return comT(lang, "mv_flow_import", "Foreign → Local");
+}
+
+function truckRegTypeLabel(lang: string, value: string | null | undefined): string {
+  const v = String(value || "").toLowerCase();
+  if (v === "temporary" || v === "hired") return comT(lang, "reg_temporary", "Temporary (Hired)");
+  if (v === "permanent") return comT(lang, "reg_permanent", "Permanent");
+  if (v === "registered") return comT(lang, "reg_registered", "Registered");
+  return value ? String(value) : "—";
+}
+
+function orderStatusLabel(lang: string, status: string | null | undefined): string {
+  const s = String(status || "").toLowerCase();
+  const map: Record<string, [string, string]> = {
+    pending: ["pending", "Pending"],
+    draft: ["status_draft", "Draft"],
+    booking_confirmed: ["ord_booking_confirmed", "Booking Confirmed"],
+    truck_confirmed: ["ord_truck_confirmed", "Truck Confirmed"],
+    completed: ["status_completed", "Completed"],
+    approved: ["ord_approved", "Approved"],
+    returned_for_correction: ["ord_returned", "Returned for Correction"],
+    rejected: ["ord_rejected", "Rejected"]
+  };
+  const hit = map[s];
+  if (hit) return comT(lang, hit[0], hit[1]);
+  return s ? s.replace(/_/g, " ") : comT(lang, "ord_pending_confirmation", "Pending Confirmation");
+}
+
+function loadingSourceLabel(lang: string, source: string | null | undefined): string {
+  const s = String(source || "");
+  if (!s) return "—";
+  return t(lang as never, ("comv.ls_" + s) as never, s.replace(/_/g, " "));
+}
+
 export function defaultGoodsItem(): CustomerOrderGoodsItem {
   return {
     goodsId: "",
@@ -1291,7 +1355,7 @@ export function CustomerOrderManagementView() {
       if (acc?.code) parts.push(`• [${acc.code}]`);
       else if (row.person_code) parts.push(`• [${row.person_code}]`);
       if (acc?.current_balance != null && Number(acc.current_balance) !== 0) {
-        parts.push(`• Bal: ${acc.currency || ""} ${Number(acc.current_balance).toLocaleString(undefined, { maximumFractionDigits: 2 })}`);
+        parts.push(`• ${comT(lang, "bal_short", "Bal:")} ${acc.currency || ""} ${Number(acc.current_balance).toLocaleString(undefined, { maximumFractionDigits: 2 })}`);
       }
 
       items.push({
@@ -1319,7 +1383,7 @@ export function CustomerOrderManagementView() {
       if (!acc.id || seenIds.has(acc.id) || (acc.customer_id && seenIds.has(acc.customer_id))) continue;
       items.push({
         value: acc.id,
-        label: `${acc.name} • [${acc.code}]${acc.current_balance != null ? ` • Bal: ${acc.currency || ""} ${Number(acc.current_balance).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : ""}`,
+        label: `${acc.name} • [${acc.code}]${acc.current_balance != null ? ` • ${comT(lang, "bal_short", "Bal:")} ${acc.currency || ""} ${Number(acc.current_balance).toLocaleString(undefined, { maximumFractionDigits: 2 })}` : ""}`,
         keywords: [acc.name, acc.code, acc.currency, acc.account_number, acc.manual_reference_number]
           .filter(Boolean)
           .join(" ")
@@ -2620,25 +2684,25 @@ export function CustomerOrderManagementView() {
     {
       num: 1,
       title: "1A: " + t(lang, "comv.step1_name", "Customer & Route"),
-      shortTitle: "1A: Booking",
+      shortTitle: t(lang, "com.step_short_1a", "1A: Booking"),
       desc: t(lang, "comv.step1_desc", "Account, Movement Type (Import/Export/Transit) & Route")
     },
     {
       num: 2,
       title: "1B: " + t(lang, "comv.step2_name", "Truck & Transport"),
-      shortTitle: "1B: Fleet",
+      shortTitle: t(lang, "com.step_short_1b", "1B: Fleet"),
       desc: t(lang, "comv.step2_desc", "Fleet Assignment & Driver Details")
     },
     {
       num: 3,
       title: "1C: " + t(lang, "comv.step3_name", "Goods & Warehouse"),
-      shortTitle: "1C: Goods",
+      shortTitle: t(lang, "com.step_short_1c", "1C: Goods"),
       desc: t(lang, "comv.step3_desc", "Own / Other Warehouse & Goods Manifest")
     },
     {
       num: 4,
       title: t(lang, "comv.step4_name", "Review, Shipping & Customs"),
-      shortTitle: "4: Review & Sheet",
+      shortTitle: t(lang, "com.step_short_4", "4: Review & Sheet"),
       desc: t(lang, "comv.step4_desc", "Expenses, Customs Agent & Confirmation")
     }
   ];
@@ -3631,10 +3695,10 @@ export function CustomerOrderManagementView() {
                             <div>{order.route_name || [order.loading_country_name, order.receiving_country_name].filter(Boolean).join(" → ") || "-"}</div>
                             <div className="flex flex-wrap gap-1 mt-0.5">
                               <span className="capitalize rounded bg-slate-100 px-1 py-0.2 text-[9px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                                {order.movement_type || "-"}
+                                {order.movement_type ? movementTypeLabel(lang, order.movement_type) : "-"}
                               </span>
                               <span className="capitalize rounded bg-blue-50 px-1 py-0.2 text-[9px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-                                {order.transport_mode?.replace("_", " ") || "-"}
+                                {order.transport_mode ? transportModeLabel(lang, order.transport_mode) : "-"}
                               </span>
                             </div>
                           </td>
@@ -4206,7 +4270,7 @@ export function CustomerOrderManagementView() {
                       {editingOrderId ? `${tt("edit_order_heading", "Edit Customer Order")} • ${formData.order_no || formData.customer_name}` : tt("new_order_heading", "New Customer Order")}
                     </h1>
                     <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800 shrink-0">
-                      ORDER VOUCHER
+                      {tt("order_voucher", "ORDER VOUCHER")}
                     </span>
                   </div>
                 </div>
@@ -4466,7 +4530,7 @@ export function CustomerOrderManagementView() {
                     <span>{tt("back_to_registry", "Back to Orders Registry")}</span>
                   </button>
                   <span className="text-[11px] text-slate-400 font-medium">
-                    Order ID: <span className="font-mono font-bold text-slate-600 dark:text-slate-300">{formData.order_no || "Draft"}</span>
+                    {tt("order_id_label", "Order ID:")} <span className="font-mono font-bold text-slate-600 dark:text-slate-300">{formData.order_no || tt("status_draft", "Draft")}</span>
                   </span>
                 </div>
               </div>
@@ -4655,13 +4719,9 @@ export function CustomerOrderManagementView() {
                       {/* Main Transport Mode Header */}
                       <div className="leading-relaxed space-y-0.5 pt-1">
                         <p className="font-bold text-slate-900 dark:text-white text-base capitalize truncate flex items-center gap-2">
-                          <span>{formData.transport_mode?.replace("by_", "By ") || "By Sea"}</span>
+                          <span>{transportModeLabel(lang, formData.transport_mode)}</span>
                           <span className="text-[10px] font-semibold text-sky-700 dark:text-sky-300 px-2 py-0.5 rounded-full bg-sky-50 dark:bg-sky-950/60 border border-sky-200/70 dark:border-sky-800">
-                            {formData.transport_mode?.includes("air")
-                              ? "Air Cargo"
-                              : formData.transport_mode?.includes("road")
-                              ? "Land / Trucking"
-                              : "Ocean Vessel"}
+                            {transportModeDescLabel(lang, formData.transport_mode)}
                           </span>
                         </p>
                         <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
@@ -4674,13 +4734,9 @@ export function CustomerOrderManagementView() {
                         <div className="flex items-center justify-between">
                           <span className="text-slate-500 font-medium">{tt("movement_type_label", "Movement Type:")}</span>
                           <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">
-                            {formData.movement_type || "Import"}
-                            <span className="ml-1 text-[10px] font-normal text-slate-500">
-                              ({formData.movement_type === "export"
-                                ? "Local → Foreign"
-                                : formData.movement_type === "transit"
-                                ? "Cross-Border"
-                                : "Foreign → Local"})
+                            {movementTypeLabel(lang, formData.movement_type)}
+                            <span className="ms-1 text-[10px] font-normal text-slate-500">
+                              ({movementFlowLabel(lang, formData.movement_type)})
                             </span>
                           </span>
                         </div>
@@ -4689,14 +4745,14 @@ export function CustomerOrderManagementView() {
                             <Route className="h-3 w-3 text-slate-400" />
                             <span>{tt("route_via_colon", "Route Via:")}</span>
                           </span>
-                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[170px]" title={formData.route_name || "Direct Customs Corridor"}>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[170px]" title={formData.route_name || tt("direct_customs_corridor", "Direct Customs Corridor")}>
                             {formData.route_name || tt("direct_customs_corridor", "Direct Customs Corridor")}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-slate-500 font-medium">{tt("clearance_office_label", "Clearance Office:")}</span>
                           <span className="font-semibold text-emerald-700 dark:text-emerald-400 truncate max-w-[170px]">
-                            {formData.customs_clearance_office || "Customs Corridor"}
+                            {formData.customs_clearance_office || tt("customs_corridor_short", "Customs Corridor")}
                           </span>
                         </div>
                       </div>
@@ -4786,7 +4842,7 @@ export function CustomerOrderManagementView() {
                         <div className="flex items-center justify-between text-xs">
                           <div className="flex items-center gap-1.5 font-black text-emerald-800 dark:text-emerald-300 uppercase tracking-wide">
                             <Route className="h-4 w-4 text-emerald-600" />
-                            <span>{tt("route_pathway_title", "Transit Route Pathway (ملک بہ ملک راستہ)")}</span>
+                            <span>{tt("route_pathway_title", "Transit Route Pathway")}</span>
                           </div>
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                             {liveRouteStops.length > 1 ? `${liveRouteStops.length} Stages Route` : "Single Corridor"}
@@ -4914,7 +4970,7 @@ export function CustomerOrderManagementView() {
                             <Route className="h-3 w-3 text-slate-400" />
                             <span>{tt("route_via_colon", "Route Via:")}</span>
                           </span>
-                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[170px]" title={formData.route_name || "Direct Customs Corridor"}>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[170px]" title={formData.route_name || tt("direct_customs_corridor", "Direct Customs Corridor")}>
                             {formData.route_name || tt("bonded_highway_fallback", "Bonded Highway")}
                           </span>
                         </div>
@@ -5043,7 +5099,7 @@ export function CustomerOrderManagementView() {
                           <span>{tt("vehicle_specifications", "VEHICLE SPECIFICATIONS")}</span>
                         </div>
                         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800 capitalize">
-                          {formData.truck_registration_type || tt("registered_status", "Registered")}
+                          {formData.truck_registration_type ? truckRegTypeLabel(lang, formData.truck_registration_type) : tt("registered_status", "Registered")}
                         </span>
                       </div>
 
@@ -5138,7 +5194,7 @@ export function CustomerOrderManagementView() {
                             {tt("goods_cargo_manifest_breakdown", "Goods & Cargo Manifest Breakdown")}
                           </span>
                           <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800">
-                            {(formData.goods_items?.length || 1)} Item{(formData.goods_items?.length || 1) > 1 ? "s" : ""}
+                            {(formData.goods_items?.length || 1)} {(formData.goods_items?.length || 1) > 1 ? tt("items_cap", "Items") : tt("item_word", "Item")}
                           </span>
                         </div>
                         <div className="text-[10.5px] text-slate-500 flex items-center gap-1.5 mt-0.5">
@@ -5157,7 +5213,7 @@ export function CustomerOrderManagementView() {
                       title={tt("transfer_step1c_goods", "Transfer to Step 1C / Goods & Warehouse Entry")}
                     >
                       <Pencil className="h-3.5 w-3.5" />
-                      <span>Transfer to Goods (1C)</span>
+                      <span>{tt("transfer_to_goods_1c", "Transfer to Goods (1C)")}</span>
                     </button>
                   </div>
 
@@ -5867,7 +5923,7 @@ function Step1BookingCustomer({
           }`}
         >
           <Users className={`h-3.5 w-3.5 shrink-0 ${step1SubStep === "1A" ? "text-blue-600 dark:text-blue-400" : "text-slate-400"}`} />
-          <span className="truncate">1A — Customer & Route</span>
+          <span className="truncate">{tt("tab_1a", "1A — Customer & Route")}</span>
           {formData.customer_id ? <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" /> : null}
         </button>
 
@@ -5881,7 +5937,7 @@ function Step1BookingCustomer({
           }`}
         >
           <Truck className={`h-3.5 w-3.5 shrink-0 ${step1SubStep === "1B" ? "text-blue-600 dark:text-blue-400" : "text-slate-400"}`} />
-          <span className="truncate">1B — Truck & Transport</span>
+          <span className="truncate">{tt("tab_1b", "1B — Truck & Transport")}</span>
           {formData.truck_number || formData.truck_assignment_mode === "later" ? (
             <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" />
           ) : null}
@@ -5897,7 +5953,7 @@ function Step1BookingCustomer({
           }`}
         >
           <Boxes className={`h-3.5 w-3.5 shrink-0 ${step1SubStep === "1C" ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400"}`} />
-          <span className="truncate">1C — Goods Entry</span>
+          <span className="truncate">{tt("tab_1c", "1C — Goods Entry")}</span>
           {(formData.goods_items || []).filter((g) => String(g.goodsName || "").trim()).length > 0 ? (
             <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" />
           ) : null}
@@ -5957,11 +6013,11 @@ function Step1BookingCustomer({
                 </span>
                 <span className="text-slate-300 dark:text-slate-600">•</span>
                 <span className="font-mono text-slate-500">
-                  Code: {selectedAccount?.code || selectedCustomer?.person_code || "—"}
+                  {tt("code_label", "Code:")} {selectedAccount?.code || selectedCustomer?.person_code || "—"}
                 </span>
                 <span className="text-slate-300 dark:text-slate-600">•</span>
                 <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                  Bal: {selectedAccount?.currency || "USD"} {Number(selectedAccount?.current_balance || 0).toLocaleString()}
+                  {tt("bal_short", "Bal:")} {selectedAccount?.currency || "USD"} {Number(selectedAccount?.current_balance || 0).toLocaleString()}
                 </span>
                 <span className="text-slate-300 dark:text-slate-600">•</span>
                 <span className="text-slate-500">
@@ -5983,10 +6039,10 @@ function Step1BookingCustomer({
                 onChange={(e) => setFormData((curr) => ({ ...curr, movement_type: e.target.value as any }))}
                 className={selectClass}
               >
-                <option value="import">Import (Foreign Origin &rarr; Local Delivery)</option>
-                <option value="export">Export (Local Origin &rarr; Foreign Discharge)</option>
-                <option value="up_transit">Up Transit (Border Entry &rarr; Bonded Corridor)</option>
-                <option value="down_transit">Down Transit (Inland &rarr; Border Exit)</option>
+                <option value="import">{tt("mv_opt_import", "Import (Foreign Origin → Local Delivery)")}</option>
+                <option value="export">{tt("mv_opt_export", "Export (Local Origin → Foreign Discharge)")}</option>
+                <option value="up_transit">{tt("mv_opt_up_transit", "Up Transit (Border Entry → Bonded Corridor)")}</option>
+                <option value="down_transit">{tt("mv_opt_down_transit", "Down Transit (Inland → Border Exit)")}</option>
               </select>
             </div>
 
@@ -6020,10 +6076,10 @@ function Step1BookingCustomer({
                 onChange={(e) => setFormData((curr) => ({ ...curr, transport_mode: e.target.value as any }))}
                 className={selectClass}
               >
-                <option value="by_sea">🚢 By Sea (Ocean Vessel / Container)</option>
-                <option value="by_road">🚛 By Road (Truck / Trailer / Freight)</option>
-                <option value="by_air">✈️ By Air (Air Freight / Cargo)</option>
-                <option value="by_rail">🚆 By Train (Rail Freight)</option>
+                <option value="by_sea">{tt("mode_opt_by_sea", "🚢 By Sea (Ocean Vessel / Container)")}</option>
+                <option value="by_road">{tt("mode_opt_by_road", "🚛 By Road (Truck / Trailer / Freight)")}</option>
+                <option value="by_air">{tt("mode_opt_by_air", "✈️ By Air (Air Freight / Cargo)")}</option>
+                <option value="by_rail">{tt("mode_opt_by_rail", "🚆 By Train (Rail Freight)")}</option>
               </select>
             </div>
           </div>
@@ -6279,7 +6335,7 @@ function Step1BookingCustomer({
                   <span>{tt("bonded_transit_movement", "Bonded Transit Movement Setup")}</span>
                 </div>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 uppercase">
-                  {formData.movement_type.replace("_", " ")}
+                  {movementTypeLabel(lang, formData.movement_type)}
                 </span>
               </div>
 
@@ -6494,7 +6550,7 @@ function Step1BookingCustomer({
                   {tt("stage_1a_summary", "Stage 1A Summary (Read-Only)")}
                 </span>
                 <span className="text-xs font-bold text-slate-500">
-                  Order: <span className="font-mono font-black text-blue-700 dark:text-blue-300">{formData.order_no || activeOrder?.order_no || "Draft"}</span>
+                  {tt("order_label", "Order:")} <span className="font-mono font-black text-blue-700 dark:text-blue-300">{formData.order_no || activeOrder?.order_no || tt("status_draft", "Draft")}</span>
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -6520,7 +6576,7 @@ function Step1BookingCustomer({
               </div>
               <div>
                 <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("movement_type_route", "Movement Type")}</span>
-                <span className="font-bold text-purple-700 dark:text-purple-300 capitalize block">{formData.movement_type?.replace("_", " ")}</span>
+                <span className="font-bold text-purple-700 dark:text-purple-300 capitalize block">{movementTypeLabel(lang, formData.movement_type)}</span>
               </div>
               <div>
                 <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("shipment_package_type", "Shipment Type")}</span>
@@ -6551,7 +6607,7 @@ function Step1BookingCustomer({
               <div>
                 <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("assigning_branch", "Assigning Branch")}</span>
                 <span className="font-medium text-slate-700 dark:text-slate-300 truncate block">
-                  {activeOrder?.latest_handover?.source_branch_name || ctx?.branchName || "Main Branch"}
+                  {activeOrder?.latest_handover?.source_branch_name || ctx?.branchName || tt("main_branch", "Main Branch")}
                 </span>
               </div>
               <div>
@@ -6564,7 +6620,7 @@ function Step1BookingCustomer({
                 <span className="text-[10px] uppercase font-bold text-slate-400 block">{tt("route_via_corridor", "Complete Route Via")}</span>
                 <span className="font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-1">
                   <Route className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                  <span className="truncate">{formData.route_name || "Direct Route"}</span>
+                  <span className="truncate">{formData.route_name || tt("direct_route_short", "Direct Route")}</span>
                 </span>
               </div>
             </div>
@@ -6973,7 +7029,7 @@ function Step1BookingCustomer({
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] uppercase font-bold text-slate-400">{tt("label_movement", "Movement")}</span>
-                  <span className="font-bold text-purple-700 dark:text-purple-300 capitalize">{formData.movement_type?.replace("_", " ") || "Import"}</span>
+                  <span className="font-bold text-purple-700 dark:text-purple-300 capitalize">{movementTypeLabel(lang, formData.movement_type)}</span>
                 </div>
               </div>
             </div>
@@ -6993,7 +7049,7 @@ function Step1BookingCustomer({
               <div className="space-y-1 text-xs">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] uppercase font-bold text-slate-400">{tt("label_truck", "Truck No")}</span>
-                  <span className="font-mono font-black text-blue-700 dark:text-blue-300">{formData.truck_number || "TO BE ASSIGNED"}</span>
+                  <span className="font-mono font-black text-blue-700 dark:text-blue-300">{formData.truck_number && formData.truck_number !== "TO BE ASSIGNED" ? formData.truck_number : tt("to_be_assigned", "To be assigned")}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] uppercase font-bold text-slate-400">{tt("label_driver", "Driver")}</span>
@@ -7004,7 +7060,7 @@ function Step1BookingCustomer({
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] uppercase font-bold text-slate-400">{tt("label_loading_point", "Loading Place")}</span>
                   <span className="font-medium text-slate-700 dark:text-slate-300 truncate max-w-[170px]">
-                    {formData.truck_loading_location || formData.loading_source_name || "Terminal Yard"}
+                    {formData.truck_loading_location || formData.loading_source_name || tt("terminal_yard", "Terminal Yard")}
                   </span>
                 </div>
               </div>
@@ -7033,7 +7089,7 @@ function Step1BookingCustomer({
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] uppercase font-bold text-slate-400">{tt("label_customs_point", "Clearance Gate")}</span>
                   <span className="font-medium text-slate-700 dark:text-slate-300 truncate max-w-[170px]">
-                    {formData.customs_clearance_office || formData.entry_border_port_name || formData.exit_border_port_name || "Customs Gate"}
+                    {formData.customs_clearance_office || formData.entry_border_port_name || formData.exit_border_port_name || tt("customs_gate", "Customs Gate")}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -7050,7 +7106,7 @@ function Step1BookingCustomer({
               <div className="flex items-center gap-2">
                 <Boxes className="h-4 w-4 text-emerald-600" />
                 <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                  Goods & Cargo Breakdown ({(formData.goods_items || []).filter((g) => g.goodsName || g.quantity).length} Items)
+                  {tt("goods_cargo_breakdown", "Goods & Cargo Breakdown")} ({(formData.goods_items || []).filter((g) => String(g.goodsName || "").trim()).length} {tt("items_cap", "Items")})
                 </span>
               </div>
               <button
@@ -7062,7 +7118,7 @@ function Step1BookingCustomer({
                 className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700 border border-emerald-200 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 transition"
               >
                 <Plus className="h-3.5 w-3.5" />
-                <span>+ New Goods Item</span>
+                <span>{tt("new_goods_item", "+ New Goods Item")}</span>
               </button>
             </div>
 
@@ -7421,12 +7477,12 @@ function Step1BookingCustomer({
                     onChange={(e) => handleDraftGoodsChange("currency", e.target.value)}
                     className={selectClass}
                   >
-                    <option value="AED">AED — UAE Dirham</option>
-                    <option value="USD">USD — US Dollar</option>
-                    <option value="PKR">PKR — Pakistani Rupee</option>
-                    <option value="AFN">AFN — Afghan Afghani</option>
-                    <option value="EUR">EUR — Euro</option>
-                    <option value="CNY">CNY — Chinese Yuan</option>
+                    <option value="AED">{tt("cur_aed", "AED — UAE Dirham")}</option>
+                    <option value="USD">{tt("cur_usd", "USD — US Dollar")}</option>
+                    <option value="PKR">{tt("cur_pkr", "PKR — Pakistani Rupee")}</option>
+                    <option value="AFN">{tt("cur_afn", "AFN — Afghan Afghani")}</option>
+                    <option value="EUR">{tt("cur_eur", "EUR — Euro")}</option>
+                    <option value="CNY">{tt("cur_cny", "CNY — Chinese Yuan")}</option>
                   </select>
                 </div>
 
@@ -7555,7 +7611,7 @@ function Step1BookingCustomer({
                         <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
                           <td className="py-2 px-2.5 text-center font-bold text-slate-400">{idx + 1}</td>
                           <td className="py-2 px-2.5 font-bold text-slate-900 dark:text-white">
-                            <div>{g.goodsName || "Goods Item"}</div>
+                            <div>{g.goodsName || tt("goods_item", "Goods Item")}</div>
                             {g.goodsChsCode ? <div className="font-mono text-[10px] text-slate-400">HS: {g.goodsChsCode}</div> : null}
                           </td>
                           <td className="py-2 px-2.5 text-slate-600 dark:text-slate-300">
@@ -7575,7 +7631,7 @@ function Step1BookingCustomer({
                             {Number(g.netWeight || g.totalKg || 0).toLocaleString()}
                           </td>
                           <td className="py-2 px-2.5 text-slate-600 dark:text-slate-300 truncate max-w-[120px]">
-                            {g.warehouseName || g.warehouseSourceType?.replace("_", " ") || "—"}
+                            {g.warehouseName || (g.warehouseSourceType ? tt("wh_src_" + g.warehouseSourceType, g.warehouseSourceType.replace("_", " ")) : "—")}
                           </td>
                           <td className="py-2 px-2.5 text-right font-mono text-slate-800 dark:text-slate-200">
                             {g.rate ? (
@@ -8995,7 +9051,7 @@ function Step4ReviewConfirm({
             className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 transition"
           >
             <ChevronLeft className="h-4 w-4" />
-            <span>{tt("back_to_1c", "Back to 1C (Route & Delivery)")}</span>
+            <span>{tt("back_to_1c", "Back to 1C (Goods Entry)")}</span>
           </button>
           <div className="h-4 w-px bg-slate-700 mx-1 hidden sm:block" />
           <span className="text-xs font-medium text-slate-300 hidden md:inline">
@@ -9055,11 +9111,11 @@ function Step4ReviewConfirm({
             <p className="text-xs text-slate-500">
               {tt("official_shipment_manifest", "Official shipment order manifest")} • {tt("movement_colon", "Movement:")}{" "}
               <strong className="uppercase text-slate-800 dark:text-slate-200">
-                {formData.movement_type || "IMPORT"}
+                {movementTypeLabel(lang, formData.movement_type)}
               </strong>{" "}
               • {tt("mode_colon", "Mode:")}{" "}
               <strong className="uppercase text-slate-800 dark:text-slate-200">
-                {formData.transport_mode?.replace("_", " ") || "BY ROAD"}
+                {transportModeLabel(lang, formData.transport_mode)}
               </strong>{" "}
               • {tt("type_colon", "Type:")}{" "}
               <strong className="uppercase text-slate-800 dark:text-slate-200">
@@ -9071,7 +9127,7 @@ function Step4ReviewConfirm({
           <div className="text-right space-y-1">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 text-xs font-bold uppercase tracking-wider">
               <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
-              {formData.status ? formData.status.toUpperCase() : "PENDING CONFIRMATION"}
+              {orderStatusLabel(lang, formData.status)}
             </div>
             <div className="text-xs font-mono font-bold text-slate-900 dark:text-slate-100">
               {formData.order_no || formData.global_serial || "AUTO-GENERATED"}
@@ -9196,13 +9252,13 @@ function Step4ReviewConfirm({
                 <div>
                   <span className="text-[10px] text-slate-400 block">{tt("movement_type_field", "Movement Type")}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">
-                    {formData.movement_type || "Import"}
+                    {movementTypeLabel(lang, formData.movement_type)}
                   </span>
                 </div>
                 <div>
                   <span className="text-[10px] text-slate-400 block">{tt("transport_mode_field", "Transport Mode")}</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">
-                    {formData.transport_mode?.replace("_", " ") || "By Road"}
+                    {transportModeLabel(lang, formData.transport_mode)}
                   </span>
                 </div>
                 <div className="col-span-2">
@@ -9251,7 +9307,7 @@ function Step4ReviewConfirm({
             <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
               <span className="text-[10px] text-slate-400 uppercase font-semibold block">{tt("pickup_source_field", "Pickup Source")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 text-xs">
-                {formData.loading_source_name || formData.loading_source || "-"}
+                {formData.loading_source_name || (formData.loading_source ? loadingSourceLabel(lang, formData.loading_source) : "-")}
               </span>
             </div>
             <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
@@ -9571,7 +9627,7 @@ function Step4ReviewConfirm({
           className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 transition"
         >
           <ChevronLeft className="h-4 w-4" />
-          <span>{tt("back_to_1c", "Back to 1C (Route & Delivery)")}</span>
+          <span>{tt("back_to_1c", "Back to 1C (Goods Entry)")}</span>
         </button>
 
         <div className="flex items-center gap-2">
