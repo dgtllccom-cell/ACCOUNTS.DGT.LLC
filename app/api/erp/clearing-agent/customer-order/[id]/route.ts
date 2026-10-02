@@ -48,7 +48,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     return NextResponse.json({ success: true, data: order });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
-    return NextResponse.json({ success: false, error: error.message }, { status: httpStatusOfError(error) });
+    return NextResponse.json({ success: false, error: error.message, ...(typeof error.code === "string" && /^[A-Z_]+$/.test(error.code) ? { code: error.code, fields: error.fields } : {}) }, { status: httpStatusOfError(error) });
   }
 }
 
@@ -155,7 +155,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (isCrossBorderTruckViolation(error)) {
       return NextResponse.json({ success: false, error: CROSS_BORDER_TRUCK_MESSAGE, code: "CROSS_BORDER_TRUCK_RULE" }, { status: 422 });
     }
-    return NextResponse.json({ success: false, error: error.message }, { status: httpStatusOfError(error) });
+    return NextResponse.json({ success: false, error: error.message, ...(typeof error.code === "string" && /^[A-Z_]+$/.test(error.code) ? { code: error.code, fields: error.fields } : {}) }, { status: httpStatusOfError(error) });
   }
 }
 
@@ -178,6 +178,6 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     return NextResponse.json({ success: true, data: deleted });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
-    return NextResponse.json({ success: false, error: error.message }, { status: httpStatusOfError(error) });
+    return NextResponse.json({ success: false, error: error.message, ...(typeof error.code === "string" && /^[A-Z_]+$/.test(error.code) ? { code: error.code, fields: error.fields } : {}) }, { status: httpStatusOfError(error) });
   }
 }

@@ -10588,6 +10588,28 @@ export type UiKey =
   | "com.retry"
   | "com.order_assigned_to"
   | "com.err_save_before_return"
+  | "com.tt_modal_title"
+  | "com.tt_modal_desc"
+  | "com.tt_field_number"
+  | "com.tt_field_driver"
+  | "com.tt_field_mobile"
+  | "com.tt_err_number"
+  | "com.tt_err_driver"
+  | "com.tt_err_mobile"
+  | "com.tt_err_mobile_invalid"
+  | "com.tt_save_confirm"
+  | "com.tt_err_all_three"
+  | "com.err_fleet_driver_missing"
+  | "com.opt_temporary_truck"
+  | "com.no_road_leg_note"
+  | "com.truck_leg_label"
+  | "com.leg_word"
+  | "com.search_truck_short"
+  | "com.no_matching_trucks"
+  | "com.fleet_missing_prefix"
+  | "com.one_trip_badge"
+  | "com.tt_edit"
+  | "com.tt_enter_details"
   | "com.tab_1a"
   | "com.tab_1b"
   | "com.tab_1c"
@@ -32795,6 +32817,28 @@ const en: Dict = {
   "com.retry": "Retry",
   "com.order_assigned_to": "Order assigned to {user} successfully!",
   "com.err_save_before_return": "Please save the order before returning for correction.",
+  "com.tt_modal_title": "Temporary / One-Trip Truck",
+  "com.tt_modal_desc": "All three details are required. This truck is not added to the Fleet Master.",
+  "com.tt_field_number": "Truck / Vehicle Number",
+  "com.tt_field_driver": "Driver Name",
+  "com.tt_field_mobile": "Driver Mobile Number",
+  "com.tt_err_number": "Truck / Vehicle Number is required.",
+  "com.tt_err_driver": "Driver Name is required.",
+  "com.tt_err_mobile": "Driver Mobile Number is required.",
+  "com.tt_err_mobile_invalid": "Enter a valid mobile number with country code, e.g. +92 300 1234567.",
+  "com.tt_save_confirm": "Save / Confirm",
+  "com.tt_err_all_three": "Temporary truck: Truck / Vehicle Number, Driver Name and a valid Driver Mobile Number (with country code) are all required.",
+  "com.err_fleet_driver_missing": "This Fleet Master truck has no driver name or mobile number. Update the truck record in Fleet Master, then select it again.",
+  "com.opt_temporary_truck": "Option 2: Temporary / One-Trip Truck",
+  "com.no_road_leg_note": "This route has no Road leg yet. A truck applies to Road legs only — Sea, Air and Train legs use their own shipping fields.",
+  "com.truck_leg_label": "Truck assigned to Road leg",
+  "com.leg_word": "Leg",
+  "com.search_truck_short": "Search truck...",
+  "com.no_matching_trucks": "No matching trucks found",
+  "com.fleet_missing_prefix": "Missing in Fleet Master:",
+  "com.one_trip_badge": "One-Trip",
+  "com.tt_edit": "Edit details",
+  "com.tt_enter_details": "Enter truck & driver details",
   "com.tab_1a": "1A — Customer & Route",
   "com.tab_1b": "1B — Truck & Transport",
   "com.tab_1c": "1C — Goods Entry",
@@ -54971,6 +55015,28 @@ const ur: Dict = {
   "com.retry": "دوبارہ کوشش کریں",
   "com.order_assigned_to": "آرڈر کامیابی سے {user} کو تفویض کر دیا گیا!",
   "com.err_save_before_return": "اصلاح کے لیے واپس بھیجنے سے پہلے آرڈر محفوظ کریں۔",
+  "com.tt_modal_title": "عارضی / ایک سفر کا ٹرک",
+  "com.tt_modal_desc": "تینوں تفصیلات لازمی ہیں۔ یہ ٹرک فلیٹ ماسٹر میں شامل نہیں کیا جاتا۔",
+  "com.tt_field_number": "ٹرک / گاڑی نمبر",
+  "com.tt_field_driver": "ڈرائیور کا نام",
+  "com.tt_field_mobile": "ڈرائیور کا موبائل نمبر",
+  "com.tt_err_number": "ٹرک / گاڑی نمبر لازمی ہے۔",
+  "com.tt_err_driver": "ڈرائیور کا نام لازمی ہے۔",
+  "com.tt_err_mobile": "ڈرائیور کا موبائل نمبر لازمی ہے۔",
+  "com.tt_err_mobile_invalid": "ملکی کوڈ کے ساتھ درست موبائل نمبر درج کریں، مثلاً +92 300 1234567۔",
+  "com.tt_save_confirm": "محفوظ / تصدیق کریں",
+  "com.tt_err_all_three": "عارضی ٹرک: ٹرک / گاڑی نمبر، ڈرائیور کا نام اور (ملکی کوڈ کے ساتھ) درست موبائل نمبر تینوں لازمی ہیں۔",
+  "com.err_fleet_driver_missing": "اس فلیٹ ماسٹر ٹرک میں ڈرائیور کا نام یا موبائل نمبر موجود نہیں۔ فلیٹ ماسٹر میں ٹرک کا ریکارڈ اپ ڈیٹ کریں، پھر دوبارہ منتخب کریں۔",
+  "com.opt_temporary_truck": "آپشن 2: عارضی / ایک سفر کا ٹرک",
+  "com.no_road_leg_note": "اس راستے میں ابھی کوئی سڑک کا مرحلہ نہیں۔ ٹرک صرف سڑک کے مراحل پر لاگو ہوتا ہے — بحری، فضائی اور ریل مراحل اپنے شپنگ خانے استعمال کرتے ہیں۔",
+  "com.truck_leg_label": "ٹرک جس سڑک کے مرحلے پر مقرر ہے",
+  "com.leg_word": "مرحلہ",
+  "com.search_truck_short": "ٹرک تلاش کریں...",
+  "com.no_matching_trucks": "کوئی مماثل ٹرک نہیں ملا",
+  "com.fleet_missing_prefix": "فلیٹ ماسٹر میں موجود نہیں:",
+  "com.one_trip_badge": "ایک سفر",
+  "com.tt_edit": "تفصیلات میں ترمیم",
+  "com.tt_enter_details": "ٹرک اور ڈرائیور کی تفصیلات درج کریں",
   "com.tab_1a": "1A — کسٹمر اور راستہ",
   "com.tab_1b": "1B — ٹرک اور ٹرانسپورٹ",
   "com.tab_1c": "1C — مال کا اندراج",
@@ -77148,6 +77214,28 @@ const ar: Dict = {
   "com.retry": "إعادة المحاولة",
   "com.order_assigned_to": "تم إسناد الطلب إلى {user} بنجاح!",
   "com.err_save_before_return": "يرجى حفظ الطلب قبل إعادته للتصحيح.",
+  "com.tt_modal_title": "شاحنة مؤقتة / لرحلة واحدة",
+  "com.tt_modal_desc": "التفاصيل الثلاثة مطلوبة. لا تتم إضافة هذه الشاحنة إلى سجل الأسطول.",
+  "com.tt_field_number": "رقم الشاحنة / المركبة",
+  "com.tt_field_driver": "اسم السائق",
+  "com.tt_field_mobile": "رقم هاتف السائق",
+  "com.tt_err_number": "رقم الشاحنة / المركبة مطلوب.",
+  "com.tt_err_driver": "اسم السائق مطلوب.",
+  "com.tt_err_mobile": "رقم هاتف السائق مطلوب.",
+  "com.tt_err_mobile_invalid": "أدخل رقم هاتف صالحًا مع رمز الدولة، مثل +92 300 1234567.",
+  "com.tt_save_confirm": "حفظ / تأكيد",
+  "com.tt_err_all_three": "الشاحنة المؤقتة: رقم الشاحنة / المركبة واسم السائق ورقم هاتف صالح (مع رمز الدولة) كلها مطلوبة.",
+  "com.err_fleet_driver_missing": "هذه الشاحنة في سجل الأسطول بلا اسم سائق أو رقم هاتف. حدّث سجل الشاحنة في سجل الأسطول ثم اخترها مجددًا.",
+  "com.opt_temporary_truck": "الخيار 2: شاحنة مؤقتة / لرحلة واحدة",
+  "com.no_road_leg_note": "لا يوجد مقطع بري في هذا المسار بعد. تنطبق الشاحنة على المقاطع البرية فقط — المقاطع البحرية والجوية والسككية لها حقول الشحن الخاصة بها.",
+  "com.truck_leg_label": "الشاحنة المسندة إلى المقطع البري",
+  "com.leg_word": "المقطع",
+  "com.search_truck_short": "ابحث عن شاحنة...",
+  "com.no_matching_trucks": "لم يتم العثور على شاحنات مطابقة",
+  "com.fleet_missing_prefix": "غير موجود في سجل الأسطول:",
+  "com.one_trip_badge": "رحلة واحدة",
+  "com.tt_edit": "تعديل التفاصيل",
+  "com.tt_enter_details": "إدخال بيانات الشاحنة والسائق",
   "com.tab_1a": "1A — العميل والمسار",
   "com.tab_1b": "1B — الشاحنة والنقل",
   "com.tab_1c": "1C — إدخال البضائع",
@@ -99324,6 +99412,28 @@ const fa: Dict = {
   "com.retry": "تلاش مجدد",
   "com.order_assigned_to": "سفارش با موفقیت به {user} واگذار شد!",
   "com.err_save_before_return": "لطفاً پیش از بازگرداندن برای اصلاح، سفارش را ذخیره کنید.",
+  "com.tt_modal_title": "کامیون موقت / تک‌سفره",
+  "com.tt_modal_desc": "هر سه مورد الزامی است. این کامیون به فهرست اصلی ناوگان افزوده نمی‌شود.",
+  "com.tt_field_number": "شماره کامیون / وسیله نقلیه",
+  "com.tt_field_driver": "نام راننده",
+  "com.tt_field_mobile": "شماره موبایل راننده",
+  "com.tt_err_number": "شماره کامیون / وسیله نقلیه الزامی است.",
+  "com.tt_err_driver": "نام راننده الزامی است.",
+  "com.tt_err_mobile": "شماره موبایل راننده الزامی است.",
+  "com.tt_err_mobile_invalid": "شماره موبایل معتبر را با کد کشور وارد کنید، مثلاً +92 300 1234567.",
+  "com.tt_save_confirm": "ذخیره / تأیید",
+  "com.tt_err_all_three": "کامیون موقت: شماره کامیون / وسیله نقلیه، نام راننده و شماره موبایل معتبر (با کد کشور) هر سه الزامی است.",
+  "com.err_fleet_driver_missing": "این کامیون در فهرست ناوگان نام یا شماره موبایل راننده ندارد. رکورد کامیون را در ناوگان به‌روزرسانی کنید و دوباره انتخاب کنید.",
+  "com.opt_temporary_truck": "گزینه ۲: کامیون موقت / تک‌سفره",
+  "com.no_road_leg_note": "این مسیر هنوز بخش زمینی ندارد. کامیون فقط برای بخش‌های زمینی است — بخش‌های دریایی، هوایی و ریلی فیلدهای حمل خود را دارند.",
+  "com.truck_leg_label": "کامیون تخصیص‌یافته به بخش زمینی",
+  "com.leg_word": "بخش",
+  "com.search_truck_short": "جستجوی کامیون...",
+  "com.no_matching_trucks": "کامیون مطابقی یافت نشد",
+  "com.fleet_missing_prefix": "در ناوگان موجود نیست:",
+  "com.one_trip_badge": "تک‌سفره",
+  "com.tt_edit": "ویرایش جزئیات",
+  "com.tt_enter_details": "ثبت جزئیات کامیون و راننده",
   "com.tab_1a": "1A — مشتری و مسیر",
   "com.tab_1b": "1B — کامیون و حمل‌ونقل",
   "com.tab_1c": "1C — ثبت کالا",
@@ -121507,6 +121617,28 @@ const ps: Dict = {
   "com.retry": "بیا هڅه",
   "com.order_assigned_to": "امر په بریالیتوب سره {user} ته وسپارل شو!",
   "com.err_save_before_return": "مهرباني وکړئ د سمون لپاره بیرته استولو دمخه امر خوندي کړئ.",
+  "com.tt_modal_title": "لنډمهاله / د یو سفر ټرک",
+  "com.tt_modal_desc": "درې واړه جزئیات اړین دي. دا ټرک د بیړۍ ماسټر ته نه اضافه کیږي.",
+  "com.tt_field_number": "د ټرک / موټر شمېره",
+  "com.tt_field_driver": "د ډرایور نوم",
+  "com.tt_field_mobile": "د ډرایور د موبایل شمېره",
+  "com.tt_err_number": "د ټرک / موټر شمېره اړینه ده.",
+  "com.tt_err_driver": "د ډرایور نوم اړین دی.",
+  "com.tt_err_mobile": "د ډرایور د موبایل شمېره اړینه ده.",
+  "com.tt_err_mobile_invalid": "د هیواد کوډ سره معتبره موبایل شمېره دننه کړئ، لکه +92 300 1234567.",
+  "com.tt_save_confirm": "خوندي / تایید کړئ",
+  "com.tt_err_all_three": "لنډمهاله ټرک: د ټرک / موټر شمېره، د ډرایور نوم او (د هیواد کوډ سره) معتبره موبایل شمېره درې واړه اړین دي.",
+  "com.err_fleet_driver_missing": "دې بیړۍ ټرک کې د ډرایور نوم یا موبایل شمېره نشته. په بیړۍ ماسټر کې د ټرک ریکارډ تازه کړئ او بیا یې وټاکئ.",
+  "com.opt_temporary_truck": "انتخاب 2: لنډمهاله / د یو سفر ټرک",
+  "com.no_road_leg_note": "دې لارې کې لا د سړک برخه نشته. ټرک یوازې د سړک برخو لپاره دی — سمندري، هوايي او اورګاډي برخې خپل د لېږد ځایونه کاروي.",
+  "com.truck_leg_label": "ټرک چې د سړک برخې ته ګمارل شوی",
+  "com.leg_word": "برخه",
+  "com.search_truck_short": "ټرک ولټوئ...",
+  "com.no_matching_trucks": "هیڅ برابر ټرک ونه موندل شو",
+  "com.fleet_missing_prefix": "په بیړۍ ماسټر کې نشته:",
+  "com.one_trip_badge": "یو سفر",
+  "com.tt_edit": "جزئیات سمول",
+  "com.tt_enter_details": "د ټرک او ډرایور جزئیات دننه کړئ",
   "com.tab_1a": "1A — پیرودونکی او لار",
   "com.tab_1b": "1B — ټرک او ترانسپورټ",
   "com.tab_1c": "1C — د توکو ثبتول",

@@ -76,7 +76,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: true, data });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
-    return NextResponse.json({ success: false, error: error.message }, { status: httpStatusOfError(error) });
+    return NextResponse.json({ success: false, error: error.message, ...(typeof error.code === "string" && /^[A-Z_]+$/.test(error.code) ? { code: error.code, fields: error.fields } : {}) }, { status: httpStatusOfError(error) });
   }
 }
 
@@ -190,6 +190,6 @@ export async function POST(req: NextRequest) {
     if (isCrossBorderTruckViolation(error)) {
       return NextResponse.json({ success: false, error: CROSS_BORDER_TRUCK_MESSAGE, code: "CROSS_BORDER_TRUCK_RULE" }, { status: 422 });
     }
-    return NextResponse.json({ success: false, error: error.message }, { status: httpStatusOfError(error) });
+    return NextResponse.json({ success: false, error: error.message, ...(typeof error.code === "string" && /^[A-Z_]+$/.test(error.code) ? { code: error.code, fields: error.fields } : {}) }, { status: httpStatusOfError(error) });
   }
 }

@@ -243,3 +243,49 @@ export function httpStatusOfError(error: unknown): number {
   const status = (error as { status?: unknown } | null)?.status;
   return typeof status === "number" && status >= 400 && status < 500 ? status : 500;
 }
+
+// ── Temporary / one-trip truck ─────────────────────────────────────────────────
+/** International mobile: optional +country code, digits with spaces / dashes / brackets, 7–15 digits. */
+export function isValidInternationalMobile(value: unknown): boolean {
+  const s = String(value ?? "").trim();
+  if (!s || !/^\+?[0-9][0-9\s().-]*$/.test(s)) return false;
+  const digits = s.replace(/\D/g, "").length;
+  return digits >= 7 && digits <= 15;
+}
+
+export type TemporaryTruckField = "truck_number" | "driver_name" | "driver_mobile" | "driver_mobile_invalid";
+
+/** The THREE mandatory fields of a temporary / one-trip truck. Empty array = valid. */
+export function temporaryTruckProblems(t: { truckNumber?: unknown; driverName?: unknown; driverMobile?: unknown }): TemporaryTruckField[] {
+  const out: TemporaryTruckField[] = [];
+  const number = String(t.truckNumber ?? "").trim();
+  if (!number || isTruckPlaceholder(number)) out.push("truck_number");
+  if (!String(t.driverName ?? "").trim()) out.push("driver_name");
+  const mobile = String(t.driverMobile ?? "").trim();
+  if (!mobile) out.push("driver_mobile");
+  else if (!isValidInternationalMobile(mobile)) out.push("driver_mobile_invalid");
+  return out;
+}
+
+export const TEMP_TRUCK_MESSAGE =
+  "A temporary / one-trip truck needs all three details: Truck / Vehicle Number, Driver Name and a valid Driver Mobile Number (with country code, e.g. +92 300 1234567).";
+
+export class TemporaryTruckError extends Error {
+  status = 422;
+  code = "TEMP_TRUCK_INCOMPLETE";
+  fields: TemporaryTruckField[];
+  constructor(fields: TemporaryTruckField[]) {
+    super(TEMP_TRUCK_MESSAGE);
+    this.name = "TemporaryTruckError";
+    this.fields = fields;
+  }
+}
+
+/**
+ * A truck is only ever assigned to a ROAD leg. Sea legs use shipping-line / vessel fields, Air and
+ * Train legs their own fields — one truck must never be forced onto a whole multi-modal journey.
+ */
+export function stripTruckFromNonRoadLeg<T extends { transportMode?: string | null }>(leg: T): T {
+  if (leg.transportMode === "by_road") return leg;
+  return { ...leg, truckId: null, truckRegistrationType: null, truckNumber: null, truckDriverName: null, truckDriverMobile: null };
+}

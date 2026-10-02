@@ -89,6 +89,7 @@ import { CustomerOrderActivityTimelineModal } from "@/features/clearing-agent/co
 import { CustomerOrderReturnCorrectionModal } from "@/features/clearing-agent/components/customer-order-return-correction-modal";
 import { CustomerOrderStageAssignmentModal } from "@/features/clearing-agent/components/customer-order-stage-assignment-modal";
 import { CustomerOrderRouteBuilder } from "@/features/clearing-agent/components/customer-order-route-builder";
+import { CustomerOrderTempTruckModal } from "@/features/clearing-agent/components/customer-order-temp-truck-modal";
 import { CustomerOrderPartnerBillsPanel } from "@/features/clearing-agent/components/customer-order-partner-bills-panel";
 import { CustomerOrderInsurancePanel } from "@/features/clearing-agent/components/customer-order-insurance-panel";
 import {
@@ -97,6 +98,7 @@ import {
   parseJsonArray,
   parseJsonObject,
   stage1bMissing,
+  temporaryTruckProblems,
   validateGoodsItems,
   violatesCrossBorderTruckRule
 } from "@/lib/services/clearing-customer-order-workflow-rules";
@@ -422,6 +424,16 @@ function partyRoleLabel(lang: string, roleKey: string | null | undefined): strin
   return k ? comT(lang, "role_" + k, k.replace(/_/g, " ")) : "";
 }
 
+/** Index of the ROAD leg the truck is assigned to (-1 when the route has no road leg). */
+function resolveTruckLegIndex(legs: any[], truckLegNo?: string | number | null): number {
+  const road = (legs || []).map((l, i) => ({ l, i })).filter((x) => x.l?.transportMode === "by_road");
+  if (!road.length) return -1;
+  const byNo = truckLegNo ? road.find((x) => String(x.l.legNo) === String(truckLegNo)) : undefined;
+  if (byNo) return byNo.i;
+  const withTruck = road.find((x) => x.l.truckNumber && !isTruckPlaceholder(x.l.truckNumber));
+  return (withTruck ?? road[0]).i;
+}
+
 function loadingSourceLabel(lang: string, source: string | null | undefined): string {
   const s = String(source || "");
   if (!s) return "—";
@@ -511,6 +523,7 @@ const EMPTY_FORM = {
 
   // 1B Truck & Pre-Carriage
   truck_assignment_mode: "permanent" as "permanent" | "hired" | "later",
+  truck_leg_no: "" as string,
   truck_mode: "permanent" as "permanent" | "hired" | "later",
   truck_registration_type: "registered" as "registered" | "temporary",
   truck_id: "",
@@ -2113,8 +2126,9 @@ export function CustomerOrderManagementView() {
         assignmentMode: formData.truck_assignment_mode,
         orderRegistrationType: formData.truck_registration_type
       });
-    const invalidCrossBorderLeg = formData.legs.find((leg: any) =>
-      violatesCrossBorderTruckRule({ ...leg, truckRegistrationType: effectiveLegRegType(leg) })
+    const truckLegIdx = resolveTruckLegIndex(formData.legs, formData.truck_leg_no);
+    const invalidCrossBorderLeg = formData.legs.find((leg: any, i: number) =>
+      i === truckLegIdx && violatesCrossBorderTruckRule({ ...leg, truckRegistrationType: effectiveLegRegType(leg) })
     );
     if (invalidCrossBorderLeg) {
       alert(
@@ -2176,7 +2190,7 @@ export function CustomerOrderManagementView() {
       // Route legs
       const legsToSave =
         formData.legs && formData.legs.length > 0
-          ? formData.legs.map((leg) => ({
+          ? formData.legs.map((leg, legIdx) => ({
               id: leg.id,
               legNo: leg.legNo,
               fromCountryId: leg.fromCountryId || null,
@@ -2189,11 +2203,12 @@ export function CustomerOrderManagementView() {
               responsibleCountryBranchId: leg.responsibleCountryBranchId || null,
               responsibleCityBranchId: leg.responsibleCityBranchId || null,
               responsibleClearingAgentId: leg.responsibleClearingAgentId || null,
-              truckId: effTruckId,
-              truckRegistrationType: effectiveLegRegType(leg),
-              truckNumber: effTruckNumber,
-              truckDriverName: effDriverName,
-              truckDriverMobile: effDriverMobile,
+              // The truck belongs to ONE road leg — never to the whole multi-modal journey.
+              truckId: legIdx === truckLegIdx ? effTruckId : null,
+              truckRegistrationType: legIdx === truckLegIdx ? effectiveLegRegType(leg) : null,
+              truckNumber: legIdx === truckLegIdx ? effTruckNumber : null,
+              truckDriverName: legIdx === truckLegIdx ? effDriverName : null,
+              truckDriverMobile: legIdx === truckLegIdx ? effDriverMobile : null,
               shippingLineId: leg.shippingLineId || null,
               vesselName: leg.vesselName || null,
               voyageNumber: leg.voyageNumber || null,
@@ -2252,11 +2267,11 @@ export function CustomerOrderManagementView() {
                 toLocationText: formData.final_delivery_location || formData.destination_port_name || null,
                 portOfLoading: formData.loading_port_name || null,
                 portOfDischarge: formData.destination_port_name || null,
-                truckId: effTruckId,
-                truckRegistrationType: legTruckRegistrationType({ assignmentMode: formData.truck_assignment_mode, orderRegistrationType: formData.truck_registration_type }),
-                truckNumber: effTruckNumber,
-                truckDriverName: effDriverName,
-                truckDriverMobile: effDriverMobile,
+                truckId: formData.transport_mode === "by_road" ? effTruckId : null,
+                truckRegistrationType: formData.transport_mode === "by_road" ? legTruckRegistrationType({ assignmentMode: formData.truck_assignment_mode, orderRegistrationType: formData.truck_registration_type }) : null,
+                truckNumber: formData.transport_mode === "by_road" ? effTruckNumber : null,
+                truckDriverName: formData.transport_mode === "by_road" ? effDriverName : null,
+                truckDriverMobile: formData.transport_mode === "by_road" ? effDriverMobile : null,
                 status: "pending",
                 plannedDeparture: formData.planned_departure_date || null,
                 actualDeparture: formData.actual_departure_date || null,
@@ -2554,6 +2569,12 @@ export function CustomerOrderManagementView() {
     if (formData.truck_assignment_mode === "later") return null;
     if (isTruckPlaceholder(formData.truck_number)) {
       return tt("err_truck_number_required", "Please enter or select a Truck Number before confirming.");
+    }
+    if (formData.truck_assignment_mode === "hired") {
+      const found = temporaryTruckProblems({ truckNumber: formData.truck_number, driverName: formData.truck_driver_name, driverMobile: formData.truck_driver_mobile });
+      if (found.length) return tt("tt_err_all_three", "Temporary truck: Truck / Vehicle Number, Driver Name and a valid Driver Mobile Number (with country code) are all required.");
+    } else if (!String(formData.truck_driver_name || "").trim() || !String(formData.truck_driver_mobile || "").trim()) {
+      return tt("err_fleet_driver_missing", "This Fleet Master truck has no driver name or mobile number. Update the truck record in Fleet Master, then select it again.");
     }
     return null;
   };
@@ -5721,6 +5742,7 @@ function Step1BookingCustomer({
   };
 
   // Step 1C Goods Draft & Edit State
+  const [tempTruckModalOpen, setTempTruckModalOpen] = useState(false);
   const [internalDraftGoodsItem, setInternalDraftGoodsItem] = useState<CustomerOrderGoodsItem>(defaultGoodsItem());
   const [internalEditingGoodsIdx, setInternalEditingGoodsIdx] = useState<number | null>(null);
 
@@ -6643,45 +6665,66 @@ function Step1BookingCustomer({
               <span className="text-[10px] font-bold text-slate-400">{tt("road_transport", "Road / Fleet Dispatch")}</span>
             </div>
 
-            {/* Truck Assignment Mode & Registration Type */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <div>
-                <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                  {tt("truck_assignment_mode_label", "Truck Assignment Mode")} *
-                </label>
-                <select
-                  value={formData.truck_assignment_mode}
-                  onChange={(e) => {
-                    const mode = e.target.value as "permanent" | "hired" | "later";
-                    setFormData((c) => ({
-                      ...c,
-                      truck_assignment_mode: mode,
-                      truck_registration_type: mode === "permanent" ? "registered" : mode === "hired" ? "temporary" : c.truck_registration_type,
-                      truck_id: mode === "later" ? "" : c.truck_id,
-                      truck_number: mode === "later" ? "TO BE ASSIGNED" : (mode === "permanent" ? c.truck_number : "")
-                    }));
-                  }}
-                  className={selectClass}
-                >
-                  <option value="permanent">{tt("opt_permanent_truck", "Option 1: Permanent Truck (From Fleet Master)")}</option>
-                  <option value="hired">{tt("opt_hired_truck", "Option 2: Hired / External Truck (Manual Entry)")}</option>
-                  <option value="later">{tt("opt_assign_later", "Option 3: Assign Later (Unblock Booking)")}</option>
-                </select>
-              </div>
+            {/* Road leg this truck is assigned to — a truck belongs to a ROAD leg only */}
+            {(() => {
+              const roadLegs = (formData.legs || []).filter((l: any) => l.transportMode === "by_road");
+              if (roadLegs.length === 0) {
+                return (
+                  <div className="rounded-lg border border-sky-200 bg-sky-50/70 p-2.5 text-[11px] text-sky-800 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-300">
+                    {tt("no_road_leg_note", "This route has no Road leg yet. A truck applies to Road legs only — Sea, Air and Train legs use their own shipping fields.")}
+                  </div>
+                );
+              }
+              if (roadLegs.length === 1) return null;
+              const selIdx = resolveTruckLegIndex(formData.legs, formData.truck_leg_no);
+              return (
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">{tt("truck_leg_label", "Truck assigned to Road leg")} *</label>
+                  <select
+                    value={String(formData.legs[selIdx]?.legNo ?? "")}
+                    onChange={(e) => setFormData((c) => ({ ...c, truck_leg_no: e.target.value }))}
+                    className={selectClass}
+                  >
+                    {roadLegs.map((l: any) => (
+                      <option key={l.legNo} value={String(l.legNo)}>
+                        {tt("leg_word", "Leg")} {l.legNo}: {l.fromLocationText || l.fromCountryName || "—"} → {l.toLocationText || l.toCountryName || "—"}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              );
+            })()}
 
-              <div>
-                <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                  {tt("vehicle_reg_type_label", "Permanent / Temporary Vehicle *")}
-                </label>
-                <select
-                  value={formData.truck_registration_type || "registered"}
-                  onChange={(e) => setFormData((c) => ({ ...c, truck_registration_type: e.target.value as any }))}
-                  className={selectClass}
-                >
-                  <option value="registered">{tt("truck_type_perm", "Permanent Fleet Truck (Company Registered)")}</option>
-                  <option value="temporary">{tt("truck_type_temp", "Temporary Truck (Trip Hired / Contractor)")}</option>
-                </select>
-              </div>
+            {/* Truck Assignment Type */}
+            <div>
+              <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                {tt("truck_assignment_mode_label", "Truck Assignment Mode")} *
+              </label>
+              <select
+                value={formData.truck_assignment_mode}
+                onChange={(e) => {
+                  const mode = e.target.value as "permanent" | "hired" | "later";
+                  // Switching type must never leave the previous type's truck / driver active.
+                  setFormData((c) => ({
+                    ...c,
+                    truck_assignment_mode: mode,
+                    truck_registration_type: mode === "permanent" ? "registered" : mode === "hired" ? "temporary" : c.truck_registration_type,
+                    truck_id: "",
+                    truck_number: mode === "later" ? "TO BE ASSIGNED" : "",
+                    truck_driver_name: "",
+                    truck_driver_mobile: "",
+                    truck_transport_company: mode === "later" ? "" : c.truck_transport_company,
+                    truck_description: "",
+                    truck_po_ref: ""
+                  }));
+                  if (mode === "hired") setTempTruckModalOpen(true);
+                }}
+                className={selectClass}
+              >
+                <option value="permanent">{tt("opt_permanent_truck", "Option 1: Permanent Truck (From Fleet Master)")}</option>
+                <option value="hired">{tt("opt_temporary_truck", "Option 2: Temporary / One-Trip Truck")}</option>
+                <option value="later">{tt("opt_assign_later", "Option 3: Assign Later (Unblock Booking)")}</option>
+              </select>
             </div>
 
             {/* Truck Form Fields based on Dropdown Selection */}
@@ -6693,7 +6736,7 @@ function Step1BookingCustomer({
                   placeholder={tt("search_truck_ph", "Search truck by number, registration, driver or make...")}
                   options={(trucksList || []).map((t: any) => ({
                     value: t.id,
-                    label: `${t.truck_number || t.registration_number || t.id} • Driver: ${t.driver_name || "—"} (${t.make || ""} ${t.model || ""})`,
+                    label: `${t.truck_number || t.registration_number || t.id} • ${tt("driver_label", "Driver")}: ${t.driver_name || "—"} (${t.make || ""} ${t.model || ""})`,
                     keywords: [t.truck_number, t.registration_number, t.driver_name, t.driver_mobile, t.make, t.model, t.transport_company].filter(Boolean).join(" ")
                   }))}
                   onValueChange={(truckId) => {
@@ -6710,64 +6753,58 @@ function Step1BookingCustomer({
                       }));
                     }
                   }}
-                  searchPlaceholder="Search truck..."
-                  emptyLabel="No matching trucks found"
+                  searchPlaceholder={tt("search_truck_short", "Search truck...")}
+                  emptyLabel={tt("no_matching_trucks", "No matching trucks found")}
                 />
 
-                {formData.truck_number ? (
-                  <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-2 text-xs dark:border-slate-800 dark:bg-slate-800/50 flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                      <span className="font-bold text-slate-900 dark:text-white">{formData.truck_number}</span>
-                      <span className="text-slate-400 ml-2">{tt("driver_label", "Driver")}: {formData.truck_driver_name || "—"} ({formData.truck_driver_mobile || "—"})</span>
+                {formData.truck_id ? (
+                  <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-2 text-xs dark:border-slate-800 dark:bg-slate-800/50 space-y-1.5">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <span className="font-bold text-slate-900 dark:text-white" dir="ltr">{formData.truck_number}</span>
+                        <span className="text-slate-400 ms-2">{tt("driver_label", "Driver")}: {formData.truck_driver_name || "—"} (<span dir="ltr">{formData.truck_driver_mobile || "—"}</span>)</span>
+                      </div>
+                      {formData.truck_description ? <span className="text-[11px] text-slate-500">{formData.truck_description}</span> : null}
                     </div>
-                    {formData.truck_description ? <span className="text-[11px] text-slate-500">{formData.truck_description}</span> : null}
+                    {(!String(formData.truck_driver_name || "").trim() || !String(formData.truck_driver_mobile || "").trim()) && (
+                      <div className="flex items-center gap-1.5 rounded-md border border-amber-300 bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
+                        <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                        <span>
+                          {tt("fleet_missing_prefix", "Missing in Fleet Master:")}{" "}
+                          {[!String(formData.truck_driver_name || "").trim() ? tt("driver_name", "Driver Name") : "", !String(formData.truck_driver_mobile || "").trim() ? tt("driver_mobile", "Driver Mobile") : ""].filter(Boolean).join(" • ")}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 ) : null}
               </div>
             )}
 
             {formData.truck_assignment_mode === "hired" && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div className="space-y-2">
+                {formData.truck_number && !isTruckPlaceholder(formData.truck_number) ? (
+                  <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-200 bg-amber-50/60 p-2.5 text-xs dark:border-amber-900/60 dark:bg-amber-950/30">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="rounded-full bg-amber-200/80 px-1.5 py-0.5 text-[9.5px] font-black uppercase text-amber-900 dark:bg-amber-900 dark:text-amber-100">{tt("one_trip_badge", "One-Trip")}</span>
+                        <span className="font-bold text-slate-900 dark:text-white" dir="ltr">{formData.truck_number}</span>
+                      </div>
+                      <div className="text-slate-600 dark:text-slate-300">
+                        {tt("driver_label", "Driver")}: {formData.truck_driver_name || "—"} • <span dir="ltr">{formData.truck_driver_mobile || "—"}</span>
+                      </div>
+                    </div>
+                    <button type="button" onClick={() => setTempTruckModalOpen(true)} className="rounded-lg border border-amber-300 bg-white px-2.5 py-1 text-[11px] font-bold text-amber-800 hover:bg-amber-50 dark:border-amber-800 dark:bg-slate-900 dark:text-amber-300">
+                      {tt("tt_edit", "Edit details")}
+                    </button>
+                  </div>
+                ) : (
+                  <button type="button" onClick={() => setTempTruckModalOpen(true)} className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-amber-400 bg-amber-50/50 px-3 py-2 text-xs font-bold text-amber-800 hover:bg-amber-50 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-300">
+                    <Truck className="h-3.5 w-3.5" />
+                    <span>{tt("tt_enter_details", "Enter truck & driver details")} *</span>
+                  </button>
+                )}
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                    {tt("truck_registration_no", "Truck / Registration No")} *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.truck_number}
-                    onChange={(e) => setFormData((c) => ({ ...c, truck_number: e.target.value }))}
-                    placeholder={tt("ph_truck_reg", "e.g. TL-9988-KHI")}
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                    {tt("driver_name", "Driver Name")}
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.truck_driver_name}
-                    onChange={(e) => setFormData((c) => ({ ...c, truck_driver_name: e.target.value }))}
-                    placeholder={tt("driver_full_name_ph", "Driver full name")}
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                    {tt("driver_mobile", "Driver Mobile")}
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.truck_driver_mobile}
-                    onChange={(e) => setFormData((c) => ({ ...c, truck_driver_mobile: e.target.value }))}
-                    placeholder="+92 300 1234567"
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                    {tt("po_hire_reference", "PO / Hire Reference")}
-                  </label>
+                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">{tt("po_hire_reference", "PO / Hire Reference")}</label>
                   <input
                     type="text"
                     value={formData.truck_po_ref || ""}
@@ -6897,6 +6934,17 @@ function Step1BookingCustomer({
               </div>
             </div>
           </div>
+
+          <CustomerOrderTempTruckModal
+            open={tempTruckModalOpen}
+            lang={lang}
+            initial={{ truckNumber: isTruckPlaceholder(formData.truck_number) ? "" : formData.truck_number || "", driverName: formData.truck_driver_name || "", driverMobile: formData.truck_driver_mobile || "" }}
+            onCancel={() => setTempTruckModalOpen(false)}
+            onConfirm={(v) => {
+              setFormData((c) => ({ ...c, truck_assignment_mode: "hired", truck_registration_type: "temporary", truck_id: "", truck_number: v.truckNumber, truck_driver_name: v.driverName, truck_driver_mobile: v.driverMobile }));
+              setTempTruckModalOpen(false);
+            }}
+          />
 
           {/* 1B Action Footer */}
           <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">

@@ -1,8 +1,12 @@
 import { withLocalPg, withReadPg } from "@/lib/db/local-postgres";
 import {
+  TemporaryTruckError,
+  isTruckPlaceholder,
   mergeTruckDetails,
   parseJsonObject,
-  resolveSavedStatus
+  resolveSavedStatus,
+  stripTruckFromNonRoadLeg,
+  temporaryTruckProblems
 } from "@/lib/services/clearing-customer-order-workflow-rules";
 import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
@@ -747,6 +751,10 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
       // "Assign Later" placeholder is the explicit way to clear it.
       const regType = input.truckRegistrationType === "registered" || input.truckRegistrationType === "temporary"
         ? input.truckRegistrationType : null;
+      if (regType === "temporary" && [input.truckNumber, input.truckDriverName, input.truckDriverMobile].some((v) => trimOrNull(v) && !isTruckPlaceholder(v))) {
+        const problems = temporaryTruckProblems({ truckNumber: input.truckNumber, driverName: input.truckDriverName, driverMobile: input.truckDriverMobile });
+        if (problems.length) throw new TemporaryTruckError(problems);
+      }
       const incomingTruck = {
         truck_id: regType === "registered" ? (trimOrNull(input.truckId) as string | null) : null,
         truck_registration_type: regType,
@@ -1012,8 +1020,17 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
 
       let legRows: ClearingCustomerOrderLegRow[] = [];
       if (hasLegsPayload) {
-        const normalizedLegs = normalizeLegs(input.legs);
+        // A truck belongs to a ROAD leg only, and a temporary one-trip truck must carry all three
+        // mandatory details (number, driver, mobile) — validated here as well as in the browser.
+        const normalizedLegs = normalizeLegs(input.legs).map(stripTruckFromNonRoadLeg);
         assertRouteContinuity(normalizedLegs);
+        for (const leg of normalizedLegs) {
+          if (leg.truckRegistrationType !== "temporary") continue;
+          const touched = [leg.truckNumber, leg.truckDriverName, leg.truckDriverMobile].some((v) => v && !isTruckPlaceholder(v));
+          if (!touched) continue;
+          const problems = temporaryTruckProblems({ truckNumber: leg.truckNumber, driverName: leg.truckDriverName, driverMobile: leg.truckDriverMobile });
+          if (problems.length) throw new TemporaryTruckError(problems);
+        }
 
         // Upsert BY ID rather than delete-all-then-reinsert: a leg's id must stay
         // stable across saves, because DocumentAttachmentIcon (generic documents

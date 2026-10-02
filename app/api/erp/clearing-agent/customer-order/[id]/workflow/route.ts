@@ -18,11 +18,13 @@ import { withLocalPg } from "@/lib/db/local-postgres";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordFields } from "@/lib/i18n/localize-records";
 import {
+  TEMP_TRUCK_MESSAGE,
   isTruckPlaceholder,
   mergeTruckDetails,
   parseJsonObject,
   readGoodsItem,
   stage1bMissing,
+  temporaryTruckProblems,
   validateGoodsItems
 } from "@/lib/services/clearing-customer-order-workflow-rules";
 
@@ -427,6 +429,19 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
       }
       if ((order as any).status === "completed") {
         throw new ApiClientError("This order is already completed; Stage 1B can no longer be changed.", { status: 409, code: "ORDER_ALREADY_COMPLETED" });
+      }
+
+      // A temporary / one-trip truck must carry all three mandatory details. (A permanent fleet
+      // truck takes them from the Fleet Master; "Assign Later" is a placeholder, not a vehicle.)
+      const isPermanentTruck = truckRegistrationType === "permanent" || truckRegistrationType === "registered";
+      if (!isPermanentTruck && !isTruckPlaceholder(truckNumber)) {
+        const problems = temporaryTruckProblems({ truckNumber, driverName: truckDriverName, driverMobile: truckDriverMobile });
+        if (problems.length) {
+          return NextResponse.json(
+            { success: false, ok: false, error: TEMP_TRUCK_MESSAGE, code: "TEMP_TRUCK_INCOMPLETE", fields: problems },
+            { status: 422 }
+          );
+        }
       }
 
       await withLocalPg(async (sql) => {
