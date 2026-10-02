@@ -1,4 +1,9 @@
 import { withLocalPg } from "@/lib/db/local-postgres";
+import {
+  mergeTruckDetails,
+  parseJsonObject,
+  resolveSavedStatus
+} from "@/lib/services/clearing-customer-order-workflow-rules";
 import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
@@ -66,7 +71,9 @@ export type ClearingCustomerOrderInput = {
   truckDriverMobile?: string | null;
   truckOwnerName?: string | null;
   truckTransportCompany?: string | null;
-  truckDetails?: Record<string, unknown> | null;
+  truckDetails?: Record<string, unknown> | string | null;
+  /** Full per-item goods manifest from step 1C (restored on reopen). */
+  goodsItems?: Record<string, unknown>[] | null;
   loadType?: "full_truck" | "partial_load" | "container_haulage" | null;
   loadingStateProvinceId?: string | null;
   loadingDistrictId?: string | null;
@@ -718,16 +725,21 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
         goods_gross_weight: typeof input.goodsGrossWeight === "number" ? input.goodsGrossWeight : null,
         goods_empty_weight: typeof input.goodsEmptyWeight === "number" ? input.goodsEmptyWeight : null,
         goods_net_weight: typeof input.goodsNetWeight === "number" ? input.goodsNetWeight : null,
+        goods_items: Array.isArray(input.goodsItems) ? input.goodsItems : undefined,
         current_stage: trimOrNull(input.currentStage) ?? (orderId ? undefined : "booking"),
         rejected_reason: trimOrNull(input.rejectedReason) ?? undefined,
         updated_at: now
       };
 
-      // By Road truck linkage — only kept for road transport.
-      const isRoad = orderPayload.transport_mode === "by_road";
+      // Truck / fleet linkage (step 1B). It applies to every transport mode — a By Sea / By Air /
+      // By Rail order still has a port/terminal pre-carriage truck — so it is never wiped just
+      // because the order isn't By Road (the old code nulled all truck fields on every save for
+      // non-road orders, destroying the 1B confirmation). An empty form field never erases a value
+      // already stored (e.g. a truck confirmed by another user while this form was open); the
+      // "Assign Later" placeholder is the explicit way to clear it.
       const regType = input.truckRegistrationType === "registered" || input.truckRegistrationType === "temporary"
         ? input.truckRegistrationType : null;
-      const truckPayload = isRoad ? {
+      const incomingTruck = {
         truck_id: regType === "registered" ? (trimOrNull(input.truckId) as string | null) : null,
         truck_registration_type: regType,
         truck_number: trimOrNull(input.truckNumber),
@@ -735,16 +747,65 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
         truck_driver_mobile: trimOrNull(input.truckDriverMobile),
         truck_owner_name: trimOrNull(input.truckOwnerName),
         truck_transport_company: trimOrNull(input.truckTransportCompany),
-        // pass the object through — the postgres driver serialises it to jsonb.
-        // (JSON.stringify + ::jsonb double-encodes into a jsonb *string*.)
-        truck_details: input.truckDetails && Object.keys(input.truckDetails).length ? input.truckDetails : null,
-      } : {
-        truck_id: null, truck_registration_type: null, truck_number: null, truck_driver_name: null,
-        truck_driver_mobile: null, truck_owner_name: null, truck_transport_company: null, truck_details: null,
       };
+      let truckPayload: Record<string, any> = { ...incomingTruck, truck_details: mergeTruckDetails(null, input.truckDetails) };
 
       let orderRow: Record<string, any>;
+      // True when a form that carries NO goods (e.g. a 1A/1B form opened before 1C was done by
+      // someone else) saves an order that already has a goods manifest: that save must not blank
+      // the goods columns or soft-delete the manifest's allocation rows.
+      let preserveGoods = false;
       if (orderId) {
+        const [existingRow] = await tx`
+          select status, truck_id, truck_registration_type, truck_number, truck_driver_name, truck_driver_mobile,
+                 truck_owner_name, truck_transport_company, truck_details, goods_items,
+                 goods_id, goods_variation_id, goods_name, goods_chs_code, goods_variation_label, goods_brand,
+                 goods_size, goods_origin_country_name, goods_quantity, goods_unit, goods_bags_cartons,
+                 goods_gross_weight, goods_empty_weight, goods_net_weight
+          from public.clearing_customer_orders
+          where id = ${orderId}::uuid and deleted_at is null
+          for update
+        `;
+        if (!existingRow) throw new Error("Customer order not found.");
+        // Workflow-owned state is only ever moved FORWARD by the stage actions (Confirm Truck,
+        // Complete Goods, approval); a draft save carrying an older status must not undo it.
+        orderPayload.status = resolveSavedStatus(existingRow.status, orderPayload.status);
+        const keep = (incoming: any, current: any) => (incoming === null || incoming === undefined || incoming === "" ? current : incoming);
+        truckPayload = {
+          truck_id: keep(incomingTruck.truck_id, existingRow.truck_id),
+          truck_registration_type: keep(incomingTruck.truck_registration_type, existingRow.truck_registration_type),
+          truck_number: keep(incomingTruck.truck_number, existingRow.truck_number),
+          truck_driver_name: keep(incomingTruck.truck_driver_name, existingRow.truck_driver_name),
+          truck_driver_mobile: keep(incomingTruck.truck_driver_mobile, existingRow.truck_driver_mobile),
+          truck_owner_name: keep(incomingTruck.truck_owner_name, existingRow.truck_owner_name),
+          truck_transport_company: keep(incomingTruck.truck_transport_company, existingRow.truck_transport_company),
+          truck_details: mergeTruckDetails(existingRow.truck_details, input.truckDetails),
+        };
+        if (orderPayload.goods_items === undefined) orderPayload.goods_items = existingRow.goods_items ?? undefined;
+
+        const existingManifest = Array.isArray(existingRow.goods_items) ? existingRow.goods_items : [];
+        const incomingManifest = Array.isArray(input.goodsItems) ? input.goodsItems : [];
+        if (existingManifest.length > 0 && incomingManifest.length === 0) {
+          preserveGoods = true;
+          Object.assign(orderPayload, {
+            goods_id: existingRow.goods_id,
+            goods_variation_id: existingRow.goods_variation_id,
+            goods_name: existingRow.goods_name,
+            goods_chs_code: existingRow.goods_chs_code,
+            goods_variation_label: existingRow.goods_variation_label,
+            goods_brand: existingRow.goods_brand,
+            goods_size: existingRow.goods_size,
+            goods_origin_country_name: existingRow.goods_origin_country_name,
+            goods_quantity: existingRow.goods_quantity,
+            goods_unit: existingRow.goods_unit,
+            goods_bags_cartons: existingRow.goods_bags_cartons,
+            goods_gross_weight: existingRow.goods_gross_weight,
+            goods_empty_weight: existingRow.goods_empty_weight,
+            goods_net_weight: existingRow.goods_net_weight,
+            goods_items: existingRow.goods_items
+          });
+        }
+
         const [updated] = await tx`
           update public.clearing_customer_orders
           set customer_id = ${orderPayload.customer_id},
@@ -812,6 +873,7 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
               truck_owner_name = ${truckPayload.truck_owner_name},
               truck_transport_company = ${truckPayload.truck_transport_company},
               truck_details = ${truckPayload.truck_details}::jsonb,
+              goods_items = ${orderPayload.goods_items == null ? null : tx.json(orderPayload.goods_items as any)}::jsonb,
               updated_at = ${now}
           where id = ${orderId}::uuid and deleted_at is null
           returning *
@@ -824,6 +886,7 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
           where order_id = ${orderId}::uuid
         `;
       } else {
+        orderPayload.status = resolveSavedStatus(null, orderPayload.status);
         const [inserted] = await tx`
           insert into public.clearing_customer_orders (
             order_no, customer_id, customer_name, goods_id, goods_variation_id, goods_name, goods_chs_code,
@@ -843,7 +906,7 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
             goods_quantity, goods_unit, goods_bags_cartons, goods_gross_weight, goods_empty_weight, goods_net_weight,
             current_stage, rejected_reason,
             truck_id, truck_registration_type, truck_number, truck_driver_name, truck_driver_mobile,
-            truck_owner_name, truck_transport_company, truck_details,
+            truck_owner_name, truck_transport_company, truck_details, goods_items,
             created_at, updated_at
           ) values (
             ${orderPayload.order_no}, ${orderPayload.customer_id}, ${orderPayload.customer_name}, ${orderPayload.goods_id},
@@ -874,6 +937,7 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
             ${truckPayload.truck_id}, ${truckPayload.truck_registration_type}, ${truckPayload.truck_number},
             ${truckPayload.truck_driver_name}, ${truckPayload.truck_driver_mobile}, ${truckPayload.truck_owner_name},
             ${truckPayload.truck_transport_company}, ${truckPayload.truck_details}::jsonb,
+            ${orderPayload.goods_items == null ? null : tx.json(orderPayload.goods_items as any)}::jsonb,
             ${now}, ${now}
           )
           returning *
@@ -1069,7 +1133,7 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
       }
 
       let allocationRows: ClearingCustomerOrderLoadingAllocationRow[] = [];
-      const hasAllocationsPayload = input.loadingAllocations !== undefined;
+      const hasAllocationsPayload = input.loadingAllocations !== undefined && !preserveGoods;
       if (hasAllocationsPayload) {
         const normalizedAllocations = normalizeLoadingAllocations(input.loadingAllocations);
         const existingAllocationIds: string[] = orderId

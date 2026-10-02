@@ -5,6 +5,11 @@ import { hasRolePermission } from "@/lib/permissions/middleware";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import {
+  CROSS_BORDER_TRUCK_MESSAGE,
+  collectTruckDetailsFromBody,
+  isCrossBorderTruckViolation
+} from "@/lib/services/clearing-customer-order-workflow-rules";
+import {
   getCustomerOrderById,
   listCustomerOrders,
   saveCustomerOrder,
@@ -153,7 +158,8 @@ export async function POST(req: NextRequest) {
       truckDriverMobile: body.truck_driver_mobile ?? body.truckDriverMobile ?? null,
       truckOwnerName: body.truck_owner_name ?? body.truckOwnerName ?? null,
       truckTransportCompany: body.truck_transport_company ?? body.truckTransportCompany ?? null,
-      truckDetails: body.truck_details ?? body.truckDetails ?? null,
+      truckDetails: collectTruckDetailsFromBody(body),
+      goodsItems: Array.isArray(body.goods_items ?? body.goodsItems) ? (body.goods_items ?? body.goodsItems) : undefined,
       loadType: body.load_type ?? body.loadType ?? null,
       loadingStateProvinceId: body.loading_state_province_id ?? body.loadingStateProvinceId ?? null,
       loadingDistrictId: body.loading_district_id ?? body.loadingDistrictId ?? null,
@@ -179,6 +185,9 @@ export async function POST(req: NextRequest) {
     rethrowIfNextControlFlow(error);
     if (error instanceof RouteContinuityError) {
       return NextResponse.json({ success: false, error: error.message, code: "ROUTE_NOT_CONTINUOUS" }, { status: 400 });
+    }
+    if (isCrossBorderTruckViolation(error)) {
+      return NextResponse.json({ success: false, error: CROSS_BORDER_TRUCK_MESSAGE, code: "CROSS_BORDER_TRUCK_RULE" }, { status: 422 });
     }
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }

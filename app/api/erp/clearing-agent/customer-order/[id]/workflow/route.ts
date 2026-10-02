@@ -8,13 +8,44 @@
 
 export const dynamic = "force-dynamic";
 
-import type { NextRequest } from "next/server";
-import { apiOk, handleApiError, ApiClientError } from "@/lib/api/response";
+import { NextResponse, type NextRequest } from "next/server";
+import { handleApiError, rethrowIfNextControlFlow, ApiClientError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
+import { authorizeApiScope } from "@/lib/api/scope-middleware";
+import { canAccessOrder } from "@/lib/services/clearing-customer-order-scope";
 import { getCustomerOrderById } from "@/lib/services/clearing-customer-order-service";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordFields } from "@/lib/i18n/localize-records";
+import {
+  isTruckPlaceholder,
+  mergeTruckDetails,
+  parseJsonObject,
+  readGoodsItem,
+  stage1bMissing,
+  validateGoodsItems
+} from "@/lib/services/clearing-customer-order-workflow-rules";
+
+// Response envelope. Every browser caller of this endpoint (confirm truck, complete goods,
+// stage assignment, return-for-correction, activity timeline) tests `json.success` and shows
+// `json.error` as text. The generic apiOk() envelope is { ok, data } and apiError() puts an
+// OBJECT in `error`, so a request the server had fully committed was reported to the user as
+// "Failed to confirm truck" / "Failed to complete goods entry". Keep both flags and a plain
+// string `error` so old and new callers agree.
+function wfOk(data: Record<string, unknown> = {}) {
+  return NextResponse.json({ success: true, ok: true, data });
+}
+
+async function wfFail(error: unknown) {
+  rethrowIfNextControlFlow(error);
+  const res = await handleApiError(error);
+  const body = await res.clone().json().catch(() => null);
+  const message = body?.error?.message || (error as Error)?.message || "Request failed";
+  return NextResponse.json(
+    { success: false, ok: false, error: message, code: body?.error?.code, details: body?.error?.details },
+    { status: res.status }
+  );
+}
 
 function generateTransferNo() {
   const d = new Date().toISOString().slice(2, 10).replace(/-/g, "");
@@ -33,21 +64,16 @@ function generateGlobalRefId() {
 export async function GET(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
+    authorizeApiScope(session, { resource: "shipping_records", action: "read" });
     const { id } = await ctx.params;
     const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
 
     const order = await getCustomerOrderById(id);
     if (!order) throw new ApiClientError("Order not found.", { status: 404 });
 
-    if (!session.isSuperAdmin) {
-      const inScope =
-        ((order as any).city_branch_id && (session.cityBranchIds ?? []).includes((order as any).city_branch_id)) ||
-        ((order as any).country_branch_id && (session.countryBranchIds ?? []).includes((order as any).country_branch_id)) ||
-        ((order as any).country_id && (session.countryIds ?? []).includes((order as any).country_id)) ||
-        ((order as any).created_by && (order as any).created_by === session.userId) ||
-        ((order as any).latest_handover?.receiver_user_id === session.userId);
-      if (!inScope) throw new ApiClientError("This order is outside your scope.", { status: 403 });
-    }
+    // Same access rule as the order's own GET/PATCH routes (scope, clearing-agent, creator, or the
+    // user the order was handed over to) — the stage workflow must not be stricter or looser.
+    if (!canAccessOrder(session, order)) throw new ApiClientError("This order is outside your scope.", { status: 403 });
 
     const legIds = ((order as any).legs || []).map((l: any) => l.id);
 
@@ -121,7 +147,7 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ id: str
 
     // 2. Transfers & Handovers
     for (const tr of (transfers || [])) {
-      const meta = tr.metadata || {};
+      const meta = parseJsonObject(tr.metadata);
       const is1B = tr.transfer_type === "truck_task" || meta.stage === "1B";
       const is1C = tr.transfer_type === "goods_verification" || meta.stage === "1C";
       const stg = is1C ? "1C" : is1B ? "1B" : "1A";
@@ -158,7 +184,7 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ id: str
 
     // 3. Activity events (Truck confirmations, Goods additions, etc.)
     for (const ev of (activityEvents || [])) {
-      const meta = ev.metadata || {};
+      const meta = parseJsonObject(ev.metadata);
       const actionName = ev.action || "";
       if (actionName.includes("assigned") && (transfers || []).some((t) => t.created_at === ev.created_at)) {
         continue; // deduplicate
@@ -209,15 +235,18 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ id: str
       // keep the original record if localization is unavailable
     }
 
-    return apiOk({ order: localizedOrder, verifications, transfers, timeline });
+    return wfOk({ order: localizedOrder, verifications, transfers, timeline });
   } catch (error) {
-    return handleApiError(error);
+    return wfFail(error);
   }
 }
 
 export async function POST(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
+    // Confirming a truck / completing goods / handing over / returning an order WRITES the order, so it
+    // needs the same shipping_records:update permission the order PATCH route already requires.
+    authorizeApiScope(session, { resource: "shipping_records", action: "update" });
     const { id } = await ctx.params;
     const body = await request.json();
     const { action } = body;
@@ -225,16 +254,8 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
     const order = await getCustomerOrderById(id);
     if (!order) throw new ApiClientError("Order not found.", { status: 404 });
 
-    // Authorization & Scope check
-    if (!session.isSuperAdmin) {
-      const inScope =
-        ((order as any).city_branch_id && (session.cityBranchIds ?? []).includes((order as any).city_branch_id)) ||
-        ((order as any).country_branch_id && (session.countryBranchIds ?? []).includes((order as any).country_branch_id)) ||
-        ((order as any).country_id && (session.countryIds ?? []).includes((order as any).country_id)) ||
-        ((order as any).created_by && (order as any).created_by === session.userId) ||
-        ((order as any).latest_handover?.receiver_user_id === session.userId);
-      if (!inScope) throw new ApiClientError("This order is outside your scope.", { status: 403 });
-    }
+    // Authorization & Scope check (identical to the order PATCH route)
+    if (!canAccessOrder(session, order)) throw new ApiClientError("This order is outside your scope.", { status: 403 });
 
     const now = new Date().toISOString();
 
@@ -255,8 +276,8 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
         // Update customer order status and current_stage
         await sql`
           update public.clearing_customer_orders
-          set current_stage = 'truck_assignment',
-              status = 'booking_confirmed',
+          set current_stage = case when status in ('truck_confirmed','completed') then current_stage else 'truck_assignment' end,
+              status = case when status in ('truck_confirmed','completed') then status else 'booking_confirmed' end,
               updated_at = now()
           where id = ${id}::uuid
         `;
@@ -290,12 +311,12 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
             ${(order as any).customer_name},
             ${now.slice(0, 10)},
             'truck_task',
-            ${JSON.stringify({
+            ${sql.json({
               stage: '1B',
               orderNo: (order as any).order_no,
               assignedBy: session.fullName,
               dueDate: dueDate || null
-            })}::jsonb
+            })}
           )
         `;
 
@@ -353,18 +374,18 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
           ) values (
             ${session.userId}, 'stage_1a_assigned', 'shipping', 'clearing_customer_orders', ${id}::uuid,
             ${targetCountryId}::uuid,
-            ${JSON.stringify({
+            ${sql.json({
               stage: '1A',
               actionText: 'Stage 1A Setup Completed — Assigned to Another User',
               assignedToUserId: toUserId,
               instructions: instructions || null,
               date: now
-            })}::jsonb
+            })}
           )
         `;
       });
 
-      return apiOk({ success: true, message: `Order ${(order as any).order_no} assigned to user for Truck Confirmation.` });
+      return wfOk({ success: true, message: `Order ${(order as any).order_no} assigned to user for Truck Confirmation.` });
     }
 
     // ─────────────────────────────────────────────────────────────────────────────
@@ -402,7 +423,10 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
       const effectiveDueDate = goodsAssignee?.dueDate || dueDate;
 
       if (!truckNumber || !String(truckNumber).trim()) {
-        throw new ApiClientError("Truck Number is required.", { status: 400 });
+        throw new ApiClientError("Truck Number is required.", { status: 400, code: "TRUCK_NUMBER_REQUIRED" });
+      }
+      if ((order as any).status === "completed") {
+        throw new ApiClientError("This order is already completed; Stage 1B can no longer be changed.", { status: 409, code: "ORDER_ALREADY_COMPLETED" });
       }
 
       await withLocalPg(async (sql) => {
@@ -416,25 +440,24 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
             and status = 'pending'
         `;
 
-        // Complete any open 1B user task
+        // Complete any open 1B user task (user_tasks use new/accepted/in_progress/waiting — never 'pending')
         await sql`
           update public.user_tasks
           set status = 'completed', completed_at = now(), updated_at = now()
           where related_record_id = ${id}::uuid
             and related_record_table = 'clearing_customer_orders'
-            and status = 'pending'
+            and status in ('new', 'accepted', 'in_progress', 'waiting')
         `;
 
-        // Update truck details
-        const existingDetails = (order as any).truck_details && typeof (order as any).truck_details === "object"
-          ? (order as any).truck_details : {};
+        // Update truck details (older rows hold this jsonb as JSON text — parseJsonObject accepts both)
+        const existingDetails = parseJsonObject((order as any).truck_details);
         const updatedTruckDetails = {
           ...existingDetails,
-          vehicleType: vehicleType || "Trailer",
-          arrivalTime: arrivalTime || null,
-          loadingLocation: loadingLocation || null,
-          truckStatus: truckStatus || "At Gate",
-          truckPhotos: truckPhotos || [],
+          vehicleType: vehicleType || existingDetails.vehicleType || "Trailer",
+          arrivalTime: arrivalTime || existingDetails.arrivalTime || null,
+          loadingLocation: loadingLocation || existingDetails.loadingLocation || null,
+          truckStatus: truckStatus || existingDetails.truckStatus || "At Gate",
+          truckPhotos: (truckPhotos && truckPhotos.length ? truckPhotos : existingDetails.truckPhotos) || [],
           confirmedBy: session.userId,
           confirmedByName: session.fullName || "User",
           confirmedByBranch: (order as any).branch_name || session.countryBranchIds?.[0] || "Branch",
@@ -443,7 +466,11 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
           stage1bCompletedAt: now
         };
 
-        const effectiveRegType = (truckRegistrationType === "permanent" || truckRegistrationType === "registered") ? "registered" : "temporary";
+        // A placeholder ("To be assigned") is not a vehicle, so it carries no registration type
+        // (and can never trip the cross-border registered-truck rule on the legs).
+        const effectiveRegType = isTruckPlaceholder(truckNumber)
+          ? null
+          : (truckRegistrationType === "permanent" || truckRegistrationType === "registered") ? "registered" : "temporary";
 
         await sql`
           update public.clearing_customer_orders
@@ -452,7 +479,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
               truck_driver_mobile = ${truckDriverMobile?.trim() || null},
               truck_transport_company = ${truckTransportCompany?.trim() || null},
               truck_registration_type = ${effectiveRegType},
-              truck_details = ${JSON.stringify(updatedTruckDetails)}::jsonb,
+              truck_details = ${sql.json(updatedTruckDetails)},
               current_stage = 'goods_verification',
               status = 'truck_confirmed',
               updated_at = now()
@@ -467,14 +494,14 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
             ) values (
               ${session.userId}, 'truck_confirmed', 'shipping', 'clearing_customer_orders', ${id}::uuid,
               ${(order as any).country_id}::uuid,
-              ${JSON.stringify({
+              ${sql.json({
                 stage: '1B',
                 actionText: 'Truck Confirmed — Self Execution (Continue to 1C)',
                 truckNumber: truckNumber.trim(),
                 driverName: truckDriverName?.trim() || null,
                 confirmedBy: session.fullName,
                 date: now
-              })}::jsonb
+              })}
             )
           `;
         } else {
@@ -515,13 +542,13 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
               ${(order as any).customer_name},
               ${now.slice(0, 10)},
               'goods_verification',
-              ${JSON.stringify({
+              ${sql.json({
                 stage: '1C',
                 orderNo: (order as any).order_no,
                 assignedBy: session.fullName,
                 truckNumber: String(truckNumber).trim(),
                 dueDate: effectiveDueDate || null
-              })}::jsonb
+              })}
             )
           `;
 
@@ -579,20 +606,20 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
             ) values (
               ${session.userId}, 'stage_1b_confirmed_assigned', 'shipping', 'clearing_customer_orders', ${id}::uuid,
               ${targetCountryId}::uuid,
-              ${JSON.stringify({
+              ${sql.json({
                 stage: '1B',
                 actionText: 'Truck Confirmed — Goods Entry Assigned to Another User',
                 truckNumber: String(truckNumber).trim(),
                 assignedToUserId: effectiveAssigneeUserId,
                 instructions: effectiveInstructions || null,
                 date: now
-              })}::jsonb
+              })}
             )
           `;
         }
       });
 
-      return apiOk({ success: true, message: `Truck ${truckNumber.trim()} confirmed for order ${(order as any).order_no}.` });
+      return wfOk({ success: true, message: `Truck ${truckNumber.trim()} confirmed for order ${(order as any).order_no}.`, status: "truck_confirmed", current_stage: "goods_verification" });
     }
 
     // ─────────────────────────────────────────────────────────────────────────────
@@ -668,18 +695,18 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
           ) values (
             ${session.userId}, 'returned_for_correction', 'shipping', 'clearing_customer_orders', ${id}::uuid,
             ${(order as any).country_id}::uuid,
-            ${JSON.stringify({
+            ${sql.json({
               stage: returnToStage || '1A',
               actionText: `Order Returned for Correction to ${returnToStage || '1A'}`,
               returnedBy: session.fullName,
               returnReason: reason.trim(),
               date: now
-            })}::jsonb
+            })}
           )
         `;
       });
 
-      return apiOk({ success: true, message: `Order ${(order as any).order_no} returned for correction.` });
+      return wfOk({ success: true, message: `Order ${(order as any).order_no} returned for correction.` });
     }
 
     // ─────────────────────────────────────────────────────────────────────────────
@@ -688,15 +715,39 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
     else if (action === "complete_goods") {
       const { goodsItems } = body;
       if (!Array.isArray(goodsItems) || goodsItems.length === 0) {
-        throw new ApiClientError("At least one goods item is required to complete goods entry.", { status: 400 });
+        throw new ApiClientError("At least one goods item is required to complete goods entry.", { status: 400, code: "GOODS_REQUIRED" });
       }
 
-      const totalQuantity = goodsItems.reduce((acc: number, g: any) => acc + (Number(g.quantity) || 0), 0);
-      const totalGross = goodsItems.reduce((acc: number, g: any) => acc + (Number(g.grossWeight || g.totalKg) || 0), 0);
-      const totalEmpty = goodsItems.reduce((acc: number, g: any) => acc + (Number(g.emptyWeight) || 0), 0);
+      // ── Completion gates ─────────────────────────────────────────────────────────
+      // The order must not be marked complete while 1B (truck & transport) or 1C (goods)
+      // is missing required information. Checked against what is STORED, not what the
+      // browser claims, so a stale or hand-built request cannot skip a stage.
+      const missing1b = stage1bMissing({
+        truck_number: (order as any).truck_number,
+        truck_details: (order as any).truck_details,
+        status: (order as any).status
+      });
+      if (missing1b.length) {
+        throw new ApiClientError(
+          `Stage 1B is incomplete — ${missing1b.join("; ")}. Go back to 1B, confirm the truck, then complete Goods Entry.`,
+          { status: 409, code: "STAGE_1B_INCOMPLETE", details: { stage: "1B", missing: missing1b } }
+        );
+      }
+      const goodsProblems = validateGoodsItems(goodsItems);
+      if (goodsProblems.length) {
+        throw new ApiClientError(
+          `Stage 1C is incomplete — ${goodsProblems.join("; ")}.`,
+          { status: 422, code: "STAGE_1C_INCOMPLETE", details: { stage: "1C", missing: goodsProblems } }
+        );
+      }
+
+      const rows = goodsItems.map((g: any) => readGoodsItem(g));
+      const totalQuantity = rows.reduce((acc: number, g: any) => acc + g.quantity, 0);
+      const totalGross = rows.reduce((acc: number, g: any) => acc + g.gross, 0);
+      const totalEmpty = rows.reduce((acc: number, g: any) => acc + g.empty, 0);
       const totalNet = Math.max(0, totalGross - totalEmpty);
-      const firstItem = goodsItems[0];
-      const aggregatedNames = goodsItems.map((g: any) => g.goodsName).filter(Boolean).join(", ") || (order as any).goods_name || "Goods";
+      const first = rows[0];
+      const aggregatedNames = rows.map((g: any) => g.name).filter(Boolean).join(", ") || (order as any).goods_name || "Goods";
 
       await withLocalPg(async (sql) => {
         // Complete any open transfer for this order
@@ -717,7 +768,12 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
             and status in ('new', 'accepted', 'in_progress', 'waiting')
         `;
 
-        // Update clearing_customer_orders to completed
+        // Finalise the order. The browser's field names are used (goodsChsCode / brandQuality /
+        // originCountry) — the previous code read hsCode / brand that the form never sends and
+        // so overwrote the saved HS code and brand with NULL. Nothing is blanked: a value the
+        // manifest does not carry keeps what the order already had. cargo_details is the free-text
+        // cargo note shared with billing/loading/tracking and is NOT overwritten with JSON; the
+        // structured manifest lives in goods_items.
         await sql`
           update public.clearing_customer_orders
           set status = 'completed',
@@ -727,11 +783,12 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
               goods_empty_weight = ${totalEmpty},
               goods_net_weight = ${totalNet},
               goods_name = ${aggregatedNames},
-              goods_brand = ${firstItem?.brand || null},
-              goods_size = ${firstItem?.size || null},
-              goods_chs_code = ${firstItem?.hsCode || null},
-              goods_unit = ${firstItem?.unit || 'Bags'},
-              cargo_details = ${JSON.stringify(goodsItems)},
+              goods_brand = coalesce(${first.brand}, goods_brand),
+              goods_size = coalesce(${first.size}, goods_size),
+              goods_chs_code = coalesce(${first.hsCode}, goods_chs_code),
+              goods_origin_country_name = coalesce(${first.originCountry}, goods_origin_country_name),
+              goods_unit = ${first.unit},
+              goods_items = ${sql.json(goodsItems)},
               approved_by = ${session.userId},
               approved_at = now(),
               updated_at = now()
@@ -746,6 +803,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
 
         for (let i = 0; i < goodsItems.length; i++) {
           const g = goodsItems[i];
+          const r = rows[i];
           await sql`
             insert into public.clearing_customer_order_loading_allocations (
               order_id, row_serial, warehouse_id, source_location_text,
@@ -755,9 +813,9 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
               ${i + 1},
               ${g.warehouseId || null}::uuid,
               ${g.warehouseAddressText || g.warehouseName || (order as any).loading_source_name || null},
-              ${Number(g.quantity) || 0},
-              ${g.unit || 'Bags'},
-              ${`${g.goodsName || 'Goods'}${g.brand ? ` [Brand: ${g.brand}]` : ''} • Gross: ${g.grossWeight || 0} kg • Net: ${g.netWeight || 0} kg`},
+              ${r.quantity},
+              ${r.unit},
+              ${`${r.name}${r.brand ? ` [Brand: ${r.brand}]` : ""} (${g.kgPerQty || ""} kg/${r.unit}) • Total: ${r.gross} kg • Gross: ${r.gross} kg • Net: ${r.net} kg`},
               now(), now()
             )
           `;
@@ -776,17 +834,17 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
             created_at, updated_at
           ) values (
             ${id}::uuid,
-            ${totalQuantity}, ${firstItem?.unit || 'Bags'},
+            ${totalQuantity}, ${first.unit},
             ${totalGross}, ${totalNet},
-            ${totalQuantity}, ${firstItem?.unit || 'Bags'},
+            ${totalQuantity}, ${first.unit},
             ${totalGross}, ${totalNet},
-            ${firstItem?.warehouseId || null}::uuid,
-            ${firstItem?.warehouseName || (order as any).loading_source_name || null},
+            ${goodsItems[0]?.warehouseId || null}::uuid,
+            ${goodsItems[0]?.warehouseName || (order as any).loading_source_name || null},
             'verified',
             ${session.userId}, now(),
-            ${(order as any).country_id}::uuid,
-            ${(order as any).country_branch_id}::uuid,
-            ${(order as any).city_branch_id}::uuid,
+            ${(order as any).country_id ?? null}::uuid,
+            ${(order as any).country_branch_id ?? null}::uuid,
+            ${(order as any).city_branch_id ?? null}::uuid,
             ${session.userId}, now(), now()
           )
         `;
@@ -797,8 +855,8 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
             actor_id, action, resource, record_table, record_id, country_id, metadata
           ) values (
             ${session.userId}, 'stage_1c_completed', 'shipping', 'clearing_customer_orders', ${id}::uuid,
-            ${(order as any).country_id}::uuid,
-            ${JSON.stringify({
+            ${(order as any).country_id ?? null}::uuid,
+            ${sql.json({
               stage: '1C',
               actionText: 'Stage 1C Completed — Goods Entry Finalized',
               completedBy: session.fullName,
@@ -807,16 +865,21 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
               totalGrossWeight: totalGross,
               totalNetWeight: totalNet,
               date: now
-            })}::jsonb
+            })}
           )
         `;
       });
 
-      return apiOk({ success: true, message: `Goods entry completed and order ${(order as any).order_no} finalized.` });
+      return wfOk({
+        success: true,
+        message: `Goods entry completed and order ${(order as any).order_no} finalized.`,
+        status: "completed",
+        current_stage: "completed"
+      });
     }
 
     throw new ApiClientError(`Unknown workflow action: ${action}`, { status: 400 });
   } catch (error) {
-    return handleApiError(error);
+    return wfFail(error);
   }
 }

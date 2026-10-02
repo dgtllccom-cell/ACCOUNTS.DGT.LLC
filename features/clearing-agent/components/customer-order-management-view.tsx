@@ -91,6 +91,15 @@ import { CustomerOrderStageAssignmentModal } from "@/features/clearing-agent/com
 import { CustomerOrderRouteBuilder } from "@/features/clearing-agent/components/customer-order-route-builder";
 import { CustomerOrderPartnerBillsPanel } from "@/features/clearing-agent/components/customer-order-partner-bills-panel";
 import { CustomerOrderInsurancePanel } from "@/features/clearing-agent/components/customer-order-insurance-panel";
+import {
+  isTruckPlaceholder,
+  legTruckRegistrationType,
+  parseJsonArray,
+  parseJsonObject,
+  stage1bMissing,
+  validateGoodsItems,
+  violatesCrossBorderTruckRule
+} from "@/lib/services/clearing-customer-order-workflow-rules";
 
 type TransportMode = "by_sea" | "by_road" | "by_air" | "by_rail";
 type MovementType = "import" | "export" | "transit" | "up_transit" | "down_transit" | "domestic";
@@ -442,7 +451,9 @@ const EMPTY_FORM = {
   truck_owner_name: "",
   truck_transport_company: "",
   truck_po_ref: "",
-  truck_details: "",
+  // Human-readable description of the picked fleet truck (display only). The stored
+  // truck_details column is a JSON object owned by the 1B confirmation, built at save time.
+  truck_description: "",
   truck_vehicle_type: "Container Trailer",
   truck_arrival_time: "",
   truck_loading_location: "",
@@ -1062,9 +1073,27 @@ export function CustomerOrderManagementView() {
     }
   }, [userContext.loading, userContext.context]);
 
+  /**
+   * Re-read ONLY the orders register (one request). Saves and stage actions use this so the
+   * wizard never waits on — or is frozen by — the 14-request bulk reload: a single slow or hung
+   * lookup request (ports, accounts, ...) used to keep `saving` true forever and leave every
+   * step button disabled.
+   */
+  const refreshOrders = async () => {
+    try {
+      const res = await fetch("/api/erp/clearing-agent/customer-order", { signal: AbortSignal.timeout(30000) });
+      const json = await res.json().catch(() => null);
+      if (res.ok && Array.isArray(json?.data)) setOrders(json.data);
+    } catch {
+      /* the next full load will correct the list */
+    }
+  };
+
   const fetchInitialData = async () => {
     setLoading(true);
     setLoadError(null);
+    // Every lookup request gets a deadline so one hung request cannot hold the page in "loading".
+    const timed = (url: string) => fetch(url, { signal: AbortSignal.timeout(45000) });
     try {
       // Every fetch below is individually guarded: one slow/reset connection
       // (transient network blip, not a scope or data bug) must not blank the
@@ -1073,20 +1102,20 @@ export function CustomerOrderManagementView() {
       // `orders` at its initial [] with no visible error ("0 Orders" that
       // looked like an empty register instead of a failed load).
       const [orderRes, customerRes, companyRes, countryRes, portRes, agentRes, lineRes, countryBranchRes, cityBranchRes, assigneeRes, accountRes, truckRes, warehouseRes, goodsRes] = await Promise.all([
-        fetch("/api/erp/clearing-agent/customer-order").catch(() => null),
-        fetch("/api/erp/customers?limit=250").catch(() => null),
-        fetch("/api/erp/companies?limit=250").catch(() => null),
-        fetch("/api/erp/locations/countries").catch(() => null),
-        fetch("/api/erp/ports").catch(() => null),
-        fetch("/api/erp/clearing-agents?limit=200").catch(() => null),
-        fetch("/api/erp/shipping-lines?limit=200").catch(() => null),
-        fetch("/api/branch-management/country-branches").catch(() => null),
-        fetch("/api/branch-management/city-branches").catch(() => null),
-        fetch("/api/erp/user-tasks/assignees").catch(() => null),
-        fetch("/api/erp/accounting/accounts?limit=1000").catch(() => null),
-        fetch("/api/erp/master-data/trucks?selectable=true&limit=250").catch(() => null),
-        fetch("/api/erp/master-data/warehouses?limit=250").catch(() => null),
-        fetch("/api/erp/goods?limit=250").catch(() => null)
+        timed("/api/erp/clearing-agent/customer-order").catch(() => null),
+        timed("/api/erp/customers?limit=250").catch(() => null),
+        timed("/api/erp/companies?limit=250").catch(() => null),
+        timed("/api/erp/locations/countries").catch(() => null),
+        timed("/api/erp/ports").catch(() => null),
+        timed("/api/erp/clearing-agents?limit=200").catch(() => null),
+        timed("/api/erp/shipping-lines?limit=200").catch(() => null),
+        timed("/api/branch-management/country-branches").catch(() => null),
+        timed("/api/branch-management/city-branches").catch(() => null),
+        timed("/api/erp/user-tasks/assignees").catch(() => null),
+        timed("/api/erp/accounting/accounts?limit=1000").catch(() => null),
+        timed("/api/erp/master-data/trucks?selectable=true&limit=250").catch(() => null),
+        timed("/api/erp/master-data/warehouses?limit=250").catch(() => null),
+        timed("/api/erp/goods?limit=250").catch(() => null)
       ]);
 
       const [orderJson, customerJson, companyJson, countryJson, portJson, agentJson, lineJson, countryBranchJson, cityBranchJson, assigneeJson, accountJson, truckJson, warehouseJson, goodsJson] = await Promise.all([
@@ -1612,22 +1641,30 @@ export function CustomerOrderManagementView() {
     setEditingOrderId(order.id);
     setDraftGoodsItem(defaultGoodsItem());
     setEditingGoodsIdx(null);
-    const currentStageVal = o.current_stage || "1A";
-    if (currentStageVal === "1B" || currentStageVal === "truck_confirmation_required") {
-      setStep1SubStep("1B");
-      setCurrentStep(2);
-    } else if (currentStageVal === "1C" || currentStageVal === "goods_entry_required" || currentStageVal === "truck_confirmed") {
-      setStep1SubStep("1C");
-      setCurrentStep(3);
-    } else {
-      setStep1SubStep("1A");
-      setCurrentStep(1);
-    }
+    // The stored values are the DB's current_stage CHECK list (booking / truck_assignment /
+    // goods_verification / ... / completed) plus the status the workflow API writes
+    // (booking_confirmed / truck_confirmed / completed) — resume exactly where the order is.
+    const currentStageVal = String(o.current_stage || "booking");
+    const statusVal = String(o.status || "");
+    const resumeStep: 1 | 2 | 3 | 4 =
+      statusVal === "completed" || currentStageVal === "completed"
+        ? 4
+        : currentStageVal === "goods_verification" || statusVal === "truck_confirmed"
+        ? 3
+        : currentStageVal === "truck_assignment" || statusVal === "booking_confirmed"
+        ? 2
+        : 1;
+    setStep1SubStep(resumeStep === 3 ? "1C" : resumeStep === 2 ? "1B" : resumeStep === 4 ? "1C" : "1A");
+    setCurrentStep(resumeStep);
     setIsFormOpen(true);
 
-    // Reconstruct goods items
+    // Reconstruct goods items. Preferred source: the full manifest saved from step 1C
+    // (goods_items jsonb); legacy orders fall back to the allocation rows.
+    const savedGoodsItems = parseJsonArray<CustomerOrderGoodsItem>(o.goods_items).filter((g) => g && typeof g === "object");
     const loadedGoodsItems: CustomerOrderGoodsItem[] =
-      Array.isArray(order.loading_allocations) && order.loading_allocations.length > 0
+      savedGoodsItems.length > 0
+        ? savedGoodsItems.map((g) => ({ ...defaultGoodsItem(), ...g }))
+        : Array.isArray(order.loading_allocations) && order.loading_allocations.length > 0
         ? order.loading_allocations.map((row: Record<string, any>, idx: number) => {
             const parsedKgMatch = row.remarks?.match(/\(([\d.]+)\s*kg\//i)?.[1];
             const q = row.quantity != null ? String(row.quantity) : "1";
@@ -1752,14 +1789,15 @@ export function CustomerOrderManagementView() {
       truck_driver_mobile: o.truck_driver_mobile || "",
       truck_owner_name: o.truck_owner_name || "",
       truck_transport_company: o.truck_transport_company || "",
-      truck_po_ref: o.truck_po_ref || "",
-      truck_vehicle_type: o.truck_vehicle_type || (o.truck_details && typeof o.truck_details === "object" ? o.truck_details.vehicleType : "Container Trailer") || "Container Trailer",
-      truck_arrival_time: o.truck_arrival_time || (o.truck_details && typeof o.truck_details === "object" ? o.truck_details.arrivalTime : "") || "",
-      truck_loading_location: o.truck_loading_location || (o.truck_details && typeof o.truck_details === "object" ? o.truck_details.loadingLocation : "") || "",
-      truck_status: o.truck_status || (o.truck_details && typeof o.truck_details === "object" ? o.truck_details.truckStatus : "Pending") || "Pending",
-      truck_photo_url: o.truck_photo_url || (o.truck_details && typeof o.truck_details === "object" && Array.isArray(o.truck_details.truckPhotos) ? o.truck_details.truckPhotos[0] : "") || "",
-      truck_photo_name: o.truck_photo_name || "",
-      truck_details: o.truck_details ? (typeof o.truck_details === "string" ? o.truck_details : JSON.stringify(o.truck_details)) : "",
+      // truck_details is a jsonb object owned by the 1B step (older rows hold it as JSON text — parseJsonObject accepts both)
+      truck_vehicle_type: o.truck_vehicle_type || parseJsonObject(o.truck_details).vehicleType || "Container Trailer",
+      truck_arrival_time: o.truck_arrival_time || parseJsonObject(o.truck_details).arrivalTime || "",
+      truck_loading_location: o.truck_loading_location || parseJsonObject(o.truck_details).loadingLocation || "",
+      truck_status: o.truck_status || parseJsonObject(o.truck_details).truckStatus || "Pending",
+      truck_photo_url: o.truck_photo_url || (Array.isArray(parseJsonObject(o.truck_details).truckPhotos) ? parseJsonObject(o.truck_details).truckPhotos[0] : "") || "",
+      truck_photo_name: o.truck_photo_name || parseJsonObject(o.truck_details).truckPhotoName || "",
+      truck_po_ref: o.truck_po_ref || parseJsonObject(o.truck_details).poRef || "",
+      truck_description: parseJsonObject(o.truck_details).description || "",
       planned_pickup_date: o.planned_pickup_date || (o.expected_loading_date ? o.expected_loading_date.split("T")[0] : ""),
       actual_pickup_date: o.actual_pickup_date || "",
       planned_dispatch_date: o.planned_dispatch_date || "",
@@ -1854,7 +1892,8 @@ export function CustomerOrderManagementView() {
             airwayBillNo: leg.airway_bill_no || "",
             railwayOperator: leg.railway_operator || "",
             wagonNumber: leg.wagon_number || "",
-            railContainerNumber: leg.rail_container_number || ""
+            railContainerNumber: leg.rail_container_number || "",
+            insuranceRequired: Boolean(leg.insurance_required)
           }))
         : [],
       loadingAllocations: Array.isArray(order.loading_allocations)
@@ -1890,9 +1929,8 @@ export function CustomerOrderManagementView() {
     }
     setPartySelections(nextState);
 
-    // Auto navigate to active step
-    const progress = getOrderProgress(order);
-    setCurrentStep(progress.step >= 4 ? 4 : ((progress.step + 1) as any));
+    // (Resume step was already derived from the order's real stage/status above — a field-
+    // completeness guess must not override it.)
   };
 
   // Deep-link support: a Handover Inbox "Open Linked Form" click lands here with
@@ -1997,13 +2035,17 @@ export function CustomerOrderManagementView() {
     // Cross-border road rule: a real registered truck (Truck Master) is required
     // once the leg actually crosses a country border; a temporary one-time truck
     // is only for local/short transfers (warehouse<->port, yard<->warehouse, etc).
-    const invalidCrossBorderLeg = formData.legs.find(
-      (leg) =>
-        leg.transportMode === "by_road" &&
-        leg.fromCountryId &&
-        leg.toCountryId &&
-        leg.fromCountryId !== leg.toCountryId &&
-        leg.truckRegistrationType === "temporary"
+    // Judged on the registration type each leg will ACTUALLY be saved with (the 1B assignment
+    // mode decides it) — checking only the stale per-leg value let a "Hired" truck through to the
+    // database CHECK constraint, which then rejected the whole 1B/1C save with a raw SQL error.
+    const effectiveLegRegType = (leg: any) =>
+      legTruckRegistrationType({
+        legValue: leg.truckRegistrationType,
+        assignmentMode: formData.truck_assignment_mode,
+        orderRegistrationType: formData.truck_registration_type
+      });
+    const invalidCrossBorderLeg = formData.legs.find((leg: any) =>
+      violatesCrossBorderTruckRule({ ...leg, truckRegistrationType: effectiveLegRegType(leg) })
     );
     if (invalidCrossBorderLeg) {
       alert(
@@ -2021,8 +2063,10 @@ export function CustomerOrderManagementView() {
       const supplier = partySelections.supplier;
       const isFinalConfirm = advanceStep && (currentStep === 4 || currentStep === 3);
 
-      const goodsItems = formData.goods_items && formData.goods_items.length > 0 ? formData.goods_items : [defaultGoodsItem()];
-      const firstGoods = goodsItems[0];
+      // Only rows the user actually filled in count as goods. The empty default row used to be saved
+      // as a phantom "Goods / 1 bag / 50 kg" allocation on every 1A save.
+      const goodsItems = (formData.goods_items || []).filter((g) => g.goodsName || g.goodsId);
+      const firstGoods = goodsItems[0] ?? defaultGoodsItem();
       const totalQuantity = goodsItems.reduce((acc, g) => acc + (Number(g.quantity) || 0), 0);
       const totalGrossKg = goodsItems.reduce((acc, g) => acc + (Number(g.totalKg) || 0), 0);
       const aggregatedGoodsNames = goodsItems.map((g) => g.goodsName).filter(Boolean).join(", ") || formData.goods_name || null;
@@ -2071,7 +2115,7 @@ export function CustomerOrderManagementView() {
               responsibleCityBranchId: leg.responsibleCityBranchId || null,
               responsibleClearingAgentId: leg.responsibleClearingAgentId || null,
               truckId: effTruckId,
-              truckRegistrationType: leg.truckRegistrationType || (formData.truck_assignment_mode === "permanent" ? "registered" : "temporary"),
+              truckRegistrationType: effectiveLegRegType(leg),
               truckNumber: effTruckNumber,
               truckDriverName: effDriverName,
               truckDriverMobile: effDriverMobile,
@@ -2134,7 +2178,7 @@ export function CustomerOrderManagementView() {
                 portOfLoading: formData.loading_port_name || null,
                 portOfDischarge: formData.destination_port_name || null,
                 truckId: effTruckId,
-                truckRegistrationType: formData.truck_assignment_mode === "permanent" ? "registered" : "temporary",
+                truckRegistrationType: legTruckRegistrationType({ assignmentMode: formData.truck_assignment_mode, orderRegistrationType: formData.truck_registration_type }),
                 truckNumber: effTruckNumber,
                 truckDriverName: effDriverName,
                 truckDriverMobile: effDriverMobile,
@@ -2188,6 +2232,21 @@ export function CustomerOrderManagementView() {
             selectedAddressText: selection.addressText || null,
             selectedAddressSource: selection.addressSource || null
           } satisfies PartyLinkInput)),
+        // 1B fleet fields live in the truck_details jsonb object (the server merges it so the
+        // confirmation marker written by "Confirm Truck" can never be erased by a later draft save).
+        truck_details: {
+          vehicleType: formData.truck_vehicle_type || null,
+          arrivalTime: formData.truck_arrival_time || null,
+          loadingLocation: formData.truck_loading_location || null,
+          truckStatus: formData.truck_status || null,
+          truckPhotos: formData.truck_photo_url ? [formData.truck_photo_url] : undefined,
+          truckPhotoName: formData.truck_photo_name || null,
+          poRef: formData.truck_po_ref || null,
+          description: formData.truck_description || null,
+          assignmentMode: formData.truck_assignment_mode || null
+        },
+        // The complete 1C manifest (every field the user entered), restored on reopen.
+        goods_items: goodsItems.filter((g) => g.goodsName || g.goodsId),
         legs: legsToSave,
         loadingAllocations: effectiveAllocations
       };
@@ -2208,6 +2267,21 @@ export function CustomerOrderManagementView() {
       if (!editingOrderId && savedOrder?.id) {
         setEditingOrderId(savedOrder.id);
       }
+      // Take the server's authoritative identity + workflow state back into the form. Without
+      // this the form kept the stale "pending"/blank values it loaded, so the Live Report showed
+      // "Draft" after saving and every later draft-save re-sent an outdated status.
+      if (savedOrder) {
+        setFormData((c) => ({
+          ...c,
+          order_no: savedOrder.order_no || c.order_no,
+          super_admin_serial: savedOrder.super_admin_serial || c.super_admin_serial,
+          country_serial: savedOrder.country_serial || c.country_serial,
+          branch_serial: savedOrder.branch_serial || c.branch_serial,
+          entry_serial: savedOrder.entry_serial || c.entry_serial,
+          status: savedOrder.status || c.status,
+          current_stage: savedOrder.current_stage || c.current_stage
+        }));
+      }
 
       setSuccessMessage(
         advanceStep && currentStep === 4
@@ -2215,7 +2289,7 @@ export function CustomerOrderManagementView() {
           : tt("order_progress_saved", "Order {orderNo} progress saved (Step {step}/4).").replace("{orderNo}", savedOrder?.order_no || "").replace("{step}", String(currentStep))
       );
 
-      await fetchInitialData();
+      void refreshOrders();
 
       if (advanceStep && currentStep < 4) {
         const nextStep = (currentStep + 1) as 1 | 2 | 3 | 4;
@@ -2339,76 +2413,126 @@ export function CustomerOrderManagementView() {
   };
 
   // Unified Operational Stage Workflow Handlers (1A -> 1B -> 1C)
-  const handleAssignStage1A = async () => {
-    let orderId = editingOrderId;
-    if (!orderId) {
-      const saved = await handleSaveProgress(false);
-      if (!saved?.id) return;
-      orderId = saved.id;
+  //
+  // Every handler first PERSISTS the step the user is on (handleSaveProgress returns the saved
+  // order, or undefined after it already told the user why it failed) and aborts if that failed —
+  // the previous code carried on to the stage action even when the save had been rejected, then
+  // reported "Failed to ..." for actions the server had in fact committed.
+
+  /** 1A is complete enough to hand over / continue: a customer and a route are required. */
+  const validateStage1A = (): string | null => {
+    if (!partySelections.supplier.customerName && !formData.customer_name && !formData.customer_id) {
+      return tt("err_1a_customer_required", "Please select the Customer Account in Stage 1A before continuing.");
     }
+    if (!formData.legs?.length && !formData.loading_country_id && !formData.receiving_country_id) {
+      return tt("err_1a_route_required", "Please set the route (origin and destination country) in Stage 1A before continuing.");
+    }
+    return null;
+  };
+
+  /** Pull the server's workflow state (status / stage / confirmed truck) back into the open form. */
+  const syncWorkflowState = (patch: Record<string, any>) => {
+    setFormData((c) => ({ ...c, ...patch }));
+  };
+
+  const postWorkflow = async (orderId: string, body: Record<string, any>, failMessage: string) => {
+    const res = await fetch(`/api/erp/clearing-agent/customer-order/${orderId}/workflow`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    const json = await res.json().catch(() => null);
+    if (!res.ok || !json?.success) {
+      const detail = typeof json?.error === "string" ? json.error : json?.error?.message;
+      throw new Error(detail || failMessage);
+    }
+    return json;
+  };
+
+  const handleAssignStage1A = async () => {
+    const problem = validateStage1A();
+    if (problem) {
+      alert(problem);
+      return;
+    }
+    const saved = await handleSaveProgress(false);
+    if (!saved?.id) return;
     setAssignmentModalStage("1A_TO_1B");
     setAssignmentTruckData(null);
     setAssignmentModalOpen(true);
   };
 
-  const handleConfirmTruckContinueMyself = async () => {
-    if (!formData.truck_number && formData.truck_assignment_mode !== "later") {
-      alert("Please enter or select a Truck Number before confirming.");
+  /** 1A "Continue": save the booking first, then open 1B (previously this only flipped the tab and saved nothing). */
+  const handleAdvanceFrom1A = async () => {
+    const problem = validateStage1A();
+    if (problem) {
+      alert(problem);
       return;
     }
+    const saved = await handleSaveProgress(false);
+    if (!saved?.id) return;
+    setStep1SubStep("1B");
+    setCurrentStep(2);
+  };
+
+  const truckProblem = (): string | null => {
+    if (formData.truck_assignment_mode === "later") return null;
+    if (isTruckPlaceholder(formData.truck_number)) {
+      return tt("err_truck_number_required", "Please enter or select a Truck Number before confirming.");
+    }
+    return null;
+  };
+
+  const truckPayloadForWorkflow = () => ({
+    truckNumber: formData.truck_number || "TO BE ASSIGNED",
+    truckDriverName: formData.truck_driver_name,
+    truckDriverMobile: formData.truck_driver_mobile,
+    vehicleType: formData.truck_vehicle_type || "Container Trailer",
+    truckRegistrationType: formData.truck_assignment_mode === "later" ? null : formData.truck_registration_type || "temporary",
+    truckTransportCompany: formData.truck_transport_company,
+    arrivalTime: formData.truck_arrival_time,
+    loadingLocation: formData.truck_loading_location,
+    truckStatus: formData.truck_status || "Pending",
+    truckPhotos: formData.truck_photo_url ? [formData.truck_photo_url] : undefined
+  });
+
+  const handleConfirmTruckContinueMyself = async () => {
+    if (saving) return;
+    const problem = truckProblem();
+    if (problem) {
+      alert(problem);
+      return;
+    }
+    const saved = await handleSaveProgress(false);
+    if (!saved?.id) return;
     setSaving(true);
     try {
-      let orderId = editingOrderId;
-      if (!orderId) {
-        const saved = await handleSaveProgress(false);
-        if (!saved?.id) return;
-        orderId = saved.id;
-      } else {
-        await handleSaveProgress(false);
-      }
-      const res = await fetch(`/api/erp/clearing-agent/customer-order/${orderId}/workflow`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "confirm_truck",
-          truckNumber: formData.truck_number || "TO BE ASSIGNED",
-          truckDriverName: formData.truck_driver_name,
-          truckDriverMobile: formData.truck_driver_mobile,
-          vehicleType: formData.truck_vehicle_type || "Container Trailer",
-          truckRegistrationType: formData.truck_registration_type || "temporary",
-          truckTransportCompany: formData.truck_transport_company,
-          arrivalTime: formData.truck_arrival_time,
-          loadingLocation: formData.truck_loading_location,
-          truckStatus: formData.truck_status || "Pending",
-          continueMyself: true
-        })
-      });
-      const json = await res.json();
-      if (!json.success) throw new Error(json.error || "Failed to confirm truck");
-      setSuccessMessage("Truck confirmed! Proceeding to Stage 1C (Goods Entry).");
+      await postWorkflow(
+        saved.id,
+        { action: "confirm_truck", ...truckPayloadForWorkflow(), continueMyself: true },
+        tt("err_confirm_truck", "Failed to confirm truck")
+      );
+      syncWorkflowState({ status: "truck_confirmed", current_stage: "goods_verification" });
+      setSuccessMessage(tt("truck_confirmed_proceed_1c", "Truck confirmed! Proceeding to Stage 1C (Goods Entry)."));
       setStep1SubStep("1C");
       setCurrentStep(3);
-      await fetchInitialData();
+      void refreshOrders();
     } catch (err: any) {
-      alert(err.message || "Failed to confirm truck");
+      alert(err.message || tt("err_confirm_truck", "Failed to confirm truck"));
     } finally {
       setSaving(false);
     }
   };
 
   const handleConfirmTruckAssignGoods = async () => {
-    if (!formData.truck_number && formData.truck_assignment_mode !== "later") {
-      alert("Please enter or select a Truck Number before confirming.");
+    if (saving) return;
+    const problem = truckProblem();
+    if (problem) {
+      alert(problem);
       return;
     }
-    let orderId = editingOrderId;
-    if (!orderId) {
-      const saved = await handleSaveProgress(false);
-      if (!saved?.id) return;
-      orderId = saved.id;
-    } else {
-      await handleSaveProgress(false);
-    }
+    const saved = await handleSaveProgress(false);
+    if (!saved?.id) return;
     setAssignmentModalStage("1B_TO_1C");
     setAssignmentTruckData({
       truckNumber: formData.truck_number || "TO BE ASSIGNED",
@@ -2426,7 +2550,7 @@ export function CustomerOrderManagementView() {
 
   const handleTriggerReturnModal = (stage: "1B" | "1C") => {
     if (!editingOrderId) {
-      alert("Please save the order before returning for correction.");
+      alert(tt("err_save_before_return", "Please save the order before returning for correction."));
       return;
     }
     setReturnOrderInfo({
@@ -2437,40 +2561,50 @@ export function CustomerOrderManagementView() {
     setReturnModalOpen(true);
   };
 
+  /** Everything still missing before this order may be finalised (shared by 1C "Complete" and Review "Final Submit"). */
+  const getCompletionProblems = (): string[] => {
+    const problems: string[] = [];
+    const p1a = validateStage1A();
+    if (p1a) problems.push(`1A: ${p1a}`);
+    for (const m of stage1bMissing({ truck_number: formData.truck_number, truck_details: { stage1bCompleted: formData.status === "truck_confirmed" || formData.status === "completed" }, status: formData.status })) {
+      problems.push(`1B: ${m}`);
+    }
+    const rows = (formData.goods_items || []).filter((g) => g.goodsName || g.goodsId || g.quantity);
+    for (const m of validateGoodsItems(rows)) problems.push(`1C: ${m}`);
+    return problems;
+  };
+
   const handleCompleteGoodsEntry = async () => {
-    const validItems = (formData.goods_items || []).filter((g) => g.goodsName || g.quantity);
-    if (validItems.length === 0) {
-      alert("Please add at least one goods item to the manifest.");
+    if (saving) return;
+    // A row typed into the "Add goods" form but never added to the manifest would be silently lost.
+    if (draftGoodsItem.goodsName && !draftGoodsItem.goodsId && editingGoodsIdx === null && !(formData.goods_items || []).some((g) => g.goodsName === draftGoodsItem.goodsName)) {
+      alert(tt("err_unadded_goods_row", "You have a goods row that is not added to the manifest yet. Click \"Add to Manifest\" first."));
       return;
     }
+    const validItems = (formData.goods_items || []).filter((g) => g.goodsName || g.goodsId);
+    const goodsProblems = validateGoodsItems(validItems);
+    if (goodsProblems.length) {
+      alert(`${tt("err_goods_incomplete", "Goods Entry is incomplete")}:\n• ${goodsProblems.join("\n• ")}`);
+      return;
+    }
+    const saved = await handleSaveProgress(false);
+    if (!saved?.id) return;
     setSaving(true);
     try {
-      let orderId = editingOrderId;
-      if (!orderId) {
-        const saved = await handleSaveProgress(false);
-        if (!saved?.id) return;
-        orderId = saved.id;
-      } else {
-        await handleSaveProgress(false);
-      }
       const totalNet = validItems.reduce((acc, g) => acc + (Number(g.netWeight || g.totalKg) || 0), 0);
-      const res = await fetch(`/api/erp/clearing-agent/customer-order/${orderId}/workflow`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "complete_goods",
-          goodsItems: validItems,
-          totalItems: validItems.length,
-          totalNetWeight: totalNet
-        })
-      });
-      const json = await res.json();
-      if (!json.success) throw new Error(json.error || "Failed to complete goods entry");
-      setSuccessMessage(`Goods Entry completed successfully for Order ${formData.order_no}!`);
-      setIsFormOpen(false);
-      await fetchInitialData();
+      await postWorkflow(
+        saved.id,
+        { action: "complete_goods", goodsItems: validItems, totalItems: validItems.length, totalNetWeight: totalNet },
+        tt("err_complete_goods", "Failed to complete goods entry")
+      );
+      syncWorkflowState({ status: "completed", current_stage: "completed" });
+      setSuccessMessage(tt("goods_entry_completed", "Goods Entry completed successfully for Order {orderNo}!").replace("{orderNo}", saved.order_no || formData.order_no || ""));
+      void refreshOrders();
+      // Show the finished order on the Review sheet (it was saved and completed server-side).
+      setStep1SubStep("1C");
+      setCurrentStep(4);
     } catch (err: any) {
-      alert(err.message || "Failed to complete goods entry");
+      alert(err.message || tt("err_complete_goods", "Failed to complete goods entry"));
     } finally {
       setSaving(false);
     }
@@ -2526,23 +2660,23 @@ export function CustomerOrderManagementView() {
             <div className="rounded-xl border border-emerald-200 bg-emerald-50/80 p-3 dark:border-emerald-900/60 dark:bg-emerald-950/40">
               <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300 font-bold text-xs">
                 <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                <span>{stageHandoverPrompt.currentStepTitle} — Saved Successfully!</span>
+                <span>{tt("step_saved_success", "{step} — Saved Successfully!").replace("{step}", stageHandoverPrompt.currentStepTitle)}</span>
               </div>
               <div className="mt-1 text-[11px] text-emerald-700/90 dark:text-emerald-400">
-                Order <span className="font-mono font-bold">{stageHandoverPrompt.orderNo}</span> progress is saved.
+                {tt("order_progress_is_saved", "Order {orderNo} progress is saved.").replace("{orderNo}", stageHandoverPrompt.orderNo)}
               </div>
             </div>
 
             <div className="space-y-1.5">
               <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                Next Stage / Agla Marhala:
+                {tt("next_stage_label", "Next Stage:")}
               </div>
               <div className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <ArrowRight className="h-4 w-4 text-blue-600" />
                 <span>{stageHandoverPrompt.nextStepTitle}</span>
               </div>
               <p className="text-xs text-slate-600 dark:text-slate-300 mt-2">
-                Aap yeh agla step khud mukammal karenge ya kisi doosre user ko assign / transfer karenge?
+                {tt("continue_or_assign_question", "Will you complete the next step yourself, or assign / transfer it to another user?")}
               </p>
             </div>
 
@@ -2678,10 +2812,10 @@ export function CustomerOrderManagementView() {
         assignableUsers={assignableUsers}
         onClose={() => setAssignmentModalOpen(false)}
         onSuccess={async (userName) => {
-          setSuccessMessage(`Order assigned to ${userName} successfully!`);
+          setSuccessMessage(tt("order_assigned_to", "Order assigned to {user} successfully!").replace("{user}", userName));
           setAssignmentModalOpen(false);
           setIsFormOpen(false);
-          await fetchInitialData();
+          void fetchInitialData();
         }}
         lang={lang}
       />
@@ -4235,7 +4369,14 @@ export function CustomerOrderManagementView() {
                   else if (sub === "1C") setCurrentStep(3);
                 }}
                 onSaveDraft={() => void handleSaveProgress(false)}
-                onConfirmSave={() => void handleSaveProgress(true)}
+                onConfirmSave={() => {
+                  const problems = getCompletionProblems();
+                  if (problems.length) {
+                    alert(`${tt("err_final_incomplete", "This order cannot be submitted yet — complete the missing information first")}:\n• ${problems.join("\n• ")}`);
+                    return;
+                  }
+                  void handleSaveProgress(true);
+                }}
                 saving={saving}
               />
             </div>
@@ -4280,15 +4421,19 @@ export function CustomerOrderManagementView() {
                         else if (sub === "1B") setCurrentStep(2);
                         else if (sub === "1C") setCurrentStep(3);
                       }}
-                      onAdvanceToStep2={() => {
-                        setStep1SubStep("1B");
-                        setCurrentStep(2);
-                      }}
+                      onAdvanceToStep2={() => void handleAdvanceFrom1A()}
                       onAdvanceToStep3={() => {
                         setStep1SubStep("1C");
                         setCurrentStep(3);
                       }}
-                      onConfirmSave={() => void handleSaveProgress(true)}
+                      onConfirmSave={() => {
+                  const problems = getCompletionProblems();
+                  if (problems.length) {
+                    alert(`${tt("err_final_incomplete", "This order cannot be submitted yet — complete the missing information first")}:\n• ${problems.join("\n• ")}`);
+                    return;
+                  }
+                  void handleSaveProgress(true);
+                }}
                       onSaveDraft={() => void handleSaveProgress(false)}
                       onAssignStage1A={handleAssignStage1A}
                       onConfirmTruckContinueMyself={handleConfirmTruckContinueMyself}
@@ -6322,7 +6467,7 @@ function Step1BookingCustomer({
                 disabled={saving}
                 className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-700 shadow-xs shadow-blue-600/25 transition"
               >
-                <span>Continue Myself (Go to 1B)</span>
+                <span>{tt("continue_to_1b", "Continue Myself (Go to 1B)")}</span>
                 <ChevronRight className="h-4 w-4" />
               </button>
             </div>
@@ -6340,7 +6485,7 @@ function Step1BookingCustomer({
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-blue-200/70 pb-2 dark:border-blue-900/60">
               <div className="flex items-center gap-2">
                 <span className="rounded-md bg-blue-600 px-2.5 py-0.5 text-xs font-black uppercase tracking-wider text-white shadow-xs">
-                  Stage 1A Summary (Read-Only)
+                  {tt("stage_1a_summary", "Stage 1A Summary (Read-Only)")}
                 </span>
                 <span className="text-xs font-bold text-slate-500">
                   Order: <span className="font-mono font-black text-blue-700 dark:text-blue-300">{formData.order_no || activeOrder?.order_no || "Draft"}</span>
@@ -6444,6 +6589,7 @@ function Step1BookingCustomer({
                     setFormData((c) => ({
                       ...c,
                       truck_assignment_mode: mode,
+                      truck_registration_type: mode === "permanent" ? "registered" : mode === "hired" ? "temporary" : c.truck_registration_type,
                       truck_id: mode === "later" ? "" : c.truck_id,
                       truck_number: mode === "later" ? "TO BE ASSIGNED" : (mode === "permanent" ? c.truck_number : "")
                     }));
@@ -6458,7 +6604,7 @@ function Step1BookingCustomer({
 
               <div>
                 <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                  Permanent / Temporary Vehicle *
+                  {tt("vehicle_reg_type_label", "Permanent / Temporary Vehicle *")}
                 </label>
                 <select
                   value={formData.truck_registration_type || "registered"}
@@ -6493,7 +6639,7 @@ function Step1BookingCustomer({
                         truck_driver_name: trk.driver_name || "",
                         truck_driver_mobile: trk.driver_mobile || trk.driver_phone || "",
                         truck_transport_company: trk.transport_company || trk.owner_name || "",
-                        truck_details: [trk.truck_type, trk.make, trk.model, trk.color].filter(Boolean).join(" • ")
+                        truck_description: [trk.truck_type, trk.make, trk.model, trk.color].filter(Boolean).join(" • ")
                       }));
                     }
                   }}
@@ -6507,7 +6653,7 @@ function Step1BookingCustomer({
                       <span className="font-bold text-slate-900 dark:text-white">{formData.truck_number}</span>
                       <span className="text-slate-400 ml-2">{tt("driver_label", "Driver")}: {formData.truck_driver_name || "—"} ({formData.truck_driver_mobile || "—"})</span>
                     </div>
-                    {formData.truck_details ? <span className="text-[11px] text-slate-500">{formData.truck_details}</span> : null}
+                    {formData.truck_description ? <span className="text-[11px] text-slate-500">{formData.truck_description}</span> : null}
                   </div>
                 ) : null}
               </div>
@@ -6523,7 +6669,7 @@ function Step1BookingCustomer({
                     type="text"
                     value={formData.truck_number}
                     onChange={(e) => setFormData((c) => ({ ...c, truck_number: e.target.value }))}
-                    placeholder="e.g. TL-9988-KHI"
+                    placeholder={tt("ph_truck_reg", "e.g. TL-9988-KHI")}
                     className={inputClass}
                   />
                 </div>
@@ -6559,7 +6705,7 @@ function Step1BookingCustomer({
                     type="text"
                     value={formData.truck_po_ref || ""}
                     onChange={(e) => setFormData((c) => ({ ...c, truck_po_ref: e.target.value }))}
-                    placeholder="e.g. PO-8874 / Hire Agmt"
+                    placeholder={tt("ph_po_ref", "e.g. PO-8874 / Hire Agmt")}
                     className={inputClass}
                   />
                 </div>
@@ -6582,7 +6728,7 @@ function Step1BookingCustomer({
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 pt-3 border-t border-slate-100 dark:border-slate-800">
               <div>
                 <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                  Vehicle Type *
+                  {tt("vehicle_type_label", "Vehicle Type *")}
                 </label>
                 <select
                   value={formData.truck_vehicle_type || "Container Trailer"}
@@ -6602,11 +6748,11 @@ function Step1BookingCustomer({
 
               <div>
                 <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                  Transport Co / Contractor
+                  {tt("transport_co_label", "Transport Co / Contractor")}
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Al-Fatah Goods Transport"
+                  placeholder={tt("ph_transport_co", "e.g. Al-Fatah Goods Transport")}
                   value={formData.truck_transport_company || ""}
                   onChange={(e) => setFormData((c) => ({ ...c, truck_transport_company: e.target.value }))}
                   className={inputClass}
@@ -6615,7 +6761,7 @@ function Step1BookingCustomer({
 
               <div>
                 <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                  Arrival Date & Time
+                  {tt("arrival_datetime_label", "Arrival Date & Time")}
                 </label>
                 <input
                   type="datetime-local"
@@ -6627,11 +6773,11 @@ function Step1BookingCustomer({
 
               <div>
                 <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                  Loading Location / Terminal
+                  {tt("loading_terminal_label", "Loading Location / Terminal")}
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Jebel Ali Gate 4 / Karachi Terminal Yard"
+                  placeholder={tt("ph_loading_terminal", "e.g. Jebel Ali Gate 4 / Karachi Terminal Yard")}
                   value={formData.truck_loading_location || ""}
                   onChange={(e) => setFormData((c) => ({ ...c, truck_loading_location: e.target.value }))}
                   className={inputClass}
@@ -6640,7 +6786,7 @@ function Step1BookingCustomer({
 
               <div>
                 <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                  Truck Operational Status
+                  {tt("truck_op_status_label", "Truck Operational Status")}
                 </label>
                 <select
                   value={formData.truck_status || "Pending"}
@@ -6694,7 +6840,7 @@ function Step1BookingCustomer({
                 className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 shadow-2xs"
               >
                 <ChevronLeft className="h-3.5 w-3.5" />
-                <span>Back to 1A</span>
+                <span>{tt("back_to_1a", "Back to 1A")}</span>
               </button>
 
               {onReturnForCorrection && (
@@ -6763,10 +6909,10 @@ function Step1BookingCustomer({
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
-                    🚚 Truck Confirmed — Goods Entry Assigned to You
+                    🚚 {tt("stage_1c_banner_title", "Truck Confirmed — Goods Entry Assigned to You")}
                   </span>
                   <span className="rounded-full bg-emerald-200/80 px-2 py-0.5 text-[10px] font-black text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200">
-                    Stage 1C Active
+                    {tt("stage_1c_active", "Stage 1C Active")}
                   </span>
                 </div>
                 <p className="text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
@@ -7108,7 +7254,7 @@ function Step1BookingCustomer({
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. Basmati Rice / Steel Coils"
+                    placeholder={tt("ph_goods_name", "e.g. Basmati Rice / Steel Coils")}
                     value={draftGoodsItem.goodsName || ""}
                     onChange={(e) => handleDraftGoodsChange("goodsName", e.target.value)}
                     className={inputClass}
@@ -7136,7 +7282,7 @@ function Step1BookingCustomer({
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. 40mm / 12x12 / Standard"
+                    placeholder={tt("ph_goods_size", "e.g. 40mm / 12x12 / Standard")}
                     value={draftGoodsItem.size || ""}
                     onChange={(e) => handleDraftGoodsChange("size", e.target.value)}
                     className={inputClass}
@@ -7148,7 +7294,7 @@ function Step1BookingCustomer({
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. Grade A / Premium / Export Quality"
+                    placeholder={tt("ph_goods_brand", "e.g. Grade A / Premium / Export Quality")}
                     value={draftGoodsItem.brandQuality || ""}
                     onChange={(e) => handleDraftGoodsChange("brandQuality", e.target.value)}
                     className={inputClass}
@@ -7500,7 +7646,7 @@ function Step1BookingCustomer({
                 className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 shadow-2xs"
               >
                 <ChevronLeft className="h-3.5 w-3.5" />
-                <span>Back to 1B</span>
+                <span>{tt("back_to_1b", "Back to 1B")}</span>
               </button>
 
               {onReturnForCorrection && (
