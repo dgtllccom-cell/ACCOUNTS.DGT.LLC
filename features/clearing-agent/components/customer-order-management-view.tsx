@@ -9742,7 +9742,7 @@ function Step4ReviewConfirm({
                     {summaryValue(leg.toCountryName || leg.toLocationText)}
                   </div>
                   <div className="text-[11px] text-slate-500">
-                    {tt("mode_colon", "Mode:")} <strong className="uppercase">{leg.transportMode || "-"}</strong> • {tt("agent_colon", "Agent:")}{" "}
+                    {tt("mode_colon", "Mode:")} <strong className="uppercase">{leg.transportMode ? transportModeLabel(lang, leg.transportMode) : "-"}</strong> • {tt("agent_colon", "Agent:")}{" "}
                     <strong>
                       {leg.responsibleClearingAgentId ? agentName(leg.responsibleClearingAgentId) : "-"}
                     </strong>

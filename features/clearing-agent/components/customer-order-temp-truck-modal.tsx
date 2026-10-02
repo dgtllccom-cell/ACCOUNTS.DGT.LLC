@@ -64,7 +64,7 @@ export function CustomerOrderTempTruckModal({ open, lang, initial, onConfirm, on
         if (e.key === "Escape") onCancel();
       }}
     >
-      <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
+      <div className="w-full max-w-sm max-h-[92vh] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
         <div className="mb-3 flex items-start justify-between gap-2">
           <div className="flex items-center gap-2">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300">
