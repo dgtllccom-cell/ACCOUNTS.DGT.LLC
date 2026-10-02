@@ -126,6 +126,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       truckDetails: collectTruckDetailsFromBody(body),
       goodsItems: Array.isArray(body.goods_items ?? body.goodsItems) ? (body.goods_items ?? body.goodsItems) : undefined,
       loadType: body.load_type ?? body.loadType ?? null,
+      importScenario: body.import_scenario ?? body.importScenario ?? null,
       loadingStateProvinceId: body.loading_state_province_id ?? body.loadingStateProvinceId ?? null,
       loadingDistrictId: body.loading_district_id ?? body.loadingDistrictId ?? null,
       loadingCityId: body.loading_city_id ?? body.loadingCityId ?? null,

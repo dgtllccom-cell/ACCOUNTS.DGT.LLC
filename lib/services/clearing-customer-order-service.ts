@@ -79,6 +79,8 @@ export type ClearingCustomerOrderInput = {
   /** Full per-item goods manifest from step 1C (restored on reopen). */
   goodsItems?: Record<string, unknown>[] | null;
   loadType?: "full_truck" | "partial_load" | "container_haulage" | null;
+  /** Import only: "collect_from_origin" or "arrived_at_entry" (goods already at the entry border / port). */
+  importScenario?: "collect_from_origin" | "arrived_at_entry" | null;
   loadingStateProvinceId?: string | null;
   loadingDistrictId?: string | null;
   loadingCityId?: string | null;
@@ -149,7 +151,7 @@ export type OrderLegInput = {
   customsCountryId?: string | null;
   customsPointText?: string | null;
   customsClearingAgentId?: string | null;
-  clearanceType?: "import" | "export" | "transit" | null;
+  clearanceType?: "import" | "export" | "transit" | "re_export" | null;
   dutyTreatment?: "duty_payable" | "no_duty_exempt" | "transit_bonded" | "pending" | null;
   dutyAmount?: number | null;
   dutyCurrency?: string | null;
@@ -256,7 +258,7 @@ function normalizeLinks(links: PartyLinkInput[] | undefined | null, fallbackPart
 
 const LEG_TRANSPORT_MODES = new Set(["by_sea", "by_road", "by_air", "by_rail"]);
 const LEG_TRUCK_REG_TYPES = new Set(["registered", "temporary"]);
-const LEG_CLEARANCE_TYPES = new Set(["import", "export", "transit"]);
+const LEG_CLEARANCE_TYPES = new Set(["import", "export", "transit", "re_export"]);
 const LEG_DUTY_TREATMENTS = new Set(["duty_payable", "no_duty_exempt", "transit_bonded", "pending"]);
 const LEG_CUSTOMS_STATUSES = new Set(["not_applicable", "pending", "submitted", "cleared", "held", "rejected"]);
 const LEG_HANDLER_TYPES = new Set(["our_branch", "external_partner"]);
@@ -696,6 +698,10 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
         shipment_type: trimOrNull(input.shipmentType) ?? "FCL",
         transport_mode: trimOrNull(input.transportMode) ?? "by_sea",
         movement_type: trimOrNull(input.movementType) ?? "import",
+        import_scenario:
+          (trimOrNull(input.movementType) ?? "import") === "import" && (input.importScenario === "collect_from_origin" || input.importScenario === "arrived_at_entry")
+            ? input.importScenario
+            : null,
         exporter_name: trimOrNull(input.exporterName),
         importer_name: trimOrNull(input.importerName),
         notify_party_required: Boolean(input.notifyPartyRequired),
@@ -838,6 +844,7 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
               shipment_type = ${orderPayload.shipment_type},
               transport_mode = ${orderPayload.transport_mode},
               movement_type = ${orderPayload.movement_type},
+              import_scenario = ${orderPayload.import_scenario},
               exporter_name = ${orderPayload.exporter_name},
               importer_name = ${orderPayload.importer_name},
               notify_party_required = ${orderPayload.notify_party_required},
@@ -907,7 +914,7 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
           insert into public.clearing_customer_orders (
             order_no, customer_id, customer_name, goods_id, goods_variation_id, goods_name, goods_chs_code,
             goods_variation_label, goods_brand, goods_size, goods_origin_country_name,
-            route_name, shipment_type, transport_mode, movement_type,
+            route_name, shipment_type, transport_mode, movement_type, import_scenario,
             exporter_name, importer_name, notify_party_required, notify_party_name, buyer_name,
             consignee_name,
             loading_source, loading_source_name, loading_country_id, loading_country_name,
@@ -929,7 +936,7 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
             ${orderPayload.goods_variation_id}, ${orderPayload.goods_name}, ${orderPayload.goods_chs_code},
             ${orderPayload.goods_variation_label}, ${orderPayload.goods_brand}, ${orderPayload.goods_size},
             ${orderPayload.goods_origin_country_name}, ${orderPayload.route_name},
-            ${orderPayload.shipment_type}, ${orderPayload.transport_mode}, ${orderPayload.movement_type},
+            ${orderPayload.shipment_type}, ${orderPayload.transport_mode}, ${orderPayload.movement_type}, ${orderPayload.import_scenario},
             ${orderPayload.exporter_name}, ${orderPayload.importer_name}, ${orderPayload.notify_party_required},
             ${orderPayload.notify_party_name}, ${orderPayload.buyer_name},
             ${orderPayload.consignee_name},

@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
+import { hasRolePermission } from "@/lib/permissions/middleware";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getRequestLanguage } from "@/lib/i18n/server";
@@ -32,7 +33,13 @@ export async function GET(request: NextRequest) {
       `)
       .is("deleted_at", null);
 
-    if (!session.isSuperAdmin && session.countryIds?.length > 0) {
+    // A customer order routes goods through FOREIGN countries too (origin port, border, discharge),
+    // so a user who may create/update shipping records can look up the port master of any country
+    // for route building (read-only reference data). Everyone else stays limited to their own countries.
+    const forOrder =
+      request.nextUrl.searchParams.get("forOrder") === "1" &&
+      (hasRolePermission(session, "shipping_records", "create") || hasRolePermission(session, "shipping_records", "update"));
+    if (!session.isSuperAdmin && !forOrder && session.countryIds?.length > 0) {
       qb = qb.in("country_id", session.countryIds);
     }
 

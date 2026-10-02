@@ -104,11 +104,11 @@ import {
 } from "@/lib/services/clearing-customer-order-workflow-rules";
 
 type TransportMode = "by_sea" | "by_road" | "by_air" | "by_rail";
-type MovementType = "import" | "export" | "transit" | "up_transit" | "down_transit" | "domestic";
+type MovementType = "import" | "export" | "re_export" | "transit" | "up_transit" | "down_transit" | "domestic";
 type LoadingSource = "shipping_warehouse" | "customer_warehouse" | "container" | "port_terminal" | "border_yard" | "other";
 type LoadType = "full_truck" | "partial_load" | "container_haulage";
 type LegTransportMode = "by_sea" | "by_road" | "by_air" | "by_rail";
-type ClearanceType = "import" | "export" | "transit";
+type ClearanceType = "import" | "export" | "transit" | "re_export";
 type DutyTreatment = "duty_payable" | "no_duty_exempt" | "transit_bonded" | "pending";
 type LegCustomsStatus = "not_applicable" | "pending" | "submitted" | "cleared" | "held" | "rejected";
 
@@ -308,7 +308,7 @@ type CompanyRow = {
 };
 
 type CountryRow = { id: string; name: string };
-type PortRow = { id: string; port_name: string };
+type PortRow = { id: string; port_name: string; country_id?: string | null; transport_type?: string | null };
 
 type PartySelection = {
   customerId: string;
@@ -387,13 +387,14 @@ function transportModeDescLabel(lang: string, mode: string | null | undefined): 
 
 function movementTypeLabel(lang: string, movement: string | null | undefined): string {
   const m = String(movement || "import").toLowerCase();
-  const fb: Record<string, string> = { import: "Import", export: "Export", up_transit: "Up Transit", down_transit: "Down Transit", transit: "Transit", domestic: "Domestic" };
+  const fb: Record<string, string> = { import: "Import", export: "Export", re_export: "Re-export", up_transit: "Up Transit", down_transit: "Down Transit", transit: "Transit", domestic: "Domestic" };
   return comT(lang, "mv_" + (fb[m] ? m : "import"), fb[m] || "Import");
 }
 
 function movementFlowLabel(lang: string, movement: string | null | undefined): string {
   const m = String(movement || "import").toLowerCase();
   if (m === "export") return comT(lang, "mv_flow_export", "Local → Foreign");
+  if (m === "re_export") return comT(lang, "mv_flow_re_export", "Foreign → Foreign");
   if (m.includes("transit")) return comT(lang, "mv_flow_transit", "Cross-Border");
   return comT(lang, "mv_flow_import", "Foreign → Local");
 }
@@ -446,6 +447,34 @@ function goodsWeights(g: Partial<CustomerOrderGoodsItem>) {
   return { qty, gross, tare, net: Math.max(0, gross - tare) };
 }
 const roundKg = (n: number, digits = 3) => Number(n.toFixed(digits));
+
+/** Customs wording follows the customs operation — an import is never labelled "In-Transit". */
+function customsStageLabel(lang: string, movement: string | null | undefined): string {
+  const m = String(movement || "import").toLowerCase();
+  if (m === "export") return comT(lang, "export_clearance_badge", "Export Clearance");
+  if (m === "re_export") return comT(lang, "reexport_clearance_badge", "Re-export Clearance");
+  if (m.includes("transit")) return comT(lang, "cust_badge_transit", "Transit Customs");
+  return comT(lang, "import_clearance_badge", "Import Clearance");
+}
+
+/** Port-master transport kind a route point must have for a given transport mode. */
+function portKindForMode(mode: string | null | undefined): string {
+  const m = String(mode || "");
+  return m === "by_road" ? "road" : m === "by_air" ? "air" : m === "by_sea" ? "sea" : "";
+}
+
+/** "Port" for Sea, "Border / loading point" for Road, "Airport" for Air, "Rail terminal" for Train. */
+function locationRoleLabel(lang: string, role: "loading" | "entry" | "exit" | "discharge", mode: string | null | undefined): string {
+  const kind = String(mode || "by_sea").replace("by_", "") || "sea";
+  const fb: Record<string, Record<string, string>> = {
+    loading: { sea: "Port of Loading", road: "Loading Point / Border", air: "Airport of Departure", rail: "Loading Rail Terminal" },
+    entry: { sea: "Entry Seaport", road: "Entry Border", air: "Entry Airport", rail: "Entry Rail Terminal" },
+    exit: { sea: "Exit Port", road: "Exit Border", air: "Exit Airport", rail: "Exit Rail Terminal" },
+    discharge: { sea: "Port of Discharge", road: "Discharge Point / Border", air: "Airport of Arrival", rail: "Discharge Rail Terminal" }
+  };
+  const k = fb[role][kind] ? kind : "sea";
+  return comT(lang, `loc_${role}_${k}`, fb[role][k]);
+}
 
 function loadingSourceLabel(lang: string, source: string | null | undefined): string {
   const s = String(source || "");
@@ -536,6 +565,7 @@ const EMPTY_FORM = {
   transport_mode: "by_sea" as TransportMode,
   shipment_mode: "by_sea" as TransportMode,
   movement_type: "import" as MovementType,
+  import_scenario: "collect_from_origin" as "collect_from_origin" | "arrived_at_entry",
 
   // 1B Truck & Pre-Carriage
   truck_assignment_mode: "permanent" as "permanent" | "hired" | "later",
@@ -1204,7 +1234,7 @@ export function CustomerOrderManagementView() {
         timed("/api/erp/customers?limit=250").catch(() => null),
         timed("/api/erp/companies?limit=250").catch(() => null),
         timed("/api/erp/locations/countries").catch(() => null),
-        timed("/api/erp/ports").catch(() => null),
+        timed("/api/erp/ports?forOrder=1").catch(() => null),
         timed("/api/erp/clearing-agents?limit=200").catch(() => null),
         timed("/api/erp/shipping-lines?limit=200").catch(() => null),
         timed("/api/branch-management/country-branches").catch(() => null),
@@ -1842,6 +1872,7 @@ export function CustomerOrderManagementView() {
       shipment_type: order.shipment_type || "FCL",
       transport_mode: (order.transport_mode || "by_sea") as TransportMode,
       movement_type: (order.movement_type || "import") as MovementType,
+      import_scenario: (o.import_scenario === "arrived_at_entry" ? "arrived_at_entry" : "collect_from_origin") as "collect_from_origin" | "arrived_at_entry",
       load_type: (o.load_type as LoadType) || "",
       loading_source: (order.loading_source || "shipping_warehouse") as LoadingSource,
       loading_source_name: order.loading_source_name || "",
@@ -4985,7 +5016,7 @@ export function CustomerOrderManagementView() {
                           <span>{tt("option2_border_customs", "2. BORDER & CUSTOMS")}</span>
                         </div>
                         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800">
-                          {tt("in_transit", "In-Transit")}
+                          {customsStageLabel(lang, formData.movement_type)}
                         </span>
                       </div>
 
@@ -5004,7 +5035,7 @@ export function CustomerOrderManagementView() {
                         <div className="flex items-center justify-between">
                           <span className="text-slate-500 font-medium">{tt("clearance_colon", "Clearance:")}</span>
                           <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[170px]">
-                            {formData.customs_clearance_office || tt("in_transit_customs_fallback", "In-Transit Customs")}
+                            {formData.customs_clearance_office || customsStageLabel(lang, formData.movement_type)}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
@@ -5013,7 +5044,7 @@ export function CustomerOrderManagementView() {
                             <span>{tt("route_via_colon", "Route Via:")}</span>
                           </span>
                           <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[170px]" title={formData.route_name || tt("direct_customs_corridor", "Direct Customs Corridor")}>
-                            {formData.route_name || tt("bonded_highway_fallback", "Bonded Highway")}
+                            {formData.route_name || (String(formData.movement_type).includes("transit") ? tt("bonded_highway_fallback", "Bonded Highway") : tt("direct_route_short", "Direct Route"))}
                           </span>
                         </div>
                       </div>
@@ -5077,6 +5108,35 @@ export function CustomerOrderManagementView() {
                     </div>
                   </div>
                 </div>
+
+                {/* Route legs: one line per leg — mode, from → to, handler / partner account, road truck */}
+                {(formData.legs || []).length > 0 && (
+                  <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-2">
+                    <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                      <Route className="h-4 w-4 text-sky-600" />
+                      <span>{tt("route_legs_summary", "Route Legs")} ({(formData.legs || []).length})</span>
+                    </div>
+                    <ol className="space-y-1.5">
+                      {(formData.legs || []).map((leg: any, i: number) => (
+                        <li key={leg.id || i} className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11.5px]">
+                          <span className="font-mono font-black text-slate-400">{leg.legNo ?? i + 1}.</span>
+                          <span className="rounded bg-sky-50 px-1.5 py-0.5 text-[10px] font-bold text-sky-700 border border-sky-200 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-800">{transportModeLabel(lang, leg.transportMode)}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200">
+                            {leg.fromLocationText || leg.fromCountryName || "—"} {isRtl ? "←" : "→"} {leg.toLocationText || leg.toCountryName || "—"}
+                          </span>
+                          <span className="text-slate-500">
+                            {leg.handlerType === "external_partner"
+                              ? `${tt("leg_handler_partner_short", "Partner")}: ${leg.partnerName || "—"}${leg.partnerAccountNumber ? ` [${leg.partnerAccountNumber}]` : ""}`
+                              : tt("leg_handler_branch_short", "Our branch")}
+                          </span>
+                          {leg.transportMode === "by_road" && leg.truckNumber && !isTruckPlaceholder(leg.truckNumber) ? (
+                            <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold text-amber-800 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800" dir="ltr">🚛 {leg.truckNumber}</span>
+                          ) : null}
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                )}
 
                 {/* 2. Vehicle & Fleet Report Card */}
                 <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-3.5">
@@ -5976,6 +6036,21 @@ function Step1BookingCustomer({
     }
   };
 
+  // Locations offered in a dropdown: ONLY those of the chosen country and of the chosen transport
+  // mode (sea ports for Sea, border points for Road, airports for Air). The value already saved on the
+  // order stays selectable even if it falls outside the filter, so reopening never loses data.
+  const portsFor = (countryId: string, keepId?: string): PortRow[] => {
+    const kind = portKindForMode(formData.transport_mode);
+    let list = ports.filter((p) => (!countryId || p.country_id === countryId) && (!kind || !p.transport_type || p.transport_type === kind));
+    if (keepId && !list.some((p) => p.id === keepId)) {
+      const kept = ports.find((p) => p.id === keepId);
+      if (kept) list = [kept, ...list];
+    }
+    return list;
+  };
+  const locLabel = (role: "loading" | "entry" | "exit" | "discharge") => locationRoleLabel(lang, role, formData.transport_mode);
+  const arrivedAtEntry = formData.movement_type === "import" && formData.import_scenario === "arrived_at_entry";
+
   return (
     <div className="space-y-4 animate-in fade-in duration-150">
       {/* Dynamic 1A / 1B / 1C Sub-step Navigator */}
@@ -6110,6 +6185,7 @@ function Step1BookingCustomer({
                 <option value="export">{tt("mv_opt_export", "Export (Local Origin → Foreign Discharge)")}</option>
                 <option value="up_transit">{tt("mv_opt_up_transit", "Up Transit (Border Entry → Bonded Corridor)")}</option>
                 <option value="down_transit">{tt("mv_opt_down_transit", "Down Transit (Inland → Border Exit)")}</option>
+                <option value="re_export">{tt("mv_opt_re_export", "Re-export (Foreign Goods → Foreign Destination)")}</option>
               </select>
             </div>
 
@@ -6164,6 +6240,21 @@ function Step1BookingCustomer({
                 </span>
               </div>
 
+              {/* Import scenario: collect from the foreign origin, or clear goods that already arrived */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  {tt("import_scenario_label", "Import Scenario")} *
+                </label>
+                <select
+                  value={formData.import_scenario}
+                  onChange={(e) => setFormData((c) => ({ ...c, import_scenario: e.target.value as "collect_from_origin" | "arrived_at_entry" }))}
+                  className={selectClass}
+                >
+                  <option value="collect_from_origin">{tt("import_scn_origin", "Collect goods from the foreign origin and arrange the journey")}</option>
+                  <option value="arrived_at_entry">{tt("import_scn_arrived", "Goods already arrived at the entry border / port — clear and arrange onward delivery")}</option>
+                </select>
+              </div>
+
               {/* Row 1: Foreign Origin Country & Port of Loading */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
@@ -6181,17 +6272,17 @@ function Step1BookingCustomer({
                     ))}
                   </select>
                 </div>
-                <div>
+                <div className={arrivedAtEntry ? "hidden" : ""}>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {tt("foreign_port_of_loading", "Port of Loading")}
+                    {locLabel("loading")}
                   </label>
                   <select
                     value={formData.loading_port_id}
                     onChange={(e) => handleLoadingPortChange(e.target.value)}
                     className={selectClass}
                   >
-                    <option value="">— {tt("select_port_of_loading", "Select Port of Loading")} —</option>
-                    {ports.map((p) => (
+                    <option value="">— {tt("loc_select_generic", "Select location")} —</option>
+                    {portsFor(formData.loading_country_id, formData.loading_port_id).map((p) => (
                       <option key={p.id} value={p.id}>{p.port_name}</option>
                     ))}
                   </select>
@@ -6202,7 +6293,7 @@ function Step1BookingCustomer({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {tt("entry_sea_port_border", "Entry Sea Port / Border Point")} *
+                    {locLabel("entry")} *
                   </label>
                   <select
                     value={formData.entry_border_port_id}
@@ -6216,15 +6307,15 @@ function Step1BookingCustomer({
                     }}
                     className={selectClass}
                   >
-                    <option value="">— {tt("select_entry_port_border", "Select Entry Port / Border")} —</option>
-                    {ports.map((p) => (
+                    <option value="">— {tt("loc_select_generic", "Select location")} —</option>
+                    {portsFor(formData.receiving_country_id, formData.entry_border_port_id).map((p) => (
                       <option key={p.id} value={p.id}>{p.port_name}</option>
                     ))}
                   </select>
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {tt("expected_border_entry_date", "Expected Border Entry Date")}
+                    {arrivedAtEntry ? tt("arrived_on_date", "Arrival Date at Entry") : tt("expected_border_entry_date", "Expected Border Entry Date")}
                   </label>
                   <input
                     type="date"
@@ -6279,15 +6370,15 @@ function Step1BookingCustomer({
             </div>
           )}
 
-          {formData.movement_type === "export" && (
+          {(formData.movement_type === "export" || formData.movement_type === "re_export") && (
             <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-3.5 space-y-3 dark:border-emerald-900/60 dark:bg-emerald-950/20">
               <div className="flex items-center justify-between border-b border-emerald-200/60 pb-1.5 dark:border-emerald-900/60">
                 <div className="flex items-center gap-1.5 text-xs font-black uppercase text-emerald-800 dark:text-emerald-300">
                   <Repeat2 className="h-4 w-4 text-emerald-600" />
-                  <span>{tt("export_movement_route", "Export Movement & Location Setup")}</span>
+                  <span>{formData.movement_type === "re_export" ? tt("reexport_movement_route", "Re-export Movement & Location Setup") : tt("export_movement_route", "Export Movement & Location Setup")}</span>
                 </div>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300">
-                  {tt("export_clearance_badge", "Export Clearance")}
+                  {formData.movement_type === "re_export" ? tt("reexport_clearance_badge", "Re-export Clearance") : tt("export_clearance_badge", "Export Clearance")}
                 </span>
               </div>
 
@@ -6307,7 +6398,7 @@ function Step1BookingCustomer({
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {tt("exit_border_port_loading", "Exit Border / Port of Loading")} *
+                    {locLabel("exit")} *
                   </label>
                   <select
                     value={formData.exit_border_port_id || formData.loading_port_id}
@@ -6323,8 +6414,8 @@ function Step1BookingCustomer({
                     }}
                     className={selectClass}
                   >
-                    <option value="">— {tt("select_exit_port_border", "Select Exit Port / Border")} —</option>
-                    {ports.map((p) => (
+                    <option value="">— {tt("loc_select_generic", "Select location")} —</option>
+                    {portsFor(formData.loading_country_id, formData.exit_border_port_id || formData.loading_port_id).map((p) => (
                       <option key={p.id} value={p.id}>{p.port_name}</option>
                     ))}
                   </select>
@@ -6377,15 +6468,15 @@ function Step1BookingCustomer({
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {tt("foreign_port_discharge_city", "Discharge Port / Destination City")}
+                    {locLabel("discharge")}
                   </label>
                   <select
                     value={formData.destination_port_id}
                     onChange={(e) => handleDestinationPortChange(e.target.value)}
                     className={selectClass}
                   >
-                    <option value="">— {tt("select_port_discharge", "Select Port of Discharge")} —</option>
-                    {ports.map((p) => (
+                    <option value="">— {tt("loc_select_generic", "Select location")} —</option>
+                    {portsFor(formData.receiving_country_id, formData.destination_port_id).map((p) => (
                       <option key={p.id} value={p.id}>{p.port_name}</option>
                     ))}
                   </select>
@@ -6425,7 +6516,7 @@ function Step1BookingCustomer({
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {tt("entry_sea_port_border", "Entry Sea Port / Border Point")} *
+                    {locLabel("entry")} *
                   </label>
                   <select
                     value={formData.entry_border_port_id}
@@ -6439,8 +6530,8 @@ function Step1BookingCustomer({
                     }}
                     className={selectClass}
                   >
-                    <option value="">— {tt("select_entry_port_border", "Select Entry Port / Border")} —</option>
-                    {ports.map((p) => (
+                    <option value="">— {tt("loc_select_generic", "Select location")} —</option>
+                    {portsFor("", formData.entry_border_port_id).map((p) => (
                       <option key={p.id} value={p.id}>{p.port_name}</option>
                     ))}
                   </select>
@@ -6466,7 +6557,7 @@ function Step1BookingCustomer({
                     className={selectClass}
                   >
                     <option value="">— {tt("select_exit_border", "Select Exit Border")} —</option>
-                    {ports.map((p) => (
+                    {portsFor("", formData.exit_border_port_id).map((p) => (
                       <option key={p.id} value={p.id}>{p.port_name}</option>
                     ))}
                   </select>
