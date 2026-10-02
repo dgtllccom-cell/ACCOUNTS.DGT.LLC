@@ -256,7 +256,7 @@ async function main() {
     const { f, id } = await newOrder(cookie, "by_road", `xb-${Date.now()}`);
     if (id) {
       const db = await dbOrder(id);
-      const hired = await api(cookie, "PATCH", ORD(id), { ...f, truck_number: "DEVTEST-HIRED-1", truck_registration_type: "temporary", legs: legsFromDb(db.legs, "temporary") });
+      const hired = await api(cookie, "PATCH", ORD(id), { ...f, truck_number: "DEVTEST-HIRED-1", truck_driver_name: "DEV Driver", truck_driver_mobile: "+92 300 1234567", truck_registration_type: "temporary", legs: legsFromDb(db.legs, "temporary").map((l: any) => ({ ...l, truckNumber: "DEVTEST-HIRED-1", truckDriverName: "DEV Driver", truckDriverMobile: "+92 300 1234567" })) });
       check("[xborder] hired/temporary truck on a cross-border road leg -> clean 422 CROSS_BORDER_TRUCK_RULE (not a raw SQL 500)", hired.status === 422 && hired.json?.code === "CROSS_BORDER_TRUCK_RULE" && /registered truck/i.test(hired.json?.error ?? ""), { http: hired.status, body: hired.text.slice(0, 240) });
       const later = await api(cookie, "PATCH", ORD(id), { ...f, truck_number: "TO BE ASSIGNED", truck_registration_type: "registered", legs: legsFromDb(db.legs, null) });
       check("[xborder] 'Assign Later' (no registration type) on the same leg is ACCEPTED", later.status === 200 && later.json?.success === true, { http: later.status, body: later.text.slice(0, 200) });
