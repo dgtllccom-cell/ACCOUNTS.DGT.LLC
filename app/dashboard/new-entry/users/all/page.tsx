@@ -1792,6 +1792,22 @@ export default function SuperAdminAllUsersDirectoryPage() {
               <span>{th("Export CSV")}</span>
             </Button>
 
+            {/* Super Admin Only: Download PDF Report */}
+            {Boolean(sess?.isSuperAdmin) && (
+              <a
+                href="/api/erp/users/credentials-pdf/download"
+                download="ACCOUNTS_DGT_LLC_USERS_CREDENTIALS.pdf"
+              >
+                <Button
+                  className="bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs h-9 px-3.5 rounded-lg flex items-center gap-1.5 shadow-xs cursor-pointer"
+                  title="Super Admin Only: Download Full Users & Credentials PDF"
+                >
+                  <FileText className="h-3.5 w-3.5" />
+                  <span>{th("Download PDF")}</span>
+                </Button>
+              </a>
+            )}
+
             {/* Module Edit & Delete Access Button */}
             <Button
               onClick={() => setShowModulePermModal(true)}

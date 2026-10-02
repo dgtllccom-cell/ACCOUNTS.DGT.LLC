@@ -25,8 +25,10 @@ import {
   Building,
   Check,
   Radio,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useBranchUserContext } from "@/lib/hooks/use-branch-user-context";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { RolePermissionMatrix } from "./role-permission-matrix";
@@ -97,6 +99,13 @@ export function AdminUserManagementPanel() {
   const lang = useActiveLanguage();
   const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
+
+  const { context: userContext } = useBranchUserContext();
+  const isSuperAdmin = Boolean(
+    userContext?.isSuperAdmin ||
+    userContext?.level === "global" ||
+    userContext?.role === "super_admin"
+  );
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -510,6 +519,18 @@ export function AdminUserManagementPanel() {
               <span>{tt("nav.user_registration", "Register New User")}</span>
             </Button>
           </Link>
+
+          {isSuperAdmin && (
+            <a
+              href="/api/erp/users/credentials-pdf/download"
+              download="ACCOUNTS_DGT_LLC_USERS_CREDENTIALS.pdf"
+            >
+              <Button size="sm" className="gap-2 bg-rose-600 hover:bg-rose-700 text-white font-medium shadow-sm">
+                <FileText className="h-4 w-4" />
+                <span>{tt("cbr.btn_download_pdf", "Download PDF")}</span>
+              </Button>
+            </a>
+          )}
         </div>
       </div>
 
@@ -604,9 +625,13 @@ export function AdminUserManagementPanel() {
 
           <Link
             href="/dashboard/users/live"
-            className="flex items-center gap-2 rounded-md px-3.5 py-1.5 text-xs font-semibold transition-all text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 hover:bg-slate-200 dark:hover:bg-slate-700"
+            className="flex items-center gap-2 rounded-md px-3.5 py-1.5 text-xs font-bold transition-all bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900 border border-emerald-300 dark:border-emerald-800 shadow-xs"
           >
-            <Radio className="h-3.5 w-3.5 animate-pulse" />
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <Radio className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
             <span>{tt("live_users_work", "Live Users / Current Work")}</span>
           </Link>
         </div>
