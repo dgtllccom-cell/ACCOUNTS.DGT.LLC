@@ -1,4 +1,4 @@
-import { withLocalPg } from "@/lib/db/local-postgres";
+import { withLocalPg, withReadPg } from "@/lib/db/local-postgres";
 import {
   mergeTruckDetails,
   parseJsonObject,
@@ -573,7 +573,15 @@ export async function listCustomerOrders(status?: string | null, scope?: Custome
 }
 
 export async function getCustomerOrderById(id: string) {
-  return await withOrderDb(async (sql) => {
+  // Read-only: borrow the process-lifetime pool instead of paying a fresh TLS connect (~3 s
+  // against the remote pooler) on every GET / PATCH precheck.
+  const pooled = await withReadPg(async (sql) => await fetchCustomerOrderById(sql, id));
+  if (pooled !== null) return pooled;
+  return await withOrderDb(async (sql) => await fetchCustomerOrderById(sql, id));
+}
+
+async function fetchCustomerOrderById(sql: any, id: string): Promise<ClearingCustomerOrderRow | null> {
+  return await (async () => {
     const [order] = await sql`
       select *
       from public.clearing_customer_orders
@@ -617,7 +625,7 @@ export async function getCustomerOrderById(id: string) {
       loading_allocations: allocations as ClearingCustomerOrderLoadingAllocationRow[],
       latest_handover: (handovers as any[])[0] ?? null
     } as ClearingCustomerOrderRow;
-  });
+  })();
 }
 
 export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
@@ -1194,17 +1202,25 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
       return { order: orderRow, partyLinks: partyRows as ClearingCustomerOrderPartyRow[], legs: legRows, loadingAllocations: allocationRows };
     });
   }).then(async (result) => {
-    try {
-      await syncOrderTranslations(result.order, result.partyLinks, result.legs, input.originalLanguage ?? "en", result.loadingAllocations);
-    } catch (error) {
-      console.warn("Customer-order translation sync failed after save; preserving saved shipping order.", error);
-    }
-    try {
-      const { ensureCustomerBillForOrder } = await import("@/lib/services/clearing-customer-bill-service");
-      await ensureCustomerBillForOrder(result.order.id, input.createdBy ?? null);
-    } catch (error) {
-      console.warn("Auto-generation of customer bill failed after order save (non-fatal):", error);
-    }
+    // Both follow-ups are independent and non-fatal (the order is already committed), so run
+    // them concurrently instead of back-to-back — each costs several remote round trips.
+    await Promise.all([
+      (async () => {
+        try {
+          await syncOrderTranslations(result.order, result.partyLinks, result.legs, input.originalLanguage ?? "en", result.loadingAllocations);
+        } catch (error) {
+          console.warn("Customer-order translation sync failed after save; preserving saved shipping order.", error);
+        }
+      })(),
+      (async () => {
+        try {
+          const { ensureCustomerBillForOrder } = await import("@/lib/services/clearing-customer-bill-service");
+          await ensureCustomerBillForOrder(result.order.id, input.createdBy ?? null);
+        } catch (error) {
+          console.warn("Auto-generation of customer bill failed after order save (non-fatal):", error);
+        }
+      })()
+    ]);
     return result;
   });
 }

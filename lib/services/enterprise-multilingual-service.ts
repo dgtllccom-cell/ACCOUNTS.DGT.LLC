@@ -4,7 +4,7 @@ import type { ErpSession } from "@/lib/auth/session";
 import { supportedLanguages, type SupportedLanguage } from "@/lib/i18n/languages";
 import { multilingualService } from "@/lib/services/multilingual-service";
 import { buildVerifiedTranslationSet, type VerifiedTranslationMap } from "@/lib/i18n/verified-record-translations";
-import { withLocalPg } from "@/lib/db/local-postgres";
+import { withLocalPg, withReadPg } from "@/lib/db/local-postgres";
 import { lookupApprovedDictionary } from "@/lib/i18n/localize-records";
 import { translateToAllLanguages } from "@/lib/i18n/machine-translation-client";
 
@@ -61,13 +61,17 @@ export async function upsertRecordTranslationRpc(
   // Direct-Postgres first — do NOT construct the Supabase admin client unless we actually
   // fall through to it (createSupabaseAdminClient throws when only a publishable key exists,
   // which would otherwise defeat the direct-pg path entirely).
-  const viaPg = await withLocalPg(async (sql) => {
+  // Single autocommit statement (no transaction), so it is safe on the process-lifetime pool:
+  // a record save upserts one row per translatable field, and a fresh TLS connect per field
+  // (~3 s each against the remote pooler) made a customer-order save take ~50 s.
+  const runUpsert = async (sql: Parameters<Parameters<typeof withLocalPg>[0]>[0]) => {
     await sql`select public.upsert_record_translation(
       ${args.recordTable}, ${args.recordId}::uuid, ${args.fieldName}, ${args.originalText}, ${args.originalLanguageCode},
       ${args.english}, ${args.urdu}, ${args.arabic}, ${args.persian}, ${args.pashto}, ${sql.json(args.languageTexts as any)},
       ${args.source}, ${args.status}, ${args.engine}, ${actorId}::uuid)`;
     return true;
-  });
+  };
+  const viaPg = (await withReadPg(runUpsert)) ?? (await withLocalPg(runUpsert));
   if (viaPg) return;
 
   const client = db ?? adminDb();

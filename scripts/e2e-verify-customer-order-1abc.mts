@@ -227,7 +227,7 @@ async function main() {
       check("[gate] complete_goods REJECTED (409, STAGE_1B_INCOMPLETE) while 1B is unconfirmed — order untouched", a.status === 409 && a.json?.success === false && a.json?.code === "STAGE_1B_INCOMPLETE" && typeof a.json?.error === "string" && db.o.status === "pending", { http: a.status, body: a.text.slice(0, 200), status: db.o.status });
       const b = await api(cookie, "POST", WF(id), { action: "confirm_truck", truckNumber: "   " });
       check("[gate] confirm_truck with a blank truck number rejected (400) with a readable message", b.status === 400 && b.json?.success === false && /Truck Number is required/i.test(b.json?.error ?? ""), { http: b.status, body: b.text.slice(0, 200) });
-      const c = await api(cookie, "POST", WF(id), { action: "confirm_truck", truckNumber: "DEVTEST-GATE-1", truckRegistrationType: "registered" });
+      const c = await api(cookie, "POST", WF(id), { action: "confirm_truck", truckNumber: "DEVTEST-GATE-1", truckRegistrationType: "registered", continueMyself: true });
       check("[gate] confirm_truck with a real truck accepted", c.status === 200 && c.json?.success === true, c.text.slice(0, 200));
       const d = await api(cookie, "POST", WF(id), { action: "complete_goods", goodsItems: [{ ...goodsItem(1), goodsName: "", quantity: "" }] });
       db = await dbOrder(id);
@@ -243,7 +243,7 @@ async function main() {
   {
     const { id } = await newOrder(cookie, "by_road", `gateB-${Date.now()}`);
     if (id) {
-      const later = await api(cookie, "POST", WF(id), { action: "confirm_truck", truckNumber: "TO BE ASSIGNED", truckRegistrationType: null });
+      const later = await api(cookie, "POST", WF(id), { action: "confirm_truck", truckNumber: "TO BE ASSIGNED", truckRegistrationType: null, continueMyself: true });
       const g = await api(cookie, "POST", WF(id), { action: "complete_goods", goodsItems: [goodsItem(1)] });
       const db = await dbOrder(id);
       check("[gate] 'Assign Later' placeholder truck is accepted at 1B but BLOCKS completion (409) until a real truck is set", later.status === 200 && g.status === 409 && g.json?.code === "STAGE_1B_INCOMPLETE" && db.o.status === "truck_confirmed", { later: later.status, complete: g.status, body: g.text.slice(0, 220), status: db.o.status });
