@@ -134,12 +134,15 @@ const num = (v: unknown): number => {
 export function readGoodsItem(g: GoodsItemInput) {
   const quantity = num(g.quantity);
   const gross = num(g.grossWeight) || num(g.totalKg);
-  const empty = num(g.emptyWeight);
+  // Net is Gross − TOTAL tare. Total tare is what is stored; per-unit tare × quantity is only a fallback.
+  const empty = num(g.emptyWeight) || num(g.emptyKgPerUnit) * quantity;
   return {
     name: String(g.goodsName ?? g.goods_name ?? "").trim(),
     hsCode: String(g.goodsChsCode ?? g.hsCode ?? g.chsCode ?? "").trim() || null,
     brand: String(g.brandQuality ?? g.brand ?? "").trim() || null,
     size: String(g.size ?? "").trim() || null,
+    variety: String(g.goodsVariationLabel ?? g.variety ?? "").trim() || null,
+    lotName: String(g.lotName ?? "").trim() || null,
     originCountry: String(g.originCountry ?? "").trim() || null,
     unit: String(g.unit ?? "").trim() || "Bags",
     quantity,

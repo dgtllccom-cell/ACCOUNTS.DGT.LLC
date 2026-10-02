@@ -800,6 +800,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
               goods_name = ${aggregatedNames},
               goods_brand = coalesce(${first.brand}, goods_brand),
               goods_size = coalesce(${first.size}, goods_size),
+              goods_variation_label = coalesce(${first.variety}, goods_variation_label),
               goods_chs_code = coalesce(${first.hsCode}, goods_chs_code),
               goods_origin_country_name = coalesce(${first.originCountry}, goods_origin_country_name),
               goods_unit = ${first.unit},

@@ -340,6 +340,10 @@ export type CustomerOrderGoodsItem = {
   rate?: string;
   finalAmount?: string;
   qualityReport?: string;
+  /** Lot name, quality/inspection reference and PER-UNIT tare (total tare stays in emptyWeight). */
+  lotName?: string;
+  qualityRef?: string;
+  emptyKgPerUnit?: string;
   warehouseSourceType: "same" | "company_warehouse" | "customer_warehouse" | "other";
   warehouseType?: "company" | "customer" | "other" | string;
   warehouseId: string;
@@ -434,6 +438,15 @@ function resolveTruckLegIndex(legs: any[], truckLegNo?: string | number | null):
   return (withTruck ?? road[0]).i;
 }
 
+/** Gross, TOTAL tare and net (= gross − total tare) of one goods row — the single source for every screen. */
+function goodsWeights(g: Partial<CustomerOrderGoodsItem>) {
+  const qty = Number(g.quantity) || 0;
+  const gross = Number(g.grossWeight || g.totalKg) || 0;
+  const tare = Number(g.emptyWeight) || (Number(g.emptyKgPerUnit) || 0) * qty;
+  return { qty, gross, tare, net: Math.max(0, gross - tare) };
+}
+const roundKg = (n: number, digits = 3) => Number(n.toFixed(digits));
+
 function loadingSourceLabel(lang: string, source: string | null | undefined): string {
   const s = String(source || "");
   if (!s) return "—";
@@ -451,13 +464,16 @@ export function defaultGoodsItem(): CustomerOrderGoodsItem {
     brandQuality: "",
     originCountry: "",
     unit: "Bags",
-    quantity: "1",
-    kgPerQty: "50",
-    totalKg: "50",
-    grossWeight: "50",
-    emptyWeight: "0",
-    netWeight: "50",
-    currency: "AED",
+    quantity: "",
+    kgPerQty: "",
+    totalKg: "",
+    grossWeight: "",
+    emptyWeight: "",
+    emptyKgPerUnit: "",
+    lotName: "",
+    qualityRef: "",
+    netWeight: "",
+    currency: "",
     rate: "",
     finalAmount: "",
     qualityReport: "",
@@ -1749,13 +1765,13 @@ export function CustomerOrderManagementView() {
         : Array.isArray(order.loading_allocations) && order.loading_allocations.length > 0
         ? order.loading_allocations.map((row: Record<string, any>, idx: number) => {
             const parsedKgMatch = row.remarks?.match(/\(([\d.]+)\s*kg\//i)?.[1];
-            const q = row.quantity != null ? String(row.quantity) : "1";
-            const k = parsedKgMatch || (idx === 0 && order.goods_quantity && order.goods_gross_weight ? String(Math.round(Number(order.goods_gross_weight) / Math.max(1, Number(order.goods_quantity)))) : "50");
+            const q = row.quantity != null ? String(row.quantity) : "";
+            const k = parsedKgMatch || (idx === 0 && order.goods_quantity && order.goods_gross_weight ? String(Math.round(Number(order.goods_gross_weight) / Math.max(1, Number(order.goods_quantity)))) : "");
             const tot = String((Number(q) || 0) * (Number(k) || 0));
             return {
               id: row.id,
               goodsId: idx === 0 ? (order.goods_id || "") : "",
-              goodsName: idx === 0 ? (order.goods_name || "") : (row.remarks?.split(" (")[0] || order.goods_name || "Goods Item"),
+              goodsName: idx === 0 ? (order.goods_name || "") : (row.remarks?.split(" (")[0] || order.goods_name || ""),
               goodsChsCode: idx === 0 ? (order.goods_chs_code || "") : "",
               goodsVariationId: idx === 0 ? (order.goods_variation_id || "") : "",
               goodsVariationLabel: idx === 0 ? (order.goods_variation_label || "") : "",
@@ -1767,9 +1783,9 @@ export function CustomerOrderManagementView() {
               kgPerQty: k,
               totalKg: tot,
               grossWeight: row.gross_weight != null ? String(row.gross_weight) : tot,
-              emptyWeight: row.empty_weight != null ? String(row.empty_weight) : "0",
+              emptyWeight: row.empty_weight != null ? String(row.empty_weight) : "",
               netWeight: row.net_weight != null ? String(row.net_weight) : tot,
-              currency: row.currency || "AED",
+              currency: row.currency || "",
               rate: row.rate != null ? String(row.rate) : "",
               finalAmount: row.final_amount != null ? String(row.final_amount) : "",
               qualityReport: row.quality_report || "",
@@ -1788,9 +1804,9 @@ export function CustomerOrderManagementView() {
               goodsVariationId: order.goods_variation_id || "",
               goodsVariationLabel: order.goods_variation_label || "",
               unit: order.goods_unit || "Bags",
-              quantity: order.goods_quantity != null ? String(order.goods_quantity) : "1",
-              kgPerQty: order.goods_quantity && order.goods_gross_weight ? String(Math.round(Number(order.goods_gross_weight) / Math.max(1, Number(order.goods_quantity)))) : "50",
-              totalKg: order.goods_gross_weight != null ? String(order.goods_gross_weight) : "50",
+              quantity: order.goods_quantity != null ? String(order.goods_quantity) : "",
+              kgPerQty: order.goods_quantity && order.goods_gross_weight ? String(Math.round(Number(order.goods_gross_weight) / Math.max(1, Number(order.goods_quantity)))) : "",
+              totalKg: order.goods_gross_weight != null ? String(order.goods_gross_weight) : "",
               warehouseSourceType: order.loading_source === "customer_warehouse" ? "customer_warehouse" : "company_warehouse",
               warehouseId: o.loading_source_warehouse_id || "",
               warehouseName: order.loading_source_name || "",
@@ -2156,8 +2172,8 @@ export function CustomerOrderManagementView() {
       // used to be written from the gross total, so a 1C Save Draft stored gross in `goods_net_weight`.
       const sumKg = (pick: (g: CustomerOrderGoodsItem) => unknown) => goodsItems.reduce((acc, g) => acc + (Number(pick(g)) || 0), 0);
       const aggGrossKg = sumKg((g) => g.grossWeight || g.totalKg);
-      const aggEmptyKg = sumKg((g) => g.emptyWeight);
-      const aggNetKg = sumKg((g) => g.netWeight || g.totalKg);
+      const aggEmptyKg = goodsItems.reduce((acc, g) => acc + goodsWeights(g).tare, 0);
+      const aggNetKg = goodsItems.reduce((acc, g) => acc + goodsWeights(g).net, 0);
       const aggregatedGoodsNames = goodsItems.map((g) => g.goodsName).filter(Boolean).join(", ") || formData.goods_name || null;
 
       // Determine effective truck values based on truck_assignment_mode
@@ -5247,7 +5263,10 @@ export function CustomerOrderManagementView() {
                   {(() => {
                     const totalItems = (formData.goods_items || []).length;
                     const totalPackages = (formData.goods_items || []).reduce((acc, it) => acc + (Number(it.quantity) || 0), 0);
-                    const totalKg = (formData.goods_items || []).reduce((acc, it) => acc + (Number(it.totalKg) || 0), 0);
+                    const namedItems = (formData.goods_items || []).filter((it) => String(it.goodsName || "").trim());
+                    const totalKg = namedItems.reduce((acc, it) => acc + goodsWeights(it).gross, 0);
+                    const totalTareKg = namedItems.reduce((acc, it) => acc + goodsWeights(it).tare, 0);
+                    const totalNetKgLive = namedItems.reduce((acc, it) => acc + goodsWeights(it).net, 0);
                     const totalMt = (totalKg / 1000).toFixed(3);
 
                     return (
@@ -5262,27 +5281,28 @@ export function CustomerOrderManagementView() {
                           <th className="py-2.5 px-3">{tt("unit", "Unit")}</th>
                           <th className="py-2.5 px-3 text-right">{tt("quantity", "Quantity")}</th>
                           <th className="py-2.5 px-3 text-right">{tt("kg_per_unit", "KG/Unit")}</th>
-                          <th className="py-2.5 px-3 text-right">{tt("total_kg", "Total KG")}</th>
-                          <th className="py-2.5 px-3 text-right">{tt("total_mt", "Total MT")}</th>
+                          <th className="py-2.5 px-3 text-right">{tt("gross_wt_kg", "Gross (kg)")}</th>
+                          <th className="py-2.5 px-3 text-right">{tt("empty_tare_kg", "Tare (kg)")}</th>
+                          <th className="py-2.5 px-3 text-right">{tt("net_wt_kg", "Net (kg)")}</th>
                           <th className="py-2.5 px-3">{tt("warehouse_source", "Warehouse Source")}</th>
                           <th className="py-2.5 px-3 text-center">{tt("quality_photo", "Quality Photo")}</th>
                           <th className="py-2.5 px-3 text-center">{tt("actions", "Actions")}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-750 text-[11px]">
-                        {(formData.goods_items || []).map((it, idx) => {
-                          const q = parseFloat(String(it.quantity || 0)) || 0;
-                          const kg = parseFloat(String(it.totalKg || 0)) || 0;
+                        {(formData.goods_items || []).filter((it) => String(it.goodsName || "").trim()).map((it, idx) => {
+                          const w = goodsWeights(it);
+                          const q = w.qty;
+                          const kg = w.gross;
                           const kgPer = parseFloat(String(it.kgPerQty || 0)) || (q > 0 ? kg / q : 0);
-                          const mt = kg > 0 ? (kg / 1000).toFixed(3) : "0.000";
 
                           return (
                             <tr key={it.id || idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                               <td className="py-2.5 px-3 font-bold text-slate-400">{idx + 1}</td>
                               <td className="py-2.5 px-3 font-bold text-slate-800 dark:text-slate-200">
-                                <div>{it.goodsName || it.goods_name || tt("general_cargo_fallback", "General Cargo")}</div>
-                                {it.goodsVariationLabel ? (
-                                  <div className="text-[9.5px] text-slate-400 font-normal">{it.goodsVariationLabel}</div>
+                                <div>{it.goodsName || it.goods_name}</div>
+                                {[it.goodsVariationLabel, it.lotName ? `${tt("goods_lot_name", "Lot Name")}: ${it.lotName}` : ""].filter(Boolean).length ? (
+                                  <div className="text-[9.5px] text-slate-400 font-normal">{[it.goodsVariationLabel, it.lotName ? `${tt("goods_lot_name", "Lot Name")}: ${it.lotName}` : ""].filter(Boolean).join(" • ")}</div>
                                 ) : null}
                               </td>
                               <td className="py-2.5 px-3 font-mono text-slate-600 dark:text-slate-400">
@@ -5295,13 +5315,16 @@ export function CustomerOrderManagementView() {
                                 {q.toLocaleString()}
                               </td>
                               <td className="py-2.5 px-3 text-right font-mono text-slate-600 dark:text-slate-400">
-                                {kgPer.toFixed(1)} kg
+                                {kgPer ? `${roundKg(kgPer, 2)} kg` : "—"}
                               </td>
                               <td className="py-2.5 px-3 text-right font-mono font-bold text-blue-700 dark:text-blue-400">
                                 {kg.toLocaleString()} kg
                               </td>
+                              <td className="py-2.5 px-3 text-right font-mono text-slate-500">
+                                {w.tare.toLocaleString()} kg
+                              </td>
                               <td className="py-2.5 px-3 text-right font-mono font-bold text-emerald-700 dark:text-emerald-400">
-                                {mt} MT
+                                {w.net.toLocaleString()} kg
                               </td>
                               <td className="py-2.5 px-3">
                                 {it.warehouseType === "company" ? (
@@ -5393,8 +5416,11 @@ export function CustomerOrderManagementView() {
                           <td className="py-2.5 px-3 text-right font-mono font-bold text-indigo-700 dark:text-indigo-400">
                             {totalKg.toLocaleString()} kg
                           </td>
-                          <td className="py-2.5 px-3 text-right font-mono font-bold text-purple-700 dark:text-purple-400">
-                            {totalMt} MT
+                          <td className="py-2.5 px-3 text-right font-mono font-bold text-slate-600 dark:text-slate-300">
+                            {totalTareKg.toLocaleString()} kg
+                          </td>
+                          <td className="py-2.5 px-3 text-right font-mono font-bold text-emerald-700 dark:text-emerald-400">
+                            {totalNetKgLive.toLocaleString()} kg
                           </td>
                           <td colSpan={3}></td>
                         </tr>
@@ -5458,6 +5484,21 @@ export function CustomerOrderManagementView() {
                           <span className="font-bold text-indigo-700 dark:text-indigo-400 font-mono">
                             {totalKg.toLocaleString()} kg
                           </span>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                            <span className="font-bold text-slate-400 font-mono text-[11px]">&bull;</span>
+                            <span className="font-medium">{tt("total_empty_kg", "Total Empty KG")}:</span>
+                          </span>
+                          <span className="font-bold text-slate-700 dark:text-slate-300 font-mono">{totalTareKg.toLocaleString()} kg</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                            <span className="font-bold text-slate-400 font-mono text-[11px]">&bull;</span>
+                            <span className="font-medium">{tt("total_net_wt_kg_label", "Total Net Wt (KG)")}:</span>
+                          </span>
+                          <span className="font-bold text-emerald-700 dark:text-emerald-400 font-mono">{totalNetKgLive.toLocaleString()} kg</span>
                         </div>
 
                         {/* 4. Total Gross Wt (MT) */}
@@ -5754,29 +5795,29 @@ function Step1BookingCustomer({
   const handleDraftGoodsChange = (field: keyof CustomerOrderGoodsItem, value: any) => {
     setDraftGoodsItem((curr) => {
       const updated = { ...curr, [field]: value };
+      const q = Number(updated.quantity) || 0;
       if (field === "quantity" || field === "kgPerQty") {
-        const q = Number(field === "quantity" ? value : updated.quantity) || 0;
-        const k = Number(field === "kgPerQty" ? value : updated.kgPerQty) || 0;
-        const tot = String(q * k);
-        updated.totalKg = tot;
-        updated.grossWeight = tot;
-        const empty = Number(updated.emptyWeight) || 0;
-        updated.netWeight = String(Math.max(0, (q * k) - empty));
-        if (updated.rate) {
-          updated.finalAmount = String(Number((q * Number(updated.rate)).toFixed(2)));
+        const k = Number(updated.kgPerQty) || 0;
+        if (q > 0 && k > 0) {
+          updated.totalKg = String(roundKg(q * k));
+          updated.grossWeight = updated.totalKg;
         }
+        // TOTAL tare follows the per-unit tare when one is given
+        const perUnit = Number(updated.emptyKgPerUnit) || 0;
+        if (perUnit > 0) updated.emptyWeight = String(roundKg(q * perUnit));
       }
-      if (field === "grossWeight" || field === "emptyWeight") {
-        const gross = Number(field === "grossWeight" ? value : updated.grossWeight) || 0;
-        const empty = Number(field === "emptyWeight" ? value : updated.emptyWeight) || 0;
-        updated.totalKg = String(gross);
-        updated.netWeight = String(Math.max(0, gross - empty));
+      if (field === "emptyKgPerUnit") {
+        const perUnit = Number(value) || 0;
+        updated.emptyWeight = perUnit > 0 && q > 0 ? String(roundKg(q * perUnit)) : "";
       }
-      if (field === "rate") {
-        const r = Number(value) || 0;
-        const q = Number(updated.quantity) || 0;
-        updated.finalAmount = r ? String(Number((q * r).toFixed(2))) : "";
+      if (field === "emptyWeight") {
+        const total = Number(value) || 0;
+        updated.emptyKgPerUnit = total > 0 && q > 0 ? String(roundKg(total / q, 4)) : "";
       }
+      if (field === "grossWeight") updated.totalKg = String(Number(value) || 0);
+      const gross = Number(updated.grossWeight || updated.totalKg) || 0;
+      const tare = Number(updated.emptyWeight) || 0;
+      updated.netWeight = gross > 0 ? String(roundKg(Math.max(0, gross - tare))) : "";
       return updated;
     });
   };
@@ -5801,26 +5842,29 @@ function Step1BookingCustomer({
       alert(tt("enter_goods_name", "Please select or enter Goods Name"));
       return;
     }
-    const qty = Number(draftGoodsItem.quantity) || 1;
-    const kg = Number(draftGoodsItem.kgPerQty) || 50;
-    const gross = Number(draftGoodsItem.grossWeight) || (qty * kg);
-    const empty = Number(draftGoodsItem.emptyWeight) || 0;
-    const net = Math.max(0, gross - empty);
-    const rateVal = draftGoodsItem.rate || "";
-    const calcFinalAmount = draftGoodsItem.finalAmount || (rateVal ? String(Number((qty * Number(rateVal)).toFixed(2))) : "");
+    const w = goodsWeights(draftGoodsItem);
+    if (!(w.qty > 0)) {
+      alert(tt("err_goods_qty", "Enter a quantity greater than 0."));
+      return;
+    }
+    if (!(w.gross > 0)) {
+      alert(tt("err_goods_gross", "Enter the gross weight (KG)."));
+      return;
+    }
+    if (w.tare > w.gross) {
+      alert(tt("err_goods_tare", "Total empty / tare weight cannot exceed the gross weight."));
+      return;
+    }
 
+    // Exactly what the user entered — no "1 bag / 50 kg" fallback. (Legacy price fields, if this row
+    // had them, ride along untouched via the spread; shipping cargo no longer edits or shows them.)
     const itemToSave: CustomerOrderGoodsItem = {
       ...draftGoodsItem,
-      goodsName: draftGoodsItem.goodsName || "Goods Item",
-      quantity: String(qty),
-      kgPerQty: String(kg),
-      totalKg: String(gross),
-      grossWeight: String(gross),
-      emptyWeight: String(empty),
-      netWeight: String(net),
-      currency: draftGoodsItem.currency || "AED",
-      rate: rateVal,
-      finalAmount: calcFinalAmount,
+      quantity: String(w.qty),
+      totalKg: String(w.gross),
+      grossWeight: String(w.gross),
+      emptyWeight: String(w.tare),
+      netWeight: String(roundKg(w.net)),
       qualityReport: draftGoodsItem.qualityReport || ""
     };
 
@@ -5839,7 +5883,7 @@ function Step1BookingCustomer({
       const totalQty = updatedItems.reduce((sum, g) => sum + (Number(g.quantity) || 0), 0);
       const totalGrossKg = updatedItems.reduce((sum, g) => sum + (Number(g.grossWeight || g.totalKg) || 0), 0);
       const totalEmptyKg = updatedItems.reduce((sum, g) => sum + (Number(g.emptyWeight) || 0), 0);
-      const totalNetKg = updatedItems.reduce((sum, g) => sum + (Number(g.netWeight || g.totalKg) || 0), 0);
+      const totalNetKg = updatedItems.reduce((sum, g) => sum + goodsWeights(g).net, 0);
       const first = updatedItems[0];
       return {
         ...current,
@@ -5884,7 +5928,7 @@ function Step1BookingCustomer({
       const totalQty = items.reduce((sum, g) => sum + (Number(g.quantity) || 0), 0);
       const totalGrossKg = items.reduce((sum, g) => sum + (Number(g.grossWeight || g.totalKg) || 0), 0);
       const totalEmptyKg = items.reduce((sum, g) => sum + (Number(g.emptyWeight) || 0), 0);
-      const totalNetKg = items.reduce((sum, g) => sum + (Number(g.netWeight || g.totalKg) || 0), 0);
+      const totalNetKg = items.reduce((sum, g) => sum + goodsWeights(g).net, 0);
 
       return {
         ...current,
@@ -5918,11 +5962,7 @@ function Step1BookingCustomer({
     [formData.goods_items]
   );
   const totalGoodsNetKg = useMemo(
-    () => (formData.goods_items || []).reduce((sum, g) => sum + (Number(g.netWeight || g.totalKg) || 0), 0),
-    [formData.goods_items]
-  );
-  const totalGoodsAmount = useMemo(
-    () => (formData.goods_items || []).reduce((sum, g) => sum + (Number(g.finalAmount) || 0), 0),
+    () => (formData.goods_items || []).reduce((sum, g) => sum + goodsWeights(g).net, 0),
     [formData.goods_items]
   );
   const totalGoodsGrossMt = useMemo(() => (totalGoodsGrossKg / 1000).toFixed(2), [totalGoodsGrossKg]);
@@ -7389,46 +7429,40 @@ function Step1BookingCustomer({
                 </div>
               </div>
 
-              {/* Row 2: Size / Dimensions, Brand / Quality, Origin Country */}
+              {/* Row 2: Size, Brand / Quality, Variety */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
-                    {tt("goods_size_dim", "Size / Dimension")}
-                  </label>
-                  <input
-                    type="text"
-                    placeholder={tt("ph_goods_size", "e.g. 40mm / 12x12 / Standard")}
-                    value={draftGoodsItem.size || ""}
-                    onChange={(e) => handleDraftGoodsChange("size", e.target.value)}
-                    className={inputClass}
-                  />
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("goods_size_dim", "Size / Dimension")}</label>
+                  <input type="text" placeholder={tt("ph_goods_size", "e.g. 40mm / 12x12 / Standard")} value={draftGoodsItem.size || ""} onChange={(e) => handleDraftGoodsChange("size", e.target.value)} className={inputClass} />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
-                    {tt("goods_brand_quality", "Brand / Quality")}
-                  </label>
-                  <input
-                    type="text"
-                    placeholder={tt("ph_goods_brand", "e.g. Grade A / Premium / Export Quality")}
-                    value={draftGoodsItem.brandQuality || ""}
-                    onChange={(e) => handleDraftGoodsChange("brandQuality", e.target.value)}
-                    className={inputClass}
-                  />
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("goods_brand_quality", "Brand / Quality")}</label>
+                  <input type="text" placeholder={tt("ph_goods_brand", "e.g. Grade A / Premium / Export Quality")} value={draftGoodsItem.brandQuality || ""} onChange={(e) => handleDraftGoodsChange("brandQuality", e.target.value)} className={inputClass} />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
-                    {tt("origin_country", "Origin Country")}
-                  </label>
-                  <select
-                    value={draftGoodsItem.originCountry || ""}
-                    onChange={(e) => handleDraftGoodsChange("originCountry", e.target.value)}
-                    className={selectClass}
-                  >
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("goods_variety", "Variety")}</label>
+                  <input type="text" placeholder={tt("ph_goods_variety", "e.g. Sella / Golden / Kabuli")} value={draftGoodsItem.goodsVariationLabel || ""} onChange={(e) => handleDraftGoodsChange("goodsVariationLabel", e.target.value)} className={inputClass} />
+                </div>
+              </div>
+
+              {/* Row 2b: Lot Name, Origin, Quality / Inspection reference */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("goods_lot_name", "Lot Name")}</label>
+                  <input type="text" placeholder={tt("ph_goods_lot", "e.g. LOT-2026-014")} value={draftGoodsItem.lotName || ""} onChange={(e) => handleDraftGoodsChange("lotName", e.target.value)} className={inputClass} />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("origin_country", "Origin Country")}</label>
+                  <select value={draftGoodsItem.originCountry || ""} onChange={(e) => handleDraftGoodsChange("originCountry", e.target.value)} className={selectClass}>
                     <option value="">— {tt("select_origin_country", "Select Origin")} —</option>
                     {countries.map((c) => (
                       <option key={c.id} value={c.name}>{c.name}</option>
                     ))}
                   </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("goods_quality_ref", "Quality / Inspection Ref.")}</label>
+                  <input type="text" placeholder={tt("ph_goods_quality_ref", "e.g. QC-2291 / Certificate no.")} value={draftGoodsItem.qualityRef || ""} onChange={(e) => handleDraftGoodsChange("qualityRef", e.target.value)} className={inputClass} />
                 </div>
               </div>
 
@@ -7436,11 +7470,7 @@ function Step1BookingCustomer({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 <div>
                   <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("qty_unit", "Qty Unit")}</label>
-                  <select
-                    value={draftGoodsItem.unit}
-                    onChange={(e) => handleDraftGoodsChange("unit", e.target.value)}
-                    className={selectClass}
-                  >
+                  <select value={draftGoodsItem.unit} onChange={(e) => handleDraftGoodsChange("unit", e.target.value)} className={selectClass}>
                     <option value="Bags">{tt("unit_bags", "Bags")}</option>
                     <option value="Cartons">{tt("unit_cartons", "Cartons")}</option>
                     <option value="Pallets">{tt("unit_pallets", "Pallets")}</option>
@@ -7452,128 +7482,43 @@ function Step1BookingCustomer({
                     <option value="Containers">{tt("unit_containers", "Containers")}</option>
                   </select>
                 </div>
-
                 <div>
                   <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("quantity", "Quantity")} *</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={draftGoodsItem.quantity}
-                    onChange={(e) => handleDraftGoodsChange("quantity", e.target.value)}
-                    className={inputClass}
-                    placeholder="1"
-                  />
+                  <input type="number" min="0" value={draftGoodsItem.quantity} onChange={(e) => handleDraftGoodsChange("quantity", e.target.value)} className={inputClass} placeholder="0" />
                 </div>
-
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("kg_per_unit", "KG / Unit")} *</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={draftGoodsItem.kgPerQty}
-                    onChange={(e) => handleDraftGoodsChange("kgPerQty", e.target.value)}
-                    className={inputClass}
-                    placeholder="50"
-                  />
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("kg_per_unit", "KG / Unit")}</label>
+                  <input type="number" min="0" value={draftGoodsItem.kgPerQty} onChange={(e) => handleDraftGoodsChange("kgPerQty", e.target.value)} className={inputClass} placeholder="0" />
                 </div>
               </div>
 
-              {/* Row 4: Weight Metrics */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              {/* Row 4: Weights — Gross, Empty KG PER UNIT, TOTAL Empty KG, Net (auto = Gross − Total Empty) */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
-                    {tt("gross_wt_kg", "Gross Wt (KG)")} *
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={draftGoodsItem.grossWeight || draftGoodsItem.totalKg}
-                    onChange={(e) => handleDraftGoodsChange("grossWeight", e.target.value)}
-                    className={inputClass}
-                    placeholder="50"
-                  />
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("gross_wt_kg", "Gross Wt (KG)")} *</label>
+                  <input type="number" min="0" value={draftGoodsItem.grossWeight || draftGoodsItem.totalKg} onChange={(e) => handleDraftGoodsChange("grossWeight", e.target.value)} className={inputClass} placeholder="0" />
                 </div>
-
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
-                    {tt("empty_tare_kg", "Empty / Tare (KG)")}
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={draftGoodsItem.emptyWeight || "0"}
-                    onChange={(e) => handleDraftGoodsChange("emptyWeight", e.target.value)}
-                    className={inputClass}
-                    placeholder="0"
-                  />
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("empty_kg_per_unit", "Empty KG per unit")}</label>
+                  <input type="number" min="0" step="0.001" value={draftGoodsItem.emptyKgPerUnit || ""} onChange={(e) => handleDraftGoodsChange("emptyKgPerUnit", e.target.value)} className={inputClass} placeholder="0" />
                 </div>
-
                 <div>
-                  <label className="block text-[10px] font-bold uppercase text-emerald-700 dark:text-emerald-400 mb-0.5">
-                    {tt("net_wt_auto", "Net Wt (Auto)")} *
-                  </label>
+                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">{tt("total_empty_kg", "Total Empty KG")}</label>
+                  <input type="number" min="0" step="0.001" value={draftGoodsItem.emptyWeight || ""} onChange={(e) => handleDraftGoodsChange("emptyWeight", e.target.value)} className={inputClass} placeholder="0" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-emerald-700 dark:text-emerald-400 mb-0.5">{tt("net_wt_auto", "Net Wt (Auto)")}</label>
                   <div className="flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50/90 px-2.5 py-2 text-xs font-mono font-black text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 truncate" title={tt("gross_minus_empty", "Gross - Empty Weight")}>
                     <Scale className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                    <span>{(Number(draftGoodsItem.netWeight) || 0).toLocaleString()} kg</span>
+                    <span>{goodsWeights(draftGoodsItem).net.toLocaleString()} kg</span>
                   </div>
-                </div>
-              </div>
-
-              {/* Row 5: Currency, Rate & Final Amount */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
-                    {tt("currency", "Currency")} *
-                  </label>
-                  <select
-                    value={draftGoodsItem.currency || "AED"}
-                    onChange={(e) => handleDraftGoodsChange("currency", e.target.value)}
-                    className={selectClass}
-                  >
-                    <option value="AED">{tt("cur_aed", "AED — UAE Dirham")}</option>
-                    <option value="USD">{tt("cur_usd", "USD — US Dollar")}</option>
-                    <option value="PKR">{tt("cur_pkr", "PKR — Pakistani Rupee")}</option>
-                    <option value="AFN">{tt("cur_afn", "AFN — Afghan Afghani")}</option>
-                    <option value="EUR">{tt("cur_eur", "EUR — Euro")}</option>
-                    <option value="CNY">{tt("cur_cny", "CNY — Chinese Yuan")}</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
-                    {tt("rate_price_unit", "Rate / Price per Unit")}
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={draftGoodsItem.rate || ""}
-                    onChange={(e) => handleDraftGoodsChange("rate", e.target.value)}
-                    className={inputClass}
-                    placeholder="e.g. 150.00"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
-                    {tt("final_amount", "Final Amount (Calculated)")}
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={draftGoodsItem.finalAmount || ""}
-                    onChange={(e) => handleDraftGoodsChange("finalAmount", e.target.value)}
-                    className={inputClass}
-                    placeholder="e.g. 1500.00"
-                  />
                 </div>
               </div>
 
               {/* Quality Report / Cargo Condition */}
               <div>
                 <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
-                  {tt("quality_inspection_report", "Quality / Inspection Report & Cargo Notes")}
+                  {tt("goods_notes", "Notes")}
                 </label>
                 <textarea
                   rows={2}
@@ -7648,14 +7593,13 @@ function Step1BookingCustomer({
                       <th className="py-2 px-2.5 text-right">{tt("empty_tare_kg", "Tare (kg)")}</th>
                       <th className="py-2 px-2.5 text-right">{tt("net_wt_kg", "Net (kg)")}</th>
                       <th className="py-2 px-2.5">{tt("warehouse", "Warehouse")}</th>
-                      <th className="py-2 px-2.5 text-right">{tt("rate_amount", "Rate / Amount")}</th>
                       <th className="py-2 px-2.5 text-center w-16">{tt("actions", "Actions")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900">
                     {(formData.goods_items || []).filter(g => g.goodsName || g.quantity).length === 0 ? (
                       <tr>
-                        <td colSpan={11} className="py-4 text-center text-xs text-slate-400">
+                        <td colSpan={10} className="py-4 text-center text-xs text-slate-400">
                           {tt("no_goods_added_yet", "No goods items added yet. Complete the form above and click '+ Add to Manifest'.")}
                         </td>
                       </tr>
@@ -7665,34 +7609,27 @@ function Step1BookingCustomer({
                           <td className="py-2 px-2.5 text-center font-bold text-slate-400">{idx + 1}</td>
                           <td className="py-2 px-2.5 font-bold text-slate-900 dark:text-white">
                             <div>{g.goodsName || tt("goods_item", "Goods Item")}</div>
-                            {g.goodsChsCode ? <div className="font-mono text-[10px] text-slate-400">HS: {g.goodsChsCode}</div> : null}
+                            {g.goodsChsCode ? <div className="font-mono text-[10px] text-slate-400" dir="ltr">HS: {g.goodsChsCode}</div> : null}
+                            {g.lotName ? <div className="text-[10px] text-slate-400">{tt("goods_lot_name", "Lot Name")}: {g.lotName}</div> : null}
                           </td>
                           <td className="py-2 px-2.5 text-slate-600 dark:text-slate-300">
-                            {[g.size, g.brandQuality].filter(Boolean).join(" • ") || "—"}
+                            {[g.size, g.brandQuality, g.goodsVariationLabel].filter(Boolean).join(" • ") || "—"}
                           </td>
                           <td className="py-2 px-2.5 text-slate-600 dark:text-slate-300">{g.originCountry || "—"}</td>
                           <td className="py-2 px-2.5 text-right font-mono font-bold text-slate-900 dark:text-white">
                             {Number(g.quantity || 0).toLocaleString()} <span className="text-[10px] font-normal text-slate-500">{g.unit || "Bags"}</span>
                           </td>
                           <td className="py-2 px-2.5 text-right font-mono text-slate-700 dark:text-slate-300">
-                            {Number(g.grossWeight || g.totalKg || 0).toLocaleString()}
+                            {goodsWeights(g).gross.toLocaleString()}
                           </td>
                           <td className="py-2 px-2.5 text-right font-mono text-slate-500">
-                            {Number(g.emptyWeight || 0).toLocaleString()}
+                            {goodsWeights(g).tare.toLocaleString()}
                           </td>
                           <td className="py-2 px-2.5 text-right font-mono font-bold text-emerald-700 dark:text-emerald-400">
-                            {Number(g.netWeight || g.totalKg || 0).toLocaleString()}
+                            {goodsWeights(g).net.toLocaleString()}
                           </td>
                           <td className="py-2 px-2.5 text-slate-600 dark:text-slate-300 truncate max-w-[120px]">
                             {g.warehouseName || (g.warehouseSourceType ? tt("wh_src_" + g.warehouseSourceType, g.warehouseSourceType.replace("_", " ")) : "—")}
-                          </td>
-                          <td className="py-2 px-2.5 text-right font-mono text-slate-800 dark:text-slate-200">
-                            {g.rate ? (
-                              <div>
-                                <span className="text-[10px] text-slate-400">{g.currency || "AED"} </span>
-                                <span className="font-bold">{Number(g.finalAmount || ((Number(g.quantity) || 0) * (Number(g.rate) || 0))).toLocaleString()}</span>
-                              </div>
-                            ) : "—"}
                           </td>
                           <td className="py-2 px-2.5 text-center">
                             <div className="flex items-center justify-center gap-1">
@@ -7740,9 +7677,6 @@ function Step1BookingCustomer({
                       </td>
                       <td className="py-2.5 px-2.5 text-slate-400 text-[10px]">
                         {(formData.goods_items || []).filter(g => g.goodsName || g.quantity).length} {tt("items", "items")}
-                      </td>
-                      <td className="py-2.5 px-2.5 text-right font-mono text-slate-900 dark:text-white font-black">
-                        {totalGoodsAmount > 0 ? `${draftGoodsItem.currency || "AED"} ${totalGoodsAmount.toLocaleString()}` : "—"}
                       </td>
                       <td></td>
                     </tr>
@@ -9042,14 +8976,16 @@ function Step4ReviewConfirm({
 
   // Normalize multi-goods items
   const goodsList = useMemo(() => {
-    if (Array.isArray(formData.goods_items) && formData.goods_items.length > 0) {
-      return formData.goods_items;
+    // Only rows that carry a goods name are real cargo — the empty default row is never shown.
+    const named = Array.isArray(formData.goods_items) ? formData.goods_items.filter((g) => String(g.goodsName || "").trim()) : [];
+    if (named.length > 0) {
+      return named;
     }
     if (formData.goods_name || formData.goods_quantity) {
       return [
         {
           goodsId: formData.goods_id || "",
-          goodsName: formData.goods_name || "General Cargo",
+          goodsName: formData.goods_name || "",
           goodsChsCode: formData.goods_chs_code || "",
           goodsVariationId: formData.goods_variation_id || "",
           goodsVariationLabel: formData.goods_variation_label || "",
@@ -9071,14 +9007,17 @@ function Step4ReviewConfirm({
   const cargoTotals = useMemo(() => {
     let qty = 0;
     let kg = 0;
+    let tare = 0;
+    let net = 0;
     goodsList.forEach((g) => {
-      const q = parseFloat(String(g.quantity || 0)) || 0;
-      const k = parseFloat(String(g.totalKg || 0)) || 0;
-      qty += q;
-      kg += k;
+      const w = goodsWeights(g as Partial<CustomerOrderGoodsItem>);
+      qty += w.qty;
+      kg += w.gross;
+      tare += w.tare;
+      net += w.net;
     });
     const mt = kg > 0 ? (kg / 1000).toFixed(3) : "0.000";
-    return { count: goodsList.length, qty, kg, mt };
+    return { count: goodsList.length, qty, kg, tare, net, mt };
   }, [goodsList]);
 
   const custName =
@@ -9506,35 +9445,36 @@ function Step4ReviewConfirm({
                   <th className="py-2.5 px-3">{tt("packaging_unit_th", "Packaging / Unit")}</th>
                   <th className="py-2.5 px-3 text-right">{tt("quantity", "Quantity")}</th>
                   <th className="py-2.5 px-3 text-right">{tt("kg_per_unit_th", "KG / Unit")}</th>
-                  <th className="py-2.5 px-3 text-right">{tt("total_kg", "Total KG")}</th>
-                  <th className="py-2.5 px-3 text-right">{tt("total_mt", "Total MT")}</th>
+                  <th className="py-2.5 px-3 text-right">{tt("gross_wt_kg", "Gross (kg)")}</th>
+                  <th className="py-2.5 px-3 text-right">{tt("empty_tare_kg", "Tare (kg)")}</th>
+                  <th className="py-2.5 px-3 text-right">{tt("net_wt_kg", "Net (kg)")}</th>
                   <th className="py-2.5 px-3">{tt("warehouse_source", "Warehouse Source")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {goodsList.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="py-4 text-center text-slate-400">
+                    <td colSpan={10} className="py-4 text-center text-slate-400">
                       {tt("no_cargo_items", "No cargo items added.")}
                     </td>
                   </tr>
                 ) : (
                   goodsList.map((item, idx) => {
-                    const q = parseFloat(String(item.quantity || 0)) || 0;
-                    const kg = parseFloat(String(item.totalKg || 0)) || 0;
+                    const w = goodsWeights(item as Partial<CustomerOrderGoodsItem>);
+                    const q = w.qty;
+                    const kg = w.gross;
                     const kgPer =
                       parseFloat(String(item.kgPerQty || 0)) || (q > 0 ? kg / q : 0);
-                    const mt = kg > 0 ? (kg / 1000).toFixed(3) : "0.000";
 
                     return (
                       <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
                         <td className="py-2.5 px-3 font-bold text-slate-400">{idx + 1}</td>
                         <td className="py-2.5 px-3">
                           <span className="font-bold text-slate-900 dark:text-white block">
-                            {item.goodsName || tt("general_cargo_fallback", "General Cargo")}
+                            {item.goodsName}
                           </span>
-                          {item.goodsVariationLabel ? (
-                            <span className="text-[10px] text-slate-400 block">{item.goodsVariationLabel}</span>
+                          {[(item as any).goodsVariationLabel, (item as any).lotName ? `${tt("goods_lot_name", "Lot Name")}: ${(item as any).lotName}` : ""].filter(Boolean).length ? (
+                            <span className="text-[10px] text-slate-400 block">{[(item as any).goodsVariationLabel, (item as any).lotName ? `${tt("goods_lot_name", "Lot Name")}: ${(item as any).lotName}` : ""].filter(Boolean).join(" • ")}</span>
                           ) : null}
                         </td>
                         <td className="py-2.5 px-3 font-mono text-slate-600 dark:text-slate-400">
@@ -9547,13 +9487,16 @@ function Step4ReviewConfirm({
                           {q.toLocaleString()}
                         </td>
                         <td className="py-2.5 px-3 text-right text-slate-600 dark:text-slate-400">
-                          {kgPer.toFixed(1)} kg
+                          {kgPer ? `${roundKg(kgPer, 2)} kg` : "—"}
                         </td>
                         <td className="py-2.5 px-3 text-right font-bold text-blue-700 dark:text-blue-400">
                           {kg.toLocaleString()} kg
                         </td>
-                        <td className="py-2.5 px-3 text-right font-bold text-slate-900 dark:text-white">
-                          {mt} MT
+                        <td className="py-2.5 px-3 text-right text-slate-600 dark:text-slate-400">
+                          {w.tare.toLocaleString()} kg
+                        </td>
+                        <td className="py-2.5 px-3 text-right font-bold text-emerald-700 dark:text-emerald-400">
+                          {w.net.toLocaleString()} kg
                         </td>
                         <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400">
                           {item.warehouseName || formData.loading_source_name || "-"}
@@ -9578,8 +9521,11 @@ function Step4ReviewConfirm({
                   <td className="py-3 px-3 text-right text-sm text-blue-700 dark:text-blue-400">
                     {cargoTotals.kg.toLocaleString()} kg
                   </td>
+                  <td className="py-3 px-3 text-right text-sm text-slate-600 dark:text-slate-300">
+                    {cargoTotals.tare.toLocaleString()} kg
+                  </td>
                   <td className="py-3 px-3 text-right text-sm text-emerald-700 dark:text-emerald-400">
-                    {cargoTotals.mt} MT
+                    {cargoTotals.net.toLocaleString()} kg
                   </td>
                   <td className="py-3 px-3 text-xs text-slate-400">-</td>
                 </tr>
