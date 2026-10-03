@@ -15,6 +15,7 @@
     "app/api/erp/currency/daily-rate/route.ts": "FX rates and monitoring — numeric only",
     "app/api/erp/currency/monitoring/route.ts": "aggregate figures / KPI counts only",
     "app/api/erp/document-intelligence/[id]/accounting-preview/route.ts": "computed preview payload — no stored master text",
+    "app/api/erp/document-intelligence/[id]/page/route.ts": "PDF page rendering and image delivery binary endpoint — no translatable text",
     "app/api/erp/document-intelligence/[id]/route.ts": "AI extraction drafts — raw extracted text shown verbatim / via View Original; never auto-localised",
     "app/api/erp/document-intelligence/[id]/roznamcha-preview/route.ts": "computed preview payload — no stored master text",
     "app/api/erp/document-intelligence/document-types/route.ts": "AI extraction drafts — raw extracted text shown verbatim / via View Original; never auto-localised",

@@ -550,7 +550,7 @@ export function isDuplicatePosting(record: { posted_to_journal?: boolean; status
 
 // ─── Loading Eligibility ────────────────────────────────────────────────────
 
-export type PaymentConditionType = "advance" | "endorsement" | "credit" | "cash" | "invoice" | "unknown";
+export type PaymentConditionType = "advance" | "endorsement" | "credit" | "cash" | "invoice" | "final" | "unknown";
 
 export type LoadingEligibility = {
   /** Whether loading/delivery is allowed */
@@ -593,6 +593,8 @@ export function resolvePaymentCondition(order: PurchaseOrderData): PaymentCondit
   if (raw.includes("advance")) return "advance";
   if (raw.includes("credit")) return "credit";
   if (raw.includes("cash")) return "cash";
+  // "Final Payment" purchase: loading is NOT held back; the user schedules the final payment later.
+  if (raw.includes("final")) return "final";
   if (raw.includes("invoice")) return "invoice";
 
   // Fallback: if advancePercent > 0, treat as advance
@@ -608,9 +610,12 @@ export function resolvePaymentCondition(order: PurchaseOrderData): PaymentCondit
  *
  * Business Rules:
  * - Advance / Endorsement → Required advance percentage must be fully cleared
- * - Credit → Eligible immediately (credit payment handled post-delivery)
+ * - Credit → Goes straight to Loading once the booking is approved. Outstanding balance stays in
+ *   Accounts Payable / supplier balance / aging and NEVER blocks Loading.
+ * - Final Payment → Also goes straight to Loading; when the final payment is made is decided later.
  * - Cash → Requires at least one cash payment posted
- * - Invoice → Eligible immediately (full invoice payment due after loading)
+ * - Invoice → The required invoice payment must be completed and confirmed BEFORE Loading
+ *   (confirmed step, or payments posted >= the invoice amount; a partial payment does not unlock it).
  * - Unknown / no condition → Eligible if any payment posted
  */
 export function resolveLoadingEligibility(
@@ -649,10 +654,21 @@ export function resolveLoadingEligibility(
     }
 
     case "credit":
-      // Credit bills are eligible immediately — payment is post-delivery
+      // Credit bills are eligible immediately — payment is post-delivery and stays payable.
       return {
         eligible: true,
-        reason: "Credit payment condition — loading allowed before payment.",
+        reason: "Credit purchase — loading allowed; the outstanding amount stays payable (not a loading condition).",
+        paymentCondition: condition,
+        requiredAmountFC: 0,
+        paidAmountFC: paidFC,
+        shortfallFC: 0,
+      };
+
+    case "final":
+      // Final Payment purchase: straight to Loading; the user decides later when / how the final payment is made.
+      return {
+        eligible: true,
+        reason: "Final Payment purchase — loading allowed; the final payment is scheduled separately (not a loading condition).",
         paymentCondition: condition,
         requiredAmountFC: 0,
         paidAmountFC: paidFC,
@@ -682,34 +698,37 @@ export function resolveLoadingEligibility(
     }
 
     case "invoice": {
-      // Invoice condition: Invoice step must be completed before entering loading.
+      // Invoice Purchase: the required invoice payment must be COMPLETED AND CONFIRMED before the goods move to Loading.
+      // Confirmed = the invoice step was marked completed / payment posted, or the payments posted cover the invoice amount.
+      // A partial payment (or an unrelated advance) does not unlock Loading.
       const orderAny = order as any;
       const wf = getWorkflow(order);
-      const isInvoiceCompleted =
+      const requiredFC = amounts.totalPurchaseFC;
+      const settledFC = Math.max(paidFC, toNum(orderAny.advance_paid, 0) + toNum(orderAny.remaining_paid, 0));
+      const stepConfirmed =
         wf.invoiceStatus === "completed" ||
         wf.currentStep === "payment_posted" ||
-        wf.currentStep === "purchase_loading" ||
-        toNum(orderAny.remaining_paid, 0) > 0 ||
-        paidFC > 0.01;
+        wf.currentStep === "purchase_loading";
+      const covered = requiredFC > 0 ? settledFC + 0.01 >= requiredFC : true;
 
-      if (isInvoiceCompleted) {
+      if (stepConfirmed || covered) {
         return {
           eligible: true,
-          reason: "Invoice payment step completed — loading eligible.",
+          reason: "Invoice payment completed and confirmed — loading eligible.",
           paymentCondition: condition,
-          requiredAmountFC: amounts.totalPurchaseFC,
-          paidAmountFC: paidFC,
-          shortfallFC: Math.max(0, amounts.totalPurchaseFC - paidFC),
+          requiredAmountFC: requiredFC,
+          paidAmountFC: settledFC,
+          shortfallFC: Math.max(0, requiredFC - settledFC),
         };
       }
 
       return {
         eligible: false,
-        reason: "Invoice payment step must be completed before loading.",
+        reason: `Invoice payment must be completed and confirmed before loading. Required: ${formatAmount(requiredFC)} ${amounts.purchaseCurrency}, paid: ${formatAmount(settledFC)} ${amounts.purchaseCurrency}.`,
         paymentCondition: condition,
-        requiredAmountFC: amounts.totalPurchaseFC,
-        paidAmountFC: paidFC,
-        shortfallFC: amounts.totalPurchaseFC,
+        requiredAmountFC: requiredFC,
+        paidAmountFC: settledFC,
+        shortfallFC: Math.max(0, requiredFC - settledFC),
       };
     }
 

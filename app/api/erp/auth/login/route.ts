@@ -305,7 +305,9 @@ export async function POST(request: NextRequest) {
   if (!isAuthenticated) {
     try {
       const cleanPass = rawPassword.trim();
-      const isChamanPass = cleanPass.toLowerCase() === "chaman@9090";
+      const capFirst = cleanPass.length > 0 ? cleanPass.charAt(0).toUpperCase() + cleanPass.slice(1) : cleanPass;
+      const lowFirst = cleanPass.length > 0 ? cleanPass.charAt(0).toLowerCase() + cleanPass.slice(1) : cleanPass;
+      const lowerPass = cleanPass.toLowerCase();
 
       const match = await withLocalPg(async (sql) => {
         const rows = await sql`
@@ -321,13 +323,9 @@ export async function POST(request: NextRequest) {
           )
             AND (
               u.encrypted_password = crypt(${cleanPass}, u.encrypted_password)
-              OR u.encrypted_password = crypt(${cleanPass.toLowerCase()}, u.encrypted_password)
-              OR (
-                ${isChamanPass} = true AND (
-                  u.encrypted_password = crypt('Chaman@9090', u.encrypted_password)
-                  OR u.encrypted_password = crypt('chaman@9090', u.encrypted_password)
-                )
-              )
+              OR u.encrypted_password = crypt(${lowerPass}, u.encrypted_password)
+              OR u.encrypted_password = crypt(${capFirst}, u.encrypted_password)
+              OR u.encrypted_password = crypt(${lowFirst}, u.encrypted_password)
             )
           LIMIT 1;
         `;
@@ -401,11 +399,15 @@ export async function POST(request: NextRequest) {
       ].filter(Boolean) as string[]));
 
       const cleanPass = rawPassword.trim();
+      const capFirst = cleanPass.length > 0 ? cleanPass.charAt(0).toUpperCase() + cleanPass.slice(1) : cleanPass;
+      const lowFirst = cleanPass.length > 0 ? cleanPass.charAt(0).toLowerCase() + cleanPass.slice(1) : cleanPass;
       const passCandidates = Array.from(new Set([
         rawPassword,
         cleanPass,
-        cleanPass.toLowerCase() === "chaman@9090" ? "Chaman@9090" : null,
-        cleanPass.toLowerCase() === "chaman@9090" ? "chaman@9090" : null,
+        cleanPass.toLowerCase(),
+        cleanPass.toUpperCase(),
+        capFirst,
+        lowFirst,
       ].filter(Boolean) as string[]));
 
       for (const authEmail of candidateEmails) {
