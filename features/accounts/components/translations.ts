@@ -1373,6 +1373,13 @@ export const accountTranslations: Record<string, Record<SupportedLanguage, strin
     fa: "۴. حساب هزینه‌ها (اجاره دفتر، قبوض، گمرک، عمومی)",
     ps: "۴. د لګښتونو حساب (د دفتر کرایه، بیلونه، ګمرک، عمومي)"
   },
+  investmentCapitalOption: {
+    en: "5. Investment / Capital Account (Branch Funding, Initial Capital & Partner Investment)",
+    ur: "5. سرمایہ کاری / کیپیٹل کھاتہ (برانچ فنڈنگ، افتتاحی سرمایہ و انوسٹمنٹ)",
+    ar: "5. حساب الاستثمار / رأس المال (تمويل الفرع، رأس المال الافتتاحي واستثمار الشركاء)",
+    fa: "۵. حساب سرمایه‌گذاری / سرمایه (تأمین مالی شعبه، سرمایه اولیه و سرمایه‌گذاری)",
+    ps: "۵. د پانګونې / سرمایې حساب (د څانګې تمویل، لومړۍ پانګه او انوسټمنټ)"
+  },
   interCountryDomain: {
     en: "Others Country Transfers & Settlements",
     ur: "دیگر ممالک ترسیلات و سیٹلمنٹ (Inter-Country)",

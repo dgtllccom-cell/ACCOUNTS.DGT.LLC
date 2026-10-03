@@ -733,6 +733,10 @@ export async function POST(request: NextRequest) {
           return id ? arr.findIndex((x: any) => String(x?.id).trim() === id) === idx : true;
         });
 
+        try {
+          await tx`alter table enterprise_accounts add column if not exists linked_companies jsonb default '[]'::jsonb, add column if not exists linked_banks jsonb default '[]'::jsonb;`;
+        } catch (_) {}
+
         const accountRows = await tx`
           insert into enterprise_accounts ${tx({
             scope: body.scope || "super_admin",

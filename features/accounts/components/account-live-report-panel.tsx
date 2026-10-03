@@ -36,6 +36,12 @@ export type AccountLiveReportProps = {
   shippingLineDetail?: any;
   linkedCountries?: string[];
   countriesList?: Array<{ id: string; name: string; iso2?: string | null }>;
+  linkedCompanies?: Array<{ id: string; name: string; isPrimary?: boolean; code?: string; country?: string; detail?: any }>;
+  linkedBanks?: Array<{ id: string; name: string; isPrimary?: boolean; branchName?: string; accountNumber?: string; currency?: string; detail?: any }>;
+  linkedWarehouses?: Array<{ id: string; name: string; isPrimary?: boolean; code?: string; address?: string; detail?: any }>;
+  companyRequired?: boolean;
+  bankRequired?: boolean;
+  warehouseRequired?: boolean;
 
   // Context metadata
   selectedCountryName?: string;
@@ -76,6 +82,12 @@ export function AccountLiveReportPanel({
   companyDetail,
   bankDetail,
   warehouseDetail,
+  linkedCompanies,
+  linkedBanks,
+  linkedWarehouses,
+  companyRequired = true,
+  bankRequired = false,
+  warehouseRequired = false,
   selectedCountryName,
   selectedBranchName,
   onEditStep,
@@ -98,18 +110,28 @@ export function AccountLiveReportPanel({
 
   const displayCreatedOn = auditCreatedOn || defaultCreatedOn;
 
+  // Multi-link fallback resolution
+  const primaryCompItem = linkedCompanies?.find((c) => c.isPrimary) || linkedCompanies?.[0];
+  const effectiveCompany = companyDetail || primaryCompItem?.detail || primaryCompItem || null;
+
+  const primaryBankItem = linkedBanks?.find((b) => b.isPrimary) || linkedBanks?.[0];
+  const effectiveBank = bankDetail || primaryBankItem?.detail || primaryBankItem || null;
+
+  const primaryWhItem = linkedWarehouses?.find((w) => w.isPrimary) || linkedWarehouses?.[0];
+  const effectiveWarehouse = warehouseDetail || primaryWhItem?.detail || primaryWhItem || null;
+
   // Contact resolution
   const primaryPhone =
     contacts?.find((c) => c.type?.toLowerCase().includes("mobile") || c.type?.toLowerCase().includes("phone"))?.value ||
     customerDetail?.mobile ||
     customerDetail?.phone ||
-    companyDetail?.phone ||
+    effectiveCompany?.phone ||
     "-";
 
   const primaryEmail =
     contacts?.find((c) => c.type?.toLowerCase().includes("email"))?.value ||
     customerDetail?.email ||
-    companyDetail?.email ||
+    effectiveCompany?.email ||
     "-";
 
   return (
@@ -237,11 +259,11 @@ export function AccountLiveReportPanel({
             </div>
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("phone", lang)}</span>
-              <span className="font-mono text-slate-800 dark:text-slate-200">{primaryPhone || "-"}</span>
+              <span className="font-mono text-slate-800 dark:text-slate-200" dir="ltr">{primaryPhone || "-"}</span>
             </div>
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("email", lang)}</span>
-              <span className="font-mono text-slate-800 dark:text-slate-200 max-w-[150px] truncate">{primaryEmail || "-"}</span>
+              <span className="font-mono text-slate-800 dark:text-slate-200 max-w-[150px] truncate" dir="ltr">{primaryEmail || "-"}</span>
             </div>
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("address", lang)}</span>
@@ -249,7 +271,7 @@ export function AccountLiveReportPanel({
             </div>
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("taxNumber", lang)}</span>
-              <span className="font-mono text-slate-700 dark:text-slate-300">{customerDetail?.tax_number || "-"}</span>
+              <span className="font-mono text-slate-700 dark:text-slate-300" dir="ltr">{customerDetail?.tax_number || "-"}</span>
             </div>
           </div>
         </div>
@@ -261,8 +283,15 @@ export function AccountLiveReportPanel({
               <span className="h-6 w-6 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                 <Building2 className="h-3.5 w-3.5" />
               </span>
-              <h3 className="text-xs font-bold text-slate-900 dark:text-white">
-                {getLabel("step3Label", lang)}
+              <h3 className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                <span>{getLabel("step3Label", lang)}</span>
+                {!companyRequired ? (
+                  <span className="text-[10px] font-normal text-slate-400">({lang === "ur" ? "شامل نہیں" : "Skipped"})</span>
+                ) : linkedCompanies && linkedCompanies.length > 1 ? (
+                  <span className="px-1.5 py-0.2 rounded-full text-[9.5px] font-mono bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300" dir="ltr">
+                    +{linkedCompanies.length - 1}
+                  </span>
+                ) : null}
               </h3>
             </div>
             {onEditStep && (
@@ -280,37 +309,37 @@ export function AccountLiveReportPanel({
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("companyName", lang)}</span>
               <span className="font-bold text-slate-900 dark:text-white max-w-[150px] truncate">
-                {trName(companyDetail?.companyName || companyDetail?.name || companyDetail?.legal_name) || "-"}
+                {trName(effectiveCompany?.name || effectiveCompany?.legal_name || effectiveCompany?.companyName) || "-"}
               </span>
             </div>
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("registrationNo", lang)}</span>
-              <span className="font-mono font-medium text-slate-800 dark:text-slate-200">
-                {companyDetail?.registration_no || companyDetail?.registration_number || "-"}
+              <span className="font-mono font-medium text-slate-800 dark:text-slate-200" dir="ltr">
+                {effectiveCompany?.registration_no || effectiveCompany?.registration_number || "-"}
               </span>
             </div>
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("businessType", lang)}</span>
               <span className="font-medium text-slate-800 dark:text-slate-200">
-                {trTerm(companyDetail?.company_type) || "-"}
+                {trTerm(effectiveCompany?.company_type || effectiveCompany?.business_type) || "-"}
               </span>
             </div>
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("industry", lang)}</span>
               <span className="font-medium text-slate-800 dark:text-slate-200">
-                {trTerm(companyDetail?.industry) || "-"}
+                {trTerm(effectiveCompany?.industry) || "-"}
               </span>
             </div>
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("registeredAddress", lang)}</span>
               <span className="font-medium text-slate-800 dark:text-slate-200 max-w-[150px] truncate">
-                {companyDetail?.address || "-"}
+                {effectiveCompany?.address || effectiveCompany?.registered_address || "-"}
               </span>
             </div>
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("branch", lang)}</span>
               <span className="font-medium text-slate-800 dark:text-slate-200 max-w-[150px] truncate">
-                {trName(companyDetail?.city_name || selectedBranchName) || "-"}
+                {trName(effectiveCompany?.city_name || effectiveCompany?.country || selectedBranchName) || "-"}
               </span>
             </div>
           </div>
@@ -323,8 +352,15 @@ export function AccountLiveReportPanel({
               <span className="h-6 w-6 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                 <Landmark className="h-3.5 w-3.5" />
               </span>
-              <h3 className="text-xs font-bold text-slate-900 dark:text-white">
-                {getLabel("step4Label", lang)}
+              <h3 className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                <span>{getLabel("step4Label", lang)}</span>
+                {!bankRequired ? (
+                  <span className="text-[10px] font-normal text-slate-400">({lang === "ur" ? "شامل نہیں" : "Skipped"})</span>
+                ) : linkedBanks && linkedBanks.length > 1 ? (
+                  <span className="px-1.5 py-0.2 rounded-full text-[9.5px] font-mono bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" dir="ltr">
+                    +{linkedBanks.length - 1}
+                  </span>
+                ) : null}
               </h3>
             </div>
             {onEditStep && (
@@ -342,37 +378,37 @@ export function AccountLiveReportPanel({
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("bankName", lang)}</span>
               <span className="font-bold text-slate-900 dark:text-white max-w-[150px] truncate">
-                {trName(bankDetail?.bank_name || bankDetail?.bankName || bankDetail?.name) || "-"}
+                {trName(effectiveBank?.bank_name || effectiveBank?.bankName || effectiveBank?.name) || "-"}
               </span>
             </div>
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("accountTitle", lang)}</span>
               <span className="font-medium text-slate-800 dark:text-slate-200 max-w-[150px] truncate">
-                {trName(bankDetail?.account_title || accountName) || "-"}
+                {trName(effectiveBank?.account_title || accountName) || "-"}
               </span>
             </div>
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("accountNumber", lang)}</span>
-              <span className="font-mono font-medium text-slate-800 dark:text-slate-200">
-                {bankDetail?.account_number || "-"}
+              <span className="font-mono font-medium text-slate-800 dark:text-slate-200" dir="ltr">
+                {effectiveBank?.account_number || effectiveBank?.accountNumber || "-"}
               </span>
             </div>
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("iban", lang)}</span>
-              <span className="font-mono text-slate-800 dark:text-slate-200 max-w-[150px] truncate">
-                {bankDetail?.iban_number || bankDetail?.iban || "-"}
+              <span className="font-mono text-slate-800 dark:text-slate-200 max-w-[150px] truncate" dir="ltr">
+                {effectiveBank?.iban_number || effectiveBank?.iban || "-"}
               </span>
             </div>
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("bankBranch", lang)}</span>
               <span className="font-medium text-slate-800 dark:text-slate-200 max-w-[150px] truncate">
-                {trName(bankDetail?.branch_name || selectedBranchName) || "-"}
+                {trName(effectiveBank?.branch_name || effectiveBank?.branchName || selectedBranchName) || "-"}
               </span>
             </div>
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("swiftCode", lang)}</span>
-              <span className="font-mono text-slate-700 dark:text-slate-300">
-                {bankDetail?.swift_bic || bankDetail?.swift_code || "-"}
+              <span className="font-mono text-slate-700 dark:text-slate-300" dir="ltr">
+                {effectiveBank?.swift_bic || effectiveBank?.swift_code || "-"}
               </span>
             </div>
           </div>
@@ -385,8 +421,15 @@ export function AccountLiveReportPanel({
               <span className="h-6 w-6 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-600 dark:text-purple-400 flex items-center justify-center">
                 <Package className="h-3.5 w-3.5" />
               </span>
-              <h3 className="text-xs font-bold text-slate-900 dark:text-white">
-                {getLabel("warehouseDetails", lang)}
+              <h3 className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                <span>{getLabel("warehouseDetails", lang)}</span>
+                {!warehouseRequired ? (
+                  <span className="text-[10px] font-normal text-slate-400">({lang === "ur" ? "شامل نہیں" : "Skipped"})</span>
+                ) : linkedWarehouses && linkedWarehouses.length > 1 ? (
+                  <span className="px-1.5 py-0.2 rounded-full text-[9.5px] font-mono bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300" dir="ltr">
+                    +{linkedWarehouses.length - 1}
+                  </span>
+                ) : null}
               </h3>
             </div>
             {onEditStep && (
@@ -404,25 +447,25 @@ export function AccountLiveReportPanel({
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("warehouse", lang)}</span>
               <span className="font-bold text-slate-900 dark:text-white max-w-[150px] truncate">
-                {warehouseDetail?.warehouse_name || warehouseDetail?.name || "-"}
+                {effectiveWarehouse?.warehouse_name || effectiveWarehouse?.name || "-"}
               </span>
             </div>
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("location", lang)}</span>
               <span className="font-medium text-slate-800 dark:text-slate-200 max-w-[150px] truncate">
-                {warehouseDetail?.city_name || warehouseDetail?.location || warehouseDetail?.full_address || "-"}
+                {effectiveWarehouse?.city_name || effectiveWarehouse?.location || effectiveWarehouse?.address || effectiveWarehouse?.full_address || "-"}
               </span>
             </div>
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("defaultStock", lang)}</span>
               <span className="font-medium text-slate-800 dark:text-slate-200">
-                {warehouseDetail?.is_default ? "Yes" : "-"}
+                {effectiveWarehouse?.is_default || effectiveWarehouse?.isPrimary ? "Yes" : "-"}
               </span>
             </div>
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("remarks", lang)}</span>
               <span className="font-medium text-slate-700 dark:text-slate-300 max-w-[150px] truncate">
-                {warehouseDetail?.description || "-"}
+                {effectiveWarehouse?.description || effectiveWarehouse?.remarks || "-"}
               </span>
             </div>
           </div>

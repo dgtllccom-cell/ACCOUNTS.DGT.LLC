@@ -415,7 +415,7 @@ export function buildRbacRoleSummary(role: EnterpriseRole, customPermissions?: s
     supervisorPrivileges.push("Direct General Ledger Postings & Cash Reconciliation");
   }
 
-  const roleTitles: Record<EnterpriseRole, string> = {
+  const roleTitles: Partial<Record<EnterpriseRole, string>> = {
     super_admin: "Super Administrator (Enterprise Root)",
     super_admin_reports: "Super Admin Reports Auditor",
     country_admin: "Country General Manager / Administrator",

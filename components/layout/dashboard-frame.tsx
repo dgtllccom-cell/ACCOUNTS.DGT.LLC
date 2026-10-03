@@ -361,7 +361,7 @@ export function DashboardFrame({
   const roleLabel = useMemo(() => {
     if (!roles || roles.length === 0) return null;
 
-    const labels: Record<EnterpriseRole, string> = {
+    const labels: Partial<Record<EnterpriseRole, string>> = {
       super_admin: t(lang, "role.super_admin", "Super Admin"),
       super_admin_reports: t(lang, "role.super_admin_reports", "Super Admin Reports Auditor"),
       country_admin: t(lang, "role.country_admin", "Country Admin"),
@@ -382,10 +382,10 @@ export function DashboardFrame({
 
     // virtual (profile-derived) roles first: an operations login must not be labelled with the business role that shares its scope
     for (const role of [...virtualRoles, ...enterpriseRoles] as EnterpriseRole[]) {
-      if (roles.includes(role)) return labels[role];
+      if (roles.includes(role) && labels[role]) return labels[role];
     }
 
-    return labels[roles[0]] ?? null;
+    return (roles[0] && labels[roles[0] as EnterpriseRole]) ?? null;
   }, [roles, lang]);
 
   const searchItems = useMemo(() => {

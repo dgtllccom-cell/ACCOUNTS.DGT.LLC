@@ -257,6 +257,27 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 // E.164-ish: optional +, 7–15 digits, allow spaces/dashes/parens for readability
 const PHONE_RE = /^\+?[0-9][0-9\s()\-]{6,20}[0-9]$/;
 
+/** Convert Arabic/Urdu numerals to Western 0-9 digits and sanitize Latin email input */
+function normalizeContactInput(type: string, rawVal: string): string {
+  const westernDigits = rawVal
+    .replace(/[٠۰]/g, "0")
+    .replace(/[١۱]/g, "1")
+    .replace(/[٢۲]/g, "2")
+    .replace(/[٣۳]/g, "3")
+    .replace(/[٤۴]/g, "4")
+    .replace(/[٥۵]/g, "5")
+    .replace(/[٦۶]/g, "6")
+    .replace(/[٧۷]/g, "7")
+    .replace(/[٨۸]/g, "8")
+    .replace(/[٩۹]/g, "9");
+
+  if (type === "Email") {
+    // English/ASCII Latin characters only for email
+    return westernDigits.replace(/[^\x20-\x7E]/g, "").trim();
+  }
+  return westernDigits;
+}
+
 /** Validate a single contact entry. Returns an error key or null. */
 function contactErrorKey(type: string, value: string): string | null {
   const v = (value || "").trim();
@@ -351,7 +372,7 @@ export function NewAccountSetup({
   const [ownershipLevel, setOwnershipLevel] = useState<"country" | "main_branch" | "city_branch">("city_branch");
   const [branchType, setBranchType] = useState<BranchType | "">("City");
   const [branch, setBranch] = useState("");
-  type PrimaryAccountCategory = "customers_trade" | "others_country" | "employee" | "expenses";
+  type PrimaryAccountCategory = "customers_trade" | "others_country" | "employee" | "expenses" | "investment";
   const [primaryType, setPrimaryType] = useState<PrimaryAccountCategory>("customers_trade");
   const [tradeKind, setTradeKind] = useState<"customer" | "company" | "bank" | "shipping_line" | "trade" | "personal">("customer");
   const [employeeRole, setEmployeeRole] = useState("Clerk");
@@ -399,6 +420,16 @@ export function NewAccountSetup({
       setOwnershipLevel("city_branch");
       setBranchType("City");
       setCategory("EX");
+      setLinkedCountries([]);
+      setIsLinkedCountriesOpen(false);
+    } else if (val === "investment") {
+      setAccountTitle("Company");
+      setTradeKind("company");
+      setSubType("Branch Capital & Investment Funding");
+      setOperationalDomain("business");
+      setOwnershipLevel("city_branch");
+      setBranchType("City");
+      setCategory("CAP");
       setLinkedCountries([]);
       setIsLinkedCountriesOpen(false);
     }
@@ -1686,6 +1717,7 @@ export function NewAccountSetup({
                     <option value="others_country">{getLabel("othersCountryOption", lang)}</option>
                     <option value="employee">{getLabel("employeeMulazimOption", lang)}</option>
                     <option value="expenses">{getLabel("expensesOption", lang)}</option>
+                    <option value="investment">{getLabel("investmentCapitalOption", lang)}</option>
                   </select>
                 </div>
 
@@ -2024,98 +2056,6 @@ export function NewAccountSetup({
                       </div>
                     )}
                   </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {/* Company Toggle */}
-                  <button
-                    type="button"
-                    onClick={() => setCompanyRequired((v) => !v)}
-                    className={cn(
-                      "flex flex-col justify-between p-3 rounded-xl border text-left transition-all",
-                      companyRequired
-                        ? "bg-blue-50/80 dark:bg-blue-950/40 border-blue-300 dark:border-blue-700 shadow-xs"
-                        : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 opacity-80 hover:border-slate-300"
-                    )}
-                  >
-                    <div className="flex items-center justify-between w-full mb-1.5">
-                      <div className="flex items-center gap-2">
-                        <Building2 className={cn("h-4 w-4", companyRequired ? "text-blue-600" : "text-slate-400")} />
-                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                          {getLabel("companyRequiredLabel", lang)}
-                        </span>
-                      </div>
-                      <span className={cn(
-                        "text-[10px] font-bold px-2 py-0.5 rounded-full",
-                        companyRequired ? "bg-blue-600 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500"
-                      )}>
-                        {companyRequired ? getLabel("includedInFlow", lang) : getLabel("skippedInFlow", lang)}
-                      </span>
-                    </div>
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">
-                      {getLabel("companyRequiredDesc", lang)}
-                    </p>
-                  </button>
-
-                  {/* Bank Toggle */}
-                  <button
-                    type="button"
-                    onClick={() => setBankRequired((v) => !v)}
-                    className={cn(
-                      "flex flex-col justify-between p-3 rounded-xl border text-left transition-all",
-                      bankRequired
-                        ? "bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-700 shadow-xs"
-                        : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 opacity-80 hover:border-slate-300"
-                    )}
-                  >
-                    <div className="flex items-center justify-between w-full mb-1.5">
-                      <div className="flex items-center gap-2">
-                        <Landmark className={cn("h-4 w-4", bankRequired ? "text-emerald-600" : "text-slate-400")} />
-                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                          {getLabel("bankRequiredLabel", lang)}
-                        </span>
-                      </div>
-                      <span className={cn(
-                        "text-[10px] font-bold px-2 py-0.5 rounded-full",
-                        bankRequired ? "bg-emerald-600 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500"
-                      )}>
-                        {bankRequired ? getLabel("includedInFlow", lang) : getLabel("skippedInFlow", lang)}
-                      </span>
-                    </div>
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">
-                      {getLabel("bankRequiredDesc", lang)}
-                    </p>
-                  </button>
-
-                  {/* Warehouse Toggle */}
-                  <button
-                    type="button"
-                    onClick={() => setWarehouseRequired((v) => !v)}
-                    className={cn(
-                      "flex flex-col justify-between p-3 rounded-xl border text-left transition-all",
-                      warehouseRequired
-                        ? "bg-purple-50/80 dark:bg-purple-950/40 border-purple-300 dark:border-purple-700 shadow-xs"
-                        : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 opacity-80 hover:border-slate-300"
-                    )}
-                  >
-                    <div className="flex items-center justify-between w-full mb-1.5">
-                      <div className="flex items-center gap-2">
-                        <Warehouse className={cn("h-4 w-4", warehouseRequired ? "text-purple-600" : "text-slate-400")} />
-                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                          {getLabel("warehouseRequiredLabel", lang)}
-                        </span>
-                      </div>
-                      <span className={cn(
-                        "text-[10px] font-bold px-2 py-0.5 rounded-full",
-                        warehouseRequired ? "bg-purple-600 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500"
-                      )}>
-                        {warehouseRequired ? getLabel("includedInFlow", lang) : getLabel("skippedInFlow", lang)}
-                      </span>
-                    </div>
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">
-                      {getLabel("warehouseRequiredDesc", lang)}
-                    </p>
-                  </button>
                 </div>
               </div>
 
@@ -2679,10 +2619,11 @@ export function NewAccountSetup({
                         <div className="flex-1 space-y-1">
                           <Label className="text-[10px] font-semibold text-slate-500">{getLabel("contactValue", lang)}</Label>
                           <Input
+                            dir="ltr"
                             value={contact.value}
                             onChange={(e) => {
                               const updated = [...contacts];
-                              updated[idx].value = e.target.value;
+                              updated[idx].value = normalizeContactInput(contact.type, e.target.value);
                               setContacts(updated);
                             }}
                             placeholder={
@@ -2692,7 +2633,7 @@ export function NewAccountSetup({
                                 ? "+00 000 0000000"
                                 : getLabel("contactNumber", lang)
                             }
-                            className={`h-9 text-xs font-mono ${contactErrorKey(contact.type, contact.value) ? "border-rose-400 focus-visible:ring-rose-400" : ""}`}
+                            className={`h-9 text-xs font-mono text-left ${contactErrorKey(contact.type, contact.value) ? "border-rose-400 focus-visible:ring-rose-400" : ""}`}
                           />
                           {contactErrorKey(contact.type, contact.value) && (
                             <p className="text-[10px] font-semibold text-rose-500">{getLabel(contactErrorKey(contact.type, contact.value)!, lang)}</p>
@@ -2932,6 +2873,7 @@ export function NewAccountSetup({
                       if (isFirst) {
                         setLinkedCompanyId(pickerCompanyId);
                         setLinkedCompanyName(name);
+                        if (pickerCompanyRecord) setCompanyDetail(pickerCompanyRecord);
                         if (!accountName) setAccountName(name);
                       }
                       setPickerCompanyId("");
@@ -3004,6 +2946,13 @@ export function NewAccountSetup({
                                     );
                                     setLinkedCompanyId(comp.id);
                                     setLinkedCompanyName(comp.name);
+                                    fetch(`/api/erp/companies/${comp.id}?lang=${lang}`)
+                                      .then((r) => r.json())
+                                      .then((json) => {
+                                        const c = json?.data?.company || json?.company;
+                                        if (c) setCompanyDetail(c);
+                                      })
+                                      .catch(() => null);
                                   }}
                                   className="text-[10px] font-bold text-slate-500 hover:text-blue-600 hover:underline cursor-pointer"
                                 >
@@ -3023,9 +2972,17 @@ export function NewAccountSetup({
                                       next[0].isPrimary = true;
                                       setLinkedCompanyId(next[0].id);
                                       setLinkedCompanyName(next[0].name);
+                                      fetch(`/api/erp/companies/${next[0].id}?lang=${lang}`)
+                                        .then((r) => r.json())
+                                        .then((json) => {
+                                          const c = json?.data?.company || json?.company;
+                                          if (c) setCompanyDetail(c);
+                                        })
+                                        .catch(() => null);
                                     } else if (next.length === 0) {
                                       setLinkedCompanyId(null);
                                       setLinkedCompanyName("");
+                                      setCompanyDetail(null);
                                     }
                                     return next;
                                   });
@@ -3144,6 +3101,7 @@ export function NewAccountSetup({
                       if (isFirst) {
                         setLinkedBankId(pickerBankId);
                         setLinkedBankName(name);
+                        if (pickerBankRecord) setBankDetail(pickerBankRecord);
                         if (!accountName) setAccountName(name);
                       }
                       setPickerBankId("");
@@ -3217,6 +3175,13 @@ export function NewAccountSetup({
                                     );
                                     setLinkedBankId(bank.id);
                                     setLinkedBankName(bank.name);
+                                    fetch(`/api/erp/banks/${bank.id}?lang=${lang}`)
+                                      .then((r) => r.json())
+                                      .then((json) => {
+                                        const b = json?.data?.bank || json?.bank;
+                                        if (b) setBankDetail(b);
+                                      })
+                                      .catch(() => null);
                                   }}
                                   className="text-[10px] font-bold text-slate-500 hover:text-emerald-600 hover:underline cursor-pointer"
                                 >
@@ -3236,9 +3201,17 @@ export function NewAccountSetup({
                                       next[0].isPrimary = true;
                                       setLinkedBankId(next[0].id);
                                       setLinkedBankName(next[0].name);
+                                      fetch(`/api/erp/banks/${next[0].id}?lang=${lang}`)
+                                        .then((r) => r.json())
+                                        .then((json) => {
+                                          const b = json?.data?.bank || json?.bank;
+                                          if (b) setBankDetail(b);
+                                        })
+                                        .catch(() => null);
                                     } else if (next.length === 0) {
                                       setLinkedBankId(null);
                                       setLinkedBankName("");
+                                      setBankDetail(null);
                                     }
                                     return next;
                                   });
@@ -3694,6 +3667,12 @@ export function NewAccountSetup({
             companyDetail={companyDetail}
             bankDetail={bankDetail}
             warehouseDetail={warehouseDetail}
+            linkedCompanies={linkedCompanies}
+            linkedBanks={linkedBanks}
+            linkedWarehouses={linkedWarehouses}
+            companyRequired={companyRequired}
+            bankRequired={bankRequired}
+            warehouseRequired={warehouseRequired}
             shippingLineDetail={shippingLineDetail}
             linkedCountries={linkedCountries}
             countriesList={countries}
