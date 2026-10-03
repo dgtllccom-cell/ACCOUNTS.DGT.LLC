@@ -981,12 +981,17 @@ export function NewAccountSetup({
     if (initialAccountId || erpScope.loading || scopePrefilled) return;
     if (!erpScope.isSuperAdmin) {
       if (erpScope.lockedCountryId) setCountry(erpScope.lockedCountryId);
+      else if (initialCountryId) setCountry(initialCountryId);
+
       if (erpScope.mode === "city_branch" && erpScope.lockedCityBranchId) {
         setBranchType("City");
         setBranch(erpScope.lockedCityBranchId);
       } else if (erpScope.mode === "main_branch" && erpScope.lockedCountryBranchId) {
         setBranchType("Main");
         setBranch(erpScope.lockedCountryBranchId);
+      } else {
+        if (initialBranchType) setBranchType(initialBranchType);
+        if (initialBranchId) setBranch(initialBranchId);
       }
       // A single-domain (non-"both") assignment locks Business vs Shipping the
       // same way a single-option country/branch already locks geography.
@@ -1022,14 +1027,15 @@ export function NewAccountSetup({
         if (!cancelled) {
           const list = json?.data?.branches || json?.branches || json?.countryBranches || [];
           setMainBranches(Array.isArray(list) ? list : []);
-          if (list.length === 1 && (ownershipLevel === "main_branch" || branchType === "Main") && !branch) {
-            setBranch(list[0].id);
+          if (list.length > 0 && (ownershipLevel === "main_branch" || branchType === "Main") && !branch) {
+            const picked = initialBranchId && list.some((b: any) => b.id === initialBranchId) ? initialBranchId : list[0].id;
+            setBranch(picked);
           }
         }
       })
       .catch(() => { if (!cancelled) setMessage(getLabel("couldNotLoadMainBranches", lang)); });
     return () => { cancelled = true; };
-  }, [country, branchType, ownershipLevel, branch, operationalDomain]);
+  }, [country, branchType, ownershipLevel, branch, operationalDomain, initialBranchId]);
 
   // Load City Branches
   useEffect(() => {
@@ -1042,14 +1048,15 @@ export function NewAccountSetup({
         if (!cancelled) {
           const list = json?.data?.cityBranches || json?.data?.branches || json?.cityBranches || [];
           setCityBranches(Array.isArray(list) ? list : []);
-          if (list.length === 1 && (ownershipLevel === "city_branch" || branchType === "City") && !branch) {
-            setBranch(list[0].id);
+          if (list.length > 0 && (ownershipLevel === "city_branch" || branchType === "City") && !branch) {
+            const picked = initialBranchId && list.some((b: any) => b.id === initialBranchId) ? initialBranchId : list[0].id;
+            setBranch(picked);
           }
         }
       })
       .catch(() => { if (!cancelled) setMessage(getLabel("couldNotLoadCityBranches", lang)); });
     return () => { cancelled = true; };
-  }, [country, branchType, ownershipLevel, branch, operationalDomain]);
+  }, [country, branchType, ownershipLevel, branch, operationalDomain, initialBranchId]);
 
   // Load Categories from database
   async function loadCategories(domain = operationalDomain) {
@@ -1267,7 +1274,8 @@ export function NewAccountSetup({
       setMessage(`${getLabel(badContact.err!, lang)} (${badContact.c.type})`);
       return;
     }
-    const issuedJournal = `SUPER-${nextNumber(journalCounter)}`;
+    const prefix = erpScope.isSuperAdmin ? "SUPER" : (selectedCountry?.iso2 || "CTR");
+    const issuedJournal = `${prefix}-${nextNumber(journalCounter)}`;
     const scope = ownershipLevel === "country" ? "country" : ownershipLevel === "main_branch" ? "main_branch" : "city_branch";
     const countryBranchId =
       ownershipLevel === "country"
@@ -1713,7 +1721,7 @@ export function NewAccountSetup({
                   >
                     <option value="city_branch">{getLabel("cityBranchLevel", lang)}</option>
                     <option value="main_branch">{getLabel("mainBranchLevel", lang)}</option>
-                    {(erpScope.isSuperAdmin || primaryType === "others_country") && (
+                    {(erpScope.isSuperAdmin || erpScope.mode === "country" || primaryType === "others_country") && (
                       <option value="country">{getLabel("countryLevel", lang)}</option>
                     )}
                   </select>

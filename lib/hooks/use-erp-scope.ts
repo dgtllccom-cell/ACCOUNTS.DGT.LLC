@@ -84,15 +84,24 @@ export function useErpScope(): ErpScope {
         const countryBranchIds: string[] = Array.isArray(s.countryBranchIds) ? s.countryBranchIds : [];
         const cityBranchIds: string[] = Array.isArray(s.cityBranchIds) ? s.cityBranchIds : [];
 
+        const userRoles: string[] = Array.isArray(p?.roles) ? p.roles : [];
+        const serverLevel = sum?.level;
+
         const mode: ErpScopeMode = isSuperAdmin
           ? "super_admin"
-          : cityBranchIds.length > 0
-            ? "city_branch"
-            : countryBranchIds.length > 0
+          : serverLevel === "country" || userRoles.includes("country_admin") || userRoles.includes("country_user")
+            ? "country"
+            : serverLevel === "main_branch" || userRoles.includes("main_branch_admin")
               ? "main_branch"
-              : countryIds.length > 0
-                ? "country"
-                : "unknown";
+              : serverLevel === "city" || userRoles.includes("city_branch_admin") || userRoles.includes("accountant") || userRoles.includes("cashier") || userRoles.includes("staff_user")
+                ? "city_branch"
+                : cityBranchIds.length > 0
+                  ? "city_branch"
+                  : countryBranchIds.length > 0
+                    ? "main_branch"
+                    : countryIds.length > 0
+                      ? "country"
+                      : "unknown";
 
         const operationalDomains: OperationalDomain[] = Array.isArray(s.operationalDomains) && s.operationalDomains.length > 0
           ? s.operationalDomains

@@ -11,6 +11,7 @@ import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { listCountries, type LocationCountry } from "@/features/locations/location-api";
+import { useErpScope } from "@/lib/hooks/use-erp-scope";
 import { ArrowLeft, LayoutList, Plus, FileText } from "lucide-react";
 
 /**
@@ -33,6 +34,7 @@ export function NewAccountWithEntryMethods({
 }) {
   const activeLang = (useActiveLanguage() || initialLang) as SupportedLanguage;
   const s = useErpScreen("acctimp", activeLang);
+  const erpScope = useErpScope();
 
   const [view, setView] = useState<"table" | "form" | "bulk" | "bulk_done">(
     initialMode || (initialAccountId ? "form" : "table")
@@ -49,6 +51,24 @@ export function NewAccountWithEntryMethods({
   const [mainBranches, setMainBranches] = useState<BranchOption[]>([]);
   const [cityBranches, setCityBranches] = useState<BranchOption[]>([]);
   const [loadingBranches, setLoadingBranches] = useState<boolean>(false);
+
+  // Sync user's authenticated scope into scoping state
+  useEffect(() => {
+    if (erpScope.loading) return;
+    if (!erpScope.isSuperAdmin) {
+      const defaultCountry = erpScope.lockedCountryId || erpScope.countryIds[0] || "";
+      if (defaultCountry && !countryId) {
+        setCountryId(defaultCountry);
+      }
+      const defaultScope: ScopeLevel =
+        erpScope.mode === "country"
+          ? "country"
+          : erpScope.mode === "main_branch"
+          ? "main_branch"
+          : "city_branch";
+      setScopeLevel(defaultScope);
+    }
+  }, [erpScope.loading, erpScope.isSuperAdmin, erpScope.lockedCountryId, erpScope.countryIds, erpScope.mode, countryId]);
 
   // Load countries
   useEffect(() => {
@@ -112,10 +132,21 @@ export function NewAccountWithEntryMethods({
     }
   }, [cityBranches, mainBranches, branchId]);
 
+  const visibleCountries = useMemo(() => {
+    if (erpScope.isSuperAdmin || erpScope.countryIds.length === 0) return countries;
+    return countries.filter((c) => erpScope.countryIds.includes(c.id));
+  }, [countries, erpScope.isSuperAdmin, erpScope.countryIds]);
+
   const selectedCountryName = useMemo(() => {
-    if (!countryId) return "all";
-    return countries.find((c) => c.id === countryId)?.name || "all";
-  }, [countries, countryId]);
+    if (countryId) {
+      const found = countries.find((c) => c.id === countryId);
+      if (found) return found.name;
+    }
+    if (!erpScope.isSuperAdmin && erpScope.countryName) {
+      return erpScope.countryName;
+    }
+    return "all";
+  }, [countries, countryId, erpScope.isSuperAdmin, erpScope.countryName]);
 
   const selectedBranchName = useMemo(() => {
     if (!branchId) return "all";
@@ -151,11 +182,12 @@ export function NewAccountWithEntryMethods({
           onBranchKindChange={handleBranchKindChange}
           branchId={branchId}
           onBranchChange={setBranchId}
-          countries={countries}
+          countries={visibleCountries}
           mainBranches={mainBranches}
           cityBranches={cityBranches}
           loadingBranches={loadingBranches}
           view={view}
+          isSuperAdmin={erpScope.isSuperAdmin}
           onNewAccount={() => {
             setCurrentAccountId(undefined);
             setView("form");
@@ -254,8 +286,8 @@ export function NewAccountWithEntryMethods({
             <NewAccountSetup
               lang={activeLang}
               initialAccountId={currentAccountId}
-              initialCountryId={countryId || undefined}
-              initialBranchType="City"
+              initialCountryId={countryId || erpScope.lockedCountryId || erpScope.countryIds[0] || undefined}
+              initialBranchType={scopeLevel === "main_branch" ? "Main" : "City"}
               initialBranchId={branchId || undefined}
             />
           </EntryMethodSelector>

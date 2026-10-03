@@ -41,6 +41,7 @@ interface AccountsHeaderScopeBarProps {
   cityBranches: BranchOption[];
   loadingBranches?: boolean;
   view: "table" | "form" | "bulk" | "bulk_done";
+  isSuperAdmin?: boolean;
   onNewAccount?: () => void;
   onBulkImport?: () => void;
   onBackToTable?: () => void;
@@ -77,6 +78,7 @@ export function AccountsHeaderScopeBar({
   cityBranches,
   loadingBranches = false,
   view,
+  isSuperAdmin = true,
   onNewAccount,
   onBulkImport,
   onBackToTable,
@@ -149,7 +151,7 @@ export function AccountsHeaderScopeBar({
           className="h-7 rounded-lg border border-slate-200 bg-white px-2 text-[10px] font-bold text-slate-700 shadow-2xs outline-none hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 cursor-pointer"
           title={s.t("scope_level", "Scope Level")}
         >
-          <option value="super_admin">{s.t("scope_super", "Global")}</option>
+          {isSuperAdmin && <option value="super_admin">{s.t("scope_super", "Global")}</option>}
           <option value="country">{s.t("scope_country", "Country")}</option>
           <option value="main_branch">{s.t("scope_main", "Main Branch")}</option>
           <option value="city_branch">{s.t("scope_city", "City Branch")}</option>

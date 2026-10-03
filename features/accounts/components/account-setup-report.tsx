@@ -94,12 +94,29 @@ function fmtTime(date: string) {
   if (!date) return "-";
   return new Date(date).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
 }
-function exportCSV(rows: AccountRow[]) {
-  const header = ["#", "Account Number", "Super Admin Account Number", "Country Serial", "Branch Serial", "Manual Ref No", "Customer Name / Account", "Owner", "Account Type", "Category", "Branch Name", "Branch Code", "Country", "Currency", "Company Status", "Bank Status"];
+function exportCSV(rows: AccountRow[], isSuperAdmin = false) {
+  const header = [
+    "#",
+    "Account Number",
+    ...(isSuperAdmin ? ["Super Admin Account Number"] : []),
+    "Country Serial",
+    "Branch Serial",
+    "Manual Ref No",
+    "Customer Name / Account",
+    "Owner",
+    "Account Type",
+    "Category",
+    "Branch Name",
+    "Branch Code",
+    "Country",
+    "Currency",
+    "Company Status",
+    "Bank Status"
+  ];
   const lines = rows.map((r, i) => [
     i + 1,
     r.accountCode,
-    "SAD-" + String(r.accountSerialNumber).padStart(3, "0"),
+    ...(isSuperAdmin ? ["SAD-" + String(r.accountSerialNumber).padStart(3, "0")] : []),
     r.countrySerialNumber ?? "-",
     r.branchSerialNumber ?? "-",
     r.manualReferenceNumber ?? "",
@@ -325,6 +342,21 @@ export function AccountSetupReport({
     }
   }, [uniqueBranches, draftBranch]);
 
+  // Auto-lock country filter for non-super-admin
+  useEffect(() => {
+    if (sessionInfo && !sessionInfo.scopes?.isSuperAdmin) {
+      if (selectedCountry && selectedCountry !== "all") {
+        if (country !== selectedCountry) {
+          setCountry(selectedCountry);
+          setDraftCountry(selectedCountry);
+        }
+      } else if (uniqueCountries.length === 1 && country === "all") {
+        setCountry(uniqueCountries[0]);
+        setDraftCountry(uniqueCountries[0]);
+      }
+    }
+  }, [sessionInfo, uniqueCountries, selectedCountry, country]);
+
   /* Filtered rows */
   const filtered = useMemo(() => rows.filter(r => {
     if (accNo) {
@@ -433,9 +465,11 @@ export function AccountSetupReport({
 
   const reportSeed = filtered[0] ?? rows[0] ?? null;
   
+  const isSuperAdminUser = Boolean(sessionInfo?.scopes?.isSuperAdmin);
+
   const reportColumns: GenericReportColumn[] = [
     { key: "accountCode", label: t(lang, "asr.col_account_number", "Account Number") },
-    { key: "sadCode", label: t(lang, "asr.col_sad_code", "Super Admin Account Number") },
+    ...(isSuperAdminUser ? [{ key: "sadCode", label: t(lang, "asr.col_sad_code", "Super Admin Account Number") }] : []),
     { key: "countrySerialNumber", label: t(lang, "asr.col_country_serial", "Country Serial") },
     { key: "branchSerialNumber", label: t(lang, "asr.col_branch_serial", "Branch Serial") },
     { key: "manualReferenceNumber", label: t(lang, "asr.col_manual_ref", "Manual Ref No") },
@@ -464,9 +498,34 @@ export function AccountSetupReport({
     }));
   }, [filtered]);
 
+  const fallbackCountry = !isSuperAdminUser && (uniqueCountries[0] || selectedCountry)
+    ? (selectedCountry && selectedCountry !== "all" ? selectedCountry : uniqueCountries[0])
+    : (reportSeed?.countryName ?? (isSuperAdminUser ? "All Countries" : "Country"));
+
+  const fallbackBranch = !isSuperAdminUser && (uniqueBranches[0] || selectedBranch)
+    ? (selectedBranch && selectedBranch !== "all" ? selectedBranch : (uniqueBranches.length === 1 ? uniqueBranches[0] : "All Branches"))
+    : (reportSeed?.branchName ?? "All Branches");
+
+  const reportContext = {
+    countryName: country !== "all" ? country : fallbackCountry,
+    countryCode: reportSeed?.countryCode || "-",
+    branchName: branch !== "all" ? branch : fallbackBranch,
+    branchCode: reportSeed?.branchCode || "-",
+    userName: sessionInfo?.user.fullName ?? meta.companyOwner ?? "Current User",
+    userId: sessionInfo?.user.id ? sessionInfo.user.id.slice(0, 12).toUpperCase() : "-",
+    userRole: sessionInfo?.roles?.[0]?.replace(/_/g, " ") ?? "-",
+    userPassword: "Protected",
+    branchPassword: "Protected",
+    date: fmt(generatedAt),
+    time: fmtTime(generatedAt)
+  };
+
   function triggerOfficialReportPreview() {
+    const reportTitleText = isSuperAdminUser
+      ? t(lang, "asr.print_title", "Account Setup Report")
+      : `${reportContext.countryName} — ${t(lang, "asr.register_title", "Chart of Accounts Register")}`;
     openGenericErpReport({
-      title: t(lang, "asr.print_title", "Account Setup Report"),
+      title: reportTitleText,
       subtitle: `${t(lang, "common.total", "Total")} ${filtered.length} ${t(lang, "asr.accounts", "accounts")} • ${reportContext.countryName} / ${reportContext.branchName}`,
       lang,
       columns: reportColumns,
@@ -489,20 +548,6 @@ export function AccountSetupReport({
       orientation: "landscape",
     });
   }
-
-  const reportContext = {
-    countryName: country !== "all" ? country : reportSeed?.countryName ?? "All Countries",
-    countryCode: reportSeed?.countryCode || "-",
-    branchName: branch !== "all" ? branch : reportSeed?.branchName ?? "All Branches",
-    branchCode: reportSeed?.branchCode || "-",
-    userName: sessionInfo?.user.fullName ?? meta.companyOwner ?? "Current User",
-    userId: sessionInfo?.user.id ? sessionInfo.user.id.slice(0, 12).toUpperCase() : "-",
-    userRole: sessionInfo?.roles?.[0]?.replace(/_/g, " ") ?? "-",
-    userPassword: "Protected",
-    branchPassword: "Protected",
-    date: fmt(generatedAt),
-    time: fmtTime(generatedAt)
-  };
   return (
     <div id="asr-report-shell" className="w-full space-y-4 font-sans antialiased text-slate-900 dark:text-slate-100" dir={isRtl ? "rtl" : "ltr"}>
       {/* ── BREADCRUMB & HEADER ── */}
@@ -533,7 +578,9 @@ export function AccountSetupReport({
             </div>
             <div>
               <h1 className="text-xl font-black text-slate-900 dark:text-white">
-                {t(lang, "asr.title", "Account Setup / New Account Entry")}
+                {isSuperAdminUser
+                  ? t(lang, "asr.title", "Account Setup / New Account Entry")
+                  : `${reportContext.countryName} — ${t(lang, "asr.register_title", "Chart of Accounts Register")}`}
               </h1>
               <p className="text-xs text-slate-500 font-medium mt-0.5">
                 {t(lang, "asr.subtitle", "Create and manage chart of accounts for all companies, branches and locations.")}
@@ -746,8 +793,9 @@ export function AccountSetupReport({
                     value={country}
                     onChange={(e) => setCountry(e.target.value)}
                     className="w-full h-8.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-2 text-xs font-semibold outline-none cursor-pointer"
+                    disabled={!isSuperAdminUser && uniqueCountries.length <= 1}
                   >
-                    <option value="all">{t(lang, "common.all_countries", "All Countries")}</option>
+                    {isSuperAdminUser && <option value="all">{t(lang, "common.all_countries", "All Countries")}</option>}
                     {uniqueCountries.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
@@ -915,7 +963,7 @@ export function AccountSetupReport({
             </button>
             <button
               type="button"
-              onClick={() => exportCSV(filtered)}
+              onClick={() => exportCSV(filtered, isSuperAdminUser)}
               className="h-8 px-2.5 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1.5"
             >
               <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" />
