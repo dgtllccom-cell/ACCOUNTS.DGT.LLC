@@ -264,7 +264,7 @@ export const AMOUNT_ROUTE_PREFIXES: readonly string[] = [
   "/dashboard/general-office/payroll", "/dashboard/general-office/wps-sif", "/dashboard/general-office/gratuity",
   "/dashboard/general-office/payroll-tax", "/dashboard/general-office/payroll-reconciliation",
   "/dashboard/reports/payments", "/dashboard/reports/financial-statements", "/dashboard/reports/journal", "/dashboard/reports/exchange-rate",
-  "/dashboard/purchase/purchase-payments", "/dashboard/temp-bills", "/dashboard/super-admin", "/dashboard/all-release-entries"
+  "/dashboard/purchase/purchase-payments", "/dashboard/temp-bills", "/dashboard/super-admin", "/dashboard/all-release-entries", "/dashboard/crm"
 ];
 
 export type RouteAccessInput = {

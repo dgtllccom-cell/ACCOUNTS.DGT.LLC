@@ -23,7 +23,7 @@ const TABLES: Record<string, { label: string; columns: string; resource: string;
   countries: { label: "Countries", resource: "settings", scoped: false, countryRows: true, order: "name", columns: "id, name, iso2, iso3, currency_code, phone_code, status, created_at", search: ["name", "iso2", "iso3", "currency_code"] },
   country_branches: { label: "Country Branches", resource: "branches", scoped: true, softDelete: true, order: "created_at", columns: "id, country_id, name, code, local_currency, is_main, status, address, created_at", search: ["name", "code", "local_currency", "address"] },
   city_branches: { label: "City Branches", resource: "branches", scoped: true, softDelete: true, order: "created_at", columns: "id, country_id, country_branch_id, city_name, name, code, local_currency, status, address, created_at", search: ["city_name", "name", "code", "local_currency", "address"] },
-  profiles: { label: "Users / Profiles", resource: "users", scoped: false, globalOnly: true, softDelete: true, order: "created_at", columns: "id, full_name, email, role, status, country_id, country_branch_id, city_branch_id, created_at", search: ["full_name", "email", "role", "status"] }
+  profiles: { label: "Users / Profiles", resource: "users", scoped: false, globalOnly: true, softDelete: true, order: "created_at", columns: "id, user_code, full_name, preferred_language_code, created_at", search: ["full_name", "user_code"] }
 };
 
 const querySchema = z.object({

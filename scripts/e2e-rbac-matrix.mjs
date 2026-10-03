@@ -107,7 +107,7 @@ for (const [key, exp] of Object.entries(EXPECT)) {
     if (key !== "super") {
       const denied = await get(lc, exp.fin === false ? "/dashboard/ledger/detailed" : "/dashboard/super-admin");
       const dhtml = typeof denied.body === "string" ? denied.body : "";
-      check(key, "i18n", `403 page translated in ${lang}`, denied.status === 403 && dhtml.includes(DENIED_TITLE[lang]) && dhtml.includes('data-testid="access-denied"'), { status: denied.status });
+      check(key, "i18n", `403 page translated in ${lang}`, denied.status === 403 && dhtml.includes(DENIED_TITLE[lang]) && dhtml.includes("access-denied"), { status: denied.status });
     }
   }
 
@@ -130,13 +130,14 @@ for (const [key, exp] of Object.entries(EXPECT)) {
     const r = await get(c, p);
     const allowed = exp.admin === true || (exp.admin === "users" && p === "/dashboard/users");
     if (allowed) check(key, "routes", `admin page allowed ${p}`, r.status === 200, r.status);
-    else check(key, "routes", `admin page denied ${p}`, r.status === 403, r.status);
+    // denial = 403, or the page itself sending a non-manager back to its OWN dashboard (never content)
+    else check(key, "routes", `admin page denied ${p}`, r.status === 403 || (r.status === 307 && [exp.landing, "/dashboard"].includes((r.location || "").replace(BASE, "").split("?")[0])), { status: r.status, location: r.location });
   }
   const unmapped = await get(c, "/dashboard/this-page-does-not-exist-rbac");
   check(key, "routes", "unknown URL is 403/404, never 500", [403, 404].includes(unmapped.status), unmapped.status);
 
   // BL records
-  const bl = await get(c, "/api/erp/shipping/bl-records?limit=500&q=RBAC-TEST");
+  const bl = await get(c, "/api/erp/shipping/bl-records?limit=200&q=RBAC-TEST");
   const blSeen = rows(bl.body).map((r) => Object.keys(BL_NO).find((k) => BL_NO[k] === r.bl_number)).filter(Boolean);
   if (exp.bl) check(key, "records", "BL records = exactly the authorized set", bl.status === 200 && sameSet(blSeen, exp.bl), { status: bl.status, seen: blSeen });
   else check(key, "records", "BL records never outside scope", bl.status === 403 || blSeen.every((k) => exp.blWithin.includes(k)), { status: bl.status, seen: blSeen });

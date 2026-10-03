@@ -11,7 +11,8 @@ export const revalidate = 0;
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
-    if (isStrictOperationalSession(session)) throw new ErpPermissionError("CRM is outside this operational role.");
+    // amount-bearing CRM views: never for an operational login nor for a login whose financial field access is denied
+    if (isStrictOperationalSession(session) || session.canViewFinancials === false) throw new ErpPermissionError("CRM financial views are outside your access.");
     assertShippingUserExplicitPermission(session, "crm", "read");
     const { searchParams } = new URL(request.url);
 

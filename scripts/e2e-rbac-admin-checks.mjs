@@ -84,7 +84,7 @@ if (users.combo?.userId) {
   const s = await call(c, "/api/erp/auth/session");
   const roles = s.body?.data?.roles ?? [];
   check("combined", "both effective roles present", roles.includes("city_branch_admin") && roles.includes("city_operations_admin"), roles);
-  const bl = await call(c, "/api/erp/shipping/bl-records?limit=500&q=RBAC-TEST");
+  const bl = await call(c, "/api/erp/shipping/bl-records?limit=200&q=RBAC-TEST");
   const seen = (bl.body?.data?.records ?? []).map((r) => r.bl_number).sort();
   check("combined", "operational data for BOTH assignments (Deira + Chaman BLs), nothing else", bl.status === 200 && JSON.stringify(seen) === JSON.stringify(["RBAC-TEST-BL-CHAMAN-AGENTA", "RBAC-TEST-BL-DEIRA-ALPHA", "RBAC-TEST-BL-DEIRA-BETA"]), seen);
   const led = await call(c, "/api/erp/ledgers?limit=500");

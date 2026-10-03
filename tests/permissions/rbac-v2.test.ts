@@ -176,3 +176,11 @@ describe("field-level financial deny on routes (business roles)", () => {
     expect(evaluateRouteAccess({ pathname: "/dashboard/ledger/detailed", ...restricted, canViewFinancials: true }).allowed).toBe(true);
   });
 });
+
+describe("clearing agent financial default", () => {
+  it("an agent-only login does not see amounts unless explicitly granted", () => {
+    expect(deriveCanViewFinancials(["agent_user"], [], false)).toBe(false);
+    expect(deriveCanViewFinancials(["agent_user"], ["finance_amounts:read"], false)).toBe(true);
+    expect(deriveCanViewFinancials(["agent_user", "accountant"], [], false)).toBe(true);
+  });
+});

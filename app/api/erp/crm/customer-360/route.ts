@@ -13,7 +13,8 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
-    if (isStrictOperationalSession(session)) throw new ErpPermissionError("CRM is outside this operational role.");
+    // amount-bearing CRM views: never for an operational login nor for a login whose financial field access is denied
+    if (isStrictOperationalSession(session) || session.canViewFinancials === false) throw new ErpPermissionError("CRM financial views are outside your access.");
     const { searchParams } = request.nextUrl;
 
     const customerId = searchParams.get("customerId");
@@ -59,7 +60,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await requireErpSession();
-    if (isStrictOperationalSession(session)) throw new ErpPermissionError("CRM is outside this operational role.");
+    // amount-bearing CRM views: never for an operational login nor for a login whose financial field access is denied
+    if (isStrictOperationalSession(session) || session.canViewFinancials === false) throw new ErpPermissionError("CRM financial views are outside your access.");
     const body = await request.json();
 
     const {

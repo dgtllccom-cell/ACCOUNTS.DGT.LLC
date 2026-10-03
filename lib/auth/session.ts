@@ -148,8 +148,10 @@ export function assignmentIsEffective(a: { effectiveFrom?: string | null; effect
 export function deriveCanViewFinancials(roles: string[], permissions: string[], isSuperAdmin: boolean): boolean {
   if (isSuperAdmin) return true;
   if (permissions.includes("finance_amounts:deny")) return false;
-  // an operations / shipping-line-only login never sees amounts, whatever token it carries (capPermissionsForRoles strips them too)
+  // operations / shipping-line logins and clearing agents never see amounts by default (spec: agents get their assigned work, never
+  // balances, ledgers or bank data); an explicit finance_amounts:read grant can open it for an agent, never for a strict role
   if (roles.length > 0 && roles.every((r) => NON_FINANCIAL_ROLES.includes(r))) return false;
+  if (roles.length > 0 && roles.every((r) => r === "agent_user") && !permissions.includes("finance_amounts:read")) return false;
   if (permissions.includes("finance_amounts:read") || permissions.includes("*:*")) return true;
   return roles.some((r) => !NON_FINANCIAL_ROLES.includes(r));
 }

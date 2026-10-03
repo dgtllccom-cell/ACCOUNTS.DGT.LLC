@@ -205,7 +205,7 @@ export async function GET(req: Request) {
         left join public.enterprise_accounts sa on sa.id = m.sales_account_id
         where m.deleted_at is null
           and (${branchId ? sql`m.branch_id = ${branchId}` : sql`true`})
-          and (${readable ? sql`m.branch_id = ANY(${readable}::uuid[])` : sql`true`})
+          and (${readable ? sql`m.branch_id = ANY(${readable}::text[])` : sql`true`})
           and (${dateFrom ? sql`m.entry_date >= ${dateFrom}` : sql`true`})
           and (${dateTo ? sql`m.entry_date <= ${dateTo}` : sql`true`})
           and (${transactionType && transactionType !== "all" ? sql`m.transaction_type = ${transactionType}` : sql`true`})
