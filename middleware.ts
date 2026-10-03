@@ -15,6 +15,9 @@ function resolveRedirectUrl(targetPath: string, request: NextRequest): URL {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  // The dashboard layout (server) needs the requested path to apply the route access policy (see lib/navigation/route-policy).
+  // Always overwrite: a client-supplied value must never be trusted.
+  request.headers.set("x-erp-pathname", pathname);
 
   // Enforce authentication for all dashboard routes.
   // This is a fast cookie-presence check (not a full session validation).

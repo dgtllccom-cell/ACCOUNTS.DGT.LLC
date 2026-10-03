@@ -178,6 +178,20 @@ export const rolesQuerySchema = z.object({
 export const roleNameSchema = z.enum(enterpriseRoles);
 export const approvalStatusSchema = z.enum(approvalStatuses);
 
+/**
+ * Access-profile fields of a user_role_assignments row (RBAC v2). The STORED role keeps deciding the scope level; the access
+ * profile narrows it to an operational / shipping-line role (lib/permissions/enterprise-roles deriveEffectiveRole).
+ *   financialAccess: role_default = the role template decides; deny = finance_amounts:deny; allow = finance_amounts:read.
+ */
+export const assignmentAccessFields = {
+  accessProfile: z.enum(["operations", "shipping_line"]).nullable().optional(),
+  shippingLineId: optionalUuidSchema,
+  warehouseIds: z.array(uuidSchema).max(50).nullable().optional(),
+  effectiveFrom: z.string().date().nullable().optional(),
+  effectiveTo: z.string().date().nullable().optional(),
+  financialAccess: z.enum(["role_default", "deny", "allow"]).optional()
+};
+
 export const userCreateSchema = scopeSchema.extend({
   role: roleNameSchema,
   fullName: z.string().trim().min(2).max(200),
@@ -213,7 +227,8 @@ export const userCreateSchema = scopeSchema.extend({
   // Simplified mobile working interface (reuses this same user id / login / scope):
   // "standard" = full ERP; "mobile_cash_ledger" = Brother User (cash entry + ledger/
   // roznamcha/journal viewing); "mobile_field" = Munshi / field (assigned forms + jobs).
-  mobileProfile: z.enum(["standard", "mobile_cash_ledger", "mobile_field"]).default("standard")
+  mobileProfile: z.enum(["standard", "mobile_cash_ledger", "mobile_field"]).default("standard"),
+  ...assignmentAccessFields
 });
 
 export const accountCreateSchema = scopeSchema.extend({

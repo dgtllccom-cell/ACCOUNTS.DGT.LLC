@@ -3,7 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { apiCreated, apiOk, handleApiError } from "@/lib/api/response";
 import { shippingBlRecordCreateSchema, uuidSchema } from "@/lib/api/erp-validation";
-import { authorizeApiScope, postgrestHierarchyScope } from "@/lib/api/scope-middleware";
+import { authorizeApiScope, enforceScopeFilter, postgrestHierarchyScope } from "@/lib/api/scope-middleware";
+import { isGlobalSession } from "@/lib/permissions/middleware";
+import { redactFinancialFields } from "@/lib/purchases/loading-redaction";
 import { requireSupabaseData, writeAuditLog } from "@/lib/api/supabase";
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -138,7 +140,9 @@ async function loadFilterOptions(session: Session) {
     .select("id, country_id, name, code, local_currency, status")
     .is("deleted_at", null)
     .order("name", { ascending: true });
-  if (!session.isSuperAdmin && session.countryIds.length) countryBranchesQuery = countryBranchesQuery.in("country_id", session.countryIds);
+  // a branch login's dropdown lists only its own main branch(es), not every main branch of its country
+  if (!session.isSuperAdmin && session.countryBranchIds.length && !session.roles.some((r) => r === "country_admin" || r === "country_user" || r === "country_operations_admin")) countryBranchesQuery = countryBranchesQuery.in("id", session.countryBranchIds);
+  else if (!session.isSuperAdmin && session.countryIds.length) countryBranchesQuery = countryBranchesQuery.in("country_id", session.countryIds);
 
   let cityBranchesQuery = supabase
     .from("city_branches")
@@ -156,6 +160,8 @@ async function loadFilterOptions(session: Session) {
     .order("code", { ascending: true });
   // Ledger options follow the hierarchy scope (own branch + parent-level ledgers, never a sibling branch's).
   { const h = postgrestHierarchyScope(session); if (h) ledgersQuery = ledgersQuery.or(h); }
+  // ledger options carry balances: none for a login without financial field access
+  if (!session.canViewFinancials) ledgersQuery = ledgersQuery.eq("id", "00000000-0000-0000-0000-000000000000");
 
   const [countries, countryBranches, cityBranches, ledgers] = await Promise.all([
     withTimeout<any>(countriesQuery.limit(20), "countries"),
@@ -260,10 +266,17 @@ export async function GET(request: NextRequest) {
         : ["00000000-0000-0000-0000-000000000000"];
       recordsQuery = recordsQuery.in("clearing_agent_id", agentIds);
     } else {
-      if (query.countryId) recordsQuery = recordsQuery.eq("country_id", query.countryId);
-      else if (!session.isSuperAdmin) recordsQuery = recordsQuery.in("country_id", session.countryIds.length ? session.countryIds : ["00000000-0000-0000-0000-000000000000"]);
-      if (query.countryBranchId) recordsQuery = recordsQuery.eq("country_branch_id", query.countryBranchId);
-      if (query.cityBranchId) recordsQuery = recordsQuery.eq("city_branch_id", query.cityBranchId);
+      // the shared fail-closed scope (city branch for branch logins, country for country-level logins) — the old filter was
+      // country-only, so a Deira login listed every UAE branch's BLs
+      recordsQuery = enforceScopeFilter(recordsQuery, session, {
+        countryId: query.countryId ?? undefined,
+        countryBranchId: query.countryBranchId ?? undefined,
+        cityBranchId: query.cityBranchId ?? undefined,
+      });
+    }
+    // a Shipping Line login sees only the shipping line(s) it is bound to
+    if (!isGlobalSession(session) && session.shippingLineIds?.length) {
+      recordsQuery = recordsQuery.in("shipping_line_id", session.shippingLineIds);
     }
     if (query.q) {
       const like = `%${query.q}%`;
@@ -327,7 +340,8 @@ export async function GET(request: NextRequest) {
     }
 
     return apiOk({
-      records: localizedRecords,
+      // amounts, ledger links and the posting account are financial: removed for a login without financial field access
+      records: redactFinancialFields(localizedRecords, session.canViewFinancials, ["debit", "credit", "account_number", "ledger_id", "ledgers", "roznamcha_entry_id"], ["report_payload"]),
       filters,
       session: {
         isSuperAdmin: session.isSuperAdmin,

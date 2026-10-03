@@ -3,6 +3,7 @@ import { z } from "zod";
 import { apiError, apiOk, rethrowIfNextControlFlow } from "@/lib/api/response";
 import { auditApiAction } from "@/lib/api/audit";
 import { requireErpSession } from "@/lib/auth/session";
+import { financialModuleDenied } from "@/lib/permissions/middleware";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { wantsRawRecord } from "@/lib/i18n/localize-records";
 import { deleteTempBill, getTempBill, updateTempBill, mapTempBillError } from "@/lib/temp-bills/service";
@@ -12,6 +13,7 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
+    if (financialModuleDenied(session, ["purchases", "sales"], "read")) return apiError("FORBIDDEN", "Arzi purchase & sales bills are financial records outside your access.", 403);
     const { id } = await ctx.params;
     const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
     const bill = await getTempBill(session, id, lang, wantsRawRecord(request));
@@ -48,6 +50,7 @@ const patchSchema = z.object({
 export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
+    if (financialModuleDenied(session, ["purchases", "sales"], "update")) return apiError("FORBIDDEN", "Arzi purchase & sales bills are financial records outside your access.", 403);
     const { id } = await ctx.params;
     const body = patchSchema.parse(await request.json());
     await updateTempBill(session, id, {
@@ -70,6 +73,7 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: s
 export async function DELETE(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
+    if (financialModuleDenied(session, ["purchases", "sales"], "delete")) return apiError("FORBIDDEN", "Arzi purchase & sales bills are financial records outside your access.", 403);
     const { id } = await ctx.params;
     await deleteTempBill(session, id);
     await auditApiAction(request, { action: "temp_bill.delete.api", entityTable: "temp_bill", entityId: id });

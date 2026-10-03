@@ -182,9 +182,9 @@ async function loadBranchDashboardData(
     ] = await Promise.all([
       q(supabase.from("roznamcha_entries").select("id", { count: "exact", head: true }).eq(queryField, queryValue).eq("entry_date", todayStr).is("deleted_at", null)),
       q(supabase.from("user_role_assignments").select("user_id", { count: "exact", head: true }).eq(queryField, queryValue).eq("is_active", true).is("deleted_at", null)),
-      q(supabase.from("customers").select("id", { count: "exact", head: true }).eq("country_id", countryId).is("deleted_at", null)),
+      q(supabase.from("clearing_customer_orders").select("customer_id").eq(queryField, queryValue).is("deleted_at", null).limit(5000)),
       q(supabase.from("ledgers").select("id, name, code, current_balance, currency").eq(queryField, queryValue).is("deleted_at", null).order("code")),
-      q(supabase.from("customers").select("id, customer_name, company_name, mobile, email").eq("country_id", countryId).is("deleted_at", null).order("customer_name").limit(8)),
+      q(supabase.from("clearing_customer_orders").select("customer_id, customer_name").eq(queryField, queryValue).is("deleted_at", null).order("created_at", { ascending: false }).limit(200)),
       q(supabase
         .from("roznamcha_entries")
         .select("id, voucher_no, entry_date, type, status, created_at, narration")
@@ -194,7 +194,7 @@ async function loadBranchDashboardData(
         .limit(8)),
       q(supabase.from("purchase_orders").select("order_total, payment_status, status").eq(queryField, queryValue).is("deleted_at", null)),
       q(supabase.from("sales_orders").select("order_total, payment_status, status").eq(queryField, queryValue).is("deleted_at", null)),
-      q(supabase.from("products").select("id", { count: "exact", head: true }).eq("country_id", countryId).is("deleted_at", null))
+      q(supabase.from("products").select("id", { count: "exact", head: true }).eq(queryField, queryValue).is("deleted_at", null))
     ]);
 
     for (const [label, r] of Object.entries({ todayPostings, usersRes, customersCountRes, ledgersRes, customersRes, recentRows, purchaseRows, salesRows, productsCountRes })) {
@@ -219,13 +219,14 @@ async function loadBranchDashboardData(
       currency: l.currency || currency
     }));
 
-    const customers: CustomerRow[] = (customersRes.data ?? []).map((c: any) => ({
-      id: c.id,
-      customer_name: c.customer_name,
-      company_name: c.company_name,
-      mobile: c.mobile,
-      email: c.email
-    }));
+    // distinct customers that have an order in this branch
+    const seenCustomers = new Map<string, CustomerRow>();
+    for (const c of customersRes.data ?? []) {
+      const id = String(c.customer_id ?? c.customer_name ?? "");
+      if (id && !seenCustomers.has(id)) seenCustomers.set(id, { id, customer_name: c.customer_name ?? null, company_name: null, mobile: null, email: null } as CustomerRow);
+    }
+    const customers: CustomerRow[] = [...seenCustomers.values()].slice(0, 8);
+    const branchCustomerCount = new Set((customersCountRes.data ?? []).map((c: any) => String(c.customer_id ?? ""))).size;
 
     const recentRoznamcha: RecentEntry[] = (recentRows.data ?? []).map((row: any) => ({
       id: row.id,
@@ -243,7 +244,7 @@ async function loadBranchDashboardData(
       currency,
       todayCount: todayPostings.count || 0,
       usersCount: usersRes.count || 0,
-      customersCount: customersCountRes.count || 0,
+      customersCount: branchCustomerCount,
       totalLedgersCount: ledgers.length,
       purchaseTotal,
       salesTotal,
@@ -335,7 +336,13 @@ export default async function CityDashboardPage(props: { searchParams?: Promise<
     );
   }
 
-  const data = await loadBranchDashboardData(countryBranchId, cityBranchId);
+  const loaded = await loadBranchDashboardData(countryBranchId, cityBranchId);
+  // Field-level financial permission: a login that may not see amounts never RECEIVES them (the RSC payload carries zeros and
+  // empty ledger / transaction lists) and the overview hides the financial cards instead of showing misleading zeros.
+  const financialsHidden = !isSuperAdmin && session?.canViewFinancials === false;
+  const data = financialsHidden
+    ? { ...loaded, purchaseTotal: 0, salesTotal: 0, cashBalance: 0, bankBalance: 0, pendingPayments: 0, purchaseCount: 0, salesCount: 0, ledgers: [], recentRoznamcha: [], totalLedgersCount: 0, todayCount: 0 }
+    : loaded;
   const activeBranchId = cityBranchId || countryBranchId;
 
   return (
@@ -374,7 +381,7 @@ export default async function CityDashboardPage(props: { searchParams?: Promise<
           </CardContent>
         </Card>
       ) : null}
-      <BranchAdminDashboardOverview data={data} />
+      <BranchAdminDashboardOverview data={data} financialsHidden={financialsHidden} />
     </div>
   );
 }

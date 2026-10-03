@@ -426,7 +426,12 @@ export function buildRbacRoleSummary(role: EnterpriseRole, customPermissions?: s
     cashier: "Cashier / Payments Officer",
     agent_user: "Customs & Clearing Agent",
     staff_user: "Operations Staff User",
-    auditor_viewer: "Auditor / Compliance Viewer"
+    auditor_viewer: "Auditor / Compliance Viewer",
+    global_operations_admin: "Global Operations Administrator (no Finance)",
+    country_operations_admin: "Country Operations Administrator (no Finance)",
+    city_operations_admin: "City Branch Operations Administrator (no Finance)",
+    shipping_line_admin: "Shipping Line Administrator",
+    shipping_line_user: "Shipping Line User"
   };
 
   return {

@@ -121,6 +121,8 @@ export async function getLedgerStatement(params: {
       entries: number;
       debit: number;
       credit: number;
+      /** balance of the account before fromDate, on its normal side */
+      openingBalance?: number;
       balance: number;
       usdDebit: number;
       usdCredit: number;

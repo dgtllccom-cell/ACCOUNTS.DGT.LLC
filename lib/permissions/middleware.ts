@@ -1,5 +1,6 @@
 import type { ErpSession } from "@/lib/auth/session";
 import { mobileProfileAllows } from "@/lib/permissions/mobile-profiles";
+import { isCountryLevelRole, storedRoleScopeLevel, NON_FINANCIAL_ROLES } from "@/lib/permissions/enterprise-roles";
 
 export type PermissionCheck = {
   resource: string;
@@ -29,22 +30,75 @@ export function hasRolePermission(session: ErpSession, resource: string, action:
   return perms.includes(required) || perms.includes(`${normalizedResource}:*`) || perms.includes("*:*");
 }
 
+/** Global DATA scope: Super Admin, Super Admin Reports, Global Operations Admin. Says nothing about permissions. */
+export function isGlobalSession(session: ErpSession): boolean {
+  return Boolean(session.isSuperAdmin || session.isGlobalScope || session.roles?.includes("super_admin_reports"));
+}
+
+/**
+ * A FINANCIAL module (Arzi bills, expenses, money exchange, ledgers, ...) is denied unless the login may see financial amounts
+ * AND holds one of the module's permissions. Super Admin always passes. Returns true when the request must be refused (403).
+ */
+export function financialModuleDenied(session: ErpSession, resources: readonly string[], action: string): boolean {
+  if (session.isSuperAdmin) return false;
+  if (!session.canViewFinancials) return true;
+  return !resources.some((r) => hasRolePermission(session, r, action));
+}
+
+/**
+ * Field-level financial permission for whole FINANCIAL reports (ledger statements, balances, exports, print): a login whose
+ * session says it may not see amounts gets 403 — module permissions alone (ledgers:read, reports:read) are not enough.
+ */
+export function assertFinancialAccess(session: ErpSession) {
+  if (session.isSuperAdmin) return;
+  if (session.canViewFinancials === false) {
+    throw new ErpPermissionError("Financial reports (ledgers, balances, statements) are outside your access.");
+  }
+}
+
+/** Every effective role is operational / shipping-line (no business, CRM, HR or finance module may answer it). */
+export function isStrictOperationalSession(session: ErpSession): boolean {
+  const roles = session.roles ?? [];
+  return !session.isSuperAdmin && roles.length > 0 && roles.every((r) => NON_FINANCIAL_ROLES.includes(r));
+}
+
+/**
+ * Bind permissions to the scope that grants them. A login with several assignments of different permission sets (e.g. Country
+ * Admin + Finance for one branch) holds a permission only inside the assignments that grant it. Called by authorize() for every
+ * permission the request uses; the session is narrowed to the assignments that grant ALL of them (monotone intersection), so the
+ * scope helpers that run afterwards (sessionSqlScope, enforceScopeFilter, ...) can never widen a permission beyond its grant.
+ */
+export function narrowSessionToPermission(session: ErpSession, resource: string, action: string) {
+  const grants = session.assignmentGrants;
+  if (!grants || grants.length < 2 || session.isSuperAdmin) return;
+  const normalized = resource === "goods" ? "products" : resource;
+  const need = `${normalized}:${action}`;
+  const grants2 = grants.filter((g) => g.permissions.includes(need) || g.permissions.includes(`${normalized}:*`) || g.permissions.includes("*:*"));
+  if (grants2.length === 0 || grants2.length === grants.length) return; // not granted per assignment (custom/branch-rule grant) or granted everywhere
+  session.assignmentGrants = grants2;
+  session.assignments = grants2.map((g) => g.assignment);
+  session.roles = [...new Set(grants2.map((g) => g.role))];
+  session.countryIds = [...new Set(grants2.flatMap((g) => g.countryIds))];
+  session.countryBranchIds = [...new Set(grants2.flatMap((g) => g.countryBranchIds))];
+  session.cityBranchIds = [...new Set(grants2.flatMap((g) => g.cityBranchIds))];
+}
+
 export function canAccessCountry(session: ErpSession, countryId?: string | null) {
   // If a route does not provide a countryId, treat it as "any allowed country".
   // Super Admin and Super Admin Reports can access all. Non-super users must have at least one assigned country.
-  const isGlobal = session.isSuperAdmin || session.roles?.includes("super_admin_reports");
+  const isGlobal = isGlobalSession(session);
   if (!countryId) return isGlobal || session.countryIds.length > 0;
   return isGlobal || session.countryIds.includes(countryId);
 }
 
 export function canAccessCountryBranch(session: ErpSession, countryBranchId?: string | null) {
-  const isGlobal = session.isSuperAdmin || session.roles?.includes("super_admin_reports");
+  const isGlobal = isGlobalSession(session);
   if (!countryBranchId) return isGlobal || session.countryBranchIds.length > 0;
   return isGlobal || session.countryBranchIds.includes(countryBranchId);
 }
 
 export function canAccessCityBranch(session: ErpSession, cityBranchId?: string | null) {
-  const isGlobal = session.isSuperAdmin || session.roles?.includes("super_admin_reports");
+  const isGlobal = isGlobalSession(session);
   if (!cityBranchId) {
     // To query without a specific city branch (cross-branch query), you must be Super Admin, Super Admin Reports, or have country-level access.
     return isGlobal || session.countryIds.length > 0 || session.countryBranchIds.length > 0;
@@ -121,7 +175,7 @@ export function assertMobileProfile(session: ErpSession, resource: string, actio
  *  their session also carries the parent country id. */
 export function isCountryRoleFor(session: ErpSession, countryId?: string | null): boolean {
   if (!countryId) return false;
-  const isCountryRole = (session.roles ?? []).some((r) => r === "country_admin" || r === "country_user");
+  const isCountryRole = (session.roles ?? []).some((r) => isCountryLevelRole(r));
   return isCountryRole && session.countryIds.includes(countryId);
 }
 
@@ -132,6 +186,7 @@ export function authorize(session: ErpSession, check: PermissionCheck) {
   if (!hasRolePermission(session, check.resource, check.action)) {
     throw new ErpPermissionError(`Missing permission: ${check.resource}:${check.action}`);
   }
+  narrowSessionToPermission(session, check.resource, check.action);
 
   if (check.countryId && !canAccessCountry(session, check.countryId)) {
     throw new ErpPermissionError(`Country scope is not allowed for this user. Required: ${check.countryId}`);
@@ -183,8 +238,8 @@ export type ReportScope = {
  *   - auditor_viewer: restricted to assigned scope (country or branch)
  */
 export function resolveReportScope(session: ErpSession): ReportScope {
-  // Super Admin and Super Admin Reports: global access
-  if (session.isSuperAdmin || session.roles?.includes("super_admin_reports")) {
+  // Super Admin, Super Admin Reports and Global Operations Admin: global DATA scope
+  if (isGlobalSession(session)) {
     return {
       level: "global",
       countryId: null,
@@ -210,8 +265,7 @@ export function resolveReportScope(session: ErpSession): ReportScope {
   const roles = session.roles;
 
   // Country-level roles: see entire country data, no branch restriction
-  const countryLevelRoles = ["country_admin", "country_user"] as const;
-  if (roles.some((r) => (countryLevelRoles as readonly string[]).includes(r))) {
+  if (roles.some((r) => isCountryLevelRole(r))) {
     return {
       level: "country",
       countryId: primaryCountryId,
@@ -242,6 +296,19 @@ export function resolveReportScope(session: ErpSession): ReportScope {
       countryBranchId: primaryCountryBranchId,
       scopeLabel: "Branch"
     };
+  }
+
+  // Operations / shipping-line logins: the scope level is the one of the assignment's STORED role
+  // (a Shipping Line Admin stored as country_admin owns the country; one stored as city_branch_admin owns the branch).
+  const levels = (session.assignments ?? []).map((a) => storedRoleScopeLevel(a.storedRole ?? a.role));
+  if (roles.some((r) => r === "city_operations_admin" || r === "shipping_line_admin" || r === "shipping_line_user")) {
+    if (levels.includes("country")) {
+      return { level: "country", countryId: primaryCountryId, branchId: null, countryBranchId: primaryCountryBranchId, scopeLabel: "Country" };
+    }
+    if (levels.includes("main_branch") && !levels.includes("city_branch")) {
+      return { level: "country", countryId: primaryCountryId, branchId: null, countryBranchId: primaryCountryBranchId, scopeLabel: "Main Branch" };
+    }
+    return { level: "branch", countryId: primaryCountryId, branchId: primaryBranchId, countryBranchId: primaryCountryBranchId, scopeLabel: "Branch" };
   }
 
   // Auditor/viewer: use most restrictive scope available

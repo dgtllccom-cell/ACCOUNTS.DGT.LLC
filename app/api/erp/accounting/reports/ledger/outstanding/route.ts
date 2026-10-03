@@ -3,6 +3,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
+import { assertFinancialAccess } from "@/lib/permissions/middleware";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getRequestLanguage } from "@/lib/i18n/server";
@@ -28,6 +29,7 @@ const querySchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    assertFinancialAccess(session);
     assertNotShippingOnly(session);
     authorizeApiScope(session, { resource: "reports", action: "read" });
     const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));

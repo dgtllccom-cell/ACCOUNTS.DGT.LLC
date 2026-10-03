@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiError, apiOk, handleApiError } from "@/lib/api/response";
-import { authorizeApiScope } from "@/lib/api/scope-middleware";
+import { authorizeLogistics } from "@/lib/api/scope-middleware";
 import { writeAuditLog } from "@/lib/api/supabase";
 import { requireErpSession } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
@@ -18,7 +18,21 @@ const updateSchema = z.object({
   remarks: z.string().trim().max(1000).nullable().optional(),
   loadedContainers: z.coerce.number().min(1).optional(),
   loadedQuantity: z.coerce.number().min(0).optional(),
-  reportPayload: z.record(z.string(), z.unknown()).optional()
+  reportPayload: z.record(z.string(), z.unknown()).optional(),
+  // operational cargo fields (no financial fields are editable on a loading record)
+  blNumber: z.string().trim().max(120).nullable().optional(),
+  grossWeight: z.coerce.number().min(0).nullable().optional(),
+  tareWeight: z.coerce.number().min(0).nullable().optional(),
+  netWeight: z.coerce.number().min(0).nullable().optional(),
+  sealNumber: z.string().trim().max(120).nullable().optional(),
+  vesselName: z.string().trim().max(160).nullable().optional(),
+  voyageNo: z.string().trim().max(80).nullable().optional(),
+  awbNumber: z.string().trim().max(80).nullable().optional(),
+  flightDetails: z.string().trim().max(200).nullable().optional(),
+  railReference: z.string().trim().max(120).nullable().optional(),
+  originText: z.string().trim().max(240).nullable().optional(),
+  destinationText: z.string().trim().max(240).nullable().optional(),
+  lotName: z.string().trim().max(120).nullable().optional()
 });
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -40,8 +54,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return apiError("NOT_FOUND", "Purchase loading record not found", 404);
     }
 
-    authorizeApiScope(session, {
-      resource: "purchases",
+    authorizeLogistics(session, {
       action: "update",
       countryId: existing.country_id,
       countryBranchId: existing.country_branch_id,
@@ -59,6 +72,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (body.carrierName !== undefined) payload.carrier_name = body.carrierName;
     if (body.remarks !== undefined) payload.remarks = body.remarks;
     if (body.reportPayload !== undefined) payload.report_payload = body.reportPayload;
+    const opCols: Array<[keyof typeof body, string]> = [
+      ["blNumber", "bl_number"], ["grossWeight", "gross_weight"], ["tareWeight", "tare_weight"], ["netWeight", "net_weight"], ["sealNumber", "seal_number"],
+      ["vesselName", "vessel_name"], ["voyageNo", "voyage_no"], ["awbNumber", "awb_number"], ["flightDetails", "flight_details"],
+      ["railReference", "rail_reference"], ["originText", "origin_text"], ["destinationText", "destination_text"], ["lotName", "lot_name"]
+    ];
+    for (const [k, col] of opCols) if (body[k] !== undefined) payload[col] = body[k];
+    if (Object.keys(payload).length === 0) return apiOk({ loadingRecordId: id, loadingRecordNo: existing.loading_record_no });
 
     const updated = await withLocalPg(async (sql) => {
       const rows = await sql`
@@ -67,6 +87,16 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         where id = ${id}::uuid
         returning id, loading_record_no
       `;
+      // keep the lane row's cargo details in step while the load has not started moving
+      if (rows[0]) {
+        await sql`
+          update purchase_lane_loads l set
+            bl_number = coalesce(plr.bl_number, l.bl_number), container_number = plr.container_number, container_type = plr.container_type,
+            gross_weight = coalesce(plr.gross_weight, l.gross_weight), tare_weight = coalesce(plr.tare_weight, l.tare_weight), net_weight = coalesce(plr.net_weight, l.net_weight),
+            origin_text = coalesce(plr.origin_text, l.origin_text), destination_text = coalesce(plr.destination_text, l.destination_text), updated_at = now()
+          from purchase_loading_records plr
+          where plr.id = ${id}::uuid and l.source_type = 'purchase_booking' and l.source_id = plr.id and l.deleted_at is null and l.lane_status = 'loaded'`;
+      }
       return rows[0] || null;
     });
 
@@ -107,16 +137,20 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
       return apiError("NOT_FOUND", "Purchase loading record not found", 404);
     }
 
-    authorizeApiScope(session, {
-      resource: "purchases",
+    authorizeLogistics(session, {
       action: "delete",
       countryId: existing.country_id,
       countryBranchId: existing.country_branch_id,
       cityBranchId: existing.city_branch_id
     });
 
+    const lane = await withLocalPg(async (sql) => (await sql`select id, lane_status, owner_type, disposition, leg_no from purchase_lane_loads where source_type = 'purchase_booking' and source_id = ${id}::uuid and deleted_at is null`)[0] ?? null);
+    if (lane && (lane.lane_status !== "loaded" || lane.owner_type !== "branch" || lane.leg_no > 1 || lane.disposition)) {
+      return apiError("LOAD_IN_LANE", "This load has already moved in the Purchase Lane (transfer, customs, disposition). It cannot be deleted from the Loading page.", 409);
+    }
     const deletedAt = new Date().toISOString();
     const updated = await withLocalPg(async (sql) => {
+      if (lane) await sql`update purchase_lane_loads set deleted_at = now(), updated_at = now() where id = ${lane.id}::uuid`;
       const rows = await sql`
         update purchase_loading_records
         set deleted_at = ${deletedAt}

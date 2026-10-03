@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { useSearchParams } from "next/navigation";
 import { openLoadingRecordsPrintReport } from "@/lib/reports/open-loading-records-print-report";
 import { SearchableSelect } from "@/components/ui/searchable-select";
-import { Download, FileText, Link2, MoreVertical, Plus, Printer, RefreshCcw, Search, Ship, Building2, ArrowDownLeft, ArrowUpRight, Pencil, Trash2, ChevronDown, ChevronRight } from "lucide-react";
+import { Download, FileText, Link2, MoreVertical, Plus, Printer, RefreshCcw, Search, Ship, Building2, ArrowDownLeft, ArrowUpRight, Pencil, Trash2, ChevronDown, ChevronRight, ArrowRightLeft, Route } from "lucide-react";
 import { UnifiedActionMenu } from "@/components/ui/unified-action-menu";
 import { ViewportActionMenu } from "@/components/ui/viewport-action-menu";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,10 @@ import { translateOptionLabel } from "@/lib/i18n/option-labels";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { CompanyPicker } from "@/features/companies/components/company-picker";
 import { ShippingLinePicker } from "@/features/shipping/components/shipping-line-picker";
+import { LANE_STATUS_LABEL, allowedNextStatuses, bulkTransferActions, canCreateNewLoading, isGenuineLoadingRow, loadingRowAction, remainingToLoad, type LaneStatus } from "@/lib/purchases/lane-rules";
+
+type TransportModeUi = "By Road" | "By Sea" | "By Air" | "By Rail";
+import { ensureLaneForLoading, fetchLaneStates, laneReportHref, type LaneState } from "@/lib/purchases/lane-client";
 function asRecordArray<T = any>(value: unknown): T[] {
   if (Array.isArray(value)) return value.filter(Boolean) as T[];
   if (value && typeof value === "object") {
@@ -252,30 +256,14 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
   const [oneEmptyKgs, setOneEmptyKgs] = useState("");
   const [divideType, setDivideType] = useState("D/KGs");
   const [divideWeightValue, setDivideWeightValue] = useState("1");
-  const [priceType, setPriceType] = useState("P/KGs");
-  const [priceRateC1, setPriceRateC1] = useState("");
   const [qualityReportRef, setQualityReportRef] = useState("");
-  const [pricingCurrency, setPricingCurrency] = useState("USD");
-  const poExchangeRate = useMemo(() => {
-    const rawRate = Number(
-      poRow.exchange_rate ||
-      form.exchangeRate ||
-      form.rate2 ||
-      goods[0]?.exchangeRate ||
-      goods[0]?.rate2 ||
-      0
-    );
-    if (rawRate > 0) return String(rawRate);
-    return String(defaultExRate || 1);
-  }, [poRow, form, goods, defaultExRate]);
-
-  const [exchangeRatePKR, setExchangeRatePKR] = useState(poExchangeRate);
-
-  useEffect(() => {
-    if (poExchangeRate && !editingLoadingId) {
-      setExchangeRatePKR(poExchangeRate);
-    }
-  }, [poExchangeRate, editingLoadingId]);
+  // Loading is OPERATIONAL: no purchase currency, exchange rate, purchase rate or converted amount lives here.
+  const [containerTypeInput, setContainerTypeInput] = useState(record.container_type || "40 FT");
+  const [voyageNo, setVoyageNo] = useState("");
+  const [railReference, setRailReference] = useState("");
+  const [grossWeightInput, setGrossWeightInput] = useState("");
+  const [tareWeightInput, setTareWeightInput] = useState("");
+  const [netWeightInput, setNetWeightInput] = useState("");
   const [blNumber, setBlNumber] = useState("");
   const [containerCount, setContainerCount] = useState("1");
   const [loadingCountryState, setLoadingCountryState] = useState(loadingCountry !== "-" ? loadingCountry : "");
@@ -285,7 +273,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
   const [receivingDateState, setReceivingDateState] = useState(form.receivedDate || form.arrivalDate || "");
   const [vesselName, setVesselName] = useState("");
   // Country-to-Country Purchase — Transportation.
-  const [transportMode, setTransportMode] = useState<"By Road" | "By Sea" | "By Air">("By Sea");
+  const [transportMode, setTransportMode] = useState<TransportModeUi>("By Sea");
   const [transportCompany, setTransportCompany] = useState("");
   const [transportCompanyId, setTransportCompanyId] = useState("");
   const [vehicleNo, setVehicleNo] = useState("");
@@ -305,8 +293,6 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
       .catch(() => setTruckOptions([]));
   }, []);
   const [expectedArrivalDate, setExpectedArrivalDate] = useState("");
-  const [transportExpenseAmount, setTransportExpenseAmount] = useState("");
-  const [transportExpenseCurrency, setTransportExpenseCurrency] = useState("USD");
   const [transportRemarksInput, setTransportRemarksInput] = useState("");
   const [savingNewLoading, setSavingNewLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState("");
@@ -314,84 +300,6 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
 
   const togglePoExpand = (poNo: string) => {
     setExpandedPoNos(prev => ({ ...prev, [poNo]: !prev[poNo] }));
-  };
-
-  const [transferConfirmData, setTransferConfirmData] = useState<{
-    loadedQty: number;
-    loadedPurchaseAmountFC: number;
-    advancePaidLC: number;
-    remainingLC: number;
-    debitAccountName: string;
-    debitAccountCode: string;
-    creditAccountName: string;
-    creditAccountCode: string;
-    finalCurrency: string;
-    purchaseCurrency: string;
-    exchangeRate: number;
-    loadingRecordId: string;
-    purchaseOrderNo: string;
-    grossWeight: number;
-    netWeight: number;
-    priceRate: number;
-  } | null>(null);
-
-  const handleInitiateTransfer = (hRecord: any) => {
-    const isOverallRecord = !hRecord || hRecord.id === record.id || !hRecord.report_payload?.loadedQuantity;
-    const poRow = (Array.isArray(hRecord?.purchase_orders) ? hRecord.purchase_orders[0] : hRecord?.purchase_orders) || (Array.isArray(record.purchase_orders) ? record.purchase_orders[0] : record.purchase_orders) || record || {};
-    const finance = calcLoadingFinance(hRecord || record, poRow, form);
-    
-    const loadedQty = isOverallRecord
-      ? (totalLoadedQuantity > 0 ? totalLoadedQuantity : Number(hRecord?.report_payload?.loadedQuantity || hRecord?.loadedQuantity || totalQuantity || 0))
-      : Number(hRecord?.report_payload?.loadedQuantity || hRecord?.loadedQuantity || 0);
-
-    const grossWeight = isOverallRecord
-      ? (loadedGrossWeight > 0 ? loadedGrossWeight : Number(hRecord?.report_payload?.grossWeight || finance.grossWeight || 0))
-      : Number(hRecord?.report_payload?.grossWeight || finance.grossWeight || 0);
-
-    const netWeight = isOverallRecord
-      ? (loadedNetWeight > 0 ? loadedNetWeight : Number(hRecord?.report_payload?.netWeight || finance.netWeight || 0))
-      : Number(hRecord?.report_payload?.netWeight || finance.netWeight || 0);
-
-    const contractPurchaseAmount = Number(poRow?.order_total || poData.totals?.grandFinal || form.totalAmount || 0);
-    const priceRate = Number(hRecord?.report_payload?.priceRateC1 || finance.priceRate || (totalQuantity > 0 ? contractPurchaseAmount / totalQuantity : 0));
-    const exRate = Number(finance.exRate || exchangeRatePKR || form.exchangeRate || 1);
-
-    const loadedPurchaseFC = isOverallRecord
-      ? (totalQuantity > 0 ? (loadedQty / totalQuantity) * contractPurchaseAmount : contractPurchaseAmount)
-      : (finance.amountUSD > 0 ? finance.amountUSD : (priceRate > 0 ? loadedQty * priceRate : 0));
-    const loadedPurchaseLC = loadedPurchaseFC * exRate;
-
-    const poAdvanceAmt = normalizeAdvanceToPurchaseCurrency(Number(poRow.advance_paid || form.advanceAmount || 0), contractPurchaseAmount, exRate);
-    const proRata = totalQuantity > 0 ? (loadedQty / totalQuantity) : 1;
-    const loadedAdvanceUSD = Math.min(loadedPurchaseFC, proRata * poAdvanceAmt);
-    const loadedAdvanceLocal = loadedAdvanceUSD * exRate;
-    const remainingLC = Math.max(0, loadedPurchaseLC - loadedAdvanceLocal);
-
-    const debitAccountName = form.purchaseAccountName || "Purchase Account";
-    const debitAccountCode = form.purchaseAccountNumber || form.purchaseAccountNo || "DR-001";
-    const creditAccountName = form.salesAccountName || form.supplierName || "Supplier Account";
-    const creditAccountCode = form.salesAccountNumber || form.salesAccountNo || "CR-001";
-
-    const targetPoNo = hRecord?.purchase_order_no || record.purchase_order_no || poRow.purchase_order_no || "";
-
-    setTransferConfirmData({
-      loadedQty,
-      loadedPurchaseAmountFC: loadedPurchaseFC,
-      advancePaidLC: loadedAdvanceLocal,
-      remainingLC,
-      debitAccountName,
-      debitAccountCode,
-      creditAccountName,
-      creditAccountCode,
-      finalCurrency: localCurrency,
-      purchaseCurrency: finance.currency || contractPurchaseCurrency || "USD",
-      exchangeRate: exRate,
-      loadingRecordId: isOverallRecord ? (history[0]?.id || record.id || "") : (hRecord?.id || record.id || ""),
-      purchaseOrderNo: targetPoNo,
-      grossWeight,
-      netWeight,
-      priceRate
-    });
   };
 
   // DB ports and countries list states
@@ -567,37 +475,6 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
     }
   };
 
-  // Fetch approved daily rate when country is set
-  useEffect(() => {
-    const countryId = poRow.country_id || record.countries?.id;
-    if (!countryId) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const params = new URLSearchParams({
-          countryId: countryId,
-          currency: "USD"
-        });
-        const branchId = poRow.country_branch_id || record.country_branches?.id;
-        if (branchId) {
-          params.set("countryBranchId", branchId);
-        }
-        const res = await fetch(`/api/erp/currency/latest-rate?${params.toString()}`).then((r) => r.json());
-        if (!cancelled && res?.ok && res?.data) {
-          const rateVal = res.data.rate || res.data.sellRate || res.data.buyRate;
-          if (rateVal && !editingLoadingId) {
-            setExchangeRatePKR(String(rateVal));
-          }
-        }
-      } catch (err) {
-        console.error("Failed to load loading exchange rate", err);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [poRow.country_id, poRow.country_branch_id, record.countries?.id, record.country_branches?.id, editingLoadingId]);
-
   async function handleDeleteHistory(h: LoadingRecord) {
     if (!confirm(tt("plr.confirm_delete", "Are you sure you want to delete this loading record?"))) return;
     try {
@@ -641,11 +518,14 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
     setOneEmptyKgs(h.report_payload?.oneEmptyKgs || "");
     setDivideType(h.report_payload?.divideType || "D/KGs");
     setDivideWeightValue(h.report_payload?.divideWeightValue || "1");
-    setPriceType(h.report_payload?.priceType || "P/KGs");
-    setPriceRateC1(h.report_payload?.priceRateC1 || "");
     setQualityReportRef(h.report_payload?.qualityReportRef || "");
-    setPricingCurrency(h.report_payload?.pricingCurrency || "USD");
-    setExchangeRatePKR(h.report_payload?.exchangeRatePKR || defaultExRate);
+    setContainerTypeInput(h.container_type || record.container_type || "40 FT");
+    setVoyageNo(h.voyage_no || "");
+    setRailReference(h.rail_reference || "");
+    setGrossWeightInput(h.gross_weight != null ? String(h.gross_weight) : "");
+    setTareWeightInput(h.tare_weight != null ? String(h.tare_weight) : "");
+    setNetWeightInput(h.net_weight != null ? String(h.net_weight) : "");
+    if (h.transport_mode) setTransportMode(h.transport_mode as TransportModeUi);
     setContainerNumberInput(h.container_number || h.report_payload?.containerNumber || "");
     setSealNumberInput(h.report_payload?.sealNumber || "");
   }
@@ -693,18 +573,85 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
     return balances;
   }, [history]);
 
+  // Lane state of every saved row: drives the Action column (Send to / Transfer / Track).
+  const [laneStates, setLaneStates] = useState<Record<string, LaneState>>({});
+  const [laneBusy, setLaneBusy] = useState(false);
+  const [laneError, setLaneError] = useState("");
+  const [laneSel, setLaneSel] = useState<Set<string>>(new Set());
+  const refreshLane = React.useCallback(async (ids: string[]) => {
+    const st = await fetchLaneStates(ids);
+    setLaneStates(st);
+    return st;
+  }, []);
+  const historyIdsKey = history.map((h) => h.id).join(",");
+  useEffect(() => { void refreshLane(historyIdsKey ? historyIdsKey.split(",") : []); }, [historyIdsKey, refreshLane]);
+
+  const laneHref = (p: { laneIds?: string[]; action?: "transfer"; focus?: string }) => laneReportHref({ purchaseOrderId: record.purchase_order_id, ...p });
+  /** Make sure every given loading row has its lane row (older loads join on first look) and return the lane ids. */
+  async function resolveLaneIds(loadingIds: string[]): Promise<string[]> {
+    const out: string[] = [];
+    await Promise.all(loadingIds.map(async (id) => {
+      const known = laneStates[id];
+      if (known) { out.push(known.id); return; }
+      out.push(await ensureLaneForLoading(id));
+    }));
+    return out;
+  }
+  async function onRowLaneAction(h: LoadingRecord, kind: string) {
+    setLaneError("");
+    const st = laneStates[h.id];
+    try {
+      setLaneBusy(true);
+      if (kind === "send_to_lane") {
+        await resolveLaneIds([h.id]);
+        await refreshLane(history.map((x) => x.id));
+      } else if (kind === "transfer" && st) {
+        window.open(laneHref({ laneIds: [st.id], action: "transfer" }), "_self");
+      } else if (st) {
+        window.open(laneHref({ focus: st.id }), "_self");
+      }
+    } catch (e: any) {
+      setLaneError(e?.message || "Lane action failed.");
+    } finally {
+      setLaneBusy(false);
+    }
+  }
+  async function onBulkTransfer(which: "transfer_selected" | "transfer_all") {
+    setLaneError("");
+    const rowsForBulk = history.filter((h) => {
+      const k = loadingRowAction({ laneStatus: laneStates[h.id]?.lane_status, hasLaneRow: !!laneStates[h.id], legNo: laneStates[h.id]?.leg_no, ownerChanged: laneStates[h.id]?.ownerChanged }).kind;
+      return k === "send_to_lane" || k === "transfer";
+    });
+    const targets = which === "transfer_selected" ? rowsForBulk.filter((h) => laneSel.has(h.id)) : rowsForBulk;
+    if (!targets.length) return;
+    try {
+      setLaneBusy(true);
+      const laneIds = await resolveLaneIds(targets.map((h) => h.id));
+      window.open(laneHref({ laneIds, action: "transfer" }), "_self");
+    } catch (e: any) {
+      setLaneError(e?.message || "Lane action failed.");
+    } finally {
+      setLaneBusy(false);
+    }
+  }
+
   const newQuantity = Math.max(0, Number(newLoadingQuantity || 0));
   const previewLoadedQuantity = Math.min(totalQuantity || savedLoadedQuantity + newQuantity, savedLoadedQuantity + newQuantity);
   const previewBalanceQuantity = Math.max(0, totalQuantity - previewLoadedQuantity);
   const unitLabel = String(reportPayload.qtyName || form.qtyName || goods?.[0]?.qtyName || qtyName || "Bags");
   const visibleLoadingRows = history.length ? history : (record.loading_status === "loaded" ? [record] : []);
   const historyLoadedQuantity = visibleLoadingRows.reduce((sum, item) => {
-    return sum + Number(item.report_payload?.loadedQuantity || item.report_payload?.loadingQuantity || item.loadedQuantity || 0);
+    return sum + Number(item.report_payload?.loadedQuantity || item.report_payload?.loadingQuantity || item.loadedQuantity || item.loaded_quantity || 0);
   }, 0);
   const previousLoadedQuantity = historyLoadedQuantity || savedLoadedQuantity;
   const currentLoadingQuantity = newQuantity;
   const totalLoadedQuantity = Math.min(totalQuantity || previousLoadedQuantity + currentLoadingQuantity, previousLoadedQuantity + currentLoadingQuantity);
   const remainingToLoadQuantity = Math.max(0, totalQuantity - totalLoadedQuantity);
+  /** Physical quantity still to load, ignoring whatever is being typed in the form. Payment balances never enter here. */
+  const remainingBeforeEntry = totalQuantity > 0 ? remainingToLoad(totalQuantity, previousLoadedQuantity) : 1;
+  const newLoadingAllowed = canCreateNewLoading({ remainingQuantity: remainingBeforeEntry, editingExisting: Boolean(editingLoadingId) });
+  const effectiveContainerNo = (containerNumberInput || (transportMode === "By Road" ? vehicleNo : transportMode === "By Air" ? (transportReference || blNumber) : transportMode === "By Rail" ? railReference : "")).trim();
+  const payableRemaining = Number(poRow.remaining_due || 0);
   const loadingProgress = totalQuantity > 0 ? (totalLoadedQuantity / totalQuantity) * 100 : 0;
   const contractGrossWeight = Number(
     poData.totals?.totalGrossWeight ||
@@ -750,14 +697,6 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
   const currentInputEmptyKgs = Number(oneEmptyKgs || 0);
   const currentInputGrossKgs = currentInputQty > 0 && currentInputQtyKgs > 0 ? (currentInputQty * currentInputQtyKgs) : 0;
   const currentInputNetKgs = currentInputQty > 0 && currentInputQtyKgs > 0 ? (currentInputQty * Math.max(0, currentInputQtyKgs - currentInputEmptyKgs)) : 0;
-  const getAdvanceAppliedLocal = (finance: ReturnType<typeof calcLoadingFinance>, loadedQty: number) => {
-    const rawAdvance = Number(poRow.advance_paid || form.advanceAmount || 0);
-    const advanceInPurchaseCurrency = normalizeAdvanceToPurchaseCurrency(rawAdvance, contractPurchaseAmount, finance.exRate || 1);
-    const ratio = finance.proRataRatio || (totalQuantity > 0 ? loadedQty / totalQuantity : 0);
-    const appliedLocal = Math.max(0, ratio * advanceInPurchaseCurrency * (finance.exRate || 1));
-    return Math.min(appliedLocal, Math.max(0, finance.amountPKR || appliedLocal));
-  };
-
   async function downloadLoadDetails(kind: "json" | "pdf") {
     if (kind === "pdf") {
       const { printDomFragmentViaModal } = await import("@/lib/reports/print-dom-fragment");
@@ -791,6 +730,11 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
       setLoadingMessage(tt("plr.enter_qty", "Enter loading quantity first."));
       return;
     }
+    const replacedQty = editingLoadingId ? Number(history.find((x) => x.id === editingLoadingId)?.report_payload?.loadedQuantity || history.find((x) => x.id === editingLoadingId)?.loadedQuantity || 0) : 0;
+    if (totalQuantity > 0 && newQuantity > remainingBeforeEntry + replacedQty + 0.0001) {
+      setLoadingMessage(tt("plr.err_exceeds_remaining", "Loading quantity is more than the quantity still to load.") + ` (${(remainingBeforeEntry + replacedQty).toLocaleString()} ${unitLabel})`);
+      return;
+    }
     setSavingNewLoading(true);
     setLoadingMessage("");
     try {
@@ -807,8 +751,8 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
           cityBranchId: record.city_branch_id ?? null,
           purchaseOrderId: record.purchase_order_id ?? null,
           purchaseOrderNo: record.purchase_order_no ?? null,
-          containerNumber: containerNumberInput || record.container_number || `LOAD-${Date.now()}`,
-          containerType: record.container_type || "40 FT",
+          containerNumber: effectiveContainerNo || record.container_number || `LOAD-${Date.now()}`,
+          containerType: containerTypeInput || record.container_type || "40 FT",
           loadingStatus: "loaded",
           loadedAt: new Date(newLoadingDate).toISOString(),
           loadingLocation: loadingPortState || record.loading_location || loadingPort,
@@ -831,9 +775,21 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
           transportReference: transportReference || null,
           departureDate: departureDate || null,
           expectedArrivalDate: expectedArrivalDate || null,
-          transportExpenseAmount: Number(transportExpenseAmount || 0),
-          transportExpenseCurrency,
           transportRemarks: transportRemarksInput || null,
+          // Operational cargo data only — never a currency, rate or amount.
+          blNumber: blNumber || null,
+          grossWeight: grossWeightInput !== "" ? Number(grossWeightInput) : (currentInputGrossKgs > 0 ? currentInputGrossKgs : null),
+          tareWeight: tareWeightInput !== "" ? Number(tareWeightInput) : (currentInputGrossKgs > currentInputNetKgs && currentInputNetKgs > 0 ? currentInputGrossKgs - currentInputNetKgs : null),
+          netWeight: netWeightInput !== "" ? Number(netWeightInput) : (currentInputNetKgs > 0 ? currentInputNetKgs : null),
+          sealNumber: sealNumberInput || null,
+          vesselName: transportMode === "By Sea" ? (vesselName || null) : null,
+          voyageNo: transportMode === "By Sea" ? (voyageNo || null) : null,
+          awbNumber: transportMode === "By Air" ? (transportReference || blNumber || null) : null,
+          flightDetails: transportMode === "By Air" ? (vesselName || null) : null,
+          railReference: transportMode === "By Rail" ? (railReference || null) : null,
+          originText: [loadingCountryState, loadingPortState].filter(Boolean).join(" / ") || null,
+          destinationText: [receivingCountryState, receivingPortState].filter(Boolean).join(" / ") || null,
+          lotName: allotName || null,
           reportPayload: {
             sourceRecordId: record.id,
             sourceLoadingRecordNo: record.loading_record_no,
@@ -864,11 +820,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
               oneEmptyKgs,
               divideType,
               divideWeightValue,
-              priceType,
-              priceRateC1,
               qualityReportRef,
-              pricingCurrency,
-              exchangeRatePKR,
               originCountry,
               hsCode,
               allotName,
@@ -877,7 +829,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
             }],
             originCountry, goodsName, hsCode, allotName, brand, sizeSpec,
             qtyName, quantityNo, oneQtyKgs, oneEmptyKgs, divideType, divideWeightValue,
-            priceType, priceRateC1, qualityReportRef, pricingCurrency, exchangeRatePKR
+            qualityReportRef
           }
         })
       });
@@ -923,15 +875,14 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
         setOneEmptyKgs(defaultGood.emptyKgs ? String(defaultGood.emptyKgs) : (form.emptyKgs ? String(form.emptyKgs) : ""));
         setDivideType(defaultGood.divideType || form.divideType || "D/KGs");
         setDivideWeightValue(defaultGood.divideWeightValue ? String(defaultGood.divideWeightValue) : (form.divideWeightValue ? String(form.divideWeightValue) : "1"));
-        setPriceType(defaultGood.priceType || form.priceType || "P/KGs");
-        setPriceRateC1(defaultGood.coursePrice ? String(defaultGood.coursePrice) : (defaultGood.price ? String(defaultGood.price) : (form.priceRate || form.rate || "")));
         setQualityReportRef("");
-        setPricingCurrency(defaultGood.pricingCurrency || form.currency || poRow.currency_code || "USD");
-        setExchangeRatePKR(poExchangeRate || defaultExRate || "287");
+        setVoyageNo("");
+        setRailReference("");
+        setGrossWeightInput("");
+        setTareWeightInput("");
+        setNetWeightInput("");
       }
       setQualityReportRef("");
-      setPricingCurrency("USD");
-      setExchangeRatePKR(defaultExRate);
       window.dispatchEvent(new CustomEvent("erp:purchase-loading-saved"));
       onSaved?.();
     } catch (error) {
@@ -949,7 +900,9 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
           <p className="mt-0.5 text-xs font-semibold text-slate-500">{tt("plr.subtitle", "Manage loading quantity, checking, brand note, PDF and download actions.")}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button type="button" size="sm" onClick={() => {
+          <Button type="button" size="sm" disabled={!showNewLoading && !newLoadingAllowed} data-testid="new-loading-btn"
+            title={!showNewLoading && !newLoadingAllowed ? tt("plr.new_loading_disabled", "Everything is already loaded. Edit an existing entry to correct it.") : undefined}
+            onClick={() => {
             if (!showNewLoading) {
                setEditingLoadingId(null);
                setFormStep(1);
@@ -964,11 +917,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                const dOneEmptyKgs = defaultGood.emptyKgs ? String(defaultGood.emptyKgs) : (form.emptyKgs ? String(form.emptyKgs) : "");
                const dDivideType = defaultGood.divideType || form.divideType || "D/KGs";
                const dDivideWeightValue = defaultGood.divideWeightValue ? String(defaultGood.divideWeightValue) : (form.divideWeightValue ? String(form.divideWeightValue) : "1");
-               const dPriceType = defaultGood.priceType || form.priceType || "P/KGs";
-               const dPriceRate = defaultGood.coursePrice ? String(defaultGood.coursePrice) : (defaultGood.price ? String(defaultGood.price) : (form.priceRate || form.rate || ""));
-               const dCurrency = defaultGood.pricingCurrency || form.currency || poRow.currency_code || "USD";
-               const dExRate = poExchangeRate || defaultExRate || "287";
-               const dTransportMode = (form.shippingMode as "By Road" | "By Sea" | "By Air") || "By Sea";
+               const dTransportMode = (form.shippingMode as TransportModeUi) || "By Sea";
 
                setLoadingCountryState(loadingCountry !== "-" ? loadingCountry : (form.loadingCountry || ""));
                setLoadingPortState(loadingPort !== "-" ? loadingPort : (form.loadingPort || ""));
@@ -992,17 +941,19 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                setOneEmptyKgs(dOneEmptyKgs);
                setDivideType(dDivideType);
                setDivideWeightValue(dDivideWeightValue);
-               setPriceType(dPriceType);
-               setPriceRateC1(dPriceRate);
                setQualityReportRef("");
-               setPricingCurrency(dCurrency);
-               setExchangeRatePKR(dExRate);
+               setContainerTypeInput(record.container_type || "40 FT");
+               setVoyageNo("");
+               setRailReference("");
+               setGrossWeightInput("");
+               setTareWeightInput("");
+               setNetWeightInput("");
                setTransportMode(dTransportMode);
                setNewLoadingQuantity("");
                setNewLoadingNote("");
             }
             setShowNewLoading((value) => !value);
-          }} className="h-8 rounded-lg bg-emerald-600 px-3 text-xs font-black text-white hover:bg-emerald-700">
+          }} className="h-8 rounded-lg bg-emerald-600 px-3 text-xs font-black text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50">
             <Plus className="mr-1.5 h-3.5 w-3.5" /> {tt("plr.new_loading", "New Loading")}
           </Button>
           <ViewportActionMenu
@@ -1055,7 +1006,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                       <span className="rounded-full bg-white px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-100 dark:ring-emerald-500/30">{tt("plr.live", "Live")}</span>
                     </div>
                     <p className="text-[10px] font-semibold text-emerald-700/80 dark:text-emerald-200/80">
-                      {formStep === 1 ? tt("plr.step1_desc", "Enter shipping and routing details.") : tt("plr.step2_desc", "Enter goods, pricing and container details.")}
+                      {formStep === 1 ? tt("plr.step1_desc", "Enter shipping and routing details.") : tt("plr.step2_desc_op", "Enter goods, container, seal and weight details.")}
                     </p>
                   </div>
 
@@ -1127,8 +1078,9 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                             onChange={(e) => setContainerCount(e.target.value)}
                             className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold normal-case tracking-normal outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-slate-800 dark:bg-slate-950"
                           >
-                            <option value="1">{tt("plr.entry_1", "1 Entry")}</option>
-                            <option value="2">{tt("plr.entry_2", "2 Entries")}</option>
+                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                              <option key={n} value={String(n)}>{n === 1 ? tt("plr.entry_1", "1 Entry") : `${n} ${tt("plr.entries", "Entries")}`}</option>
+                            ))}
                           </select>
                         </label>
 
@@ -1175,8 +1127,8 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                               if (val === "__ADD_NEW__") {
                                 void handleAddNewLocationItem("country", "receivingCountry");
                               } else {
-                                setLoadingCountryState(val);
-                                setLoadingPortState("");
+                                setReceivingCountryState(val);
+                                setReceivingPortState("");
                               }
                             }}
                             options={allCountries.map((c) => ({ label: `${c.name} ${c.iso2 ? `(${c.iso2})` : ""}`, value: c.name }))}
@@ -1232,7 +1184,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                             </h5>
                           </div>
                           <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 uppercase">
-                            {transportMode}
+                            {translateOptionLabel(activeLang, transportMode)}
                           </span>
                         </div>
 
@@ -1242,7 +1194,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                             <select
                               value={transportMode}
                               onChange={(e) => {
-                                const mode = e.target.value as "By Road" | "By Sea" | "By Air";
+                                const mode = e.target.value as TransportModeUi;
                                 setTransportMode(mode);
                               }}
                               className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
@@ -1250,6 +1202,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                               <option value="By Sea">{tt("plr.by_sea", "By Sea (Ocean Freight)")}</option>
                               <option value="By Road">{tt("plr.by_road", "By Road (Truck / Trailer)")}</option>
                               <option value="By Air">{tt("plr.by_air", "By Air (Air Freight)")}</option>
+                              <option value="By Rail">{tt("plr.by_rail", "By Rail (Train)")}</option>
                             </select>
                           </label>
 
@@ -1264,7 +1217,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                                     setBlNumber(e.target.value);
                                     setTransportReference(e.target.value);
                                   }}
-                                  placeholder={tt("plr.ph_e_g__bl12345", "e.g. BL12345")}
+                                  data-testid="ld-bl" placeholder={tt("plr.ph_e_g__bl12345", "e.g. BL12345")}
                                   className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
                                 />
                               </label>
@@ -1275,6 +1228,17 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                                   value={vesselName}
                                   onChange={(e) => setVesselName(e.target.value)}
                                   placeholder={tt("plr.ph_e_g__msc_alina", "e.g. MSC Alina")}
+                                  className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
+                                />
+                              </label>
+
+                              <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                                {tt("plr.voyage_no", "Voyage No.")}
+                                <input
+                                  value={voyageNo}
+                                  onChange={(e) => setVoyageNo(e.target.value)}
+                                  data-testid="ld-voyage"
+                                  placeholder="e.g. 024E"
                                   className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
                                 />
                               </label>
@@ -1431,6 +1395,20 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                             </>
                           )}
 
+                          {/* Rail Mode Layout */}
+                          {transportMode === "By Rail" && (
+                            <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 sm:col-span-2">
+                              {tt("plr.rail_ref", "Rail / Wagon Reference")}
+                              <input
+                                value={railReference}
+                                onChange={(e) => setRailReference(e.target.value)}
+                                data-testid="ld-rail"
+                                placeholder="e.g. RW-55021"
+                                className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
+                              />
+                            </label>
+                          )}
+
                           {/* Common Dates */}
                           <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
                             {tt("plr.departure_date", "Departure Date")}
@@ -1451,47 +1429,6 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                               className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
                             />
                           </label>
-
-                          {/* Transport Expense with Rate & Conversion */}
-                          <div className="sm:col-span-2 rounded-lg border border-indigo-100 bg-white p-2.5 dark:border-indigo-900/60 dark:bg-slate-900/80">
-                            <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 block">
-                              {tt("plr.transport_expense", "Transport Expense")}
-                              <div className="flex gap-2 mt-1">
-                                <input
-                                  type="number"
-                                  min="0"
-                                  step="0.01"
-                                  value={transportExpenseAmount}
-                                  onChange={(e) => setTransportExpenseAmount(e.target.value)}
-                                  placeholder="0.00"
-                                  className="h-9 flex-1 rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
-                                />
-                                <select
-                                  value={transportExpenseCurrency}
-                                  onChange={(e) => setTransportExpenseCurrency(e.target.value)}
-                                  className="h-9 w-24 rounded-lg border border-slate-200 bg-white px-2 text-xs font-bold outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
-                                >
-                                  <option value="USD">USD</option>
-                                  <option value="AED">AED</option>
-                                  <option value="PKR">PKR</option>
-                                  <option value="EUR">EUR</option>
-                                </select>
-                              </div>
-                            </label>
-                            {Number(transportExpenseAmount || 0) > 0 && (
-                              <div className="mt-2 flex items-center justify-between text-[10px] font-bold text-slate-500">
-                                <span>{tt("plr.converted_expense", "Converted Total")}:</span>
-                                <div className="font-mono text-indigo-700 dark:text-indigo-300 font-black">
-                                  {((Number(transportExpenseAmount) || 0) * (transportExpenseCurrency === localCurrency ? 1 : Number(exchangeRatePKR || 1))).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {localCurrency}
-                                  {transportExpenseCurrency !== localCurrency && (
-                                    <span className="text-[9px] text-slate-400 font-normal ml-1">
-                                      (@ {exchangeRatePKR || 1} {localCurrency}/{transportExpenseCurrency})
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            )}
-                          </div>
 
                           <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 sm:col-span-2">
                             {tt("plr.transport_remarks", "Transport Remarks")}
@@ -1616,8 +1553,6 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                                 if (good.emptyKgs) setOneEmptyKgs(String(good.emptyKgs));
                                 if (good.divideType) setDivideType(good.divideType);
                                 if (good.divideWeightValue) setDivideWeightValue(String(good.divideWeightValue));
-                                if (good.priceType) setPriceType(good.priceType);
-                                if (good.coursePrice) setPriceRateC1(String(good.coursePrice));
                               }
                             }}
                             className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
@@ -1658,7 +1593,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                         
                         <label className="space-y-1 text-[10px] font-bold text-slate-500 dark:text-slate-400">
                           {tt("plr.qty_number", "Quantity No")}
-                          <input value={quantityNo} onChange={(e) => {
+                          <input data-testid="ld-qty" value={quantityNo} onChange={(e) => {
                             setQuantityNo(e.target.value);
                             setNewLoadingQuantity(e.target.value);
                           }} className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
@@ -1684,46 +1619,53 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                           <input value={divideWeightValue} onChange={(e) => setDivideWeightValue(e.target.value)} placeholder="1" className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
                         </label>
 
-                        <label className="space-y-1 text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                          {tt("plr.price_type", "Price Type")}
-                          <input value={priceType} onChange={(e) => setPriceType(e.target.value)} placeholder="P/KGs" className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
-                        </label>
-                        
-                        <label className="space-y-1 text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                          {tt("plr.price_rate", "Price Rate (C1)")}
-                          <input value={priceRateC1} onChange={(e) => setPriceRateC1(e.target.value)} className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
-                        </label>
-
                         <label className="space-y-1 text-[10px] font-bold text-slate-500 dark:text-slate-400 col-span-2">
                           {tt("plr.quality_ref", "Quality Report Ref")}
                           <input value={qualityReportRef} onChange={(e) => setQualityReportRef(e.target.value)} placeholder={tt("plr.ph_passed", "Passed")} className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
                         </label>
                       </div>
 
-                      <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-4 mb-6 dark:border-emerald-900/30 dark:bg-emerald-950/20">
-                        <h4 className="text-[10px] font-black uppercase tracking-widest text-teal-700 dark:text-teal-400 mb-3">{tt("plr.purchase_currency_section", "Purchase Currency & Conversion")}</h4>
-                        
+                      <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-4 mb-6 dark:border-emerald-900/30 dark:bg-emerald-950/20" data-testid="loading-container-panel">
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-teal-700 dark:text-teal-400 mb-3">{tt("plr.container_section", "Container, Seal & Weights")}</h4>
+
                         <div className="flex flex-col gap-3">
                           <label className="space-y-1 text-[10px] font-bold text-teal-700 dark:text-teal-500">
-                            {tt("plr.pricing_currency", "Pricing Currency")}
-                            <input value={pricingCurrency} onChange={(e) => setPricingCurrency(e.target.value)} placeholder="USD" className="h-9 w-full rounded-md border border-emerald-200 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-emerald-800 dark:bg-slate-900 dark:text-slate-200" />
-                          </label>
-                          <label className="space-y-1 text-[10px] font-bold text-teal-700 dark:text-teal-500">
-                            {tt("plr.exchange_rate", "Exchange Rate")} to {localCurrency}
-                            <input value={exchangeRatePKR} onChange={(e) => setExchangeRatePKR(e.target.value)} placeholder={defaultExRate} className="h-9 w-full rounded-md border border-emerald-200 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-emerald-800 dark:bg-slate-900 dark:text-slate-200" />
-                          </label>
-                          <label className="space-y-1 text-[10px] font-bold text-teal-700 dark:text-teal-500">
                             {tt("plr.container_no", "Container No.")}
-                            <input value={containerNumberInput} onChange={(e) => setContainerNumberInput(e.target.value)} placeholder={tt("plr.ph_e_g__mscu1234567", "e.g. MSCU1234567")} className="h-9 w-full rounded-md border border-emerald-200 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-emerald-800 dark:bg-slate-900 dark:text-slate-200" />
+                            <input value={containerNumberInput} onChange={(e) => setContainerNumberInput(e.target.value)} data-testid="ld-container-no" placeholder={tt("plr.ph_e_g__mscu1234567", "e.g. MSCU1234567")} className="h-9 w-full rounded-md border border-emerald-200 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-emerald-800 dark:bg-slate-900 dark:text-slate-200" />
+                          </label>
+                          <label className="space-y-1 text-[10px] font-bold text-teal-700 dark:text-teal-500">
+                            {tt("plr.container_size", "Container Size / Type")}
+                            <select value={containerTypeInput} onChange={(e) => setContainerTypeInput(e.target.value)} data-testid="ld-container-type" className="h-9 w-full rounded-md border border-emerald-200 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-emerald-500 dark:border-emerald-800 dark:bg-slate-900 dark:text-slate-200">
+                              {containerTypes.map((c) => (<option key={c} value={c}>{c}</option>))}
+                            </select>
                           </label>
                           <label className="space-y-1 text-[10px] font-bold text-teal-700 dark:text-teal-500">
                             {tt("plr.seal_no", "Seal No.")}
-                            <input value={sealNumberInput} onChange={(e) => setSealNumberInput(e.target.value)} placeholder={tt("plr.ph_e_g__sl998877", "e.g. SL998877")} className="h-9 w-full rounded-md border border-emerald-200 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-emerald-800 dark:bg-slate-900 dark:text-slate-200" />
+                            <input value={sealNumberInput} onChange={(e) => setSealNumberInput(e.target.value)} data-testid="ld-seal" placeholder={tt("plr.ph_e_g__sl998877", "e.g. SL998877")} className="h-9 w-full rounded-md border border-emerald-200 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-emerald-800 dark:bg-slate-900 dark:text-slate-200" />
                           </label>
+                          <div className="grid grid-cols-3 gap-2">
+                            <label className="space-y-1 text-[10px] font-bold text-teal-700 dark:text-teal-500">
+                              {tt("plr.gross_weight_kg", "Gross (kg)")}
+                              <input type="number" min="0" step="0.01" value={grossWeightInput} onChange={(e) => setGrossWeightInput(e.target.value)} data-testid="ld-gross" placeholder={currentInputGrossKgs > 0 ? String(currentInputGrossKgs) : "0"} className="h-9 w-full rounded-md border border-emerald-200 bg-white px-2 text-sm font-semibold text-slate-800 outline-none focus:border-emerald-500 dark:border-emerald-800 dark:bg-slate-900 dark:text-slate-200" />
+                            </label>
+                            <label className="space-y-1 text-[10px] font-bold text-teal-700 dark:text-teal-500">
+                              {tt("plr.tare_weight_kg", "Tare (kg)")}
+                              <input type="number" min="0" step="0.01" value={tareWeightInput} onChange={(e) => setTareWeightInput(e.target.value)} data-testid="ld-tare" placeholder={currentInputGrossKgs > currentInputNetKgs ? String(currentInputGrossKgs - currentInputNetKgs) : "0"} className="h-9 w-full rounded-md border border-emerald-200 bg-white px-2 text-sm font-semibold text-slate-800 outline-none focus:border-emerald-500 dark:border-emerald-800 dark:bg-slate-900 dark:text-slate-200" />
+                            </label>
+                            <label className="space-y-1 text-[10px] font-bold text-teal-700 dark:text-teal-500">
+                              {tt("plr.net_weight_kg", "Net (kg)")}
+                              <input type="number" min="0" step="0.01" value={netWeightInput} onChange={(e) => setNetWeightInput(e.target.value)} data-testid="ld-net" placeholder={currentInputNetKgs > 0 ? String(currentInputNetKgs) : "0"} className="h-9 w-full rounded-md border border-emerald-200 bg-white px-2 text-sm font-semibold text-slate-800 outline-none focus:border-emerald-500 dark:border-emerald-800 dark:bg-slate-900 dark:text-slate-200" />
+                            </label>
+                          </div>
                           <label className="space-y-1 text-[10px] font-bold text-teal-700 dark:text-teal-500">
                             {tt("plr.loading_note", "Loading Note")}
-                            <input value={newLoadingNote} onChange={(e) => setNewLoadingNote(e.target.value)} placeholder={tt("plr.ph_e_g__checking___brand_remarks", "e.g. Checking / brand remarks")} className="h-9 w-full rounded-md border border-emerald-200 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-emerald-800 dark:bg-slate-900 dark:text-slate-200" />
+                            <input value={newLoadingNote} onChange={(e) => setNewLoadingNote(e.target.value)} data-testid="ld-note" placeholder={tt("plr.ph_e_g__checking___brand_remarks", "e.g. Checking / brand remarks")} className="h-9 w-full rounded-md border border-emerald-200 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-emerald-800 dark:bg-slate-900 dark:text-slate-200" />
                           </label>
+                          <div className="rounded-md border border-dashed border-emerald-300 bg-white/70 px-3 py-2 text-[10px] font-semibold text-slate-600 dark:border-emerald-800 dark:bg-slate-900/60 dark:text-slate-300" data-testid="loading-booking-readonly">
+                            <span className="uppercase tracking-wider text-slate-400">{tt("plr.booking_amount_ro", "Booking amount (read-only)")}: </span>
+                            <span className="font-mono font-black">{contractPurchaseAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {contractPurchaseCurrency}</span>
+                            <div className="mt-0.5 text-[9px] font-medium text-slate-400">{tt("plr.booking_amount_note", "Currency, rate and amounts belong to the Purchase Booking and Payment Journal — not to Loading.")}</div>
+                          </div>
                         </div>
                       </div>
 
@@ -1738,7 +1680,6 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                                 <Th className="px-2 py-1.5 text-right">{tt("plr.col_po_qty", "PO Qty")}</Th>
                                 <Th className="px-2 py-1.5 text-right">{tt("plr.status_loaded", "Loaded")}</Th>
                                 <Th className="px-2 py-1.5 text-right">{tt("plr.col_balance_short", "Balance")}</Th>
-                                <Th className="px-2 py-1.5 text-right">{tt("plr.col_rate", "Rate")}</Th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -1747,14 +1688,12 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                                 const poQty = Number(g.qtyNo || g.quantity || 0);
                                 const loaded = itemLoadBalances[name]?.loaded || 0;
                                 const bal = Math.max(0, poQty - loaded);
-                                const rate = Number(g.coursePrice || 0);
                                 return (
                                   <tr key={gIdx} className="text-slate-655 dark:text-slate-350 hover:bg-slate-50/50 dark:hover:bg-slate-900/50 transition">
                                     <td className="px-2 py-2 font-bold uppercase truncate max-w-[80px]" title={name}>{name}</td>
                                     <td className="px-2 py-2 text-right font-mono">{poQty.toLocaleString()}</td>
                                     <td className="px-2 py-2 text-right font-mono text-emerald-600 font-bold">{loaded.toLocaleString()}</td>
                                     <td className={cn("px-2 py-2 text-right font-mono font-bold", (bal > 0) ? "text-rose-600" : "text-emerald-650")}>{bal.toLocaleString()}</td>
-                                    <td className="px-2 py-2 text-right font-mono">{rate.toLocaleString()}</td>
                                   </tr>
                                 );
                               })}
@@ -1763,11 +1702,11 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                         </div>
                       </div>
 
-                      <div className="mt-auto pt-4 flex items-center justify-between gap-2 border-t border-slate-200 dark:border-slate-800">
+                      <div className="mt-auto pt-4 pb-20 sm:pb-0 flex items-center justify-between gap-2 border-t border-slate-200 dark:border-slate-800">
                         <Button type="button" variant="outline" onClick={() => setFormStep(1)} className="rounded-full h-9 px-4 text-xs font-bold">
                           {tt("plr.back", "Back")}
                         </Button>
-                        <Button type="button" onClick={() => void saveNewLoading()} disabled={savingNewLoading || !newQuantity || !containerNumberInput} className="rounded-full h-9 bg-emerald-600 px-4 text-xs font-bold text-white hover:bg-emerald-700 shadow-sm transition active:scale-[0.98] disabled:opacity-50">
+                        <Button type="button" onClick={() => void saveNewLoading()} disabled={savingNewLoading || !newQuantity || !effectiveContainerNo} data-testid="ld-save" className="rounded-full h-9 bg-emerald-600 px-4 text-xs font-bold text-white hover:bg-emerald-700 shadow-sm transition active:scale-[0.98] disabled:opacity-50">
                           {savingNewLoading ? tt("plr.saving", "Saving...") : (Number(containerCount) > 1 && (currentContainerIndex < Number(containerCount))) ? tt("plr.save_next", "Save & Next Container") + " (" + String(currentContainerIndex + 1) + "/" + String(containerCount) + ")" : tt("plr.save_loading", "Save Loading")}
                         </Button>
                       </div>
@@ -1816,7 +1755,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
                     <span className="text-slate-500">{tt("common.status", "Status")}:</span>
-                    <span className="font-bold text-amber-600 uppercase text-[10px]">{record.loading_status || "PENDING"}</span>
+                    <span className="font-bold text-amber-600 uppercase text-[10px]">{record.loading_status === "loaded" ? tt("plr.status_loaded", "Loaded") : (record.loading_status || "PENDING")}</span>
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
                     <span className="text-slate-500">{tt("plr.system_serial", "System Serial")}:</span>
@@ -1908,7 +1847,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                   <h3 className="font-bold uppercase tracking-widest text-slate-700 dark:text-slate-300 text-[10px]">{tt("plr.loading_summary_report", "Loading Summary Report")}</h3>
                 </div>
                 <span className="text-[10px] font-mono font-black text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900">
-                  {loadingProgress.toFixed(1)}% Loaded
+                  {loadingProgress.toFixed(1)}% {tt("plr.status_loaded", "Loaded")}
                 </span>
               </div>
               <div className="space-y-2 text-xs font-semibold">
@@ -1945,136 +1884,55 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                   <span className="font-mono font-black text-rose-600">{remainingToLoadQuantity.toLocaleString()} {unitLabel}</span>
                 </div>
 
-                {remainingToLoadQuantity > 0 && (
-                  <Button
-                    type="button"
-                    onClick={() => handleInitiateTransfer(record)}
-                    className="w-full h-10 mt-2 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-2 shadow-sm transition active:scale-[0.98]"
-                  >
-                    <Link2 className="h-4 w-4" />
-                    {tt("plr.btn_transfer_remaining_journal", "Transfer Remaining to Journal")}
-                  </Button>
-                )}
-              </div>
-            </div>
-
-            {/* Transfer Remaining to Journal Confirmation Modal (Requirement 11) */}
-      {transferConfirmData && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
-          <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
-              <div className="flex items-center gap-2">
-                <div className="p-2 rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400">
-                  <Link2 className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-black uppercase text-slate-800 dark:text-slate-100">{tt("plr.btn_transfer_remaining_journal", "Transfer Remaining to Journal")}</h3>
-                  <p className="text-[10px] text-slate-500 font-semibold">{tt("plr.transfer_confirm_summary", "Confirmation summary for loaded goods remaining balance")}</p>
+                <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50 p-3 text-[10px] font-semibold text-slate-600 dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-300" data-testid="loading-payment-note">
+                  <p>{tt("plr.payment_note", "Payment is separate from loading. An outstanding Credit or Final Payment balance stays in Accounts Payable; it never blocks loading and is not part of Remaining to Load.")}</p>
+                  {payableRemaining > 0.005 && (
+                    <a
+                      href={`/dashboard/journal/purchase-order-payment/remaining?purchaseOrderNo=${encodeURIComponent(record.purchase_order_no || poRow.purchase_order_no || "")}`}
+                      className="mt-2 inline-flex items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1 text-[10px] font-black uppercase text-blue-700 hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300"
+                      data-testid="open-payment-journal"
+                    >
+                      <Link2 className="h-3 w-3" /> {tt("plr.open_payment_journal", "Open Payment Journal")}
+                    </a>
+                  )}
                 </div>
               </div>
-              <button onClick={() => setTransferConfirmData(null)} className="text-slate-400 hover:text-slate-600 text-sm font-bold" aria-label={tt("plr.a_close", "Close")}>X</button>
             </div>
 
-            <div className="space-y-3 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl text-xs font-semibold border border-slate-100 dark:border-slate-800">
-              <div className="flex justify-between items-center"><span className="text-slate-500">{tt("plr.f_po_number", "PO Number:")}</span><span className="font-mono font-bold text-blue-600">{transferConfirmData.purchaseOrderNo}</span></div>
-              <div className="flex justify-between items-center"><span className="text-slate-500">{tt("plr.f_loaded_quantity", "Loaded Quantity:")}</span><span className="font-mono font-black text-slate-800 dark:text-slate-100">{transferConfirmData.loadedQty.toLocaleString()} Bags</span></div>
-              <div className="flex justify-between items-center"><span className="text-slate-500">{tt("plr.f_loaded_purchase_amount", "Loaded Purchase Amount:")}</span><span className="font-mono font-black text-slate-800 dark:text-slate-100">{transferConfirmData.loadedPurchaseAmountFC.toLocaleString(undefined, {minimumFractionDigits: 2})} {transferConfirmData.purchaseCurrency}</span></div>
-              <div className="flex justify-between items-center"><span className="text-slate-500">{tt("plr.f_advance_paid_applied", "Advance Paid Applied:")}</span><span className="font-mono font-bold text-emerald-600">{transferConfirmData.advancePaidLC.toLocaleString(undefined, {minimumFractionDigits: 2})} {transferConfirmData.finalCurrency}</span></div>
-              <div className="flex justify-between items-center pt-2 border-t border-slate-200 dark:border-slate-800"><span className="text-rose-600 font-bold uppercase">{tt("plr.f_remaining_amount_to_journal", "Remaining Amount to Journal:")}</span><span className="font-mono font-black text-rose-600 text-sm">{transferConfirmData.remainingLC.toLocaleString(undefined, {minimumFractionDigits: 2})} {transferConfirmData.finalCurrency}</span></div>
-              <div className="pt-2 border-t border-slate-200 dark:border-slate-800 grid grid-cols-2 gap-2 text-[10px]">
-                <div><span className="text-slate-400 block">{tt("plr.debit_account_dr", "Debit Account (DR)")}</span><span className="font-bold text-blue-700 dark:text-blue-300">{transferConfirmData.debitAccountName} ({transferConfirmData.debitAccountCode})</span></div>
-                <div><span className="text-slate-400 block">{tt("plr.credit_account_cr", "Credit Account (CR)")}</span><span className="font-bold text-rose-700 dark:text-rose-300">{transferConfirmData.creditAccountName} ({transferConfirmData.creditAccountCode})</span></div>
               </div>
-              <div className="flex justify-between items-center text-[10px] text-slate-500 pt-1">
-                <span>{tt("plr.f_exchange_rate", "Exchange Rate:")} <strong className="font-mono text-slate-700 dark:text-slate-200">{transferConfirmData.exchangeRate}</strong></span>
-                <span>{tt("plr.f_final_currency", "Final Currency:")} <strong className="font-mono text-slate-700 dark:text-slate-200">{transferConfirmData.finalCurrency}</strong></span>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-3 pt-2">
-              <Button type="button" variant="outline" size="sm" onClick={() => setTransferConfirmData(null)} className="rounded-lg font-bold text-xs">{tt("plr.word_cancel", "Cancel")}</Button>
-              <Button type="button" size="sm" onClick={() => {
-                const queryParams = new URLSearchParams({
-                  purchaseOrderNo: transferConfirmData.purchaseOrderNo,
-                  fromLoading: "true",
-                  loadingRecordId: transferConfirmData.loadingRecordId,
-                  loadedQty: String(transferConfirmData.loadedQty),
-                  grossWeight: String(transferConfirmData.grossWeight),
-                  netWeight: String(transferConfirmData.netWeight),
-                  priceRate: String(transferConfirmData.priceRate),
-                  amount: String(transferConfirmData.remainingLC / transferConfirmData.exchangeRate),
-                  exchangeRate: String(transferConfirmData.exchangeRate),
-                  currency: transferConfirmData.purchaseCurrency,
-                  amountPKR: String(transferConfirmData.remainingLC)
-                }).toString();
-                setTransferConfirmData(null);
-                window.open(`/dashboard/journal/purchase-order-payment/remaining?${queryParams}`, "_self");
-              }} className="rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs">
-                {tt("plr.confirm_transfer_journal", "Confirm & Transfer to Journal")}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-              </div>
-              <div className="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+              <div className="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900" data-testid="bill-loading-report">
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 bg-white px-5 py-4 dark:border-slate-800 dark:bg-slate-900">
                   <div>
                     <h3 className="text-xs font-black uppercase tracking-widest text-slate-800 dark:text-slate-100">{tt("plr.title_current_bill_loading", "Current Bill Loading Report")}</h3>
-                    <p className="mt-1 text-[10px] font-semibold text-slate-500">Consolidated bill quantity, loaded progress, payment conversion and remaining balance.</p>
+                    <p className="mt-1 text-[10px] font-semibold text-slate-500">{tt("plr.bill_loading_note", "Physical quantity and weight: contract, loaded and still to load.")}</p>
                   </div>
                   <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-blue-700 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-300">
                     {tt("plr.bill_summary", "Bill Summary")}
                   </span>
                 </div>
                 <div className="overflow-x-auto">
-                  <table className="w-full min-w-[1280px] text-left text-xs">
+                  <table className="w-full min-w-[980px] text-left text-xs">
                     <thead>
                       <tr className="border-b border-slate-200 bg-slate-50 text-[10px] uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-900/60">
                         <Th className="px-4 py-3">{tt("common.sr_no", "SR#")}</Th>
-                        <Th className="px-4 py-3">Goods</Th>
-                        <Th className="px-4 py-3 text-right">Contract Qty</Th>
-                        <Th className="px-4 py-3 text-right">{tt("plr.loaded_qty", "Loaded Qty")}</Th>
-                        <Th className="px-4 py-3 text-right">Remaining Qty</Th>
-                        <Th className="px-4 py-3 text-right">Net Weight</Th>
-                        <Th className="px-4 py-3 text-right">Gross Weight</Th>
-                        <Th className="px-4 py-3 text-end">{tt("plr.col_purchase_rate", "Purchase Rate")}</Th>
-                        <Th className="px-4 py-3 text-right">Loaded Purchase</Th>
-                        <Th className="px-4 py-3 text-end">{tt("plr.col_exchange_rate", "Exchange Rate")}</Th>
-                        <Th className="px-4 py-3 text-end">{tt("plr.col_final_amount", "Final Amount")} ({localCurrency})</Th>
-                        <Th className="px-4 py-3 text-right">Approved Advance</Th>
-                        <Th className="px-4 py-3 text-right">Balance</Th>
-                        <Th className="px-4 py-3">Route / Dates</Th>
-                        <Th className="px-4 py-3 text-center">Action</Th>
+                        <Th className="px-4 py-3">{tt("plr.col_goods", "Goods")}</Th>
+                        <Th className="px-4 py-3 text-end">{tt("plr.col_contract_qty", "Contract Qty")}</Th>
+                        <Th className="px-4 py-3 text-end">{tt("plr.loaded_qty", "Loaded Qty")}</Th>
+                        <Th className="px-4 py-3 text-end">{tt("plr.remaining_to_load", "Remaining to Load")}</Th>
+                        <Th className="px-4 py-3 text-end">{tt("plr.col_net_weight", "Net Weight")}</Th>
+                        <Th className="px-4 py-3 text-end">{tt("plr.col_gross_weight", "Gross Weight")}</Th>
+                        <Th className="px-4 py-3 text-end">{tt("plr.col_booking_amount", "Booking Amount")}</Th>
+                        <Th className="px-4 py-3">{tt("plr.col_route_dates", "Route / Dates")}</Th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                       {(() => {
-                        const exRate = Number(exchangeRatePKR || form.exchangeRate || (poData as any).exchange_rate || 1);
-                        const effectiveRate = Number(goods?.[0]?.coursePrice || form.coursePrice || (totalQuantity > 0 ? contractPurchaseAmount / totalQuantity : 0));
-                        
-                        const effectiveLoadedQty = totalLoadedQuantity;
-                        const proRataRatio = totalQuantity > 0 ? (effectiveLoadedQty / totalQuantity) : (effectiveLoadedQty > 0 ? 1 : 0);
-                        
-                        const billPurchaseFC = effectiveLoadedQty > 0
-                          ? (proRataRatio * contractPurchaseAmount)
-                          : contractPurchaseAmount;
-                        const billFinalLC = billPurchaseFC * exRate;
-                        
-                        const rawPoAdvance = Number(poRow.advance_paid || form.advanceAmount || 0);
-                        const advanceInFC = normalizeAdvanceToPurchaseCurrency(rawPoAdvance, contractPurchaseAmount, exRate);
-                        const appliedAdvanceLC = effectiveLoadedQty > 0
-                          ? Math.min(proRataRatio * advanceInFC * exRate, billFinalLC)
-                          : Math.min(advanceInFC * exRate, billFinalLC);
-                        const billBalanceLC = Math.max(0, billFinalLC - appliedAdvanceLC);
-
                         const gName = goods?.[0]?.goodsName || goods?.[0]?.item || form.goodsName || form.itemName || "-";
                         const brandName = goods?.[0]?.brand || form.brand || "";
                         const sizeName = goods?.[0]?.size || form.size || "";
-                        const route = [loadingPort !== "-" ? loadingPort : form.loadingPort, receivingPort !== "-" ? receivingPort : form.receivedPort].filter(Boolean).join(" to ") || "-";
+                        const route = [loadingPort !== "-" ? loadingPort : form.loadingPort, receivingPort !== "-" ? receivingPort : form.receivedPort].filter(Boolean).join(" \u2192 ") || "-";
                         const displayLoadDate = form.loadingDate || loadingDate || "-";
-                        const displayRecDate = form.receivedDate || form.arrivalDate || receivingDate || "Pending";
-
+                        const displayRecDate = form.receivedDate || form.arrivalDate || receivingDate || tt("plr.pending", "Pending");
                         return (
                           <tr className="bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800/60 font-semibold">
                             <td className="px-4 py-3 font-mono font-bold text-slate-500">01</td>
@@ -2082,43 +1940,15 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                               <div className="font-black text-slate-800 dark:text-slate-100">{gName}</div>
                               <div className="mt-1 text-[10px] font-semibold text-slate-500">{[brandName, sizeName].filter(Boolean).join(" / ") || "-"}</div>
                             </td>
-                            <td className="px-4 py-3 text-right font-mono font-black text-slate-700 dark:text-slate-200">{totalQuantity.toLocaleString()} {unitLabel}</td>
-                            <td className="px-4 py-3 text-right font-mono font-black text-emerald-600">{effectiveLoadedQty.toLocaleString()} {unitLabel}</td>
-                            <td className="px-4 py-3 text-right font-mono font-black text-rose-600">{remainingToLoadQuantity.toLocaleString()} {unitLabel}</td>
-                            <td className="px-4 py-3 text-right font-mono text-slate-600 dark:text-slate-300">{contractNetWeight.toLocaleString()} kg</td>
-                            <td className="px-4 py-3 text-right font-mono text-slate-600 dark:text-slate-300">{contractGrossWeight.toLocaleString()} kg</td>
-                            <td className="px-4 py-3 text-right font-mono text-slate-700 dark:text-slate-200">
-                              {effectiveRate > 0 ? `${effectiveRate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })} ${contractPurchaseCurrency}` : "-"}
-                            </td>
-                            <td className="px-4 py-3 text-right font-mono font-black text-slate-800 dark:text-slate-100">
-                              {billPurchaseFC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {contractPurchaseCurrency}
-                            </td>
-                            <td className="px-4 py-3 text-right font-mono font-semibold text-blue-700 dark:text-blue-300">{exRate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</td>
-                            <td className="px-4 py-3 text-right font-mono font-black text-blue-700 dark:text-blue-300">
-                              {billFinalLC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {localCurrency}
-                            </td>
-                            <td className="px-4 py-3 text-right font-mono font-black text-emerald-600">
-                              {appliedAdvanceLC > 0 ? `${appliedAdvanceLC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${localCurrency}` : "-"}
-                            </td>
-                            <td className="px-4 py-3 text-right font-mono font-black text-rose-600">
-                              {billBalanceLC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {localCurrency}
-                            </td>
+                            <td className="px-4 py-3 text-end font-mono font-black text-slate-700 dark:text-slate-200">{totalQuantity.toLocaleString()} {unitLabel}</td>
+                            <td className="px-4 py-3 text-end font-mono font-black text-emerald-600" data-testid="bill-loaded-qty">{totalLoadedQuantity.toLocaleString()} {unitLabel}</td>
+                            <td className="px-4 py-3 text-end font-mono font-black text-rose-600" data-testid="bill-remaining-qty">{remainingToLoadQuantity.toLocaleString()} {unitLabel}</td>
+                            <td className="px-4 py-3 text-end font-mono text-slate-600 dark:text-slate-300">{contractNetWeight.toLocaleString()} kg</td>
+                            <td className="px-4 py-3 text-end font-mono text-slate-600 dark:text-slate-300">{contractGrossWeight.toLocaleString()} kg</td>
+                            <td className="px-4 py-3 text-end font-mono text-slate-700 dark:text-slate-200">{contractPurchaseAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {contractPurchaseCurrency}</td>
                             <td className="px-4 py-3">
                               <div className="font-semibold text-slate-700 dark:text-slate-200">{route}</div>
                               <div className="mt-1 text-[10px] font-semibold text-slate-500">{displayLoadDate} &rarr; {displayRecDate}</div>
-                            </td>
-                            <td className="px-4 py-3 text-center">
-                              {billBalanceLC > 0 ? (
-                                <button
-                                  type="button"
-                                  onClick={() => handleInitiateTransfer(record)}
-                                  className="rounded-md bg-blue-600 px-2.5 py-1 text-[10px] font-black uppercase text-white hover:bg-blue-700 shadow-sm transition active:scale-95 flex items-center gap-1 mx-auto"
-                                >
-                                  <Link2 className="h-3 w-3" /> {tt("plr.transfer", "Transfer")}
-                                </button>
-                              ) : (
-                                <span className="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[9px] font-bold text-emerald-700">{tt("plr.word_settled", "Settled")}</span>
-                              )}
                             </td>
                           </tr>
                         );
@@ -2128,229 +1958,144 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                 </div>
               </div>
 
-              <div className="hidden">
-            <div className="border-b border-slate-100 bg-slate-50/80 px-6 py-4 dark:border-slate-800 dark:bg-slate-900/40">
-              <h3 className="text-xs font-black uppercase tracking-widest text-slate-700 dark:text-slate-300">{tt("plr.title_goods_container", "Goods & Container Report")}</h3>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs whitespace-nowrap">
-                <thead className="bg-slate-50/50 dark:bg-slate-900/20">
-                  <tr className="border-b border-slate-200 dark:border-slate-800">
-                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 w-10">SR#</Th>
-                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Country</Th>
-                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Loading No</Th>
-                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Purchase Booking No.</Th>
-                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Sales Account</Th>
-                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Purchase Account</Th>
-                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Goods</Th>
-                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Quantity</Th>
-                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Net Weight</Th>
-                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Gross Weight</Th>
-                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Purchase Amount ({localCurrency})</Th>
-                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Exchange Rate</Th>
-                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Advance Amount ({localCurrency})</Th>
-                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Balance Amount ({localCurrency})</Th>
-                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Payment Date</Th>
-                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Loading Country</Th>
-                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Loading Port</Th>
-                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Loading Date</Th>
-                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Received Country</Th>
-                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Received Port</Th>
-                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Received Date</Th>
-                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Action</Th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {(() => {
-                    const hasLoading = record.loading_status === "loaded" || Number(record.report_payload?.loadedQuantity || record.loadedQuantity || 0) > 0;
-                    
-                    if (hasLoading) {
-                      const finance = calcLoadingFinance(record, poRow, form);
-                      const gName = record.report_payload?.goodsName || record.report_payload?.item || form.itemName || "-";
-                      const brandName = record.report_payload?.brand || "";
-                      const sizeName = record.report_payload?.sizeSpec || "";
-                      const nameCombined = [gName, brandName, sizeName].filter(Boolean).join(" - ") || "-";
-
-                      const loadedQty = Number(record.report_payload?.loadedQuantity || record.report_payload?.loadingQuantity || record.loadedQuantity || 0);
-                      const grossWeight = finance.grossWeight;
-                      const netWeight = finance.netWeight;
-
-                      const itemFinalAmountPKR = finance.amountPKR;
-                      const exRate = finance.exRate;
-
-                      const advancePaidForThisLoadingLocal = getAdvanceAppliedLocal(finance, loadedQty);
-                      const balPKR = Math.max(0, itemFinalAmountPKR - advancePaidForThisLoadingLocal);
-                      const payDate = form.advancePaymentDate || form.paymentDate || form.clearanceDate || "-";
-
-                      return (
-                        <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
-                          <td className="px-6 py-3 font-medium text-slate-400">01</td>
-                          <td className="px-6 py-3 font-semibold text-slate-600 dark:text-slate-300">{countryLabel}</td>
-                          <td className="px-6 py-3 font-semibold text-slate-600 dark:text-slate-300">{record.loading_record_no || "-"}</td>
-                          <td className="px-6 py-3 font-semibold text-slate-600 dark:text-slate-300">{record.purchase_order_no || "-"}</td>
-                          <td className="px-6 py-3 font-semibold text-slate-600 dark:text-slate-300">{form.salesAccountName || form.salesAccountNumber || "-"}</td>
-                          <td className="px-6 py-3 font-semibold text-slate-600 dark:text-slate-300">{form.purchaseAccountName || form.supplierName || "-"}</td>
-                          <td className="px-6 py-3 font-bold text-slate-700 dark:text-slate-200">{nameCombined}</td>
-                          <td className="px-6 py-3 font-mono font-semibold text-slate-600 dark:text-slate-300 text-right">{loadedQty.toLocaleString()}</td>
-                          <td className="px-6 py-3 font-mono font-semibold text-slate-600 dark:text-slate-300 text-right">{netWeight.toLocaleString()}</td>
-                          <td className="px-6 py-3 font-mono font-semibold text-slate-600 dark:text-slate-300 text-right">{grossWeight.toLocaleString()}</td>
-                          <td className="px-6 py-3 font-mono font-semibold text-slate-600 dark:text-slate-300 text-right">{itemFinalAmountPKR > 0 ? itemFinalAmountPKR.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : "-"}</td>
-                          <td className="px-6 py-3 font-mono font-semibold text-slate-600 dark:text-slate-300 text-right">{exRate > 1 ? exRate.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 4}) : "-"}</td>
-                          <td className="px-6 py-3 font-mono font-semibold text-emerald-600 dark:text-emerald-400 text-right">{advancePaidForThisLoadingLocal > 0 ? advancePaidForThisLoadingLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : "-"}</td>
-                          <td className="px-6 py-3 font-mono font-semibold text-rose-600 dark:text-rose-400 text-right">{balPKR !== 0 ? balPKR.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : "-"}</td>
-                          <td className="px-6 py-3 font-semibold text-slate-600 dark:text-slate-300">{payDate}</td>
-                          <td className="px-6 py-3 font-semibold text-slate-600 dark:text-slate-300">{loadingCountry}</td>
-                          <td className="px-6 py-3 font-semibold text-slate-600 dark:text-slate-300">{loadingPort}</td>
-                          <td className="px-6 py-3 font-mono font-semibold text-blue-600 dark:text-blue-400">{loadingDate}</td>
-                          <td className="px-6 py-3 font-semibold text-slate-600 dark:text-slate-300">{receivingCountry}</td>
-                          <td className="px-6 py-3 font-semibold text-slate-600 dark:text-slate-300">{receivingPort}</td>
-                          <td className="px-6 py-3 font-mono font-semibold text-emerald-600 dark:text-emerald-400">{receivingDate}</td>
-                          <td className="px-6 py-3 font-semibold text-slate-600 dark:text-slate-300">-</td>
-                        </tr>
-                      );
-                    } else {
-                      // Fallback: PO contract value row
-                      const poTotal = Number(poRow?.order_total || poData.totals?.grandFinal || form.totalAmount || 0);
-                      const exRate = Number(form.exchangeRate || (poData as any).exchange_rate || 1);
-                      const itemFinalAmountPKR = poTotal * exRate;
-                      const poAdvancePaid = normalizeAdvanceToPurchaseCurrency(Number(poRow.advance_paid || form.advanceAmount || 0), poTotal, exRate || 1);
-                      const advancePaidLocal = Math.min(poAdvancePaid * exRate, Math.max(0, itemFinalAmountPKR));
-                      const balPKR = Math.max(0, itemFinalAmountPKR - advancePaidLocal);
-                      const payDate = form.advancePaymentDate || form.paymentDate || form.purchaseDate || "-";
-
-                      return (
-                        <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
-                          <td className="px-6 py-3 font-medium text-slate-400">01</td>
-                          <td className="px-6 py-3 font-semibold text-slate-600 dark:text-slate-300">{countryLabel}</td>
-                          <td className="px-6 py-3 font-semibold text-slate-600 dark:text-slate-300">{record.loading_record_no || "-"}</td>
-                          <td className="px-6 py-3 font-semibold text-slate-600 dark:text-slate-300">{record.purchase_order_no || "-"}</td>
-                          <td className="px-6 py-3 font-semibold text-slate-600 dark:text-slate-300">{form.salesAccountName || form.salesAccountNumber || "-"}</td>
-                          <td className="px-6 py-3 font-semibold text-slate-600 dark:text-slate-300">{form.purchaseAccountName || form.supplierName || "-"}</td>
-                          <td className="px-6 py-3 font-bold text-slate-700 dark:text-slate-200">
-                            {form.goodsName || form.itemName || "-"} {form.itemDetails ? ` - ${form.itemDetails}` : ""}
-                          </td>
-                          <td className="px-6 py-3 font-mono font-semibold text-slate-600 dark:text-slate-300 text-right">{form.quantity || 0}</td>
-                          <td className="px-6 py-3 font-mono font-semibold text-slate-600 dark:text-slate-300 text-right">{form.netWeight || 0}</td>
-                          <td className="px-6 py-3 font-mono font-semibold text-slate-600 dark:text-slate-300 text-right">{form.grossWeight || 0}</td>
-                          <td className="px-6 py-3 font-mono font-semibold text-slate-600 dark:text-slate-300 text-right">{itemFinalAmountPKR > 0 ? itemFinalAmountPKR.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : "-"}</td>
-                          <td className="px-6 py-3 font-mono font-semibold text-slate-600 dark:text-slate-300 text-right">{exRate > 1 ? exRate.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 4}) : "-"}</td>
-                          <td className="px-6 py-3 font-mono font-semibold text-emerald-600 dark:text-emerald-400 text-right">{advancePaidLocal > 0 ? advancePaidLocal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : "-"}</td>
-                          <td className="px-6 py-3 font-mono font-semibold text-rose-600 dark:text-rose-400 text-right">{balPKR !== 0 ? balPKR.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : "-"}</td>
-                          <td className="px-6 py-3 font-semibold text-slate-600 dark:text-slate-300">{payDate}</td>
-                          <td className="px-6 py-3 font-semibold text-slate-600 dark:text-slate-300">{loadingCountry}</td>
-                          <td className="px-6 py-3 font-semibold text-slate-600 dark:text-slate-300">{loadingPort}</td>
-                          <td className="px-6 py-3 font-mono font-semibold text-blue-600 dark:text-blue-400">{loadingDate}</td>
-                          <td className="px-6 py-3 font-semibold text-slate-600 dark:text-slate-300">{receivingCountry}</td>
-                          <td className="px-6 py-3 font-semibold text-slate-600 dark:text-slate-300">{receivingPort}</td>
-                          <td className="px-6 py-3 font-mono font-semibold text-emerald-600 dark:text-emerald-400">{receivingDate}</td>
-                          <td className="px-6 py-3 font-semibold text-slate-600 dark:text-slate-300">-</td>
-                        </tr>
-                      );
-                    }
-                  })()}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* LOADING HISTORY TABLE */}
-          <div className="mt-6 rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          {/* LOADING HISTORY — one row per container / load, each with its lane action */}
+          <div className="mt-6 rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900" data-testid="loading-history">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 bg-white px-5 py-4 dark:border-slate-800 dark:bg-slate-900">
               <div>
                 <h3 className="text-xs font-black uppercase tracking-widest text-slate-800 dark:text-slate-100">{tt("plr.history_title", "Loading History")}</h3>
                 <p className="mt-1 text-[10px] font-semibold text-slate-500">{tt("plr.history_desc", "All BL/container loading records for this purchase bill.")}</p>
               </div>
-              <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+              <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300" data-testid="history-count">
                 {history.length} {tt("plr.saved_loading", "Saved Loading")}
               </span>
             </div>
+            {(() => {
+              const untransferred = history.filter((h) => {
+                const k = loadingRowAction({ laneStatus: laneStates[h.id]?.lane_status, hasLaneRow: !!laneStates[h.id], legNo: laneStates[h.id]?.leg_no, ownerChanged: laneStates[h.id]?.ownerChanged }).kind;
+                return k === "send_to_lane" || k === "transfer";
+              });
+              const selectedCount = untransferred.filter((h) => laneSel.has(h.id)).length;
+              const bulk = bulkTransferActions({ untransferredLoads: untransferred.length, selectedLoads: selectedCount });
+              return history.length > 0 ? (
+                <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 bg-slate-50/60 px-5 py-3 dark:border-slate-800 dark:bg-slate-900/40" data-testid="loading-lane-bulk">
+                  {bulk.map((b) => (
+                    <button
+                      key={b.id}
+                      type="button"
+                      disabled={!b.enabled || laneBusy}
+                      onClick={() => void onBulkTransfer(b.id)}
+                      data-testid={`bulk-${b.id}`}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-300 bg-white px-3 py-1.5 text-[11px] font-bold text-indigo-700 shadow-sm transition hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-900"
+                    >
+                      <ArrowRightLeft className="h-3.5 w-3.5" />
+                      {tt(`plane.${b.labelKey}`, b.label)} ({b.id === "transfer_selected" ? selectedCount : untransferred.length})
+                    </button>
+                  ))}
+                  <a href={laneHref({})} data-testid="open-lane-report" className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-bold text-blue-700 hover:underline dark:text-blue-300">
+                    <Route className="h-3.5 w-3.5" /> {tt("plr.open_lane_report", "Open Purchase Transit & Lane")}
+                  </a>
+                  {laneError && <span role="alert" className="text-[11px] font-semibold text-rose-600" data-testid="lane-action-error">{laneError}</span>}
+                </div>
+              ) : null;
+            })()}
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[1180px] text-left text-xs">
+              <table className="w-full min-w-[1500px] text-left text-xs">
                 <thead>
                   <tr className="border-b border-slate-200 bg-slate-50 text-[10px] uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-900/60">
-                    <Th className="px-4 py-3">{tt("common.sr_no", "SR#")}</Th>
-                    <Th className="px-4 py-3">{tt("plr.col_bl", "BL Number")}</Th>
-                    <Th className="px-4 py-3">{tt("plr.col_container", "Container")}</Th>
-                    <Th className="px-4 py-3">{tt("plr.col_vessel", "Vessel / Vehicle")}</Th>
-                    <Th className="px-4 py-3 text-end">{tt("plr.col_load_qty", "Load Qty")}</Th>
-                    <Th className="px-4 py-3 text-end">{tt("plr.col_purchase_rate", "Purchase Rate")}</Th>
-                    <Th className="px-4 py-3 text-end">{tt("plr.col_purchase_amount", "Purchase Amount")}</Th>
-                    <Th className="px-4 py-3 text-end">{tt("plr.col_exchange_rate", "Exchange Rate")}</Th>
-                    <Th className="px-4 py-3 text-end">{tt("plr.col_final_amount", "Final Amount")} ({localCurrency})</Th>
-                    <Th className="px-4 py-3 text-end">{tt("plr.col_advance_paid", "Advance Paid")}</Th>
-                    <Th className="px-4 py-3 text-end">{tt("plr.col_balance", "Balance Remaining")}</Th>
-                    <Th className="px-4 py-3">{tt("plr.col_ports_dates", "Ports / Dates")}</Th>
-                    <Th className="px-4 py-3">{tt("common.status", "Status")}</Th>
-                    <Th className="px-4 py-3 text-center">{tt("common.actions", "Actions")}</Th>
+                    <th className="px-3 py-3 w-8" />
+                    <Th className="px-3 py-3">{tt("common.sr_no", "SR#")}</Th>
+                    <Th className="px-3 py-3">{tt("plr.col_booking_no", "Purchase Booking No.")}</Th>
+                    <Th className="px-3 py-3">{tt("plr.col_supplier", "Supplier")}</Th>
+                    <Th className="px-3 py-3">{tt("plr.col_goods", "Goods")}</Th>
+                    <Th className="px-3 py-3">{tt("plr.col_bl", "BL Number")}</Th>
+                    <Th className="px-3 py-3">{tt("plr.col_container", "Container")}</Th>
+                    <Th className="px-3 py-3 text-end">{tt("plr.col_load_qty", "Load Qty")}</Th>
+                    <Th className="px-3 py-3 text-end">{tt("plr.col_gross_weight", "Gross Weight")}</Th>
+                    <Th className="px-3 py-3 text-end">{tt("plr.col_net_weight", "Net Weight")}</Th>
+                    <Th className="px-3 py-3">{tt("plr.col_vessel", "Vessel / Vehicle")}</Th>
+                    <Th className="px-3 py-3">{tt("plr.col_ports_dates", "Ports / Dates")}</Th>
+                    <Th className="px-3 py-3">{tt("plr.col_lane_status", "Lane Status")}</Th>
+                    <Th className="px-3 py-3">{tt("plr.col_location", "Current Location")}</Th>
+                    <Th className="px-3 py-3">{tt("plr.col_assigned", "Assigned To")}</Th>
+                    <Th className="px-3 py-3">{tt("plr.col_next_action", "Next Action")}</Th>
+                    <Th className="px-3 py-3 text-center max-sm:sticky max-sm:end-0 max-sm:z-10 max-sm:bg-slate-50 dark:max-sm:bg-slate-900">{tt("common.actions", "Actions")}</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {history.length ? history.map((h, i) => {
                     const finance = calcLoadingFinance(h, poRow, form);
-                    const loadedQty = Number(h.report_payload?.loadedQuantity || h.loadedQuantity || 0);
-                    const poAdvanceAmt = Number(poRow.advance_paid || form.advanceAmount || 0);
-                    const loadedAdvanceUSD = (finance.proRataRatio || 0) * poAdvanceAmt;
-                    const advanceLocal = Math.min(loadedAdvanceUSD * finance.exRate, Math.max(0, finance.amountPKR));
-                    const balanceLocal = Math.max(0, finance.amountPKR - advanceLocal);
+                    const loadedQty = Number(h.report_payload?.loadedQuantity || h.loadedQuantity || h.loaded_quantity || 0);
+                    const gross = Number(h.gross_weight ?? h.report_payload?.grossWeight ?? finance.grossWeight ?? 0);
+                    const net = Number(h.net_weight ?? h.report_payload?.netWeight ?? finance.netWeight ?? 0);
+                    const ls = laneStates[h.id];
+                    const act = loadingRowAction({ laneStatus: ls?.lane_status, hasLaneRow: !!ls, legNo: ls?.leg_no, ownerChanged: ls?.ownerChanged });
+                    const stKey = ls ? (LANE_STATUS_LABEL[ls.lane_status as LaneStatus]?.key ?? ls.lane_status) : "";
+                    const stEn = ls ? (LANE_STATUS_LABEL[ls.lane_status as LaneStatus]?.en ?? ls.lane_status) : "";
+                    const nx = ls ? allowedNextStatuses(ls.lane_status as LaneStatus)[0] : null;
+                    const nextText = !ls
+                      ? tt("plane.act_send_to_lane", "Send to Purchase Lane")
+                      : ls.lane_status === "transfer_pending" ? tt("plane.act_accept", "Accept transfer")
+                      : ls.lane_status === "final_disposition_pending" ? tt("plane.act_dispose", "Choose final disposition")
+                      : nx ? `${tt("plane.act_mark", "Mark")} ${tt(`plane.${LANE_STATUS_LABEL[nx].key}`, LANE_STATUS_LABEL[nx].en)}`
+                      : "-";
+                    const selectable = act.kind === "send_to_lane" || act.kind === "transfer";
                     return (
-                      <tr key={h.id} className="bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800/60">
-                        <td className="px-4 py-3 font-mono font-bold text-slate-500">{String(i + 1).padStart(2, "0")}</td>
-                        <td className="px-4 py-3 font-mono font-black text-blue-700 dark:text-blue-300">{h.report_payload?.blNumber || "-"}</td>
-                        <td className="px-4 py-3 font-mono font-semibold text-slate-700 dark:text-slate-200">{h.container_number || h.report_payload?.containerNumber || "-"}</td>
-                        <td className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-200">{h.report_payload?.vesselName || h.carrier_name || "-"}</td>
-                        <td className="px-4 py-3 text-right font-mono font-black text-slate-800 dark:text-slate-100">{loadedQty.toLocaleString()} {unitLabel}</td>
-                        <td className="px-4 py-3 text-right font-mono font-semibold text-slate-700 dark:text-slate-200">{finance.priceRate ? finance.priceRate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 }) : "-"} {finance.currency}</td>
-                        <td className="px-4 py-3 text-right font-mono font-black text-slate-800 dark:text-slate-100">{finance.amountUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {finance.currency}</td>
-                        <td className="px-4 py-3 text-right font-mono font-semibold text-blue-700 dark:text-blue-300">{finance.exRate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</td>
-                        <td className="px-4 py-3 text-right font-mono font-black text-blue-700 dark:text-blue-300">{finance.amountPKR.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {localCurrency}</td>
-                        <td className="px-4 py-3 text-right font-mono font-black text-emerald-600">{advanceLocal > 0 ? advanceLocal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"} {advanceLocal > 0 ? localCurrency : ""}</td>
-                        <td className="px-4 py-3 text-right font-mono font-black text-rose-600">{balanceLocal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {localCurrency}</td>
-                        <td className="px-4 py-3">
+                      <tr key={h.id} className="bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800/60" data-testid={`history-row-${h.container_number || h.id}`} data-lane-kind={act.kind}>
+                        <td className="px-3 py-3">
+                          {selectable && (
+                            <input
+                              type="checkbox"
+                              checked={laneSel.has(h.id)}
+                              onChange={() => setLaneSel((prev) => { const n = new Set(prev); if (n.has(h.id)) n.delete(h.id); else n.add(h.id); return n; })}
+                              className="h-4 w-4 rounded border-slate-300 accent-indigo-600"
+                              aria-label={tt("plr.select_row", "Select")}
+                              data-testid="row-select"
+                            />
+                          )}
+                        </td>
+                        <td className="px-3 py-3 font-mono font-bold text-slate-500">{String(i + 1).padStart(2, "0")}</td>
+                        <td className="px-3 py-3 font-mono font-semibold text-slate-700 dark:text-slate-200">{h.purchase_order_no || record.purchase_order_no || "-"}</td>
+                        <td className="px-3 py-3 font-semibold text-slate-700 dark:text-slate-200">{form.supplierName || form.purchaseAccountName || "-"}</td>
+                        <td className="px-3 py-3 font-semibold text-slate-700 dark:text-slate-200">{h.report_payload?.goodsName || goods?.[0]?.goodsName || "-"}</td>
+                        <td className="px-3 py-3 font-mono font-black text-blue-700 dark:text-blue-300" data-testid="row-bl">{h.bl_number || h.report_payload?.blNumber || "-"}</td>
+                        <td className="px-3 py-3 font-mono font-semibold text-slate-700 dark:text-slate-200">
+                          <div data-testid="row-container">{h.container_number || h.report_payload?.containerNumber || "-"}</div>
+                          <div className="mt-0.5 text-[10px] font-medium text-slate-400">{[h.container_type, h.seal_number || h.report_payload?.sealNumber].filter(Boolean).join(" · ")}</div>
+                        </td>
+                        <td className="px-3 py-3 text-end font-mono font-black text-slate-800 dark:text-slate-100">{loadedQty.toLocaleString()} {unitLabel}</td>
+                        <td className="px-3 py-3 text-end font-mono text-slate-600 dark:text-slate-300">{gross > 0 ? gross.toLocaleString() : "-"}</td>
+                        <td className="px-3 py-3 text-end font-mono text-slate-600 dark:text-slate-300">{net > 0 ? net.toLocaleString() : "-"}</td>
+                        <td className="px-3 py-3 font-semibold text-slate-700 dark:text-slate-200">{h.vessel_name || h.report_payload?.vesselName || h.carrier_name || h.vehicle_no || "-"}</td>
+                        <td className="px-3 py-3">
                           <div className="font-semibold text-slate-700 dark:text-slate-200">{h.report_payload?.loadingPort || h.loading_location || "-"} &rarr; {h.report_payload?.receivingPort || h.receiving_location || "-"}</div>
                           <div className="mt-1 text-[10px] font-semibold text-slate-500">{h.report_payload?.loadingDate || h.loaded_at?.slice(0, 10) || "-"} &rarr; {h.report_payload?.receivingDate || tt("plr.pending", "Pending")}</div>
                         </td>
-                        <td className="px-4 py-3"><span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-[10px] font-black uppercase text-emerald-700">{tt("plr.status_loaded", "Loaded")}</span></td>
-                        <td className="px-4 py-3 text-center">
-                          <div className="inline-flex items-center gap-1.5">
+                        <td className="px-3 py-3" data-testid="row-lane-status">
+                          {ls
+                            ? <span className="rounded-full border border-sky-200 bg-sky-50 px-2 py-1 text-[10px] font-black uppercase text-sky-700">{tt(`plane.${stKey}`, stEn)}</span>
+                            : <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-black uppercase text-slate-500">{tt("plr.not_in_lane", "Not in lane")}</span>}
+                        </td>
+                        <td className="px-3 py-3 font-semibold text-slate-700 dark:text-slate-200" data-testid="row-location">{ls?.current_location || h.report_payload?.loadingPort || h.loading_location || "-"}</td>
+                        <td className="px-3 py-3 font-semibold text-slate-700 dark:text-slate-200" data-testid="row-assigned">{ls?.assigned_to || "-"}</td>
+                        <td className="px-3 py-3 text-[11px] font-semibold text-slate-600 dark:text-slate-300" data-testid="row-next">{nextText}</td>
+                        <td className="px-3 py-3 text-center max-sm:sticky max-sm:end-0 max-sm:z-10 max-sm:bg-white max-sm:shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.25)] dark:max-sm:bg-slate-900">
+                          <div className="inline-flex items-center gap-1.5 max-sm:max-w-[10.5rem] max-sm:flex-wrap max-sm:justify-end">
                             <button
                               type="button"
-                              onClick={() => {
-                                const grossWeight = Number(h.report_payload?.grossWeight || finance.grossWeight || 0);
-                                const netWeight = Number(h.report_payload?.netWeight || finance.netWeight || 0);
-                                const priceRate = Number(h.report_payload?.priceRateC1 || finance.priceRate || 0);
-                                const loadedRemainingUSD = Math.max(0, finance.amountUSD - loadedAdvanceUSD);
-                                const exchangeRate = finance.exRate || 1;
-
-                                const queryParams = new URLSearchParams({
-                                  purchaseOrderNo: record.purchase_order_no || poRow.purchase_order_no || "",
-                                  fromLoading: "true",
-                                  loadingRecordId: h.id,
-                                  blNumber: h.report_payload?.blNumber || "",
-                                  containerNumber: h.container_number || h.report_payload?.containerNumber || "",
-                                  loadedQty: String(loadedQty),
-                                  grossWeight: String(grossWeight),
-                                  netWeight: String(netWeight),
-                                  priceRate: String(priceRate),
-                                  purchaseAmount: String(finance.amountUSD),
-                                  loadedPurchaseAmount: String(finance.amountUSD),
-                                  finalAmount: String(finance.amountUSD * exchangeRate),
-                                  advanceApplied: String(loadedAdvanceUSD),
-                                  advanceAppliedLocal: String(loadedAdvanceUSD * exchangeRate),
-                                  remainingBalance: String(loadedRemainingUSD),
-                                  remainingBalanceLocal: String(loadedRemainingUSD * exchangeRate),
-                                  amount: String(loadedRemainingUSD),
-                                  exchangeRate: String(exchangeRate),
-                                  currency: finance.currency || "USD",
-                                  amountPKR: String(loadedRemainingUSD * exchangeRate)
-                                }).toString();
-                                window.open(`/dashboard/journal/purchase-order-payment/remaining?${queryParams}`, "_self");
-                              }}
-                              className="inline-flex items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1 text-[10px] font-black uppercase text-blue-700 hover:bg-blue-100 hover:border-blue-300 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300 transition shadow-sm"
-                              title={tt("plr.a_transfer_remaining_journal", "Transfer Remaining Loading Balance to Journal")}
+                              disabled={laneBusy}
+                              onClick={() => void onRowLaneAction(h, act.kind)}
+                              data-testid="row-lane-action"
+                              data-kind={act.kind}
+                              className="inline-flex items-center gap-1 whitespace-nowrap rounded-md border border-indigo-300 bg-indigo-50 px-2.5 py-1 text-[10px] font-black uppercase text-indigo-700 shadow-sm transition hover:bg-indigo-100 disabled:opacity-50 dark:border-indigo-900/50 dark:bg-indigo-950/40 dark:text-indigo-300"
                             >
-                              <Link2 className="h-3 w-3 text-blue-600" />
-                              {tt("plr.transfer_remaining", "Transfer Remaining")}
+                              <ArrowRightLeft className="h-3 w-3" />
+                              {tt(`plane.${act.labelKey}`, act.label)}
                             </button>
+                            {ls && (
+                              <a href={laneHref({ focus: ls.id })} data-testid="row-open-lane" className="whitespace-nowrap rounded-md border border-slate-200 px-2 py-1 text-[10px] font-bold text-blue-700 hover:bg-blue-50" title={tt("plane.act_open_lane", "Open in Purchase Lane")}>
+                                <Route className="inline h-3 w-3" /> {tt("plane.act_open_lane", "Open in Purchase Lane")}
+                              </a>
+                            )}
                             <button onClick={() => handleEditHistory(h)} className="rounded-md border border-slate-200 p-1.5 text-blue-600 hover:border-blue-300 hover:bg-blue-50" title={tt("plr.a_edit_entry", "Edit Entry")}><Pencil className="h-3.5 w-3.5" /></button>
                             <button onClick={() => handleDeleteHistory(h)} disabled={savingNewLoading} className="rounded-md border border-slate-200 p-1.5 text-rose-600 hover:border-rose-300 hover:bg-rose-50 disabled:opacity-50" title={tt("plr.a_delete_entry", "Delete Entry")}><Trash2 className="h-3.5 w-3.5" /></button>
                             <button onClick={() => window.open(`/dashboard/purchase/purchase-loading-records/${h.id}?print=true`, "_blank")} className="rounded-md border border-slate-200 p-1.5 text-slate-600 hover:border-slate-300 hover:bg-slate-50" title={tt("plr.a_print", "Print")}><Printer className="h-3.5 w-3.5" /></button>
@@ -2360,143 +2105,9 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                     );
                   }) : (
                     <tr>
-                      <td colSpan={14} className="px-4 py-8 text-center text-xs font-semibold text-slate-500">{tt("plr.no_records", "No saved loading records yet. Click New Loading to create the first BL/container entry.")}</td>
+                      <td colSpan={17} className="px-4 py-8 text-center text-xs font-semibold text-slate-500">{tt("plr.no_records", "No saved loading records yet. Click New Loading to create the first BL/container entry.")}</td>
                     </tr>
                   )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div className="hidden">
-            <div className="border-b border-slate-100 bg-slate-50/80 px-6 py-4 dark:border-slate-800 dark:bg-slate-900/40">
-              <h3 className="text-xs font-black uppercase tracking-widest text-slate-700 dark:text-slate-300">{tt("plr.title_loading_history", "Loading History")}</h3>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs whitespace-nowrap">
-                <thead className="bg-slate-50/50 dark:bg-slate-900/20">
-                  <tr className="border-b border-slate-200 dark:border-slate-800">
-                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 w-10 text-center">Action</Th>
-                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 w-10">SR#</Th>
-                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">BL Number</Th>
-                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Vessel Name</Th>
-                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Load Qty</Th>
-                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Purchase Payment</Th>
-                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Exchange Rate</Th>
-                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Final Payment ({localCurrency})</Th>
-                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Advance Paid ({localCurrency})</Th>
-                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Balance Remaining ({localCurrency})</Th>
-                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Loading Port</Th>
-                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Load Date</Th>
-                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Receive Port</Th>
-                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Receive Date</Th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                   {history.map((h, i) => {
-                      const poRow = (Array.isArray(record.purchase_orders) ? record.purchase_orders[0] : record.purchase_orders) || {};
-                      const finance = calcLoadingFinance(h, poRow, form);
-                      const { amountUSD, exRate, amountPKR, currency } = finance;
-
-                      const rowPoAdv = normalizeAdvanceToPurchaseCurrency(Number(poRow.advance_paid || form.advanceAmount || 0), contractPurchaseAmount, exRate || 1);
-                      const rowLoadedAdvUSD = (finance.proRataRatio || 0) * rowPoAdv;
-                      const rowLoadedAdvLocal = Math.min(rowLoadedAdvUSD * (exRate || 1), Math.max(0, amountPKR));
-                      const rowLoadedBalLocal = Math.max(0, amountPKR - rowLoadedAdvLocal);
-
-                      const rowAdvDisp = rowLoadedAdvLocal > 0 ? `${rowLoadedAdvLocal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${localCurrency}` : "-";
-                      const rowBalDisp = rowLoadedBalLocal !== 0 ? `${rowLoadedBalLocal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${localCurrency}` : "-";
-                      return (
-                        <tr key={h.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
-                          <td className="px-6 py-3 text-center flex items-center justify-center gap-1">
-                            <button onClick={() => handleEditHistory(h)} className="text-blue-500 hover:text-blue-700 p-1 rounded hover:bg-blue-50 transition" title={tt("plr.a_edit_entry", "Edit Entry")}>
-                              <Pencil className="w-4 h-4" />
-                            </button>
-                            <button onClick={() => handleDeleteHistory(h)} disabled={savingNewLoading} className="text-rose-500 hover:text-rose-700 p-1 rounded hover:bg-rose-50 transition disabled:opacity-50" title={tt("plr.a_delete_entry", "Delete Entry")}>
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                            <button 
-                              onClick={() => window.open(`/dashboard/purchase/purchase-loading-records/${h.id}?print=true`, "_blank")} 
-                              className="text-slate-500 hover:text-slate-700 p-1 rounded hover:bg-slate-50 transition" 
-                              title={tt("plr.a_print_loading_slip", "Print Loading Slip")}
-                            >
-                              <Printer className="w-4 h-4" />
-                            </button>
-                            <button 
-                              onClick={() => window.open(`/dashboard/purchase/purchase-loading-records/${h.id}?print=true`, "_blank")} 
-                              className="text-indigo-500 hover:text-indigo-700 p-1 rounded hover:bg-indigo-50 transition" 
-                              title={tt("plr.a_export_pdf", "Export PDF")}
-                            >
-                              <FileText className="w-4 h-4" />
-                            </button>
-                            {h.report_payload?.loadedQuantity && (
-                              <button 
-                                onClick={() => {
-                                  const poRow = (Array.isArray(record.purchase_orders) ? record.purchase_orders[0] : record.purchase_orders) || {};
-                                  const finance = calcLoadingFinance(h, poRow, form);
-                                  const loadedQty = h.report_payload?.loadedQuantity || h.loadedQuantity || 0;
-                                  const grossWeight = h.report_payload?.grossWeight || 0;
-                                  const netWeight = h.report_payload?.netWeight || 0;
-                                  const priceRate = h.report_payload?.priceRateC1 || 0;
-                                  
-                                  const poAdvanceAmt = normalizeAdvanceToPurchaseCurrency(Number(poRow.advance_paid || form.advanceAmount || 0), contractPurchaseAmount, finance.exRate || 1);
-                                  const loadedAdvanceUSD = Math.min(finance.amountUSD, totalQuantity > 0 ? (loadedQty / totalQuantity) * poAdvanceAmt : poAdvanceAmt);
-                                  const loadedRemainingUSD = Math.max(0, finance.amountUSD - loadedAdvanceUSD);
-                                  const exchangeRate = finance.exRate || 1;
-                                  
-                                  const queryParams = new URLSearchParams({
-                                    purchaseOrderNo: record.purchase_order_no || "",
-                                    fromLoading: "true",
-                                    loadingRecordId: h.id,
-                                    loadedQty: String(loadedQty),
-                                    grossWeight: String(grossWeight),
-                                    netWeight: String(netWeight),
-                                    priceRate: String(priceRate),
-                                    purchaseAmount: String(finance.amountUSD),
-                                    loadedPurchaseAmount: String(finance.amountUSD),
-                                    finalAmount: String(finance.amountUSD * exchangeRate),
-                                    advanceApplied: String(loadedAdvanceUSD),
-                                    advanceAppliedLocal: String(loadedAdvanceUSD * exchangeRate),
-                                    remainingBalance: String(loadedRemainingUSD),
-                                    remainingBalanceLocal: String(loadedRemainingUSD * exchangeRate),
-                                    amount: String(loadedRemainingUSD),
-                                    exchangeRate: String(exchangeRate),
-                                    currency: finance.currency || "USD",
-                                    amountPKR: String(loadedRemainingUSD * exchangeRate)
-                                  }).toString();
-                                  window.open(`/dashboard/journal/purchase-order-payment/remaining?${queryParams}`, "_self");
-                                }}
-                                className="text-emerald-600 hover:text-emerald-800 p-1 rounded hover:bg-emerald-50 transition"
-                                title={tt("plr.a_transfer_remaining_payment", "Transfer Remaining Balance to Payment Journal")}
-                              >
-                                <Link2 className="w-4 h-4" />
-                              </button>
-                            )}
-                          </td>
-                          <td className="px-6 py-3 font-medium text-slate-400">{String(i + 1).padStart(2, '0')}</td>
-                          <td className="px-6 py-3 font-bold text-slate-700 dark:text-slate-200">{h.report_payload?.blNumber || "-"}</td>
-                          <td className="px-6 py-3 font-bold text-slate-700 dark:text-slate-200">{h.carrier_name || h.report_payload?.vesselName || "-"}</td>
-                          <td className="px-6 py-3 font-mono font-semibold text-slate-600 dark:text-slate-300 text-right">{h.report_payload?.loadedQuantity || h.loadedQuantity || "-"}</td>
-                          <td className="px-6 py-3 font-mono font-bold text-slate-750 dark:text-slate-300 text-right">{amountUSD > 0 ? `${amountUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}` : "-"}</td>
-                          <td className="px-6 py-3 font-mono text-slate-600 dark:text-slate-400 text-right">{exRate > 0 ? exRate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 }) : "-"}</td>
-                          <td className="px-6 py-3 font-mono font-black text-emerald-650 dark:text-emerald-400 text-right">{amountPKR > 0 ? `${amountPKR.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${localCurrency}` : "-"}</td>
-                          <td className="px-6 py-3 font-mono font-bold text-amber-600 dark:text-amber-400 text-right">
-                            {rowAdvDisp}
-                          </td>
-                          <td className="px-6 py-3 font-mono font-black text-rose-700 dark:text-rose-500 text-right">
-                            {rowBalDisp}
-                          </td>
-                          <td className="px-6 py-3 font-semibold text-slate-600 dark:text-slate-300">{h.report_payload?.loadingPort || h.loading_location || "-"}</td>
-                          <td className="px-6 py-3 font-mono font-semibold text-blue-600 dark:text-blue-400">{h.report_payload?.loadingDate ? new Date(h.report_payload.loadingDate).toLocaleDateString() : (h.loaded_at ? new Date(h.loaded_at).toLocaleDateString() : "-")}</td>
-                          <td className="px-6 py-3 font-semibold text-slate-600 dark:text-slate-300">{h.report_payload?.receivingPort || h.receiving_location || "-"}</td>
-                          <td className="px-6 py-3 font-mono font-semibold text-emerald-600 dark:text-emerald-400">{h.report_payload?.receivingDate ? new Date(h.report_payload.receivingDate).toLocaleDateString() : "-"}</td>
-                        </tr>
-                      );
-                   })}
-                   {history.length === 0 && (
-                      <tr>
-                        <td colSpan={14} className="px-6 py-6 text-center font-medium text-slate-500">{tt("plr.no_loading_history", "No loading history found.")}</td>
-                      </tr>
-                   )}
                 </tbody>
               </table>
             </div>
@@ -2941,6 +2552,34 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
         .some((value) => String(value).toLowerCase().includes(q));
     });
   }, [query, records, status, receivingFocus]);
+
+  // Lane state of every genuine loading row (Action column: Send to / Transfer / Track)
+  const [listLane, setListLane] = useState<Record<string, LaneState>>({});
+  const [listLaneBusy, setListLaneBusy] = useState<string | null>(null);
+  const laneIdsKey = records.filter((r) => isGenuineLoadingRow(r)).map((r) => r.id).join(",");
+  useEffect(() => {
+    let cancelled = false;
+    void fetchLaneStates(laneIdsKey ? laneIdsKey.split(",") : []).then((st) => { if (!cancelled) setListLane(st); });
+    return () => { cancelled = true; };
+  }, [laneIdsKey]);
+  async function onListLaneAction(r: LoadingRecord, kind: string, purchaseOrderId: string | null) {
+    const st = listLane[r.id];
+    try {
+      setListLaneBusy(r.id);
+      if (kind === "send_to_lane") {
+        await ensureLaneForLoading(r.id);
+        setListLane(await fetchLaneStates(laneIdsKey.split(",").filter(Boolean)));
+      } else if (kind === "transfer" && st) {
+        window.open(laneReportHref({ purchaseOrderId, laneIds: [st.id], action: "transfer" }), "_self");
+      } else if (st) {
+        window.open(laneReportHref({ purchaseOrderId, focus: st.id }), "_self");
+      }
+    } catch (e: any) {
+      setMessage(e?.message || "Lane action failed.");
+    } finally {
+      setListLaneBusy(null);
+    }
+  }
 
   async function loadRecords() {
     setLoading(true);
@@ -3666,14 +3305,9 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                       "Gross Wt",
                       "Tare Wt (Empty)",
                       "Net Wt",
-                      "Purchase Price Rate",
                       "Total Purchase Amount (FC)",
                       "Purchase Advance (FC)",
                       "Purchase Remaining (FC)",
-                      "Exchange Rate",
-                      "Final Amount (LC)",
-                      "Final Advance (LC)",
-                      "Final Remaining (LC)",
                       "Loaded Qty",
                       "Remaining to Load",
                       "Stage / Payment / Next Step",
@@ -3688,7 +3322,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {loading ? (
                     <tr>
-                      <td colSpan={24} className="px-3 py-8 text-center text-muted-foreground">
+                      <td colSpan={19} className="px-3 py-8 text-center text-muted-foreground">
                         {tt("plr.loading_records", "Loading records...")}
                       </td>
                     </tr>
@@ -3778,9 +3412,6 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                             <td className="whitespace-nowrap px-4 py-3 font-mono">{totalContractGrossWeight.toLocaleString()} kg</td>
                             <td className="whitespace-nowrap px-4 py-3 font-mono text-slate-500">{contractTareWeight.toLocaleString()} kg</td>
                             <td className="whitespace-nowrap px-4 py-3 font-mono">{totalContractNetWeight.toLocaleString()} kg</td>
-                            <td className="whitespace-nowrap px-4 py-3 font-mono text-slate-700 dark:text-slate-300">
-                              {priceRate > 0 ? `${priceRate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })} ${currency}` : "-"}
-                            </td>
                             <td className="whitespace-nowrap px-4 py-3 font-mono font-black text-emerald-600 dark:text-emerald-400">
                               {totalContractAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency}
                             </td>
@@ -3789,16 +3420,6 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                             </td>
                             <td className="whitespace-nowrap px-4 py-3 font-mono font-bold text-rose-600">
                               {purchaseRemainingUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency}
-                            </td>
-                            <td className="whitespace-nowrap px-4 py-3 font-mono text-[10px] text-slate-500">{exRate}</td>
-                            <td className="whitespace-nowrap px-4 py-3 font-mono font-black text-blue-700 dark:text-blue-300">
-                              {finalAmountLC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {localCurrencyCode}
-                            </td>
-                            <td className="whitespace-nowrap px-4 py-3 font-mono font-bold text-amber-600">
-                              {finalAdvanceLC > 0 ? `${finalAdvanceLC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${localCurrencyCode}` : "-"}
-                            </td>
-                            <td className="whitespace-nowrap px-4 py-3 font-mono font-black text-rose-600">
-                              {finalRemainingLC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {localCurrencyCode}
                             </td>
                             <td className="whitespace-nowrap px-4 py-3 font-mono font-black text-teal-600 dark:text-teal-400">{totalLoadedQty.toLocaleString()} Bags</td>
                             <td className="whitespace-nowrap px-4 py-3 font-mono font-black text-rose-600">{remainingQtyToLoad.toLocaleString()} Bags</td>
@@ -3823,8 +3444,8 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                                 <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
                                   Next: <span className="text-blue-600 dark:text-blue-400">{nextDestination}</span>
                                 </span>
-                                <span className="text-[10px] font-mono font-black text-rose-600">
-                                  Balance: {finalRemainingLC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {localCurrencyCode}
+                                <span className="text-[10px] font-mono font-black text-rose-600" data-testid="payable-balance">
+                                  {tt("plr.payable_balance", "Payable")}: {purchaseRemainingUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency}
                                 </span>
                               </div>
                             </td>
@@ -3835,7 +3456,10 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                                   size="sm"
                                   variant="outline"
                                   onClick={() => setSelectedLoadDetailsRecord(records[0])}
-                                  className="h-7 px-2 text-[10px] font-bold uppercase text-emerald-700 border-emerald-300 hover:bg-emerald-50 dark:text-emerald-400 dark:border-emerald-800 gap-1 shadow-sm"
+                                  disabled={isFullyLoaded}
+                                  data-testid={`add-loading-${poNo}`}
+                                  title={isFullyLoaded ? tt("plr.new_loading_disabled", "Everything is already loaded. Edit an existing entry to correct it.") : undefined}
+                                  className="h-7 px-2 text-[10px] font-bold uppercase text-emerald-700 border-emerald-300 hover:bg-emerald-50 dark:text-emerald-400 dark:border-emerald-800 gap-1 shadow-sm disabled:opacity-50"
                                 >
                                   <Plus className="h-3 w-3 text-emerald-600" />
                                   {tt("plr.add_loading", "Add Loading")}
@@ -3857,7 +3481,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                           {/* Expanded Child Loading Breakdown Table */}
                           {isExpanded && (
                             <tr className="bg-slate-100/70 dark:bg-slate-950/60">
-                              <td colSpan={24} className="p-4">
+                              <td colSpan={19} className="p-4">
                                 <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-md dark:border-slate-800 dark:bg-slate-900 space-y-3">
                                   <div className="flex items-center justify-between border-b border-slate-100 pb-2 dark:border-slate-800">
                                     <div className="flex items-center gap-2">
@@ -3878,18 +3502,18 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                                       <table className="w-full text-left text-xs whitespace-nowrap border-collapse">
                                         <thead>
                                           <tr className="bg-slate-50 text-[9px] font-black uppercase tracking-wider text-slate-500 border-b dark:bg-slate-950">
-                                            <Th className="px-3 py-2">Loading #</Th>
-                                            <Th className="px-3 py-2">BL Number</Th>
-                                            <Th className="px-3 py-2">Container #</Th>
-                                            <Th className="px-3 py-2">Vessel / Carrier</Th>
-                                            <Th className="px-3 py-2 text-right">Loaded Qty</Th>
-                                            <Th className="px-3 py-2 text-right">Net Wt</Th>
-                                            <Th className="px-3 py-2 text-right">Gross Wt</Th>
-                                            <Th className="px-3 py-2 text-right">Loaded Purchase</Th>
-                                            <Th className="px-3 py-2 text-right">Advance Applied</Th>
-                                            <Th className="px-3 py-2 text-right">Remaining Balance</Th>
-                                            <Th className="px-3 py-2">Loading Route & Date</Th>
-                                            <Th className="px-3 py-2 text-center">Action</Th>
+                                            <Th className="px-3 py-2">{tt("plr.col_loading_no", "Loading #")}</Th>
+                                            <Th className="px-3 py-2">{tt("plr.col_bl", "BL Number")}</Th>
+                                            <Th className="px-3 py-2">{tt("plr.col_container", "Container")}</Th>
+                                            <Th className="px-3 py-2">{tt("plr.col_vessel", "Vessel / Vehicle")}</Th>
+                                            <Th className="px-3 py-2 text-end">{tt("plr.loaded_qty", "Loaded Qty")}</Th>
+                                            <Th className="px-3 py-2 text-end">{tt("plr.col_net_weight", "Net Weight")}</Th>
+                                            <Th className="px-3 py-2 text-end">{tt("plr.col_gross_weight", "Gross Weight")}</Th>
+                                            <Th className="px-3 py-2">{tt("plr.col_lane_status", "Lane Status")}</Th>
+                                            <Th className="px-3 py-2">{tt("plr.col_location", "Current Location")}</Th>
+                                            <Th className="px-3 py-2">{tt("plr.col_assigned", "Assigned To")}</Th>
+                                            <Th className="px-3 py-2">{tt("plr.col_route_dates", "Route / Dates")}</Th>
+                                            <Th className="px-3 py-2 text-center max-sm:sticky max-sm:end-0 max-sm:z-10 max-sm:bg-slate-50 dark:max-sm:bg-slate-950">{tt("common.actions", "Actions")}</Th>
                                           </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -3897,16 +3521,15 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                                             const payload = r.report_payload || {};
                                             const loadedQty = Number(payload.loadedQuantity || r.loadedQuantity || 0);
                                             const finance = calcLoadingFinance(r, poRow, form);
-                                            const blNo = payload.blNumber || "-";
+                                            const blNo = r.bl_number || payload.blNumber || "-";
                                             const containerNo = r.container_number || payload.containerNumber || "-";
                                             const vessel = payload.vesselName || r.carrier_name || "-";
                                             const route = [payload.loadingPort || r.loading_location, payload.receivingPort || r.receiving_location].filter(Boolean).join(" to ") || "-";
                                             const loadingDateStr = payload.loadingDate || (r.loaded_at ? new Date(r.loaded_at).toLocaleDateString() : "-");
-                                            const poAdvanceAmt = Number(poRow.advance_paid || form.advanceAmount || 0);
-                                            const advanceUSD = (finance.proRataRatio || 0) * poAdvanceAmt;
-                                            const advanceLocal = Math.min(advanceUSD * finance.exRate, Math.max(0, finance.amountPKR));
-                                            const balanceLocal = Math.max(0, (finance.amountPKR || 0) - advanceLocal);
-                                            const childCurrency = records[0]?.countries?.currency || form.branchCurrency || "PKR";
+                                            const ls = listLane[r.id];
+                                            const act = loadingRowAction({ laneStatus: ls?.lane_status, hasLaneRow: !!ls, legNo: ls?.leg_no, ownerChanged: ls?.ownerChanged });
+                                            const net = Number(r.net_weight ?? payload.netWeight ?? finance.netWeight ?? 0);
+                                            const gross = Number(r.gross_weight ?? payload.grossWeight ?? finance.grossWeight ?? 0);
 
                                             return (
                                               <tr key={r.id || childIdx} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
@@ -3915,30 +3538,32 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                                                 <td className="px-3 py-2 font-mono font-bold text-slate-800 dark:text-slate-100">{containerNo}</td>
                                                 <td className="px-3 py-2 text-slate-600 dark:text-slate-400">{vessel}</td>
                                                 <td className="px-3 py-2 text-right font-mono font-black text-emerald-600">{loadedQty.toLocaleString()} Bags</td>
-                                                <td className="px-3 py-2 text-right font-mono text-slate-600 dark:text-slate-400">{finance.netWeight.toLocaleString()} kg</td>
-                                                <td className="px-3 py-2 text-right font-mono text-slate-600 dark:text-slate-400">{finance.grossWeight.toLocaleString()} kg</td>
-                                                <td className="px-3 py-2 text-right font-mono font-bold text-slate-800 dark:text-slate-100">
-                                                  {finance.amountUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {finance.currency}
+                                                <td className="px-3 py-2 text-end font-mono text-slate-600 dark:text-slate-400">{net > 0 ? `${net.toLocaleString()} kg` : "-"}</td>
+                                                <td className="px-3 py-2 text-end font-mono text-slate-600 dark:text-slate-400">{gross > 0 ? `${gross.toLocaleString()} kg` : "-"}</td>
+                                                <td className="px-3 py-2" data-testid="list-lane-status">
+                                                  {ls
+                                                    ? <span className="rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[9px] font-black uppercase text-sky-700">{tt(`plane.${LANE_STATUS_LABEL[ls.lane_status as LaneStatus]?.key ?? ls.lane_status}`, LANE_STATUS_LABEL[ls.lane_status as LaneStatus]?.en ?? ls.lane_status)}</span>
+                                                    : <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[9px] font-black uppercase text-slate-500">{tt("plr.not_in_lane", "Not in lane")}</span>}
                                                 </td>
-                                                <td className="px-3 py-2 text-right font-mono font-bold text-amber-600">
-                                                  {advanceLocal > 0 ? `${advanceLocal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${childCurrency}` : "-"}
-                                                </td>
-                                                <td className="px-3 py-2 text-right font-mono font-black text-rose-600">
-                                                  {balanceLocal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {childCurrency}
-                                                </td>
+                                                <td className="px-3 py-2 text-slate-600 dark:text-slate-300">{ls?.current_location || payload.loadingPort || r.loading_location || "-"}</td>
+                                                <td className="px-3 py-2 text-slate-600 dark:text-slate-300">{ls?.assigned_to || "-"}</td>
                                                 <td className="px-3 py-2 text-[10px]">
                                                   <div className="font-semibold text-slate-700 dark:text-slate-300">{route}</div>
                                                   <div className="text-slate-400 font-mono">{loadingDateStr}</div>
                                                 </td>
-                                                <td className="px-3 py-2 text-center">
-                                                  <div className="flex items-center justify-center gap-1.5">
+                                                <td className="px-3 py-2 text-center max-sm:sticky max-sm:end-0 max-sm:z-10 max-sm:bg-white max-sm:shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.25)] dark:max-sm:bg-slate-900">
+                                                  <div className="flex items-center justify-center gap-1.5 max-sm:max-w-[9.5rem] max-sm:flex-wrap">
                                                     <Button
                                                       type="button"
                                                       size="sm"
-                                                      onClick={() => setSelectedLoadDetailsRecord(r)}
-                                                      className="h-6 px-2 text-[9px] font-bold uppercase bg-blue-600 hover:bg-blue-700 text-white rounded shadow-sm"
+                                                      disabled={listLaneBusy === r.id}
+                                                      onClick={() => void onListLaneAction(r, act.kind, poRow.id ?? r.purchase_order_id ?? null)}
+                                                      data-testid="list-lane-action"
+                                                      data-kind={act.kind}
+                                                      className="h-6 gap-1 rounded bg-indigo-600 px-2 text-[9px] font-bold uppercase text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50"
                                                     >
-                                                      {tt("plr.transfer_to_journal", "Transfer to Journal")}
+                                                      <ArrowRightLeft className="h-3 w-3" />
+                                                      {tt(`plane.${act.labelKey}`, act.label)}
                                                     </Button>
                                                     <CustomDropdown record={r} onLoadDetails={setSelectedLoadDetailsRecord} onReceive={setReceivingRecord} />
                                                   </div>

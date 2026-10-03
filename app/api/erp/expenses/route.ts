@@ -2,7 +2,15 @@ import { NextResponse } from "next/server";
 import { sessionSqlScope } from "@/lib/api/scope-middleware";
 import { getCurrentErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { canAccessCityBranch } from "@/lib/permissions/middleware";
+import { canAccessCityBranch, hasRolePermission } from "@/lib/permissions/middleware";
+import type { ErpSession } from "@/lib/auth/session";
+
+/** Expense bills post to ledgers: FINANCIAL. No financial field access, or neither expense nor cash-book permission → 403. */
+function expensesDenied(session: ErpSession, action: "read" | "create") {
+  if (session.isSuperAdmin) return false;
+  if (!session.canViewFinancials) return true;
+  return !(hasRolePermission(session, "expenses", action) || hasRolePermission(session, "roznamcha", action));
+}
 import { z } from "zod";
 
 const expensesBillLineSchema = z.object({
@@ -46,6 +54,7 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getCurrentErpSession();
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (expensesDenied(session, "create")) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
     const body = await req.json();
     const parsed = expensesBillPayloadSchema.parse(body);
@@ -185,6 +194,7 @@ export async function GET(req: Request) {
   try {
     const session = await getCurrentErpSession();
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (expensesDenied(session, "read")) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
     const { searchParams } = new URL(req.url);
     const limit = Number(searchParams.get("limit") || 50);

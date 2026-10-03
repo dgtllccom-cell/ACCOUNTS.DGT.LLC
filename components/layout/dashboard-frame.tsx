@@ -44,12 +44,13 @@ import { GlobalCalculator } from "@/components/layout/global-calculator";
 import { AiBusinessAssistant } from "@/components/layout/ai-business-assistant";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { filterSidebarTree } from "@/lib/navigation/sidebar";
-import { enterpriseRoles, type EnterpriseRole } from "@/lib/permissions/enterprise-roles";
+import { enterpriseRoles, virtualRoles, type EnterpriseRole } from "@/lib/permissions/enterprise-roles";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { PremiumSidebarNav } from "@/components/layout/premium-sidebar-nav";
-import { DigitalDockPremiumSidebar, ROUTE_PERMISSION_MAP } from "@/components/layout/digital-dock-premium-sidebar";
+import { DigitalDockPremiumSidebar } from "@/components/layout/digital-dock-premium-sidebar";
+import { evaluateRouteAccess } from "@/lib/navigation/route-policy";
 import { PreferencesControls } from "@/components/layout/preferences-controls";
 import { ErpPageActions } from "@/components/layout/erp-page-actions";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -65,6 +66,7 @@ export function DashboardFrame({
   isShippingScoped,
   operationalDomains,
   ledgerVisibility,
+  canViewFinancials,
   userEmail,
   userName
 }: {
@@ -76,6 +78,7 @@ export function DashboardFrame({
   isShippingScoped?: boolean;
   operationalDomains?: ("business" | "shipping" | "both")[];
   ledgerVisibility?: "scoped" | "shipping_only" | "full";
+  canViewFinancials?: boolean;
   userEmail: string;
   userName?: string | null;
 }) {
@@ -127,78 +130,11 @@ export function DashboardFrame({
       }
     }
 
-    // Defense-in-depth: Business-only users (operational_domain='business') must NOT
-    // access shipping/clearing routes via direct URL.
-    // Operations Admins (domain='both') and super admins are not affected.
-    const isBusinessOnly =
-      !roles?.includes("super_admin") &&
-      !permissions?.includes("*:*") &&
-      operationalDomains != null &&
-      operationalDomains.length > 0 &&
-      operationalDomains.includes("business") &&
-      !operationalDomains.includes("shipping") &&
-      !operationalDomains.includes("both");
-
-    if (isBusinessOnly) {
-      const cleanPath = pathname.split("?")[0];
-      const BLOCKED_FOR_BUSINESS = [
-        "/dashboard/shipping-clearing",
-        "/dashboard/shipping",
-        "/dashboard/clearing",
-        "/dashboard/bl-entry",
-        "/dashboard/manifest",
-        "/dashboard/customs-clearance",
-        "/dashboard/shipping-lines",
-        "/dashboard/logistics"
-      ];
-      if (BLOCKED_FOR_BUSINESS.some(prefix => cleanPath.startsWith(prefix))) {
-        return true;
-      }
-    }
-
-
+    // Everything else (business-only domain block, permission map, strict default-deny for operations / shipping-line
+    // logins) is decided by the SAME pure policy the server layout uses — one rule set, no drift between client and server.
     if (!permissions || permissions.length === 0) return false;
-
-    const cleanPath = pathname.split("?")[0];
-    if (cleanPath === "/dashboard" || cleanPath === "/dashboard/smart-operations") return false;
-
-    // permSet includes both granted resource:action permissions (e.g.
-    // "purchases:read") AND the user's role names (e.g. "city_branch_admin") —
-    // ROUTE_PERMISSION_MAP entries mix both kinds of requirement, and a plain
-    // role-based user (no custom "route:" grants) was previously skipped
-    // entirely by a `hasExplicitRouteRules` check, meaning any authenticated
-    // user could open any /dashboard/* page by typing the URL directly even
-    // though the sidebar correctly hid it. This makes the same existing map
-    // that already drives sidebar visibility also gate the route itself.
-    const permSet = new Set([...(permissions || []), ...(roles || [])]);
-    if (permSet.has(`route:${cleanPath}`) || permSet.has(`route:${pathname}`)) {
-      return false;
-    }
-
-    const reqPerms = ROUTE_PERMISSION_MAP[cleanPath];
-    if (reqPerms) {
-      for (const p of reqPerms) {
-        if (permSet.has(p)) return false;
-        const [resource] = p.split(":");
-        if (permSet.has(`${resource}:*`)) return false;
-      }
-      return true;
-    }
-
-    for (const [mappedRoute, reqs] of Object.entries(ROUTE_PERMISSION_MAP)) {
-      if (mappedRoute !== "/dashboard" && cleanPath.startsWith(mappedRoute)) {
-        if (permSet.has(`route:${mappedRoute}`)) return false;
-        for (const p of reqs) {
-          if (permSet.has(p)) return false;
-          const [resource] = p.split(":");
-          if (permSet.has(`${resource}:*`)) return false;
-        }
-        return true;
-      }
-    }
-
-    return false;
-  }, [permissions, roles, pathname]);
+    return !evaluateRouteAccess({ pathname, permissions, roles, operationalDomains, canViewFinancials }).allowed;
+  }, [permissions, roles, pathname, operationalDomains, isShippingScoped, canViewFinancials]);
 
   // Expose the signed-in user's display name so client-side print/report engines
   // can stamp "Printed / Generated by" with the real user instead of "ERP User".
@@ -436,10 +372,16 @@ export function DashboardFrame({
       cashier: t(lang, "role.cashier", "Cashier"),
       agent_user: t(lang, "role.agent_user", "Agent User"),
       staff_user: t(lang, "role.staff_user", "Staff User"),
-      auditor_viewer: t(lang, "role.auditor_viewer", "Auditor / Viewer")
+      auditor_viewer: t(lang, "role.auditor_viewer", "Auditor / Viewer"),
+      global_operations_admin: t(lang, "role.global_operations_admin", "Global Operations Admin"),
+      country_operations_admin: t(lang, "role.country_operations_admin", "Country Operations Admin"),
+      city_operations_admin: t(lang, "role.city_operations_admin", "City Branch Operations Admin"),
+      shipping_line_admin: t(lang, "role.shipping_line_admin", "Shipping Line Admin"),
+      shipping_line_user: t(lang, "role.shipping_line_user", "Shipping Line User")
     };
 
-    for (const role of enterpriseRoles) {
+    // virtual (profile-derived) roles first: an operations login must not be labelled with the business role that shares its scope
+    for (const role of [...virtualRoles, ...enterpriseRoles] as EnterpriseRole[]) {
       if (roles.includes(role)) return labels[role];
     }
 
@@ -543,6 +485,7 @@ export function DashboardFrame({
             isShippingScoped={isShippingScoped}
             operationalDomains={operationalDomains}
             ledgerVisibility={ledgerVisibility}
+            canViewFinancials={canViewFinancials}
             brandTitle={brandCompany || "Damaan Business Group"}
             onToggleCollapse={() => setSidebarCollapsed(true)}
           />
@@ -576,6 +519,7 @@ export function DashboardFrame({
               isShippingScoped={isShippingScoped}
               operationalDomains={operationalDomains}
               ledgerVisibility={ledgerVisibility}
+              canViewFinancials={canViewFinancials}
               brandTitle={brandCompany || "Damaan Business Group"}
               onNavigate={() => {
                 setDrawerOpen(false);

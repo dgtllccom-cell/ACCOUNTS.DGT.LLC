@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { apiCreated, apiError, apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
+import { isGlobalSession } from "@/lib/permissions/middleware";
 import { shippingLinesRepository } from "@/lib/repositories/shipping-lines-repository";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
 import { getRequestLanguage } from "@/lib/i18n/server";
@@ -23,6 +24,10 @@ export async function GET(request: NextRequest) {
     });
 
     let shippingLines: any[] = (result as any).shippingLines ?? [];
+    // a Shipping Line login lists only the shipping line(s) it is bound to (dropdowns included)
+    if (!isGlobalSession(session) && session.shippingLineIds?.length) {
+      shippingLines = shippingLines.filter((l: any) => session.shippingLineIds.includes(l.id));
+    }
     if (Array.isArray(shippingLines) && shippingLines.length > 0) {
       shippingLines = await localizeRecordNames<any>(shippingLines, "shipping_lines", "name", lang);
     }

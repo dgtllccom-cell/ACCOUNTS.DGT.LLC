@@ -4,6 +4,7 @@ import { z } from "zod";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { uuidSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
+import { assertFinancialAccess } from "@/lib/permissions/middleware";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { resolveReportScope } from "@/lib/permissions/middleware";
 import { ledgerReportService } from "@/lib/services/ledger-report-service";
@@ -53,6 +54,7 @@ function monthStartIso() {
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    assertFinancialAccess(session);
     assertNotShippingOnly(session);
     const language = await getRequestLanguage();
     const query = querySchema.parse({

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { ledgerScopeSchema, uuidSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
+import { assertFinancialAccess } from "@/lib/permissions/middleware";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { ledgerReportService, type LedgerReportScope } from "@/lib/services/ledger-report-service";
 import { getRequestLanguage } from "@/lib/i18n/server";
@@ -30,6 +31,7 @@ function normalizeForSearch(value: string) {
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    assertFinancialAccess(session);
     assertNotShippingOnly(session);
     const urlLang = request.nextUrl.searchParams.get("language");
     // Narrow the raw ?language= query value to a SupportedLanguage literal (no cast); otherwise

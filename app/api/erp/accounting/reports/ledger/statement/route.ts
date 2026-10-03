@@ -4,6 +4,7 @@ import { z } from "zod";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { ledgerStatementQuerySchema, uuidSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
+import { assertFinancialAccess } from "@/lib/permissions/middleware";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { ledgerReportService } from "@/lib/services/ledger-report-service";
 import { getRequestLanguage } from "@/lib/i18n/server";
@@ -16,6 +17,7 @@ const querySchema = ledgerStatementQuerySchema.extend({
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    assertFinancialAccess(session);
     assertNotShippingOnly(session);
     const language = await getRequestLanguage(request.nextUrl.searchParams.get("language"));
     const allLedgerIds = request.nextUrl.searchParams.getAll("ledgerId").filter(Boolean);

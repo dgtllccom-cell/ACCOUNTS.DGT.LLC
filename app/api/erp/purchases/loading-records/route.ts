@@ -4,15 +4,18 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiCreated, apiOk, handleApiError } from "@/lib/api/response";
 import { optionalUuidSchema, uuidSchema } from "@/lib/api/erp-validation";
-import { authorizeApiScope, enforceScopeFilter } from "@/lib/api/scope-middleware";
+import { authorizeApiScope, authorizeLogistics, enforceScopeFilter } from "@/lib/api/scope-middleware";
+import { redactLoadingRecords } from "@/lib/purchases/loading-redaction";
 import { requireSupabaseData, writeAuditLog } from "@/lib/api/supabase";
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { ApiClientError } from "@/lib/api/response";
 import { resolvePurchaseAmounts, resolvePurchaseLoadingSummary, validatePurchaseLoadingEntries, resolveLoadingEligibility } from "@/lib/services/purchase-calculation-service";
 import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
+import { ensureLaneFromLoadingRecord } from "@/lib/services/purchase-lane-service";
 
 const LOCALIZED_TEXT_FIELDS = ["carrier_name", "transport_company", "driver_name", "shipping_line", "transport_remarks", "receiving_remarks"] as const;
 
@@ -33,7 +36,7 @@ const loadingStatusSchema = z.enum([
   "draft", "pending", "loaded", "dispatched", "in_transit",
   "partially_received", "received", "cancelled"
 ]);
-const transportModeSchema = z.enum(["By Road", "By Sea", "By Air"]);
+const transportModeSchema = z.enum(["By Road", "By Sea", "By Air", "By Rail"]);
 
 const querySchema = z.object({
   countryId: uuidSchema.optional(),
@@ -78,7 +81,21 @@ const createSchema = z.object({
   expectedArrivalDate: z.string().trim().max(10).nullable().optional(),
   transportExpenseAmount: z.coerce.number().min(0).default(0),
   transportExpenseCurrency: z.string().trim().length(3).default("USD"),
-  transportRemarks: z.string().trim().max(1000).nullable().optional()
+  transportRemarks: z.string().trim().max(1000).nullable().optional(),
+  // Operational cargo fields. Loading never asks for a currency, rate or amount: those belong to the Purchase Booking.
+  blNumber: z.string().trim().max(120).nullable().optional(),
+  grossWeight: z.coerce.number().min(0).nullable().optional(),
+  tareWeight: z.coerce.number().min(0).nullable().optional(),
+  netWeight: z.coerce.number().min(0).nullable().optional(),
+  sealNumber: z.string().trim().max(120).nullable().optional(),
+  vesselName: z.string().trim().max(160).nullable().optional(),
+  voyageNo: z.string().trim().max(80).nullable().optional(),
+  awbNumber: z.string().trim().max(80).nullable().optional(),
+  flightDetails: z.string().trim().max(200).nullable().optional(),
+  railReference: z.string().trim().max(120).nullable().optional(),
+  originText: z.string().trim().max(240).nullable().optional(),
+  destinationText: z.string().trim().max(240).nullable().optional(),
+  lotName: z.string().trim().max(120).nullable().optional()
 });
 
 type Session = Awaited<ReturnType<typeof requireErpSession>>;
@@ -235,8 +252,7 @@ export async function GET(request: NextRequest) {
     });
     const lang = normalizeLanguage(query.lang, "en");
 
-    authorizeApiScope(session, {
-      resource: "purchases",
+    authorizeLogistics(session, {
       action: "read",
       countryId: query.countryId ?? null,
       countryBranchId: query.countryBranchId ?? null,
@@ -271,6 +287,8 @@ export async function GET(request: NextRequest) {
           plr.expected_arrival_date, plr.actual_arrival_date, plr.transport_expense_amount,
           plr.transport_expense_currency, plr.transport_remarks, plr.received_quantity, plr.received_at,
           plr.received_by, plr.receiving_warehouse_id, plr.receiving_goods_id, plr.receiving_remarks,
+          plr.bl_number, plr.gross_weight, plr.tare_weight, plr.net_weight, plr.seal_number, plr.vessel_name, plr.voyage_no,
+          plr.awb_number, plr.flight_details, plr.rail_reference, plr.origin_text, plr.destination_text, plr.lot_name,
           case when c.id is not null then jsonb_build_object('name', c.name, 'iso2', c.iso2) else null end as countries,
           case when cb.id is not null then jsonb_build_object(
             'name', cb.name, 'code', cb.code,
@@ -443,11 +461,11 @@ export async function GET(request: NextRequest) {
       }
 
       const allRecords = await localizeLoadingRecords([...records, ...syntheticRecords], lang);
-      return apiOk({ records: allRecords, summary: summarize(allRecords), setupRequired: false, setupMessage: null, ...scopePayload });
+      return apiOk({ records: redactLoadingRecords(allRecords, session.canViewFinancials), summary: summarize(allRecords), setupRequired: false, setupMessage: null, ...scopePayload });
     } catch (err: any) {
       console.error("[loading-records GET] Error fetching purchase orders for loading queue:", err);
       const localizedRecords = await localizeLoadingRecords(records, lang);
-      return apiOk({ records: localizedRecords, summary: summarize(localizedRecords), setupRequired: false, setupMessage: null, ...scopePayload });
+      return apiOk({ records: redactLoadingRecords(localizedRecords, session.canViewFinancials), summary: summarize(localizedRecords), setupRequired: false, setupMessage: null, ...scopePayload });
     }
   } catch (error) {
     return handleApiError(error);
@@ -464,8 +482,7 @@ export async function POST(request: NextRequest) {
       cityBranchId: body.cityBranchId ?? null
     });
 
-    authorizeApiScope(session, {
-      resource: "purchases",
+    authorizeLogistics(session, {
       action: "create",
       countryId: effective.countryId,
       countryBranchId: effective.countryBranchId,
@@ -529,11 +546,11 @@ export async function POST(request: NextRequest) {
       // concurrent loading-record creates can't both under-count persistedLoadedQuantity
       // and jointly over-load the order.
       const purchaseOrderId = body.purchaseOrderId;
-      const poResult = await withLocalPg(async (sql) => {
+      const poResult = await (async () => { try { return await withLocalPg(async (sql) => {
         return sql.begin(async (tx) => {
           const poRows = await tx`
             select id, order_total, advance_paid, remaining_due, remaining_paid, credit_amount,
-                   currency_code, exchange_rate, form_data, payment_status
+                   currency_code, exchange_rate, form_data, payment_status, status, ledger_posting_status
             from purchase_orders where id = ${purchaseOrderId}::uuid
             for update
           `;
@@ -547,6 +564,14 @@ export async function POST(request: NextRequest) {
           `;
           const totalPaymentsFromPop = Number(popRows[0]?.total_payments || 0);
           const totalPaidFC = Math.max(Number(po.advance_paid || 0), totalPaymentsFromPop);
+
+          // ── Approval gate: a booking is loadable only once it has been approved / transferred ──
+          const approved =
+            po.status === "transferred" || po.ledger_posting_status === "posted" ||
+            String(po.form_data?.workflow?.transferStatus ?? "") === "transferred";
+          if (!approved) {
+            throw new Error("Loading blocked: the Purchase Booking has not been approved (transferred) yet.");
+          }
 
           // ── Loading Eligibility Gate (POST) ──
           // Enforce payment condition before allowing loading record creation
@@ -631,7 +656,13 @@ export async function POST(request: NextRequest) {
             loadedQuantity: validatedBundle ? validatedBundle.loadedQuantity : loadedQuantity
           };
         });
-      });
+      }); } catch (e) {
+        // a blocked / over-quantity loading is a business-rule refusal (422), not a server fault
+        if (e instanceof Error && !(e instanceof ApiClientError) && /^(Loading blocked|Loaded quantity|Loading quantity|Provide exactly|Entry count)/.test(e.message)) {
+          throw new ApiClientError(e.message, { status: 422, code: "LOADING_REFUSED" });
+        }
+        throw e;
+      } })();
 
       if (poResult) {
         totalQuantity = poResult.totalQuantity;
@@ -696,6 +727,19 @@ export async function POST(request: NextRequest) {
       transport_expense_amount: body.transportExpenseAmount,
       transport_expense_currency: body.transportExpenseCurrency,
       transport_remarks: body.transportRemarks ?? null,
+      bl_number: body.blNumber ?? ((body.reportPayload as any)?.blNumber || null),
+      gross_weight: body.grossWeight ?? null,
+      tare_weight: body.tareWeight ?? null,
+      net_weight: body.netWeight ?? null,
+      seal_number: body.sealNumber ?? ((body.reportPayload as any)?.sealNumber || null),
+      vessel_name: body.vesselName ?? ((body.reportPayload as any)?.vesselName || null),
+      voyage_no: body.voyageNo ?? null,
+      awb_number: body.awbNumber ?? null,
+      flight_details: body.flightDetails ?? null,
+      rail_reference: body.railReference ?? null,
+      origin_text: body.originText ?? null,
+      destination_text: body.destinationText ?? null,
+      lot_name: body.lotName ?? ((body.reportPayload as any)?.allotName || null),
       created_by: session.userId
     };
 
@@ -703,6 +747,8 @@ export async function POST(request: NextRequest) {
     // the existing purchase expense trail) via withLocalPg in one connection.
     const insertResult = await withLocalPg(async (sql) => {
       const rows = await sql`insert into purchase_loading_records ${sql(payload as any)} returning id, loading_record_no`;
+      // After Loading the load enters the General Purchase Lane (idempotent: one lane row per loading record).
+      if (rows[0]?.id) await ensureLaneFromLoadingRecord(sql, rows[0].id, session);
       if (body.transportExpenseAmount > 0 && body.purchaseOrderId) {
         await sql`insert into purchase_order_expenses ${sql({
           purchase_order_id: body.purchaseOrderId,

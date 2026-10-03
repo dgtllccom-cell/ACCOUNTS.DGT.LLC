@@ -1,5 +1,18 @@
 import { NextResponse } from "next/server";
-import { getCurrentErpSession } from "@/lib/auth/session";
+import { getCurrentErpSession, type ErpSession } from "@/lib/auth/session";
+import { hasRolePermission, isGlobalSession } from "@/lib/permissions/middleware";
+
+/** Money exchange is FINANCIAL: a login without financial field access, or without exchange / cash-book permission, gets 403. */
+function moneyExchangeDenied(session: ErpSession, action: "read" | "create") {
+  if (session.isSuperAdmin) return false;
+  if (!session.canViewFinancials) return true;
+  return !(hasRolePermission(session, "exchange_rates", action) || hasRolePermission(session, "roznamcha", action));
+}
+/** Branch ids this login may read/write (city + main branch ids); null = every branch. */
+function moneyExchangeBranches(session: ErpSession): string[] | null {
+  if (isGlobalSession(session)) return null;
+  return [...new Set([...(session.cityBranchIds ?? []), ...(session.countryBranchIds ?? [])])];
+}
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { z } from "zod";
 
@@ -46,9 +59,14 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getCurrentErpSession();
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (moneyExchangeDenied(session, "create")) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
     const body = await req.json();
     const parsed = moneyExchangePayloadSchema.parse(body);
+    const writable = moneyExchangeBranches(session);
+    if (writable && !writable.includes(parsed.branchId)) {
+      return NextResponse.json({ error: "This branch is outside your assigned scope." }, { status: 403 });
+    }
 
     const lockRes = await acquireIdempotencyLock({
       req,
@@ -159,10 +177,17 @@ export async function GET(req: Request) {
   try {
     const session = await getCurrentErpSession();
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (moneyExchangeDenied(session, "read")) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
     const { searchParams } = new URL(req.url);
     const limit = Number(searchParams.get("limit") || 100);
     const branchId = searchParams.get("branchId");
+    // scope: a requested branch outside the login's scope is 403 (not an empty list); no branch = only the login's branches
+    const readable = moneyExchangeBranches(session);
+    if (branchId && readable && !readable.includes(branchId)) {
+      return NextResponse.json({ error: "This branch is outside your assigned scope." }, { status: 403 });
+    }
+    if (readable && readable.length === 0) return NextResponse.json({ entries: [], stock: [], kpis: null });
     const dateFrom = searchParams.get("dateFrom");
     const dateTo = searchParams.get("dateTo");
     const transactionType = searchParams.get("transactionType");
@@ -180,6 +205,7 @@ export async function GET(req: Request) {
         left join public.enterprise_accounts sa on sa.id = m.sales_account_id
         where m.deleted_at is null
           and (${branchId ? sql`m.branch_id = ${branchId}` : sql`true`})
+          and (${readable ? sql`m.branch_id = ANY(${readable}::uuid[])` : sql`true`})
           and (${dateFrom ? sql`m.entry_date >= ${dateFrom}` : sql`true`})
           and (${dateTo ? sql`m.entry_date <= ${dateTo}` : sql`true`})
           and (${transactionType && transactionType !== "all" ? sql`m.transaction_type = ${transactionType}` : sql`true`})
@@ -259,6 +285,7 @@ export async function GET(req: Request) {
     if (branchId) {
       query = query.eq("branch_id", branchId);
     }
+    if (readable) query = query.in("branch_id", readable);
 
     const { data, error } = await query;
 

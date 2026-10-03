@@ -1,19 +1,32 @@
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { type EnterpriseRole, enterpriseRoles } from "@/lib/permissions/enterprise-roles";
-import { enterpriseRolePermissions, SHIPPING_BUNDLE_SHIPPING_DOMAIN_ONLY } from "@/lib/permissions/enterprise-roles";
+import {
+  type EnterpriseRole, type StoredEnterpriseRole, type AccessProfile, enterpriseRoles, accessProfiles,
+  deriveEffectiveRole, storedRoleScopeLevel, NON_FINANCIAL_ROLES, GLOBAL_SCOPE_ROLES,
+} from "@/lib/permissions/enterprise-roles";
+import { enterpriseRolePermissions, SHIPPING_BUNDLE_SHIPPING_DOMAIN_ONLY, capPermissionsForRoles } from "@/lib/permissions/enterprise-roles";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { isDemoAuthEnabled, isSupabaseConfigured } from "@/lib/supabase/config";
 import { readTempSession } from "@/lib/auth/temp-session";
 import { type MobileProfile, normalizeMobileProfile } from "@/lib/permissions/mobile-profiles";
 
+export { storedRoleScopeLevel };
 export type LedgerVisibility = "scoped" | "shipping_only" | "full";
 
 export type OperationalDomain = "business" | "shipping" | "both";
 
 export type RoleAssignmentScope = {
+  /** EFFECTIVE role (derived from stored role + access profile — see deriveEffectiveRole). */
   role: EnterpriseRole;
+  /** The role as stored in user_role_assignments.role (decides the scope level). */
+  storedRole?: StoredEnterpriseRole;
+  /** NULL = standard role template; operations / shipping_line narrow the template. */
+  accessProfile?: AccessProfile | null;
+  shippingLineId?: string | null;
+  effectiveFrom?: string | null;
+  effectiveTo?: string | null;
+  warehouseIds?: string[] | null;
   countryId: string | null;
   countryBranchId: string | null;
   cityBranchId: string | null;
@@ -39,6 +52,16 @@ function roleTemplatePermissions(roles: EnterpriseRole[], assignments: Array<{ r
   }
   return [...out];
 }
+
+/** One assignment with its own expanded scope and its own permissions (used to bind permissions to the scope that grants them). */
+export type AssignmentGrant = {
+  role: EnterpriseRole;
+  permissions: string[];
+  countryIds: string[];
+  countryBranchIds: string[];
+  cityBranchIds: string[];
+  assignment: RoleAssignmentScope;
+};
 
 export type ErpSession = {
   userId: string;
@@ -68,6 +91,14 @@ export type ErpSession = {
   // True right after an admin-issued temporary password reset - the dashboard
   // layout redirects to /auth/set-new-password until the user sets their own.
   mustChangePassword: boolean;
+  /** Global DATA scope (every country/branch) — Super Admin, Super Admin Reports and Global Operations Admin. Does NOT imply any permission. */
+  isGlobalScope: boolean;
+  /** Shipping lines this login is bound to (Shipping Line Admin / User). Empty = not shipping-line-bound. */
+  shippingLineIds: string[];
+  /** False for operations / shipping-line logins and when the field-level permission finance_amounts:deny is set. */
+  canViewFinancials: boolean;
+  /** Present only for a login with several assignments of different permission sets: per-assignment scope+grants. */
+  assignmentGrants?: AssignmentGrant[];
 };
 
 /** True when this session may see data in the given operational domain. */
@@ -95,7 +126,33 @@ type AssignmentRow = {
   ledger_visibility?: string | null;
   operational_domain?: string | null;
   mobile_profile?: string | null;
+  access_profile?: string | null;
+  shipping_line_id?: string | null;
+  effective_from?: string | null;
+  effective_to?: string | null;
+  warehouse_ids?: string[] | null;
 };
+
+function normalizeAccessProfile(v: unknown): AccessProfile | null {
+  return typeof v === "string" && (accessProfiles as readonly string[]).includes(v) ? (v as AccessProfile) : null;
+}
+
+/** An assignment is live when today falls inside its (optional) effective window. */
+export function assignmentIsEffective(a: { effectiveFrom?: string | null; effectiveTo?: string | null }, today = new Date().toISOString().slice(0, 10)): boolean {
+  if (a.effectiveFrom && String(a.effectiveFrom).slice(0, 10) > today) return false;
+  if (a.effectiveTo && String(a.effectiveTo).slice(0, 10) < today) return false;
+  return true;
+}
+
+/** Field-level financial visibility: explicit deny wins, explicit grant wins, otherwise operations/shipping-line roles are denied. */
+export function deriveCanViewFinancials(roles: string[], permissions: string[], isSuperAdmin: boolean): boolean {
+  if (isSuperAdmin) return true;
+  if (permissions.includes("finance_amounts:deny")) return false;
+  // an operations / shipping-line-only login never sees amounts, whatever token it carries (capPermissionsForRoles strips them too)
+  if (roles.length > 0 && roles.every((r) => NON_FINANCIAL_ROLES.includes(r))) return false;
+  if (permissions.includes("finance_amounts:read") || permissions.includes("*:*")) return true;
+  return roles.some((r) => !NON_FINANCIAL_ROLES.includes(r));
+}
 
 /** The effective mobile profile for a session = the most restrictive non-standard
  *  profile across active assignments (a user is normally on exactly one). */
@@ -140,10 +197,10 @@ export class ErpAuthError extends Error {
   }
 }
 
-function normalizeRole(role: string): EnterpriseRole | null {
+function normalizeRole(role: string): StoredEnterpriseRole | null {
   if (role === "branch_admin") return "city_branch_admin";
   if (role === "staff") return "staff_user";
-  return enterpriseRoles.includes(role as EnterpriseRole) ? (role as EnterpriseRole) : null;
+  return enterpriseRoles.includes(role as StoredEnterpriseRole) ? (role as StoredEnterpriseRole) : null;
 }
 
 function uniqueStrings(values: Array<string | null>) {
@@ -300,6 +357,42 @@ async function resolveHierarchyScopes(
   };
 }
 
+/** Every active country / main branch / city branch id (Global Operations Admin). */
+async function expandToWholeNetwork(db: any, scopes: { countryIds: string[]; countryBranchIds: string[]; cityBranchIds: string[] }) {
+  try {
+    const [c, cb, ci] = await Promise.all([
+      db.from("countries").select("id").is("deleted_at", null),
+      db.from("country_branches").select("id").is("deleted_at", null),
+      db.from("city_branches").select("id").is("deleted_at", null),
+    ]);
+    scopes.countryIds = (c?.data ?? []).map((r: any) => r.id);
+    scopes.countryBranchIds = (cb?.data ?? []).map((r: any) => r.id);
+    scopes.cityBranchIds = (ci?.data ?? []).map((r: any) => r.id);
+  } catch (e) {
+    console.error("Error expanding global scope:", e);
+  }
+}
+
+/**
+ * Per-assignment scope + permissions. Only built when the login has several assignments whose permission sets differ —
+ * that is the only case where the flat union (all permissions x all scopes) would over-grant (e.g. Country Admin in UAE
+ * plus Finance in ONE branch must not give Finance for the whole country). authorize() narrows the session to the
+ * assignments that actually grant what is being used.
+ */
+async function buildAssignmentGrants(db: any, assignments: RoleAssignmentScope[], isSuperAdmin: boolean, explicit: string[] | null): Promise<AssignmentGrant[] | null> {
+  if (isSuperAdmin || assignments.length < 2) return null;
+  const perAssignment = assignments.map((a) => ({ a, permissions: explicit ?? roleTemplatePermissions([a.role], [a]) }));
+  const distinct = new Set(perAssignment.map((x) => [...x.permissions].sort().join("|")));
+  if (distinct.size < 2) return null;
+  const out: AssignmentGrant[] = [];
+  for (const x of perAssignment) {
+    const roots = getAssignmentRoots([x.a]);
+    const sc = await resolveHierarchyScopes(db, roots.initialCountryIds, roots.initialCountryBranchIds, roots.initialCityBranchIds, false, roots.downwardCountryIds, roots.downwardCountryBranchIds);
+    out.push({ role: x.a.role, permissions: x.permissions, countryIds: sc.countryIds, countryBranchIds: sc.countryBranchIds, cityBranchIds: sc.cityBranchIds, assignment: x.a });
+  }
+  return out;
+}
+
 const BOOTSTRAP_EMAILS = new Set(["superadmin@damaan.com", "asmatdgtllc@users.damaan.local", "superadmin@dgt.llc", "shipping@dgt.llc"]);
 // Synthetic UUIDs minted by readTempSession() for the bootstrap identities
 // (temp-super-admin / temp-pakistan-country-admin / temp-quetta-city-admin / temp-shipping-line) —
@@ -353,6 +446,7 @@ async function resolveErpSessionFromDb(
   // 2. Current active assignments (schema-drift tolerant).
   let assignmentsResult: { data: AssignmentRow[] | null; error?: { message: string } | null } = { data: null };
   const selects = [
+    "role, country_id, country_branch_id, city_branch_id, clearing_agent_id, ledger_visibility, operational_domain, mobile_profile, access_profile, shipping_line_id, effective_from, effective_to, warehouse_ids",
     "role, country_id, country_branch_id, city_branch_id, clearing_agent_id, ledger_visibility, operational_domain, mobile_profile",
     "role, country_id, country_branch_id, city_branch_id, clearing_agent_id, ledger_visibility",
     "role, country_id, country_branch_id, city_branch_id",
@@ -367,12 +461,20 @@ async function resolveErpSessionFromDb(
 
   const assignments = (assignmentsResult.data ?? [])
     .map((assignment) => {
-      const role = normalizeRole(assignment.role);
-      if (!role) return null;
+      const storedRole = normalizeRole(assignment.role);
+      if (!storedRole) return null;
       const rawDomain = (assignment as AssignmentRow).operational_domain;
       const operationalDomain: OperationalDomain = rawDomain === "shipping" || rawDomain === "both" ? rawDomain : "business";
+      const accessProfile = normalizeAccessProfile((assignment as AssignmentRow).access_profile);
+      const role = deriveEffectiveRole(storedRole, accessProfile);
       return {
         role,
+        storedRole,
+        accessProfile,
+        shippingLineId: (assignment as AssignmentRow).shipping_line_id ?? null,
+        effectiveFrom: (assignment as AssignmentRow).effective_from ?? null,
+        effectiveTo: (assignment as AssignmentRow).effective_to ?? null,
+        warehouseIds: (assignment as AssignmentRow).warehouse_ids ?? null,
         countryId: assignment.country_id,
         countryBranchId: assignment.country_branch_id,
         cityBranchId: assignment.city_branch_id,
@@ -382,7 +484,9 @@ async function resolveErpSessionFromDb(
         mobileProfile: normalizeMobileProfile((assignment as AssignmentRow).mobile_profile),
       } as RoleAssignmentScope;
     })
-    .filter((a): a is RoleAssignmentScope => Boolean(a));
+    .filter((a): a is RoleAssignmentScope => Boolean(a))
+    // an assignment outside its effective window grants nothing (not yet started / already ended)
+    .filter((a) => assignmentIsEffective(a));
 
   let roles = [...new Set(assignments.map((a) => a.role))];
   if ((!roles.length || !roles.includes("super_admin")) && isBootstrapEmail) {
@@ -403,14 +507,20 @@ async function resolveErpSessionFromDb(
   //    them specifically). Recompute live from the role definition for those
   //    rows instead of trusting the stored array.
   let permissions: string[] = [];
+  // Field-level financial tokens are per-USER decisions, not part of any role template: they survive the role_default
+  // recompute below (otherwise "Deny amounts and balances" on a role-default user would be silently dropped).
+  let fieldLevelTokens: string[] = [];
   try {
     const permResult = (await db.from("user_permission_sets").select("permissions, source").eq("user_id", identity.userId).maybeSingle()) as { data: PermissionSetRow | null };
     const source = permResult?.data?.source ?? null;
+    const stored = Array.isArray(permResult?.data?.permissions) ? permResult!.data!.permissions : [];
+    fieldLevelTokens = stored.filter((p) => p === "finance_amounts:deny" || p === "finance_amounts:read");
     const explicit = source === "role_default" ? null : (permResult?.data?.permissions ?? null);
     permissions = explicit && Array.isArray(explicit) ? explicit.filter((p) => typeof p === "string" && p.length > 0) : [];
   } catch { permissions = []; }
+  const usedExplicitPermissionSet = permissions.length > 0;
   if (!permissions.length) {
-    permissions = roleTemplatePermissions(roles, assignments);
+    permissions = [...new Set([...roleTemplatePermissions(roles, assignments), ...fieldLevelTokens])];
   }
   if (roles.includes("super_admin") && !permissions.includes("*:*")) {
     permissions = ["*:*", ...permissions];
@@ -418,8 +528,13 @@ async function resolveErpSessionFromDb(
 
   const { initialCountryIds, initialCountryBranchIds, initialCityBranchIds, downwardCountryIds, downwardCountryBranchIds } = getAssignmentRoots(assignments);
   const isSuperAdmin = roles.includes("super_admin") || isBootstrapEmail;
+  const isGlobalScope = isSuperAdmin || roles.some((r) => GLOBAL_SCOPE_ROLES.includes(r));
 
   const resolvedScopes = await resolveHierarchyScopes(db, initialCountryIds, initialCountryBranchIds, initialCityBranchIds, isSuperAdmin, downwardCountryIds, downwardCountryBranchIds);
+  // A Global Operations Admin is global in DATA scope but not a Super Admin: give it every active country/branch id so both
+  // "no filter" and "filter by session ids" call styles see the whole network (and nothing else).
+  if (isGlobalScope && !isSuperAdmin) await expandToWholeNetwork(db, resolvedScopes);
+  const assignmentGrants = await buildAssignmentGrants(db, assignments, isSuperAdmin, usedExplicitPermissionSet ? permissions : null);
 
   // 3b. Apply Branch Rules & Scoped Permission Overrides / Denials
   if (!isSuperAdmin) {
@@ -473,6 +588,8 @@ async function resolveErpSessionFromDb(
       // Graceful fallback: maintain role default permissions if branch_rules lookup errors
     }
   }
+  // operations / shipping-line logins: financial resources and wildcards never survive (last step, after branch rules)
+  permissions = capPermissionsForRoles(roles, permissions);
 
   return {
     userId: identity.userId,
@@ -489,6 +606,10 @@ async function resolveErpSessionFromDb(
     ...resolveShippingScope(assignments, isSuperAdmin),
     mobileProfile: resolveMobileProfile(assignments, isSuperAdmin),
     mustChangePassword: Boolean(profile?.must_change_password) && !isBootstrapEmail,
+    isGlobalScope,
+    shippingLineIds: [...new Set(assignments.map((a) => a.shippingLineId).filter((v): v is string => Boolean(v)))],
+    canViewFinancials: deriveCanViewFinancials(roles, permissions, isSuperAdmin),
+    ...(assignmentGrants ? { assignmentGrants } : {}),
   };
 }
 
@@ -553,11 +674,18 @@ export async function getCurrentErpSession(): Promise<ErpSession | null> {
           ledgerVisibility: ((a as any).ledgerVisibility as LedgerVisibility) ?? "scoped",
           operationalDomain: (d === "shipping" || d === "both" ? d : "business") as OperationalDomain,
           mobileProfile: normalizeMobileProfile((a as any).mobileProfile),
+          accessProfile: normalizeAccessProfile((a as any).accessProfile),
+          shippingLineId: (a as any).shippingLineId ?? null,
+          effectiveFrom: (a as any).effectiveFrom ?? null,
+          effectiveTo: (a as any).effectiveTo ?? null,
+          warehouseIds: (a as any).warehouseIds ?? null,
         };
-      });
+      }).filter((a) => assignmentIsEffective(a));
       const { initialCountryIds, initialCountryBranchIds, initialCityBranchIds, downwardCountryIds, downwardCountryBranchIds } = getAssignmentRoots(tempAssignments);
       const isSuperAdmin = temp.roles.includes("super_admin");
+      const isGlobalScope = isSuperAdmin || temp.roles.some((r) => GLOBAL_SCOPE_ROLES.includes(r));
       const resolvedScopes = await resolveHierarchyScopes(admin, initialCountryIds, initialCountryBranchIds, initialCityBranchIds, isSuperAdmin, downwardCountryIds, downwardCountryBranchIds);
+      if (isGlobalScope && !isSuperAdmin && admin) await expandToWholeNetwork(admin, resolvedScopes);
       let perms = roleTemplatePermissions(temp.roles, tempAssignments);
 
       // Same branch_rules custom-grant/deny application as resolveErpSessionFromDb,
@@ -606,7 +734,7 @@ export async function getCurrentErpSession(): Promise<ErpSession | null> {
         fullName: temp.fullName ?? null,
         preferredLanguage: temp.preferredLanguage,
         roles: temp.roles,
-        permissions: isSuperAdmin && !perms.includes("*:*") ? ["*:*", ...perms] : perms,
+        permissions: isSuperAdmin && !perms.includes("*:*") ? ["*:*", ...perms] : capPermissionsForRoles(temp.roles, perms),
         assignments: tempAssignments,
         countryIds: resolvedScopes.countryIds,
         countryBranchIds: resolvedScopes.countryBranchIds,
@@ -615,6 +743,9 @@ export async function getCurrentErpSession(): Promise<ErpSession | null> {
         ...resolveShippingScope(tempAssignments, isSuperAdmin),
         mobileProfile: resolveMobileProfile(tempAssignments, isSuperAdmin),
         mustChangePassword: false,
+        isGlobalScope,
+        shippingLineIds: [...new Set(tempAssignments.map((a) => a.shippingLineId).filter((v): v is string => Boolean(v)))],
+        canViewFinancials: deriveCanViewFinancials(temp.roles, perms, isSuperAdmin),
       };
     }
 
@@ -657,6 +788,20 @@ export async function getErpSessionForApi(): Promise<ErpSession | null> {
     return session;
   } catch (e) {
     console.error("[session-api] getCurrentErpSession threw:", (e as any)?.message);
+    return null;
+  }
+}
+
+/**
+ * The EXACT session another user would receive on their next request — same resolver as login, no copy of the rules.
+ * Used by User Setup / User Profile to show an administrator the effective-access summary. Returns null for a
+ * disabled account or one with no effective assignment.
+ */
+export async function resolveEffectiveAccessForUser(userId: string, email: string | null): Promise<ErpSession | null> {
+  const admin = createSupabaseAdminClient() as any;
+  try {
+    return await resolveErpSessionFromDb(admin, { userId, email });
+  } catch {
     return null;
   }
 }

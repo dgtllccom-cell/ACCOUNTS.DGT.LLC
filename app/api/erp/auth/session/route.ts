@@ -50,6 +50,10 @@ export async function GET() {
       roles: session.roles,
       permissions: session.permissions,
       mobileProfile: session.mobileProfile,
+      // field-level financial permission + global data scope (display / form gating only — every API enforces its own)
+      canViewFinancials: session.canViewFinancials,
+      isGlobalScope: session.isGlobalScope,
+      shippingLineIds: session.shippingLineIds,
       scopes: {
         assignments: session.assignments,
         countryIds: session.countryIds,

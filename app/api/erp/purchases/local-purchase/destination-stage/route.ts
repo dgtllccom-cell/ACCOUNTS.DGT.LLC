@@ -7,6 +7,7 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { acquireIdempotencyLock, buildReplayedResponse, commitIdempotencySuccess, releaseIdempotencyLock } from "@/lib/api/idempotency";
 import { z } from "zod";
+import { ensureLaneFromLocalPurchase } from "@/lib/services/purchase-lane-service";
 
 /**
  * POST /api/erp/purchases/local-purchase/destination-stage
@@ -126,6 +127,8 @@ export async function POST(request: NextRequest) {
             where id = ${purchaseId}::uuid
             returning *;
           `;
+          // Loaded -> the load enters the General Purchase Lane (idempotent; one lane row per local purchase).
+          await ensureLaneFromLocalPurchase(tx, purchaseId, session);
         } else {
           updatedRows = await tx`
             update public.local_purchases

@@ -4,7 +4,7 @@ import type { Route } from "next";
 import { isDemoAuthEnabled, isSupabaseConfigured } from "@/lib/supabase/config";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { dashboardByRole, type EnterpriseRole } from "@/lib/permissions/enterprise-roles";
+import { dashboardForRoles, type EnterpriseRole } from "@/lib/permissions/enterprise-roles";
 import { MOBILE_PROFILE_HOME } from "@/lib/permissions/mobile-profiles";
 import { normalizeUserCode } from "@/lib/services/user-identity-service";
 import { setTempSuperAdminSession, setDirectUserSession } from "@/lib/auth/temp-session";
@@ -16,15 +16,8 @@ function toEnterpriseRole(role: string): EnterpriseRole {
   return role as EnterpriseRole;
 }
 
-function dashboardForRoles(roles: EnterpriseRole[]) {
-  if (roles.includes("super_admin")) return "/dashboard/super-admin";
-  if (roles.includes("country_admin") || roles.includes("country_user")) return "/dashboard/country";
-  if (roles.includes("clearing_agent_admin" as EnterpriseRole) || roles.includes("clearing_agent_user" as EnterpriseRole) || roles.includes("agent_user")) return "/dashboard/agent";
-  if (roles.includes("city_branch_admin") || roles.includes("city_branch_user" as EnterpriseRole) || roles.includes("accountant") || roles.includes("cashier") || roles.includes("staff_user")) return "/dashboard/city";
-  if (roles.includes("super_admin_reports") || roles.includes("auditor_viewer")) return "/dashboard/reports";
-  
-  const primary = roles[0];
-  return primary ? (dashboardByRole[primary] ?? "/dashboard") : "/dashboard";
+function dashboardForRolesLocal(roles: EnterpriseRole[]) {
+  return dashboardForRoles(roles);
 }
 
 const BOOTSTRAP_IDENTIFIER = (process.env.BOOTSTRAP_SUPERADMIN_EMAIL || "superadmin@damaan.com").trim().toLowerCase();
@@ -535,7 +528,7 @@ export async function POST(request: NextRequest) {
     | undefined;
   const redirectTo = mobileProfile
     ? MOBILE_PROFILE_HOME[mobileProfile]
-    : dashboardForRoles(userRoles);
+    : dashboardForRolesLocal(userRoles);
 
   try {
     await admin.from("audit_logs").insert({

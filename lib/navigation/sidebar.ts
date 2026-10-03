@@ -728,6 +728,13 @@ export const sidebarTree: SidebarNode[] = [
         roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
       },
       {
+        key: "purchase-transit-lane",
+        labelKey: "nav.purchase_transit_lane",
+        iconKey: "truck",
+        href: "/dashboard/purchase/purchase-transit-lane" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
+      },
+      {
         key: "local-purchase-loading",
         labelKey: "nav.lp_loading_queue",
         iconKey: "truck",

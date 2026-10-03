@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
-import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
+import { openLedgerStatementPrint, type LedgerPrintOrientation } from "@/lib/reports/ledger-statement-print";
+import { t as centralT } from "@/lib/i18n/ui";
 import { resolveLedgerBranding } from "@/lib/reports/resolve-ledger-branding";
 import {
   getLedgerStatement,
@@ -89,6 +90,8 @@ export function UnifiedDetailedLedgerView() {
   // Data
   const [header, setHeader] = useState<LedgerLookupRow | null>(null);
   const [lines, setLines] = useState<LedgerStatementLine[]>([]);
+  // balance before fromDate (server-computed, on the account's normal side) — the running balance starts here
+  const [openingBalance, setOpeningBalance] = useState(0);
   const [loading, setLoading] = useState(false);
   const [ledgerOptions, setLedgerOptions] = useState<SearchSelectOption[]>([]);
   const [searchingLedgers, setSearchingLedgers] = useState(false);
@@ -108,9 +111,11 @@ export function UnifiedDetailedLedgerView() {
       if (res.found) {
         setHeader(res.header);
         setLines(res.lines || []);
+        setOpeningBalance(Number(res.totals?.openingBalance ?? 0) || 0);
       } else {
         setHeader(null);
         setLines([]);
+        setOpeningBalance(0);
       }
     } catch (e) {
       console.error("Failed to load statement", e);
@@ -246,7 +251,8 @@ export function UnifiedDetailedLedgerView() {
     let sumCr = 0;
     let sumDrUsd = 0;
     let sumCrUsd = 0;
-    let running = 0;
+    let running = openingBalance;
+    const creditNormal = header?.normalBalance === "credit";
 
     const filteredLines = lines.filter((line) => {
       if (filterType === "none" || !filterValue) return true;
@@ -259,7 +265,7 @@ export function UnifiedDetailedLedgerView() {
     const mappedLines = filteredLines.map((line) => {
       sumDr += line.debit || 0;
       sumCr += line.credit || 0;
-      running += (line.debit || 0) - (line.credit || 0);
+      running += creditNormal ? (line.credit || 0) - (line.debit || 0) : (line.debit || 0) - (line.credit || 0);
 
       const drUsd = (line.debit || 0) > 0 ? line.usdAmount || 0 : 0;
       const crUsd = (line.credit || 0) > 0 ? line.usdAmount || 0 : 0;
@@ -283,93 +289,56 @@ export function UnifiedDetailedLedgerView() {
       sumCrUsd,
       running
     };
-  }, [lines, filterType, filterValue, header]);
+  }, [lines, filterType, filterValue, header, openingBalance]);
 
-  async function printDetailedStatement() {
-    const openBal = (header as any)?.openingBalance || 0;
-    const totalDr = calculatedTotals.sumDr;
-    const totalCr = calculatedTotals.sumCr;
-    const closingBal = openBal + totalDr - totalCr;
-
-    const brand = await resolveLedgerBranding(header, lang);
-
-    openUniversalPrintReport({
-      title: `Account Ledger Statement - ${header?.accountName || "Account"}`,
-      subtitle: `${header?.accountCode || ""} • ${header?.countryName || ""} • ${(header as any)?.branchName || (header as any)?.cityBranchName || ""}`,
-      lang,
-      moduleType: "ledger",
-      orientation: "landscape",
-      companyInfo: brand.companyInfo,
-      scope: {
-        scopeLevel: isSuperAdmin ? "Super Admin Detailed Statement" : "Authorized Ledger Statement",
-        company: brand.entityName || undefined,
-        country: brand.countryName || header?.countryName || "",
-        branch: brand.branchName || (header as any)?.branchName || (header as any)?.cityBranchName || "",
-        currency: header?.ledgerCurrency || "AED",
-        dateRange: `${fromDate || ""} → ${toDate || ""}`,
-      },
-      ledgerSummary: {
-        accountName: header?.accountName || "Account Holder",
-        accountCode: header?.accountCode || "",
-        countryBranch: `${header?.countryName || ""} • ${(header as any)?.branchName || (header as any)?.cityBranchName || ""}`,
-        currency: header?.ledgerCurrency || "AED",
-        datePeriod: `${fromDate || ""} → ${toDate || ""}`,
-        openingBalance: openBal,
-        openingDcType: openBal >= 0 ? "Dr" : "Cr",
-        totalDebit: totalDr,
-        totalCredit: totalCr,
-        closingBalance: closingBal,
-        closingDcType: closingBal >= 0 ? "Dr" : "Cr",
-      },
-
-      partyDetails: {
-        type: "customer",
-        name: header?.accountName || "Account Holder",
-        code: header?.accountCode || "",
-      },
-      columns: [
-        { key: "index", label: tr("S.No"), width: "4%", align: "center" },
-        { key: "entryDate", label: tr("Date"), format: "date", width: "8%" },
-        { key: "serialNo", label: tr("Voucher / Serial #"), width: "10%" },
-        { key: "voucherNo", label: tr("Manual Ref"), width: "9%" },
-        { key: "sourceModule", label: tr("Source"), width: "8%" },
-        { key: "narration", label: tr("Description / Narration"), width: "22%" },
-        { key: "currencyExRate", label: tr("Currency / Ex. Rate"), width: "11%" },
-        { key: "debit", label: tr("Debit (DR)"), align: "right", format: "currency", width: "10%" },
-        { key: "credit", label: tr("Credit (CR)"), align: "right", format: "currency", width: "10%" },
-        { key: "runningBalance", label: tr("Balance"), align: "right", format: "currency", width: "10%" },
-      ],
-      rows: calculatedTotals.lines.map((l, i) => {
-        const origCurr = (l as any).origCurrency || (l as any).currency;
-        const origAmt = (l as any).origAmount || (l.debit || l.credit || 0);
-        const rate = l.usdRate || (l as any).exchangeRate || 1;
-        const baseCurr = header?.ledgerCurrency || "AED";
-
-        return {
-          index: i + 1,
-          entryDate: l.entryDate,
-          serialNo: l.branchSerialNo || l.countrySerialNo || l.superAdminSerialNo || "-",
-          voucherNo: l.referenceNo || "-",
-          sourceModule: l.sourceTable || "Journal",
-          narration: l.description || "-",
-          origCurrency: origCurr,
-          origAmount: origAmt,
-          exchangeRate: rate,
-          currencyExRate: origCurr && origCurr !== baseCurr ? `${origCurr} ${origAmt} (@ ${rate})` : baseCurr,
+  async function printStatement(orientation: LedgerPrintOrientation) {
+    if (!header) return;
+    const printedBy = sessionInfo?.user?.fullName || sessionInfo?.user?.email || null;
+    const brand = await resolveLedgerBranding(header, lang, printedBy);
+    const filtered = filterType !== "none" && filterValue;
+    openLedgerStatementPrint(
+      {
+        company: brand.companyInfo,
+        account: {
+          name: header.accountName || header.ledgerName || "—",
+          code: header.accountCode || header.ledgerCode || "",
+          customerNumber: header.customerNumber ?? null,
+          manualReference: header.manualReferenceNumber ?? null,
+          kind: header.accountKind ? tv(header.accountKind) : null,
+          currency: header.ledgerCurrency || "",
+          country: brand.countryName || header.countryName,
+          branch: brand.branchName || header.cityBranchName || header.countryBranchName,
+          company: header.companyName,
+          address: header.address,
+        },
+        normalBalance: header.normalBalance === "credit" ? "credit" : "debit",
+        fromDate,
+        toDate,
+        openingBalance,
+        totalDebit: calculatedTotals.sumDr,
+        totalCredit: calculatedTotals.sumCr,
+        closingBalance: calculatedTotals.running,
+        lines: calculatedTotals.lines.map((l) => ({
+          date: l.entryDate,
+          serial: l.branchSerialNo || l.countrySerialNo || l.superAdminSerialNo || null,
+          manualRef: l.referenceNo,
+          source: l.sourceTable,
+          branch: l.branchName ?? null,
+          user: l.createdByName,
+          description: l.description,
+          currency: l.currency,
+          usdRate: l.usdRate,
+          usdAmount: l.usdAmount,
           debit: l.debit || 0,
           credit: l.credit || 0,
-          runningBalance: l.runningBalance || 0,
-          dcType: (l.runningBalance || 0) >= 0 ? "Dr" : "Cr",
-          branchName: l.branchName || "-",
-        };
-      }),
-      totals: {
-        debit: totalDr,
-        credit: totalCr,
-        runningBalance: closingBal,
+          balance: l.runningBalance || 0,
+        })),
+        printedBy,
+        printedAt: new Date().toISOString().slice(0, 16).replace("T", " "),
+        filterNote: filtered ? `${tr(filterType === "user" ? "User" : filterType === "branch" ? "Branch" : "Country")}: ${filterValue}` : null,
       },
-      autoPrint: false,
-    });
+      { lang, orientation }
+    );
   }
 
   return (
@@ -411,11 +380,27 @@ export function UnifiedDetailedLedgerView() {
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => { void printDetailedStatement(); }}
+              data-testid="ledger-print-portrait"
+              disabled={!header}
+              onClick={() => { void printStatement("portrait"); }}
               className="h-8 gap-1.5 rounded-lg px-2.5 text-xs font-bold shadow-xs"
+              title={centralT(lang, "lprint.portrait", "Print Portrait")}
             >
               <Printer className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{tr("Print")}</span>
+              <span className="hidden sm:inline">{centralT(lang, "lprint.portrait", "Print Portrait")}</span>
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              data-testid="ledger-print-landscape"
+              disabled={!header}
+              onClick={() => { void printStatement("landscape"); }}
+              className="h-8 gap-1.5 rounded-lg px-2.5 text-xs font-bold shadow-xs"
+              title={centralT(lang, "lprint.landscape", "Print Landscape")}
+            >
+              <Printer className="h-3.5 w-3.5 rotate-90" />
+              <span className="hidden sm:inline">{centralT(lang, "lprint.landscape", "Print Landscape")}</span>
             </Button>
             <Button
               type="button"

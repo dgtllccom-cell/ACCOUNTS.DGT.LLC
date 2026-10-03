@@ -1,6 +1,8 @@
 import { LogisticsDashboardOverview, type LogisticsDashboardData } from "@/features/dashboard/components/logistics-dashboard-overview";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentErpSession } from "@/lib/auth/session";
+import { enforceScopeFilter } from "@/lib/api/scope-middleware";
+import { isGlobalSession } from "@/lib/permissions/middleware";
 import { hasRolePermission } from "@/lib/permissions/middleware";
 
 export const metadata = { title: "Logistics Tracking Dashboard" };
@@ -58,58 +60,43 @@ async function safeCount(table: string, build?: (query: QueryBuilder) => QueryBu
 async function loadLogisticsDashboardData(session: any): Promise<LogisticsDashboardData> {
   try {
     const supabase = createSupabaseAdminClient();
-    const isSuperAdmin = Boolean(session?.isSuperAdmin);
-    const isShippingScoped = Boolean(session?.isShippingScoped && session?.clearingAgentIds?.length > 0);
     const clearingAgentIds: string[] = session?.clearingAgentIds || [];
-
+    // Every KPI below goes through the SAME scope helpers the APIs use. They fail CLOSED: a login with no scope sees nothing
+    // (the previous hand-written filters applied no filter at all when the session carried no ids).
     const applyShipmentScope = (query: any) => {
-      let q = query.is("deleted_at", null);
-      if (!isSuperAdmin) {
-        if (isShippingScoped && clearingAgentIds.length > 0) {
-          q = q.in("clearing_agent_id", clearingAgentIds);
-        } else {
-          if (session?.countryIds?.length > 0) {
-            q = q.in("country_id", session.countryIds);
-          }
-          if (session?.countryBranchIds?.length > 0) {
-            q = q.in("country_branch_id", session.countryBranchIds);
-          }
-          if (session?.cityBranchIds?.length > 0) {
-            q = q.in("city_branch_id", session.cityBranchIds);
-          }
-        }
-      }
+      let q = enforceScopeFilter(query.is("deleted_at", null), session);
+      // a Shipping Line login sees only the shipping line(s) it is bound to
+      if (!session?.isSuperAdmin && session?.shippingLineIds?.length > 0) q = q.in("shipping_line_id", session.shippingLineIds);
       return q;
     };
 
     const applyClearingScope = (query: any) => {
       let q = query.is("deleted_at", null);
-      if (!isSuperAdmin) {
-        if (session?.cityBranchIds?.length > 0) {
-          q = q.in("responsible_city_branch_id", session.cityBranchIds);
-        } else if (session?.countryBranchIds?.length > 0) {
-          q = q.in("responsible_country_branch_id", session.countryBranchIds);
-        } else if (session?.countryIds?.length > 0) {
-          q = q.in("customs_country_id", session.countryIds);
-        }
+      if (isGlobalSession(session)) return q;
+      // assigned-only logins: legs of THEIR shipping line / THEIR clearing agent / assigned to them — never the whole branch
+      if (session?.shippingLineIds?.length > 0) q = q.in("shipping_line_id", session.shippingLineIds);
+      if (session?.isShippingScoped && clearingAgentIds.length > 0) {
+        return q.or(`responsible_clearing_agent_id.in.(${clearingAgentIds.join(",")}),customs_clearing_agent_id.in.(${clearingAgentIds.join(",")}),responsible_user_id.eq.${session.userId}`);
       }
-      return q;
+      if (session?.cityBranchIds?.length > 0) return q.in("responsible_city_branch_id", session.cityBranchIds);
+      if (session?.countryBranchIds?.length > 0) return q.in("responsible_country_branch_id", session.countryBranchIds);
+      if (session?.countryIds?.length > 0) return q.in("customs_country_id", session.countryIds);
+      return q.eq("id", "00000000-0000-0000-0000-000000000000");
     };
 
+    // Tasks: an agent / shipping-line user / restricted user sees the tasks assigned to THEM (or to their clearing agent);
+    // an admin sees the tasks of their scope.
+    const assignedOnly = !isGlobalSession(session) && (session?.roles ?? []).length > 0 &&
+      (session.roles as string[]).every((r) => ["agent_user", "shipping_line_user", "shipping_line_admin", "staff_user"].includes(r));
     const applyTaskScope = (query: any) => {
       let q = query.is("deleted_at", null);
-      if (!isSuperAdmin) {
-        if (isShippingScoped && clearingAgentIds.length > 0) {
-          q = q.or(`assigned_to_user_id.eq.${session.userId},clearing_agent_id.in.(${clearingAgentIds.join(",")})`);
-        } else if (session?.cityBranchIds?.length > 0) {
-          q = q.in("city_branch_id", session.cityBranchIds);
-        } else if (session?.countryBranchIds?.length > 0) {
-          q = q.in("country_branch_id", session.countryBranchIds);
-        } else if (session?.countryIds?.length > 0) {
-          q = q.in("country_id", session.countryIds);
-        }
+      if (isGlobalSession(session)) return q;
+      if (assignedOnly || (session?.isShippingScoped && clearingAgentIds.length > 0)) {
+        return clearingAgentIds.length > 0
+          ? q.or(`assigned_to_user_id.eq.${session.userId},clearing_agent_id.in.(${clearingAgentIds.join(",")})`)
+          : q.eq("assigned_to_user_id", session.userId);
       }
-      return q;
+      return enforceScopeFilter(q, session);
     };
 
     let shipmentsQuery = supabase

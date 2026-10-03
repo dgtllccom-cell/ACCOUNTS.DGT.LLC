@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireErpSession } from "@/lib/auth/session";
+import { ErpPermissionError, isStrictOperationalSession } from "@/lib/permissions/middleware";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
 import { hasRolePermission } from "@/lib/permissions/middleware";
 import { assertShippingUserExplicitPermission } from "@/lib/permissions/shipping-explicit-gate";
@@ -22,6 +23,7 @@ const schema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    if (isStrictOperationalSession(session)) throw new ErpPermissionError("CRM is outside this operational role.");
     assertShippingUserExplicitPermission(session, "crm", "create");
     if (!session.isSuperAdmin && !hasRolePermission(session, "crm", "create") && (session.roles?.includes("agent_user") || session.isShippingScoped)) {
       return NextResponse.json({ error: "Missing permission: crm:create" }, { status: 403 });

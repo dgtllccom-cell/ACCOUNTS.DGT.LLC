@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
+import { ErpPermissionError, isStrictOperationalSession } from "@/lib/permissions/middleware";
 import { 
   getCustomer360Data, 
   getCustomer360Profile, 
@@ -12,6 +13,7 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    if (isStrictOperationalSession(session)) throw new ErpPermissionError("CRM is outside this operational role.");
     const { searchParams } = request.nextUrl;
 
     const customerId = searchParams.get("customerId");
@@ -57,6 +59,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    if (isStrictOperationalSession(session)) throw new ErpPermissionError("CRM is outside this operational role.");
     const body = await request.json();
 
     const {

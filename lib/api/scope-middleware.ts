@@ -1,7 +1,8 @@
 import type { NextRequest } from "next/server";
 import type { ErpSession } from "@/lib/auth/session";
 import { requireErpSession } from "@/lib/auth/session";
-import { authorize, isCountryRoleFor, canAccessCityBranch, canAccessCountry, canAccessCountryBranch, hasRolePermission, ErpPermissionError, type PermissionCheck } from "@/lib/permissions/middleware";
+import { authorize, isCountryRoleFor, isGlobalSession, canAccessCityBranch, canAccessCountry, canAccessCountryBranch, hasRolePermission, ErpPermissionError, type PermissionCheck } from "@/lib/permissions/middleware";
+import { isCountryLevelRole } from "@/lib/permissions/enterprise-roles";
 
 export type ApiScope = {
   countryId?: string | null;
@@ -21,6 +22,16 @@ export async function requireAuthorizedSession(check: PermissionCheck): Promise<
   const session = await requireErpSession();
   authorize(session, check);
   return session;
+}
+
+/**
+ * Loading / Transit & Lane are OPERATIONAL (quantities, BL, containers, trucks, routes). A login holding purchase_logistics:<action>
+ * passes without purchases:<action>; a login with purchases:<action> keeps working exactly as before. Financial fields are removed
+ * from the payload for logins that may not see amounts (see lib/purchases/loading-redaction).
+ */
+export function authorizeLogistics(session: ErpSession, input: { action: string } & ApiScope) {
+  const resource = hasRolePermission(session, "purchases", input.action) ? "purchases" : "purchase_logistics";
+  authorizeApiScope(session, { resource, ...input });
 }
 
 export function authorizeApiScope(
@@ -98,7 +109,7 @@ export function isDestinationScopeUser(session: ErpSession, destination: ApiScop
  * Super admins get null (meaning "all"), non-super users get their assigned IDs.
  */
 export function buildScopeFilter(session: ErpSession) {
-  if (session.isSuperAdmin) {
+  if (isGlobalSession(session)) {
     return { countryIds: null, countryBranchIds: null, cityBranchIds: null, isSuperAdmin: true };
   }
   return {
@@ -135,15 +146,15 @@ export function enforceScopeFilter(
     q = q.eq("country_id", explicitScope.countryId);
   }
 
-  // For non-super admins, enforce session scope
-  if (!session.isSuperAdmin) {
+  // For non-global sessions (not Super Admin / Reports auditor / Global Operations Admin), enforce session scope
+  if (!isGlobalSession(session)) {
     // 1. Shipping-scoped / Clearing Agent isolation
     if (session.isShippingScoped && session.clearingAgentIds?.length > 0) {
       q = q.in("clearing_agent_id", session.clearingAgentIds);
     }
     // 2. City Branch isolation: Branch users strictly see records belonging to their city branch
     else if (session.cityBranchIds.length > 0) {
-      const isCountryRole = session.roles.some((r) => r === "country_admin" || r === "country_user");
+      const isCountryRole = session.roles.some((r) => isCountryLevelRole(r));
       if (isCountryRole && session.countryIds.length > 0) {
         q = q.in("country_id", session.countryIds);
       } else {
@@ -241,8 +252,8 @@ export type SqlScope =
   | { kind: "cityBranch"; ids: string[]; ownCountryBranchIds?: string[] };
 
 export function sessionSqlScope(session: ErpSession): SqlScope {
-  if (session.isSuperAdmin || session.roles?.includes("super_admin_reports")) return { kind: "all" };
-  const isCountryRole = session.roles.some((r) => r === "country_admin" || r === "country_user");
+  if (isGlobalSession(session)) return { kind: "all" };
+  const isCountryRole = session.roles.some((r) => isCountryLevelRole(r));
   if (session.cityBranchIds.length > 0) {
     if (isCountryRole && session.countryIds.length > 0) return { kind: "country", ids: session.countryIds };
     const ownCountryBranchIds = [
@@ -280,7 +291,7 @@ export function sqlScopeCondition(sql: any, scope: SqlScope, alias: string, opts
 
 /** Reject explicit country/branch query params that point outside the caller's scope (403). */
 export function assertExplicitScopeAllowed(session: ErpSession, scope: ApiScope) {
-  if (session.isSuperAdmin) return;
+  if (isGlobalSession(session)) return;
   if (scope.cityBranchId && !canAccessCityBranch(session, scope.cityBranchId)) throw new ErpPermissionError("This branch is outside your authorized scope.");
   if (scope.countryBranchId && !canAccessCountryBranch(session, scope.countryBranchId)) throw new ErpPermissionError("This branch is outside your authorized scope.");
   if (scope.countryId && !canAccessCountry(session, scope.countryId)) throw new ErpPermissionError("This country is outside your authorized scope.");

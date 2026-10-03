@@ -291,6 +291,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
           { label: nt("Purchase Orders Payment"), href: "/dashboard/purchase/purchase-order", icon: Receipt },
           { label: nt("Country Bill Payment"), href: "/dashboard/purchase/completed-purchase-bills", icon: FileCheck2 },
           { label: nt("Purchase Loading Records"), href: "/dashboard/purchase/purchase-loading-records", icon: Truck },
+          { label: nt("Purchase Transit & Lane"), href: "/dashboard/purchase/purchase-transit-lane?source=purchase_booking", icon: Truck },
         ],
       },
       {
@@ -302,6 +303,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
           { label: nt("Local Goods Received"), href: "/dashboard/purchase/local-goods-received", icon: Package },
           { label: nt("Warehouse Transfer Queue"), href: "/dashboard/purchase/local-purchase-warehouse-transfer", icon: Warehouse },
           { label: nt("Local Purchase Loading Queue"), href: "/dashboard/purchase/local-purchase-loading", icon: Truck },
+          { label: nt("Purchase Transit & Lane"), href: "/dashboard/purchase/purchase-transit-lane?source=local_purchase", icon: Truck },
           { label: nt("Export Handover Queue"), href: "/dashboard/purchase/local-purchase-export", icon: Flag },
           { label: nt("Local Purchase Journal Report"), href: "/dashboard/purchase/local-purchase-journal-report", icon: FileBarChart },
         ],
@@ -732,176 +734,15 @@ export interface DigitalDockPremiumSidebarProps {
   operationalDomains?: ("business" | "shipping" | "both")[] | null;
   /** 'scoped' | 'shipping_only' | 'full' */
   ledgerVisibility?: "scoped" | "shipping_only" | "full" | null;
+  /** field-level financial permission (session.canViewFinancials) */
+  canViewFinancials?: boolean;
 }
 
-export const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
-  "/dashboard": ["dashboard:read", "route:/dashboard"],
-  "/dashboard/smart-operations": ["dashboard:read", "route:/dashboard/smart-operations"],
-  "/dashboard/ai-assistant": ["dashboard:read", "route:/dashboard/ai-assistant"],
-  "/dashboard/super-admin": ["dashboard:read", "super_admin", "route:/dashboard/super-admin"],
-  "/dashboard/country": ["dashboard:read", "country_admin", "country_user", "route:/dashboard/country"],
-  "/dashboard/city": ["dashboard:read", "main_branch_admin", "city_branch_admin", "staff_user", "accountant", "cashier", "route:/dashboard/city"],
-  "/dashboard/logistics": ["shipping_records:read", "route:/dashboard/logistics"],
-  "/dashboard/new-entry/users/registration": ["users:create", "users:read", "route:/dashboard/new-entry/users/registration"],
-  "/dashboard/new-entry/users/all": ["users:read", "route:/dashboard/new-entry/users/all"],
-  "/dashboard/new-entry/users/credentials-pdf": ["super_admin", "route:/dashboard/new-entry/users/credentials-pdf"],
-  "/dashboard/new-entry/branch-entry/country-branch": ["country_branches:create", "country_branches:read", "route:/dashboard/new-entry/branch-entry/country-branch"],
-  "/dashboard/new-entry/branch-entry/city-branch": ["city_branches:create", "city_branches:read", "route:/dashboard/new-entry/branch-entry/city-branch"],
-  "/dashboard/new-entry/branches/super-admin": ["country_branches:create", "super_admin", "route:/dashboard/new-entry/branches/super-admin"],
-  "/dashboard/branch-management/general-report": ["country_branches:read", "city_branches:read", "route:/dashboard/branch-management/general-report"],
-  "/dashboard/accounts/setup": ["accounts:read", "accounts:create", "accounts:update", "accounts.setup", "accounts.new_entry", "route:/dashboard/accounts/setup"],
-  "/dashboard/ledger/new": ["ledgers:read", "ledgers:create", "ledgers.new", "route:/dashboard/ledger/new"],
-  "/dashboard/new-entry/accounts/general-report": ["accounts:read", "accounts.reports", "reports:read", "route:/dashboard/new-entry/accounts/general-report"],
-  "/dashboard/new-entry": ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "route:/dashboard/new-entry"],
-  "/dashboard/business-edit-invoice": ["transactions:update", "purchases:update", "route:/dashboard/business-edit-invoice"],
-  "/dashboard/super-admin/edit-history": ["transactions:read", "audit_logs:read", "super_admin", "route:/dashboard/super-admin/edit-history"],
-  "/dashboard/super-admin/deleted-records": ["transactions:read", "audit_logs:read", "super_admin", "country_admin", "route:/dashboard/super-admin/deleted-records"],
-  "/dashboard/ledger/detailed": ["ledgers:read", "route:/dashboard/ledger/detailed"],
-  "/dashboard/ledger/general-report": ["ledgers:read", "reports:read", "route:/dashboard/ledger/general-report"],
-  "/dashboard/ledger/outstanding": ["ledgers:read", "reports:read", "route:/dashboard/ledger/outstanding"],
-  "/dashboard/roznamcha/cash-entry": ["roznamcha:read", "roznamcha:create", "route:/dashboard/roznamcha/cash-entry"],
-  "/dashboard/journal/purchase-order-payment/advance": ["transactions:read", "purchases:read", "route:/dashboard/journal/purchase-order-payment/advance"],
-  "/dashboard/journal/purchase-order-payment/charges": ["transactions:read", "purchases:read", "route:/dashboard/journal/purchase-order-payment/charges"],
-  "/dashboard/journal/purchase-order-payment/remaining": ["transactions:read", "purchases:read", "route:/dashboard/journal/purchase-order-payment/remaining"],
-  "/dashboard/journal/purchase-order-payment/history": ["transactions:read", "purchases:read", "route:/dashboard/journal/purchase-order-payment/history"],
-  "/dashboard/journal/purchase-order-payment/final": ["transactions:read", "purchases:read", "route:/dashboard/journal/purchase-order-payment/final"],
-  "/dashboard/journal/sales-order-payment/advance": ["transactions:read", "sales:read", "route:/dashboard/journal/sales-order-payment/advance"],
-  "/dashboard/journal/sales-order-payment/charges": ["transactions:read", "sales:read", "route:/dashboard/journal/sales-order-payment/charges"],
-  "/dashboard/journal/sales-order-payment/remaining": ["transactions:read", "sales:read", "route:/dashboard/journal/sales-order-payment/remaining"],
-  "/dashboard/journal/sales-order-payment/history": ["transactions:read", "sales:read", "route:/dashboard/journal/sales-order-payment/history"],
-  "/dashboard/journal/sales-order-payment/final": ["transactions:read", "sales:read", "route:/dashboard/journal/sales-order-payment/final"],
-  "/dashboard/roznamcha/daily-expenses-bill": ["expenses:read", "expenses:create", "route:/dashboard/roznamcha/daily-expenses-bill"],
-  "/dashboard/roznamcha/expenses-bill": ["expenses:read", "expenses:create", "route:/dashboard/roznamcha/expenses-bill"],
-  "/dashboard/purchase/new-purchase-booking-order": ["purchases:read", "purchases:create", "route:/dashboard/purchase/new-purchase-booking-order"],
-  "/dashboard/purchase/purchase-confirm": ["purchases:read", "purchases:update", "route:/dashboard/purchase/purchase-confirm"],
-  "/dashboard/purchase/purchase-booking-journal-report": ["purchases:read", "reports:read", "route:/dashboard/purchase/purchase-booking-journal-report"],
-  "/dashboard/purchase/purchase-order": ["purchases:read", "purchases:create", "route:/dashboard/purchase/purchase-order"],
-  "/dashboard/purchase/purchase-order-tracking": ["purchases:read", "route:/dashboard/purchase/purchase-order-tracking"],
-  "/dashboard/purchase/completed-purchase-bills": ["purchases:read", "route:/dashboard/purchase/completed-purchase-bills"],
-  "/dashboard/purchase/purchase-loading-records": ["purchases:read", "purchases:update", "route:/dashboard/purchase/purchase-loading-records"],
-  "/dashboard/purchase/local-purchase": ["purchases:read", "purchases:create", "route:/dashboard/purchase/local-purchase"],
-  "/dashboard/purchase/local-goods-received": ["purchases:read", "inventory:read", "route:/dashboard/purchase/local-goods-received"],
-  "/dashboard/purchase/local-purchase-transfer-payment": ["purchases:read", "transactions:read", "route:/dashboard/purchase/local-purchase-transfer-payment"],
-  "/dashboard/purchase/local-purchase-warehouse-transfer": ["purchases:read", "warehouses:read", "route:/dashboard/purchase/local-purchase-warehouse-transfer"],
-  "/dashboard/purchase/local-purchase-loading": ["purchases:read", "route:/dashboard/purchase/local-purchase-loading"],
-  "/dashboard/purchase/local-purchase-export": ["purchases:read", "shipping_records:read", "route:/dashboard/purchase/local-purchase-export"],
-  "/dashboard/purchase/local-purchase-journal-report": ["purchases:read", "reports:read", "route:/dashboard/purchase/local-purchase-journal-report"],
-  "/dashboard/consignment": ["purchases:read", "inventory:read", "route:/dashboard/consignment"],
-  "/dashboard/sales/new-sales-booking-order": ["sales:read", "sales:create", "route:/dashboard/sales/new-sales-booking-order"],
-  "/dashboard/sales/sales-confirm": ["sales:read", "sales:update", "route:/dashboard/sales/sales-confirm"],
-  "/dashboard/sales/sales-booking-journal-report": ["sales:read", "reports:read", "route:/dashboard/sales/sales-booking-journal-report"],
-  "/dashboard/sales/local-sales": ["sales:read", "sales:create", "route:/dashboard/sales/local-sales"],
-  "/dashboard/sales/sales-order": ["sales:read", "sales:create", "route:/dashboard/sales/sales-order"],
-  "/dashboard/purchase/country-transfer": ["purchases:read", "shipping_transfers:read", "route:/dashboard/purchase/country-transfer"],
-  "/dashboard/inter-country-transfers": ["purchases:read", "shipping_records:read", "shipping_transfers:read", "route:/dashboard/inter-country-transfers"],
-  "/dashboard/purchase/country-purchase-reports": ["purchases:read", "reports:read", "route:/dashboard/purchase/country-purchase-reports"],
-  "/dashboard/bill-cost-profit": ["purchases:read", "expenses:read", "route:/dashboard/bill-cost-profit"],
-  "/dashboard/expenses/bill-expenses": ["expenses:read", "expenses:create", "route:/dashboard/expenses/bill-expenses"],
-  "/dashboard/inventory": ["products:read", "inventory:read", "route:/dashboard/inventory"],
-  "/dashboard/clearing-agent/customer-order": ["shipping_records:read", "clearing_agents:read", "route:/dashboard/clearing-agent/customer-order"],
-  "/dashboard/clearing-agent/customer-bill": ["shipping_records:read", "clearing_bill_customer_charges:read", "route:/dashboard/clearing-agent/customer-bill"],
-  "/dashboard/shipping-line": ["shipping_records:read", "route:/dashboard/shipping-line"],
-  "/dashboard/shipping-line/bl-entry": ["shipping_records:read", "route:/dashboard/shipping-line/bl-entry"],
-  "/dashboard/shipping-line/tracking": ["shipping_records:read", "route:/dashboard/shipping-line/tracking"],
-  "/dashboard/purchase/shipment-tracking": ["purchases:read", "route:/dashboard/purchase/shipment-tracking"],
-  "/dashboard/tracking": ["dashboard:read", "shipping_records:read", "route:/dashboard/tracking"],
-  "/dashboard/clearing-agent": ["clearing_agents:read", "route:/dashboard/clearing-agent"],
-  "/dashboard/clearing-agent/truck-registration": ["shipping_records:read", "clearing_agents:read", "route:/dashboard/clearing-agent/truck-registration"],
-  "/dashboard/shipping-line/handover-inbox": ["shipping_records:read", "shipping_transfers:read", "route:/dashboard/shipping-line/handover-inbox"],
-  "/dashboard/shipping-line/account-access": ["accounts:read", "route:/dashboard/shipping-line/account-access"],
-  "/dashboard/settings/bank": ["banks:read", "route:/dashboard/settings/bank"],
-  "/dashboard/roznamcha/reports/bank": ["banks:read", "roznamcha:read", "route:/dashboard/roznamcha/reports/bank"],
-  "/dashboard/roznamcha/money-exchange": ["exchange_rates:read", "route:/dashboard/roznamcha/money-exchange"],
-  "/dashboard/reports/exchange-rate": ["exchange_rates:read", "route:/dashboard/reports/exchange-rate"],
-  "/dashboard/super-admin/investments": ["transactions:read", "super_admin", "route:/dashboard/super-admin/investments"],
-  "/dashboard/settings/customers": ["customers:read", "route:/dashboard/settings/customers"],
-  "/dashboard/general-office/employees": ["users:read", "employees:read", "route:/dashboard/general-office/employees"],
-  "/dashboard/general-office/employee-kyc": ["users:read", "employees:read", "route:/dashboard/general-office/employee-kyc"],
-  "/dashboard/general-office/leave-attendance": ["users:read", "employees:read", "route:/dashboard/general-office/leave-attendance"],
-  "/dashboard/general-office/payroll": ["users:read", "payroll:read", "route:/dashboard/general-office/payroll"],
-  "/dashboard/general-office/wps-sif": ["users:read", "payroll:read", "route:/dashboard/general-office/wps-sif"],
-  "/dashboard/general-office/performance": ["users:read", "employees:read", "tasks:read", "dashboard:read", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "city_branch_user", "hr_admin", "hr_manager", "route:/dashboard/general-office/performance"],
-  "/dashboard/general-office/departments": ["users:read", "route:/dashboard/general-office/departments"],
-  "/dashboard/general-office/gratuity": ["users:read", "payroll:read", "route:/dashboard/general-office/gratuity"],
-  "/dashboard/settlement": ["transactions:read", "route:/dashboard/settlement"],
-  "/dashboard/settlement/daily": ["transactions:read", "route:/dashboard/settlement/daily"],
-  "/dashboard/settlement/payment": ["transactions:read", "route:/dashboard/settlement/payment"],
-  "/dashboard/reports": ["reports:read", "route:/dashboard/reports"],
-  "/dashboard/audit-monitoring": ["audit_logs:read", "route:/dashboard/audit-monitoring"],
-  "/dashboard/documents": ["documents:read", "route:/dashboard/documents"],
-  "/dashboard/ai-entry/messages": ["communication:read", "route:/dashboard/ai-entry/messages"],
-  "/dashboard/ai-entry/voice-text": ["communication:read", "route:/dashboard/ai-entry/voice-text"],
-  "/dashboard/messages/whatsapp": ["communication:read", "whatsapp:read", "route:/dashboard/messages/whatsapp"],
-  "/dashboard/messages/email": ["communication:read", "route:/dashboard/messages/email"],
-  "/dashboard/settings/email-accounts": ["communication:read", "settings:read", "route:/dashboard/settings/email-accounts"],
-  "/dashboard/settings/super-admin-security": ["super_admin", "route:/dashboard/settings/super-admin-security"],
-  "/dashboard/mail-management": ["communication:read", "route:/dashboard/mail-management"],
-  "/dashboard/mail-management/users": ["users:read", "communication:read", "route:/dashboard/mail-management/users"],
-  "/dashboard/mail-management/monitoring": ["audit_logs:read", "route:/dashboard/mail-management/monitoring"],
-  "/dashboard/permissions/control-center": ["super_admin", "permissions:read", "route:/dashboard/permissions/control-center"],
-  "/dashboard/reports/journal": ["reports:read", "ledgers:read", "route:/dashboard/reports/journal"],
-  "/dashboard/bill-cost-profit/purchase": ["purchases:read", "expenses:read", "route:/dashboard/bill-cost-profit/purchase"],
-  "/dashboard/bill-cost-profit/sales": ["sales:read", "expenses:read", "route:/dashboard/bill-cost-profit/sales"],
-  "/dashboard/bill-cost-profit/expenses": ["expenses:read", "route:/dashboard/bill-cost-profit/expenses"],
-  "/dashboard/bill-cost-profit/reports": ["reports:read", "expenses:read", "route:/dashboard/bill-cost-profit/reports"],
-  "/dashboard/inventory/stock-reports/branch": ["inventory:read", "products:read", "route:/dashboard/inventory/stock-reports/branch"],
-  "/dashboard/inventory/stock-reports/country": ["inventory:read", "products:read", "route:/dashboard/inventory/stock-reports/country"],
-  "/dashboard/inventory/stock-reports/salesman": ["inventory:read", "products:read", "route:/dashboard/inventory/stock-reports/salesman"],
-  "/dashboard/purchase/stock/warehouse": ["inventory:read", "purchases:read", "warehouses:read", "route:/dashboard/purchase/stock/warehouse"],
-  "/dashboard/purchase/stock/booking": ["purchases:read", "inventory:read", "route:/dashboard/purchase/stock/booking"],
-  "/dashboard/purchase/stock/confirmed": ["purchases:read", "inventory:read", "route:/dashboard/purchase/stock/confirmed"],
-  "/dashboard/purchase/stock/import": ["purchases:read", "shipping_records:read", "route:/dashboard/purchase/stock/import"],
-  "/dashboard/purchase/stock/in-transit": ["purchases:read", "shipping_records:read", "route:/dashboard/purchase/stock/in-transit"],
-  "/dashboard/inventory/journal-report/branch": ["inventory:read", "reports:read", "route:/dashboard/inventory/journal-report/branch"],
-  "/dashboard/clearing-agent/clearing-workspace": ["shipping_records:read", "clearing_agents:read", "route:/dashboard/clearing-agent/clearing-workspace"],
-  "/dashboard/transfer-center": ["shipping_transfers:read", "shipping_records:read", "route:/dashboard/transfer-center"],
-  "/dashboard/user-tasks": ["tasks:read", "dashboard:read", "route:/dashboard/user-tasks"],
-  "/dashboard/reports/super-admin": ["super_admin", "reports:read", "route:/dashboard/reports/super-admin"],
-  "/dashboard/reports/country": ["country_admin", "reports:read", "route:/dashboard/reports/country"],
-  "/dashboard/reports/branch": ["reports:read", "route:/dashboard/reports/branch"],
-  "/dashboard/reports/payments": ["reports:read", "transactions:read", "route:/dashboard/reports/payments"],
-  "/dashboard/reports/shipping": ["reports:read", "shipping_records:read", "route:/dashboard/reports/shipping"],
-  "/dashboard/reports/financial-statements": ["reports:read", "ledgers:read", "route:/dashboard/reports/financial-statements"],
-  "/dashboard/reports/handover": ["reports:read", "shipping_transfers:read", "route:/dashboard/reports/handover"],
-  "/dashboard/reports/system-forms-directory": ["reports:read", "dashboard:read", "route:/dashboard/reports/system-forms-directory"],
-  "/dashboard/ai-entry/approvals": ["approvals:read", "approvals:approve", "route:/dashboard/ai-entry/approvals"],
-  "/dashboard/customer-inquiries/calls": ["communication:read", "customers:read", "route:/dashboard/customer-inquiries/calls"],
-  "/dashboard/document-intelligence": ["documents:read", "route:/dashboard/document-intelligence"],
-  "/dashboard/crm": ["customers:read", "crm:read", "route:/dashboard/crm"],
-  "/dashboard/smart-due": ["smart_due:read", "dashboard:read", "route:/dashboard/smart-due"],
-  "/dashboard/crm/customers/new": ["customers:create", "customers:read", "route:/dashboard/crm/customers/new"],
-  "/dashboard/crm/reports": ["reports:read", "customers:read", "route:/dashboard/crm/reports"],
-  "/dashboard/tax-einvoicing/uae/dashboard": ["uae_tax:read", "route:/dashboard/tax-einvoicing/uae/dashboard"],
-  "/dashboard/tax-einvoicing/uae/vat-return": ["uae_tax:read", "uae_tax_filing:read", "route:/dashboard/tax-einvoicing/uae/vat-return"],
-  "/dashboard/tax-einvoicing/uae/corporate-tax": ["uae_tax:read", "uae_tax_filing:read", "route:/dashboard/tax-einvoicing/uae/corporate-tax"],
-  "/dashboard/tax-einvoicing/uae/e-invoices": ["uae_tax:read", "route:/dashboard/tax-einvoicing/uae/e-invoices"],
-  "/dashboard/tax-einvoicing/uae/asp-fta-status": ["uae_tax:read", "route:/dashboard/tax-einvoicing/uae/asp-fta-status"],
-  "/dashboard/tax-einvoicing/uae/vat-control": ["uae_tax:read", "route:/dashboard/tax-einvoicing/uae/vat-control"],
-  "/dashboard/tax-einvoicing/uae/tax-reports": ["uae_tax:read", "reports:read", "route:/dashboard/tax-einvoicing/uae/tax-reports"],
-  "/dashboard/settings/goods-master": ["products:read", "inventory:read", "goods:read", "route:/dashboard/settings/goods-master"],
-  "/dashboard/settings/product-categories": ["product_categories:read", "products:read", "route:/dashboard/settings/product-categories"],
-  "/dashboard/settings/warehouse": ["warehouses:read", "route:/dashboard/settings/warehouse"],
-  "/dashboard/communication-center": ["communication:read", "messages:read", "route:/dashboard/communication-center"],
-  "/dashboard/customer-inquiries": ["communication:read", "customers:read", "route:/dashboard/customer-inquiries"],
-  "/dashboard/customer-inquiries/follow-ups": ["communication:read", "customers:read", "route:/dashboard/customer-inquiries/follow-ups"],
-  "/dashboard/customer-inquiries/intelligence": ["communication:read", "customers:read", "route:/dashboard/customer-inquiries/intelligence"],
-  "/dashboard/customer-inquiries/reactivation": ["communication:read", "customers:read", "route:/dashboard/customer-inquiries/reactivation"],
-  "/dashboard/return-sms-reply": ["communication:read", "messages:read", "route:/dashboard/return-sms-reply"],
-  "/dashboard/settings": ["settings:read", "route:/dashboard/settings"],
-  "/dashboard/settings/dashboard-settings": ["settings:read", "route:/dashboard/settings/dashboard-settings"],
-  "/dashboard/settings/company-setup": ["companies:update", "companies:read", "route:/dashboard/settings/company-setup"],
-  "/dashboard/settings/account-type": ["accounts:read", "settings:read", "route:/dashboard/settings/account-type"],
-  "/dashboard/settings/locations": ["countries:read", "settings:read", "route:/dashboard/settings/locations"],
-  "/dashboard/settings/tax": ["uae_tax:read", "settings:read", "route:/dashboard/settings/tax"],
-  "/dashboard/settings/translations": ["translations:read", "settings:read", "route:/dashboard/settings/translations"],
-  "/dashboard/settings/profile": ["profile:read", "users:read", "route:/dashboard/settings/profile"],
-  "/dashboard/temp-bills/purchase": ["purchases:read", "route:/dashboard/temp-bills/purchase"],
-  "/dashboard/temp-bills/sales": ["sales:read", "route:/dashboard/temp-bills/sales"],
-  "/dashboard/temp-bills": ["purchases:read", "sales:read", "route:/dashboard/temp-bills"],
-  "/dashboard/temp-bills/reports": ["purchases:read", "sales:read", "reports:read", "route:/dashboard/temp-bills/reports"]
-};
+import { ROUTE_PERMISSION_MAP, evaluateRouteAccess } from "@/lib/navigation/route-policy";
+export { ROUTE_PERMISSION_MAP };
 
 type ShippingContext = {
+  canViewFinancials?: boolean;
   isShippingScoped?: boolean;
   operationalDomains?: ("business" | "shipping" | "both")[] | null;
   ledgerVisibility?: "scoped" | "shipping_only" | "full" | null;
@@ -938,57 +779,6 @@ function filterByRolesAndPermissions<T extends { key?: string; roles?: string[];
     !userRoles.has("city_branch_admin") &&
     !userRoles.has("accountant") &&
     !userRoles.has("cashier");
-
-  if (isShippingOnly) {
-    // A shipping line / clearing agent user sees ONLY their shipping ecosystem:
-    // 1. Dashboard (Logistics Tracking / Agent dashboard)
-    // 2. Shipping & Clearing (All 10 modules)
-    // 3. Ledgers (Detailed Statement & General Report — already restricted by backend to their clearing agent)
-    // 4. Transfer & Handover Center
-    // 5. Daily Cash Entry (Roznamcha) if they have roznamcha permissions
-    const ALLOWED_SHIPPING_KEYS = new Set([
-      "dashboard",
-      "shipping-cleaning",
-      "ledgers",
-      "transfer-handover-center",
-      "daily-payment"
-    ]);
-
-    return items
-      .filter((it: any) => ALLOWED_SHIPPING_KEYS.has(it.key))
-      .map((it: any) => {
-        if (it.key === "dashboard") {
-          return { ...it, href: "/dashboard/logistics" };
-        }
-        if (it.key === "shipping-cleaning") {
-          return { ...it, defaultOpen: true };
-        }
-        if (it.key === "ledgers") {
-          // Shipping users must see their scoped ledgers (Detailed statement & General report)
-          const allowedLedgerHrefs = new Set([
-            "/dashboard/ledger/detailed",
-            "/dashboard/ledger/general-report"
-          ]);
-          const kids = (it.children || []).filter((c: any) => allowedLedgerHrefs.has(c.href));
-          return {
-            ...it,
-            defaultOpen: false,
-            children: kids
-          };
-        }
-        if (it.key === "daily-payment") {
-          // Keep only cash entry if the user has roznamcha:read, remove all purchase/sales payments
-          const hasRoznamcha = userPermissions.has("roznamcha:read") || userPermissions.has("roznamcha:*");
-          if (!hasRoznamcha) return null;
-          return {
-            ...it,
-            children: (it.children || []).filter((c: any) => c.href === "/dashboard/roznamcha/cash-entry")
-          };
-        }
-        return it;
-      })
-      .filter(Boolean) as T[];
-  }
 
   // -----------------------------------------------------------------------
   // BUSINESS-ONLY domain: A pure Business Admin (operational_domain='business')
@@ -1029,6 +819,18 @@ function filterByRolesAndPermissions<T extends { key?: string; roles?: string[];
     // Default home dashboard is always visible
     if (cleanHref === "/dashboard") return true;
 
+    // The server-side route gate (app/dashboard/layout.tsx) and this menu share one policy: an entry the gate would answer
+    // with 403 (financial page for an operations / shipping-line login, business-only domain, unmapped page for a strict
+    // login) is never rendered.
+    const routeDecision = evaluateRouteAccess({
+      pathname: cleanHref,
+      permissions: [...userPermissions],
+      roles: [...userRoles],
+      operationalDomains: shippingContext?.operationalDomains ?? null,
+      canViewFinancials: shippingContext?.canViewFinancials ?? null,
+    });
+    if (!routeDecision.allowed) return false;
+
     // Direct route permission: route:/dashboard/...
     if (userPermissions.has(`route:${cleanHref}`) || userPermissions.has(`route:${rawHref}`)) {
       return true;
@@ -1051,6 +853,67 @@ function filterByRolesAndPermissions<T extends { key?: string; roles?: string[];
     return false;
   };
 
+  // recursive permission filter for a subtree (used by the shipping-only branch; the main path below is equivalent)
+  const filterTree = (list: any[]): any[] =>
+    list
+      .filter((c) => isPermitted(c))
+      .map((c) => (c.children ? { ...c, children: filterTree(c.children) } : c))
+      .filter((c) => !c.children || c.href || c.children.length > 0);
+
+  if (isShippingOnly) {
+    // A shipping line / clearing agent user sees ONLY their shipping ecosystem:
+    // 1. Dashboard (Logistics Tracking / Agent dashboard)
+    // 2. Shipping & Clearing (All 10 modules)
+    // 3. Ledgers (Detailed Statement & General Report — already restricted by backend to their clearing agent)
+    // 4. Transfer & Handover Center
+    // 5. Daily Cash Entry (Roznamcha) if they have roznamcha permissions
+    const ALLOWED_SHIPPING_KEYS = new Set([
+      "dashboard",
+      "shipping-cleaning",
+      "ledgers",
+      "transfer-handover-center",
+      "daily-payment"
+    ]);
+
+    return items
+      .filter((it: any) => ALLOWED_SHIPPING_KEYS.has(it.key) && (it.key === "dashboard" || isPermitted(it)))
+      .map((it: any) => {
+        if (it.key === "dashboard") {
+          return { ...it, href: "/dashboard/logistics" };
+        }
+        if (it.key === "shipping-cleaning") {
+          return { ...it, defaultOpen: true, children: filterTree(it.children || []) };
+        }
+        if (it.key === "ledgers") {
+          // Shipping users must see their scoped ledgers (Detailed statement & General report)
+          const allowedLedgerHrefs = new Set([
+            "/dashboard/ledger/detailed",
+            "/dashboard/ledger/general-report"
+          ]);
+          const kids = filterTree((it.children || []).filter((c: any) => allowedLedgerHrefs.has(c.href)));
+          return {
+            ...it,
+            defaultOpen: false,
+            children: kids
+          };
+        }
+        if (it.key === "daily-payment") {
+          // Keep only cash entry if the user has roznamcha:read, remove all purchase/sales payments
+          const hasRoznamcha = userPermissions.has("roznamcha:read") || userPermissions.has("roznamcha:*");
+          if (!hasRoznamcha) return null;
+          return {
+            ...it,
+            children: filterTree((it.children || []).filter((c: any) => c.href === "/dashboard/roznamcha/cash-entry"))
+          };
+        }
+        return it.children ? { ...it, children: filterTree(it.children) } : it;
+      })
+      .filter(Boolean)
+      // no empty categories
+      .filter((it: any) => !it.children || it.href || it.children.length > 0) as T[];
+  }
+
+
   return items
     .filter(isPermitted)
     .map((it) => {
@@ -1070,6 +933,7 @@ export function DigitalDockPremiumSidebar({
   isShippingScoped,
   operationalDomains,
   ledgerVisibility,
+  canViewFinancials,
 }: DigitalDockPremiumSidebarProps = {}) {
   const pathname = usePathname() ?? "";
   const lang = useActiveLanguage();
@@ -1081,7 +945,8 @@ export function DigitalDockPremiumSidebar({
     isShippingScoped,
     operationalDomains,
     ledgerVisibility,
-  }), [isShippingScoped, operationalDomains, ledgerVisibility]);
+    canViewFinancials,
+  }), [isShippingScoped, operationalDomains, ledgerVisibility, canViewFinancials]);
 
   const menuItems = useMemo(() => {
     return filterByRolesAndPermissions(DAMAN_SIDEBAR_ITEMS, userRolesSet, userPermsSet, shippingCtx);
@@ -1709,3 +1574,19 @@ export function DigitalDockPremiumSidebarWithDrawer({
 }
 
 export default DigitalDockPremiumSidebar;
+
+/**
+ * The menu a given role / permission set ACTUALLY receives — the same filter the live sidebar runs, so the User Profile's
+ * effective-access summary can never disagree with what the user will see.
+ */
+export function visibleMenuFor(
+  roles: readonly string[],
+  permissions: readonly string[],
+  ctx?: ShippingContext
+): { key: string; label: string; items: number }[] {
+  return filterByRolesAndPermissions(DAMAN_SIDEBAR_ITEMS, new Set(roles.map(String)), new Set(permissions.map(String)), ctx).map((it) => ({
+    key: String(it.key ?? it.href ?? it.label),
+    label: String(it.label),
+    items: (it.children ?? []).length,
+  }));
+}

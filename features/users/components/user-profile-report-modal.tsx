@@ -31,6 +31,7 @@ import {
 import { Button } from "@/components/ui/button";
 import type { EnterpriseRole } from "@/lib/permissions/enterprise-roles";
 import { buildRbacRoleSummary, buildAllModulesCapabilities, ModulePermissionCapability } from "@/lib/permissions/rbac-matrix-builder";
+import { EffectiveAccessForUser } from "@/features/users/components/user-access-profile-panel";
 import { openUserA4ReportWindow, UserReportData } from "@/lib/reports/open-user-a4-report-window";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
@@ -288,6 +289,9 @@ export function UserProfileReportModal({
             </div>
 
           </div>
+
+          {/* Effective access: what this user actually receives (server-computed, same resolver as login) */}
+          <EffectiveAccessForUser userId={user.userId} lang={activeLang} />
 
           {/* Section 2: Complete RBAC Form/Module Permission Matrix */}
           <div className="p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-3">

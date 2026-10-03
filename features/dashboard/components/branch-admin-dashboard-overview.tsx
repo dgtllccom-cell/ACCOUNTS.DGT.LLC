@@ -132,7 +132,7 @@ function StatusBadge({ value, draftLabel }: { value: string | null; draftLabel: 
   return <span className={`inline-flex rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase ${tone}`}>{value || draftLabel}</span>;
 }
 
-export function BranchAdminDashboardOverview({ data }: BranchDashboardOverviewProps) {
+export function BranchAdminDashboardOverview({ data, financialsHidden = false }: BranchDashboardOverviewProps & { financialsHidden?: boolean }) {
   const lang = useActiveLanguage();
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
@@ -210,18 +210,24 @@ export function BranchAdminDashboardOverview({ data }: BranchDashboardOverviewPr
         </div>
       </section>
 
+      {financialsHidden && (
+        <div data-testid="financials-hidden" className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-bold text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+          {tt("bdash.fin_hidden", "Financial figures (purchases, sales, balances and ledgers) are not part of your access.")}
+        </div>
+      )}
+
       {/* Grid of 6 stats cards */}
-      <section className="grid gap-4 grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
+      {!financialsHidden && <section className="grid gap-4 grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
         <OperationalCard label={tt("bdash.today_postings", "Today's Postings")} value={String(data.todayCount)} sub={tt("bdash.roznamcha_entries", "Roznamcha entries")} icon={Activity} tone="text-blue-500 dark:text-blue-400" />
         <OperationalCard label={tt("cdash.col_purchases", "Purchases")} value={formatMoney(data.purchaseTotal, currency)} sub={`${data.purchaseCount} ${tt("bdash.orders", "orders")}`} icon={ShoppingCart} tone="text-amber-500 dark:text-amber-400" />
         <OperationalCard label={tt("cdash.col_sales", "Sales")} value={formatMoney(data.salesTotal, currency)} sub={`${data.salesCount} ${tt("bdash.orders", "orders")}`} icon={TrendingUp} tone="text-emerald-600 dark:text-emerald-400" />
         <OperationalCard label={tt("bdash.cash_balance", "Cash Balance")} value={formatMoney(data.cashBalance, currency)} sub={tt("bdash.cash_ledger_standing", "Cash ledger standing")} icon={Wallet} tone="text-cyan-500 dark:text-cyan-400" />
         <OperationalCard label={tt("bdash.bank_balance", "Bank Balance")} value={formatMoney(data.bankBalance, currency)} sub={tt("bdash.bank_ledger_standing", "Bank ledger standing")} icon={Landmark} tone="text-indigo-500 dark:text-indigo-400" />
         <OperationalCard label={tt("bdash.pending_payments", "Pending Payments")} value={formatMoney(data.pendingPayments, currency)} sub={tt("bdash.open_exposure", "Open branch exposure")} icon={AlertTriangle} tone="text-rose-500 dark:text-rose-400" />
-      </section>
+      </section>}
 
       {/* Recharts Graphics visual row */}
-      <section className="grid gap-6 xl:grid-cols-[1.35fr_0.9fr_0.9fr]">
+      {!financialsHidden && <section className="grid gap-6 xl:grid-cols-[1.35fr_0.9fr_0.9fr]">
         {/* Branch Financials (real) */}
         <Card className="border-border bg-card text-card-foreground shadow-lg">
           <CardHeader className="pb-2">
@@ -321,10 +327,10 @@ export function BranchAdminDashboardOverview({ data }: BranchDashboardOverviewPr
             })}
           </CardContent>
         </Card>
-      </section>
+      </section>}
 
       {/* Grid of details tables */}
-      <section className="grid gap-6 md:grid-cols-2">
+      {!financialsHidden && <section className="grid gap-6 md:grid-cols-2">
         {/* Cash, Bank & Ledger status */}
         <Card className="border-border bg-card text-card-foreground shadow-lg">
           <CardHeader className="pb-2 border-b border-border">
@@ -383,7 +389,7 @@ export function BranchAdminDashboardOverview({ data }: BranchDashboardOverviewPr
             </div>
           </CardContent>
         </Card>
-      </section>
+      </section>}
 
       {/* Grid of sub-sections (Inventory and Customer Directory) */}
       <section className="grid gap-6 md:grid-cols-2">

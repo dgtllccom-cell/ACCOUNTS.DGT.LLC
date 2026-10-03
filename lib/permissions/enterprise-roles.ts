@@ -12,7 +12,77 @@ export const enterpriseRoles = [
   "auditor_viewer"
 ] as const;
 
-export type EnterpriseRole = (typeof enterpriseRoles)[number];
+/**
+ * Roles stored in user_role_assignments.role (the app_role enum). They decide the SCOPE LEVEL of an assignment.
+ */
+export type StoredEnterpriseRole = (typeof enterpriseRoles)[number];
+
+/**
+ * Effective roles DERIVED from (stored role, access_profile) by the session builder — never stored, never offered in
+ * a role dropdown. They exist so that an operations / shipping-line login is a different, narrower role than the
+ * business role that shares its scope level (a Global Operations Admin is NOT a Super Admin).
+ */
+export const virtualRoles = [
+  "global_operations_admin",
+  "country_operations_admin",
+  "city_operations_admin",
+  "shipping_line_admin",
+  "shipping_line_user"
+] as const;
+export type VirtualRole = (typeof virtualRoles)[number];
+
+export type EnterpriseRole = StoredEnterpriseRole | VirtualRole;
+
+/** Access profiles: what an assignment may DO inside the scope its role decides. NULL = the standard role template. */
+export const accessProfiles = ["operations", "shipping_line"] as const;
+export type AccessProfile = (typeof accessProfiles)[number];
+
+export type ScopeLevel = "global" | "country" | "main_branch" | "city_branch";
+
+/** Scope level of an assignment, from its STORED role (the single place this mapping lives). */
+export function storedRoleScopeLevel(role: string): ScopeLevel {
+  switch (role) {
+    case "super_admin":
+    case "super_admin_reports":
+      return "global";
+    case "country_admin":
+    case "country_user":
+      return "country";
+    case "main_branch_admin":
+      return "main_branch";
+    default:
+      return "city_branch";
+  }
+}
+
+/**
+ * (stored role, access profile) -> effective role.
+ *   NULL profile                       -> the stored role itself (unchanged behaviour for every existing user)
+ *   operations    @ global/country/branch -> global / country / city operations admin
+ *   shipping_line @ admin level          -> shipping line admin ; @ user level (agent_user, staff) -> shipping line user
+ */
+export function deriveEffectiveRole(storedRole: StoredEnterpriseRole, profile: AccessProfile | null | undefined): EnterpriseRole {
+  if (!profile) return storedRole;
+  const level = storedRoleScopeLevel(storedRole);
+  if (profile === "operations") {
+    if (level === "global") return "global_operations_admin";
+    if (level === "country") return "country_operations_admin";
+    return "city_operations_admin"; // main branch and city branch operations admins see their own branch tree only
+  }
+  const adminLevel = level !== "city_branch" || storedRole === "city_branch_admin";
+  return adminLevel ? "shipping_line_admin" : "shipping_line_user";
+}
+
+/** Country-level roles: they own their whole country, including branches that were later deactivated. */
+export const COUNTRY_LEVEL_ROLES: readonly string[] = ["country_admin", "country_user", "country_operations_admin"];
+/** Roles whose scope is global but whose permissions are NOT "everything". */
+export const GLOBAL_SCOPE_ROLES: readonly string[] = ["super_admin", "super_admin_reports", "global_operations_admin"];
+/** Operational / shipping-line roles: financial modules are denied by construction. */
+export const NON_FINANCIAL_ROLES: readonly string[] = [
+  "global_operations_admin", "country_operations_admin", "city_operations_admin", "shipping_line_admin", "shipping_line_user"
+];
+
+export function isCountryLevelRole(role: string): boolean { return COUNTRY_LEVEL_ROLES.includes(role); }
 
 export const enterpriseRoleScopes: Record<EnterpriseRole, string> = {
   super_admin: "Global",
@@ -25,8 +95,72 @@ export const enterpriseRoleScopes: Record<EnterpriseRole, string> = {
   cashier: "Assigned cash/payment scope",
   agent_user: "Assigned agent tasks",
   staff_user: "Assigned staff tasks",
-  auditor_viewer: "Read-only assigned scope"
+  auditor_viewer: "Read-only assigned scope",
+  global_operations_admin: "Operational modules across all permitted countries (no Finance)",
+  country_operations_admin: "Operational modules of the assigned country (no Finance)",
+  city_operations_admin: "Operational modules of the assigned branch (no Finance)",
+  shipping_line_admin: "Shipping Line modules inside the assigned scope / shipping line",
+  shipping_line_user: "Assigned Shipping Line records inside the assigned branch"
 };
+
+/**
+ * Resources that are FINANCIAL. They are denied by default to every operations / shipping-line role and are
+ * never part of an operational template. Used by the templates below, the effective-access report and the tests.
+ */
+export const FINANCIAL_RESOURCES: readonly string[] = [
+  "accounts", "ledgers", "ledger_full", "roznamcha", "journal_entries", "transactions", "banks", "currency_rates",
+  "exchange_rates", "expenses", "bill_expenses", "payroll", "payments", "customer_receipts",
+  "clearing_bill_customer_charges", "financial_periods", "uae_tax", "pk_tax", "uae_tax_filing", "pk_tax_filing",
+  "uae_tax_settings", "settlement", "investments", "smart_due", "finance_amounts", "purchases", "sales", "approvals"
+];
+
+/** Operational baseline shared by the three Operations Admin roles. NO financial resource appears here. */
+const OPERATIONS_PERMISSIONS: string[] = [
+  "dashboard:read",
+  "countries:read", "country_branches:read", "city_branches:read",
+  "users:read", "customers:read", "companies:read",
+  "shipping_records:create", "shipping_records:read", "shipping_records:update",
+  "shipments:create", "shipments:read", "shipments:update",
+  "shipping_transfers:create", "shipping_transfers:read", "shipping_transfers:approve",
+  "shipping:read", "shipping_reports:read",
+  "route_templates:create", "route_templates:read", "route_templates:update",
+  "location_master:read",
+  "clearing_agents:read", "clearing_agent_branches:read",
+  "record_transfers:create", "record_transfers:read",
+  "assignments:create", "assignments:read", "assignments:update",
+  "tasks:create", "tasks:read", "tasks:update",
+  "documents:create", "documents:read", "documents:update", "documents:export", "documents:print",
+  "messages:create", "messages:read", "whatsapp:read",
+  "warehouses:read", "inventory:read", "products:read",
+  // Loading / Transit & Lane are operational: quantities, BLs, containers, trucks — without purchase prices or payables.
+  "purchase_logistics:create", "purchase_logistics:read", "purchase_logistics:update"
+];
+
+/** Shipping Line modules only: bookings, BL, containers, vessels/voyages, ports, tracking, documents, assigned tasks. */
+const SHIPPING_LINE_ADMIN_PERMISSIONS: string[] = [
+  "dashboard:read",
+  "shipping_records:create", "shipping_records:read", "shipping_records:update",
+  "shipments:read", "shipments:update",
+  "shipping_transfers:create", "shipping_transfers:read",
+  "shipping:read", "shipping_reports:read",
+  "route_templates:read", "location_master:read",
+  "record_transfers:create", "record_transfers:read",
+  "assignments:read", "assignments:update",
+  "tasks:read", "tasks:update",
+  "documents:create", "documents:read", "documents:update", "documents:print",
+  "messages:create", "messages:read"
+];
+
+const SHIPPING_LINE_USER_PERMISSIONS: string[] = [
+  "dashboard:read",
+  "shipping_records:read", "shipping_records:update",
+  "shipments:read", "shipments:update",
+  "shipping_transfers:read",
+  "shipping:read",
+  "tasks:read", "tasks:update",
+  "documents:create", "documents:read",
+  "messages:read", "record_transfers:read"
+];
 
 /**
  * Approved Shipping Line baseline (agent_user). Single source of truth for: the role template,
@@ -623,7 +757,12 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     ...SHIPPING_APPROVED_BUNDLE
   ],
   staff_user: ["transactions:create", "transactions:read", "customers:read", "companies:read", "shipping_records:read", "whatsapp:read", "location_master:read", "route_templates:read"],
-  auditor_viewer: ["reports:read", "audit_logs:read", "ledgers:read", "companies:read", "kyc:read", "documents:read", "uae_tax:read", "uae_tax_filing:read", "pk_tax:read", "pk_tax_filing:read", "contracts:read"]
+  auditor_viewer: ["reports:read", "audit_logs:read", "ledgers:read", "companies:read", "kyc:read", "documents:read", "uae_tax:read", "uae_tax_filing:read", "pk_tax:read", "pk_tax_filing:read", "contracts:read"],
+  global_operations_admin: [...OPERATIONS_PERMISSIONS],
+  country_operations_admin: [...OPERATIONS_PERMISSIONS],
+  city_operations_admin: [...OPERATIONS_PERMISSIONS],
+  shipping_line_admin: [...SHIPPING_LINE_ADMIN_PERMISSIONS],
+  shipping_line_user: [...SHIPPING_LINE_USER_PERMISSIONS]
 };
 
 export const dashboardByRole: Record<EnterpriseRole, string> = {
@@ -637,5 +776,54 @@ export const dashboardByRole: Record<EnterpriseRole, string> = {
   cashier: "/dashboard/city",
   agent_user: "/dashboard/agent",
   staff_user: "/dashboard/city",
-  auditor_viewer: "/dashboard/reports"
+  auditor_viewer: "/dashboard/reports",
+  // The existing, already-scoped operational dashboards (shipments, routes, BL/containers, tasks) — no duplicate dashboards.
+  global_operations_admin: "/dashboard/logistics",
+  country_operations_admin: "/dashboard/logistics",
+  city_operations_admin: "/dashboard/logistics",
+  // no separate page: the logistics dashboard filters every card by the login's shipping line(s) (session.shippingLineIds)
+  shipping_line_admin: "/dashboard/logistics",
+  shipping_line_user: "/dashboard/logistics"
 };
+
+/**
+ * The landing dashboard for a set of EFFECTIVE roles. The single implementation behind both /dashboard and the login redirect
+ * (there used to be two hand-written copies). Broadest business role first; operational roles land on the existing scoped
+ * operational dashboards; a login whose roles are unknown lands on the branch dashboard, which itself refuses without a branch.
+ */
+export function dashboardForRoles(roles: readonly string[], opts: { isSuperAdmin?: boolean; isShippingScoped?: boolean } = {}): string {
+  if (opts.isSuperAdmin || roles.includes("super_admin")) return "/dashboard/super-admin";
+  const order: EnterpriseRole[] = [
+    "country_admin", "country_user",
+    "main_branch_admin", "city_branch_admin", "accountant", "cashier",
+    "global_operations_admin", "country_operations_admin", "city_operations_admin",
+    "shipping_line_admin", "shipping_line_user",
+    "agent_user", "staff_user",
+    "super_admin_reports", "auditor_viewer"
+  ];
+  if (opts.isShippingScoped && !roles.some((r) => ["country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "cashier"].includes(r))) {
+    return "/dashboard/logistics";
+  }
+  for (const r of order) if (roles.includes(r)) return dashboardByRole[r];
+  return "/dashboard/city";
+}
+
+/**
+ * Hard cap for a login whose EVERY effective role is operational / shipping-line: no wildcard and no financial resource can
+ * survive — not from a stale saved permission set, not from a branch rule grant. (A combined login such as Branch Admin +
+ * Operations is not capped here; its access is computed per assignment by narrowSessionToPermission.)
+ * "finance_amounts:deny" is kept: it only ever removes access.
+ */
+export function capPermissionsForRoles(roles: readonly string[], permissions: readonly string[]): string[] {
+  if (!roles.length || !roles.every((r) => NON_FINANCIAL_ROLES.includes(r))) return [...permissions];
+  let out = [...permissions];
+  if (out.includes("*:*")) {
+    // a wildcard on a strict login is replaced by its own templates, never kept
+    out = [...new Set([...out.filter((p) => p !== "*:*"), ...roles.flatMap((r) => enterpriseRolePermissions[r as EnterpriseRole] ?? [])])];
+  }
+  return out.filter((p) => {
+    if (p === "finance_amounts:deny") return true;
+    const resource = p.split(":")[0];
+    return resource !== "*" && !FINANCIAL_RESOURCES.includes(resource);
+  });
+}

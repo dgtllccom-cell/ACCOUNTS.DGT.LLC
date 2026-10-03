@@ -1053,6 +1053,16 @@ export function LocalPurchaseDestinationQueueView({
                                     </Button>
                                   )}
 
+                                  {stage === "loading" && isCompleted && (
+                                    <a
+                                      href={`/dashboard/purchase/purchase-transit-lane?source=local_purchase&sourceId=${row.id}`}
+                                      data-testid="lp-open-lane"
+                                      className="inline-flex h-6 items-center gap-1 whitespace-nowrap rounded-md border border-indigo-300 bg-indigo-50 px-2 text-[9px] font-bold text-indigo-700 hover:bg-indigo-100 dark:border-indigo-900 dark:bg-indigo-950/40 dark:text-indigo-300"
+                                    >
+                                      {t(activeLang as any, "plane.act_open_lane" as any, "Open in Purchase Lane")}
+                                    </a>
+                                  )}
+
                                   <Button
                                     size="sm"
                                     variant="outline"

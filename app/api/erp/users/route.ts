@@ -4,10 +4,11 @@ import { z } from "zod";
 import { apiCreated, apiOk, handleApiError, ApiClientError } from "@/lib/api/response";
 import { auditApiAction } from "@/lib/api/audit";
 import { requireErpSession } from "@/lib/auth/session";
-import { userCreateSchema, uuidSchema } from "@/lib/api/erp-validation";
+import { assignmentAccessFields, userCreateSchema, uuidSchema } from "@/lib/api/erp-validation";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import type { EnterpriseRole } from "@/lib/permissions/enterprise-roles";
-import { enterpriseRolePermissions } from "@/lib/permissions/enterprise-roles";
+import type { EnterpriseRole, StoredEnterpriseRole, AccessProfile } from "@/lib/permissions/enterprise-roles";
+import { enterpriseRolePermissions, enterpriseRoles, deriveEffectiveRole } from "@/lib/permissions/enterprise-roles";
+import { resolveEffectiveAccessForUser } from "@/lib/auth/session";
 import { expandPermissionGroups } from "@/lib/permissions/catalog";
 import { MOBILE_PROFILE_ALLOWED, capPermissionsToProfile, normalizeMobileProfile } from "@/lib/permissions/mobile-profiles";
 import { issueNextUserCode, normalizeUserCode } from "@/lib/services/user-identity-service";
@@ -61,6 +62,42 @@ function assertScopeForRole(role: EnterpriseRole, scope: { countryId: string | n
   }
 }
 
+/** Roles only a Super Admin may grant (a country / branch manager can never mint a peer or a global login). */
+const SUPER_ADMIN_ONLY_ROLES = new Set(["super_admin", "super_admin_reports", "country_admin"]);
+
+/**
+ * Field-level financial permission → permission tokens. "deny" always wins at session time (deriveCanViewFinancials);
+ * "allow" is only issued by a creator who can see financial amounts themself.
+ */
+function applyFinancialAccess(permissions: string[], mode: "role_default" | "deny" | "allow" | undefined, creatorCanViewFinancials: boolean) {
+  const base = permissions.filter((p) => p !== "finance_amounts:deny" && p !== "finance_amounts:read");
+  if (mode === "deny") return [...base, "finance_amounts:deny"];
+  if (mode === "allow") {
+    if (!creatorCanViewFinancials) throw new ApiClientError("You cannot grant financial access you do not hold.", { status: 403 });
+    return [...base, "finance_amounts:read"];
+  }
+  if (mode === "role_default") return base;
+  return permissions;
+}
+
+/** Validates the access-profile combination and the shipping line binding. */
+function assertAccessProfile(storedRole: string, input: { accessProfile?: string | null; shippingLineId?: string | null; effectiveFrom?: string | null; effectiveTo?: string | null }) {
+  if (input.accessProfile === "shipping_line" && !input.shippingLineId) {
+    throw new ApiClientError("A Shipping Line login must be bound to a shipping line.", { status: 400 });
+  }
+  if (input.accessProfile !== "shipping_line" && input.shippingLineId) {
+    throw new ApiClientError("A shipping line can only be assigned with the Shipping Line access profile.", { status: 400 });
+  }
+  if (input.accessProfile && storedRole === "super_admin_reports") {
+    throw new ApiClientError("The Reports auditor role cannot carry an operational access profile.", { status: 400 });
+  }
+  if (input.effectiveFrom && input.effectiveTo && input.effectiveTo < input.effectiveFrom) {
+    throw new ApiClientError("Effective-to date must be on or after the effective-from date.", { status: 400 });
+  }
+}
+
+const ACCESS_COLUMNS = /access_profile|shipping_line_id|warehouse_ids|effective_from|effective_to/;
+
 function normalizePermissions(input: unknown) {
   return Array.isArray(input)
     ? [...new Set(input.map((permission) => String(permission).trim()).filter(Boolean))]
@@ -110,6 +147,13 @@ async function loadScopePermissionLimit(
   return null;
 }
 
+/** A Country Admin manages its country; a Main Branch Admin only its own branch tree. Unassigned / global users are out of scope. */
+function userInManagerScope(session: { roles: string[]; countryIds: string[]; countryBranchIds: string[] }, assignment: any): boolean {
+  if (!assignment?.country_id || !session.countryIds.includes(assignment.country_id)) return false;
+  if (session.roles.includes("country_admin")) return true;
+  return Boolean(assignment.country_branch_id && session.countryBranchIds.includes(assignment.country_branch_id));
+}
+
 export async function POST(request: NextRequest) {
   try {
     const session = await requireErpSession();
@@ -121,8 +165,18 @@ export async function POST(request: NextRequest) {
     const isCountryManager = session.roles.some((r) => r === "country_admin" || r === "main_branch_admin");
     if (!session.isSuperAdmin) {
       if (!isCountryManager) throw new ApiClientError("Not authorized to create users.", { status: 403 });
-      if (body.role === "super_admin" || body.role === "country_admin") {
-        throw new Error("Only Super Admin can create Super Admin or Country Admin users.");
+      if (SUPER_ADMIN_ONLY_ROLES.has(body.role)) {
+        throw new ApiClientError("Only Super Admin can create Super Admin, Reports Auditor or Country Admin users.", { status: 403 });
+      }
+      // A Main Branch Admin creates users only inside its OWN branch tree, never in a sibling branch of the same country.
+      const isCountryAdmin = session.roles.includes("country_admin");
+      if (!isCountryAdmin) {
+        if (!body.countryBranchId || !session.countryBranchIds.includes(body.countryBranchId)) {
+          throw new ApiClientError("Branch scope is not allowed.", { status: 403 });
+        }
+        if (body.cityBranchId && !session.cityBranchIds.includes(body.cityBranchId)) {
+          throw new ApiClientError("City branch scope is not allowed.", { status: 403 });
+        }
       }
       if (!body.countryId || !session.countryIds.includes(body.countryId)) {
         throw new Error("Country scope is not allowed.");
@@ -134,6 +188,9 @@ export async function POST(request: NextRequest) {
       countryBranchId: body.countryBranchId ?? null,
       cityBranchId: body.cityBranchId ?? null
     });
+    assertAccessProfile(body.role, body);
+    const accessProfile = (body.accessProfile ?? null) as AccessProfile | null;
+    const effectiveRole = deriveEffectiveRole(body.role as StoredEnterpriseRole, accessProfile);
 
     // ── Operational domain consistency ──────────────────────────────────────
     // A creator can only create users in a domain they themselves belong to
@@ -167,7 +224,9 @@ export async function POST(request: NextRequest) {
     const mobileProfile = normalizeMobileProfile(body.mobileProfile);
 
     const requestedPermissions = normalizePermissions(body.permissions);
-    const defaultRolePermissions = [...new Set(enterpriseRolePermissions[body.role] ?? [])];
+    // The template of the EFFECTIVE role: an Operations / Shipping Line login starts from its narrow template, never the
+    // stored admin role's full template.
+    const defaultRolePermissions = [...new Set(enterpriseRolePermissions[effectiveRole] ?? [])];
     // A simplified mobile profile has a FIXED small permission surface — start
     // from that, not from the (larger) role template, so the profile really is
     // limited. It is still capped by the creator's own authority below.
@@ -189,6 +248,7 @@ export async function POST(request: NextRequest) {
       : constrainPermissions(constrainPermissions(requestedOrDefault, creatorLimit), parentLimit);
     // Hard cap: even a super admin's mobile user cannot exceed the profile surface.
     issuedPermissions = capPermissionsToProfile(mobileProfile, issuedPermissions);
+    issuedPermissions = applyFinancialAccess(issuedPermissions, body.financialAccess, session.canViewFinancials);
 
     if (!issuedPermissions.length) {
       throw new Error("No assignable permissions remain after applying parent scope limits.");
@@ -328,12 +388,26 @@ export async function POST(request: NextRequest) {
       clearing_agent_id: body.clearingAgentId ?? null,
       ledger_visibility: ledgerVisibility,
       mobile_profile: mobileProfile,
+      access_profile: accessProfile,
+      shipping_line_id: body.shippingLineId ?? null,
+      warehouse_ids: body.warehouseIds?.length ? body.warehouseIds : null,
+      effective_from: body.effectiveFrom ?? null,
+      effective_to: body.effectiveTo ?? null,
       created_by: isUuid(session.userId) ? session.userId : null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
 
     let { error: assignmentError } = await admin.from("user_role_assignments").insert(assignmentPayload);
+    if (assignmentError && ACCESS_COLUMNS.test(assignmentError.message)) {
+      // DB predates RBAC v2. Dropping a REQUESTED profile would silently turn an Operations / Shipping Line login into the
+      // full stored role — refuse instead.
+      if (accessProfile || body.shippingLineId || body.warehouseIds?.length || body.effectiveFrom || body.effectiveTo) {
+        throw new ApiClientError("This database does not yet support access profiles (migration 20261004_rbac_access_profiles).", { status: 409 });
+      }
+      for (const c of ["access_profile", "shipping_line_id", "warehouse_ids", "effective_from", "effective_to"]) delete assignmentPayload[c];
+      ({ error: assignmentError } = await admin.from("user_role_assignments").insert(assignmentPayload));
+    }
     if (assignmentError && /mobile_profile/.test(assignmentError.message)) {
       delete assignmentPayload.mobile_profile;
       ({ error: assignmentError } = await admin.from("user_role_assignments").insert(assignmentPayload));
@@ -364,7 +438,15 @@ export async function POST(request: NextRequest) {
         operationalDomain: domain,
         clearingAgentId: body.clearingAgentId ?? null,
         ledgerVisibility,
-        mobileProfile
+        mobileProfile,
+        accessProfile,
+        effectiveRole,
+        shippingLineId: body.shippingLineId ?? null,
+        warehouseIds: body.warehouseIds ?? null,
+        effectiveFrom: body.effectiveFrom ?? null,
+        effectiveTo: body.effectiveTo ?? null,
+        financialAccess: body.financialAccess ?? "role_default",
+        permissions: issuedPermissions
       }
     });
 
@@ -403,12 +485,16 @@ export async function GET(request: NextRequest) {
     }
 
     const assignment = assignmentRes.data;
-    if (!session.isSuperAdmin && assignment?.country_id && !session.countryIds.includes(assignment.country_id)) {
-      throw new ApiClientError("Not authorized to view users outside of your country.", { status: 403 });
+    // Fail closed: a non-super-admin may only open a user whose assignment is INSIDE their own scope — a user with no
+    // country (a Super Admin) or in a sibling branch is out of scope, not "unscoped therefore visible".
+    if (!session.isSuperAdmin && !userInManagerScope(session, assignment)) {
+      throw new ApiClientError("Not authorized to view users outside of your scope.", { status: 403 });
     }
+    const { data: allAssignments } = await admin.from("user_role_assignments").select("*").eq("user_id", userId).is("deleted_at", null).order("created_at", { ascending: true });
 
     const permissions = permissionsRes.data?.permissions ?? [];
     const authUser = authUserRes.data?.user;
+    const effective = await resolveEffectiveAccessForUser(userId, authUser?.email ?? null);
 
     const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
     let localizedFullName = profile.full_name;
@@ -432,6 +518,34 @@ export async function GET(request: NextRequest) {
       mobileProfile: normalizeMobileProfile(assignment?.mobile_profile),
       operationalDomain: assignment?.operational_domain ?? "business",
       clearingAgentId: assignment?.clearing_agent_id ?? null,
+      accessProfile: assignment?.access_profile ?? null,
+      shippingLineId: assignment?.shipping_line_id ?? null,
+      warehouseIds: assignment?.warehouse_ids ?? [],
+      effectiveFrom: assignment?.effective_from ?? null,
+      effectiveTo: assignment?.effective_to ?? null,
+      financialAccess: permissions.includes("finance_amounts:deny") ? "deny" : permissions.includes("finance_amounts:read") ? "allow" : "role_default",
+      assignments: (allAssignments ?? []).map((a: any) => ({
+        id: a.id, role: a.role, isActive: a.is_active, countryId: a.country_id, countryBranchId: a.country_branch_id, cityBranchId: a.city_branch_id,
+        accessProfile: a.access_profile ?? null, effectiveRole: deriveEffectiveRole(a.role === "staff" ? "staff_user" : a.role, a.access_profile ?? null),
+        shippingLineId: a.shipping_line_id ?? null, clearingAgentId: a.clearing_agent_id ?? null, operationalDomain: a.operational_domain ?? "business",
+        warehouseIds: a.warehouse_ids ?? [], effectiveFrom: a.effective_from ?? null, effectiveTo: a.effective_to ?? null,
+      })),
+      // What the user will ACTUALLY get on their next request (same resolver as login).
+      effectiveAccess: effective ? {
+        roles: effective.roles,
+        isSuperAdmin: effective.isSuperAdmin,
+        isGlobalScope: effective.isGlobalScope,
+        countryIds: effective.countryIds,
+        countryBranchIds: effective.countryBranchIds,
+        cityBranchIds: effective.cityBranchIds,
+        shippingLineIds: effective.shippingLineIds,
+        clearingAgentIds: effective.clearingAgentIds ?? [],
+        isShippingScoped: Boolean(effective.isShippingScoped),
+        operationalDomains: effective.operationalDomains ?? [],
+        canViewFinancials: effective.canViewFinancials,
+        permissions: effective.permissions,
+        combinedAssignments: (effective.assignmentGrants ?? []).length,
+      } : null,
       permissions,
       email: authUser?.email ?? "",
       phone: authUser?.user_metadata?.phone ?? "",
@@ -487,7 +601,8 @@ export async function PATCH(request: NextRequest) {
       middleName: z.string().trim().optional(),
       lastName: z.string().trim().optional(),
       photoUrl: z.string().trim().optional(),
-      purpose: z.string().trim().optional()
+      purpose: z.string().trim().optional(),
+      ...assignmentAccessFields
     }).parse(await request.json());
 
     if (body.mobileProfile === "mobile_field") {
@@ -505,8 +620,21 @@ export async function PATCH(request: NextRequest) {
       if (!isCountryManager) throw new ApiClientError("Not authorized to update users.", { status: 403 });
       // If updating scope, ensure it matches current session country.
       if (body.countryId && !session.countryIds.includes(body.countryId as string)) {
-        throw new Error("Country scope is not allowed.");
+        throw new ApiClientError("Country scope is not allowed.", { status: 403 });
       }
+      // Privilege escalation guard: a manager can never promote a user to a role it may not create.
+      if (body.role && SUPER_ADMIN_ONLY_ROLES.has(body.role)) {
+        throw new ApiClientError("Only Super Admin can assign Super Admin, Reports Auditor or Country Admin roles.", { status: 403 });
+      }
+      if (body.countryBranchId && !session.countryBranchIds.includes(body.countryBranchId)) {
+        throw new ApiClientError("Branch scope is not allowed.", { status: 403 });
+      }
+      if (body.cityBranchId && !session.cityBranchIds.includes(body.cityBranchId)) {
+        throw new ApiClientError("City branch scope is not allowed.", { status: 403 });
+      }
+    }
+    if (body.role !== undefined && !(enterpriseRoles as readonly string[]).includes(body.role)) {
+      throw new ApiClientError("Unknown role.", { status: 400 });
     }
 
     const admin = createSupabaseAdminClient() as any;
@@ -547,6 +675,8 @@ export async function PATCH(request: NextRequest) {
 
       if (matchedProfile?.id) {
         targetUserId = matchedProfile.id;
+      } else if (!session.isSuperAdmin) {
+        throw new ApiClientError("User not found.", { status: 404 });
       } else {
         // Auto-provision profile with a valid UUID so FK constraints succeed
         const newId = crypto.randomUUID();
@@ -566,29 +696,35 @@ export async function PATCH(request: NextRequest) {
     body.userId = targetUserId;
 
     // Fetch the target user's current assignment to check their current country scope
+    // The full current assignment row — it is both the authorization subject and the audit "before" image.
     let { data: targetAssignment } = await admin
       .from("user_role_assignments")
-      .select("country_id, role, country_branch_id, city_branch_id, mobile_profile")
+      .select("*")
       .eq("user_id", targetUserId)
       .is("deleted_at", null)
+      .order("created_at", { ascending: false })
+      .limit(1)
       .maybeSingle();
-    if (!targetAssignment) {
-      ({ data: targetAssignment } = await admin
-        .from("user_role_assignments")
-        .select("country_id, role, country_branch_id, city_branch_id")
-        .eq("user_id", targetUserId)
-        .is("deleted_at", null)
-        .maybeSingle());
-    }
+    const { data: beforePermissionSet } = await admin.from("user_permission_sets").select("permissions").eq("user_id", targetUserId).maybeSingle();
 
-    if (!session.isSuperAdmin && targetAssignment) {
-      if (targetAssignment.role === "super_admin" || targetAssignment.role === "country_admin") {
-        throw new Error("Only Super Admin can update Super Admin or Country Admin users.");
+    if (!session.isSuperAdmin) {
+      if (!targetAssignment || !userInManagerScope(session, targetAssignment)) {
+        throw new ApiClientError("Not authorized to update users outside of your scope.", { status: 403 });
       }
-      if (targetAssignment.country_id && !session.countryIds.includes(targetAssignment.country_id)) {
-        throw new ApiClientError("Not authorized to update users outside of your country.", { status: 403 });
+      if (SUPER_ADMIN_ONLY_ROLES.has(targetAssignment.role)) {
+        throw new ApiClientError("Only Super Admin can update Super Admin, Reports Auditor or Country Admin users.", { status: 403 });
       }
     }
+    const nextStoredRole = (body.role ?? (targetAssignment?.role === "staff" ? "staff_user" : targetAssignment?.role) ?? "city_branch_admin") as StoredEnterpriseRole;
+    const nextAccessProfile = (body.accessProfile !== undefined ? body.accessProfile : (targetAssignment?.access_profile ?? null)) as AccessProfile | null;
+    const nextShippingLine = body.shippingLineId !== undefined ? body.shippingLineId : (targetAssignment?.shipping_line_id ?? null);
+    assertAccessProfile(nextStoredRole, {
+      accessProfile: nextAccessProfile,
+      shippingLineId: nextAccessProfile === "shipping_line" ? nextShippingLine : (body.shippingLineId ?? null),
+      effectiveFrom: body.effectiveFrom !== undefined ? body.effectiveFrom : (targetAssignment?.effective_from ?? null),
+      effectiveTo: body.effectiveTo !== undefined ? body.effectiveTo : (targetAssignment?.effective_to ?? null),
+    });
+    const accessChanged = [body.accessProfile, body.shippingLineId, body.warehouseIds, body.effectiveFrom, body.effectiveTo].some((v) => v !== undefined);
 
     // 1. Update profiles table if profile fields are provided
     if (
@@ -681,7 +817,8 @@ export async function PATCH(request: NextRequest) {
       body.countryId !== undefined ||
       body.countryBranchId !== undefined ||
       body.cityBranchId !== undefined ||
-      body.mobileProfile !== undefined
+      body.mobileProfile !== undefined ||
+      accessChanged
     ) {
       // Fetch latest assignment row
       const { data: currentAssign } = await admin
@@ -703,6 +840,12 @@ export async function PATCH(request: NextRequest) {
         if (body.countryBranchId !== undefined) assignmentUpdates.country_branch_id = body.countryBranchId;
         if (body.cityBranchId !== undefined) assignmentUpdates.city_branch_id = body.cityBranchId;
         if (body.mobileProfile !== undefined) assignmentUpdates.mobile_profile = body.mobileProfile;
+        if (body.accessProfile !== undefined) assignmentUpdates.access_profile = body.accessProfile;
+        if (body.accessProfile !== undefined && body.accessProfile !== "shipping_line") assignmentUpdates.shipping_line_id = null;
+        if (body.shippingLineId !== undefined) assignmentUpdates.shipping_line_id = body.shippingLineId;
+        if (body.warehouseIds !== undefined) assignmentUpdates.warehouse_ids = body.warehouseIds?.length ? body.warehouseIds : null;
+        if (body.effectiveFrom !== undefined) assignmentUpdates.effective_from = body.effectiveFrom;
+        if (body.effectiveTo !== undefined) assignmentUpdates.effective_to = body.effectiveTo;
 
         let { error: assignmentError } = await admin
           .from("user_role_assignments")
@@ -716,6 +859,9 @@ export async function PATCH(request: NextRequest) {
             .eq("id", currentAssign.id));
         }
 
+        if (assignmentError && ACCESS_COLUMNS.test(assignmentError.message)) {
+          throw new ApiClientError("This database does not yet support access profiles (migration 20261004_rbac_access_profiles).", { status: 409 });
+        }
         if (assignmentError) throw new Error(assignmentError.message);
       }
     }
@@ -723,12 +869,15 @@ export async function PATCH(request: NextRequest) {
     // 4. Update user_permission_sets when permissions OR the mobile profile change.
     // Switching a user onto a simplified mobile profile must immediately re-cap
     // what they can do — not wait for a separate permissions edit.
-    if (body.permissions !== undefined || body.mobileProfile !== undefined) {
+    if (body.permissions !== undefined || body.mobileProfile !== undefined || body.financialAccess !== undefined || body.accessProfile !== undefined || body.role !== undefined) {
       const effectiveMobileProfile = normalizeMobileProfile(
         body.mobileProfile ?? (targetAssignment as any)?.mobile_profile
       );
-      const requestedPermissions = normalizePermissions(body.permissions);
-      const targetRole = (body.role || targetAssignment?.role || "city_branch_admin") as EnterpriseRole;
+      // An explicit list wins; otherwise a role / profile change re-issues the NEW effective role's template (never keeps the
+      // old, wider set), and a financial-only change keeps the current list and just flips the token.
+      const keepCurrent = body.permissions === undefined && body.role === undefined && body.accessProfile === undefined && body.mobileProfile === undefined;
+      const requestedPermissions = keepCurrent ? normalizePermissions(beforePermissionSet?.permissions) : normalizePermissions(body.permissions);
+      const targetRole = deriveEffectiveRole(nextStoredRole, nextAccessProfile) as EnterpriseRole;
       const defaultRolePermissions = [...new Set(enterpriseRolePermissions[targetRole] ?? [])];
       const baseline =
         effectiveMobileProfile === "standard"
@@ -747,6 +896,7 @@ export async function PATCH(request: NextRequest) {
         ? baseline
         : constrainPermissions(constrainPermissions(baseline, creatorLimit), parentLimit);
       issuedPermissions = capPermissionsToProfile(effectiveMobileProfile, issuedPermissions);
+      issuedPermissions = applyFinancialAccess(issuedPermissions, body.financialAccess, session.canViewFinancials);
 
       const { error: permError } = await admin
         .from("user_permission_sets")
@@ -766,6 +916,15 @@ export async function PATCH(request: NextRequest) {
       action: "users.update.api",
       entityTable: "profiles",
       entityId: body.userId as string,
+      // before/after of everything that decides access — role, scope, profile, bindings, dates and the permission list
+      before: targetAssignment ? {
+        role: targetAssignment.role, isActive: targetAssignment.is_active, countryId: targetAssignment.country_id,
+        countryBranchId: targetAssignment.country_branch_id, cityBranchId: targetAssignment.city_branch_id,
+        mobileProfile: targetAssignment.mobile_profile ?? null, accessProfile: targetAssignment.access_profile ?? null,
+        shippingLineId: targetAssignment.shipping_line_id ?? null, warehouseIds: targetAssignment.warehouse_ids ?? null,
+        effectiveFrom: targetAssignment.effective_from ?? null, effectiveTo: targetAssignment.effective_to ?? null,
+        permissions: beforePermissionSet?.permissions ?? null,
+      } : null,
       after: {
         userId: body.userId,
         isActive: body.isActive,
@@ -774,7 +933,15 @@ export async function PATCH(request: NextRequest) {
         countryId: body.countryId,
         countryBranchId: body.countryBranchId,
         cityBranchId: body.cityBranchId,
-        mobileProfile: body.mobileProfile
+        mobileProfile: body.mobileProfile,
+        accessProfile: body.accessProfile,
+        effectiveRole: deriveEffectiveRole(nextStoredRole, nextAccessProfile),
+        shippingLineId: body.shippingLineId,
+        warehouseIds: body.warehouseIds,
+        effectiveFrom: body.effectiveFrom,
+        effectiveTo: body.effectiveTo,
+        financialAccess: body.financialAccess,
+        permissions: (await admin.from("user_permission_sets").select("permissions").eq("user_id", body.userId).maybeSingle()).data?.permissions ?? null,
       }
     });
 

@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
-import { hasRolePermission } from "@/lib/permissions/middleware";
+import { hasRolePermission, isGlobalSession } from "@/lib/permissions/middleware";
+import { isCountryLevelRole } from "@/lib/permissions/enterprise-roles";
+import { canAccessOrder } from "@/lib/services/clearing-customer-order-scope";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import {
@@ -22,16 +24,25 @@ import {
 // branch and (for shipping-scoped logins) a clearing agent — this must never be
 // readable/writable by every authenticated user regardless of role, the same
 // standard already applied to /api/erp/handovers.
+/**
+ * The list filter, by the login's scope LEVEL (RBAC audit 2026-10). listCustomerOrders picks the first non-empty level, so only
+ * the login's own level is filled in:
+ *   global                      -> everything
+ *   assigned-only (agent, shipping line roles) -> its clearing agent(s), else only its own / handed-over orders
+ *   country-level               -> its countries (includes main-branch-level orders that have no city branch)
+ *   main branch admin           -> its main branch(es)
+ *   everyone else               -> its city branch(es)
+ */
 function scopeOf(session: any): CustomerOrderScopeFilter {
-  const isSuperAdmin = !!session.isSuperAdmin || (session.roles ?? []).includes("super_admin_reports");
-  return {
-    isSuperAdmin,
-    countryIds: isSuperAdmin ? null : (session.countryIds ?? []),
-    countryBranchIds: isSuperAdmin ? null : (session.countryBranchIds ?? []),
-    cityBranchIds: isSuperAdmin ? null : (session.cityBranchIds ?? []),
-    clearingAgentIds: isSuperAdmin ? null : (session.clearingAgentIds ?? []),
-    createdByUserId: session.userId ?? null
-  };
+  const roles: string[] = session.roles ?? [];
+  const isSuperAdmin = isGlobalSession(session);
+  const base = { isSuperAdmin, countryIds: [] as string[], countryBranchIds: [] as string[], cityBranchIds: [] as string[], clearingAgentIds: [] as string[], createdByUserId: session.userId ?? null };
+  if (isSuperAdmin) return { ...base, countryIds: null, countryBranchIds: null, cityBranchIds: null, clearingAgentIds: null };
+  const assignedOnly = Boolean(session.isShippingScoped) || (roles.length > 0 && roles.every((r) => ["agent_user", "shipping_line_user", "shipping_line_admin"].includes(r)));
+  if (assignedOnly) return { ...base, clearingAgentIds: session.clearingAgentIds ?? [] };
+  if (roles.some((r) => isCountryLevelRole(r))) return { ...base, countryIds: session.countryIds ?? [] };
+  if (roles.includes("main_branch_admin")) return { ...base, countryBranchIds: session.countryBranchIds ?? [] };
+  return { ...base, cityBranchIds: session.cityBranchIds ?? [] };
 }
 
 export async function GET(req: NextRequest) {
@@ -55,19 +66,10 @@ export async function GET(req: NextRequest) {
       if (!order) {
         return NextResponse.json({ success: false, error: "Customer order not found" }, { status: 404 });
       }
-      if (!scope.isSuperAdmin) {
-        const inScope =
-          (scope.clearingAgentIds && scope.clearingAgentIds.length > 0 && scope.clearingAgentIds.includes(order.clearing_agent_id)) ||
-          (scope.cityBranchIds && scope.cityBranchIds.length > 0 && scope.cityBranchIds.includes(order.city_branch_id)) ||
-          (scope.countryBranchIds && scope.countryBranchIds.length > 0 && scope.countryBranchIds.includes(order.country_branch_id)) ||
-          (scope.countryIds && scope.countryIds.length > 0 && scope.countryIds.includes(order.country_id)) ||
-          (order.created_by && order.created_by === scope.createdByUserId) ||
-          (order.latest_handover?.receiver_user_id && order.latest_handover.receiver_user_id === scope.createdByUserId) ||
-          (order.latest_handover?.dest_country_branch_id && (scope.countryBranchIds ?? []).includes(order.latest_handover.dest_country_branch_id)) ||
-          (order.latest_handover?.dest_city_branch_id && (scope.cityBranchIds ?? []).includes(order.latest_handover.dest_city_branch_id));
-        if (!inScope) {
-          return NextResponse.json({ success: false, error: "Not authorized to view this order" }, { status: 403 });
-        }
+      // one record rule for the list's ?id= and the /[id] route (a duplicate inline copy used to let a branch login open any
+      // order of its country)
+      if (!scope.isSuperAdmin && !canAccessOrder(session, order)) {
+        return NextResponse.json({ success: false, error: "Not authorized to view this order" }, { status: 403 });
       }
       return NextResponse.json({ success: true, data: order });
     }

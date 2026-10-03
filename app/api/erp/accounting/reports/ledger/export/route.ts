@@ -5,6 +5,7 @@ import { z } from "zod";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { uuidSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
+import { assertFinancialAccess } from "@/lib/permissions/middleware";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { ledgerReportService } from "@/lib/services/ledger-report-service";
 import { resolveBrandingCompanyName } from "@/lib/branding/server";
@@ -37,6 +38,7 @@ function monthStartIso() {
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    assertFinancialAccess(session);
     assertNotShippingOnly(session);
     const query = querySchema.parse({
       format: request.nextUrl.searchParams.get("format") ?? undefined,

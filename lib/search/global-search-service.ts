@@ -17,6 +17,8 @@
 
 import { createApiSupabaseClient } from "@/lib/api/supabase";
 import type { ErpSession } from "@/lib/auth/session";
+import { enforceScopeFilter } from "@/lib/api/scope-middleware";
+import { hasRolePermission, isGlobalSession } from "@/lib/permissions/middleware";
 
 export type SearchResultItem = {
   entityType: string;
@@ -41,6 +43,7 @@ type ScopeFilter = {
   countryBranchIds: string[];
   cityBranchIds: string[];
   isSuperAdmin: boolean;
+  session: ErpSession;
 };
 
 function buildScopeFilter(session: ErpSession): ScopeFilter {
@@ -48,25 +51,18 @@ function buildScopeFilter(session: ErpSession): ScopeFilter {
     countryIds: session.countryIds || [],
     countryBranchIds: session.countryBranchIds || [],
     cityBranchIds: session.cityBranchIds || [],
-    isSuperAdmin: session.isSuperAdmin,
+    isSuperAdmin: isGlobalSession(session),
+    session,
   };
 }
 
-function applyScopeToQuery(q: any, scope: ScopeFilter, countryCol = "country_id", branchCol = "country_branch_id", cityCol = "city_branch_id") {
-  if (scope.isSuperAdmin) return q;
-
-  if (scope.cityBranchIds.length > 0) {
-    q = q.in(cityCol, scope.cityBranchIds);
-  } else if (scope.countryBranchIds.length > 0) {
-    q = q.in(branchCol, scope.countryBranchIds);
-  } else if (scope.countryIds.length > 0) {
-    q = q.in(countryCol, scope.countryIds);
-  } else {
-    // No scope — return empty
-    q = q.eq("id", "00000000-0000-0000-0000-000000000000");
-  }
-  return q;
+function applyScopeToQuery(q: any, scope: ScopeFilter) {
+  let out = enforceScopeFilter(q, scope.session);
+  // a Shipping Line login only ever finds the shipping line(s) it is bound to
+  return out;
 }
+
+const NIL = "00000000-0000-0000-0000-000000000000";
 
 function matchesNeedle(value: unknown, needle: string): boolean {
   return String(value ?? "").toLowerCase().includes(needle);
@@ -187,10 +183,20 @@ async function searchCustomers(
 
   // Manual scope for customers (only country_id exists)
   if (!scope.isSuperAdmin) {
-    if (scope.countryIds.length > 0) {
+    const s0 = scope.session;
+    const assignedOnly = s0.isShippingScoped || (s0.roles.length > 0 && s0.roles.every((r) => ["agent_user", "shipping_line_user", "staff_user"].includes(r)));
+    if (assignedOnly) {
+      // customers are a country master with no branch column: an agent / shipping-line / restricted login sees only the customers
+      // of orders that are inside ITS OWN scope (its clearing agent or its branch)
+      let oq = supabase.from("clearing_customer_orders").select("customer_id").is("deleted_at", null).not("customer_id", "is", null).limit(2000);
+      oq = enforceScopeFilter(oq, s0);
+      const { data: orderRows } = await oq;
+      const ids = [...new Set((orderRows ?? []).map((r: any) => r.customer_id).filter(Boolean))];
+      q = q.in("id", ids.length ? ids : [NIL]);
+    } else if (scope.countryIds.length > 0) {
       q = q.in("country_id", scope.countryIds);
     } else {
-      q = q.eq("id", "00000000-0000-0000-0000-000000000000");
+      q = q.eq("id", NIL);
     }
   }
 
@@ -223,6 +229,7 @@ async function searchShipping(
     .limit(limit);
 
   q = applyScopeToQuery(q, scope);
+  if (!scope.isSuperAdmin && scope.session.shippingLineIds?.length) q = q.in("shipping_line_id", scope.session.shippingLineIds);
 
   const { data, error } = await q;
   if (error || !data) return [];
@@ -241,18 +248,21 @@ async function searchShipping(
 async function searchLocations(
   supabase: any,
   needle: string,
-  _scope: ScopeFilter,
+  scope: ScopeFilter,
   limit: number
 ): Promise<SearchResultItem[]> {
   const results: SearchResultItem[] = [];
+  const inList = (ids: string[]) => (ids.length ? ids : [NIL]);
 
   // Search countries
-  const { data: countries } = await supabase
+  let countryQ = supabase
     .from("countries")
     .select("id, name, iso2, iso3, currency_code")
     .is("deleted_at", null)
     .or(`name.ilike.%${needle}%,iso2.ilike.%${needle}%,iso3.ilike.%${needle}%`)
     .limit(limit);
+  if (!scope.isSuperAdmin) countryQ = countryQ.in("id", inList(scope.countryIds));
+  const { data: countries } = await countryQ;
 
   if (countries) {
     for (const row of countries) {
@@ -269,12 +279,14 @@ async function searchLocations(
   }
 
   // Search country branches
-  const { data: branches } = await supabase
+  let branchQ = supabase
     .from("country_branches")
     .select("id, name, code, country_id")
     .is("deleted_at", null)
     .or(`name.ilike.%${needle}%,code.ilike.%${needle}%`)
     .limit(limit);
+  if (!scope.isSuperAdmin) branchQ = branchQ.in("id", inList(scope.countryBranchIds));
+  const { data: branches } = await branchQ;
 
   if (branches) {
     for (const row of branches) {
@@ -291,12 +303,14 @@ async function searchLocations(
   }
 
   // Search city branches
-  const { data: cities } = await supabase
+  let cityQ = supabase
     .from("city_branches")
     .select("id, name, code, country_branch_id")
     .is("deleted_at", null)
     .or(`name.ilike.%${needle}%,code.ilike.%${needle}%`)
     .limit(limit);
+  if (!scope.isSuperAdmin) cityQ = cityQ.in("id", inList(scope.cityBranchIds));
+  const { data: cities } = await cityQ;
 
   if (cities) {
     for (const row of cities) {
@@ -404,26 +418,28 @@ export async function globalSearch(
   const selectedModules = options.modules || Object.keys(MODULE_MAP);
 
   const searchPromises: Promise<SearchResultItem[]>[] = [];
+  // A module the login holds no permission for contributes nothing — not even a title (search must not outrun the menu).
+  const can = (resource: string) => hasRolePermission(session, resource, "read");
 
-  if (selectedModules.includes("purchase_order")) {
+  if (selectedModules.includes("purchase_order") && can("purchases")) {
     searchPromises.push(searchPurchaseOrders(supabase, needle, scope, perModuleLimit));
   }
-  if (selectedModules.includes("account")) {
+  if (selectedModules.includes("account") && can("accounts")) {
     searchPromises.push(searchAccounts(supabase, needle, scope, perModuleLimit));
   }
-  if (selectedModules.includes("customer")) {
+  if (selectedModules.includes("customer") && can("customers")) {
     searchPromises.push(searchCustomers(supabase, needle, scope, perModuleLimit));
   }
-  if (selectedModules.includes("shipping")) {
+  if (selectedModules.includes("shipping") && can("shipping_records")) {
     searchPromises.push(searchShipping(supabase, needle, scope, perModuleLimit));
   }
-  if (selectedModules.includes("country") || selectedModules.includes("country_branch") || selectedModules.includes("city_branch")) {
+  if ((selectedModules.includes("country") || selectedModules.includes("country_branch") || selectedModules.includes("city_branch")) && (can("countries") || can("country_branches") || can("city_branches"))) {
     searchPromises.push(searchLocations(supabase, needle, scope, perModuleLimit));
   }
-  if (selectedModules.includes("product")) {
+  if (selectedModules.includes("product") && can("products")) {
     searchPromises.push(searchProducts(supabase, needle, scope, perModuleLimit));
   }
-  if (selectedModules.includes("roznamcha")) {
+  if (selectedModules.includes("roznamcha") && can("roznamcha")) {
     searchPromises.push(searchRoznamcha(supabase, needle, scope, perModuleLimit));
   }
 
@@ -435,7 +451,10 @@ export async function globalSearch(
     results: allResults.slice(0, perModuleLimit * 5),
     total: allResults.length,
     query,
-    modules: Object.keys(MODULE_MAP),
+    modules: Object.keys(MODULE_MAP).filter((m) => {
+      const resource = ({ purchase_order: "purchases", account: "accounts", customer: "customers", shipping: "shipping_records", country: "countries", country_branch: "country_branches", city_branch: "city_branches", product: "products", roznamcha: "roznamcha" } as Record<string, string>)[m];
+      return !resource || can(resource);
+    }),
   };
 }
 

@@ -16,6 +16,7 @@ export function DashboardShell({
   isShippingScoped,
   operationalDomains,
   ledgerVisibility,
+  canViewFinancials,
   lang
 }: {
   children: React.ReactNode;
@@ -27,6 +28,7 @@ export function DashboardShell({
   isShippingScoped?: boolean;
   operationalDomains?: ("business" | "shipping" | "both")[];
   ledgerVisibility?: "scoped" | "shipping_only" | "full";
+  canViewFinancials?: boolean;
   lang: SupportedLanguage;
 }) {
   const isDemoMode = userEmail === "Demo mode" || userEmail === "Template preview";
@@ -41,6 +43,7 @@ export function DashboardShell({
         isShippingScoped={isShippingScoped}
         operationalDomains={operationalDomains}
         ledgerVisibility={ledgerVisibility}
+        canViewFinancials={canViewFinancials}
         lang={lang}
         userEmail={userEmail}
         userName={userName}

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
+import { ErpPermissionError, isStrictOperationalSession } from "@/lib/permissions/middleware";
 import { getSmartCrmDashboardData } from "@/lib/crm/smart-crm-service";
 import { rethrowIfNextControlFlow } from "@/lib/api/response";
 import { assertShippingUserExplicitPermission } from "@/lib/permissions/shipping-explicit-gate";
@@ -10,6 +11,7 @@ export const revalidate = 0;
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    if (isStrictOperationalSession(session)) throw new ErpPermissionError("CRM is outside this operational role.");
     assertShippingUserExplicitPermission(session, "crm", "read");
     const { searchParams } = new URL(request.url);
 

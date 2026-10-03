@@ -102,8 +102,12 @@ export async function GET(request: NextRequest) {
 
     const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
     const all = await loadWarehouses(lang);
+    // Warehouse assignment (user_role_assignments.warehouse_ids): when any assignment names warehouses, the login sees only those.
+    const assignedWarehouses = [...new Set((session.assignments ?? []).flatMap((a) => a.warehouseIds ?? []))];
     const scoped = !session.isSuperAdmin
-      ? all.filter((warehouse) => !warehouse.country_id || session.countryIds.includes(warehouse.country_id))
+      ? all.filter((warehouse) =>
+          Boolean(warehouse.country_id && session.countryIds.includes(warehouse.country_id)) && // fail closed: an unassigned warehouse is not "everyone's"
+          (assignedWarehouses.length === 0 || assignedWarehouses.includes(warehouse.id)))
       : all;
     const filtered = scoped.filter((warehouse) => {
       if (status === "Active" && !warehouse.is_active) return false;

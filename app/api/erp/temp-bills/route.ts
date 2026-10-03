@@ -3,6 +3,7 @@ import { z } from "zod";
 import { apiCreated, apiError, apiOk, rethrowIfNextControlFlow } from "@/lib/api/response";
 import { auditApiAction } from "@/lib/api/audit";
 import { requireErpSession } from "@/lib/auth/session";
+import { financialModuleDenied } from "@/lib/permissions/middleware";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { createTempBill, listTempBills, tempBillSummary, mapTempBillError } from "@/lib/temp-bills/service";
 
@@ -11,6 +12,7 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    if (financialModuleDenied(session, ["purchases", "sales"], "read")) return apiError("FORBIDDEN", "Arzi purchase & sales bills are financial records outside your access.", 403);
     const p = request.nextUrl.searchParams;
     const lang = await getRequestLanguage(p.get("lang"));
     const [{ rows }, summary] = await Promise.all([
@@ -62,6 +64,7 @@ const createSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    if (financialModuleDenied(session, ["purchases", "sales"], "create")) return apiError("FORBIDDEN", "Arzi purchase & sales bills are financial records outside your access.", 403);
     const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
     const body = createSchema.parse(await request.json());
     const { id, entryNo } = await createTempBill(

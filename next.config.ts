@@ -276,6 +276,8 @@ const nextConfig: NextConfig = {
     ];
   },
   experimental: {
+    // forbidden() + app/forbidden.tsx: a route the login may not open answers 403, not a hidden menu entry
+    authInterrupts: true,
     // workerThreads: true reintroduces the exact DataCloneError this project's
     // build-worker-sanitizer.cjs was written to work around (confirmed live on
     // the VPS build: DATA_CLONE_ERR: 25) — keep it false. preloadEntriesOnStart

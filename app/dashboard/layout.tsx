@@ -1,5 +1,6 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import { cookies, headers } from "next/headers";
+import { forbidden, redirect } from "next/navigation";
+import { evaluateRouteAccess } from "@/lib/navigation/route-policy";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { getCurrentErpSession } from "@/lib/auth/session";
 import { MOBILE_PROFILE_HOME } from "@/lib/permissions/mobile-profiles";
@@ -43,6 +44,19 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect("/auth/set-new-password");
   }
 
+  // SERVER-side route gate: a pasted/typed URL the login may not open answers 403 (the client guard and the sidebar use the same policy).
+  const requested = (await headers()).get("x-erp-pathname") ?? "";
+  if (requested.startsWith("/dashboard")) {
+    const decision = evaluateRouteAccess({
+      pathname: requested,
+      permissions: session.permissions,
+      roles: session.roles,
+      operationalDomains: session.operationalDomains,
+      canViewFinancials: session.canViewFinancials,
+    });
+    if (!decision.allowed) forbidden();
+  }
+
   return (
     <DashboardShell
       userEmail={session.email ?? "User"}
@@ -53,6 +67,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       isShippingScoped={session.isShippingScoped}
       operationalDomains={session.operationalDomains}
       ledgerVisibility={session.ledgerVisibility}
+      canViewFinancials={session.canViewFinancials}
       lang={cookieLang ?? session.preferredLanguage ?? "en"}
     >
       {children}

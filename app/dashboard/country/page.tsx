@@ -319,7 +319,16 @@ export default async function CountryDashboardPage(props: { searchParams?: Promi
     );
   }
 
-  const data = await loadCountryData(countryId);
+  const loaded = await loadCountryData(countryId);
+  // Field-level financial permission: amounts are never SENT to a login that may not see them (zeros + empty lists in the
+  // payload, every numeric field of the per-branch summaries zeroed) and a notice explains why.
+  const financialsHidden = !isSuperAdmin && session?.canViewFinancials === false;
+  const zeroNumbers = <T extends Record<string, unknown>>(row: T): T =>
+    Object.fromEntries(Object.entries(row).map(([k, v]) => [k, typeof v === "number" ? 0 : v])) as T;
+  const data = financialsHidden
+    ? { ...loaded, purchaseTotal: 0, salesTotal: 0, stockValueTotal: 0, profitLossTotal: 0, ledgerDebit: 0, ledgerCredit: 0, ledgerBalance: 0,
+        recentRoznamcha: [], branchSummaries: loaded.branchSummaries.map((b) => zeroNumbers(b)) }
+    : loaded;
 
   return (
     <div className="space-y-6">
@@ -425,6 +434,11 @@ export default async function CountryDashboardPage(props: { searchParams?: Promi
                 {t(lang, "cpage.stats_load_error", "Country statistics could not load:")} {data.error}
               </CardContent>
             </Card>
+          )}
+          {financialsHidden && (
+            <div data-testid="financials-hidden" className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-bold text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+              {t(lang, "bdash.fin_hidden", "Financial figures (purchases, sales, balances and ledgers) are not part of your access.")}
+            </div>
           )}
           {data.databaseReady && <CountryDashboardOverview data={data} />}
         </div>

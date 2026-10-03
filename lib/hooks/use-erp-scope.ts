@@ -20,6 +20,8 @@ export type ErpScope = {
   error: string | null;
 
   isSuperAdmin: boolean;
+  /** may see financial amounts / balances (server-computed; display gating only) */
+  canViewFinancials: boolean;
   /** super_admin → free choice; country → country locked; main_branch/city_branch → branch locked too */
   mode: ErpScopeMode;
 
@@ -54,7 +56,7 @@ export type ErpScope = {
 };
 
 const EMPTY: ErpScope = {
-  loading: true, error: null, isSuperAdmin: false, mode: "unknown",
+  loading: true, error: null, isSuperAdmin: false, canViewFinancials: false, mode: "unknown",
   operationalDomains: [], domainLocked: false, lockedDomain: null,
   countryIds: [], countryBranchIds: [], cityBranchIds: [],
   lockedCountryId: null, lockedCountryBranchId: null, lockedCityBranchId: null,
@@ -114,6 +116,7 @@ export function useErpScope(): ErpScope {
         setScope({
           loading: false, error: null,
           isSuperAdmin, mode,
+          canViewFinancials: p?.canViewFinancials === undefined ? isSuperAdmin : Boolean(p.canViewFinancials),
           operationalDomains, domainLocked, lockedDomain,
           countryIds, countryBranchIds, cityBranchIds,
           // lock a level only when the user has EXACTLY ONE option there

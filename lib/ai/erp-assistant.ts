@@ -1,4 +1,6 @@
 import type { ErpSession } from "@/lib/auth/session";
+import { sessionSqlScope, sqlScopeCondition, sqlHierarchyScopeCondition } from "@/lib/api/scope-middleware";
+import { hasRolePermission, isGlobalSession } from "@/lib/permissions/middleware";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
 import { fetchFinancialStatementRows, classifyProfitAndLoss, classifyBalanceSheet, classifyCashPosition } from "@/lib/reports/financial-statement-data";
@@ -217,7 +219,7 @@ export function resolveLedgerScopeForSession(session: ErpSession): {
   countryBranchId: string | null;
   cityBranchId: string | null;
 } {
-  const isSuperAdmin = session.isSuperAdmin || session.roles?.includes("super_admin_reports");
+  const isSuperAdmin = isGlobalSession(session);
   if (isSuperAdmin) return { scope: "super_admin", countryId: null, countryBranchId: null, cityBranchId: null };
 
   const countryId = session.countryIds?.[0] ?? null;
@@ -232,6 +234,8 @@ export function resolveLedgerScopeForSession(session: ErpSession): {
 
 function hasFinancePermission(session: ErpSession): boolean {
   if (session.isSuperAdmin) return true;
+  // operations / shipping-line logins and logins with the field-level finance_amounts:deny never receive financial answers
+  if (session.canViewFinancials === false) return false;
   if (session.roles?.some(r => r === "super_admin" || r === "super_admin_reports" || r === "accountant")) return true;
   if (session.permissions?.includes("reports:read") && !session.isShippingScoped && !session.roles?.includes("agent_user") && !session.roles?.includes("staff_user")) return true;
   return false;
@@ -390,9 +394,21 @@ async function searchRealErpRecords(
   lang: SupportedLanguage
 ): Promise<AssistantAnswer> {
   const terms = extractSearchTerms(query);
-  const isSuperAdmin = session.isSuperAdmin || session.roles?.includes("super_admin_reports");
+  const isSuperAdmin = isGlobalSession(session);
   const countryId = session.countryIds?.[0] ?? null;
   const cityBranchIds = session.cityBranchIds || [];
+
+  // ── RBAC for the assistant: the SAME permission + scope rules as the screens it summarises. A record the login could not open
+  //    in the ERP is never named, counted or quoted by the assistant. ──
+  const canCustomers = hasRolePermission(session, "customers", "read");
+  const canAccounts = hasRolePermission(session, "accounts", "read");
+  const canShipping = hasRolePermission(session, "shipping_records", "read");
+  const showBalances = hasFinancePermission(session);
+  const countryIdsAll = session.countryIds ?? [];
+  const agentIds = session.clearingAgentIds ?? [];
+  const assignedOnly = Boolean(session.isShippingScoped) || (session.roles.length > 0 && session.roles.every((r) => ["agent_user", "shipping_line_user", "staff_user"].includes(r)));
+  const lineIds = session.shippingLineIds ?? [];
+  const gscope = sessionSqlScope(session);
 
   const runWithSql = async (sql: any) => {
     for (const term of terms) {
@@ -404,7 +420,9 @@ async function searchRealErpRecords(
         FROM customers
         WHERE deleted_at IS NULL
           AND (customer_name ILIKE ${searchPattern} OR company_name ILIKE ${searchPattern} OR person_code ILIKE ${searchPattern} OR mobile ILIKE ${searchPattern} OR contact_person ILIKE ${searchPattern})
-          ${isSuperAdmin ? sql`` : countryId ? sql`AND (country_id = ${countryId} OR country_id IS NULL)` : sql`AND false`}
+          ${canCustomers ? sql`` : sql`AND false`}
+          ${isSuperAdmin ? sql`` : countryIdsAll.length ? sql`AND (country_id = ANY(${countryIdsAll}::uuid[]) OR country_id IS NULL)` : sql`AND false`}
+          ${assignedOnly && !isSuperAdmin ? sql`AND id IN (SELECT o.customer_id FROM clearing_customer_orders o WHERE o.deleted_at IS NULL AND o.customer_id IS NOT NULL AND ${sqlScopeCondition(sql, gscope, "o")} ${agentIds.length ? sql`AND o.clearing_agent_id = ANY(${agentIds}::uuid[])` : sql``})` : sql``}
         LIMIT 1;
       `;
 
@@ -417,6 +435,7 @@ async function searchRealErpRecords(
           FROM enterprise_accounts
           WHERE deleted_at IS NULL
             AND (customer_id = ${c.id} OR name ILIKE ${searchPattern})
+            AND ${showBalances && canAccounts ? sql`${sqlHierarchyScopeCondition(sql, session, "enterprise_accounts")}` : sql`FALSE`}
           LIMIT 1;
         `;
         const ea = eaMatches.length > 0 ? eaMatches[0] : null;
@@ -486,7 +505,7 @@ async function searchRealErpRecords(
         FROM enterprise_accounts
         WHERE deleted_at IS NULL
           AND (code ILIKE ${searchPattern} OR name ILIKE ${searchPattern})
-          ${isSuperAdmin ? sql`` : countryId ? sql`AND (country_id = ${countryId} OR country_id IS NULL)` : sql``}
+          AND ${showBalances && canAccounts ? sql`${sqlHierarchyScopeCondition(sql, session, "enterprise_accounts")}` : sql`FALSE`}
         LIMIT 1;
       `;
 
@@ -545,7 +564,8 @@ async function searchRealErpRecords(
         FROM accounts
         WHERE deleted_at IS NULL
           AND (code ILIKE ${searchPattern} OR name ILIKE ${searchPattern})
-          ${isSuperAdmin ? sql`` : cityBranchIds.length > 0 ? sql`AND (branch_id = ANY(${cityBranchIds}) OR branch_id IS NULL)` : sql``}
+          AND ${showBalances && canAccounts ? sql`TRUE` : sql`FALSE`}
+          ${isSuperAdmin ? sql`` : cityBranchIds.length > 0 ? sql`AND (branch_id = ANY(${cityBranchIds}::uuid[]) OR branch_id IS NULL)` : sql`AND false`}
         LIMIT 1;
       `;
 
@@ -589,7 +609,11 @@ async function searchRealErpRecords(
         SELECT id, bl_number, container_number, vessel_name, voyage_number, shipping_line_name, country_id
         FROM shipping_bl_records
         WHERE (bl_number ILIKE ${searchPattern} OR container_number ILIKE ${searchPattern} OR vessel_name ILIKE ${searchPattern})
-          ${isSuperAdmin ? sql`` : countryId ? sql`AND (country_id = ${countryId} OR country_id IS NULL)` : sql``}
+          AND deleted_at IS NULL
+          AND ${canShipping ? sql`TRUE` : sql`FALSE`}
+          AND ${sqlScopeCondition(sql, gscope, "shipping_bl_records")}
+          ${session.isShippingScoped && agentIds.length ? sql`AND clearing_agent_id = ANY(${agentIds}::uuid[])` : sql``}
+          ${!isSuperAdmin && lineIds.length ? sql`AND shipping_line_id = ANY(${lineIds}::uuid[])` : sql``}
         LIMIT 1;
       `;
 
@@ -633,6 +657,10 @@ async function searchRealErpRecords(
         SELECT id, order_no, customer_name, route_name, shipment_type, transport_mode, movement_type, loading_country_name, receiving_country_name
         FROM clearing_customer_orders
         WHERE (order_no ILIKE ${searchPattern} OR customer_name ILIKE ${searchPattern} OR route_name ILIKE ${searchPattern})
+          AND deleted_at IS NULL
+          AND ${canShipping ? sql`TRUE` : sql`FALSE`}
+          AND ${sqlScopeCondition(sql, gscope, "clearing_customer_orders")}
+          ${session.isShippingScoped && agentIds.length ? sql`AND clearing_agent_id = ANY(${agentIds}::uuid[])` : sql``}
         LIMIT 1;
       `;
 

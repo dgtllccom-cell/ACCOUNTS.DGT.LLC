@@ -66,6 +66,11 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t as centralT } from "@/lib/i18n/ui";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
+import {
+  AccessProfilePanel, EffectiveAccessSummary, EMPTY_ACCESS_PROFILE, accessProfileError, accessProfilePayload,
+  type AccessProfileValue, type EffectiveAccess,
+} from "@/features/users/components/user-access-profile-panel";
+import { deriveEffectiveRole, type StoredEnterpriseRole } from "@/lib/permissions/enterprise-roles";
 import { apiPost } from "@/lib/api/client";
 import { normalizeUserCode } from "@/lib/services/user-identity-service";
 import { openUserA4ReportWindow } from "@/lib/reports/open-user-a4-report-window";
@@ -266,6 +271,12 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
   // permissions). "standard" = full ERP; "mobile_cash_ledger" = Brother User;
   // "mobile_field" = Munshi / field user.
   const [mobileProfile, setMobileProfile] = useState<"standard" | "mobile_cash_ledger" | "mobile_field">("standard");
+  // RBAC v2: access profile (operations / shipping line), shipping line, warehouses, effective dates, financial field access
+  const [accessValue, setAccessValue] = useState<AccessProfileValue>(EMPTY_ACCESS_PROFILE);
+  // server-computed effective access of the user being edited (same resolver as login)
+  const [effectiveAccess, setEffectiveAccess] = useState<EffectiveAccess | null | undefined>(undefined);
+  // the template the permission matrix starts from is the EFFECTIVE role's (an Operations profile never starts from Super Admin's)
+  const templateRole = deriveEffectiveRole(role as StoredEnterpriseRole, accessValue.accessProfile);
 
   // Step 3: KYC & Security
   const [cnicPassportNo, setCnicPassportNo] = useState("");
@@ -288,8 +299,8 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
 
   // When role changes, pre-populate default module capabilities for that role
   useEffect(() => {
-    setModuleCapabilities(buildAllModulesCapabilities(role, enterpriseRolePermissions[role] || []));
-  }, [role]);
+    setModuleCapabilities(buildAllModulesCapabilities(templateRole, enterpriseRolePermissions[templateRole] || []));
+  }, [templateRole]);
 
   // Editing User
   const [editUserId, setEditUserId] = useState<string | null>(null);
@@ -555,6 +566,15 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
           setMobileProfile(data.mobileProfile);
         }
         setCountryId(data.countryId || "");
+        setAccessValue({
+          accessProfile: data.accessProfile === "operations" || data.accessProfile === "shipping_line" ? data.accessProfile : null,
+          shippingLineId: data.shippingLineId || "",
+          warehouseIds: Array.isArray(data.warehouseIds) ? data.warehouseIds : [],
+          effectiveFrom: data.effectiveFrom || "",
+          effectiveTo: data.effectiveTo || "",
+          financialAccess: data.financialAccess === "deny" || data.financialAccess === "allow" ? data.financialAccess : "role_default",
+        });
+        setEffectiveAccess(data.effectiveAccess ?? null);
         if (data.email) setPersonalEmail(data.email);
         if (data.phone) setContactPhone(data.phone);
         if (data.designation) setDesignation(data.designation);
@@ -858,6 +878,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
       if (role === "super_admin") return true;
       if (!countryId) return false;
       if (operationalDomain === "shipping" && role === "agent_user" && !clearingAgentId) return false;
+      if (accessProfileError(accessValue)) return false;
       return true;
     }
     if (currentStep === 3) {
@@ -980,7 +1001,8 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         middleName: employeeProfile.middleName || null,
         lastName: employeeProfile.lastName || lastName || (fullName.trim().split(" ").slice(1).join(" ") || null),
         photoUrl: employeeProfile.photoUrl || null,
-        permissions: effectivePermissions
+        permissions: effectivePermissions,
+        ...accessProfilePayload(accessValue)
       };
 
       let resUserId = editUserId;
@@ -2046,6 +2068,15 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                         ))}
                     </select>
                   </div>
+
+                  <AccessProfilePanel
+                    role={role as StoredEnterpriseRole}
+                    countryId={countryId}
+                    value={accessValue}
+                    onChange={setAccessValue}
+                    canGrantFinance={erpScope.isSuperAdmin || erpScope.canViewFinancials}
+                    lang={activeLang}
+                  />
                 </div>
               )}
 
@@ -2198,6 +2229,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
               {/* STEP 4: Review & Complete + MANUALLY ASSIGNABLE PERMISSION MATRIX */}
               {step === 4 && (
                 <div className="space-y-4">
+                  {editUserId && effectiveAccess !== undefined && <EffectiveAccessSummary access={effectiveAccess} lang={activeLang} />}
                   {/* Summary of Steps 1-3 */}
                   <div className="rounded-xl border border-slate-200 bg-slate-50 dark:bg-slate-900/60 p-3.5 space-y-2 text-xs">
                     <div className="font-bold text-slate-900 dark:text-slate-100 border-b pb-1 flex items-center justify-between">
