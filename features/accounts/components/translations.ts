@@ -835,11 +835,25 @@ export const accountTranslations: Record<string, Record<SupportedLanguage, strin
     ps: "حساب تازه کړئ"
   },
   manualReferencePlaceholder: {
-    en: "e.g. REF-1001",
-    ur: "مثلاً REF-1001",
-    ar: "مثلاً REF-1001",
-    fa: "مثلا REF-1001",
-    ps: "مثلاً REF-1001"
+    en: "e.g. ABC-1001 / REF-1001",
+    ur: "ABC-1001 / REF-1001",
+    ar: "ABC-1001 / REF-1001",
+    fa: "ABC-1001 / REF-1001",
+    ps: "ABC-1001 / REF-1001"
+  },
+  manualReferenceHint: {
+    en: "English letters (ABC) and numbers (0-9)",
+    ur: "انگریزی حروف (ABC) اور نمبرز (0-9)",
+    ar: "أحرف إنجليزية (ABC) وأرقام (0-9)",
+    fa: "حروف انگلیسی (ABC) و اعداد (0-9)",
+    ps: "انګلیسي توري (ABC) او شمیرې (0-9)"
+  },
+  manualReferenceBadge: {
+    en: "English ABC & 0-9",
+    ur: "انگریزی ABC اور نمبرز",
+    ar: "ABC إنجليزي وأرقام",
+    fa: "ABC انگلیسی و اعداد",
+    ps: "انګلیسي ABC او شمیرې"
   },
   accountNamePlaceholder: {
     en: "Enter account name...",

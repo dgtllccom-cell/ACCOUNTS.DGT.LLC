@@ -191,7 +191,7 @@ export function AccountLiveReportPanel({
             </div>
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-slate-500 dark:text-slate-400">{getLabel("referenceNo", lang)}</span>
-              <span className="font-mono text-slate-700 dark:text-slate-300">{manualReferenceNumber || "-"}</span>
+              <span className="font-mono text-slate-700 dark:text-slate-300" dir="ltr">{manualReferenceNumber || "-"}</span>
             </div>
           </div>
         </div>

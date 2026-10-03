@@ -68,6 +68,36 @@ import { useErpScope } from "@/lib/hooks/use-erp-scope";
 import { LoginScopeBanner } from "@/components/layout/login-scope-banner";
 import { fetchBranding } from "@/lib/branding/client";
 
+/**
+ * Normalizes reference numbers to support English letters (ABC) and numbers (0-9)
+ * regardless of the active UI language (Urdu, Pashto, Arabic, Persian, or English):
+ * 1. Converts Eastern Arabic (٠-٩) and Persian/Urdu (۰-۹) digits to standard 0-9
+ * 2. Maps Arabic/Urdu/Pashto keyboard keys to uppercase Latin characters if typed in RTL keyboard layout
+ * 3. Keeps uppercase English letters (A-Z), numbers (0-9), hyphens (-), slashes (/), dots (.), and underscores (_)
+ */
+export function normalizeManualReference(raw: string): string {
+  if (!raw) return "";
+
+  // 1. Convert Eastern Arabic numerals (٠-٩) and Persian/Urdu numerals (۰-۹) to standard 0-9
+  let s = raw
+    .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 1632))
+    .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 1776));
+
+  // 2. Phonetic / keyboard mapping for Arabic/Urdu/Pashto keys if user typed while in RTL keyboard
+  const rtlCharMap: Record<string, string> = {
+    "ا": "A", "آ": "A", "أ": "A", "إ": "A", "ب": "B", "پ": "P", "ت": "T", "ٹ": "T", "ث": "S",
+    "ج": "J", "چ": "C", "ح": "H", "خ": "KH", "د": "D", "ڈ": "D", "ذ": "Z", "ر": "R", "ڑ": "R",
+    "ز": "Z", "ژ": "Z", "س": "S", "ش": "SH", "ص": "S", "ض": "Z", "ط": "T", "ظ": "Z", "ع": "A",
+    "غ": "G", "ف": "F", "ق": "Q", "ک": "K", "ك": "K", "گ": "G", "ل": "L", "م": "M", "ن": "N",
+    "ں": "N", "و": "W", "ؤ": "W", "ہ": "H", "ھ": "H", "ة": "H", "ء": "", "ی": "Y", "ي": "Y", "ے": "E"
+  };
+
+  s = s.replace(/[\u0600-\u06FF]/g, (ch) => (rtlCharMap[ch] !== undefined ? rtlCharMap[ch] : ""));
+
+  // 3. Keep English letters, digits, and allowed reference symbols (-, _, /, ., space)
+  return s.replace(/[^A-Za-z0-9_\-/. ]/g, "").toUpperCase();
+}
+
 type BranchType = "Main" | "City";
 
 type AccountGeneralReportRow = {
@@ -2573,14 +2603,29 @@ export function NewAccountSetup({
                     className="bg-blue-50/50 dark:bg-blue-950/30 font-mono text-xs font-bold text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 shadow-inner"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="manualReferenceNumber">{getLabel("manualReference", lang)}</Label>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="manualReferenceNumber" className="font-semibold text-slate-800 dark:text-slate-200">
+                      {getLabel("manualReference", lang)}
+                    </Label>
+                    <span
+                      dir="ltr"
+                      className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800"
+                    >
+                      {getLabel("manualReferenceBadge", lang)}
+                    </span>
+                  </div>
                   <Input
                     id="manualReferenceNumber"
+                    dir="ltr"
                     value={manualReferenceNumber}
-                    onChange={(event) => setManualReferenceNumber(event.target.value.replace(/[^A-Za-z0-9_-]/g, '').toUpperCase())}
+                    onChange={(event) => setManualReferenceNumber(normalizeManualReference(event.target.value))}
                     placeholder={getLabel("manualReferencePlaceholder", lang)}
+                    className="font-mono text-left tracking-wider font-bold text-slate-900 dark:text-slate-100 placeholder:text-slate-400 placeholder:font-mono"
                   />
+                  <p className="text-[10.5px] text-slate-500 dark:text-slate-400">
+                    {getLabel("manualReferenceHint", lang)}
+                  </p>
                 </div>
               </div>
 
@@ -3481,7 +3526,7 @@ export function NewAccountSetup({
                   <div><b>{getLabel("category", lang)}:</b> {category || "-"}</div>
                   <div><b>{getLabel("accountCodeAuto", lang)}:</b> {accountCode || "AUTO"}</div>
                   <div><b>{getLabel("accountName", lang)}:</b> {accountName || "-"}</div>
-                  <div><b>{getLabel("manualReference", lang)}:</b> {manualReferenceNumber || "-"}</div>
+                  <div><b>{getLabel("manualReference", lang)}:</b> <span dir="ltr" className="font-mono font-medium">{manualReferenceNumber || "-"}</span></div>
                 </div>
               </div>
 
