@@ -9,10 +9,17 @@ export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
 
-    // STRICT SECURITY: Only Super Admin can download credentials PDF
-    if (!session.isSuperAdmin) {
+    const roles = new Set(session.roles ?? []);
+    const isAuthorized =
+      session.isSuperAdmin ||
+      roles.has("country_admin") ||
+      roles.has("country_user") ||
+      roles.has("main_branch_admin") ||
+      roles.has("city_branch_admin");
+
+    if (!isAuthorized) {
       return NextResponse.json(
-        { error: "Access Denied. Only Super Admin has permission to download user credentials and security reports." },
+        { error: "Access Denied. Only Admins have permission to download user credentials and security reports." },
         { status: 403 }
       );
     }
