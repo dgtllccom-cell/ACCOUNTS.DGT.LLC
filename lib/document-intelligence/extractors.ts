@@ -170,7 +170,9 @@ const RULES: Rule[] = [
     ], onlyDocTypes: ["account_master"] },
 ];
 
-const TRADE_SKIP = new Set(["company_name", "company_type", "registration_number", "owner_name", "father_name", "national_id", "incorporation_date", "contract_parties", "phone", "email", "website", "address"]);
+const TRADE_SKIP = new Set(["company_name", "company_type", "registration_number", "owner_name", "father_name", "national_id", "incorporation_date", "contract_parties", "phone", "email", "website", "address",
+  // account-master rules read HS codes / table headers as account codes; the transport references are parsed explicitly
+  "account_code", "account_name", "category", "branch", "mobile", "city", "contact", "bl_number", "customs_reference", "vessel", "voyage"]);
 
 const CONTAINER_RE = /\b([A-Z]{4}\d{7})\b/g;
 const SEAL_RE = /\bseal\s*(?:no\.?)?\s*[:.\-]?\s*([A-Z0-9\-]{4,15})/gi;
@@ -207,7 +209,10 @@ export function contractFieldCandidates(c: ContractParse, pages: OcrPage[]): Fie
   out.push(fc("buyer_country", "Buyer Country", c.buyerCountry, pages, { confidence: 0.8 }));
   out.push(fc("contract_number", "Original Contract Number", c.contractNo, pages, { confidence: 0.92 }));
   out.push(fc("document_date", "Contract / Document Date", c.contractDate, pages, { confidence: 0.9 }));
-  out.push(fc("currency", "Currency", c.currency, pages, { confidence: 0.9 }));
+  // one currency in the document = confident; several (e.g. USD price + CNY bank) = the reviewer must confirm
+  out.push(fc("currency", "Purchase Currency", c.currency, pages, c.currencies.length > 1
+    ? { confidence: 0.6, message: `More than one currency appears in the document (${c.currencies.join(", ")}) - confirm the purchase currency.` }
+    : { confidence: 0.9 }));
   if (c.total) {
     const calc = c.total.source !== "stated";
     out.push(fc("grand_total", "Total Amount", String(c.total.amount), pages, {
@@ -232,6 +237,8 @@ export function contractFieldCandidates(c: ContractParse, pages: OcrPage[]): Fie
   out.push(fc("net_weight", "Net Weight", c.netWeight, pages, { normalized: c.netWeight == null ? null : String(c.netWeight) }));
   out.push(fc("truck_number", "Truck / Vehicle Number", c.truckNo, pages, { confidence: 0.8 }));
   out.push(fc("bl_number", "Bill of Lading Number", c.blNo, pages, { confidence: 0.82 }));
+  out.push(fc("awb_number", "Air Waybill (AWB) Number", c.awbNo, pages, { confidence: 0.8 }));
+  out.push(fc("rail_reference", "Rail Consignment / Wagon Reference", c.railRef, pages, { confidence: 0.75 }));
   out.push(fc("payment_terms", "Payment Terms", c.paymentTerms, pages, { confidence: 0.88 }));
   out.push(fc("delivery_terms", "Delivery Terms", c.deliveryTerms, pages, { confidence: 0.88 }));
   out.push(fc("incoterm", "Incoterm", c.incoterm, pages, { confidence: 0.9 }));

@@ -18,6 +18,7 @@ import type { ErpScreen } from "@/lib/i18n/use-erp-screen";
 import { apiGet, apiPatch } from "@/lib/api/client";
 import { DRAFT_PREFILL_KEY } from "@/features/document-intelligence/components/entry-method-selector";
 import { VerificationChecksPanel } from "@/features/document-intelligence/components/verification-checks-panel";
+import { IntakeDocumentViewer } from "@/features/document-intelligence/components/intake-document-viewer";
 import {
   INTAKE_MODULES, INTAKE_MODULE_GROUPS, accountFitsRole, getIntakeModule, pruneAccountsForModule, resolveModule,
   type AccountRole, type IntakeModule,
@@ -31,7 +32,8 @@ import type { ReviewContext, AccountOption } from "@/lib/services/document-intak
 
 type Row = Record<string, any>;
 type Bundle = JobBundle & { matches: Row[]; events: Row[]; draft?: Row | null };
-type TabId = "basic" | "items" | "payment" | "notes";
+type TabId = "basic" | "items" | "payment" | "notes" | "fields" | "checks";
+const PROCESSING = ["ocr", "classifying", "extracting", "matching"];
 
 const CURRENCIES = ["USD", "AED", "PKR", "AFN", "EUR", "GBP", "CNY", "INR", "SAR", "QAR", "KWD", "OMR", "BHD", "IRR", "TRY", "JPY"];
 
@@ -86,7 +88,9 @@ export function IntakeReviewWorkspace({ s, jobId, moduleId, scope, onBack, onCha
   const [notice, setNotice] = useState<string | null>(null);
   const [showAllAccounts, setShowAllAccounts] = useState(false);
   const [dirty, setDirty] = useState(false);
-  const [page, setPage] = useState<number | null>(null);
+  const [page, setPage] = useState<number>(1);
+  const [ocrOpen, setOcrOpen] = useState(false);
+  const [manualMode, setManualMode] = useState(false);
   const [docOpen, setDocOpen] = useState(false);
   const loadSeq = useRef(0);
 
@@ -125,6 +129,30 @@ export function IntakeReviewWorkspace({ s, jobId, moduleId, scope, onBack, onCha
   }, [jobId, moduleId, fetchContext, T]);
 
   useEffect(() => { void load(); }, [load]);
+
+  // while OCR / extraction is running the job moves ocr -> classifying -> extracting -> review; follow it
+  useEffect(() => {
+    const st = bundle?.job?.status;
+    if (!st || !PROCESSING.includes(st) || bundle?.job?.stalled) return;
+    const t = setTimeout(() => void load(), 3000);
+    return () => clearTimeout(t);
+  }, [bundle, load]);
+
+  const retryOcr = async () => {
+    setBusy(true); setError(null); setNotice(null); setManualMode(false);
+    try {
+      await apiPatch(`/api/erp/document-intelligence/${jobId}`, { action: "process", async: true, force: true });
+      await load();
+    } catch (e) { setError(e instanceof Error ? e.message : String(e)); } finally { setBusy(false); }
+  };
+  const reportProblem = async () => {
+    setBusy(true); setError(null);
+    try {
+      await apiPatch(`/api/erp/document-intelligence/${jobId}`, { action: "qvc", reason: "Extraction problem reported by the reviewer: OCR/extraction returned no usable fields." });
+      setNotice(T("reported", "Reported. The document was sent to the verification queue (QVC)."));
+      await load();
+    } catch (e) { setError(e instanceof Error ? e.message : String(e)); } finally { setBusy(false); }
+  };
 
   const posted = bundle?.job?.status === "linked" || bundle?.draft?.status === "consumed";
   const set = useCallback((fn: (prev: ReviewState) => ReviewState) => {
@@ -261,7 +289,12 @@ export function IntakeReviewWorkspace({ s, jobId, moduleId, scope, onBack, onCha
   const pages = useMemo(() => [...new Set((bundle?.fields ?? []).map((f) => Number(f.page_number)).filter((n) => Number.isFinite(n) && n > 0))].sort((a, b) => a - b), [bundle]);
   const uncertain = useMemo(() => (bundle?.fields ?? []).filter((f) => f.validation_status === "amber" || f.validation_status === "red").map((f) => f.field_label || f.field_key), [bundle]);
   const mime = String(bundle?.job?.mime_type ?? "");
-  const fileUrl = `/api/erp/document-intelligence/${jobId}/file`;
+  const jobStatus = String(bundle?.job?.status ?? "");
+  const processing = PROCESSING.includes(jobStatus) && !bundle?.job?.stalled;
+  const stalled = Boolean(bundle?.job?.stalled);
+  const noFields = !processing && (bundle?.fields?.length ?? 0) === 0;
+  const extractionProblem = stalled || jobStatus === "error" || noFields;
+  const progress = (bundle?.job?.progress ?? null) as { stage?: string; page?: number; pages?: number } | null;
 
   if (loading && !state) {
     return <div className="flex items-center justify-center rounded-2xl border border-slate-200 bg-white p-16 text-slate-400 dark:border-slate-800 dark:bg-slate-900"><Loader2 className="h-6 w-6 animate-spin" /></div>;
@@ -276,6 +309,7 @@ export function IntakeReviewWorkspace({ s, jobId, moduleId, scope, onBack, onCha
   }
 
   const readOnly = posted;
+  const fields1 = (k: string) => bundle?.fields?.find((x) => x.field_key === k) as { validation_status?: string; validation_message?: string } | undefined;
   const f = state.form;
   const miss = (k: string) => missing.includes(k);
   const notFound = T("not_found", "Not found — enter");
@@ -291,6 +325,8 @@ export function IntakeReviewWorkspace({ s, jobId, moduleId, scope, onBack, onCha
     const linked = all.filter((a) => pid && a.linkedPartyIds.includes(pid));
     const rest = all.filter((a) => !linked.includes(a) && (showAllAccounts || accountFitsRole(role, a, pid)));
     const known = all.some((a) => a.id === value);
+    const picked = all.find((a) => a.id === value);
+    const linkedOk = Boolean(picked && pid && picked.linkedPartyIds.includes(pid));
     const required = mod.required.includes(role);
     const fmt = (a: AccountOption) => `${a.code} · ${a.name}${a.currency ? ` (${a.currency})` : ""}`;
     return (
@@ -317,6 +353,12 @@ export function IntakeReviewWorkspace({ s, jobId, moduleId, scope, onBack, onCha
           </optgroup>
         </select>
         {required && !value && <p className="mt-1 text-[10.5px] font-semibold text-amber-700">{T("account_required", "Required before the entry can be opened.")}</p>}
+        {picked && (
+          <p className={`mt-1 text-[10.5px] font-semibold ${linkedOk || !pid ? "text-slate-500" : "text-amber-700"}`} data-testid={`acct-info-${role}`} dir="auto">
+            {picked.code} · {picked.name}{picked.kind ? ` · ${picked.kind}` : ""}{picked.currency ? ` · ${picked.currency}` : ""}
+            {pid && (role === "supplier" || role === "customer") ? (linkedOk ? ` — ${T("acct_linked", "linked to the selected party")}` : ` — ${T("acct_not_linked", "NOT linked to the selected party: check this is the party's own account, not a generic ledger")}`) : ""}
+          </p>
+        )}
       </div>
     );
   };
@@ -324,7 +366,7 @@ export function IntakeReviewWorkspace({ s, jobId, moduleId, scope, onBack, onCha
   const tabBtn = (id: TabId, label: string) => (
     <button
       key={id} type="button" onClick={() => setTab(id)} data-testid={`tab-${id}`}
-      className={`whitespace-nowrap border-b-2 px-3 py-2 text-xs font-bold transition-colors ${tab === id ? "border-blue-600 text-blue-700 dark:text-blue-300" : "border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400"}`}
+      className={`shrink-0 whitespace-nowrap border-b-2 px-3 py-2 text-xs font-bold transition-colors ${tab === id ? "border-blue-600 text-blue-700 dark:text-blue-300" : "border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400"}`}
     >{label}</button>
   );
 
@@ -383,7 +425,7 @@ export function IntakeReviewWorkspace({ s, jobId, moduleId, scope, onBack, onCha
             </h2>
             <p className="mt-0.5 text-[11px] text-slate-500">
               <span className="font-mono font-bold text-blue-600" dir="ltr">{bundle.job.job_no}</span> · <span dir="ltr">{bundle.job.original_filename}</span> ·{" "}
-              <span data-testid="field-count">{extractedCount} {T("fields_extracted", "fields extracted")}</span>
+              <span className="font-bold" data-testid="job-status">{{ uploaded: T("stl_uploaded", "Uploaded"), ocr: T("stl_ocr", "Reading document (OCR)"), classifying: T("stl_classifying", "Classifying"), extracting: T("stl_extracting", "Extracting fields"), matching: T("stl_matching", "Matching records"), review: T("stl_review", "Extracted — review required"), qvc: T("stl_qvc", "Needs verification"), draft_ready: T("stl_draft_ready", "Reviewed — draft prepared"), linked: T("stl_linked", "Entered in its module"), error: T("stl_error", "Processing failed") }[jobStatus] ?? jobStatus}</span> · <span data-testid="field-count">{extractedCount} {T("fields_extracted", "fields extracted")}</span>
               {missing.length > 0 && <> · <span className="text-amber-700">{missing.length} {T("fields_missing", "to complete")}</span></>}
               {bundle.draft?.draft_no && <> · {T("draft", "Draft")} <span className="font-mono font-bold" dir="ltr">{bundle.draft.draft_no}</span></>}
             </p>
@@ -396,11 +438,11 @@ export function IntakeReviewWorkspace({ s, jobId, moduleId, scope, onBack, onCha
                 </optgroup>
               ))}
             </select>
-            <button type="button" disabled={busy || readOnly} onClick={() => void save("draft")} data-testid="save-draft"
+            <button type="button" disabled={busy || readOnly || processing} onClick={() => void save("draft")} data-testid="save-draft"
               className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
               {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}{T("save_draft", "Save draft")}
             </button>
-            <button type="button" disabled={busy || readOnly} onClick={() => void save("handoff")} data-testid="open-entry"
+            <button type="button" disabled={busy || readOnly || processing || (extractionProblem && !manualMode)} onClick={() => void save("handoff")} data-testid="open-entry"
               className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-2 text-xs font-bold text-white shadow-sm hover:bg-blue-500 disabled:opacity-50">
               <ExternalLink className="h-3.5 w-3.5" />{T("open_entry", "Open entry form")}<ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
             </button>
@@ -412,6 +454,34 @@ export function IntakeReviewWorkspace({ s, jobId, moduleId, scope, onBack, onCha
       {/* ── banners ──────────────────────────────────────────────────────────────────────────── */}
       {error && <div className="flex items-start gap-2 rounded-xl border border-rose-300 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 dark:border-rose-900 dark:bg-rose-950/30" role="alert" data-testid="review-error"><XCircle className="mt-0.5 h-4 w-4 shrink-0" /><span>{error}</span></div>}
       {notice && <div className="flex items-start gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/30" data-testid="review-notice"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" /><span>{notice}</span></div>}
+      {processing && (
+        <div className="flex items-center gap-2 rounded-xl border border-blue-300 bg-blue-50 px-3 py-2.5 text-xs font-bold text-blue-800 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-200" data-testid="processing-banner">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <span>{T("processing", "Reading the document — OCR and field extraction are running. This screen updates by itself.")}{progress?.pages ? ` (${T("page", "page")} ${progress.page ?? 0} / ${progress.pages})` : ""}</span>
+        </div>
+      )}
+      {extractionProblem && !readOnly && (
+        <div className="space-y-2 rounded-xl border border-rose-300 bg-rose-50 px-3 py-2.5 dark:border-rose-900 dark:bg-rose-950/30" data-testid="extraction-problem">
+          <p className="flex items-start gap-2 text-xs font-bold text-rose-800 dark:text-rose-200"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>{stalled ? T("ep_stalled", "OCR stopped before it finished (the server was restarted or the request timed out). Nothing was extracted.") : jobStatus === "error" ? `${T("ep_error", "OCR failed")}: ${bundle?.job?.error ?? ""}` : T("ep_none", "OCR finished but no fields could be extracted. The form below is EMPTY — it is not an extracted result.")}</span>
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" disabled={busy} onClick={() => void retryOcr()} data-testid="retry-ocr" className="rounded-lg bg-rose-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-rose-700 disabled:opacity-50">{T("retry_ocr", "Retry OCR")}</button>
+            <button type="button" onClick={() => setOcrOpen(true)} data-testid="review-ocr" className="rounded-lg border border-rose-300 bg-white px-3 py-1.5 text-[11px] font-bold text-rose-700 hover:bg-rose-50">{T("review_ocr", "Review OCR text")}</button>
+            <button type="button" onClick={() => setManualMode(true)} data-testid="manual-entry" className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-[11px] font-bold text-slate-700 hover:bg-slate-50">{T("manual_entry", "Manual data entry")}</button>
+            <button type="button" disabled={busy} onClick={() => void reportProblem()} data-testid="report-problem" className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-[11px] font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50">{T("report_problem", "Report extraction problem")}</button>
+          </div>
+          {manualMode && <p className="text-[11px] font-semibold text-slate-600">{T("manual_on", "Manual entry is on: type the values from the original document. Nothing here was extracted.")}</p>}
+        </div>
+      )}
+      {ocrOpen && (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-900/60 p-3" role="dialog" aria-modal="true" onClick={() => setOcrOpen(false)}>
+          <div className="flex max-h-[88vh] w-full max-w-2xl flex-col rounded-2xl bg-white p-3 shadow-2xl dark:bg-slate-900" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-2 flex items-center justify-between"><p className="text-sm font-black">{T("review_ocr", "Review OCR text")}</p><button type="button" onClick={() => setOcrOpen(false)} className="text-xs font-bold text-slate-500">{T("close", "Close")}</button></div>
+            <pre className="flex-1 overflow-auto whitespace-pre-wrap rounded-lg bg-slate-50 p-3 font-mono text-[11px] text-slate-800 dark:bg-slate-800 dark:text-slate-100" dir="auto" data-testid="ocr-text">{bundle?.job?.ocr_text || T("ocr_empty", "OCR returned no text for this document.")}</pre>
+          </div>
+        </div>
+      )}
       {posted && (
         <div className="flex items-start gap-2 rounded-xl border border-slate-300 bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200" data-testid="posted-banner">
           <Lock className="mt-0.5 h-4 w-4 shrink-0" />
@@ -444,29 +514,19 @@ export function IntakeReviewWorkspace({ s, jobId, moduleId, scope, onBack, onCha
       )}
 
       {/* ── document + form ──────────────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1.3fr_1fr]">
         {/* original document */}
         <div className="rounded-2xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900 lg:sticky lg:top-16 lg:self-start">
-          <button type="button" className="flex w-full items-center justify-between px-3 py-2 text-xs font-black text-slate-700 dark:text-slate-200 lg:cursor-default" onClick={() => setDocOpen((o) => !o)}>
+          <div className="flex items-center justify-between px-3 py-2 text-xs font-black text-slate-700 dark:text-slate-200">
             <span className="inline-flex items-center gap-1.5"><FileText className="h-4 w-4 text-blue-600" />{T("original_doc", "Original document")}</span>
-            <span className="text-[10px] text-slate-400 lg:hidden">{docOpen ? T("hide", "Hide") : T("show", "Show")}</span>
-          </button>
-          <div className={`${docOpen ? "block" : "hidden"} lg:block border-t border-slate-100 dark:border-slate-800`}>
             {pages.length > 0 && (
-              <div className="flex flex-wrap items-center gap-1 px-3 py-1.5 text-[10.5px]">
+              <span className="flex flex-wrap items-center gap-1 text-[10.5px] font-normal">
                 <span className="font-bold text-slate-500">{T("source_pages", "Source pages")}:</span>
                 {pages.map((p) => <button key={p} type="button" onClick={() => setPage(p)} className={`rounded-full px-2 py-0.5 font-bold ${page === p ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"}`}>{p}</button>)}
-              </div>
+              </span>
             )}
-            <div className="h-[420px] overflow-auto bg-slate-100 dark:bg-slate-950 lg:h-[640px]">
-              {mime.startsWith("image/") ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={fileUrl} alt={T("original_doc", "Original document")} className="mx-auto max-w-full" />
-              ) : (
-                <iframe key={page ?? 0} src={`${fileUrl}${page ? `#page=${page}` : ""}`} className="h-full w-full border-0" title={T("original_doc", "Original document")} data-testid="doc-frame" />
-              )}
-            </div>
           </div>
+          <IntakeDocumentViewer jobId={jobId} mime={mime} pageCount={bundle.job.page_count ?? null} page={page} onPageChange={setPage} T={T} />
         </div>
 
         {/* editable form */}
@@ -476,6 +536,8 @@ export function IntakeReviewWorkspace({ s, jobId, moduleId, scope, onBack, onCha
             {tabBtn("items", T("tab_items", "Items"))}
             {tabBtn("payment", mod.financial ? T("tab_payment", "Payment & Delivery") : T("tab_delivery", "Delivery & Transport"))}
             {tabBtn("notes", T("tab_notes", "Notes"))}
+            {tabBtn("fields", `${T("tab_fields", "Extracted Fields")} (${bundle.fields.length})`)}
+            {tabBtn("checks", T("tab_checks", "Verification Checks"))}
           </div>
 
           <fieldset disabled={readOnly} className="space-y-3 p-3">
@@ -487,8 +549,9 @@ export function IntakeReviewWorkspace({ s, jobId, moduleId, scope, onBack, onCha
                     <p className="mb-1.5 text-xs font-black text-slate-800 dark:text-slate-100" dir="auto" data-testid="doc-party-name">{ctx?.documentPartyName || <span className="text-amber-700">{notFound}</span>}</p>
                     <select value={state.party.id ?? ""} onChange={(e) => void pickParty(e.target.value)} className={inputCls(!state.party.id)} data-testid="party-select">
                       <option value="">{ctx?.partyStatus === "ambiguous" ? T("party_choose", "— Several possible matches: choose the correct one —") : T("party_none", "— No matching record: select one —")}</option>
-                      {(ctx?.candidates ?? []).map((c) => <option key={c.id} value={c.id}>{c.name} · {c.kind === "company" ? T("kind_company", "Company") : T("kind_customer", "Customer")}{c.score ? ` · ${Math.round(c.score * 100)}%` : ""}</option>)}
+                      {(ctx?.candidates ?? []).map((c) => <option key={c.id} value={c.id}>{c.name}{c.code ? ` [${c.code}]` : ""} · {c.kind === "company" ? T("kind_company", "Company") : T("kind_customer", "Customer")}{c.score ? ` · ${Math.round(c.score * 100)}%` : ""}</option>)}
                     </select>
+                    {state.party.id && <p className="mt-1 text-[11px] font-black text-slate-700 dark:text-slate-200" dir="auto" data-testid="party-chosen">{state.party.name}{(ctx?.candidates.find((c) => c.id === state.party.id)?.code) ? ` · ${T("party_code", "Code")} ${ctx?.candidates.find((c) => c.id === state.party.id)?.code}` : ""}</p>}
                     <p className={`mt-1 text-[10.5px] font-semibold ${state.party.id ? "text-emerald-700" : "text-amber-700"}`}>
                       {state.party.id ? T("party_matched", "Matched to an existing authorised record.") : ctx?.partyStatus === "ambiguous" ? T("party_ambiguous", "More than one record could match — please choose.") : T("party_not_found", "No existing authorised record matched. Nothing will be created automatically.")}
                     </p>
@@ -506,6 +569,25 @@ export function IntakeReviewWorkspace({ s, jobId, moduleId, scope, onBack, onCha
                   </div>
                 )}
 
+                {mod.financial && (
+                  <div className="grid grid-cols-1 gap-2.5 rounded-xl border border-slate-200 p-2.5 sm:grid-cols-2 dark:border-slate-800" data-testid="currency-block">
+                    <div>
+                      {lbl(T("f_currency", "Purchase currency") + " *")}
+                      <select value={f.currency} onChange={(e) => setForm({ currency: e.target.value })} className={inputCls(!f.currency)} data-testid="f-currency">
+                        <option value="">{T("currency_pick", "— Select the purchase currency —")}</option>
+                        {[...new Set([...(f.currency ? [f.currency] : []), ...CURRENCIES])].map((c) => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                      {ctx && ctx.rate.fromCurrency && f.currency && ctx.rate.fromCurrency !== f.currency && <p className="mt-1 text-[10.5px] font-semibold text-amber-700">{T("currency_differs", "The document states")} {ctx.rate.fromCurrency}.</p>}
+                      {(fields1("currency")?.validation_status === "amber") && <p className="mt-1 text-[10.5px] font-semibold text-amber-700">{fields1("currency")?.validation_message}</p>}
+                    </div>
+                    <div>
+                      {lbl(T("f_totalAmount", "Original purchase amount") + " *", fm.grand_total ? <span className="font-normal text-slate-400">{T("as_extracted", "as extracted")}: {fm.grand_total}</span> : null)}
+                      <input dir="ltr" inputMode="decimal" value={f.totalAmount} onChange={(e) => setForm({ totalAmount: e.target.value })} className={inputCls(!f.totalAmount)} placeholder={notFound} data-testid="f-total" />
+                      <p className="mt-0.5 text-[10px] text-slate-400">{T("original_kept", "Kept as written on the document. Only the converted amount is used for the final posting, after you confirm it.")}</p>
+                    </div>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                   <div>
                     {lbl(T("f_contractNo", "Original contract / document no."))}
@@ -520,21 +602,6 @@ export function IntakeReviewWorkspace({ s, jobId, moduleId, scope, onBack, onCha
                     {lbl(T("f_documentDate", "Document date"))}
                     <input type="date" value={f.documentDate} onChange={(e) => setForm({ documentDate: e.target.value })} className={inputCls(!f.documentDate)} data-testid="f-date" />
                   </div>
-                  {mod.financial && (
-                    <>
-                      <div>
-                        {lbl(T("f_currency", "Currency"))}
-                        <select value={f.currency} onChange={(e) => setForm({ currency: e.target.value })} className={inputCls(!f.currency)} data-testid="f-currency">
-                          <option value="">{notFound}</option>
-                          {[...new Set([...(f.currency ? [f.currency] : []), ...CURRENCIES])].map((c) => <option key={c} value={c}>{c}</option>)}
-                        </select>
-                      </div>
-                      <div className="sm:col-span-2">
-                        {lbl(T("f_totalAmount", "Total amount"), fm.grand_total === "" || !fm.grand_total ? null : <span className="font-normal text-slate-400">{T("as_extracted", "as extracted")}: {fm.grand_total}</span>)}
-                        <input dir="ltr" inputMode="decimal" value={f.totalAmount} onChange={(e) => setForm({ totalAmount: e.target.value })} className={inputCls(!f.totalAmount)} placeholder={notFound} data-testid="f-total" />
-                      </div>
-                    </>
-                  )}
                   {textField("goodsDescription", T("f_goods", "Goods description"))}
                   {textField("hsCode", T("f_hs", "HS code"), { dir: "ltr" })}
                 </div>
@@ -594,9 +661,28 @@ export function IntakeReviewWorkspace({ s, jobId, moduleId, scope, onBack, onCha
                   {textField("incoterm", T("f_incoterm", "Incoterm"), { dir: "ltr" })}
                   {textField("deliveryPlace", T("f_place", "Delivery place"))}
                   {textField("packing", T("f_packing", "Packing"))}
-                  {textField("truckNo", T("f_truck", "Truck / vehicle no."), { dir: "ltr" })}
-                  {textField("blNo", T("f_bl", "B/L no."), { dir: "ltr" })}
-                  {textField("containerNos", T("f_containers", "Container no(s)."), { dir: "ltr" })}
+                </div>
+
+                <div className="rounded-xl border border-slate-200 p-2.5 dark:border-slate-800" data-testid="transport-panel">
+                  {lbl(T("shipment_mode", "Shipment mode"))}
+                  <select value={f.shipmentMode} onChange={(e) => setForm({ shipmentMode: e.target.value as ReviewForm["shipmentMode"] })} className={inputCls()} data-testid="shipment-mode">
+                    <option value="">{T("mode_unspecified", "Not stated in this document")}</option>
+                    <option value="sea">{T("mode_sea", "By Sea")}</option>
+                    <option value="road">{T("mode_road", "By Road")}</option>
+                    <option value="air">{T("mode_air", "By Air")}</option>
+                    <option value="train">{T("mode_train", "By Train")}</option>
+                  </select>
+                  {f.shipmentMode === "" && <p className="mt-1.5 text-[11px] font-semibold text-slate-500" data-testid="transport-na">{T("transport_na", "Not applicable / not provided in this document. BL, container, truck, AWB and rail references are not required to save a Purchase Booking.")}</p>}
+                  <div className="mt-2 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                    {f.shipmentMode === "sea" && (<>
+                      {textField("blNo", T("f_bl", "B/L no.") + " (" + T("bl_hint", "only if a Bill of Lading exists") + ")", { dir: "ltr" })}
+                      {textField("containerNos", T("f_containers", "Container no(s).") + " (" + T("container_hint", "only if containerized") + ")", { dir: "ltr" })}
+                    </>)}
+                    {f.shipmentMode === "road" && textField("truckNo", T("f_truck", "Truck / vehicle no."), { dir: "ltr" })}
+                    {f.shipmentMode === "air" && textField("awbNo", T("f_awb", "AWB no."), { dir: "ltr" })}
+                    {f.shipmentMode === "train" && textField("railRef", T("f_rail", "Rail consignment / wagon ref."), { dir: "ltr" })}
+                  </div>
+                  <p className="mt-1.5 text-[10px] text-slate-400">{T("transport_not_bill", "These references are separate from the purchase bill no., the contract no. and the ERP entry no.")}</p>
                 </div>
 
                 {mod.financial && (
@@ -640,6 +726,9 @@ export function IntakeReviewWorkspace({ s, jobId, moduleId, scope, onBack, onCha
                           <div className="col-span-2 rounded-lg bg-blue-50 px-3 py-2 text-xs font-bold text-blue-900 dark:bg-blue-950/30 dark:text-blue-100" dir="ltr" data-testid="fx-result">
                             {dirText} → {ex.originalAmount != null ? ex.originalAmount.toLocaleString() : "—"} {ex.originalCurrency} = <span className="font-black">{ex.finalAmount != null ? ex.finalAmount.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "—"} {ex.finalCurrency}</span>
                           </div>
+                          <p className="col-span-2 text-[11px] font-semibold text-slate-600 dark:text-slate-300" dir="ltr" data-testid="fx-formula">
+                            {T("fx_formula", "Calculation")}: {ex.originalAmount != null ? ex.originalAmount.toLocaleString() : "—"} {ex.direction === "multiply" ? "×" : "÷"} {ex.rate ?? "?"} = {ex.finalAmount != null ? ex.finalAmount.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "—"} {ex.finalCurrency}
+                          </p>
                           {ex.rateSource !== "master" && (
                             <p className="col-span-2 flex items-start gap-1 text-[10.5px] font-semibold text-amber-700" data-testid="fx-unverified">
                               <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />{ex.rate == null ? T("fx_no_rate", "No verified rate was found in the Exchange Rates master for this pair. Enter the rate you want to use.") : T("fx_manual", "This rate was typed in manually — it is not from the Exchange Rates master.")}
@@ -690,11 +779,17 @@ export function IntakeReviewWorkspace({ s, jobId, moduleId, scope, onBack, onCha
             {tab === "notes" && (
               <div className="space-y-3" data-testid="panel-notes">
                 {textField("notes", T("f_notes", "Notes"), { area: true })}
-                <div>
-                  <p className="mb-1 text-[11px] font-black uppercase tracking-wide text-slate-500">{T("extracted_fields", "Extracted fields")} ({bundle.fields.length})</p>
-                  <div className="max-h-56 overflow-auto rounded-lg border border-slate-200 dark:border-slate-800">
+                <button type="button" onClick={() => setOcrOpen(true)} className="text-[11px] font-bold text-blue-600 underline" data-testid="open-ocr">{T("review_ocr", "Review OCR text")}</button>
+              </div>
+            )}
+
+            {tab === "fields" && (
+              <div className="space-y-2" data-testid="panel-fields">
+                <p className="text-[11px] font-black uppercase tracking-wide text-slate-500">{T("extracted_fields", "Extracted fields")} ({bundle.fields.length})</p>
+                {bundle.fields.length === 0 ? <p className="rounded-lg border border-dashed border-rose-300 bg-rose-50 p-3 text-center text-xs font-semibold text-rose-700">{T("no_fields", "No fields were extracted from this document.")}</p> : (
+                  <div className="max-h-[60vh] overflow-auto rounded-lg border border-slate-200 dark:border-slate-800">
                     <table className="w-full text-[11px]">
-                      <thead className="bg-slate-50 text-[10px] uppercase text-slate-400 dark:bg-slate-800"><tr><th className="p-1.5 text-start">{T("col_field", "Field")}</th><th className="p-1.5 text-start">{T("col_value", "Value")}</th><th className="p-1.5">{T("col_page", "Page")}</th><th className="p-1.5">%</th></tr></thead>
+                      <thead className="sticky top-0 bg-slate-50 text-[10px] uppercase text-slate-400 dark:bg-slate-800"><tr><th className="p-1.5 text-start">{T("col_field", "Field")}</th><th className="p-1.5 text-start">{T("col_value", "Value")}</th><th className="p-1.5">{T("col_page", "Page")}</th><th className="p-1.5">%</th></tr></thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                         {bundle.fields.map((fld) => (
                           <tr key={fld.field_key}>
@@ -707,15 +802,18 @@ export function IntakeReviewWorkspace({ s, jobId, moduleId, scope, onBack, onCha
                       </tbody>
                     </table>
                   </div>
-                </div>
-                <VerificationChecksPanel jobId={jobId} lang={s.lang} />
+                )}
               </div>
+            )}
+
+            {tab === "checks" && (
+              <div data-testid="panel-checks"><VerificationChecksPanel jobId={jobId} lang={s.lang} /></div>
             )}
           </fieldset>
 
           {blockers.length > 0 && !readOnly && (
             <div className="border-t border-slate-100 px-3 py-2 text-[11px] font-semibold text-amber-800 dark:border-slate-800" data-testid="handoff-blockers">
-              {T("before_open", "Before the entry form can be opened")}: {blockers.map((b) => b.startsWith("account:") ? T(ROLE_LABEL[b.split(":")[1] as AccountRole][0], ROLE_LABEL[b.split(":")[1] as AccountRole][1]) : b === "party" ? partyWord : b === "rate" ? T("fx_rate", "Exchange rate") : b === "rate_unconfirmed" ? T("fx_confirm_short", "Confirm the exchange rate") : b).join(" · ")}
+              {T("before_open", "Before the entry form can be opened")}: {blockers.map((b) => b.startsWith("account:") ? T(ROLE_LABEL[b.split(":")[1] as AccountRole][0], ROLE_LABEL[b.split(":")[1] as AccountRole][1]) : b === "party" ? partyWord : b === "currency" ? T("f_currency", "Purchase currency") : b === "amount" ? T("f_totalAmount", "Original purchase amount") : b === "rate" ? T("fx_rate", "Exchange rate") : b === "rate_unconfirmed" ? T("fx_confirm_short", "Confirm the exchange rate") : b).join(" · ")}
             </div>
           )}
         </div>

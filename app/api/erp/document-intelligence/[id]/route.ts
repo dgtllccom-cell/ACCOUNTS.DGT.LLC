@@ -48,6 +48,8 @@ const idSchema = z.object({ id: z.string().uuid() });
 const patchSchema = z.object({
   action: z.enum(["process", "cancel", "qvc", "confirm", "update_scope", "update_module"]),
   force: z.boolean().optional(),
+  /** start OCR in the background and return at once (the screen polls the job) */
+  async: z.boolean().optional(),
   moduleId: z.string().trim().max(60).optional(),
   intent: z.enum(["draft", "handoff"]).optional(),
   review: reviewSchema.optional(),
@@ -93,7 +95,9 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: s
       sweepRateLimiter();
       const rl = checkRateLimit("process", session.userId);
       if (!rl.ok) return apiError("RATE_LIMITED", `Too many processing requests — retry in ${rl.retryAfterSec}s.`, 429);
-      const res = await documentIntakeService.processJob(id, session.userId, actorName, scope, { force: body.force === true });
+      const res = body.async
+        ? await documentIntakeService.startProcessing(id, session.userId, actorName, scope, { force: body.force === true })
+        : await documentIntakeService.processJob(id, session.userId, actorName, scope, { force: body.force === true });
       return apiOk({ result: res });
     }
     if (body.action === "cancel") {

@@ -58,6 +58,10 @@ export type ContractParse = {
   truckNo: string | null;
   containerNos: string[];
   blNo: string | null;
+  awbNo: string | null;
+  railRef: string | null;
+  /** every distinct currency code the document mentions (more than one = the purchase currency needs confirming) */
+  currencies: string[];
   bank: ParsedBank;
   warnings: string[];
 };
@@ -209,6 +213,7 @@ function parseGoods(text: string): { goods: ParsedGoodsLine[]; totalRow: { quant
 export function parseTradeContract(text: string): ContractParse {
   const t = (text ?? "").replace(/\r/g, "");
   const warnings: string[] = [];
+  const currencies = [...new Set([...t.matchAll(new RegExp(`\\b(${CUR})\\b`, "g"))].map((m) => (m[1] === "RMB" ? "CNY" : m[1])))];
 
   const sellerRaw = labelled(t, "(?:the\\s+)?seller|supplier|exporter|party\\s*a", /\s+(?:the\\s+)?buyer\s*[:：]/i);
   const buyerRaw = labelled(t, "(?:the\\s+)?buyer|purchaser|importer|party\\s*b", /\s+(?:the\\s+)?seller\s*[:：]/i);
@@ -261,6 +266,7 @@ export function parseTradeContract(text: string): ContractParse {
       warnings.push(`Printed total ${total.amount} differs from the sum of the goods lines ${sum}.`);
     }
   }
+  if (currencies.length > 1) warnings.push(`More than one currency appears in the document (${currencies.join(", ")}) - confirm the purchase currency.`);
   for (const g of goods) {
     if (g.consistent === false) warnings.push(`Line "${g.description}": quantity × unit price does not equal the printed amount.`);
   }
@@ -292,6 +298,8 @@ export function parseTradeContract(text: string): ContractParse {
 
   const truckNo = labelled(t, "truck\\s*(?:no\\.?|number)?|vehicle\\s*(?:no\\.?|number)|lorry\\s*no\\.?");
   const blNo = labelled(t, "b\\/?l\\s*(?:no\\.?|number)?|bill\\s*of\\s*lading\\s*(?:no\\.?|number)?");
+  const awbNo = labelled(t, "awb\\s*(?:no\\.?|number)?|air\\s*waybill(?:\\s*(?:no\\.?|number))?");
+  const railRef = labelled(t, "rail(?:way)?\\s*(?:receipt|consignment|wagon|waybill)?\\s*(?:no\\.?|number)|wagon\\s*(?:no\\.?|number)");
   const containerNos = [...new Set([...t.matchAll(/\b([A-Z]{4}\d{7})\b/g)].map((m) => m[1]))];
 
   const bank: ParsedBank = {
@@ -343,6 +351,9 @@ export function parseTradeContract(text: string): ContractParse {
     truckNo,
     containerNos,
     blNo,
+    awbNo,
+    railRef,
+    currencies,
     bank,
     warnings,
   };

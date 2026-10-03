@@ -15,7 +15,7 @@ const idSchema = z.object({ id: z.string().uuid() });
  * The file lives in ./storage/document-intake/ (never public/); this is the
  * only way to read it — no public URL is ever produced.
  */
-export async function GET(_r: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+export async function GET(r: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   try {
     const { scope } = await guardIntake("read");
     const { id } = idSchema.parse(await ctx.params);
@@ -25,7 +25,7 @@ export async function GET(_r: NextRequest, ctx: { params: Promise<{ id: string }
       status: 200,
       headers: {
         "Content-Type": f.mime,
-        "Content-Disposition": `inline; filename="${encodeURIComponent(f.filename)}"`,
+        "Content-Disposition": `${r.nextUrl.searchParams.get("download") === "1" ? "attachment" : "inline"}; filename="${encodeURIComponent(f.filename)}"`,
         "Cache-Control": "private, no-store",
         "X-Content-Type-Options": "nosniff",
       },

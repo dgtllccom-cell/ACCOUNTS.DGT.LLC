@@ -90,7 +90,7 @@ export type RegistryDocType = {
 export interface DocumentAiProvider {
   readonly name: string;
   /** OCR / text-layer extraction + light pre-processing. */
-  ingest(input: { buffer: Buffer; mimeType: string; filename: string }): Promise<IngestResult>;
+  ingest(input: { buffer: Buffer; mimeType: string; filename: string; onProgress?: (page: number, total: number) => void | Promise<void> }): Promise<IngestResult>;
   /** Rule/model classification against the document type registry. */
   classify(text: string, registry: RegistryDocType[], domainHint?: OperationalDomain | null): Promise<ClassificationResult>;
   /** Field + line-item extraction for a given document type. */

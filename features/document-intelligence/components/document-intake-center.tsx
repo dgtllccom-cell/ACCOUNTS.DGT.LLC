@@ -220,9 +220,10 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
       const jobId: string = job?.id;
       if (!jobId) throw new Error(T("upload_failed", "Upload failed."));
       // A file already uploaded earlier is REUSED (its saved review is kept) — only a fresh upload is extracted.
-      if (!job.deduped || job.status === "uploaded" || job.status === "error") {
+      // OCR runs on the server in the background; the review screen follows the job (ocr -> extracting -> review)
+      if (!job.deduped || ["uploaded", "error", "ocr", "classifying", "extracting", "matching"].includes(job.status)) {
         setBusyText(T("proc_extract", "Reading the document and extracting fields…"));
-        await apiPatch(`/api/erp/document-intelligence/${jobId}`, { action: "process", force: job.status === "error" });
+        await apiPatch(`/api/erp/document-intelligence/${jobId}`, { action: "process", async: true, force: job.status === "error" });
       }
       setReviewModuleId(chosen.id);
       setReviewJobId(jobId);

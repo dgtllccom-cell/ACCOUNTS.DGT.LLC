@@ -46,6 +46,9 @@ export type ReviewBank = {
   bankId: string | null;
 };
 
+/** How the goods travel. Decides which transport reference applies — none is universally required. */
+export type ShipmentMode = "" | "sea" | "road" | "air" | "train";
+
 export type ReviewForm = {
   contractNo: string;
   documentDate: string;
@@ -68,6 +71,10 @@ export type ReviewForm = {
   truckNo: string;
   blNo: string;
   containerNos: string;
+  awbNo: string;
+  railRef: string;
+  /** "" = the document does not say; the reviewer may choose */
+  shipmentMode: ShipmentMode;
   notes: string;
 };
 
@@ -86,7 +93,7 @@ export type ReviewState = {
 export const EMPTY_FORM: ReviewForm = {
   contractNo: "", documentDate: "", reference: "", currency: "", totalAmount: "", paymentTerms: "", deliveryTerms: "",
   incoterm: "", deliveryPlace: "", quality: "", packing: "", hsCode: "", lotNo: "", variety: "", goodsDescription: "",
-  grossWeight: "", tareWeight: "", netWeight: "", truckNo: "", blNo: "", containerNos: "", notes: "",
+  grossWeight: "", tareWeight: "", netWeight: "", truckNo: "", blNo: "", containerNos: "", awbNo: "", railRef: "", shipmentMode: "", notes: "",
 };
 
 export const EMPTY_EXCHANGE: ReviewExchange = {
@@ -130,6 +137,8 @@ export function handoffBlockers(mod: IntakeModule | null, s: ReviewState): strin
   }
   if (mod.party && !s.party.id) out.push("party");
   if (mod.financial) {
+    if (!s.form.currency) out.push("currency");
+    if (!s.form.totalAmount && !s.items.some((i) => i.amount != null)) out.push("amount");
     const ex = s.exchange;
     if (ex.originalCurrency && ex.finalCurrency && ex.originalCurrency !== ex.finalCurrency) {
       if (ex.rate == null || ex.rate <= 0) out.push("rate");
@@ -158,9 +167,14 @@ export function buildTargetPayload(mod: IntakeModule, s: ReviewState, scope: { c
   put("goodsName", f.goodsDescription);
   put("hsCode", f.hsCode);
   put("chsCode", f.hsCode);
-  put("containerNumbers", f.containerNos);
-  put("blNumber", f.blNo);
-  put("truckNumber", f.truckNo);
+  // Transport references are conditional: only the one that belongs to the shipment mode is carried over,
+  // and only when the document actually states it (a Purchase Contract alone has none of them).
+  if (f.shipmentMode === "sea") { put("blNumber", f.blNo); put("containerNumbers", f.containerNos); }
+  else if (f.shipmentMode === "road") put("truckNumber", f.truckNo);
+  else if (f.shipmentMode === "air") put("awbNumber", f.awbNo);
+  else if (f.shipmentMode === "train") put("railReference", f.railRef);
+  else if (mod.side === "shipping") { put("blNumber", f.blNo); put("containerNumbers", f.containerNos); put("truckNumber", f.truckNo); }
+  put("shippingMode", { sea: "By Sea", road: "By Road", air: "By Air", train: "By Train", "": "" }[f.shipmentMode]);
   put("remarks", f.notes);
 
   if (mod.side === "shipping" && !mod.financial) {

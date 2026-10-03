@@ -83,27 +83,34 @@ async function main() {
 
     const country = u.country_name || "Global / Worldwide";
     const branch = u.city_branch_name || u.country_branch_name || "Headquarters";
+    const emailAlias = u.email ? u.email.split('@')[0] : '';
+    const usernameDisplay = u.user_code;
 
     return `
-      <tr style="border-bottom: 1px solid #e2e8f0; font-size: 11px;">
-        <td style="padding: 7px 8px; text-align: center; color: #64748b; font-weight: 600;">${idx + 1}</td>
-        <td style="padding: 7px 8px; font-weight: 700; color: #0f172a;">
-          ${u.full_name}
-          <div style="font-size: 9.5px; color: #64748b; font-weight: normal; font-family: monospace;">${u.user_code}</div>
+      <tr style="border-bottom: 1px solid #e2e8f0; font-size: 10px;">
+        <td style="padding: 6px 6px; text-align: center; color: #64748b; font-weight: 600;">${idx + 1}</td>
+        <td style="padding: 6px 6px;">
+          <div style="font-family: monospace; font-size: 10.5px; font-weight: 800; color: #0369a1; background: #f0f9ff; padding: 2px 5px; border-radius: 4px; border: 1px solid #bae6fd; display: inline-block;">
+            ${usernameDisplay}
+          </div>
+          ${emailAlias.toLowerCase() !== usernameDisplay.toLowerCase() ? `<div style="font-size: 8.5px; color: #64748b; font-family: monospace; margin-top: 1px;">Alias: ${emailAlias}</div>` : ''}
         </td>
-        <td style="padding: 7px 8px; font-family: monospace; color: #0369a1; font-weight: 600;">${u.email}</td>
-        <td style="padding: 7px 8px; font-family: monospace; color: #b91c1c; font-weight: 700; letter-spacing: 0.5px;">${password}</td>
-        <td style="padding: 7px 8px;">
-          <span style="display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 9.5px; font-weight: 700; ${roleBadge}">
+        <td style="padding: 6px 6px; font-weight: 700; color: #0f172a;">
+          ${u.full_name}
+        </td>
+        <td style="padding: 6px 6px; font-family: monospace; color: #475569; font-weight: 500; font-size: 9.5px;">${u.email}</td>
+        <td style="padding: 6px 6px; font-family: monospace; color: #b91c1c; font-weight: 700; font-size: 10px; letter-spacing: 0.5px;">${password}</td>
+        <td style="padding: 6px 6px;">
+          <span style="display: inline-block; padding: 2px 5px; border-radius: 4px; font-size: 9px; font-weight: 700; ${roleBadge}">
             ${roleName}
           </span>
         </td>
-        <td style="padding: 7px 8px; color: #334155; font-size: 10px;">
+        <td style="padding: 6px 6px; color: #334155; font-size: 9.5px;">
           <strong>${country}</strong>
-          <div style="font-size: 9px; color: #64748b;">${branch}</div>
+          <div style="font-size: 8.5px; color: #64748b;">${branch}</div>
         </td>
-        <td style="padding: 7px 8px; text-align: center;">
-          <span style="display: inline-block; padding: 2px 6px; border-radius: 9999px; background: #ecfdf5; color: #047857; font-weight: 700; font-size: 9px; border: 1px solid #a7f3d0;">
+        <td style="padding: 6px 6px; text-align: center;">
+          <span style="display: inline-block; padding: 2px 5px; border-radius: 9999px; background: #ecfdf5; color: #047857; font-weight: 700; font-size: 8.5px; border: 1px solid #a7f3d0;">
             ✓ VERIFIED
           </span>
         </td>
@@ -280,13 +287,14 @@ async function main() {
       <table>
         <thead>
           <tr>
-            <th style="width: 25px; text-align: center;">#</th>
-            <th style="width: 155px;">User Name & Code</th>
-            <th style="width: 175px;">Login Email / Identifier</th>
-            <th style="width: 95px;">Password</th>
-            <th style="width: 125px;">Assigned Role</th>
-            <th style="width: 120px;">Country & Branch</th>
-            <th style="width: 65px; text-align: center;">Status</th>
+            <th style="width: 22px; text-align: center;">#</th>
+            <th style="width: 125px;">USERNAME (LOGIN ID)<br><span style="font-size: 8px; font-weight: normal; color: #bae6fd;">(لاگ ان یوزر نیم)</span></th>
+            <th style="width: 130px;">FULL NAME<br><span style="font-size: 8px; font-weight: normal; color: #cbd5e1;">(صارف کا نام)</span></th>
+            <th style="width: 150px;">EMAIL IDENTIFIER<br><span style="font-size: 8px; font-weight: normal; color: #cbd5e1;">(لاگ ان ای میل)</span></th>
+            <th style="width: 80px;">PASSWORD<br><span style="font-size: 8px; font-weight: normal; color: #fecaca;">(پاس ورڈ)</span></th>
+            <th style="width: 110px;">ASSIGNED ROLE<br><span style="font-size: 8px; font-weight: normal; color: #cbd5e1;">(کردار / عہدہ)</span></th>
+            <th style="width: 115px;">COUNTRY & BRANCH<br><span style="font-size: 8px; font-weight: normal; color: #cbd5e1;">(ملک و برانچ)</span></th>
+            <th style="width: 55px; text-align: center;">STATUS</th>
           </tr>
         </thead>
         <tbody>

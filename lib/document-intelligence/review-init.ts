@@ -34,6 +34,15 @@ const n = (v: unknown): number | null => {
   return Number.isFinite(x) ? x : null;
 };
 
+/** Mode is only inferred from a reference the document really contains; otherwise it stays unspecified. */
+export function inferShipmentMode(m: Record<string, string>, job: Record<string, any>): ReviewForm["shipmentMode"] {
+  if (m.bl_number || m.container_numbers || job.bl_reference || job.container_reference) return "sea";
+  if (m.awb_number) return "air";
+  if (m.rail_reference) return "train";
+  if (m.truck_number) return "road";
+  return "";
+}
+
 export function formFromFields(m: Record<string, string>, job: Record<string, any>): ReviewForm {
   return {
     ...EMPTY_FORM,
@@ -58,6 +67,9 @@ export function formFromFields(m: Record<string, string>, job: Record<string, an
     truckNo: m.truck_number || "",
     blNo: m.bl_number || job.bl_reference || "",
     containerNos: m.container_numbers || job.container_reference || "",
+    awbNo: m.awb_number || "",
+    railRef: m.rail_reference || "",
+    shipmentMode: inferShipmentMode(m, job),
     notes: "",
   };
 }

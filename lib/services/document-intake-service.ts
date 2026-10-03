@@ -66,7 +66,7 @@ const FORM_TO_FIELD: Array<[keyof ReviewState["form"], string]> = [
   ["paymentTerms", "payment_terms"], ["deliveryTerms", "delivery_terms"], ["incoterm", "incoterm"], ["quality", "quality"],
   ["packing", "packing"], ["hsCode", "hs_codes"], ["lotNo", "lot_number"], ["variety", "variety"], ["goodsDescription", "goods_description"],
   ["grossWeight", "gross_weight"], ["tareWeight", "tare_weight"], ["netWeight", "net_weight"], ["truckNo", "truck_number"],
-  ["blNo", "bl_number"], ["containerNos", "container_numbers"],
+  ["blNo", "bl_number"], ["containerNos", "container_numbers"], ["awbNo", "awb_number"], ["railRef", "rail_reference"], ["deliveryPlace", "delivery_place"],
 ];
 
 async function applyFormCorrections(sql: any, jobId: string, review: ReviewState, actorId: string) {
@@ -90,6 +90,11 @@ async function applyFormCorrections(sql: any, jobId: string, review: ReviewState
     }
   }
 }
+
+/** statuses a job holds while OCR / extraction is running */
+export const PROCESSING_STATUSES = ["ocr", "classifying", "extracting", "matching"];
+/** a processing job that has not moved for this long was killed (server restart / timeout) - it can be restarted */
+export const STALE_PROCESSING_MS = 4 * 60 * 1000;
 
 export class DocumentIntakeService {
   // ── queue / detail ─────────────────────────────────────────────────────
@@ -147,6 +152,10 @@ export class DocumentIntakeService {
         const lineItems = await sql`SELECT * FROM public.document_intake_line_items WHERE job_id = ${jobId} ORDER BY line_no`;
         const matches = await sql`SELECT * FROM public.document_intake_matches WHERE job_id = ${jobId} ORDER BY match_kind, score DESC`;
         const events = await sql`SELECT * FROM public.document_intake_events WHERE job_id = ${jobId} ORDER BY created_at DESC LIMIT 100`;
+        const raw = (await sql`SELECT transcript, extraction_summary, updated_at FROM public.document_intake_jobs WHERE id = ${jobId}`)?.[0];
+        (job as any).ocr_text = raw?.transcript ?? "";
+        (job as any).progress = PROCESSING_STATUSES.includes(job.status) ? (raw?.extraction_summary ?? null) : null;
+        (job as any).stalled = PROCESSING_STATUSES.includes(job.status) && raw?.updated_at ? Date.now() - new Date(raw.updated_at).getTime() > STALE_PROCESSING_MS : false;
         // The live draft (prepared, or consumed once its record exists) carries the reviewer's saved state.
         const draft = (await sql`SELECT id, draft_no, status, target_module, draft_payload, line_items, currency, consumed_source_module, consumed_source_id, created_at, updated_at
           FROM public.document_intake_drafts WHERE job_id = ${jobId} AND deleted_at IS NULL AND status IN ('prepared','consumed')
@@ -251,6 +260,20 @@ export class DocumentIntakeService {
 
   // ── process (OCR → classify → extract → match) ────────────────────────
   async processJob(jobId: string, actorId: string, actorName: string | null, scope: IntakeScope, opts: { force?: boolean } = {}) {
+    try {
+      return await this.runProcess(jobId, actorId, actorName, scope, opts);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (!/Job not found|outside your|Job is /.test(msg)) {
+        await withLocalPg(async (sql) => {
+          await sql`UPDATE public.document_intake_jobs SET status = 'error', error = ${msg.slice(0, 500)}, updated_at = now() WHERE id = ${jobId} AND status IN ('ocr','classifying','extracting','matching')`;
+        }).catch(() => undefined);
+      }
+      throw e;
+    }
+  }
+
+  private async runProcess(jobId: string, actorId: string, actorName: string | null, scope: IntakeScope, opts: { force?: boolean } = {}) {
     const job = await withLocalPg(async (sql) => (await sql`SELECT * FROM public.document_intake_jobs WHERE id = ${jobId} AND deleted_at IS NULL`)?.[0]);
     if (!job) throw new Error("Job not found.");
     assertRowInScope(scope, job);
@@ -260,15 +283,28 @@ export class DocumentIntakeService {
     if (!opts.force && ["review", "qvc", "draft_ready"].includes(job.status)) {
       return { jobId, status: "already_processed" };
     }
+    // A run that is still alive is left alone; one that stopped moving (server restart / timeout) is restarted.
+    if (!opts.force && PROCESSING_STATUSES.includes(job.status)) {
+      const age = Date.now() - new Date(job.updated_at).getTime();
+      if (age < STALE_PROCESSING_MS) return { jobId, status: "already_running" };
+    }
 
     const provider = getDocumentAiProvider();
     const buffer = await readIntakeFile(job.storage_key);
 
-    await withLocalPg(async (sql) => { await sql`UPDATE public.document_intake_jobs SET status = 'ocr', updated_at = now() WHERE id = ${jobId}`; });
+    await withLocalPg(async (sql) => {
+      await sql`UPDATE public.document_intake_jobs SET status = 'ocr', error = NULL, extraction_summary = ${sql.json({ stage: "ocr", page: 0, pages: 0 } as never)}, updated_at = now() WHERE id = ${jobId}`;
+    });
 
     let ingest;
     try {
-      ingest = await provider.ingest({ buffer, mimeType: job.mime_type, filename: job.original_filename });
+      // heartbeat per page: keeps updated_at moving so a live run is never mistaken for a dead one
+      ingest = await provider.ingest({
+        buffer, mimeType: job.mime_type, filename: job.original_filename,
+        onProgress: async (page, total) => {
+          await withLocalPg(async (sql) => { await sql`UPDATE public.document_intake_jobs SET extraction_summary = ${sql.json({ stage: "ocr", page, pages: total } as never)}, updated_at = now() WHERE id = ${jobId}`; });
+        },
+      });
     } catch (e) {
       await withLocalPg(async (sql) => {
         await sql`UPDATE public.document_intake_jobs SET status = 'error', error = ${(e as Error).message}, updated_at = now() WHERE id = ${jobId}`;
@@ -286,6 +322,7 @@ export class DocumentIntakeService {
     }
 
     const unreadable = !ingest.fullText || ingest.fullText.replace(/\s/g, "").length < 20;
+    await withLocalPg(async (sql) => { await sql`UPDATE public.document_intake_jobs SET status = 'classifying', updated_at = now() WHERE id = ${jobId}`; });
     const registry = await loadRegistry(job.country_id);
     const cls = unreadable
       ? { code: "other_document", name: "Other / Unclassified", confidence: 0, domain: "both" as const, category: "other", targetModule: null, requiresQvc: true, scores: [] }
@@ -307,6 +344,7 @@ export class DocumentIntakeService {
     if (!docTypeDef) {
       docTypeDef = registry.find((d) => d.code === "other_document")!;
     }
+    await withLocalPg(async (sql) => { await sql`UPDATE public.document_intake_jobs SET status = 'extracting', updated_at = now() WHERE id = ${jobId}`; });
     const extraction = unreadable ? { fields: [], lineItems: [], summary: {} } : await provider.extract({ text: ingest.fullText, pages: ingest.pages, docType: docTypeDef });
 
     // scope-constrained master matching (no contract-number-alone)
@@ -354,6 +392,7 @@ export class DocumentIntakeService {
         let qvcReason: string | null = null;
         const qvcMissing: string[] = [...missingRequired];
         if (unreadable) { status = "qvc"; qvcReason = "Document is unreadable — OCR produced no usable text."; }
+        else if (extraction.fields.length === 0) { status = "qvc"; qvcReason = "OCR read the document but no fields could be extracted. Retry OCR, check the OCR text, or enter the data manually."; }
         else if (matchResult.status === "out_of_scope") { status = "qvc"; qvcReason = matchResult.reason ?? "No authorized matching record in your scope."; }
         else if (cls.requiresQvc && cls.confidence < 0.4) { status = "qvc"; qvcReason = "Document type could not be confidently classified."; }
         else if (missingRequired.length) { status = "qvc"; qvcReason = `Missing required field(s): ${missingRequired.join(", ")}`; }
@@ -379,6 +418,7 @@ export class DocumentIntakeService {
             qvc_reason = ${qvcReason},
             qvc_missing = ${sql.json(qvcMissing)},
             error = NULL,
+            transcript = ${(ingest.fullText ?? "").slice(0, 200000)},
             updated_at = now()
           WHERE id = ${jobId}`;
         await event(sql, jobId, "processed", {
@@ -394,6 +434,28 @@ export class DocumentIntakeService {
     });
 
     return { jobId, status: "processed" };
+  }
+
+  /**
+   * Start OCR + extraction WITHOUT holding the HTTP request open (a 3-page scan takes a while; a dropped
+   * request used to leave the job in 'ocr' forever). The status is set first, the work continues on the
+   * server, and the screen polls the job. If the server is killed mid-run the job simply stops moving and
+   * is offered "Retry OCR" (see STALE_PROCESSING_MS).
+   */
+  async startProcessing(jobId: string, actorId: string, actorName: string | null, scope: IntakeScope, opts: { force?: boolean } = {}) {
+    const job = await withLocalPg(async (sql) => (await sql`SELECT id, status, updated_at, country_id, country_branch_id, city_branch_id, clearing_agent_id, operational_domain FROM public.document_intake_jobs WHERE id = ${jobId} AND deleted_at IS NULL`)?.[0]);
+    if (!job) throw new Error("Job not found.");
+    assertRowInScope(scope, job);
+    if (["linked", "cancelled"].includes(job.status)) throw new Error(`Job is ${job.status}.`);
+    if (!opts.force && ["review", "qvc", "draft_ready"].includes(job.status)) return { jobId, status: "already_processed" };
+    if (!opts.force && PROCESSING_STATUSES.includes(job.status) && Date.now() - new Date(job.updated_at).getTime() < STALE_PROCESSING_MS) return { jobId, status: "already_running" };
+    await withLocalPg(async (sql) => {
+      await sql`UPDATE public.document_intake_jobs SET status = 'ocr', error = NULL, extraction_summary = ${sql.json({ stage: "ocr", page: 0, pages: 0 } as never)}, updated_at = now() WHERE id = ${jobId}`;
+    });
+    void this.processJob(jobId, actorId, actorName, scope, { force: true }).catch((e) => {
+      console.warn("document intake background processing failed:", e instanceof Error ? e.message : String(e));
+    });
+    return { jobId, status: "processing" };
   }
 
   // ── field correction ─────────────────────────────────────────────────

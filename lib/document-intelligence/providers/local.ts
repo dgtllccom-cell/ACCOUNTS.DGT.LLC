@@ -38,9 +38,17 @@ function detectLanguage(text: string): string | null {
   return "en";
 }
 
-async function ingestPdf(buffer: Buffer): Promise<{ pages: OcrPage[]; fullText: string; isDigital: boolean; ocrUsed: boolean; meanConfidence: number | null }> {
+type OcrWorkerLike = { setParameters: (p: any) => Promise<unknown>; recognize: (b: Buffer) => Promise<{ data: any }>; terminate: () => Promise<unknown> };
+
+async function ingestPdf(buffer: Buffer, onProgress?: (page: number, total: number) => void | Promise<void>): Promise<{ pages: OcrPage[]; fullText: string; isDigital: boolean; ocrUsed: boolean; meanConfidence: number | null }> {
   const { PDFParse } = await import("pdf-parse");
   const parser = new PDFParse({ data: new Uint8Array(buffer) });
+  // ONE tesseract worker for every page of this PDF (a new WASM worker per page was the slow part of a multi-page scan)
+  let sharedWorker: OcrWorkerLike | null = null;
+  const ocr = async (img: Buffer) => {
+    if (!sharedWorker) sharedWorker = await newOcrWorker();
+    return ocrWith(sharedWorker, img);
+  };
   try {
     const res = await parser.getText();
     let pages: OcrPage[] = (res.pages ?? []).map((p: any, i: number) => ({
@@ -113,11 +121,11 @@ async function ingestPdf(buffer: Buffer): Promise<{ pages: OcrPage[]; fullText: 
       }
       if (!imgBuf) return false;
 
-      let r = preferRaw ? await ocrImage(imgBuf) : await ocrImage(await preprocessImage(imgBuf, "image/png"));
+      let r = preferRaw ? await ocr(imgBuf) : await ocr(await preprocessImage(imgBuf, "image/png"));
       if (nonWs(r.text) < 40) {
         const alt = preferRaw
-          ? await ocrImage(await preprocessImage(imgBuf, "image/png"))
-          : await ocrImage(imgBuf);
+          ? await ocr(await preprocessImage(imgBuf, "image/png"))
+          : await ocr(imgBuf);
         if (nonWs(alt.text) > nonWs(r.text)) r = alt;
       }
       confs.push(r.meanConfidence);
@@ -128,6 +136,7 @@ async function ingestPdf(buffer: Buffer): Promise<{ pages: OcrPage[]; fullText: 
     const pageCount = totalPages > 0 ? Math.min(totalPages, maxPages)
       : (embeddedByPage.size || maxPages);
     for (let pageNo = 1; pageNo <= pageCount; pageNo += 1) {
+      try { await onProgress?.(pageNo, pageCount); } catch { /* progress is best-effort */ }
       const ok = await ocrOnePage(pageNo);
       if (!ok && totalPages === 0 && embeddedByPage.size === 0) break;
     }
@@ -138,6 +147,7 @@ async function ingestPdf(buffer: Buffer): Promise<{ pages: OcrPage[]; fullText: 
     }
     return { pages: pages.length ? pages : [{ pageNumber: 1, text: "" }], fullText, isDigital: false, ocrUsed: false, meanConfidence: 0 };
   } finally {
+    try { await (sharedWorker as OcrWorkerLike | null)?.terminate(); } catch { /* ignore */ }
     await parser.destroy?.();
   }
 }
@@ -162,12 +172,12 @@ async function preprocessImage(buffer: Buffer, mime: string): Promise<Buffer> {
   }
 }
 
-async function ocrImage(buffer: Buffer): Promise<{ text: string; meanConfidence: number; words: OcrPage["wordBoxes"] }> {
+async function newOcrWorker(): Promise<OcrWorkerLike> {
   const { createWorker, PSM } = await import("tesseract.js");
   const opts: Record<string, unknown> = { cachePath: VENDOR_DIR };
   if (hasVendor("tesseract-core.wasm")) opts.corePath = VENDOR_DIR;
-  // A vendored, UNcompressed <lang>.traineddata → point langPath there with gzip:false.
-  // A vendored <lang>.traineddata.gz → langPath + gzip stays true (default).
+  // A vendored, UNcompressed <lang>.traineddata -> point langPath there with gzip:false.
+  // A vendored <lang>.traineddata.gz -> langPath + gzip stays true (default).
   const firstLang = OCR_LANGS.split("+")[0];
   if (fs.existsSync(path.join(VENDOR_DIR, `${firstLang}.traineddata.gz`))) {
     opts.langPath = VENDOR_DIR;
@@ -176,15 +186,25 @@ async function ocrImage(buffer: Buffer): Promise<{ text: string; meanConfidence:
     opts.gzip = false;
   }
   const worker = await createWorker(OCR_LANGS, 1, opts as never);
+  await worker.setParameters({ tessedit_pageseg_mode: PSM.AUTO });
+  return worker as unknown as OcrWorkerLike;
+}
+
+async function ocrWith(worker: OcrWorkerLike, buffer: Buffer): Promise<{ text: string; meanConfidence: number; words: OcrPage["wordBoxes"] }> {
+  const { data } = await worker.recognize(buffer);
+  const words = (data.words ?? []).map((w: any) => ({
+    text: w.text, x: w.bbox?.x0 ?? 0, y: w.bbox?.y0 ?? 0,
+    w: (w.bbox?.x1 ?? 0) - (w.bbox?.x0 ?? 0), h: (w.bbox?.y1 ?? 0) - (w.bbox?.y0 ?? 0),
+    confidence: (w.confidence ?? 0) / 100,
+  }));
+  return { text: data.text || "", meanConfidence: (data.confidence ?? 0) / 100, words };
+}
+
+/** One-shot OCR for a single image (worker created and destroyed here). */
+async function ocrImage(buffer: Buffer) {
+  const worker = await newOcrWorker();
   try {
-    await worker.setParameters({ tessedit_pageseg_mode: PSM.AUTO });
-    const { data } = await worker.recognize(buffer);
-    const words = (data.words ?? []).map((w: any) => ({
-      text: w.text, x: w.bbox?.x0 ?? 0, y: w.bbox?.y0 ?? 0,
-      w: (w.bbox?.x1 ?? 0) - (w.bbox?.x0 ?? 0), h: (w.bbox?.y1 ?? 0) - (w.bbox?.y0 ?? 0),
-      confidence: (w.confidence ?? 0) / 100,
-    }));
-    return { text: data.text || "", meanConfidence: (data.confidence ?? 0) / 100, words };
+    return await ocrWith(worker, buffer);
   } finally {
     await worker.terminate();
   }
@@ -193,13 +213,13 @@ async function ocrImage(buffer: Buffer): Promise<{ text: string; meanConfidence:
 export class LocalDocumentAiProvider implements DocumentAiProvider {
   readonly name = "local";
 
-  async ingest(input: { buffer: Buffer; mimeType: string; filename: string }): Promise<IngestResult> {
+  async ingest(input: { buffer: Buffer; mimeType: string; filename: string; onProgress?: (page: number, total: number) => void | Promise<void> }): Promise<IngestResult> {
     const started = Date.now();
     const mime = (input.mimeType || "").toLowerCase();
     const isPdf = mime.includes("pdf") || input.filename.toLowerCase().endsWith(".pdf");
 
     if (isPdf) {
-      const { pages, fullText, isDigital, ocrUsed, meanConfidence } = await ingestPdf(input.buffer);
+      const { pages, fullText, isDigital, ocrUsed, meanConfidence } = await ingestPdf(input.buffer, input.onProgress);
       return {
         engine: isDigital ? "pdf-parse" : ocrUsed ? `pdf-parse+tesseract.js@${OCR_LANGS}` : "pdf-parse(no-text-layer)",
         isDigital,

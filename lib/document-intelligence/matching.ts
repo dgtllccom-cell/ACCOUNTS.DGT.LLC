@@ -241,6 +241,11 @@ export async function runScopedMatching(input: {
 
   const inScope = candidates.filter((c) => c.scopeOk).sort((a, b) => b.score - a.score);
 
+  // Nothing matched at all = this is a NEW record (the normal case for a fresh contract) - not a scope problem.
+  if (candidates.length === 0) {
+    return { status: "none", matchedModule: null, matchedId: null, matchedScore: null,
+      reason: "No existing record matches this document - it will be entered as a new record.", candidates: [] };
+  }
   if (inScope.length === 0) {
     return {
       status: "out_of_scope", matchedModule: null, matchedId: null, matchedScore: null,

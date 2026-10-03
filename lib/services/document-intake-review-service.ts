@@ -16,6 +16,8 @@ export type PartyCandidate = {
   id: string;
   kind: "customer" | "company";
   name: string;
+  /** supplier / customer master code (person_code / company_code) */
+  code: string | null;
   countryId: string | null;
   score: number;
   accountIds: string[];
@@ -100,18 +102,18 @@ export async function buildReviewContext(
     if (partyRole && tokens.length) {
       const patterns = tokens.map((t) => `%${t.replace(/[%_\\]/g, "")}%`);
       const custRows = await sql`
-        SELECT id, COALESCE(NULLIF(customer_name,''), company_name) AS name, country_id
+        SELECT id, COALESCE(NULLIF(customer_name,''), company_name) AS name, person_code AS code, country_id
         FROM public.customers
         WHERE deleted_at IS NULL AND (lower(coalesce(customer_name,'') || ' ' || coalesce(company_name,'')) ILIKE ANY(${patterns}::text[]))
         LIMIT 40`;
       const compRows = await sql`
-        SELECT id, COALESCE(NULLIF(name,''), legal_name) AS name, country_id
+        SELECT id, COALESCE(NULLIF(name,''), legal_name) AS name, company_code AS code, country_id
         FROM public.companies
         WHERE deleted_at IS NULL AND (lower(coalesce(name,'') || ' ' || coalesce(legal_name,'')) ILIKE ANY(${patterns}::text[]))
         LIMIT 40`;
-      const raw: Array<{ id: string; kind: "customer" | "company"; name: string; countryId: string | null; score: number }> = [];
-      for (const r of custRows as any[]) raw.push({ id: r.id, kind: "customer", name: r.name, countryId: r.country_id, score: partyNameScore(documentPartyName, r.name) });
-      for (const r of compRows as any[]) raw.push({ id: r.id, kind: "company", name: r.name, countryId: r.country_id, score: partyNameScore(documentPartyName, r.name) });
+      const raw: Array<{ id: string; kind: "customer" | "company"; name: string; code: string | null; countryId: string | null; score: number }> = [];
+      for (const r of custRows as any[]) raw.push({ id: r.id, kind: "customer", name: r.name, code: r.code ?? null, countryId: r.country_id, score: partyNameScore(documentPartyName, r.name) });
+      for (const r of compRows as any[]) raw.push({ id: r.id, kind: "company", name: r.name, code: r.code ?? null, countryId: r.country_id, score: partyNameScore(documentPartyName, r.name) });
       const top = raw.filter((c) => c.score >= 0.5).sort((a, b) => b.score - a.score).slice(0, 8);
 
       for (const c of top) {
@@ -132,7 +134,7 @@ export async function buildReviewContext(
         const inCountry = !scope.countryIds || (c.countryId && scope.countryIds.includes(c.countryId));
         if (!inCountry && accts.length === 0) continue;
         candidates.push({
-          id: c.id, kind: c.kind, name: c.name, countryId: c.countryId, score: Number(c.score.toFixed(2)),
+          id: c.id, kind: c.kind, name: c.name, code: c.code, countryId: c.countryId, score: Number(c.score.toFixed(2)),
           accountIds: accts.map((x) => x.id),
           banks: banks.map((b) => ({ id: b.id, bankName: b.bank_name, branchName: b.branch_name, accountTitle: b.account_title, accountNumber: b.account_number, iban: b.iban_number, swift: b.swift_bic, currency: b.currency })),
         });
@@ -140,11 +142,11 @@ export async function buildReviewContext(
       // If the caller picked a party that did not come up by name, load it (still scope-checked above by account scope).
       if (opts.partyId && !candidates.some((c) => c.id === opts.partyId)) {
         const one = (await sql`
-          SELECT id, 'customer' AS kind, COALESCE(NULLIF(customer_name,''), company_name) AS name, country_id FROM public.customers WHERE id = ${opts.partyId} AND deleted_at IS NULL
+          SELECT id, 'customer' AS kind, COALESCE(NULLIF(customer_name,''), company_name) AS name, person_code AS code, country_id FROM public.customers WHERE id = ${opts.partyId} AND deleted_at IS NULL
           UNION ALL
-          SELECT id, 'company', COALESCE(NULLIF(name,''), legal_name), country_id FROM public.companies WHERE id = ${opts.partyId} AND deleted_at IS NULL LIMIT 1`)?.[0] as any;
+          SELECT id, 'company', COALESCE(NULLIF(name,''), legal_name), company_code, country_id FROM public.companies WHERE id = ${opts.partyId} AND deleted_at IS NULL LIMIT 1`)?.[0] as any;
         if (one && (!scope.countryIds || (one.country_id && scope.countryIds.includes(one.country_id)))) {
-          candidates.unshift({ id: one.id, kind: one.kind, name: one.name, countryId: one.country_id, score: 0, accountIds: [], banks: [] });
+          candidates.unshift({ id: one.id, kind: one.kind, name: one.name, code: one.code ?? null, countryId: one.country_id, score: 0, accountIds: [], banks: [] });
         }
       }
     }
