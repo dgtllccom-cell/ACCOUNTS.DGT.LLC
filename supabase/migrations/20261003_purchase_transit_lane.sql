@@ -168,6 +168,11 @@ ALTER TABLE public.purchase_loading_records DROP CONSTRAINT IF EXISTS purchase_l
 ALTER TABLE public.purchase_loading_records
   ADD CONSTRAINT purchase_loading_records_transport_mode_check CHECK (transport_mode IS NULL OR transport_mode IN ('By Road', 'By Sea', 'By Air', 'By Rail'));
 
+-- Server-side access only (service role), same convention as purchase_loading_records: RLS on, no client policies.
+ALTER TABLE public.purchase_lane_loads ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.purchase_lane_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.purchase_lane_expenses ENABLE ROW LEVEL SECURITY;
+
 COMMENT ON TABLE public.purchase_lane_loads IS
   'General Purchase Lane: one row per physical load/container. Moving a load between lanes/branches/agents never creates stock, revenue or a second purchase record.';
 

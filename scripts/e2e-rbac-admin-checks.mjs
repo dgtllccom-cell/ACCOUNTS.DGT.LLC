@@ -57,7 +57,7 @@ async function call(cookie, path, method = "GET", body) {
   const f = await call(c, `/api/erp/users?userId=${users.branch_deira.userId}`);
   check("scope", "Country Admin opens a user of its own country", f.status === 200, f.status);
   const bc = await login(users.branch_deira.email);
-  const h = await call(bc, "/api/erp/users", "PATCH", { userId: users.finance.userId, fullName: "x" });
+  const h = await call(bc, "/api/erp/users", "PATCH", { userId: users.finance.userId, fullName: "Escalation Attempt" });
   check("escalation", "Branch Admin (not a user manager) cannot edit users", h.status === 403, h.status);
 }
 

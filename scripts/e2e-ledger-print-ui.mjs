@@ -47,7 +47,7 @@ async function session(key) {
     await page.waitForTimeout(2500);
     await page.screenshot({ path: path.join(DIR, "ledger-ui-preview-portrait.png") });
     // orientation toggle in the preview → rebuild
-    await page.getByRole("button", { name: /portrait/i }).first().click();
+    await page.locator("div.fixed.inset-0 button").filter({ hasText: /^\s*(Portrait|Landscape)\s*$/ }).first().click();
     await page.waitForTimeout(1500);
     html = await srcdoc();
     check("preview toggle REBUILDS the landscape layout (12 columns)", html.includes('data-layout="landscape"') && (html.match(/<tr class="cols">([\s\S]*?)<\/tr>/)?.[1].match(/<th/g) ?? []).length === 12, html.includes('data-layout="landscape"'));

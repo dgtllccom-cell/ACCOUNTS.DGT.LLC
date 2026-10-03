@@ -72,17 +72,18 @@ export function PaymentJournalV2Header({
   }, [actionsMenuOpen]);
 
   const currency = stats?.currency || "AED";
-  const formattedBalance = (stats?.bankBalance ?? 521921.27).toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
-  const totalCompanies = stats?.totalCompanies ?? 1;
-  const totalUsers = stats?.totalUsers ?? 5;
-  const totalAccounts = (stats?.totalAccounts ?? 2856).toLocaleString();
-  const ledgerTransactions = (stats?.transactionsInLedger ?? 12430).toLocaleString();
-  const pendingAiReview = stats?.pendingAiReview ?? 18;
-  const aiDocsProcessed = (stats?.aiDocumentsProcessed ?? 1245).toLocaleString();
-  const pendingDocs = stats?.pendingDocuments ?? 42;
+  // Real figures only: a value the caller does not supply renders as "—" (these used to default to fabricated numbers —
+  // a 521,921.27 bank balance, 12,430 ledger transactions, 1,245 AI documents — on every empty/fresh system).
+  const dash = (v: number | undefined | null, money = false) =>
+    v == null || !Number.isFinite(v) ? "—" : money ? v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : v.toLocaleString();
+  const formattedBalance = dash(stats?.bankBalance, true);
+  const totalCompanies = dash(stats?.totalCompanies);
+  const totalUsers = dash(stats?.totalUsers);
+  const totalAccounts = dash(stats?.totalAccounts);
+  const ledgerTransactions = dash(stats?.transactionsInLedger);
+  const pendingAiReview = dash(stats?.pendingAiReview);
+  const aiDocsProcessed = dash(stats?.aiDocumentsProcessed);
+  const pendingDocs = dash(stats?.pendingDocuments);
 
   return (
     <div className="w-full space-y-5 px-6 pt-6 pb-2">

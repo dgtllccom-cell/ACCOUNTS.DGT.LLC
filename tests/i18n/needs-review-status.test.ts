@@ -21,8 +21,9 @@ function templateText(strings: TemplateStringsArray): string {
   return strings.join(" ? ");
 }
 
-vi.mock("@/lib/db/local-postgres", () => ({
-  withLocalPg: vi.fn(async (fn: (sql: any) => Promise<unknown>) => {
+vi.mock("@/lib/db/local-postgres", () => {
+  // the service uses withLocalPg for writes and (since 00961f7) withReadPg for reads — both go to the same fake client
+  const run = async (fn: (sql: any) => Promise<unknown>) => {
     const sql: any = (strings: TemplateStringsArray, ...values: any[]) => {
       if (templateText(strings).includes("upsert_record_translation")) upsertCalls.push(values);
       return Promise.resolve([]);
@@ -30,8 +31,9 @@ vi.mock("@/lib/db/local-postgres", () => ({
     sql.json = (value: unknown) => value;
     await fn(sql);
     return true;
-  }),
-}));
+  };
+  return { withLocalPg: vi.fn(run), withReadPg: vi.fn(run) };
+});
 
 vi.mock("@/lib/i18n/localize-records", () => ({
   lookupApprovedDictionary: vi.fn(async () => null),

@@ -4380,15 +4380,9 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
           if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
         }}
         stats={{
+          // real values only (fabricated bank balance / counts removed)
           currency: (session?.localCurrency || session?.currency || "AED").toUpperCase(),
-          bankBalance: 521921.27,
-          totalCompanies: 1,
-          totalUsers: 5,
-          totalAccounts: ledgers?.length || 2856,
-          transactionsInLedger: 12430,
-          pendingAiReview: 18,
-          aiDocumentsProcessed: 1245,
-          pendingDocuments: 42
+          totalAccounts: ledgers?.length ?? undefined,
         }}
       />
 

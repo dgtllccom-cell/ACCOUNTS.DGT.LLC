@@ -15,7 +15,8 @@ import { setTempSuperAdminSession, setDirectUserSession } from "@/lib/auth/temp-
  *   POST /api/erp/auth/dev-session { "role": "country_admin", "countryId": "<uuid>" }
  */
 function devEnabled() {
-  return (process.env.APP_ENV || "").toLowerCase() === "development" && isDemoAuthEnabled();
+  // explicit opt-in ONLY (a passwordless Super Admin session must never be on just because demo auth is)
+  return (process.env.APP_ENV || "").toLowerCase() === "development" && isDemoAuthEnabled() && process.env.ALLOW_DEV_SESSION === "true";
 }
 
 export async function POST(request: Request) {

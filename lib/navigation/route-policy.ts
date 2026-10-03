@@ -18,7 +18,8 @@ const BASE_ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/dashboard": ["dashboard:read", "route:/dashboard"],
   "/dashboard/smart-operations": ["dashboard:read", "route:/dashboard/smart-operations"],
   "/dashboard/ai-assistant": ["dashboard:read", "route:/dashboard/ai-assistant"],
-  "/dashboard/super-admin": ["dashboard:read", "super_admin", "route:/dashboard/super-admin"],
+  // the global dashboard: Super Admin only (dashboard:read used to let every login through to the page's own redirect)
+  "/dashboard/super-admin": ["super_admin", "route:/dashboard/super-admin"],
   "/dashboard/country": ["dashboard:read", "country_admin", "country_user", "route:/dashboard/country"],
   "/dashboard/city": ["dashboard:read", "main_branch_admin", "city_branch_admin", "staff_user", "accountant", "cashier", "route:/dashboard/city"],
   "/dashboard/logistics": ["shipping_records:read", "route:/dashboard/logistics"],

@@ -322,29 +322,8 @@ export default function JournalStockReportDashboard({
         branches: Object.values(c.branches)
       }));
     }
-    // Executive fallback summary data matching user's ERP standard screenshot
-    return [
-      {
-        country: "PK PAKISTAN",
-        currency: "PKR",
-        purchase: 16721250.00,
-        transferred: 16721250.00,
-        remaining: 0.00,
-        branches: [
-          { branch: "CHAMAN CITY BRANCH", purchase: 16721250.00, transferred: 16721250.00, remaining: 0.00 }
-        ]
-      },
-      {
-        country: "AE UNITED ARAB EMIRATES",
-        currency: "AED",
-        purchase: 4770607350.00,
-        transferred: 4770607350.00,
-        remaining: 0.00,
-        branches: [
-          { branch: "AL RAS", purchase: 4770607350.00, transferred: 4770607350.00, remaining: 0.00 }
-        ]
-      }
-    ];
+    // No records → no summary (an "executive fallback" of fabricated Pakistan/UAE purchase totals used to show here).
+    return [];
   }, [records]);
 
   // Selected group details

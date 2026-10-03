@@ -345,6 +345,7 @@ export function LocalPurchaseView({
 
   // Dual View Mode: "auto" (Super Admin with no country selected shows USD multi-country view; single country shows branch view) | "super_admin" | "single_country"
   const [viewScopeMode, setViewScopeMode] = useState<"auto" | "super_admin" | "single_country">("auto");
+  const [showFullCountryMatrix, setShowFullCountryMatrix] = useState(false);
   const [showTableActionsMenu, setShowTableActionsMenu] = useState(false);
   const [expandedCountryKey, setExpandedCountryKey] = useState<string | null>(null);
   const [openActionRowId, setOpenActionRowId] = useState<string | null>(null);
@@ -685,14 +686,48 @@ export function LocalPurchaseView({
   };
 
   // Derived Country options from canonical countries table (never branch names)
+  // ONLY includes countries that are actually configured with country branches, city branches, or purchases
   const countryOptions = useMemo(() => {
     const options: Array<{ id: string; name: string; code: string; currency: string }> = [];
     const seenKeys = new Set<string>();
 
+    // Sets of configured country identifiers (have branches or recorded transactions)
+    const configuredCountryIds = new Set<string>();
+    const configuredCountryNames = new Set<string>();
+
+    countryBranches.forEach((b: any) => {
+      const cId = b.countryId || b.country_id;
+      if (cId) configuredCountryIds.add(String(cId));
+      const cName = b.countryName || b.country_name;
+      if (cName) configuredCountryNames.add(normalizeCountryKey(cName));
+      if (b.name) configuredCountryNames.add(normalizeCountryKey(b.name));
+    });
+
+    cityBranches.forEach((cb: any) => {
+      const cId = cb.countryId || cb.country_id;
+      if (cId) configuredCountryIds.add(String(cId));
+      const cName = cb.countryName || cb.country_name;
+      if (cName) configuredCountryNames.add(normalizeCountryKey(cName));
+    });
+
+    purchases.forEach((p: any) => {
+      const cId = p.country_id || p.countryId;
+      if (cId) configuredCountryIds.add(String(cId));
+      const cName = p.country_name || p.countryName;
+      if (cName) configuredCountryNames.add(normalizeCountryKey(cName));
+    });
+
+    const isCountryConfigured = (id?: string | null, name?: string | null) => {
+      if (id && configuredCountryIds.has(String(id))) return true;
+      if (name && configuredCountryNames.has(normalizeCountryKey(name))) return true;
+      return false;
+    };
+
     if (countries && countries.length > 0) {
       countries.forEach((c: any) => {
         const key = normalizeCountryKey(c.name || c.iso2 || c.code);
-        if (!seenKeys.has(key)) {
+        // Only include if configured with branches or transactions
+        if (isCountryConfigured(c.id, c.name) && !seenKeys.has(key)) {
           seenKeys.add(key);
           options.push({
             id: String(c.id),
@@ -704,35 +739,35 @@ export function LocalPurchaseView({
       });
     }
 
-    // Standard business countries fallback if not populated
-    const standardDefs = [
-      { name: "United Arab Emirates", code: "AED", currency: "AED" },
-      { name: "Pakistan", code: "PKR", currency: "PKR" },
-      { name: "Afghanistan", code: "AFN", currency: "AFN" },
-      { name: "Iran", code: "IRR", currency: "IRR" },
-      { name: "Uzbekistan", code: "UZS", currency: "UZS" },
-      { name: "India", code: "INR", currency: "INR" },
-      { name: "Oman", code: "OMR", currency: "OMR" },
-    ];
-    standardDefs.forEach(sd => {
-      const key = normalizeCountryKey(sd.name);
-      if (!seenKeys.has(key)) {
+    // Also ensure any country represented in countryBranches is present even if omitted in countries table
+    countryBranches.forEach((b: any) => {
+      const bCountryId = String(b.countryId || b.country_id || "");
+      const bCountryName = b.countryName || b.country_name || (b.name ? b.name.replace(/ Main Branch/i, "").trim() : "");
+      const key = normalizeCountryKey(bCountryName || bCountryId);
+      if (key && !seenKeys.has(key)) {
         seenKeys.add(key);
-        const branchWithCountry = countryBranches.find(b => {
-          const bCName = b.countryName || b.country_name || "";
-          return normalizeCountryKey(bCName) === key;
-        });
         options.push({
-          id: String(branchWithCountry?.countryId || branchWithCountry?.country_id || key),
-          name: sd.name,
-          code: sd.code,
-          currency: sd.currency,
+          id: bCountryId || key,
+          name: bCountryName || key.toUpperCase(),
+          code: b.currency || b.local_currency || "USD",
+          currency: b.currency || b.local_currency || "USD",
         });
       }
     });
 
+    // Fallback: If completely empty (e.g. brand new workspace with 0 branches)
+    if (options.length === 0 && countries && countries.length > 0) {
+      const first = countries[0];
+      options.push({
+        id: String(first.id),
+        name: first.name || "Default Country",
+        code: first.currency_code || first.currency || "USD",
+        currency: first.currency_code || first.currency || "USD",
+      });
+    }
+
     return options;
-  }, [countries, countryBranches]);
+  }, [countries, countryBranches, cityBranches, purchases]);
 
   const activeCountryObj = useMemo(() => {
     if (!selectedCountryId) return null;
@@ -2015,7 +2050,7 @@ export function LocalPurchaseView({
     // Map normalized country key -> country summary object
     const countryMap = new Map<string, any>();
 
-    // 1. Seed from canonical countryOptions
+    // 1. Seed from configured countryOptions
     countryOptions.forEach(opt => {
       const key = normalizeCountryKey(opt.name);
       if (!countryMap.has(key)) {
@@ -2032,12 +2067,14 @@ export function LocalPurchaseView({
           posted: 0,
           draft: 0,
           pending: 0,
+          mainBranches: new Map<string, any>(),
+          cityBranches: new Map<string, any>(),
           branches: new Map<string, any>(),
         });
       }
     });
 
-    // 2. Associate branches into their parent country
+    // 2. Associate countryBranches (Country Main Branches)
     countryBranches.forEach(b => {
       const bCountryId = String(b.countryId || b.country_id || "");
       let target: any = null;
@@ -2053,23 +2090,68 @@ export function LocalPurchaseView({
       }
 
       if (target) {
-        target.branches.set(String(b.id), {
+        const branchObj = {
           id: String(b.id),
           name: b.name || b.code || "Main Branch",
           code: b.code || "—",
+          isMain: b.is_main ?? true,
+          status: b.status || "active",
           billsCount: 0,
           totalAmount: 0,
           paidAmount: 0,
           remainingAmount: 0,
-        });
+        };
+        target.mainBranches.set(String(b.id), branchObj);
+        target.branches.set(String(b.id), branchObj);
       }
     });
 
-    // 3. Accumulate purchases
+    // 3. Associate cityBranches (Business City Branches)
+    cityBranches.forEach(cb => {
+      const cbCountryId = String(cb.countryId || cb.country_id || "");
+      const cbCountryBranchId = String(cb.countryBranchId || cb.country_branch_id || "");
+      let target: any = null;
+      if (cbCountryId) {
+        target = Array.from(countryMap.values()).find(c => String(c.id) === cbCountryId);
+      }
+      if (!target && cbCountryBranchId) {
+        for (const c of countryMap.values()) {
+          if (c.mainBranches.has(cbCountryBranchId) || c.branches.has(cbCountryBranchId)) {
+            target = c;
+            break;
+          }
+        }
+      }
+      if (!target) {
+        const cbCName = cb.countryName || cb.country_name || "";
+        if (cbCName) target = countryMap.get(normalizeCountryKey(cbCName));
+      }
+
+      if (target) {
+        const cityBranchObj = {
+          id: String(cb.id),
+          name: cb.name || cb.branchName || cb.branch_name || "City Branch",
+          code: cb.code || "—",
+          cityName: cb.city_name || cb.cityName || cb.city || "—",
+          countryBranchId: cbCountryBranchId,
+          isBusinessBranch: cb.is_business_branch ?? true,
+          status: cb.status || "active",
+          billsCount: 0,
+          totalAmount: 0,
+          paidAmount: 0,
+          remainingAmount: 0,
+        };
+        target.cityBranches.set(String(cb.id), cityBranchObj);
+        target.branches.set(String(cb.id), cityBranchObj);
+      }
+    });
+
+    // 4. Accumulate purchases
     purchases.forEach((p) => {
       const pCountryId = String(p.country_id || p.countryId || "");
       const pCountryName = String(p.country_name || p.countryName || "");
       const pBranchId = String(p.country_branch_id || p.countryBranchId || "");
+      const pCityBranchId = String(p.city_branch_id || p.cityBranchId || "");
       const st = String(p.status || p.bill_status || "").toLowerCase();
       const curr = p.purchase_currency || p.localCurrency || p.local_currency || "AFN";
       const exRate = Number(p.exchange_rate || p.exchangeRate || 1);
@@ -2085,7 +2167,15 @@ export function LocalPurchaseView({
       }
       if (!targetCountry && pBranchId) {
         for (const c of countryMap.values()) {
-          if (c.branches.has(pBranchId)) {
+          if (c.branches.has(pBranchId) || c.mainBranches.has(pBranchId)) {
+            targetCountry = c;
+            break;
+          }
+        }
+      }
+      if (!targetCountry && pCityBranchId) {
+        for (const c of countryMap.values()) {
+          if (c.cityBranches.has(pCityBranchId)) {
             targetCountry = c;
             break;
           }
@@ -2108,14 +2198,27 @@ export function LocalPurchaseView({
           targetCountry.remainingAmount += cost;
         }
 
-        if (pBranchId && targetCountry.branches.has(pBranchId)) {
-          const br = targetCountry.branches.get(pBranchId);
-          br.billsCount += 1;
-          br.totalAmount += cost;
+        // Accumulate to Main Branch
+        if (pBranchId && targetCountry.mainBranches.has(pBranchId)) {
+          const mbr = targetCountry.mainBranches.get(pBranchId);
+          mbr.billsCount += 1;
+          mbr.totalAmount += cost;
           if (["posted", "accepted", "transferred"].includes(st)) {
-            br.paidAmount += cost;
+            mbr.paidAmount += cost;
           } else {
-            br.remainingAmount += cost;
+            mbr.remainingAmount += cost;
+          }
+        }
+
+        // Accumulate to City Branch
+        if (pCityBranchId && targetCountry.cityBranches.has(pCityBranchId)) {
+          const cbr = targetCountry.cityBranches.get(pCityBranchId);
+          cbr.billsCount += 1;
+          cbr.totalAmount += cost;
+          if (["posted", "accepted", "transferred"].includes(st)) {
+            cbr.paidAmount += cost;
+          } else {
+            cbr.remainingAmount += cost;
           }
         }
       }
@@ -2123,9 +2226,11 @@ export function LocalPurchaseView({
 
     return Array.from(countryMap.values()).map(c => ({
       ...c,
+      mainBranchList: Array.from(c.mainBranches.values()),
+      cityBranchList: Array.from(c.cityBranches.values()),
       branchList: Array.from(c.branches.values()),
     }));
-  }, [countryOptions, countryBranches, purchases]);
+  }, [countryOptions, countryBranches, cityBranches, purchases]);
 
   const activeCountrySummary = useMemo(() => {
     if (!activeCountryObj) return null;
@@ -4729,247 +4834,612 @@ export function LocalPurchaseView({
         /* Dual Mode Table Views: 1. Country / Branch View vs 2. Super Admin USD View */
         <div className="space-y-6 w-full animate-in fade-in duration-200">
           {isSuperAdminView ? (
-            /* ========================================================================= */
-            /* 2. SUPER ADMIN VIEW (ALL COUNTRIES - USD): TWO COMPACT TABLES             */
-            /* ========================================================================= */
             <div className="space-y-6">
-              {/* TABLE 1: COUNTRY WISE PURCHASE SUMMARY (USD) */}
-              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xs overflow-hidden">
-                <div className="flex items-center justify-between gap-3 px-4 py-3 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
-                  <div className="flex items-center gap-2.5">
-                    <div className="h-7 w-7 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
-                      <Building2 className="h-4 w-4" />
-                    </div>
-                    <h3 className="text-xs font-black uppercase text-slate-900 dark:text-slate-100 tracking-wider">
-                      {th("COUNTRY WISE PURCHASE SUMMARY (USD)")}
-                    </h3>
-                  </div>
+              <div className="space-y-4">
+              {/* TOP COUNTRY SELECTOR & ARCHITECTURE BAR */}
+              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-2.5 shadow-2xs flex flex-wrap items-center justify-between gap-2.5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 px-2 flex items-center gap-1.5">
+                    <Globe className="h-3.5 w-3.5 text-blue-600" />
+                    <span>Select Country:</span>
+                  </span>
+
+                  {/* All Countries Pill */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedCountryId("");
+                      setSelectedBranchId("");
+                      setSelectedCityBranchId("");
+                    }}
+                    className={cn(
+                      "px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer border shadow-2xs",
+                      !selectedCountryId
+                        ? "bg-blue-600 text-white border-blue-600 font-extrabold shadow-blue-500/20"
+                        : "bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100"
+                    )}
+                  >
+                    <span>🌐</span>
+                    <span>{tr("All Countries")}</span>
+                    <span className={cn(
+                      "px-1.5 py-0.2 rounded text-[10px] font-mono",
+                      !selectedCountryId ? "bg-white/20 text-white" : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
+                    )}>
+                      {superAdminStats.totalPurchasesCount} bills &middot; ${superAdminStats.totalUsdAmount.toLocaleString()}
+                    </span>
+                  </button>
+
+                  {/* Individual Configured Countries */}
+                  {superAdminCountrySummary.map((c) => {
+                    const isSelected = selectedCountryId === c.id || (activeCountryObj && normalizeCountryKey(activeCountryObj.name) === normalizeCountryKey(c.country));
+
+                    return (
+                      <button
+                        key={c.country}
+                        type="button"
+                        onClick={() => {
+                          if (isSelected) {
+                            setSelectedCountryId("");
+                            setSelectedBranchId("");
+                            setSelectedCityBranchId("");
+                          } else {
+                            setSelectedCountryId(c.id);
+                            setSelectedBranchId("");
+                            setSelectedCityBranchId("");
+                          }
+                        }}
+                        className={cn(
+                          "px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer border shadow-2xs",
+                          isSelected
+                            ? "bg-blue-600 text-white border-blue-600 font-extrabold shadow-blue-500/20"
+                            : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-blue-50/60 dark:hover:bg-slate-800/80"
+                        )}
+                        title={`Click to view ${c.country} branch architecture and purchases`}
+                      >
+                        <span>{getCountryFlag(c.country)}</span>
+                        <span>{c.country}</span>
+                        <span className={cn(
+                          "px-1.5 py-0.2 rounded text-[10px] font-mono",
+                          isSelected ? "bg-white/20 text-white" : "bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300"
+                        )}>
+                          {c.totalPurchases} bills {c.totalPurchases > 0 ? `(${c.currency} ${c.totalAmountLocal.toLocaleString()})` : ""}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
 
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs whitespace-nowrap border-collapse">
-                    <thead className="bg-slate-50/90 dark:bg-slate-800/80 text-[10.5px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700">
-                      <tr>
-                        <th className="px-3 py-2.5 text-center w-10">#</th>
-                        <th className="px-3 py-2.5">{t(lang, "common.country", "COUNTRY")}</th>
-                        <th className="px-3 py-2.5 text-center">{t(lang, "common.code", "CODE")}</th>
-                        <th className="px-3 py-2.5 text-center">{th("TOTAL PURCHASES")}</th>
-                        <th className="px-3 py-2.5 text-right">{th("TOTAL AMOUNT (LOCAL)")}</th>
-                        <th className="px-3 py-2.5 text-right">{th("TOTAL AMOUNT (USD)")}</th>
-                        <th className="px-3 py-2.5 text-center">{th("POSTED")}</th>
-                        <th className="px-3 py-2.5 text-center">{th("DRAFT")}</th>
-                        <th className="px-3 py-2.5 text-center text-red-600">{th("PENDING")}</th>
-                        <th className="px-3 py-2.5 text-center w-16">{t(lang, "common.actions", "ACTIONS")}</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11px]">
-                      {superAdminCountrySummary.map((c, idx) => {
-                        const isExpanded = expandedCountryKey === c.country;
-                        const isSelected = selectedCountryId === c.id || (activeCountryObj && normalizeCountryKey(activeCountryObj.name) === normalizeCountryKey(c.country));
-                        return (
-                          <React.Fragment key={c.country}>
-                            <tr
-                              onClick={() => {
-                                if (isSelected) {
-                                  setSelectedCountryId("");
-                                  setSelectedBranchId("");
-                                } else {
-                                  setSelectedCountryId(c.id);
-                                  setSelectedBranchId("");
-                                }
-                              }}
-                              className={cn(
-                                "hover:bg-blue-50/50 dark:hover:bg-slate-800/60 transition-colors cursor-pointer",
-                                isExpanded && "bg-blue-50/30 dark:bg-blue-950/20 font-semibold",
-                                isSelected && "bg-blue-50/80 dark:bg-blue-950/40 border-l-4 border-l-blue-600 font-bold"
-                              )}
-                              title={`Click to filter bills list below for ${c.country}`}
-                            >
-                              <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-400">
-                                <div className="flex items-center justify-center gap-1">
-                                  {isExpanded ? (
-                                    <ChevronDown className="h-3.5 w-3.5 text-blue-600" />
-                                  ) : (
-                                    <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
-                                  )}
-                                  <span>{idx + 1}</span>
-                                </div>
-                              </td>
-                              <td className="px-3 py-2.5 font-bold text-slate-900 dark:text-slate-100">
-                                <span className="inline-flex items-center gap-1.5">
-                                  <span>{getCountryFlag(c.country)}</span>
-                                  <span>{c.country}</span>
-                                  {isSelected && (
-                                    <span className="px-1.5 py-0.2 rounded text-[9px] font-black uppercase bg-blue-600 text-white">
-                                      Active Filter
-                                    </span>
-                                  )}
-                                </span>
-                              </td>
-                              <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-600 dark:text-slate-400">{c.code}</td>
-                              <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-800 dark:text-slate-200">{c.totalPurchases}</td>
-                              <td className="px-3 py-2.5 text-right font-mono text-slate-700 dark:text-slate-300">
-                                {c.currency} {c.totalAmountLocal.toLocaleString()}
-                              </td>
-                              <td className="px-3 py-2.5 text-right font-mono font-bold text-slate-900 dark:text-slate-100">
-                                $ {c.totalAmountUsd.toLocaleString()}
-                              </td>
-                              <td className="px-3 py-2.5 text-center font-mono font-bold text-emerald-600">{c.posted}</td>
-                              <td className="px-3 py-2.5 text-center font-mono font-bold text-amber-600">{c.draft}</td>
-                              <td className="px-3 py-2.5 text-center font-mono font-bold text-red-600">{c.pending}</td>
-                              <td className="px-3 py-2.5 text-center" onClick={(e) => e.stopPropagation()}>
-                                <div className="flex items-center justify-center gap-1.5">
-                                  <button
-                                    type="button"
-                                    onClick={() => setExpandedCountryKey(prev => prev === c.country ? null : c.country)}
-                                    className="h-6 px-2 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold flex items-center gap-1 transition cursor-pointer"
-                                    title={`Expand ${c.country} details`}
-                                  >
-                                    {isExpanded ? "Collapse" : "Details"}
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      if (isSelected) {
-                                        setSelectedCountryId("");
-                                        setSelectedBranchId("");
-                                      } else {
-                                        setSelectedCountryId(c.id);
-                                        setSelectedBranchId("");
-                                      }
-                                    }}
-                                    className={cn(
-                                      "h-6 px-2 rounded text-[10px] font-bold flex items-center gap-1 transition cursor-pointer border shadow-2xs",
-                                      isSelected
-                                        ? "bg-blue-600 text-white border-blue-600 font-extrabold"
-                                        : "bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-400 border-blue-200/60 dark:border-blue-800"
-                                    )}
-                                    title={`Filter bills below for ${c.country}`}
-                                  >
-                                    <Eye className="h-3 w-3" />
-                                    <span>{isSelected ? "Showing" : "Bills"}</span>
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
+                {/* Right: Toggle Full Country Summary Table if needed */}
+                <button
+                  type="button"
+                  onClick={() => setShowFullCountryMatrix(prev => !prev)}
+                  className={cn(
+                    "px-2.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border shadow-2xs ms-auto",
+                    showFullCountryMatrix
+                      ? "bg-amber-500 text-white border-amber-500 font-black"
+                      : "bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:text-slate-900"
+                  )}
+                  title={tr("Toggle overall country USD summary table")}
+                >
+                  <Building2 className="h-3.5 w-3.5" />
+                  <span>{showFullCountryMatrix ? tr("Hide Summary Matrix") : tr("Country Summary Matrix")}</span>
+                </button>
+              </div>
 
-                            {/* EXPANDABLE DRILLDOWN SUB-ROW */}
-                            {isExpanded && (
-                              <tr className="bg-slate-50/90 dark:bg-slate-800/50 border-y border-slate-200 dark:border-slate-700">
-                                <td colSpan={10} className="p-3.5">
-                                  <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3.5 shadow-xs space-y-3">
-                                    <div className="flex flex-wrap items-center justify-between gap-3 pb-2.5 border-b border-slate-100 dark:border-slate-800">
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-base">{getCountryFlag(c.country)}</span>
-                                        <span className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">
-                                          {c.country} &mdash; Branch Purchases & Balances
-                                        </span>
-                                        <span className="px-2 py-0.5 rounded-full text-[9.5px] font-black uppercase bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
-                                          {c.branchList.length} {c.branchList.length === 1 ? "Branch" : "Branches"}
-                                        </span>
-                                      </div>
-                                      <div className="flex flex-wrap items-center gap-4 text-xs">
-                                        <div className="text-slate-600 dark:text-slate-400">
-                                          Total Purchases: <strong className="font-mono text-slate-900 dark:text-slate-100">{c.currency} {c.totalAmountLocal.toLocaleString()}</strong>
-                                        </div>
-                                        <div className="text-emerald-700 dark:text-emerald-400">
-                                          Paid: <strong className="font-mono">{c.currency} {c.paidAmount.toLocaleString()}</strong>
-                                        </div>
-                                        <div className="text-amber-700 dark:text-amber-400">
-                                          Remaining: <strong className="font-mono">{c.currency} {c.remainingAmount.toLocaleString()}</strong>
-                                        </div>
-                                      </div>
-                                    </div>
+              {/* CONDITIONAL TABLE 1: COUNTRY WISE PURCHASE SUMMARY (USD) */}
+              {showFullCountryMatrix && (
+                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xs overflow-hidden animate-in fade-in">
+                  <div className="flex items-center justify-between gap-3 px-4 py-3 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center gap-2.5">
+                      <div className="h-7 w-7 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
+                        <Building2 className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <h3 className="text-xs font-black uppercase text-slate-900 dark:text-slate-100 tracking-wider">
+                          {th("COUNTRY WISE PURCHASE SUMMARY (USD)")}
+                        </h3>
+                        <p className="text-[10.5px] text-slate-400 font-medium">
+                          Configured business countries & operational branches summary
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowFullCountryMatrix(false)}
+                      className="text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 transition cursor-pointer"
+                    >
+                      ✕ Close Matrix
+                    </button>
+                  </div>
 
-                                    {c.branchList.length === 0 ? (
-                                      <div className="py-4 text-center text-xs text-slate-400">
-                                        No branches registered for {c.country}.
-                                      </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs whitespace-nowrap border-collapse">
+                      <thead className="bg-slate-50/90 dark:bg-slate-800/80 text-[10.5px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700">
+                        <tr>
+                          <th className="px-3 py-2.5 text-center w-10">#</th>
+                          <th className="px-3 py-2.5">{t(lang, "common.country", "COUNTRY")}</th>
+                          <th className="px-3 py-2.5 text-center">{t(lang, "common.code", "CODE")}</th>
+                          <th className="px-3 py-2.5 text-center">{th("TOTAL PURCHASES")}</th>
+                          <th className="px-3 py-2.5 text-right">{th("TOTAL AMOUNT (LOCAL)")}</th>
+                          <th className="px-3 py-2.5 text-right">{th("TOTAL AMOUNT (USD)")}</th>
+                          <th className="px-3 py-2.5 text-center">{th("POSTED")}</th>
+                          <th className="px-3 py-2.5 text-center">{th("DRAFT")}</th>
+                          <th className="px-3 py-2.5 text-center text-red-600">{th("PENDING")}</th>
+                          <th className="px-3 py-2.5 text-center w-16">{t(lang, "common.actions", "ACTIONS")}</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11px]">
+                        {superAdminCountrySummary.map((c, idx) => {
+                          const isExpanded = expandedCountryKey === c.country;
+                          const isSelected = selectedCountryId === c.id || (activeCountryObj && normalizeCountryKey(activeCountryObj.name) === normalizeCountryKey(c.country));
+                          return (
+                            <React.Fragment key={c.country}>
+                              <tr
+                                onClick={() => {
+                                  if (isSelected) {
+                                    setSelectedCountryId("");
+                                    setSelectedBranchId("");
+                                    setSelectedCityBranchId("");
+                                  } else {
+                                    setSelectedCountryId(c.id);
+                                    setSelectedBranchId("");
+                                    setSelectedCityBranchId("");
+                                  }
+                                }}
+                                className={cn(
+                                  "hover:bg-blue-50/50 dark:hover:bg-slate-800/60 transition-colors cursor-pointer",
+                                  isExpanded && "bg-blue-50/30 dark:bg-blue-950/20 font-semibold",
+                                  isSelected && "bg-blue-50/80 dark:bg-blue-950/40 border-l-4 border-l-blue-600 font-bold"
+                                )}
+                                title={`Click to filter bills list below for ${c.country}`}
+                              >
+                                <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-400">
+                                  <div className="flex items-center justify-center gap-1">
+                                    {isExpanded ? (
+                                      <ChevronDown className="h-3.5 w-3.5 text-blue-600" />
                                     ) : (
-                                      <div className="overflow-x-auto">
-                                        <table className="w-full text-left text-xs whitespace-nowrap">
-                                          <thead className="bg-slate-50 dark:bg-slate-800/80 text-[10px] font-black uppercase text-slate-500 border-b border-slate-200 dark:border-slate-700">
-                                            <tr>
-                                              <th className="px-3 py-2">Branch Name</th>
-                                              <th className="px-3 py-2 text-center">Code</th>
-                                              <th className="px-3 py-2 text-center">Total Bills</th>
-                                              <th className="px-3 py-2 text-right">Total Purchase ({c.currency})</th>
-                                              <th className="px-3 py-2 text-right text-emerald-600">Paid Amount</th>
-                                              <th className="px-3 py-2 text-right text-amber-600">Remaining Balance</th>
-                                              <th className="px-3 py-2 text-center">Action</th>
-                                            </tr>
-                                          </thead>
-                                          <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11px]">
-                                            {c.branchList.map((b: any) => (
-                                              <tr key={b.id} className="hover:bg-blue-50/40 dark:hover:bg-slate-800/40">
-                                                <td className="px-3 py-2 font-bold text-slate-800 dark:text-slate-200">{b.name}</td>
-                                                <td className="px-3 py-2 text-center font-mono text-slate-500">{b.code || "—"}</td>
-                                                <td className="px-3 py-2 text-center font-mono font-bold">{b.billsCount}</td>
-                                                <td className="px-3 py-2 text-right font-mono font-bold text-slate-900 dark:text-slate-100">
-                                                  {b.totalAmount.toLocaleString()}
-                                                </td>
-                                                <td className="px-3 py-2 text-right font-mono font-bold text-emerald-600">
-                                                  {b.paidAmount.toLocaleString()}
-                                                </td>
-                                                <td className="px-3 py-2 text-right font-mono font-bold text-amber-600">
-                                                  {b.remainingAmount.toLocaleString()}
-                                                </td>
-                                                <td className="px-3 py-2 text-center">
-                                                  <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                      const matched = countryOptions.find(opt => opt.name.toLowerCase().includes(c.country.toLowerCase()));
-                                                      if (matched) setSelectedCountryId(matched.id);
-                                                      setSelectedBranchId(b.id);
-                                                      setViewScopeMode("single_country");
-                                                    }}
-                                                    className="px-2 py-1 rounded bg-blue-50 hover:bg-blue-100 text-blue-600 text-[10.5px] font-bold transition flex items-center gap-1 mx-auto cursor-pointer"
-                                                  >
-                                                    <Eye className="h-3 w-3" />
-                                                    <span>{tr("View Branch Bills")}</span>
-                                                  </button>
-                                                </td>
-                                              </tr>
-                                            ))}
-                                          </tbody>
-                                        </table>
-                                      </div>
+                                      <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
                                     )}
+                                    <span>{idx + 1}</span>
+                                  </div>
+                                </td>
+                                <td className="px-3 py-2.5 font-bold text-slate-900 dark:text-slate-100">
+                                  <span className="inline-flex items-center gap-1.5">
+                                    <span>{getCountryFlag(c.country)}</span>
+                                    <span>{c.country}</span>
+                                    {isSelected && (
+                                      <span className="px-1.5 py-0.2 rounded text-[9px] font-black uppercase bg-blue-600 text-white">
+                                        Active Filter
+                                      </span>
+                                    )}
+                                  </span>
+                                </td>
+                                <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-600 dark:text-slate-400">{c.code}</td>
+                                <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-800 dark:text-slate-200">{c.totalPurchases}</td>
+                                <td className="px-3 py-2.5 text-right font-mono text-slate-700 dark:text-slate-300">
+                                  {c.currency} {c.totalAmountLocal.toLocaleString()}
+                                </td>
+                                <td className="px-3 py-2.5 text-right font-mono font-bold text-slate-900 dark:text-slate-100">
+                                  $ {c.totalAmountUsd.toLocaleString()}
+                                </td>
+                                <td className="px-3 py-2.5 text-center font-mono font-bold text-emerald-600">{c.posted}</td>
+                                <td className="px-3 py-2.5 text-center font-mono font-bold text-amber-600">{c.draft}</td>
+                                <td className="px-3 py-2.5 text-center font-mono font-bold text-red-600">{c.pending}</td>
+                                <td className="px-3 py-2.5 text-center" onClick={(e) => e.stopPropagation()}>
+                                  <div className="flex items-center justify-center gap-1.5">
+                                    <button
+                                      type="button"
+                                      onClick={() => setExpandedCountryKey(prev => prev === c.country ? null : c.country)}
+                                      className="h-6 px-2 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold flex items-center gap-1 transition cursor-pointer"
+                                      title={`Expand ${c.country} details`}
+                                    >
+                                      {isExpanded ? "Collapse" : "Details"}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        if (isSelected) {
+                                          setSelectedCountryId("");
+                                          setSelectedBranchId("");
+                                          setSelectedCityBranchId("");
+                                        } else {
+                                          setSelectedCountryId(c.id);
+                                          setSelectedBranchId("");
+                                          setSelectedCityBranchId("");
+                                        }
+                                      }}
+                                      className={cn(
+                                        "h-6 px-2 rounded text-[10px] font-bold flex items-center gap-1 transition cursor-pointer border shadow-2xs",
+                                        isSelected
+                                          ? "bg-blue-600 text-white border-blue-600 font-extrabold"
+                                          : "bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-400 border-blue-200/60 dark:border-blue-800"
+                                      )}
+                                      title={`Filter bills below for ${c.country}`}
+                                    >
+                                      <Eye className="h-3 w-3" />
+                                      <span>{isSelected ? "Showing" : "Bills"}</span>
+                                    </button>
                                   </div>
                                 </td>
                               </tr>
-                            )}
-                          </React.Fragment>
+
+                              {/* EXPANDABLE DRILLDOWN SUB-ROW: MAIN BRANCH & CITY BRANCHES */}
+                              {isExpanded && (
+                                <tr className="bg-slate-50/90 dark:bg-slate-800/50 border-y border-slate-200 dark:border-slate-700">
+                                  <td colSpan={10} className="p-3.5">
+                                    <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3.5 shadow-xs space-y-3">
+                                      <div className="flex flex-wrap items-center justify-between gap-3 pb-2.5 border-b border-slate-100 dark:border-slate-800">
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-base">{getCountryFlag(c.country)}</span>
+                                          <span className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">
+                                            {c.country} &mdash; Branch Architecture & Purchases
+                                          </span>
+                                          <span className="px-2 py-0.5 rounded-full text-[9.5px] font-black uppercase bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
+                                            {c.mainBranchList.length} Main &bull; {c.cityBranchList.length} City Branches
+                                          </span>
+                                        </div>
+                                        <div className="flex flex-wrap items-center gap-4 text-xs">
+                                          <div className="text-slate-600 dark:text-slate-400">
+                                            Total Purchases: <strong className="font-mono text-slate-900 dark:text-slate-100">{c.currency} {c.totalAmountLocal.toLocaleString()}</strong>
+                                          </div>
+                                          <div className="text-emerald-700 dark:text-emerald-400">
+                                            Paid: <strong className="font-mono">{c.currency} {c.paidAmount.toLocaleString()}</strong>
+                                          </div>
+                                          <div className="text-amber-700 dark:text-amber-400">
+                                            Remaining: <strong className="font-mono">{c.currency} {c.remainingAmount.toLocaleString()}</strong>
+                                          </div>
+                                        </div>
+                                      </div>
+
+                                      {/* Main Branch & City Branches Subtable */}
+                                      <div className="space-y-2">
+                                        <div className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+                                          1. Country Main Branch
+                                        </div>
+                                        <div className="overflow-x-auto">
+                                          <table className="w-full text-left text-xs whitespace-nowrap">
+                                            <thead className="bg-slate-50 dark:bg-slate-800/80 text-[10px] font-black uppercase text-slate-500 border-b border-slate-200 dark:border-slate-700">
+                                              <tr>
+                                                <th className="px-3 py-2">Branch Name</th>
+                                                <th className="px-3 py-2 text-center">Code</th>
+                                                <th className="px-3 py-2 text-center">Type</th>
+                                                <th className="px-3 py-2 text-center">Total Bills</th>
+                                                <th className="px-3 py-2 text-right">Total Purchase ({c.currency})</th>
+                                                <th className="px-3 py-2 text-center">Action</th>
+                                              </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11px]">
+                                              {c.mainBranchList.map((mb: any) => (
+                                                <tr key={mb.id} className="hover:bg-blue-50/40 dark:hover:bg-slate-800/40">
+                                                  <td className="px-3 py-2 font-bold text-slate-800 dark:text-slate-200">{mb.name}</td>
+                                                  <td className="px-3 py-2 text-center font-mono text-slate-500">{mb.code}</td>
+                                                  <td className="px-3 py-2 text-center">
+                                                    <span className="px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-blue-100 text-blue-700">
+                                                      Main Branch
+                                                    </span>
+                                                  </td>
+                                                  <td className="px-3 py-2 text-center font-mono font-bold">{mb.billsCount}</td>
+                                                  <td className="px-3 py-2 text-right font-mono font-bold text-slate-900 dark:text-slate-100">
+                                                    {mb.totalAmount.toLocaleString()}
+                                                  </td>
+                                                  <td className="px-3 py-2 text-center">
+                                                    <button
+                                                      type="button"
+                                                      onClick={() => {
+                                                        setSelectedCountryId(c.id);
+                                                        setSelectedBranchId(mb.id);
+                                                        setSelectedCityBranchId("");
+                                                      }}
+                                                      className="px-2 py-1 rounded bg-blue-50 hover:bg-blue-100 text-blue-600 text-[10px] font-bold transition cursor-pointer"
+                                                    >
+                                                      Filter Branch
+                                                    </button>
+                                                  </td>
+                                                </tr>
+                                              ))}
+                                            </tbody>
+                                          </table>
+                                        </div>
+
+                                        {c.cityBranchList.length > 0 && (
+                                          <>
+                                            <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 pt-2">
+                                              2. Business City Branches
+                                            </div>
+                                            <div className="overflow-x-auto">
+                                              <table className="w-full text-left text-xs whitespace-nowrap">
+                                                <thead className="bg-slate-50 dark:bg-slate-800/80 text-[10px] font-black uppercase text-slate-500 border-b border-slate-200 dark:border-slate-700">
+                                                  <tr>
+                                                    <th className="px-3 py-2">City Branch Name</th>
+                                                    <th className="px-3 py-2">City</th>
+                                                    <th className="px-3 py-2 text-center">Code</th>
+                                                    <th className="px-3 py-2 text-center">Category</th>
+                                                    <th className="px-3 py-2 text-center">Total Bills</th>
+                                                    <th className="px-3 py-2 text-right">Total Purchase ({c.currency})</th>
+                                                    <th className="px-3 py-2 text-center">Action</th>
+                                                  </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11px]">
+                                                  {c.cityBranchList.map((cb: any) => (
+                                                    <tr key={cb.id} className="hover:bg-blue-50/40 dark:hover:bg-slate-800/40">
+                                                      <td className="px-3 py-2 font-bold text-slate-800 dark:text-slate-200">{cb.name}</td>
+                                                      <td className="px-3 py-2 font-medium text-slate-600 dark:text-slate-400">{cb.cityName}</td>
+                                                      <td className="px-3 py-2 text-center font-mono text-slate-500">{cb.code}</td>
+                                                      <td className="px-3 py-2 text-center">
+                                                        {cb.isBusinessBranch ? (
+                                                          <span className="px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-emerald-100 text-emerald-800">
+                                                            Business City Branch
+                                                          </span>
+                                                        ) : (
+                                                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-slate-200 text-slate-700">
+                                                            Shipping & Clearing
+                                                          </span>
+                                                        )}
+                                                      </td>
+                                                      <td className="px-3 py-2 text-center font-mono font-bold">{cb.billsCount}</td>
+                                                      <td className="px-3 py-2 text-right font-mono font-bold text-slate-900 dark:text-slate-100">
+                                                        {cb.totalAmount.toLocaleString()}
+                                                      </td>
+                                                      <td className="px-3 py-2 text-center">
+                                                        <button
+                                                          type="button"
+                                                          onClick={() => {
+                                                            setSelectedCountryId(c.id);
+                                                            setSelectedCityBranchId(cb.id);
+                                                          }}
+                                                          className="px-2 py-1 rounded bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[10px] font-bold transition cursor-pointer"
+                                                        >
+                                                          Filter City Branch
+                                                        </button>
+                                                      </td>
+                                                    </tr>
+                                                  ))}
+                                                </tbody>
+                                              </table>
+                                            </div>
+                                          </>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </td>
+                                </tr>
+                              )}
+                            </React.Fragment>
+                          );
+                        })}
+
+                        {/* AUTHENTIC DYNAMIC TOTAL ROW */}
+                        <tr className="bg-amber-100/70 dark:bg-amber-950/40 font-black text-[11px] border-t-2 border-amber-300 dark:border-amber-700">
+                          <td className="px-3 py-2.5 text-center font-mono text-slate-500">-</td>
+                          <td className="px-3 py-2.5 font-black text-slate-900 dark:text-slate-100">TOTAL</td>
+                          <td className="px-3 py-2.5 text-center font-mono text-slate-500">-</td>
+                          <td className="px-3 py-2.5 text-center font-mono font-black text-slate-900 dark:text-slate-100">
+                            {superAdminStats.totalPurchasesCount}
+                          </td>
+                          <td className="px-3 py-2.5 text-right font-mono text-slate-500">-</td>
+                          <td className="px-3 py-2.5 text-right font-mono font-black text-slate-900 dark:text-slate-100">
+                            $ {superAdminStats.totalUsdAmount.toLocaleString()}
+                          </td>
+                          <td className="px-3 py-2.5 text-center font-mono font-black text-emerald-700 dark:text-emerald-400">
+                            {superAdminStats.posted}
+                          </td>
+                          <td className="px-3 py-2.5 text-center font-mono font-black text-amber-700 dark:text-amber-400">
+                            {superAdminStats.draft}
+                          </td>
+                          <td className="px-3 py-2.5 text-center font-mono font-black text-red-600">
+                            {superAdminStats.pending}
+                          </td>
+                          <td className="px-3 py-2.5 text-center font-mono text-slate-500">-</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* DEDICATED COUNTRY & BRANCH ARCHITECTURE BREAKDOWN PANEL (When a Country is Selected) */}
+              {activeCountrySummary && (
+                <div className="bg-gradient-to-br from-white to-blue-50/40 dark:from-slate-900 dark:to-slate-800/60 rounded-2xl border border-blue-200/90 dark:border-blue-900/60 p-4 shadow-xs space-y-4 animate-in fade-in duration-200">
+                  {/* Top Header of Country Breakdown */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-blue-100 dark:border-slate-800">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center text-xl shadow-xs">
+                        {getCountryFlag(activeCountrySummary.country)}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-slate-100 tracking-tight">
+                            {activeCountrySummary.country}
+                          </h2>
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                            {activeCountrySummary.currency}
+                          </span>
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                            {activeCountrySummary.mainBranchList.length} Main Branch &bull; {activeCountrySummary.cityBranchList.length} City Branches
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 font-medium">
+                          Country & Branch Operational Architecture &middot; Super Admin Breakdown
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Quick Summary Metrics & Close Action */}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div className="flex items-center gap-3 bg-white dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200/80 dark:border-slate-700 text-xs shadow-2xs font-semibold">
+                        <div>
+                          <span className="text-slate-400 text-[10px] block font-medium">Purchases:</span>
+                          <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{activeCountrySummary.totalPurchases}</span>
+                        </div>
+                        <div className="h-6 w-px bg-slate-200 dark:bg-slate-700" />
+                        <div>
+                          <span className="text-slate-400 text-[10px] block font-medium">Total ({activeCountrySummary.currency}):</span>
+                          <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{activeCountrySummary.totalAmountLocal.toLocaleString()}</span>
+                        </div>
+                        <div className="h-6 w-px bg-slate-200 dark:bg-slate-700" />
+                        <div>
+                          <span className="text-slate-400 text-[10px] block font-medium">USD Value:</span>
+                          <span className="font-mono font-bold text-emerald-600">${activeCountrySummary.totalAmountUsd.toLocaleString()}</span>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedCountryId("");
+                          setSelectedBranchId("");
+                          setSelectedCityBranchId("");
+                        }}
+                        className="h-8 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                        title={tr("Show All Countries")}
+                      >
+                        <X className="h-3.5 w-3.5 text-slate-500" />
+                        <span>{tr("Show All Countries")}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Two-part layout: Main Branch on Left/Top, Business City Branches on Right/Bottom */}
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-3.5">
+                    {/* 1. Country Main Branch Card */}
+                    <div className="md:col-span-5 bg-white dark:bg-slate-800/90 rounded-xl border border-slate-200/90 dark:border-slate-700 p-3.5 shadow-2xs space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="h-6 w-6 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 flex items-center justify-center">
+                            <Building2 className="h-3.5 w-3.5" />
+                          </div>
+                          <span className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                            Country Main Branch
+                          </span>
+                        </div>
+                        <span className="px-1.5 py-0.5 rounded text-[9.5px] font-extrabold uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                          Primary / HQ
+                        </span>
+                      </div>
+
+                      {activeCountrySummary.mainBranchList.map((mbr: any) => {
+                        const isMainSelected = selectedBranchId === mbr.id && !selectedCityBranchId;
+                        return (
+                          <div key={mbr.id} className="p-2.5 rounded-lg border border-slate-100 dark:border-slate-700/60 bg-slate-50/70 dark:bg-slate-900/50 space-y-2">
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">{mbr.name}</h4>
+                                <span className="text-[10px] font-mono text-slate-400 font-semibold">{mbr.code}</span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (isMainSelected) {
+                                    setSelectedBranchId("");
+                                  } else {
+                                    setSelectedBranchId(mbr.id);
+                                    setSelectedCityBranchId("");
+                                  }
+                                }}
+                                className={cn(
+                                  "px-2 py-1 rounded-lg text-[10px] font-bold transition flex items-center gap-1 cursor-pointer",
+                                  isMainSelected
+                                    ? "bg-blue-600 text-white shadow-2xs"
+                                    : "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 border border-slate-200 dark:border-slate-700 hover:bg-blue-50"
+                                )}
+                              >
+                                <Eye className="h-3 w-3" />
+                                <span>{isMainSelected ? "Active Filter" : "Filter Branch"}</span>
+                              </button>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 text-[10.5px] pt-1 border-t border-slate-200/60 dark:border-slate-800 font-semibold">
+                              <div>
+                                <span className="text-slate-400 text-[9.5px] block font-medium">Branch Bills:</span>
+                                <span className="font-mono text-slate-800 dark:text-slate-200">{mbr.billsCount} bills</span>
+                              </div>
+                              <div>
+                                <span className="text-slate-400 text-[9.5px] block font-medium">Branch Purchases:</span>
+                                <span className="font-mono text-slate-800 dark:text-slate-200">{activeCountrySummary.currency} {mbr.totalAmount.toLocaleString()}</span>
+                              </div>
+                            </div>
+                          </div>
                         );
                       })}
+                    </div>
 
-                      {/* AUTHENTIC DYNAMIC TOTAL ROW */}
-                      <tr className="bg-amber-100/70 dark:bg-amber-950/40 font-black text-[11px] border-t-2 border-amber-300 dark:border-amber-700">
-                        <td className="px-3 py-2.5 text-center font-mono text-slate-500">-</td>
-                        <td className="px-3 py-2.5 font-black text-slate-900 dark:text-slate-100">TOTAL</td>
-                        <td className="px-3 py-2.5 text-center font-mono text-slate-500">-</td>
-                        <td className="px-3 py-2.5 text-center font-mono font-black text-slate-900 dark:text-slate-100">
-                          {superAdminStats.totalPurchasesCount}
-                        </td>
-                        <td className="px-3 py-2.5 text-right font-mono text-slate-500">-</td>
-                        <td className="px-3 py-2.5 text-right font-mono font-black text-slate-900 dark:text-slate-100">
-                          $ {superAdminStats.totalUsdAmount.toLocaleString()}
-                        </td>
-                        <td className="px-3 py-2.5 text-center font-mono font-black text-emerald-700 dark:text-emerald-400">
-                          {superAdminStats.posted}
-                        </td>
-                        <td className="px-3 py-2.5 text-center font-mono font-black text-amber-700 dark:text-amber-400">
-                          {superAdminStats.draft}
-                        </td>
-                        <td className="px-3 py-2.5 text-center font-mono font-black text-red-600">
-                          {superAdminStats.pending}
-                        </td>
-                        <td className="px-3 py-2.5 text-center font-mono text-slate-500">-</td>
-                      </tr>
-                    </tbody>
-                  </table>
+                    {/* 2. Business City Branches */}
+                    <div className="md:col-span-7 bg-white dark:bg-slate-800/90 rounded-xl border border-slate-200/90 dark:border-slate-700 p-3.5 shadow-2xs space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="h-6 w-6 rounded-lg bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 flex items-center justify-center">
+                            <Warehouse className="h-3.5 w-3.5" />
+                          </div>
+                          <span className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                            Business City Branches ({activeCountrySummary.cityBranchList.length})
+                          </span>
+                        </div>
+                        {selectedCityBranchId && (
+                          <button
+                            type="button"
+                            onClick={() => setSelectedCityBranchId("")}
+                            className="text-[10px] text-blue-600 hover:underline font-bold cursor-pointer"
+                          >
+                            Clear City Filter
+                          </button>
+                        )}
+                      </div>
+
+                      {activeCountrySummary.cityBranchList.length === 0 ? (
+                        <div className="py-6 text-center text-xs text-slate-400">
+                          No city branches registered under {activeCountrySummary.country}.
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {activeCountrySummary.cityBranchList.map((cb: any) => {
+                            const isCitySelected = selectedCityBranchId === cb.id;
+                            return (
+                              <div
+                                key={cb.id}
+                                onClick={() => setSelectedCityBranchId(isCitySelected ? "" : cb.id)}
+                                className={cn(
+                                  "p-2.5 rounded-lg border transition cursor-pointer flex flex-col justify-between gap-2",
+                                  isCitySelected
+                                    ? "bg-blue-50/90 dark:bg-blue-950/40 border-blue-400 dark:border-blue-600 shadow-2xs"
+                                    : "bg-slate-50/70 dark:bg-slate-900/50 border-slate-100 dark:border-slate-700/60 hover:bg-blue-50/30"
+                                )}
+                              >
+                                <div className="flex items-start justify-between gap-1.5">
+                                  <div>
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      <span className="text-xs font-bold text-slate-900 dark:text-slate-100">{cb.name}</span>
+                                      {cb.isBusinessBranch ? (
+                                        <span className="px-1.5 py-0.2 rounded text-[8.5px] font-black uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                                          Business
+                                        </span>
+                                      ) : (
+                                        <span className="px-1.5 py-0.2 rounded text-[8.5px] font-bold uppercase bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-400">
+                                          Shipping
+                                        </span>
+                                      )}
+                                    </div>
+                                    <span className="text-[10px] text-slate-400 font-medium">
+                                      City: <strong className="text-slate-600 dark:text-slate-300">{cb.cityName}</strong> &middot; <span className="font-mono">{cb.code}</span>
+                                    </span>
+                                  </div>
+                                  {isCitySelected && <Check className="h-4 w-4 text-blue-600 shrink-0" />}
+                                </div>
+
+                                <div className="flex items-center justify-between pt-1 border-t border-slate-200/50 dark:border-slate-800 text-[10px] font-semibold text-slate-600 dark:text-slate-400">
+                                  <span>{cb.billsCount} bills</span>
+                                  <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
+                                    {activeCountrySummary.currency} {cb.totalAmount.toLocaleString()}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
+            </div>
 
               {/* TABLE 2: ALL COUNTRIES LOCAL PURCHASE LIST */}
               <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xs overflow-hidden">

@@ -193,7 +193,7 @@ async function loadBranchDashboardData(
         .order("created_at", { ascending: false })
         .limit(8)),
       q(supabase.from("purchase_orders").select("order_total, payment_status, status").eq(queryField, queryValue).is("deleted_at", null)),
-      q(supabase.from("sales_orders").select("order_total, payment_status, status").eq(queryField, queryValue).is("deleted_at", null)),
+      q(supabase.from("sales_orders").select("order_total, payment_status, sales_status").eq(queryField, queryValue).is("deleted_at", null)),
       q(supabase.from("products").select("id", { count: "exact", head: true }).eq(queryField, queryValue).is("deleted_at", null))
     ]);
 

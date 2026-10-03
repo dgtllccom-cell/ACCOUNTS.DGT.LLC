@@ -64,7 +64,9 @@ for (const [key, plan] of Object.entries(PLAN)) {
 
   if (plan.denied) {
     const d = await page.goto(BASE + plan.denied, { waitUntil: "domcontentloaded", timeout: 120000 }).catch(() => null);
-    menus[key].denied = { url: plan.denied, status: d?.status?.() ?? null };
+    // a page may answer 403 itself or redirect the login to its own dashboard: record both, never only the final 200
+    const first = d?.request()?.redirectedFrom() ? (await d.request().redirectedFrom().response())?.status() : d?.status?.();
+    menus[key].denied = { url: plan.denied, status: first ?? null, finalUrl: new URL(page.url()).pathname };
     await shot(`denied-${plan.rtl}`);
   }
 

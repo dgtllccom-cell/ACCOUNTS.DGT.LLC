@@ -82,20 +82,8 @@ export async function signInWithPassword(formData: FormData) {
 }
 
 export async function enterDashboardPreview() {
-  if (!isDemoAuthEnabled()) {
-    redirect("/auth/login" as Route);
-  }
-
-  const cookieStore = await cookies();
-
-  cookieStore.set("damaan_dashboard_preview", "1", {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 8
-  });
-
-  redirect("/dashboard" as Route);
+  // Retired: dashboard preview without a session is no longer offered.
+  redirect("/auth/login" as Route);
 }
 
 export async function requestPasswordReset(formData: FormData) {
