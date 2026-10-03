@@ -32,9 +32,12 @@ const U = {
   pk_admin: { id: "51b1bd43-b8a7-4664-8542-af197aeb8b6f", email: "pakistan.admin@dgt.llc", name: "PK Admin", role: "country_admin" },
   pk_ops: { id: "c0216850-7b9c-413b-9eaf-d903019d309b", email: "pk.ops@dgt.llc", name: "PK Ops", role: "country_admin" },
   uae_admin: { id: "68318247-a28d-4a2f-a731-877f9d880033", email: "uae.admin@dgt.llc", name: "UAE Admin", role: "country_admin" },
-  chaman_admin: { id: "5785e55c-7937-43c9-851f-4669b097296c", email: "chaman.branch@dgt.llc", name: "Chaman Admin", role: "city_branch_admin" },
+  quetta_admin: { id: "2ccc050f-ea52-499e-a8f9-167d9de7a246", email: "quetta.branch@dgt.llc", name: "Quetta Admin", role: "city_branch_admin" },
+  chaman_ops: { id: "ebf74539-92f5-4099-a2c4-4bc951cd9a1e", email: "chaman.ops@dgt.llc", name: "Chaman Ops", role: "city_branch_admin" },
+  // DISABLED accounts (profile archived, login blocked): a correctly signed token must still get NO session
+  disabled_chaman_admin: { id: "5785e55c-7937-43c9-851f-4669b097296c", email: "chaman.branch@dgt.llc", name: "x", role: "city_branch_admin" },
+  disabled_kandahar: { id: "34e90ea1-2e74-4cf0-b885-006901c9aef9", email: "kandahar.ops@dgt.llc", name: "x", role: "city_branch_admin" },
   quetta_ops: { id: "494454ce-04f9-423a-ae0f-2a1b7639be30", email: "quetta.ops@dgt.llc", name: "Quetta Ops", role: "city_branch_admin" },
-  chaman_entry: { id: "fb907ed5-dd4a-4169-b10c-a01d3b9b4692", email: "usr9261@dgt.llc", name: "Chaman entry", role: "staff_user" },
   chaman_ship: { id: "9b568b89-5541-450d-b3e5-45053cf7364c", email: "chaman.shipping@dgt.llc", name: "Chaman Ship", role: "city_branch_admin" },
   agent: { id: "3f55c3ba-90fb-4243-8efe-08aa3dccf326", email: "usr7420@dgt.llc", name: "Agent", role: "agent_user" },
   alras_admin: { id: "84644d2f-8f15-4377-9c99-d360da7131de", email: "alras.shipping@dgt.llc", name: "Al Ras Admin", role: "city_branch_admin" },
@@ -88,8 +91,14 @@ await deny("pk_ops", "/api/erp/money-exchange", "operations: money exchange 403"
 await deny("pk_ops", "/api/erp/accounting/reports/ledger/ledgers?reportScope=country", "operations: ledger API 403");
 await allow("pk_ops", "/dashboard/logistics", "operations: logistics allowed");
 await deny("quetta_ops", "/dashboard/roznamcha/cash-entry", "Quetta ops: cash entry 403");
-await deny("chaman_admin", `/api/erp/money-exchange?branchId=${QUETTA}`, "Chaman admin: Quetta money exchange 403");
-await deny("chaman_admin", "/dashboard/super-admin", "Chaman admin: global dashboard blocked");
+await deny("quetta_admin", `/api/erp/money-exchange?branchId=${ALRAS}`, "Quetta admin: Al Ras money exchange 403");
+await deny("quetta_admin", "/dashboard/super-admin", "Quetta admin: global dashboard blocked");
+await deny("chaman_ops", "/dashboard/ledger/detailed", "Chaman ops: ledger 403");
+await allow("chaman_ops", "/dashboard/logistics", "Chaman ops: logistics allowed");
+for (const who of ["disabled_chaman_admin", "disabled_kandahar"]) {
+  const r = await get(mint(U[who]), "/api/erp/auth/session");
+  check(who, "users", "disabled account: signed token gets no session", r.status !== 200 || !r.json?.data?.user?.id, r.status);
+}
 await deny("chaman_ship", "/dashboard/ledger/detailed", "shipping line: ledger 403");
 await deny("chaman_ship", "/api/erp/expenses", "shipping line: expenses 403");
 await deny("agent", "/api/erp/money-exchange", "clearing agent: money exchange 403");
@@ -101,8 +110,8 @@ const lineIds = (sl.json?.data?.shippingLines ?? []).map((l) => l.id);
 check("chaman_ship", "rbac", "shipping-lines list = own line only", sl.status === 200 && lineIds.length === 1 && lineIds[0] === "d122bcf3-4f2e-4db3-b564-15a50cdd74bb", lineIds);
 const alrasSes = await get(mint(U.alras_admin), "/api/erp/auth/session");
 check("alras_admin", "rbac", "Al Ras admin is a business (not shipping) login", alrasSes.status === 200 && JSON.stringify(alrasSes.json?.data?.scopes?.operationalDomains ?? []) === '["business"]', alrasSes.json?.data?.scopes?.operationalDomains);
-const ent = await get(mint(U.chaman_entry), "/api/erp/auth/session");
-check("chaman_entry", "rbac", "Chaman data-entry user scoped to Chaman only", ent.status === 200 && JSON.stringify(ent.json?.data?.scopes?.cityBranchIds) === JSON.stringify([CHAMAN]), ent.json?.data?.scopes?.cityBranchIds);
+const ops = await get(mint(U.chaman_ops), "/api/erp/auth/session");
+check("chaman_ops", "rbac", "Chaman ops scoped to the Chaman Shipping branch only", ops.status === 200 && JSON.stringify(ops.json?.data?.scopes?.cityBranchIds) === JSON.stringify(["fe96248b-1c3f-4706-a78e-3015026fe846"]), ops.json?.data?.scopes?.cityBranchIds);
 
 // 4. five languages render (RTL for ur/ar/fa/ps) on the live landing dashboard
 for (const lang of ["en", "ur", "ar", "fa", "ps"]) {
