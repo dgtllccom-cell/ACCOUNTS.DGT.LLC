@@ -1,61 +1,26 @@
 "use client";
 
-import { VerificationChecksPanel } from "@/features/document-intelligence/components/verification-checks-panel";
+/**
+ * AI Document Intake / Scan-to-Entry.
+ *
+ * One compact setup (in this order):  1. Country · Main Branch · City Branch (within the user's permissions)
+ *                                     2. "Which module should this document be entered into?"
+ *                                     3. Upload a document OR pick one that is already uploaded
+ * then the module-aware review workspace (original document beside the module's own editable fields).
+ * The module the user picks — never the document's title — decides the form, the accounts and the save
+ * destination. Nothing here posts, pays or transfers anything.
+ */
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import {
-  Loader2,
-  UploadCloud,
-  RefreshCw,
-  FileText,
-  ShieldAlert,
-  CheckCircle2,
-  X,
-  ChevronLeft,
-  ChevronRight,
-  Play,
-  Ban,
-  Link2,
-  AlertTriangle,
-  Package,
-  Receipt,
-  Camera,
-  ExternalLink,
-  Globe,
-  Building2,
-  MapPin,
-  Compass,
-  ArrowRight,
-  Download,
-  Search,
-  ZoomIn,
-  ZoomOut,
-  RotateCw,
-  Maximize2,
-  Check,
-  Briefcase,
-  Ship,
-  Sparkles,
-  HelpCircle,
-  Bell,
-  User,
-  Sliders,
-  Plus,
-  Trash2,
-  Calendar,
-  DollarSign,
-  Layers,
-  Edit3,
-  ShieldCheck,
-  Clock,
-  KeyRound,
+  Loader2, UploadCloud, RefreshCw, FileText, ShieldAlert, CheckCircle2, X, Link2, AlertTriangle, Camera, Globe, Building2, MapPin,
+  ArrowRight, Search, Ban, Layers, Sparkles, Trash2, Lock,
 } from "lucide-react";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { isNativeApp, captureDocumentPhoto } from "@/lib/mobile/native-bridge";
-import { apiGet, apiPost, apiPatch } from "@/lib/api/client";
-import { Th } from "@/components/ui/translated-th";
-import { DRAFT_PREFILL_KEY } from "@/features/document-intelligence/components/entry-method-selector";
-import { CrossLanguageReviewer } from "@/components/cross-language-reviewer";
+import { apiGet, apiPatch } from "@/lib/api/client";
+import { IntakeReviewWorkspace } from "@/features/document-intelligence/components/intake-review-workspace";
+import { INTAKE_MODULES, INTAKE_MODULE_GROUPS, getIntakeModule, moduleForTarget, resolveModule, type IntakeModule } from "@/lib/document-intelligence/intake-modules";
 
 type Row = Record<string, any>;
 
@@ -75,354 +40,123 @@ const STATUS_TONE: Record<string, string> = {
 };
 
 const COUNTRY_FLAGS: Record<string, string> = {
-  ae: "🇦🇪",
-  uae: "🇦🇪",
-  "united arab emirates": "🇦🇪",
-  af: "🇦🇫",
-  afghanistan: "🇦🇫",
-  pk: "🇵🇰",
-  pakistan: "🇵🇰",
-  ir: "🇮🇷",
-  iran: "🇮🇷",
-  qa: "🇶🇦",
-  qatar: "🇶🇦",
-  sa: "🇸🇦",
-  "saudi arabia": "🇸🇦",
-  om: "🇴🇲",
-  oman: "🇴🇲",
-  cn: "🇨🇳",
-  china: "🇨🇳",
-  us: "🇺🇸",
-  usa: "🇺🇸",
-  gb: "🇬🇧",
-  uk: "🇬🇧",
+  ae: "🇦🇪", "united arab emirates": "🇦🇪", af: "🇦🇫", afghanistan: "🇦🇫", pk: "🇵🇰", pakistan: "🇵🇰", ir: "🇮🇷", iran: "🇮🇷",
+  qa: "🇶🇦", qatar: "🇶🇦", sa: "🇸🇦", "saudi arabia": "🇸🇦", om: "🇴🇲", oman: "🇴🇲", cn: "🇨🇳", china: "🇨🇳", us: "🇺🇸", usa: "🇺🇸", gb: "🇬🇧", uk: "🇬🇧",
 };
-
-function getFlagEmoji(countryName?: string | null): string {
-  if (!countryName) return "🌐";
-  const lower = countryName.toLowerCase().trim();
-  return COUNTRY_FLAGS[lower] || "🌐";
-}
-
-// Canonical ERP destination metadata
-export function getDestinationInfo(targetModule?: string | null, s?: ReturnType<typeof useErpScreen>) {
-  switch (targetModule) {
-    case "account_master":
-    case "accounts":
-      return {
-        moduleName: s ? s.t("purpose_account_master", "Chart of Accounts / New Account Entry") : "Chart of Accounts / New Account Entry",
-        menuPath: "Sidebar → New Entry → Accounts → New Account Setup",
-        routeUrl: "/dashboard/accounts/setup",
-        category: "Masters & Setup",
-      };
-    case "purchase_orders":
-      return {
-        moduleName: s ? s.t("purpose_purchase", "Purchase (New / Existing)") : "Purchase Booking Order",
-        menuPath: "Sidebar → Trade → New Purchase Booking Order",
-        routeUrl: "/dashboard/purchase/new-purchase-booking-order",
-        category: "Trade",
-      };
-    case "sales_orders":
-      return {
-        moduleName: s ? s.t("purpose_sales", "Sales (New / Existing)") : "Sale Order Booking",
-        menuPath: "Sidebar → Trade → New Sales Booking Order",
-        routeUrl: "/dashboard/sales/new-sales-booking-order",
-        category: "Trade",
-      };
-    case "purchase_loading_records":
-      return {
-        moduleName: s ? s.t("purpose_loading", "Purchase Loading / Receiving") : "Purchase Loading Records",
-        menuPath: "Sidebar → Trade → Purchase Loading",
-        routeUrl: "/dashboard/purchase-loading-records",
-        category: "Trade",
-      };
-    case "roznamcha_entries":
-      return {
-        moduleName: s ? s.t("purpose_payment", "Payment / Cash / Bank Roznamcha") : "Cash / Bank Roznamcha",
-        menuPath: "Sidebar → Finance → Roznamcha Cash Entry",
-        routeUrl: "/dashboard/roznamcha/cash-entry",
-        category: "Finance",
-      };
-    case "expenses":
-    case "bill_expense_line":
-      return {
-        moduleName: s ? s.t("purpose_expense", "Expense Bill") : "Expense Bill Entry",
-        menuPath: "Sidebar → Finance → Expenses",
-        routeUrl: "/dashboard/expenses",
-        category: "Finance",
-      };
-    case "shipping_bl_records":
-      return {
-        moduleName: s ? s.t("purpose_shipping", "Shipping / Bill of Lading") : "Shipping Line / Bill of Lading",
-        menuPath: "Sidebar → Logistics → Shipping Line",
-        routeUrl: "/dashboard/shipping-line",
-        category: "Logistics",
-      };
-    case "clearing_agent_custom_entries":
-      return {
-        moduleName: s ? s.t("purpose_clearing", "Clearing / Customs Entry") : "Clearing Agent / Customs Entry",
-        menuPath: "Sidebar → Logistics → Clearing Agent",
-        routeUrl: "/dashboard/clearing-agent",
-        category: "Logistics",
-      };
-    case "companies":
-      return {
-        moduleName: s ? s.t("purpose_company", "Company / Entity") : "Company / Entity Setup",
-        menuPath: "Sidebar → Masters → Companies",
-        routeUrl: "/dashboard/companies/new",
-        category: "Masters",
-      };
-    case "customers":
-      return {
-        moduleName: s ? s.t("purpose_customer", "Customer / Person KYC") : "Customer / Person KYC Setup",
-        menuPath: "Sidebar → Masters → Customers",
-        routeUrl: "/dashboard/crm/customers/new",
-        category: "Masters",
-      };
-    case "employees":
-      return {
-        moduleName: s ? s.t("purpose_employee", "Employee / HR Record") : "Employee / HR Record",
-        menuPath: "Sidebar → HR & Payroll → Employees",
-        routeUrl: "/dashboard/employees",
-        category: "HR & Payroll",
-      };
-    case "banks":
-      return {
-        moduleName: s ? s.t("purpose_bank", "Bank Account") : "Bank Account Setup",
-        menuPath: "Sidebar → Masters → Chart of Accounts",
-        routeUrl: "/dashboard/accounts/setup",
-        category: "Masters",
-      };
-    default:
-      return {
-        moduleName: targetModule || "Purchase Booking",
-        menuPath: "Sidebar → Trade → New Purchase Booking Order",
-        routeUrl: "/dashboard/purchase/new-purchase-booking-order",
-        category: "Trade",
-      };
-  }
-}
-
-// Scoped modules per domain
-const BUSINESS_MODULES = [
-  { id: "purchase_orders", name: "Purchase", target: "purchase_orders", icon: Briefcase, desc: "Purchase order, commercial invoice, raw material contract" },
-  { id: "purchase_loading_records", name: "Purchase Booking", target: "purchase_loading_records", icon: Package, desc: "Booking contract, shipping advice, container allocation" },
-  { id: "sales_orders", name: "Sale", target: "sales_orders", icon: DollarSign, desc: "Sales invoice, sales contract, commercial agreement" },
-  { id: "sales_booking", name: "Sale Booking", target: "sales_orders", icon: DollarSign, desc: "Proforma invoice, order confirmation, advance booking" },
-  { id: "local_purchase", name: "Local Purchase", target: "purchase_orders", icon: Briefcase, desc: "Domestic vendor invoice, local procurement" },
-  { id: "local_sale", name: "Local Sale", target: "sales_orders", icon: DollarSign, desc: "Local customer bill, domestic supply" },
-  { id: "roznamcha_entries", name: "Cash Entry", target: "roznamcha_entries", icon: Receipt, desc: "Cash voucher, daily payment, counter receipt" },
-  { id: "payment", name: "Payment", target: "roznamcha_entries", icon: Receipt, desc: "Vendor payment, bank transfer advice, supplier receipt" },
-  { id: "receipt", name: "Receipt", target: "roznamcha_entries", icon: Receipt, desc: "Customer collection, advance receipt, cash slip" },
-  { id: "banks", name: "Bank", target: "banks", icon: Building2, desc: "Bank statement, bank advice, deposit slip" },
-  { id: "companies", name: "Company", target: "companies", icon: Building2, desc: "Trade license, incorporation certificate, memorandum" },
-  { id: "customers", name: "Customer / Supplier", target: "customers", icon: User, desc: "KYC document, passport, Emirates ID, VAT certificate" },
-  { id: "warehouses", name: "Warehouse", target: "account_master", icon: Package, desc: "Warehouse receipt, storage agreement, gate pass" },
-  { id: "transport", name: "Truck / Transport", target: "account_master", icon: Ship, desc: "Bilty, truck waybill, transport receipt" },
-  { id: "expenses", name: "Expense", target: "expenses", icon: Receipt, desc: "Utility bill, rent agreement, office expense" },
-  { id: "journal", name: "Journal", target: "roznamcha_entries", icon: Layers, desc: "General journal voucher, adjustment entry" },
-  { id: "account_master", name: "Account / Ledger", target: "account_master", icon: Layers, desc: "Chart of accounts, ledger statement, khaata page" },
-  { id: "other", name: "Other", target: "other_document", icon: FileText, desc: "General correspondence, unstructured agreement" },
-];
-
-const SHIPPING_MODULES = [
-  { id: "shipping_bl_records", name: "BL (Bill of Lading)", target: "shipping_bl_records", icon: Ship, desc: "Ocean B/L, Master B/L, House B/L, Sea Waybill" },
-  { id: "container", name: "Container", target: "shipping_bl_records", icon: Package, desc: "Container tracking, stuffing sheet, EIR, gate in/out" },
-  { id: "clearing_agent_custom_entries", name: "Customs / Clearing", target: "clearing_agent_custom_entries", icon: ShieldCheck, desc: "Customs declaration, clearance bill, duty receipt" },
-  { id: "shipping_line", name: "Shipping Line", target: "shipping_bl_records", icon: Ship, desc: "Delivery order (DO), freight invoice, detention bill" },
-  { id: "clearing_agent", name: "Clearing Agent", target: "clearing_agent_custom_entries", icon: User, desc: "Agent billing, terminal charges, clearance summary" },
-  { id: "import", name: "Import", target: "shipping_bl_records", icon: Ship, desc: "Import consignment, manifest, arrival notice" },
-  { id: "export", name: "Export", target: "shipping_bl_records", icon: Ship, desc: "Export shipping bill, certificate of origin, packing list" },
-  { id: "transit", name: "Transit", target: "shipping_bl_records", icon: Ship, desc: "Cross-border transit document, bond transit permit" },
-  { id: "by_sea", name: "By Sea", target: "shipping_bl_records", icon: Ship, desc: "Ocean vessel cargo, port handling documents" },
-  { id: "by_road", name: "By Road", target: "shipping_bl_records", icon: Ship, desc: "CMR, international truck consignment note" },
-  { id: "by_air", name: "By Air", target: "shipping_bl_records", icon: Ship, desc: "Air Waybill (AWB), airport clearance advice" },
-  { id: "customer_order", name: "Customer Order", target: "sales_orders", icon: DollarSign, desc: "Shipping customer consignment booking order" },
-  { id: "port", name: "Port", target: "shipping_bl_records", icon: Compass, desc: "Port authority bill, wharfage receipt, stevedoring" },
-  { id: "truck_route", name: "Truck / Route", target: "shipping_bl_records", icon: Compass, desc: "Border crossing receipt, highway toll, route permit" },
-  { id: "delivery", name: "Delivery", target: "shipping_bl_records", icon: Package, desc: "Proof of delivery (POD), receiver goods receipt" },
-  { id: "shipping_expense", name: "Shipping Expense", target: "bill_expense_line", icon: Receipt, desc: "Ocean freight bill, demurrage invoice, port fee" },
-  { id: "customer_expense", name: "Customer Expense", target: "bill_expense_line", icon: Receipt, desc: "Client-reimbursable shipping / clearing expense" },
-  { id: "other_shipping", name: "Other", target: "other_document", icon: FileText, desc: "Miscellaneous logistics paperwork" },
-];
+const flag = (name?: string | null) => (name ? COUNTRY_FLAGS[name.toLowerCase().trim()] ?? "🌐" : "🌐");
 
 export function DocumentIntakeCenter({ lang }: { lang?: string }) {
   const s = useErpScreen("dintake", lang);
-  const router = useRouter();
+  const T = useCallback((k: string, fb: string) => s.t("x_" + k, fb), [s]);
 
-  // Mode: "wizard" (5-step interactive workflow) vs "queue" (audit table of past jobs)
-  const [activeTab, setActiveTab] = useState<"wizard" | "queue">("wizard");
+  const [tab, setTab] = useState<"intake" | "queue">("intake");
+  const [reviewJobId, setReviewJobId] = useState<string | null>(null);
+  const [reviewModuleId, setReviewModuleId] = useState<string | null>(null);
 
-  // Wizard Step State — a real session always starts at Step 1 (Upload)
-  const [wizardStep, setWizardStep] = useState<1 | 2 | 3 | 4 | 5>(1);
-
-  // File Upload State
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [file, setFile] = useState<File | null>(null);
-  const [fileDetails, setFileDetails] = useState<{
-    name: string;
-    sizeFormatted: string;
-    pages: number;
-    type: string;
-  } | null>(null);
-
-  // Step 1: Domain State
-  const [domain, setDomain] = useState<"business" | "shipping" | null>(null);
-
-  // Step 2: Role-based Location Scope State
+  // 1. scope
   const [sessionData, setSessionData] = useState<any>(null);
-  const [countries, setCountries] = useState<Array<{ id: string; name: string; code?: string }>>([]);
+  const [countries, setCountries] = useState<Array<{ id: string; name: string }>>([]);
   const [countryBranches, setCountryBranches] = useState<Array<{ id: string; name: string; code?: string }>>([]);
   const [cityBranches, setCityBranches] = useState<Array<{ id: string; name: string; code?: string }>>([]);
-  const [countryId, setCountryId] = useState<string>("");
-  const [countryBranchId, setCountryBranchId] = useState<string>("");
-  const [cityBranchId, setCityBranchId] = useState<string>("");
+  const [countryId, setCountryId] = useState("");
+  const [countryBranchId, setCountryBranchId] = useState("");
+  const [cityBranchId, setCityBranchId] = useState("");
 
-  // Step 3: ERP Module State
-  const [selectedModuleId, setSelectedModuleId] = useState<string>("purchase_orders");
-  const [targetModule, setTargetModule] = useState<string>("purchase_orders");
+  // 2. module
+  const [moduleId, setModuleId] = useState("");
 
-  // Step 4: Dynamic Accounting / Entity Parameters State
-  const [chartAccounts, setChartAccounts] = useState<any[]>([]);
-  const [purchaseAccountId, setPurchaseAccountId] = useState<string>("");
-  const [payableAccountId, setPayableAccountId] = useState<string>("");
-  const [salesAccountId, setSalesAccountId] = useState<string>("");
-  const [receivableAccountId, setReceivableAccountId] = useState<string>("");
-  const [debitAccountId, setDebitAccountId] = useState<string>("");
-  const [creditAccountId, setCreditAccountId] = useState<string>("");
-  const [entryType, setEntryType] = useState<"both" | "debit" | "credit">("both");
-  const [bankAccountId, setBankAccountId] = useState<string>("");
-  const [blReference, setBlReference] = useState<string>("");
-  const [containerReference, setContainerReference] = useState<string>("");
-  const [contractReference, setContractReference] = useState<string>("");
-  const [documentReference, setDocumentReference] = useState<string>("");
+  // 3. document
+  const [docMode, setDocMode] = useState<"upload" | "existing">("upload");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [existing, setExisting] = useState<Row[]>([]);
+  const [existingId, setExistingId] = useState("");
+  const [existingSearch, setExistingSearch] = useState("");
 
-  // Step 5 / Step 6: AI Extraction & Review State
-  const [activeJobId, setActiveJobId] = useState<string | null>(null);
-  const [jobData, setJobData] = useState<{
-    job: Row;
-    fields: Row[];
-    lineItems: Row[];
-    matches: Row[];
-    events: Row[];
-  } | null>(null);
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
-  const [processingStatusText, setProcessingStatusText] = useState<string>("");
-  const [editFieldsModalOpen, setEditFieldsModalOpen] = useState<boolean>(false);
+  const [busy, setBusy] = useState(false);
+  const [busyText, setBusyText] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
-  // Editable Form State in Split View — populated only from real extraction results
-  const [formData, setFormData] = useState<Record<string, any>>({
-    docType: "",
-    contractNo: "",
-    documentDate: "",
-    supplierName: "",
-    buyerName: "",
-    currency: "USD",
-    totalAmount: "",
-    reference: "",
-    paymentTerms: "",
-    deliveryTerms: "",
-    notes: "",
-  });
-  const [activeFormTab, setActiveFormTab] = useState<"basic" | "items" | "payment" | "additional" | "notes">("basic");
-  const [activeDocTab, setActiveDocTab] = useState<"preview" | "ocr" | "extracted" | "logs">("preview");
-
-  // Document Viewer Controls
-  const [zoomLevel, setZoomLevel] = useState<number>(100);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [rotation, setRotation] = useState<number>(0);
-  const [showThumbnails, setShowThumbnails] = useState<boolean>(true);
-
-  // Toast / Confirmation notification
-  const [toast, setToast] = useState<{ show: boolean; draftNo: string; message: string; targetModule: string } | null>(null);
-  // Visible, non-native error banner — every failure surfaced here must also
-  // be genuinely visible; a silent console.warn or an easily-dismissed native
-  // alert() looks identical to "nothing happened" from the user's side.
-  const [actionError, setActionError] = useState<string | null>(null);
-
-  // Queue state
+  // queue
   const [queueRows, setQueueRows] = useState<Row[]>([]);
   const [kpis, setKpis] = useState<Record<string, number>>({});
-  const [queueLoading, setQueueLoading] = useState<boolean>(false);
-  const [queueSearch, setQueueSearch] = useState<string>("");
-  const [queueStatusFilter, setQueueStatusFilter] = useState<string>("");
+  const [queueLoading, setQueueLoading] = useState(false);
+  const [queueSearch, setQueueSearch] = useState("");
+  const [queueStatusFilter, setQueueStatusFilter] = useState("");
 
-  // Auto-dismiss toast
-  useEffect(() => {
-    if (!toast?.show) return;
-    const t = setTimeout(() => setToast((prev) => (prev ? { ...prev, show: false } : null)), 10000);
-    return () => clearTimeout(t);
-  }, [toast?.show]);
+  const isSuperAdmin = Boolean(sessionData?.scopes?.isSuperAdmin || sessionData?.roles?.includes("super_admin") || sessionData?.scopes?.summary?.level === "global");
+  const isCountryLevel = Boolean(sessionData?.roles?.includes("country_admin") || sessionData?.roles?.includes("country_user") || sessionData?.scopes?.summary?.level === "country");
+  const isBranchAdmin = Boolean(sessionData?.roles?.includes("branch_admin") || sessionData?.roles?.includes("main_branch_admin") || sessionData?.roles?.includes("main_branch_user"));
+  const lockCountry = !isSuperAdmin;
+  const lockMain = !(isSuperAdmin || isCountryLevel);
+  const lockCity = !(isSuperAdmin || isCountryLevel || isBranchAdmin);
 
-  // Initial Scope & Session Loader
+  const allowedDomains: string[] | null = useMemo(() => {
+    const d = sessionData?.scopes?.operationalDomains;
+    return Array.isArray(d) && d.length ? d : null;
+  }, [sessionData]);
+  const modules = useMemo(() => INTAKE_MODULES.filter((m) => !allowedDomains || allowedDomains.includes(m.domain) || allowedDomains.includes("both")), [allowedDomains]);
+  const chosen: IntakeModule | null = getIntakeModule(moduleId);
+
+  // ── scope loading ─────────────────────────────────────────────────────────────────────────────────
+  const loadCityBranches = useCallback(async (bid: string) => {
+    if (!bid) { setCityBranches([]); return; }
+    try {
+      const r = await apiGet<{ cityBranches: any[] }>(`/api/branch-management/city-branches?countryBranchId=${bid}`);
+      setCityBranches(r?.cityBranches ?? []);
+    } catch { setCityBranches([]); }
+  }, []);
+
+  const loadCountryBranches = useCallback(async (cid: string) => {
+    if (!cid) { setCountryBranches([]); return; }
+    try {
+      const r = await apiGet<{ countryBranches: any[] }>(`/api/branch-management/country-branches?countryId=${cid}`);
+      setCountryBranches(r?.countryBranches ?? []);
+    } catch { setCountryBranches([]); }
+  }, []);
+
   useEffect(() => {
-    async function initScope() {
+    (async () => {
       try {
         const [sess, cList] = await Promise.all([
           apiGet<any>("/api/erp/auth/session").catch(() => null),
           apiGet<{ countries: Array<{ id: string; name: string }> }>("/api/branch-management/countries").catch(() => ({ countries: [] })),
         ]);
         setSessionData(sess);
-        const cl = cList?.countries ?? [];
-        setCountries(cl);
+        setCountries(cList?.countries ?? []);
+        const sum = sess?.scopes?.summary ?? {};
+        // Super Admin has no home country — leave blank rather than silently pre-selecting one.
+        const cid: string = sum.countryId || sum.branchCountryId || sess?.scopes?.countryIds?.[0] || "";
+        const mb: string = sum.countryBranchId || sess?.scopes?.countryBranchIds?.[0] || "";
+        const cb: string = sum.cityBranchId || sess?.scopes?.cityBranchIds?.[0] || "";
+        if (cid) { setCountryId(cid); await loadCountryBranches(cid); }
+        if (mb) { setCountryBranchId(mb); await loadCityBranches(mb); }
+        if (cb) setCityBranchId(cb);
+      } catch (e) { console.warn("Scope init notice:", e); }
+    })();
+  }, [loadCountryBranches, loadCityBranches]);
 
-        const assignedCountryId = sess?.scopes?.summary?.countryId || (sess?.scopes?.countryIds && sess.scopes.countryIds[0]);
-        const assignedBranchId = sess?.scopes?.summary?.countryBranchId || sess?.scopes?.summary?.cityBranchId || (sess?.scopes?.countryBranchIds && sess.scopes.countryBranchIds[0]);
+  const pickCountry = async (cid: string) => {
+    setCountryId(cid); setCountryBranchId(""); setCityBranchId(""); setCityBranches([]);
+    await loadCountryBranches(cid);
+  };
+  const pickMain = async (bid: string) => {
+    setCountryBranchId(bid); setCityBranchId("");
+    await loadCityBranches(bid);
+  };
 
-        // Super Admin has no home country — silently defaulting to cl[0] (the
-        // first country returned, e.g. Afghanistan) pre-selected a country the
-        // admin never chose and scoped every subsequent account/goods lookup
-        // to it. Leave it blank; the dropdown above is already fully editable
-        // for Super Admin, so this only removes an incorrect default.
-        const initCid = assignedCountryId || "";
-        if (initCid) {
-          setCountryId(initCid);
-          const brRes = await apiGet<{ countryBranches: any[] }>(`/api/branch-management/country-branches?countryId=${initCid}`).catch(() => ({ countryBranches: [] }));
-          setCountryBranches(brRes?.countryBranches ?? []);
-        }
-        if (assignedBranchId) {
-          setCountryBranchId(assignedBranchId);
-        }
-      } catch (err) {
-        console.warn("Scope init notice:", err);
-      }
-    }
-    void initScope();
-  }, []);
+  // ── existing uploaded documents ───────────────────────────────────────────────────────────────────
+  const loadExisting = useCallback(async () => {
+    try {
+      const qs = new URLSearchParams({ limit: "200" });
+      if (existingSearch) qs.set("search", existingSearch);
+      const r = await apiGet<{ rows: Row[] }>(`/api/erp/document-intelligence?${qs.toString()}`);
+      setExisting((r.rows ?? []).filter((x) => x.status !== "cancelled"));
+    } catch { setExisting([]); }
+  }, [existingSearch]);
+  useEffect(() => { if (tab === "intake" && docMode === "existing") void loadExisting(); }, [tab, docMode, loadExisting]);
 
-  // Fetch accounts when country changes
-  useEffect(() => {
-    async function loadAccounts() {
-      try {
-        const url = countryId ? `/api/erp/accounts?countryId=${countryId}` : `/api/erp/accounts`;
-        const res = await apiGet<{ accounts?: any[]; data?: any[] }>(url).catch(
-          () => ({ accounts: [], data: [] })
-        );
-        const accts: any[] = res?.accounts || res?.data || (Array.isArray(res) ? res : []);
-        setChartAccounts(accts);
-
-        // Auto-assign sensible default accounts
-        const purAcc = accts.find((a) => /purchase|cost/i.test(a.name) || String(a.code).startsWith("5"));
-        const payAcc = accts.find((a) => /payable|supplier|vendor/i.test(a.name) || String(a.code).startsWith("2"));
-        const salAcc = accts.find((a) => /sales|revenue|income/i.test(a.name) || String(a.code).startsWith("4"));
-        const recAcc = accts.find((a) => /receivable|customer/i.test(a.name) || String(a.code).startsWith("1"));
-        const bnkAcc = accts.find((a) => /bank|cash/i.test(a.name) || String(a.code).startsWith("10"));
-
-        if (purAcc && !purchaseAccountId) setPurchaseAccountId(purAcc.id);
-        if (payAcc && !payableAccountId) setPayableAccountId(payAcc.id);
-        if (salAcc && !salesAccountId) setSalesAccountId(salAcc.id);
-        if (recAcc && !receivableAccountId) setReceivableAccountId(recAcc.id);
-        if (bnkAcc && !bankAccountId) setBankAccountId(bnkAcc.id);
-        if (bnkAcc && !debitAccountId) setDebitAccountId(bnkAcc.id);
-        if (payAcc && !creditAccountId) setCreditAccountId(payAcc.id);
-      } catch (err) {
-        console.warn("Account load notice:", err);
-      }
-    }
-    void loadAccounts();
-  }, [countryId]);
-
-  // Load Queue & KPIs
+  // ── queue ─────────────────────────────────────────────────────────────────────────────────────────
   const loadQueue = useCallback(async () => {
     setQueueLoading(true);
     try {
@@ -435,2526 +169,319 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
       ]);
       setQueueRows(q.rows ?? []);
       setKpis(k.kpis ?? {});
-    } catch (err) {
-      console.warn("Queue load notice:", err);
-    } finally {
-      setQueueLoading(false);
-    }
+    } catch (e) { console.warn("Queue load notice:", e); } finally { setQueueLoading(false); }
   }, [queueStatusFilter, queueSearch]);
+  useEffect(() => { if (tab === "queue") void loadQueue(); }, [tab, loadQueue]);
 
-  useEffect(() => {
-    if (activeTab === "queue") {
-      void loadQueue();
-    }
-  }, [activeTab, loadQueue]);
-
-  // Handle URL deep link (?job=<id>)
+  // deep link (?job=<id>) opens an existing document straight into review
   useEffect(() => {
     if (typeof window === "undefined") return;
     const j = new URLSearchParams(window.location.search).get("job");
-    if (j) {
-      void openJobDetails(j);
-    }
+    if (j) { setReviewModuleId(null); setReviewJobId(j); setTab("intake"); }
   }, []);
 
-  // Country Change handler
-  const handleCountrySelect = async (cid: string) => {
-    setCountryId(cid);
-    setCountryBranchId("");
-    setCityBranchId("");
-    if (!cid) {
-      setCountryBranches([]);
-      setCityBranches([]);
+  const openExisting = (row: Row) => {
+    setError(null);
+    setReviewModuleId(null); // the saved draft / job remembers its own module
+    setReviewJobId(row.id);
+    setTab("intake");
+  };
+
+  // ── upload + extract ──────────────────────────────────────────────────────────────────────────────
+  const scopeOk = Boolean(countryId && (countryBranchId || cityBranchId));
+  const canExtract = Boolean(chosen && scopeOk && ((docMode === "upload" && file) || (docMode === "existing" && existingId)));
+
+  const run = async () => {
+    if (!chosen) return;
+    setError(null);
+    if (docMode === "existing") {
+      const row = existing.find((x) => x.id === existingId);
+      if (!row) return;
+      setReviewModuleId(chosen.id);
+      setReviewJobId(row.id);
       return;
     }
-    try {
-      const brRes = await apiGet<{ countryBranches: any[] }>(`/api/branch-management/country-branches?countryId=${cid}`);
-      setCountryBranches(brRes?.countryBranches ?? []);
-    } catch {
-      setCountryBranches([]);
-    }
-  };
-
-  // Branch Change handler
-  const handleMainBranchSelect = async (bid: string) => {
-    setCountryBranchId(bid);
-    setCityBranchId("");
-    if (!bid) {
-      setCityBranches([]);
-      return;
-    }
-    try {
-      const cbRes = await apiGet<{ cityBranches: any[] }>(`/api/branch-management/city-branches?countryBranchId=${bid}`);
-      setCityBranches(cbRes?.cityBranches ?? []);
-    } catch {
-      setCityBranches([]);
-    }
-  };
-
-  // Permission Scope evaluation
-  const isSuperAdmin = Boolean(sessionData?.scopes?.isSuperAdmin || sessionData?.roles?.includes("super_admin") || sessionData?.scopes?.summary?.level === "global");
-  const isCountryAdmin = Boolean(sessionData?.roles?.includes("country_admin") || sessionData?.scopes?.summary?.level === "country");
-  const isBranchAdmin = Boolean(sessionData?.roles?.includes("branch_admin") || sessionData?.roles?.includes("main_branch_admin"));
-  const isBranchUser = !isSuperAdmin && !isCountryAdmin && !isBranchAdmin;
-
-  // Gate for "Run AI / OCR Extraction" — per spec, OCR only runs once Country,
-  // Branch, Domain, Module and the relevant Account/Entity are all known.
-  const canRunExtraction = useMemo(() => {
-    if (!file || !domain || !countryId || !(countryBranchId || cityBranchId) || !targetModule) return false;
-    switch (targetModule) {
-      case "purchase_orders":
-      case "purchase_loading_records":
-        return Boolean(purchaseAccountId && payableAccountId);
-      case "sales_orders":
-        return Boolean(salesAccountId && receivableAccountId);
-      case "roznamcha_entries":
-        return Boolean(debitAccountId && creditAccountId);
-      case "banks":
-      case "companies":
-      case "customers":
-      case "warehouses":
-      case "transport":
-      case "expenses":
-      case "account_master":
-        return Boolean(bankAccountId);
-      default:
-        return true;
-    }
-  }, [file, domain, countryId, countryBranchId, cityBranchId, targetModule, purchaseAccountId, payableAccountId, salesAccountId, receivableAccountId, debitAccountId, creditAccountId, bankAccountId]);
-
-  // Real average field-confidence from this job's actual extracted fields (0-100).
-  // null until a job has genuinely run OCR — never a placeholder percentage.
-  const avgConfidencePct = useMemo(() => {
-    const fields = jobData?.fields || [];
-    if (!fields.length) return null;
-    const scored = fields.filter((f: any) => f.confidence != null);
-    if (!scored.length) return null;
-    const avg = scored.reduce((sum: number, f: any) => sum + Number(f.confidence), 0) / scored.length;
-    return Math.round(avg * 100);
-  }, [jobData]);
-
-  // Selected Country / Branch name helpers for header badges — no fallback to a
-  // specific real branch name; an unresolved scope shows a neutral placeholder
-  // instead of implying a location that was never actually selected.
-  const currentCountryName = useMemo(() => {
-    return countries.find((c) => c.id === countryId)?.name || sessionData?.scopes?.summary?.countryName || s.t("scope_pending_country", "Select Country");
-  }, [countries, countryId, sessionData, s]);
-
-  const currentMainBranchName = useMemo(() => {
-    return countryBranches.find((b) => b.id === countryBranchId)?.name || sessionData?.scopes?.summary?.countryBranchName || s.t("scope_pending_branch", "Select Branch");
-  }, [countryBranches, countryBranchId, sessionData, s]);
-
-  const currentCityBranchName = useMemo(() => {
-    return cityBranches.find((cb) => cb.id === cityBranchId)?.name || sessionData?.scopes?.summary?.cityBranchName || s.t("scope_pending_city", "Select City Branch");
-  }, [cityBranches, cityBranchId, sessionData, s]);
-
-  // File attach handler
-  const handleFileAttach = (selectedFile: File) => {
-    setFile(selectedFile);
-    const sizeKB = (selectedFile.size / 1024).toFixed(0);
-    const sizeFormatted = selectedFile.size > 1024 * 1024 ? `${(selectedFile.size / (1024 * 1024)).toFixed(1)} MB` : `${sizeKB} KB`;
-    const ext = selectedFile.name.split(".").pop()?.toUpperCase() || "PDF";
-    setFileDetails({
-      name: selectedFile.name,
-      sizeFormatted,
-      pages: 3, // Default estimated pages until parsed
-      type: ext,
-    });
-    // Default domain to business if not set
-    if (!domain) {
-      setDomain("business");
-    }
-    // Move to step 1 domain confirmation or step 2
-    setWizardStep(1);
-  };
-
-  // Native camera capture
-  const handleCameraSnap = async () => {
-    const captured = await captureDocumentPhoto({ source: "PROMPT" });
-    if (captured) handleFileAttach(captured);
-  };
-
-  // Upload & Process Job (Executes between Step 4 and Step 5)
-  const executeAiExtraction = async () => {
     if (!file) return;
-    setActionError(null);
-    setIsProcessing(true);
-    setProcessingStatusText(s.t("proc_uploading", "Uploading document securely to ERP intake storage..."));
-
+    setBusy(true);
     try {
+      setBusyText(T("proc_uploading", "Uploading the document securely…"));
       const fd = new FormData();
       fd.append("file", file);
-      fd.append("operationalDomain", domain || "business");
-      if (countryId) fd.append("countryId", countryId);
+      fd.append("operationalDomain", chosen.domain);
+      fd.append("countryId", countryId);
       if (countryBranchId) fd.append("countryBranchId", countryBranchId);
       if (cityBranchId) fd.append("cityBranchId", cityBranchId);
-      if (contractReference) fd.append("contractReference", contractReference);
-      if (documentReference) fd.append("documentReference", documentReference);
-      if (blReference) fd.append("blReference", blReference);
-      if (containerReference) fd.append("containerReference", containerReference);
-      fd.append("sourceModuleHint", targetModule || selectedModuleId);
-      fd.append("idempotencyKey", `${file.name}:${file.size}:${file.lastModified}:${domain}`);
-
-      // 1. Upload
-      const uploadRes = await fetch("/api/erp/document-intelligence/upload", { method: "POST", body: fd });
-      const uploadJson = await uploadRes.json();
-      if (!uploadRes.ok || uploadJson?.ok === false) {
-        throw new Error(uploadJson?.error?.message || uploadJson?.error || "Upload failed");
+      fd.append("sourceModuleHint", chosen.id);
+      fd.append("idempotencyKey", `${file.name}:${file.size}:${file.lastModified}:${chosen.domain}:${countryBranchId || cityBranchId}`);
+      const up = await fetch("/api/erp/document-intelligence/upload", { method: "POST", body: fd });
+      const upJson = await up.json();
+      if (!up.ok || upJson?.ok === false) throw new Error(upJson?.error?.message || upJson?.error || T("upload_failed", "Upload failed."));
+      const job = upJson.data?.job ?? upJson.job;
+      const jobId: string = job?.id;
+      if (!jobId) throw new Error(T("upload_failed", "Upload failed."));
+      // A file already uploaded earlier is REUSED (its saved review is kept) — only a fresh upload is extracted.
+      if (!job.deduped || job.status === "uploaded" || job.status === "error") {
+        setBusyText(T("proc_extract", "Reading the document and extracting fields…"));
+        await apiPatch(`/api/erp/document-intelligence/${jobId}`, { action: "process", force: job.status === "error" });
       }
-      const jId = uploadJson.data?.job?.id ?? uploadJson.job?.id;
-      setActiveJobId(jId);
-
-      // 2. Process / OCR / Extract
-      setProcessingStatusText(s.t("proc_neural", "Running OCR, language detection, and context-aware neural field extraction..."));
-      await apiPatch(`/api/erp/document-intelligence/${jId}`, { action: "process" });
-
-      // 3. Load full result
-      setProcessingStatusText(s.t("proc_sync", "Synchronizing ERP parameters and structured fields..."));
-      await openJobDetails(jId);
-
-      // 4. Move to Step 5 (Review & Create)
-      setWizardStep(5);
-    } catch (err: any) {
-      setActionError(err instanceof Error ? err.message : String(err));
+      setReviewModuleId(chosen.id);
+      setReviewJobId(jobId);
+      setFile(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
     } finally {
-      setIsProcessing(false);
-      setProcessingStatusText("");
+      setBusy(false);
+      setBusyText("");
     }
   };
 
-  // Open existing or processed job details
-  const openJobDetails = async (jId: string) => {
-    setActiveJobId(jId);
-    try {
-      const d = await apiGet<{ job: Row; fields: Row[]; lineItems: Row[]; matches: Row[]; events: Row[] }>(`/api/erp/document-intelligence/${jId}`);
-      if (!d) {
-        setActionError(s.t("job_load_failed", "Could not load this document's details — it may be out of your scope or no longer exists."));
-        return;
-      }
-      setJobData(d);
+  const backToSetup = () => { setReviewJobId(null); setReviewModuleId(null); void loadQueue(); };
 
-      // Populate form state from extracted fields
-      const fMap: Record<string, string> = {};
-      d.fields.forEach((f) => {
-        fMap[f.field_key] = f.corrected_value || f.normalized_value || f.raw_value || "";
-      });
+  const countryName = countries.find((c) => c.id === countryId)?.name || sessionData?.scopes?.summary?.countryName || "";
+  const mainName = countryBranches.find((b) => b.id === countryBranchId)?.name || sessionData?.scopes?.summary?.countryBranchName || "";
+  const cityName = cityBranches.find((b) => b.id === cityBranchId)?.name || sessionData?.scopes?.summary?.cityBranchName || "";
 
-      const tm = d.job.target_module || targetModule || "purchase_orders";
-      setTargetModule(tm);
+  const selectCls = "w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:bg-slate-50 disabled:text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100";
+  const lockedBox = (txt: string) => (
+    <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs font-bold text-slate-700 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-200">
+      <span className="truncate">{txt || "—"}</span><Lock className="h-3 w-3 shrink-0 text-slate-400" />
+    </div>
+  );
 
-      // Map the registry's doc_type_code (e.g. "purchase_contract", "commercial_invoice")
-      // to the exact <option value> this dropdown uses — the two are different naming
-      // schemes, so passing the raw code through left every non-matching classification
-      // (which was most of them) silently showing the select's first option ("Sales
-      // Contract") regardless of what was actually classified. Falls back to the
-      // target module's natural side rather than a fixed default.
-      const DOC_TYPE_OPTION_BY_CODE: Record<string, string> = {
-        sales_contract: "Sales Contract",
-        purchase_contract: "Purchase Contract",
-        purchase_order: "Purchase Contract",
-        purchase_booking: "Purchase Contract",
-        customer_po: "Sales Contract",
-        sales_booking: "Sales Contract",
-        sales_order: "Sales Contract",
-        commercial_invoice: "Commercial Invoice",
-        sales_invoice: "Commercial Invoice",
-        proforma_invoice: "Proforma Invoice",
-        bill_of_lading: "Bill of Lading",
-      };
-      const rawDocType = fMap.doc_type || d.job.doc_type_code || "";
-      const resolvedDocType =
-        DOC_TYPE_OPTION_BY_CODE[rawDocType] ||
-        (rawDocType === "" ? "" : tm === "sales_orders" ? "Sales Contract" : "Purchase Contract");
-
-      // Extracted values only — an unextracted field stays blank so the reviewer
-      // can see it was not found, rather than silently showing sample data.
-      setFormData((prev) => ({
-        ...prev,
-        docType: resolvedDocType,
-        contractNo: fMap.contract_number || d.job.contract_reference || "",
-        documentDate: fMap.document_date || "",
-        supplierName: fMap.supplier_name || fMap.contract_parties || "",
-        buyerName: fMap.customer_name || "",
-        currency: fMap.currency || prev.currency || "USD",
-        totalAmount: fMap.grand_total || fMap.subtotal || "",
-        reference: d.job.document_reference || "",
-        paymentTerms: fMap.payment_terms || "",
-        deliveryTerms: fMap.delivery_terms || "",
-      }));
-
-      // Update file details from job metadata
-      setFileDetails({
-        name: d.job.original_filename || fileDetails?.name || "Document.pdf",
-        sizeFormatted: d.job.file_size ? `${(d.job.file_size / 1024).toFixed(0)} KB` : fileDetails?.sizeFormatted || "-",
-        pages: d.fields[0]?.page_number ? Math.max(...d.fields.map((f) => f.page_number || 1)) : fileDetails?.pages || 1,
-        type: (d.job.original_filename || fileDetails?.name || "pdf").split(".").pop()?.toUpperCase() || "PDF",
-      });
-
-      setWizardStep(5);
-      setActiveTab("wizard");
-    } catch (err) {
-      console.warn("Failed to open job details:", err);
-      setActionError(err instanceof Error ? err.message : String(err));
-    }
-  };
-
-  // Save as Draft
-  const handleSaveAsDraft = async () => {
-    if (!activeJobId) return;
-    setActionError(null);
-    setIsProcessing(true);
-    try {
-      const res = await apiPatch<Row>(`/api/erp/document-intelligence/${activeJobId}`, {
-        action: "confirm",
-        linkMode: "new_record",
-        targetModule,
-        countryId: countryId || null,
-        countryBranchId: countryBranchId || null,
-        cityBranchId: cityBranchId || null,
-        purchaseAccountId: purchaseAccountId || null,
-        payableAccountId: payableAccountId || null,
-        salesAccountId: salesAccountId || null,
-        receivableAccountId: receivableAccountId || null,
-        debitAccountId: debitAccountId || null,
-        creditAccountId: creditAccountId || null,
-        bankAccountId: bankAccountId || null,
-        supplierName: formData.supplierName,
-        customerName: formData.buyerName,
-        currency: formData.currency,
-        totalAmount: formData.totalAmount,
-        payloadOverrides: formData,
-      });
-
-      const draftNo = res?.result?.draftNo || res?.draftNo || (activeJobId ? `DID-${activeJobId.slice(0, 8).toUpperCase()}` : "");
-      setToast({
-        show: true,
-        draftNo,
-        message: s.t("draft_saved_msg", "Reviewed draft saved successfully in ERP Document Intelligence."),
-        targetModule,
-      });
-
-      // Refresh job data
-      await openJobDetails(activeJobId);
-    } catch (err: any) {
-      setActionError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  // Transfer to Canonical ERP Module
-  const handleCreateEntry = async () => {
-    if (!activeJobId) return;
-    setActionError(null);
-    setIsProcessing(true);
-    try {
-      // First ensure draft is confirmed in DB
-      const res = await apiPatch<Row>(`/api/erp/document-intelligence/${activeJobId}`, {
-        action: "confirm",
-        linkMode: "new_record",
-        targetModule,
-        countryId: countryId || null,
-        countryBranchId: countryBranchId || null,
-        cityBranchId: cityBranchId || null,
-        purchaseAccountId: purchaseAccountId || null,
-        payableAccountId: payableAccountId || null,
-        salesAccountId: salesAccountId || null,
-        receivableAccountId: receivableAccountId || null,
-        debitAccountId: debitAccountId || null,
-        creditAccountId: creditAccountId || null,
-        bankAccountId: bankAccountId || null,
-        supplierName: formData.supplierName,
-        customerName: formData.buyerName,
-        currency: formData.currency,
-        totalAmount: formData.totalAmount,
-        payloadOverrides: formData,
-      });
-
-      const draftId = res?.result?.draftId || res?.draftId || activeJobId;
-      const draftNo = res?.result?.draftNo || res?.draftNo || (activeJobId ? `DID-${activeJobId.slice(0, 8).toUpperCase()}` : "");
-
-      // Stash prefill payload into DRAFT_PREFILL_KEY for the destination screen
-      sessionStorage.setItem(
-        DRAFT_PREFILL_KEY,
-        JSON.stringify({
-          targetModule,
-          draftId,
-          draftNo,
-          payload: {
-            ...formData,
-            countryId: countryId || null,
-            countryBranchId: countryBranchId || null,
-            cityBranchId: cityBranchId || null,
-            branchId: countryBranchId || cityBranchId || null,
-            purchaseAccountId,
-            payableAccountId,
-            salesAccountId,
-            receivableAccountId,
-            debitAccountId,
-            creditAccountId,
-            bankAccountId,
-            supplierName: formData.supplierName,
-            customerName: formData.buyerName,
-            contractNo: formData.contractNo,
-            purchaseContractNo: formData.contractNo,
-            salesContractNo: formData.contractNo,
-            orderDate: formData.documentDate,
-            purchaseDate: formData.documentDate,
-            currencyCode: formData.currency,
-            purchaseCurrency: formData.currency,
-            orderTotal: formData.totalAmount,
-          },
-          goodsEntries: jobData?.lineItems || [],
-          linkMode: "new_record",
-        })
-      );
-
-      const dest = getDestinationInfo(targetModule, s);
-      if (!dest?.routeUrl) {
-        setActionError(`No canonical ERP screen is configured for module "${targetModule}" yet.`);
-        return;
-      }
-      router.push(dest.routeUrl as any);
-    } catch (err: any) {
-      setActionError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  // Reset / Discard document
-  const handleRemoveDocument = () => {
-    setFile(null);
-    setFileDetails(null);
-    setActiveJobId(null);
-    setJobData(null);
-    setWizardStep(1);
-  };
+  const filteredExisting = existing.filter((r) => !existingSearch || `${r.job_no} ${r.original_filename} ${r.contract_reference ?? ""}`.toLowerCase().includes(existingSearch.toLowerCase()));
 
   return (
-    <section dir={s.dir} className="min-h-screen bg-[#f8fafc] dark:bg-slate-950 text-slate-900 dark:text-slate-50 font-sans pb-16">
-      {/* ── 1. Top Enterprise Header Bar ────────────────────────────────────────── */}
-      <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95 px-4 sm:px-6 lg:px-8 py-3.5 shadow-xs">
-        <div className="mx-auto max-w-[1920px] flex flex-wrap items-center justify-between gap-4">
-          {/* Logo & Title */}
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-md shadow-blue-500/20">
-              <Sparkles className="h-5 w-5" />
-            </div>
+    <section dir={s.dir} className="min-h-screen bg-[#f8fafc] pb-16 font-sans text-slate-900 dark:bg-slate-950 dark:text-slate-50">
+      <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 px-3 py-2.5 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95 sm:px-6">
+        <div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white"><Sparkles className="h-4.5 w-4.5" /></div>
             <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-lg font-black tracking-tight text-slate-900 dark:text-white">
-                  {s.t("title", "AI Document Intake")}
-                </h1>
-                <span className="rounded-full bg-blue-100 dark:bg-blue-950/60 px-2.5 py-0.5 text-[10px] font-bold text-blue-700 dark:text-blue-300">
-                  ENTERPRISE AI
-                </span>
-              </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                {s.t("tagline", "From Documents to Data — Faster, Smarter, Global")}
-              </p>
+              <h1 className="text-base font-black tracking-tight">{s.t("title", "AI Document Intake")}</h1>
+              <p className="text-[11px] text-slate-500">{T("tagline", "Scan a document into the right ERP form — you review everything before it goes anywhere.")}</p>
             </div>
           </div>
-
-          {/* Right Controls: Location Badges + User Badges + View Switcher */}
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            {/* Country Pill */}
-            <div className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-800/80 dark:text-slate-200 shadow-xs">
-              <span className="text-sm">{getFlagEmoji(currentCountryName)}</span>
-              <span>{currentCountryName}</span>
-            </div>
-
-            {/* Main Branch Pill */}
-            <div className="hidden md:flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-800/80 dark:text-slate-200 shadow-xs">
-              <Building2 className="h-3.5 w-3.5 text-blue-600" />
-              <span>{currentMainBranchName}</span>
-            </div>
-
-            {/* City Branch Pill */}
-            <div className="hidden lg:flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-800/80 dark:text-slate-200 shadow-xs">
-              <MapPin className="h-3.5 w-3.5 text-blue-600" />
-              <span>{currentCityBranchName}</span>
-            </div>
-
-            {/* Language Pill */}
-            <div className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-300">
-              <Globe className="h-3.5 w-3.5 text-slate-400" />
-              <span>{s.t("current_lang_name", "English")}</span>
-              <span className="text-[10px] text-slate-400">▾</span>
-            </div>
-
-            {/* Notification Bell */}
-            <div className="relative rounded-full border border-slate-200 bg-white p-2 text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 shadow-xs">
-              <Bell className="h-4 w-4" />
-              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-600 text-[9px] font-bold text-white">
-                3
-              </span>
-            </div>
-
-            {/* User Profile Pill */}
-            <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 py-1 pl-1 pr-3 text-xs font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-200 shadow-xs">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-[10px] font-black text-white dark:bg-blue-600">
-                SA
-              </div>
-              <span className="hidden sm:inline">
-                {sessionData?.roles?.includes("super_admin") || isSuperAdmin ? "Super Admin" : "Enterprise User"}
-              </span>
-            </div>
-
-            {/* View Switcher: Wizard vs Queue */}
-            <div className="flex items-center rounded-xl bg-slate-200/80 p-1 dark:bg-slate-800">
-              <button
-                type="button"
-                onClick={() => setActiveTab("wizard")}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-bold transition-all ${
-                  activeTab === "wizard"
-                    ? "bg-white text-blue-700 shadow-xs dark:bg-slate-900 dark:text-blue-400"
-                    : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
-                }`}
-              >
-                <Sparkles className="h-3.5 w-3.5" />
-                <span>{s.t("tab_wizard", "Intake Wizard")}</span>
+          <div className="flex items-center rounded-xl bg-slate-200/80 p-1 dark:bg-slate-800">
+            {([["intake", T("tab_intake", "New / Open Document"), Sparkles], ["queue", s.t("tab_queue", "Queue & History"), Layers]] as const).map(([id, label, Icon]) => (
+              <button key={id} type="button" onClick={() => setTab(id as "intake" | "queue")} data-testid={`main-tab-${id}`}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-bold ${tab === id ? "bg-white text-blue-700 shadow-xs dark:bg-slate-900 dark:text-blue-400" : "text-slate-600 dark:text-slate-400"}`}>
+                <Icon className="h-3.5 w-3.5" /><span>{label}</span>
               </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab("queue")}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-bold transition-all ${
-                  activeTab === "queue"
-                    ? "bg-white text-blue-700 shadow-xs dark:bg-slate-900 dark:text-blue-400"
-                    : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
-                }`}
-              >
-                <Layers className="h-3.5 w-3.5" />
-                <span>{s.t("tab_queue", "Queue & History")}</span>
-              </button>
-            </div>
+            ))}
           </div>
         </div>
       </header>
 
-      {/* ── 2. Toast Notification Bar ────────────────────────────────────────── */}
-      {toast?.show && (
-        <div className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mt-3">
-          <div className="flex items-center justify-between rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-emerald-600/20">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4" />
-              <span>{toast.message}</span>
-              <span className="rounded bg-emerald-800/60 px-2 py-0.5 font-mono text-[11px] font-bold">
-                {toast.draftNo}
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setToast(null)}
-              className="rounded p-1 hover:bg-emerald-700/60 transition-colors"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
+      <div className="mx-auto mt-4 max-w-[1500px] space-y-3 px-3 sm:px-6">
+        {error && (
+          <div className="flex items-center justify-between gap-3 rounded-xl bg-rose-600 px-4 py-2.5 text-xs font-bold text-white" role="alert" data-testid="intake-error">
+            <span>{error}</span>
+            <button type="button" onClick={() => setError(null)} aria-label={T("dismiss", "Dismiss")}><X className="h-3.5 w-3.5" /></button>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* ── 2b. Action Error Bar — every action failure surfaces here, not just console/alert ── */}
-      {actionError && (
-        <div className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mt-3">
-          <div className="flex items-center justify-between gap-3 rounded-xl bg-rose-600 px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-rose-600/20">
-            <div className="flex items-center gap-2">
-              <X className="h-4 w-4 shrink-0" />
-              <span>{actionError}</span>
+        {tab === "intake" && reviewJobId && (
+          <IntakeReviewWorkspace s={s} jobId={reviewJobId} moduleId={reviewModuleId}
+            scope={{ countryId, countryBranchId, cityBranchId }} onBack={backToSetup} onChanged={() => void loadQueue()} />
+        )}
+
+        {tab === "intake" && !reviewJobId && (
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900" data-testid="setup-panel">
+            {/* 1 · scope */}
+            <div>
+              <p className="mb-2 flex items-center gap-2 text-xs font-black text-slate-700 dark:text-slate-200"><span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] text-white">1</span>{T("setup_scope", "Where is this document for?")}</p>
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+                <div>
+                  <label className="mb-1 flex items-center gap-1 text-[11px] font-bold text-slate-600 dark:text-slate-400"><Globe className="h-3 w-3" />{s.t("country_label", "Country / Territory *")}</label>
+                  {lockCountry ? lockedBox(`${flag(countryName)} ${countryName}`) : (
+                    <select value={countryId} onChange={(e) => void pickCountry(e.target.value)} className={selectCls} data-testid="sel-country">
+                      <option value="">{T("sel_country", "— Select country —")}</option>
+                      {countries.map((c) => <option key={c.id} value={c.id}>{flag(c.name)} {c.name}</option>)}
+                    </select>
+                  )}
+                </div>
+                <div>
+                  <label className="mb-1 flex items-center gap-1 text-[11px] font-bold text-slate-600 dark:text-slate-400"><Building2 className="h-3 w-3" />{s.t("branch_label", "Main Branch *")}</label>
+                  {lockMain ? lockedBox(mainName) : (
+                    <select value={countryBranchId} onChange={(e) => void pickMain(e.target.value)} className={selectCls} disabled={!countryId} data-testid="sel-main">
+                      <option value="">{T("sel_main", "— Select main branch —")}</option>
+                      {countryBranches.map((b) => <option key={b.id} value={b.id}>{b.name}{b.code ? ` (${b.code})` : ""}</option>)}
+                    </select>
+                  )}
+                </div>
+                <div>
+                  <label className="mb-1 flex items-center gap-1 text-[11px] font-bold text-slate-600 dark:text-slate-400"><MapPin className="h-3 w-3" />{s.t("city_branch_label", "City Branch")}</label>
+                  {lockCity ? lockedBox(cityName) : (
+                    <select value={cityBranchId} onChange={(e) => setCityBranchId(e.target.value)} className={selectCls} disabled={!countryBranchId} data-testid="sel-city">
+                      <option value="">{T("sel_city", "— Main branch office —")}</option>
+                      {cityBranches.map((b) => <option key={b.id} value={b.id}>{b.name}{b.code ? ` (${b.code})` : ""}</option>)}
+                    </select>
+                  )}
+                </div>
+              </div>
             </div>
-            <button
-              type="button"
-              onClick={() => setActionError(null)}
-              className="shrink-0 rounded p-1 hover:bg-rose-700/60 transition-colors"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
+
+            {/* 2 · module */}
+            <div className="mt-4 border-t border-slate-100 pt-3 dark:border-slate-800">
+              <p className="mb-2 flex items-center gap-2 text-xs font-black text-slate-700 dark:text-slate-200"><span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] text-white">2</span>{T("setup_module_q", "Which module should this document be entered into?")}</p>
+              <select value={moduleId} onChange={(e) => setModuleId(e.target.value)} className={`${selectCls} sm:max-w-md`} data-testid="sel-module">
+                <option value="">{T("sel_module", "— Select module —")}</option>
+                {INTAKE_MODULE_GROUPS.map((g) => {
+                  const list = modules.filter((m) => m.group === g.id);
+                  if (!list.length) return null;
+                  return <optgroup key={g.id} label={s.t(g.labelKey, g.label)}>{list.map((m) => <option key={m.id} value={m.id}>{s.t(m.labelKey, m.label)}</option>)}</optgroup>;
+                })}
+              </select>
+              {chosen && (
+                <p className="mt-1.5 text-[11px] text-slate-500" data-testid="module-hint">
+                  {T("saves_to", "Opens in")}: <b>{s.t(chosen.labelKey, chosen.label)}</b>.{" "}
+                  {chosen.party === "supplier" ? T("hint_supplier", "The Seller named on the document is treated as our supplier, whatever the document is titled.") : chosen.party === "customer" ? T("hint_customer", "The Buyer named on the document is treated as our customer, whatever the document is titled.") : ""}
+                  {!chosen.financial && chosen.side === "shipping" ? ` ${T("hint_no_price", "Cargo form — no price or payment fields.")}` : ""}
+                </p>
+              )}
+            </div>
+
+            {/* 3 · document */}
+            <div className="mt-4 border-t border-slate-100 pt-3 dark:border-slate-800">
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                <p className="flex items-center gap-2 text-xs font-black text-slate-700 dark:text-slate-200"><span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] text-white">3</span>{T("setup_doc", "Upload a document, or choose one already uploaded")}</p>
+                <div className="flex rounded-lg bg-slate-100 p-0.5 text-[11px] font-bold dark:bg-slate-800">
+                  {(["upload", "existing"] as const).map((m) => (
+                    <button key={m} type="button" onClick={() => setDocMode(m)} data-testid={`doc-mode-${m}`} className={`rounded-md px-3 py-1 ${docMode === m ? "bg-white text-blue-700 shadow-xs dark:bg-slate-900" : "text-slate-500"}`}>
+                      {m === "upload" ? T("mode_upload", "Upload new") : T("mode_existing", "Select existing")}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {docMode === "upload" ? (
+                <>
+                  <input ref={fileInputRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.tif,.tiff,application/pdf,image/*" className="hidden" data-testid="file-input"
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) setFile(f); }} />
+                  {file ? (
+                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 p-2.5 dark:border-slate-800">
+                      <div className="flex items-center gap-2"><FileText className="h-5 w-5 text-rose-500" /><div><p className="text-xs font-bold" dir="ltr">{file.name}</p><p className="text-[10.5px] text-slate-400">{(file.size / 1024).toFixed(0)} KB</p></div></div>
+                      <button type="button" onClick={() => setFile(null)} className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-600"><Trash2 className="h-3.5 w-3.5" />{T("remove", "Remove")}</button>
+                    </div>
+                  ) : (
+                    <button type="button" onClick={() => fileInputRef.current?.click()}
+                      className="flex w-full flex-col items-center gap-1 rounded-xl border-2 border-dashed border-slate-300 px-4 py-6 text-center hover:border-blue-500 hover:bg-blue-50/30 dark:border-slate-700">
+                      <UploadCloud className="h-6 w-6 text-blue-600" />
+                      <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{s.t("drop_title", "Click to browse or drop an invoice, contract, or bill")}</span>
+                      <span className="text-[10.5px] text-slate-400">{s.t("drop_sub", "Supports PDF, JPG, PNG, WEBP, TIFF (Max 25 MB, 60 pages)")}</span>
+                    </button>
+                  )}
+                  {isNativeApp() && (
+                    <button type="button" onClick={async () => { const c = await captureDocumentPhoto({ source: "PROMPT" }); if (c) setFile(c); }} className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white"><Camera className="h-3.5 w-3.5" />{s.t("snap_camera", "Capture via Scanner / Camera")}</button>
+                  )}
+                </>
+              ) : (
+                <div className="space-y-2" data-testid="existing-panel">
+                  <input type="search" value={existingSearch} onChange={(e) => setExistingSearch(e.target.value)} placeholder={T("search_existing", "Search by job no., file name or contract no.")} className={selectCls} />
+                  <select value={existingId} onChange={(e) => { setExistingId(e.target.value); const r = existing.find((x) => x.id === e.target.value); const m = resolveModule(r?.source_module_hint, r?.target_module); if (m && !moduleId) setModuleId(m.id); }} className={selectCls} size={Math.min(6, Math.max(2, filteredExisting.length + 1))} data-testid="sel-existing">
+                    <option value="">{T("sel_existing", "— Select an uploaded document —")}</option>
+                    {filteredExisting.map((r) => <option key={r.id} value={r.id}>{r.job_no} · {r.original_filename} · {r.status}{r.draft_reference ? ` · ${r.draft_reference}` : ""}</option>)}
+                  </select>
+                  {existingId && <button type="button" onClick={() => { const r = existing.find((x) => x.id === existingId); if (r) openExisting(r); }} className="text-[11px] font-bold text-blue-600 underline" data-testid="open-saved">{T("open_saved", "Open with its saved review")}</button>}
+                </div>
+              )}
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
+              <p className="text-[11px] text-slate-500">
+                {!scopeOk ? T("need_scope", "Choose a country and branch first.") : !chosen ? T("need_module", "Choose the module.") : docMode === "upload" && !file ? T("need_file", "Add a document.") : docMode === "existing" && !existingId ? T("need_existing", "Choose an uploaded document.") : ""}
+              </p>
+              <button type="button" disabled={!canExtract || busy} onClick={() => void run()} data-testid="run-extract"
+                className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-600/20 hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50">
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                <span>{busy ? busyText : docMode === "upload" ? T("extract_review", "Extract & open review form") : T("open_review", "Open review form")}</span>
+                {!busy && <ArrowRight className="h-4 w-4 rtl:rotate-180" />}
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* ── 3. Main Body Container ────────────────────────────────────────────── */}
-      <div className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 mt-5 space-y-5">
-        {activeTab === "wizard" ? (
-          <>
-            {/* ── Step Navigator (5-Step Breadcrumb Bar Matching Reference) ─── */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-xs dark:border-slate-800 dark:bg-slate-900">
-              <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2">
-                {/* Step 1 */}
-                <div
-                  onClick={() => setWizardStep(1)}
-                  className={`flex-1 flex items-center gap-3 rounded-xl px-3.5 py-2.5 transition-all cursor-pointer ${
-                    wizardStep === 1
-                      ? "bg-blue-600 text-white shadow-md shadow-blue-600/20 font-bold"
-                      : wizardStep > 1
-                      ? "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 font-semibold"
-                      : "bg-slate-50 text-slate-400 dark:bg-slate-800/40 dark:text-slate-500"
-                  }`}
-                >
-                  <div
-                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-black ${
-                      wizardStep === 1
-                        ? "bg-white text-blue-700"
-                        : wizardStep > 1
-                        ? "bg-blue-200 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                        : "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
-                    }`}
-                  >
-                    1
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-black truncate">{s.t("step1_title", "Upload Document")}</p>
-                    <p className={`text-[10px] truncate ${wizardStep === 1 ? "text-blue-100" : "text-slate-400"}`}>
-                      {s.t("step1_sub", "Attach your file")}
-                    </p>
-                  </div>
-                </div>
-
-                <ChevronRight className="h-4 w-4 text-slate-400 shrink-0 hidden lg:block" />
-
-                {/* Step 2 */}
-                <div
-                  onClick={() => setWizardStep(2)}
-                  className={`flex-1 flex items-center gap-3 rounded-xl px-3.5 py-2.5 transition-all cursor-pointer ${
-                    wizardStep === 2
-                      ? "bg-blue-600 text-white shadow-md shadow-blue-600/20 font-bold"
-                      : wizardStep > 2
-                      ? "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 font-semibold"
-                      : "bg-slate-50 text-slate-400 dark:bg-slate-800/40 dark:text-slate-500"
-                  }`}
-                >
-                  <div
-                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-black ${
-                      wizardStep === 2
-                        ? "bg-white text-blue-700"
-                        : wizardStep > 2
-                        ? "bg-blue-200 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                        : "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
-                    }`}
-                  >
-                    2
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-black truncate">{s.t("step2_title", "Classify & Route")}</p>
-                    <p className={`text-[10px] truncate ${wizardStep === 2 ? "text-blue-100" : "text-slate-400"}`}>
-                      {s.t("step2_sub", "Business area & location")}
-                    </p>
-                  </div>
-                </div>
-
-                <ChevronRight className="h-4 w-4 text-slate-400 shrink-0 hidden lg:block" />
-
-                {/* Step 3 */}
-                <div
-                  onClick={() => setWizardStep(3)}
-                  className={`flex-1 flex items-center gap-3 rounded-xl px-3.5 py-2.5 transition-all cursor-pointer ${
-                    wizardStep === 3
-                      ? "bg-blue-600 text-white shadow-md shadow-blue-600/20 font-bold"
-                      : wizardStep > 3
-                      ? "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 font-semibold"
-                      : "bg-slate-50 text-slate-400 dark:bg-slate-800/40 dark:text-slate-500"
-                  }`}
-                >
-                  <div
-                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-black ${
-                      wizardStep === 3
-                        ? "bg-white text-blue-700"
-                        : wizardStep > 3
-                        ? "bg-blue-200 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                        : "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
-                    }`}
-                  >
-                    3
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-black truncate">{s.t("step3_title", "ERP Module")}</p>
-                    <p className={`text-[10px] truncate ${wizardStep === 3 ? "text-blue-100" : "text-slate-400"}`}>
-                      {s.t("step3_sub", "Select related module")}
-                    </p>
-                  </div>
-                </div>
-
-                <ChevronRight className="h-4 w-4 text-slate-400 shrink-0 hidden lg:block" />
-
-                {/* Step 4 */}
-                <div
-                  onClick={() => setWizardStep(4)}
-                  className={`flex-1 flex items-center gap-3 rounded-xl px-3.5 py-2.5 transition-all cursor-pointer ${
-                    wizardStep === 4
-                      ? "bg-blue-600 text-white shadow-md shadow-blue-600/20 font-bold"
-                      : wizardStep > 4
-                      ? "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 font-semibold"
-                      : "bg-slate-50 text-slate-400 dark:bg-slate-800/40 dark:text-slate-500"
-                  }`}
-                >
-                  <div
-                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-black ${
-                      wizardStep === 4
-                        ? "bg-white text-blue-700"
-                        : wizardStep > 4
-                        ? "bg-blue-200 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                        : "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
-                    }`}
-                  >
-                    4
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-black truncate">{s.t("step4_title", "Parameters")}</p>
-                    <p className={`text-[10px] truncate ${wizardStep === 4 ? "text-blue-100" : "text-slate-400"}`}>
-                      {s.t("step4_sub", "Accounts & additional info")}
-                    </p>
-                  </div>
-                </div>
-
-                <ChevronRight className="h-4 w-4 text-slate-400 shrink-0 hidden lg:block" />
-
-                {/* Step 5 */}
-                <div
-                  onClick={() => setWizardStep(5)}
-                  className={`flex-1 flex items-center gap-3 rounded-xl px-3.5 py-2.5 transition-all cursor-pointer ${
-                    wizardStep === 5
-                      ? "bg-blue-600 text-white shadow-md shadow-blue-600/20 font-bold"
-                      : "bg-slate-50 text-slate-400 dark:bg-slate-800/40 dark:text-slate-500"
-                  }`}
-                >
-                  <div
-                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-black ${
-                      wizardStep === 5
-                        ? "bg-white text-blue-700"
-                        : "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
-                    }`}
-                  >
-                    5
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-black truncate">{s.t("step5_title", "Review & Create")}</p>
-                    <p className={`text-[10px] truncate ${wizardStep === 5 ? "text-blue-100" : "text-slate-400"}`}>
-                      {s.t("step5_sub", "Confirm and save")}
-                    </p>
-                  </div>
-                </div>
-              </div>
+        {tab === "queue" && (
+          <div className="space-y-3" data-testid="queue-panel">
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 lg:grid-cols-7">
+              <Kpi label={s.t("k_total", "Total")} value={kpis.total ?? queueRows.length} icon={FileText} />
+              <Kpi label={s.t("k_review", "In Review")} value={kpis.in_review ?? 0} tone="text-amber-600" icon={FileText} />
+              <Kpi label={s.t("k_qvc", "In QVC")} value={kpis.in_qvc ?? 0} tone="text-rose-600" icon={ShieldAlert} />
+              <Kpi label={s.t("k_draft", "Draft Ready")} value={kpis.draft_ready ?? 0} tone="text-emerald-600" icon={CheckCircle2} />
+              <Kpi label={s.t("k_linked", "Linked")} value={kpis.linked ?? 0} tone="text-blue-600" icon={Link2} />
+              <Kpi label={s.t("k_oos", "Out of Scope")} value={kpis.out_of_scope ?? 0} tone="text-rose-600" icon={AlertTriangle} />
+              <Kpi label={s.t("k_failed", "Failed")} value={kpis.failed ?? 0} tone="text-rose-600" icon={Ban} />
             </div>
-
-            {/* ── Active Attached Document Bar (Shown whenever file exists) ─── */}
-            {fileDetails && (
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-xs dark:border-slate-800 dark:bg-slate-900">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600 border border-rose-200 dark:bg-rose-950/40 dark:border-rose-900 dark:text-rose-400">
-                    <FileText className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="text-xs font-bold text-slate-500">{s.t("attached_doc", "Uploaded Document")}</p>
-                    </div>
-                    <p className="text-sm font-bold text-slate-800 dark:text-slate-100">{fileDetails.name}</p>
-                    <p className="text-[11px] text-slate-400">
-                      {fileDetails.type} • {fileDetails.sizeFormatted} • {fileDetails.pages} {s.t("pages", "pages")}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={handleRemoveDocument}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-100 transition-colors dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                    <span>{s.t("remove", "Remove")}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700 hover:bg-blue-100 transition-colors dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300"
-                  >
-                    <RefreshCw className="h-3.5 w-3.5" />
-                    <span>{s.t("replace", "Replace")}</span>
-                  </button>
-                </div>
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-white p-2.5 dark:border-slate-800 dark:bg-slate-900">
+              <div className="flex flex-1 items-center gap-2"><Search className="h-4 w-4 text-slate-400" />
+                <input type="text" value={queueSearch} onChange={(e) => setQueueSearch(e.target.value)} placeholder={s.t("search_queue", "Search job no, contract, B/L, or document name...")} className="w-full bg-transparent text-xs font-semibold outline-none" />
               </div>
-            )}
-
-            {/* Hidden File Input */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".pdf,.jpg,.jpeg,.png,.webp,.tif,.tiff,application/pdf,image/*"
-              className="hidden"
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) handleFileAttach(f);
-              }}
-            />
-
-            {/* ── STEP 1: Upload & Domain ───────────────────────────────────── */}
-            {wizardStep === 1 && (
-              <div className="space-y-4">
-                {!file ? (
-                  <div
-                    onClick={() => fileInputRef.current?.click()}
-                    className="group cursor-pointer rounded-3xl border-2 border-dashed border-slate-300 bg-white p-12 text-center transition-all hover:border-blue-500 hover:bg-blue-50/20 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-blue-500"
-                  >
-                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 transition-transform group-hover:scale-110 dark:bg-blue-950/50 dark:text-blue-400">
-                      <UploadCloud className="h-8 w-8" />
-                    </div>
-                    <h3 className="mt-4 text-base font-bold text-slate-800 dark:text-slate-100">
-                      {s.t("drop_title", "Click to browse or drop an invoice, contract, or bill")}
-                    </h3>
-                    <p className="mt-1 text-xs text-slate-400">
-                      {s.t("drop_sub", "Supports PDF, JPG, PNG, WEBP, TIFF (Max 25 MB, 60 pages)")}
-                    </p>
-
-                    {isNativeApp() && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          void handleCameraSnap();
-                        }}
-                        className="mt-5 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-md shadow-blue-600/20 hover:bg-blue-500 transition-all"
-                      >
-                        <Camera className="h-4 w-4" />
-                        <span>{s.t("snap_camera", "Capture via Scanner / Camera")}</span>
-                      </button>
-                    )}
-                  </div>
-                ) : (
-                  <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900 space-y-4">
-                    <div className="border-b border-slate-100 pb-3 dark:border-slate-800">
-                      <h3 className="text-sm font-black text-slate-800 dark:text-slate-100">
-                        {s.t("ask_domain", "Select Operational Domain for this Document")}
-                      </h3>
-                      <p className="text-xs text-slate-400">
-                        {s.t("ask_domain_sub", "Immediately categorize whether this relates to commercial trading or shipping logistics.")}
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {/* Business Card */}
-                      <div
-                        onClick={() => {
-                          setDomain("business");
-                          setSelectedModuleId("purchase_orders");
-                          setTargetModule("purchase_orders");
-                          setWizardStep(2);
-                        }}
-                        className={`group cursor-pointer rounded-2xl border-2 p-5 transition-all ${
-                          domain === "business"
-                            ? "border-blue-600 bg-blue-50/50 dark:bg-blue-950/20"
-                            : "border-slate-200 hover:border-blue-400 dark:border-slate-800"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-                            <Briefcase className="h-6 w-6" />
-                          </div>
-                          {domain === "business" && (
-                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-white text-xs">
-                              ✓
-                            </span>
-                          )}
-                        </div>
-                        <h4 className="mt-3 text-sm font-bold text-slate-900 dark:text-white">
-                          {s.t("domain_business_title", "Business / Trading")}
-                        </h4>
-                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                          {s.t("domain_business_desc", "Finance, Purchases, Sales, Cash, Inventory, Ledger, Expenses, Companies, Banks")}
-                        </p>
-                      </div>
-
-                      {/* Shipping Card */}
-                      <div
-                        onClick={() => {
-                          setDomain("shipping");
-                          setSelectedModuleId("shipping_bl_records");
-                          setTargetModule("shipping_bl_records");
-                          setWizardStep(2);
-                        }}
-                        className={`group cursor-pointer rounded-2xl border-2 p-5 transition-all ${
-                          domain === "shipping"
-                            ? "border-blue-600 bg-blue-50/50 dark:bg-blue-950/20"
-                            : "border-slate-200 hover:border-blue-400 dark:border-slate-800"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
-                            <Ship className="h-6 w-6" />
-                          </div>
-                          {domain === "shipping" && (
-                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-white text-xs">
-                              ✓
-                            </span>
-                          )}
-                        </div>
-                        <h4 className="mt-3 text-sm font-bold text-slate-900 dark:text-white">
-                          {s.t("domain_shipping_title", "Shipping & Clearing")}
-                        </h4>
-                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                          {s.t("domain_shipping_desc", "Logistics, Import, Export, Transit, Road/Sea/Air, Shipping Lines, Clearing Agents, BL, Containers, Customs")}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* ── STEP 2: Role-based Location Scope ─────────────────────────── */}
-            {wizardStep === 2 && (
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900 space-y-4">
-                <div className="border-b border-slate-100 pb-3 dark:border-slate-800">
-                  <h3 className="text-sm font-black text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                    <Compass className="h-4 w-4 text-blue-600" />
-                    <span>{s.t("step2_head", "Location Scope & Operating Office")}</span>
-                  </h3>
-                  <p className="text-xs text-slate-400">
-                    {s.t("step2_desc", "Select the legal entity and branch office responsible for this document. Scope permissions strictly apply.")}
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  {/* Country Selector */}
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center justify-between">
-                      <span className="flex items-center gap-1.5">
-                        <Globe className="h-3.5 w-3.5 text-slate-400" />
-                        <span>{s.t("country_label", "Country / Territory *")}</span>
-                      </span>
-                      {!isSuperAdmin && (
-                        <span className="text-[10px] text-amber-600 font-bold bg-amber-50 dark:bg-amber-950/50 px-1.5 py-0.5 rounded">
-                          LOCKED BY ROLE
-                        </span>
-                      )}
-                    </label>
-
-                    {isSuperAdmin ? (
-                      <select
-                        value={countryId}
-                        onChange={(e) => void handleCountrySelect(e.target.value)}
-                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                      >
-                        <option value="">— Select Country —</option>
-                        {countries.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {getFlagEmoji(c.name)} {c.name}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 dark:border-slate-800 dark:bg-slate-800">
-                        <span>{getFlagEmoji(currentCountryName)} {currentCountryName}</span>
-                        <ShieldCheck className="h-3.5 w-3.5 text-blue-600" />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Main Branch Selector */}
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center justify-between">
-                      <span className="flex items-center gap-1.5">
-                        <Building2 className="h-3.5 w-3.5 text-slate-400" />
-                        <span>{s.t("branch_label", "Main Branch *")}</span>
-                      </span>
-                      {isBranchUser && (
-                        <span className="text-[10px] text-amber-600 font-bold bg-amber-50 dark:bg-amber-950/50 px-1.5 py-0.5 rounded">
-                          LOCKED BY ROLE
-                        </span>
-                      )}
-                    </label>
-
-                    {isSuperAdmin || isCountryAdmin ? (
-                      <select
-                        value={countryBranchId}
-                        onChange={(e) => void handleMainBranchSelect(e.target.value)}
-                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                      >
-                        <option value="">— Select Main Branch —</option>
-                        {countryBranches.map((b) => (
-                          <option key={b.id} value={b.id}>
-                            {b.name} {b.code ? `(${b.code})` : ""}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 dark:border-slate-800 dark:bg-slate-800">
-                        <span>{currentMainBranchName}</span>
-                        <ShieldCheck className="h-3.5 w-3.5 text-blue-600" />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* City Branch Selector */}
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center justify-between">
-                      <span className="flex items-center gap-1.5">
-                        <MapPin className="h-3.5 w-3.5 text-slate-400" />
-                        <span>{s.t("city_branch_label", "City Branch")}</span>
-                      </span>
-                      {isBranchUser && (
-                        <span className="text-[10px] text-amber-600 font-bold bg-amber-50 dark:bg-amber-950/50 px-1.5 py-0.5 rounded">
-                          LOCKED BY ROLE
-                        </span>
-                      )}
-                    </label>
-
-                    {!isBranchUser ? (
-                      <select
-                        value={cityBranchId}
-                        onChange={(e) => setCityBranchId(e.target.value)}
-                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                      >
-                        <option value="">— Primary / City Office —</option>
-                        {cityBranches.map((cb) => (
-                          <option key={cb.id} value={cb.id}>
-                            {cb.name} {cb.code ? `(${cb.code})` : ""}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 dark:border-slate-800 dark:bg-slate-800">
-                        <span>{currentCityBranchName}</span>
-                        <ShieldCheck className="h-3.5 w-3.5 text-blue-600" />
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
-                  <button
-                    type="button"
-                    onClick={() => setWizardStep(1)}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300"
-                  >
-                    <ChevronLeft className="h-3.5 w-3.5" />
-                    <span>{s.t("back", "Back")}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setWizardStep(3)}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2 text-xs font-bold text-white shadow-md shadow-blue-600/20 hover:bg-blue-500"
-                  >
-                    <span>{s.t("next_module", "Next: Select ERP Module")}</span>
-                    <ChevronRight className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* ── STEP 3: ERP Module Selection ──────────────────────────────── */}
-            {wizardStep === 3 && (
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900 space-y-4">
-                <div className="border-b border-slate-100 pb-3 dark:border-slate-800 flex items-center justify-between">
-                  <div>
-                    <h3 className="text-sm font-black text-slate-800 dark:text-slate-100">
-                      {s.t("step3_head", "Select Target ERP Module")} ({domain === "shipping" ? "Shipping & Clearing" : "Business / Trading"})
-                    </h3>
-                    <p className="text-xs text-slate-400">
-                      {s.t("step3_desc", "Choose the canonical ERP module for this document. Only valid modules for this domain are shown.")}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 max-h-[460px] overflow-y-auto p-1">
-                  {(domain === "shipping" ? SHIPPING_MODULES : BUSINESS_MODULES).map((mod) => {
-                    const IconComp = mod.icon || FileText;
-                    const isSelected = selectedModuleId === mod.id;
-                    return (
-                      <div
-                        key={mod.id}
-                        onClick={() => {
-                          setSelectedModuleId(mod.id);
-                          setTargetModule(mod.target);
-                        }}
-                        className={`cursor-pointer rounded-xl border-2 p-3.5 transition-all ${
-                          isSelected
-                            ? "border-blue-600 bg-blue-50/60 dark:bg-blue-950/40 shadow-xs"
-                            : "border-slate-200/90 hover:border-blue-300 bg-white dark:border-slate-800 dark:bg-slate-900"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className={`p-2 rounded-lg ${isSelected ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"}`}>
-                            <IconComp className="h-4 w-4" />
-                          </div>
-                          {isSelected && <span className="text-blue-600 font-black text-xs">✓</span>}
-                        </div>
-                        <p className="mt-2.5 text-xs font-bold text-slate-900 dark:text-slate-100">{mod.name}</p>
-                        <p className="mt-0.5 text-[10px] text-slate-400 line-clamp-2">{mod.desc}</p>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
-                  <button
-                    type="button"
-                    onClick={() => setWizardStep(2)}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300"
-                  >
-                    <ChevronLeft className="h-3.5 w-3.5" />
-                    <span>{s.t("back", "Back")}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setWizardStep(4)}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2 text-xs font-bold text-white shadow-md shadow-blue-600/20 hover:bg-blue-500"
-                  >
-                    <span>{s.t("next_params", "Next: Dynamic Parameters")}</span>
-                    <ChevronRight className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* ── STEP 4: Dynamic Parameters & Relevant Accounts ─────────────── */}
-            {wizardStep === 4 && (
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900 space-y-4">
-                <div className="border-b border-slate-100 pb-3 dark:border-slate-800">
-                  <h3 className="text-sm font-black text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                    <Sliders className="h-4 w-4 text-blue-600" />
-                    <span>{s.t("step4_head", "Accounting & Entity Parameters")} — {getDestinationInfo(targetModule, s).moduleName}</span>
-                  </h3>
-                  <p className="text-xs text-slate-400">
-                    {s.t("step4_desc", "Configure target accounts, references, and counterparties before invoking AI extraction.")}
-                  </p>
-                </div>
-
-                {/* DYNAMIC FIELDS PER MODULE */}
-                {/* 1. PURCHASE / PURCHASE BOOKING */}
-                {["purchase_orders", "purchase_loading_records"].includes(targetModule) && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        {s.t("pur_acct", "Purchase Account *")}
-                      </label>
-                      <select
-                        value={purchaseAccountId}
-                        onChange={(e) => setPurchaseAccountId(e.target.value)}
-                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                      >
-                        <option value="">— 5010 - Purchase Account —</option>
-                        {chartAccounts.map((a) => (
-                          <option key={a.id} value={a.id}>{a.code} · {a.name}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        {s.t("pay_acct", "Supplier / Payable Account *")}
-                      </label>
-                      <select
-                        value={payableAccountId}
-                        onChange={(e) => setPayableAccountId(e.target.value)}
-                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                      >
-                        <option value="">— 2000 - Accounts Payable —</option>
-                        {chartAccounts.map((a) => (
-                          <option key={a.id} value={a.id}>{a.code} · {a.name}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        {s.t("contract_hint", "Contract / PO Reference Hint")}
-                      </label>
-                      <input
-                        type="text"
-                        value={contractReference}
-                        onChange={(e) => setContractReference(e.target.value)}
-                        placeholder="e.g. 0907B, PO-2026-001"
-                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* 2. SALES */}
-                {targetModule === "sales_orders" && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        {s.t("rec_acct", "Customer / Receivable Account *")}
-                      </label>
-                      <select
-                        value={receivableAccountId}
-                        onChange={(e) => setReceivableAccountId(e.target.value)}
-                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                      >
-                        <option value="">— 1100 - Accounts Receivable —</option>
-                        {chartAccounts.map((a) => (
-                          <option key={a.id} value={a.id}>{a.code} · {a.name}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        {s.t("sales_acct", "Sales / Revenue Account *")}
-                      </label>
-                      <select
-                        value={salesAccountId}
-                        onChange={(e) => setSalesAccountId(e.target.value)}
-                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                      >
-                        <option value="">— 4010 - Sales Revenue —</option>
-                        {chartAccounts.map((a) => (
-                          <option key={a.id} value={a.id}>{a.code} · {a.name}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        {s.t("sales_ref", "Sales Contract / Order No.")}
-                      </label>
-                      <input
-                        type="text"
-                        value={contractReference}
-                        onChange={(e) => setContractReference(e.target.value)}
-                        placeholder="e.g. SC-9901"
-                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* 3. CASH ENTRY / ROZNAMCHA */}
-                {targetModule === "roznamcha_entries" && (
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        {s.t("debit_acct", "Debit Account *")}
-                      </label>
-                      <select
-                        value={debitAccountId}
-                        onChange={(e) => setDebitAccountId(e.target.value)}
-                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                      >
-                        <option value="">— Select Debit Account —</option>
-                        {chartAccounts.map((a) => (
-                          <option key={a.id} value={a.id}>{a.code} · {a.name}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        {s.t("credit_acct", "Credit Account *")}
-                      </label>
-                      <select
-                        value={creditAccountId}
-                        onChange={(e) => setCreditAccountId(e.target.value)}
-                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                      >
-                        <option value="">— Select Credit Account —</option>
-                        {chartAccounts.map((a) => (
-                          <option key={a.id} value={a.id}>{a.code} · {a.name}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        {s.t("entry_type", "Entry Type")}
-                      </label>
-                      <select
-                        value={entryType}
-                        onChange={(e) => setEntryType(e.target.value as any)}
-                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                      >
-                        <option value="both">Both (DR & CR)</option>
-                        <option value="debit">{s.t("debit_only", "Debit Only")}</option>
-                        <option value="credit">{s.t("credit_only", "Credit Only")}</option>
-                      </select>
-                    </div>
-                  </div>
-                )}
-
-                {/* 4. SHIPPING & CLEARING */}
-                {["shipping_bl_records", "clearing_agent_custom_entries"].includes(targetModule) && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        {s.t("bl_no", "B/L Number")}
-                      </label>
-                      <input
-                        type="text"
-                        value={blReference}
-                        onChange={(e) => setBlReference(e.target.value)}
-                        placeholder="e.g. MEDU1234567"
-                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        {s.t("container_no", "Container Number(s)")}
-                      </label>
-                      <input
-                        type="text"
-                        value={containerReference}
-                        onChange={(e) => setContainerReference(e.target.value)}
-                        placeholder="e.g. MSCU9876543, CMAU1122334"
-                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        {s.t("pol_hint", "Port of Loading")}
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Dalian Port, Jebel Ali"
-                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        {s.t("pod_hint", "Port of Discharge")}
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Jebel Ali, Karachi"
-                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* 5. BANKS / COMPANIES / OTHERS */}
-                {!["purchase_orders", "purchase_loading_records", "sales_orders", "roznamcha_entries", "shipping_bl_records", "clearing_agent_custom_entries"].includes(targetModule) && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        {s.t("linked_account", "Linked GL Account")}
-                      </label>
-                      <select
-                        value={bankAccountId}
-                        onChange={(e) => setBankAccountId(e.target.value)}
-                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                      >
-                        <option value="">— Select Account —</option>
-                        {chartAccounts.map((a) => (
-                          <option key={a.id} value={a.id}>{a.code} · {a.name}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        {s.t("doc_ref", "Document Reference No.")}
-                      </label>
-                      <input
-                        type="text"
-                        value={documentReference}
-                        onChange={(e) => setDocumentReference(e.target.value)}
-                        placeholder="e.g. LIC-2026-900"
-                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
-                  <button
-                    type="button"
-                    onClick={() => setWizardStep(3)}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300"
-                  >
-                    <ChevronLeft className="h-3.5 w-3.5" />
-                    <span>{s.t("back", "Back")}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    disabled={isProcessing || !canRunExtraction}
-                    onClick={() => void executeAiExtraction()}
-                    title={!canRunExtraction ? s.t("run_ai_blocked", "Select country, branch, module and the relevant account(s) before running extraction.") : undefined}
-                    className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-xs font-black text-white shadow-lg shadow-blue-600/30 hover:bg-blue-500 transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100"
-                  >
-                    {isProcessing ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        <span>{s.t("analyzing", "Running AI Extraction...")}</span>
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="h-4 w-4" />
-                        <span>{s.t("run_ai", "Run AI / OCR Extraction")}</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-                {!canRunExtraction && !isProcessing && (
-                  <p className="text-right text-[11px] font-semibold text-amber-600 dark:text-amber-400">
-                    {s.t("run_ai_blocked", "Select country, branch, module and the relevant account(s) before running extraction.")}
-                  </p>
-                )}
-              </div>
-            )}
-
-            {/* Processing Overlay Modal */}
-            {isProcessing && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs">
-                <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl text-center dark:bg-slate-900 space-y-4">
-                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400">
-                    <Loader2 className="h-8 w-8 animate-spin" />
-                  </div>
-                  <h3 className="text-base font-black text-slate-900 dark:text-white">
-                    {s.t("processing_doc", "Processing Document Intelligence")}
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {processingStatusText || "Analyzing layout, reading text, and matching ERP parameters..."}
-                  </p>
-                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-                    <div className="h-full bg-blue-600 rounded-full animate-pulse w-3/4" />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* ── STEP 5: SPLIT-SCREEN REVIEW & ERP FORM BESIDE DOCUMENT ───────── */}
-            {wizardStep === 5 && (
-              <div className="space-y-4">
-                <VerificationChecksPanel jobId={activeJobId} lang={s.lang} />
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-                  {/* ── LEFT COLUMN (52% width): DOCUMENT PREVIEW & AI RESULTS ── */}
-                  <div className="lg:col-span-6 xl:col-span-6 space-y-4">
-                    <div className="rounded-2xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900 overflow-hidden flex flex-col">
-                      {/* Document Tabs */}
-                      <div className="flex items-center justify-between border-b border-slate-200 px-4 pt-2 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-900">
-                        <div className="flex items-center gap-1">
-                          <button
-                            type="button"
-                            onClick={() => setActiveDocTab("preview")}
-                            className={`px-3 py-2 text-xs font-bold border-b-2 transition-colors ${
-                              activeDocTab === "preview"
-                                ? "border-blue-600 text-blue-600 dark:text-blue-400"
-                                : "border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400"
-                            }`}
-                          >
-                            {s.t("doc_preview", "Document Preview")}
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => setActiveDocTab("ocr")}
-                            className={`px-3 py-2 text-xs font-bold border-b-2 transition-colors ${
-                              activeDocTab === "ocr"
-                                ? "border-blue-600 text-blue-600 dark:text-blue-400"
-                                : "border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400"
-                            }`}
-                          >
-                            {s.t("ocr_text", "OCR Text")}
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => setActiveDocTab("extracted")}
-                            className={`px-3 py-2 text-xs font-bold border-b-2 transition-colors ${
-                              activeDocTab === "extracted"
-                                ? "border-blue-600 text-blue-600 dark:text-blue-400"
-                                : "border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400"
-                            }`}
-                          >
-                            {s.t("extracted_data_tab", "Extracted Data")} ({jobData?.fields?.length ?? 0})
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => setActiveDocTab("logs")}
-                            className={`px-3 py-2 text-xs font-bold border-b-2 transition-colors ${
-                              activeDocTab === "logs"
-                                ? "border-blue-600 text-blue-600 dark:text-blue-400"
-                                : "border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400"
-                            }`}
-                          >
-                            {s.t("proc_log", "Processing Log")}
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Dark Toolbar Bar Matching Reference */}
-                      <div className="flex items-center justify-between px-3.5 py-2 bg-slate-900 text-white text-xs select-none">
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            className="p-1 rounded hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
-                            title={s.t("fullscreen", "Fullscreen")}
-                          >
-                            <Maximize2 className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setShowThumbnails(!showThumbnails)}
-                            className={`p-1 rounded hover:bg-slate-800 transition-colors ${showThumbnails ? "text-blue-400" : "text-slate-300"}`}
-                            title={s.t("toggle_thumbnails", "Toggle Thumbnails")}
-                          >
-                            <Layers className="h-3.5 w-3.5" />
-                          </button>
-                          <div className="flex items-center gap-1.5 text-slate-300 text-xs ml-1">
-                            <button
-                              type="button"
-                              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                              className="h-5 w-5 flex items-center justify-center rounded bg-slate-800 hover:bg-slate-700 text-slate-200"
-                            >
-                              -
-                            </button>
-                            <span className="font-mono text-xs px-2 py-0.5 bg-slate-800 rounded font-semibold text-white">
-                              {currentPage}
-                            </span>
-                            <span className="text-slate-400">/ {fileDetails?.pages || 3}</span>
-                            <button
-                              type="button"
-                              onClick={() => setCurrentPage(Math.min(fileDetails?.pages || 3, currentPage + 1))}
-                              className="h-5 w-5 flex items-center justify-center rounded bg-slate-800 hover:bg-slate-700 text-slate-200"
-                            >
-                              +
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Zoom & Action Controls */}
-                        <div className="flex items-center gap-2.5">
-                          <span className="font-mono text-xs text-slate-300 font-semibold">{zoomLevel}%</span>
-                          <button
-                            type="button"
-                            onClick={() => setZoomLevel(Math.max(50, zoomLevel - 15))}
-                            className="p-1 rounded hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
-                            title={s.t("zoom_out", "Zoom Out")}
-                          >
-                            <ZoomOut className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setZoomLevel(Math.min(200, zoomLevel + 15))}
-                            className="p-1 rounded hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
-                            title={s.t("zoom_in", "Zoom In")}
-                          >
-                            <ZoomIn className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            className="p-1 rounded hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
-                            title={s.t("search_document", "Search Document")}
-                          >
-                            <Search className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (activeJobId) window.open(`/api/erp/document-intelligence/${activeJobId}/file`, '_blank');
-                              else alert("Downloading original document...");
-                            }}
-                            className="p-1 rounded hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
-                            title={s.t("download_original", "Download Original")}
-                          >
-                            <Download className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Main Viewer Area */}
-                      <div className="flex min-h-[490px] max-h-[600px] bg-slate-100/80 dark:bg-slate-950/70 overflow-hidden">
-                        {/* Page Thumbnails Rail */}
-                        {showThumbnails && (
-                          <div className="w-24 border-r border-slate-200 bg-white p-2.5 overflow-y-auto space-y-3 dark:border-slate-800 dark:bg-slate-900 shrink-0">
-                            {[1, 2, 3].map((pg) => (
-                              <div
-                                key={pg}
-                                onClick={() => setCurrentPage(pg)}
-                                className={`cursor-pointer rounded-lg p-1 text-center transition-all ${
-                                  currentPage === pg
-                                    ? "ring-2 ring-blue-600 bg-blue-50/60 shadow-xs"
-                                    : "border border-slate-200 hover:border-slate-300 dark:border-slate-800"
-                                }`}
-                              >
-                                <div className="h-20 w-full rounded bg-white border border-slate-200 p-1 flex flex-col justify-between text-[7px] text-slate-400 font-serif leading-tight overflow-hidden shadow-2xs">
-                                  <div className="border-b border-slate-100 pb-0.5 font-bold text-[6px] text-slate-600 truncate">
-                                    DALIAN SUNSHINE
-                                  </div>
-                                  <div className="space-y-0.5 py-0.5 text-center">
-                                    <span className="font-bold text-slate-800 text-[6px]">SALES CONTRACT</span>
-                                    <div className="h-1 bg-slate-100 rounded w-3/4 mx-auto" />
-                                    <div className="h-1 bg-slate-100 rounded w-1/2 mx-auto" />
-                                  </div>
-                                  <div className="border-t border-slate-100 pt-0.5 flex justify-between text-[5px]">
-                                    <span>QTY 50</span>
-                                    <span>$60,000</span>
-                                  </div>
-                                </div>
-                                <span className="mt-1 block text-[11px] font-bold text-slate-600 dark:text-slate-400">
-                                  {pg}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-
-                        {/* Interactive Viewer / Document Frame */}
-                        <div className="flex-1 overflow-auto p-4 flex items-center justify-center">
-                          {activeDocTab === "preview" ? (
-                            activeJobId && file ? (
-                              <div
-                                className="transition-transform duration-200 shadow-xl rounded-lg overflow-hidden bg-white max-w-full"
-                                style={{
-                                  transform: `scale(${zoomLevel / 100}) rotate(${rotation}deg)`,
-                                  transformOrigin: "top center",
-                                }}
-                              >
-                                <iframe
-                                  src={`/api/erp/document-intelligence/${activeJobId}/file`}
-                                  className="w-[520px] h-[580px] border-0"
-                                  title={s.t("original_document", "Original Document")}
-                                />
-                              </div>
-                            ) : (
-                              /* Clean authentic contract preview matching reference image */
-                              <div
-                                className="w-[480px] min-h-[560px] bg-white p-7 shadow-lg rounded-sm border border-slate-200 text-slate-900 text-xs leading-relaxed space-y-3 font-serif transition-transform duration-150"
-                                style={{
-                                  transform: `scale(${zoomLevel / 100}) rotate(${rotation}deg)`,
-                                  transformOrigin: "top center",
-                                }}
-                              >
-                                <div className="text-center border-b border-slate-200 pb-2.5">
-                                  <h4 className="font-bold text-sm tracking-wide text-slate-900">
-                                    DALIAN SUNSHINE IMP & EXP. CO., LTD.
-                                  </h4>
-                                  <p className="text-[10px] text-slate-500 font-sans mt-0.5">
-                                    大连阳光进出口有限公司
-                                  </p>
-                                  <p className="text-[9px] text-slate-500 font-sans">
-                                    Room 1901-1902, Yinfeng Tower, Renmin Road, Dalian, China
-                                  </p>
-                                  <h5 className="font-black text-xs mt-2 uppercase tracking-widest text-slate-900 font-sans border-t border-slate-100 pt-1.5">
-                                    SALES CONTRACT
-                                  </h5>
-                                </div>
-
-                                <div className="flex justify-between text-[11px] font-sans border-b border-slate-100 pb-1.5">
-                                  <div>
-                                    <span className="text-slate-500">Contract No.: </span>
-                                    <strong className="text-slate-900">0907B</strong>
-                                  </div>
-                                  <div>
-                                    <span className="text-slate-500">Date: </span>
-                                    <strong className="text-slate-900">2026-09-05</strong>
-                                  </div>
-                                </div>
-
-                                <div className="text-[11px] font-sans space-y-1">
-                                  <p>
-                                    <span className="text-slate-500">The Seller: </span>
-                                    <strong>Dalian Sunshine Imp & Exp. Co., Ltd. (CHINA)</strong>
-                                  </p>
-                                  <p>
-                                    <span className="text-slate-500">The Buyer: </span>
-                                    <strong>DGT LLC (UAE)</strong>
-                                  </p>
-                                  <p className="text-[10px] text-slate-500 italic pt-0.5">
-                                    The Buyer and Seller have agreed to conclude this Sales Contract under the following terms and conditions:
-                                  </p>
-                                </div>
-
-                                <table className="w-full border-collapse border border-slate-300 text-[10px] font-sans">
-                                  <thead>
-                                    <tr className="bg-slate-100 text-slate-700 font-bold">
-                                      <th className="border border-slate-300 p-1.5 text-left">DESCRIPTION</th>
-                                      <th className="border border-slate-300 p-1.5 text-center">QUANTITY (MT)</th>
-                                      <th className="border border-slate-300 p-1.5 text-right">UNIT PRICE (USD/MT)</th>
-                                      <th className="border border-slate-300 p-1.5 text-right">AMOUNT (USD)</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    <tr>
-                                      <td className="border border-slate-300 p-1.5 font-semibold text-slate-900">Plastic Raw Material</td>
-                                      <td className="border border-slate-300 p-1.5 text-center font-mono">50</td>
-                                      <td className="border border-slate-300 p-1.5 text-right font-mono">1,200</td>
-                                      <td className="border border-slate-300 p-1.5 text-right font-mono font-bold">60,000</td>
-                                    </tr>
-                                    <tr className="bg-slate-50 font-bold border-t-2 border-slate-300">
-                                      <td className="border border-slate-300 p-1.5">Total</td>
-                                      <td className="border border-slate-300 p-1.5 text-center font-mono">50</td>
-                                      <td className="border border-slate-300 p-1.5 text-right font-mono">1,200</td>
-                                      <td className="border border-slate-300 p-1.5 text-right font-mono font-bold text-slate-900">60,000</td>
-                                    </tr>
-                                  </tbody>
-                                </table>
-
-                                <div className="text-[10px] font-sans space-y-1 text-slate-700 pt-1">
-                                  <p><strong>1. Payment Terms:</strong> T/T</p>
-                                  <p><strong>2. Delivery Terms:</strong> {s.t("sample_delivery_terms", "CIF Dalian Port")}</p>
-                                  <p><strong>3. Quality:</strong> As per Seller&apos;s standard</p>
-                                  <p><strong>4. Packing:</strong> {s.t("sample_packing", "Standard export packing")}</p>
-                                  <p><strong>5. Validity:</strong> This contract is valid until full shipment.</p>
-                                </div>
-
-                                <div className="pt-3 grid grid-cols-2 gap-6 text-[10px] font-sans border-t border-slate-200 mt-2">
-                                  <div>
-                                    <p className="text-slate-500 font-semibold">For the Seller:</p>
-                                    <p className="font-bold text-slate-800 mt-0.5">Dalian Sunshine Imp & Exp. Co., Ltd.</p>
-                                    <div className="mt-3 border-b border-slate-300 w-28" />
-                                    <p className="text-[9px] text-slate-400 mt-0.5">Date: 2026-09-05</p>
-                                  </div>
-                                  <div>
-                                    <p className="text-slate-500 font-semibold">For the Buyer:</p>
-                                    <p className="font-bold text-slate-800 mt-0.5">DGT LLC (UAE)</p>
-                                    <div className="mt-3 border-b border-slate-300 w-28" />
-                                    <p className="text-[9px] text-slate-400 mt-0.5">Date: 2026-09-05</p>
-                                  </div>
-                                </div>
-                              </div>
-                            )
-                          ) : activeDocTab === "ocr" ? (
-                            <div className="w-full h-full p-4 font-mono text-xs text-slate-800 dark:text-slate-200 whitespace-pre-wrap overflow-auto bg-white dark:bg-slate-900 rounded-xl">
-                              {jobData?.job?.transcript || `DALIAN SUNSHINE IMP & EXP. CO., LTD.
-SALES CONTRACT
-Contract No.: 0907B
-Date: 2026-09-05
-Seller: Dalian Sunshine Imp & Exp. Co., Ltd.
-Buyer: DGT LLC
-Description: Plastic Raw Material
-Quantity: 50 MT
-Unit Price: USD 1,200
-Total Amount: USD 60,000
-Payment Terms: T/T
-Delivery Terms: CIF Dalian Port`}
-                            </div>
-                          ) : activeDocTab === "extracted" ? (
-                            <div className="w-full h-full p-2 overflow-auto">
-                              <table className="w-full text-xs text-left">
-                                <thead className="text-[10px] text-slate-400 border-b">
-                                  <tr>
-                                    <th className="p-2">Field</th>
-                                    <th className="p-2">Extracted Value</th>
-                                    <th className="p-2">Confidence</th>
-                                    <th className="p-2">Status</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {Object.entries(formData).map(([k, v]) => (
-                                    <tr key={k} className="border-b border-slate-100 dark:border-slate-800">
-                                      <td className="p-2 font-bold text-slate-600 dark:text-slate-400 capitalize">{k}</td>
-                                      <td className="p-2 font-mono text-slate-800 dark:text-slate-100">{String(v)}</td>
-                                      <td className="p-2 text-emerald-600 font-bold">{avgConfidencePct != null ? `${avgConfidencePct}%` : "—"}</td>
-                                      <td className="p-2 text-emerald-600">{v ? `✓ ${s.t("verified", "Verified")}` : `${s.t("not_extracted", "Not extracted")}`}</td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          ) : (
-                            <div className="w-full h-full p-4 font-mono text-xs text-slate-600 dark:text-slate-400 space-y-2 overflow-auto">
-                              {jobData?.events?.length ? (
-                                [...jobData.events].reverse().map((ev: any) => (
-                                  <p key={ev.id}>
-                                    ✓ [{ev.created_at ? new Date(ev.created_at).toLocaleTimeString() : "-"}] {ev.action}
-                                    {ev.detail ? `: ${typeof ev.detail === "string" ? ev.detail : JSON.stringify(ev.detail)}` : ""}
-                                  </p>
-                                ))
-                              ) : (
-                                <p>{s.t("no_log_yet", "No processing events yet — run AI / OCR Extraction to see the log here.")}</p>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* AI Extraction Results Sub-Panel (Matching Reference Image) */}
-                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900 space-y-3">
-                      <div className="flex items-center justify-between border-b border-slate-100 pb-2.5 dark:border-slate-800">
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-xs font-black text-slate-900 dark:text-slate-100">
-                            {s.t("ai_res_head", "AI Extraction Results")}
-                          </h4>
-                          <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-                            {(jobData?.fields?.length ?? 0)} {s.t("fields_extracted", "fields extracted")}
-                          </span>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => setEditFieldsModalOpen(true)}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-[11px] font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-300 transition-colors"
-                        >
-                          <Edit3 className="h-3 w-3" />
-                          <span>{s.t("edit_extracted", "Edit Extracted Data")}</span>
-                        </button>
-                      </div>
-
-                      {/* Extracted Fields List with Green Icons Matching Reference Image */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                        <div className="flex items-center justify-between rounded-lg bg-slate-50 p-2 dark:bg-slate-800/60">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                            <span className="text-slate-500">Document Type</span>
-                          </div>
-                          <span className="font-bold text-slate-800 dark:text-slate-100">{formData.docType}</span>
-                        </div>
-
-                        <div className="flex items-center justify-between rounded-lg bg-slate-50 p-2 dark:bg-slate-800/60">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                            <span className="text-slate-500">Contract No.</span>
-                          </div>
-                          <span className="font-bold text-slate-800 dark:text-slate-100">{formData.contractNo}</span>
-                        </div>
-
-                        <div className="flex items-center justify-between rounded-lg bg-slate-50 p-2 dark:bg-slate-800/60">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                            <span className="text-slate-500">Document Date</span>
-                          </div>
-                          <span className="font-bold text-slate-800 dark:text-slate-100">{formData.documentDate}</span>
-                        </div>
-
-                        <div className="flex items-center justify-between rounded-lg bg-slate-50 p-2 dark:bg-slate-800/60">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                            <span className="text-slate-500">Supplier</span>
-                          </div>
-                          <span className="font-bold text-slate-800 dark:text-slate-100 truncate max-w-[130px]">{formData.supplierName}</span>
-                        </div>
-
-                        <div className="flex items-center justify-between rounded-lg bg-slate-50 p-2 dark:bg-slate-800/60">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                            <span className="text-slate-500">Buyer</span>
-                          </div>
-                          <span className="font-bold text-slate-800 dark:text-slate-100">{formData.buyerName}</span>
-                        </div>
-
-                        <div className="flex items-center justify-between rounded-lg bg-slate-50 p-2 dark:bg-slate-800/60">
-                          <div className="flex items-center gap-2">
-                            <DollarSign className="h-4 w-4 text-emerald-600 shrink-0" />
-                            <span className="text-slate-500">Total Amount</span>
-                          </div>
-                          <span className="font-bold text-emerald-600 font-mono">{formData.currency} {Number(formData.totalAmount || 60000).toLocaleString()}</span>
-                        </div>
-
-                        <div className="flex items-center justify-between rounded-lg bg-slate-50 p-2 dark:bg-slate-800/60">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                            <span className="text-slate-500">Currency</span>
-                          </div>
-                          <span className="font-bold text-slate-800 dark:text-slate-100">{formData.currency}</span>
-                        </div>
-
-                        <div className="flex items-center justify-between rounded-lg bg-slate-50 p-2 dark:bg-slate-800/60">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                            <span className="text-slate-500">Items</span>
-                          </div>
-                          <span className="font-bold text-slate-800 dark:text-slate-100">1 item</span>
-                        </div>
-
-                        <div className="flex items-center justify-between rounded-lg bg-slate-50 p-2 dark:bg-slate-800/60">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                            <span className="text-slate-500">Quantity</span>
-                          </div>
-                          <span className="font-bold text-slate-800 dark:text-slate-100">50 MT</span>
-                        </div>
-
-                        <div className="flex items-center justify-between rounded-lg bg-slate-50 p-2 dark:bg-slate-800/60">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                            <span className="text-slate-500">Unit Price</span>
-                          </div>
-                          <span className="font-bold text-slate-800 dark:text-slate-100 font-mono">1,200</span>
-                        </div>
-
-                        <div className="flex items-center justify-between rounded-lg bg-slate-50 p-2 dark:bg-slate-800/60">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                            <span className="text-slate-500">Payment Terms</span>
-                          </div>
-                          <span className="font-bold text-slate-800 dark:text-slate-100">{formData.paymentTerms || "T/T"}</span>
-                        </div>
-
-                        <div className="flex items-center justify-between rounded-lg bg-slate-50 p-2 dark:bg-slate-800/60">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                            <span className="text-slate-500">Delivery Terms</span>
-                          </div>
-                          <span className="font-bold text-slate-800 dark:text-slate-100">{formData.deliveryTerms || "CIF"}</span>
-                        </div>
-                      </div>
-
-                      {/* AI Confidence Progress Bar */}
-                      <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-                        <div className="flex items-center justify-between text-xs mb-1">
-                          <span className="font-bold text-slate-700 dark:text-slate-300">{s.t("ai_confidence", "AI Confidence")}</span>
-                          <span className="font-black text-emerald-600">{avgConfidencePct != null ? `${avgConfidencePct}%` : "—"}</span>
-                        </div>
-                        <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden dark:bg-slate-800">
-                          <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${avgConfidencePct ?? 0}%` }} />
-                        </div>
-                        <p className="mt-1.5 text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold flex items-center gap-1.5">
-                          <CheckCircle2 className="h-3.5 w-3.5" />
-                          <span>{s.t("doc_ok", "Document analyzed successfully without reference conflicts.")}</span>
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* ── RIGHT COLUMN (48% width): ERP ENTRY FORM BESIDE DOCUMENT ── */}
-                  <div className="lg:col-span-6 xl:col-span-6 space-y-4">
-                    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900 space-y-4">
-                      {/* Form Header */}
-                      <div className="flex items-start justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400 border border-blue-200 dark:border-blue-900">
-                            <FileText className="h-5 w-5" />
-                          </div>
-                          <div>
-                            <h3 className="text-sm font-black text-slate-900 dark:text-slate-100">
-                              {["sales_orders", "sales_booking"].includes(targetModule)
-                                ? s.t("create_sales_entry", "Create Sales Entry")
-                                : ["purchase_orders", "purchase_loading_records"].includes(targetModule)
-                                ? s.t("create_purchase_entry", "Create Purchase Entry")
-                                : `${s.t("create_entry_prefix", "Create")} ${getDestinationInfo(targetModule, s).moduleName} ${s.t("create_entry_suffix", "Entry")}`}
-                            </h3>
-                            <p className="text-[11px] text-slate-400">
-                              {s.t("verify_sub", "Verify and complete the data before creating draft entry")}
-                            </p>
-                          </div>
-                        </div>
-
-                        <button
-                          type="button"
-                          className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                        >
-                          <span>{s.t("load_template", "Load Template")}</span>
-                          <span className="text-[10px] text-slate-400">▾</span>
-                        </button>
-                      </div>
-
-                      {/* Sub-Tabs (Basic Info, Items, Payment & Delivery, Notes) */}
-                      <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800">
-                        <button
-                          type="button"
-                          onClick={() => setActiveFormTab("basic")}
-                          className={`pb-2 text-xs font-bold border-b-2 transition-colors ${
-                            activeFormTab === "basic"
-                              ? "border-blue-600 text-blue-600 dark:text-blue-400"
-                              : "border-transparent text-slate-400 hover:text-slate-700"
-                          }`}
-                        >
-                          {s.t("basic_info", "Basic Information")}
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setActiveFormTab("items")}
-                          className={`pb-2 text-xs font-bold border-b-2 transition-colors ${
-                            activeFormTab === "items"
-                              ? "border-blue-600 text-blue-600 dark:text-blue-400"
-                              : "border-transparent text-slate-400 hover:text-slate-700"
-                          }`}
-                        >
-                          {s.t("items_tab", "Items")} ({jobData?.lineItems?.length ?? 0})
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setActiveFormTab("payment")}
-                          className={`pb-2 text-xs font-bold border-b-2 transition-colors ${
-                            activeFormTab === "payment"
-                              ? "border-blue-600 text-blue-600 dark:text-blue-400"
-                              : "border-transparent text-slate-400 hover:text-slate-700"
-                          }`}
-                        >
-                          {s.t("payment_tab", "Payment & Delivery")}
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setActiveFormTab("notes")}
-                          className={`pb-2 text-xs font-bold border-b-2 transition-colors ${
-                            activeFormTab === "notes"
-                              ? "border-blue-600 text-blue-600 dark:text-blue-400"
-                              : "border-transparent text-slate-400 hover:text-slate-700"
-                          }`}
-                        >
-                          {s.t("notes_tab", "Notes")}
-                        </button>
-                      </div>
-
-                      {/* TAB CONTENT */}
-                      {activeFormTab === "basic" && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
-                          {/* Document Type */}
-                          <div>
-                            <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                              Document Type <span className="text-rose-500">*</span>
-                            </label>
-                            <select
-                              value={formData.docType}
-                              onChange={(e) => setFormData({ ...formData, docType: e.target.value })}
-                              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                            >
-                              <option value="Sales Contract">{s.t("doctype_sales_contract", "Sales Contract")}</option>
-                              <option value="Purchase Contract">{s.t("doctype_purchase_contract", "Purchase Contract")}</option>
-                              <option value="Commercial Invoice">{s.t("doctype_commercial_invoice", "Commercial Invoice")}</option>
-                              <option value="Proforma Invoice">{s.t("doctype_proforma_invoice", "Proforma Invoice")}</option>
-                              <option value="Bill of Lading">{s.t("doctype_bill_of_lading", "Bill of Lading")}</option>
-                            </select>
-                          </div>
-
-                          {/* Country */}
-                          <div>
-                            <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                              Country <span className="text-rose-500">*</span>
-                            </label>
-                            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-200">
-                              <span>{getFlagEmoji(currentCountryName)}</span>
-                              <span>{currentCountryName}</span>
-                            </div>
-                          </div>
-
-                          {/* Contract No */}
-                          <div>
-                            <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                              Contract No. <span className="text-rose-500">*</span>
-                            </label>
-                            <input
-                              type="text"
-                              value={formData.contractNo}
-                              onChange={(e) => setFormData({ ...formData, contractNo: e.target.value })}
-                              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                            />
-                          </div>
-
-                          {/* Main Branch */}
-                          <div>
-                            <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                              Main Branch <span className="text-rose-500">*</span>
-                            </label>
-                            <select
-                              value={countryBranchId}
-                              onChange={(e) => handleMainBranchSelect(e.target.value)}
-                              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                            >
-                              <option value="">{currentMainBranchName}</option>
-                              {countryBranches.map((b) => (
-                                <option key={b.id} value={b.id}>{b.name}</option>
-                              ))}
-                            </select>
-                          </div>
-
-                          {/* Document Date */}
-                          <div>
-                            <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                              Document Date <span className="text-rose-500">*</span>
-                            </label>
-                            <div className="relative">
-                              <input
-                                type="date"
-                                value={formData.documentDate}
-                                onChange={(e) => setFormData({ ...formData, documentDate: e.target.value })}
-                                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                              />
-                            </div>
-                          </div>
-
-                          {/* City Branch */}
-                          <div>
-                            <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                              City Branch <span className="text-rose-500">*</span>
-                            </label>
-                            <select
-                              value={cityBranchId}
-                              onChange={(e) => setCityBranchId(e.target.value)}
-                              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                            >
-                              <option value="">{currentCityBranchName}</option>
-                              {cityBranches.map((cb) => (
-                                <option key={cb.id} value={cb.id}>{cb.name}</option>
-                              ))}
-                            </select>
-                          </div>
-
-                          {/* Supplier / Vendor (Purchase) or Customer (Sales) — module-aware */}
-                          <div>
-                            <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                              {["sales_orders", "sales_booking"].includes(targetModule)
-                                ? s.t("customer_label", "Customer")
-                                : s.t("supplier_vendor_label", "Supplier / Vendor")} <span className="text-rose-500">*</span>
-                            </label>
-                            <div className="relative">
-                              <input
-                                type="text"
-                                value={["sales_orders", "sales_booking"].includes(targetModule) ? formData.buyerName : formData.supplierName}
-                                onChange={(e) =>
-                                  ["sales_orders", "sales_booking"].includes(targetModule)
-                                    ? setFormData({ ...formData, buyerName: e.target.value })
-                                    : setFormData({ ...formData, supplierName: e.target.value })
-                                }
-                                className="w-full rounded-xl border border-slate-300 bg-white pl-3 pr-8 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                              />
-                              <Search className="absolute right-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
-                            </div>
-                          </div>
-
-                          {/* Purchase / Sales Account — module-aware, matches the Step 4 selection */}
-                          <div>
-                            <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                              {["sales_orders", "sales_booking"].includes(targetModule)
-                                ? s.t("sales_acct", "Sales / Revenue Account *")
-                                : s.t("pur_acct", "Purchase Account *")}
-                            </label>
-                            <select
-                              value={["sales_orders", "sales_booking"].includes(targetModule) ? salesAccountId : purchaseAccountId}
-                              onChange={(e) =>
-                                ["sales_orders", "sales_booking"].includes(targetModule)
-                                  ? setSalesAccountId(e.target.value)
-                                  : setPurchaseAccountId(e.target.value)
-                              }
-                              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                            >
-                              <option value="">
-                                {["sales_orders", "sales_booking"].includes(targetModule) ? "4010 - Sales Revenue" : "5010 - Purchase Account"}
-                              </option>
-                              {chartAccounts.map((a) => (
-                                <option key={a.id} value={a.id}>{a.code} · {a.name}</option>
-                              ))}
-                            </select>
-                          </div>
-
-                          {/* Currency */}
-                          <div>
-                            <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                              Currency <span className="text-rose-500">*</span>
-                            </label>
-                            <select
-                              value={formData.currency}
-                              onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                            >
-                              <option value="USD">{s.t("currency_usd", "USD - US Dollar")}</option>
-                              <option value="AED">{s.t("currency_aed", "AED - UAE Dirham")}</option>
-                              <option value="EUR">{s.t("currency_eur", "EUR - Euro")}</option>
-                              <option value="PKR">{s.t("currency_pkr", "PKR - Pakistani Rupee")}</option>
-                              <option value="AFN">{s.t("currency_afn", "AFN - Afghan Afghani")}</option>
-                            </select>
-                          </div>
-
-                          {/* Payable / Receivable Account — module-aware, matches the Step 4 selection */}
-                          <div>
-                            <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                              {["sales_orders", "sales_booking"].includes(targetModule)
-                                ? s.t("rec_acct", "Customer / Receivable Account *")
-                                : s.t("pay_acct", "Supplier / Payable Account *")}
-                            </label>
-                            <select
-                              value={["sales_orders", "sales_booking"].includes(targetModule) ? receivableAccountId : payableAccountId}
-                              onChange={(e) =>
-                                ["sales_orders", "sales_booking"].includes(targetModule)
-                                  ? setReceivableAccountId(e.target.value)
-                                  : setPayableAccountId(e.target.value)
-                              }
-                              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                            >
-                              <option value="">
-                                {["sales_orders", "sales_booking"].includes(targetModule) ? "1100 - Accounts Receivable" : "2000 - Accounts Payable"}
-                              </option>
-                              {chartAccounts.map((a) => (
-                                <option key={a.id} value={a.id}>{a.code} · {a.name}</option>
-                              ))}
-                            </select>
-                          </div>
-
-                          {/* Total Amount */}
-                          <div>
-                            <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                              Total Amount
-                            </label>
-                            <input
-                              type="number"
-                              value={formData.totalAmount}
-                              onChange={(e) => setFormData({ ...formData, totalAmount: e.target.value })}
-                              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                            />
-                          </div>
-
-                          {/* Reference */}
-                          <div>
-                            <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                              Reference
-                            </label>
-                            <input
-                              type="text"
-                              value={formData.reference}
-                              onChange={(e) => setFormData({ ...formData, reference: e.target.value })}
-                              placeholder="e.g., PO No., LC No., Remarks"
-                              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                            />
-                          </div>
-                        </div>
-                      )}
-
-                      {/* ITEMS TAB */}
-                      {activeFormTab === "items" && (
-                        <div className="space-y-3">
-                          <table className="w-full text-xs text-left border border-slate-200 rounded-xl overflow-hidden dark:border-slate-800">
-                            <thead className="bg-slate-50 text-[10px] text-slate-500 dark:bg-slate-800">
-                              <tr>
-                                <th className="p-2.5">Description</th>
-                                <th className="p-2.5">Qty</th>
-                                <th className="p-2.5">Unit</th>
-                                <th className="p-2.5">Price</th>
-                                <th className="p-2.5">Total</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {(jobData?.lineItems ?? []).length > 0 ? (
-                                (jobData?.lineItems ?? []).map((li: any, idx: number) => (
-                                  <tr key={li.id ?? idx} className="border-t border-slate-100 dark:border-slate-800">
-                                    <td className="p-2.5 font-semibold text-slate-800 dark:text-slate-100">{li.description || li.goods_name || "-"}</td>
-                                    <td className="p-2.5">{li.quantity ?? "-"}</td>
-                                    <td className="p-2.5">{li.unit || "-"}</td>
-                                    <td className="p-2.5">{li.unit_price ?? "-"}</td>
-                                    <td className="p-2.5 font-bold text-emerald-600">{li.total_amount ?? "-"}</td>
-                                  </tr>
-                                ))
-                              ) : (
-                                <tr className="border-t border-slate-100 dark:border-slate-800">
-                                  <td colSpan={5} className="p-2.5 text-slate-500 dark:text-slate-400 text-center">
-                                    {s.t("no_line_items_extracted", "No line items were extracted from this document — add one manually or leave blank.")}
-                                  </td>
-                                </tr>
-                              )}
-                            </tbody>
-                          </table>
-                          <button
-                            type="button"
-                            className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-700"
-                          >
-                            <Plus className="h-3.5 w-3.5" />
-                            <span>{s.t("add_line_item", "Add Another Line Item")}</span>
-                          </button>
-                        </div>
-                      )}
-
-                      {/* PAYMENT & DELIVERY TAB */}
-                      {activeFormTab === "payment" && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
-                          <div>
-                            <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Payment Terms</label>
-                            <input
-                              type="text"
-                              value={formData.paymentTerms}
-                              onChange={(e) => setFormData({ ...formData, paymentTerms: e.target.value })}
-                              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                            />
-                          </div>
-                          <div>
-                            <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Delivery Terms</label>
-                            <input
-                              type="text"
-                              value={formData.deliveryTerms}
-                              onChange={(e) => setFormData({ ...formData, deliveryTerms: e.target.value })}
-                              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                            />
-                          </div>
-                        </div>
-                      )}
-
-                      {/* NOTES TAB */}
-                      {activeFormTab === "notes" && (
-                        <div>
-                          <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1 text-xs">Review Notes / Remarks</label>
-                          <textarea
-                            rows={3}
-                            value={formData.notes}
-                            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                            className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                          />
-                        </div>
-                      )}
-
-                      {/* Action Footer (Matching Reference Buttons) */}
-                      <div className="flex flex-wrap items-center justify-between gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
-                        <button
-                          type="button"
-                          onClick={() => setWizardStep(4)}
-                          className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                        >
-                          {s.t("cancel", "Cancel")}
-                        </button>
-
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            disabled={isProcessing}
-                            onClick={() => void handleSaveAsDraft()}
-                            className="inline-flex items-center gap-1.5 rounded-xl border border-blue-600 bg-white px-4 py-2 text-xs font-black text-blue-700 hover:bg-blue-50 transition-colors shadow-xs dark:bg-slate-900 dark:text-blue-400"
-                          >
-                            <FileText className="h-3.5 w-3.5" />
-                            <span>{s.t("save_draft", "Save as Draft")}</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            disabled={isProcessing}
-                            onClick={() => void handleCreateEntry()}
-                            className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2 text-xs font-black text-white shadow-md shadow-blue-600/20 hover:bg-blue-500 transition-all hover:scale-[1.02]"
-                          >
-                            <Check className="h-4 w-4" />
-                            <span>{s.t("create_entry", "Create Entry")}</span>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* ── Bottom Help / Info Banner (Matching Reference Image) ─────── */}
-                <div className="flex items-center justify-between rounded-2xl border border-blue-100 bg-blue-50/70 p-3 text-xs text-blue-800 dark:border-blue-900/40 dark:bg-blue-950/20 dark:text-blue-300">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-blue-600 shrink-0" />
-                    <span>
-                      {s.t("bottom_tip", "AI will extract key information based on your selected module. Please review and correct any details before creating the entry.")}
-                    </span>
-                  </div>
-
-                  <a
-                    href="#help"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      alert("AI Document Intake extracts data locally and generates verified drafts for the canonical ERP modules. The AI never posts directly without human confirmation.");
-                    }}
-                    className="inline-flex items-center gap-1 font-bold text-blue-700 hover:underline dark:text-blue-400 shrink-0"
-                  >
-                    <HelpCircle className="h-3.5 w-3.5" />
-                    <span>{s.t("need_help", "Need Help?")}</span>
-                  </a>
-                </div>
-              </div>
-            )}
-          </>
-        ) : (
-          /* ── 4. DOCUMENT QUEUE & AUDIT HISTORY VIEW ────────────────────────── */
-          <div className="space-y-4">
-            {/* KPI Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
-              <KpiCard label={s.t("k_total", "Total")} value={kpis.total ?? queueRows.length} icon={FileText} />
-              <KpiCard label={s.t("k_review", "In Review")} value={kpis.in_review ?? 0} tone="text-amber-600" icon={FileText} />
-              <KpiCard label={s.t("k_qvc", "In QVC")} value={kpis.in_qvc ?? 0} tone="text-rose-600" icon={ShieldAlert} />
-              <KpiCard label={s.t("k_draft", "Draft Ready")} value={kpis.draft_ready ?? 0} tone="text-emerald-600" icon={CheckCircle2} />
-              <KpiCard label={s.t("k_linked", "Linked")} value={kpis.linked ?? 0} tone="text-blue-600" icon={Link2} />
-              <KpiCard label={s.t("k_oos", "Out of Scope")} value={kpis.out_of_scope ?? 0} tone="text-rose-600" icon={AlertTriangle} />
-              <KpiCard label={s.t("k_failed", "Failed")} value={kpis.failed ?? 0} tone="text-rose-600" icon={Ban} />
-            </div>
-
-            {/* Filter Bar */}
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-xs dark:border-slate-800 dark:bg-slate-900">
-              <div className="flex flex-1 items-center gap-2">
-                <Search className="h-4 w-4 text-slate-400" />
-                <input
-                  type="text"
-                  value={queueSearch}
-                  onChange={(e) => setQueueSearch(e.target.value)}
-                  placeholder={s.t("search_queue", "Search job no, contract, B/L, or document name...")}
-                  className="w-full bg-transparent text-xs font-semibold outline-none"
-                />
-              </div>
-
               <div className="flex items-center gap-2">
-                <select
-                  value={queueStatusFilter}
-                  onChange={(e) => setQueueStatusFilter(e.target.value)}
-                  className="rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                >
+                <select value={queueStatusFilter} onChange={(e) => setQueueStatusFilter(e.target.value)} className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-semibold dark:border-slate-700 dark:bg-slate-800">
                   <option value="">{s.t("all_statuses", "All Statuses")}</option>
+                  <option value="uploaded">{T("st_uploaded", "Uploaded")}</option>
                   <option value="review">{s.t("st_review", "In Review")}</option>
                   <option value="draft_ready">{s.t("st_draft_ready", "Draft Ready")}</option>
                   <option value="qvc">{s.t("st_qvc", "In QVC")}</option>
                   <option value="linked">{s.t("st_linked", "Linked")}</option>
                 </select>
-
-                <button
-                  type="button"
-                  onClick={() => void loadQueue()}
-                  className="rounded-xl border border-slate-200 bg-white p-2 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800"
-                  title={s.t("refresh_queue", "Refresh Queue")}
-                >
-                  <RefreshCw className="h-3.5 w-3.5" />
-                </button>
+                <button type="button" onClick={() => void loadQueue()} className="rounded-lg border border-slate-200 bg-white p-2 text-slate-600 dark:border-slate-700 dark:bg-slate-800" title={s.t("refresh_queue", "Refresh Queue")}><RefreshCw className="h-3.5 w-3.5" /></button>
               </div>
             </div>
-
-            {/* Table */}
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
-              <table className="w-full text-xs text-left">
-                <thead className="bg-slate-50 text-[10px] uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:bg-slate-800 dark:border-slate-800">
+            <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+              <table className="w-full min-w-[720px] text-start text-xs">
+                <thead className="border-b border-slate-100 bg-slate-50 text-[10px] uppercase tracking-wider text-slate-400 dark:border-slate-800 dark:bg-slate-800">
                   <tr>
-                    <th className="p-3">Job No</th>
-                    <th className="p-3">Domain</th>
-                    <th className="p-3">Document File</th>
-                    <th className="p-3">Scope / Office</th>
-                    <th className="p-3">Target Module</th>
-                    <th className="p-3">Status</th>
-                    <th className="p-3 text-right">Actions</th>
+                    <th className="p-3 text-start">{T("q_job", "Job no.")}</th><th className="p-3 text-start">{T("q_file", "Document")}</th><th className="p-3 text-start">{T("q_scope", "Scope / office")}</th>
+                    <th className="p-3 text-start">{T("q_module", "Module")}</th><th className="p-3 text-start">{T("q_draft", "Draft")}</th><th className="p-3 text-start">{T("q_fields", "Fields")}</th><th className="p-3 text-start">{T("q_status", "Status")}</th><th className="p-3 text-end">{T("q_actions", "Actions")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {queueLoading ? (
-                    <tr>
-                      <td colSpan={7} className="p-8 text-center text-slate-400">
-                        <Loader2 className="mx-auto h-5 w-5 animate-spin" />
-                      </td>
-                    </tr>
+                    <tr><td colSpan={8} className="p-8 text-center text-slate-400"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></td></tr>
                   ) : queueRows.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} className="p-8 text-center text-slate-400">
-                        {s.t("empty_queue", "No intake jobs found matching your scope or criteria.")}
-                      </td>
-                    </tr>
-                  ) : (
-                    queueRows.map((r) => (
-                      <tr key={r.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/50 transition-colors">
-                        <td className="p-3 font-mono font-bold text-blue-600 dark:text-blue-400">{r.job_no}</td>
-                        <td className="p-3 capitalize font-semibold text-slate-600 dark:text-slate-300">
-                          {r.operational_domain === "shipping" ? "Shipping & Clearing" : "Business ERP"}
-                        </td>
-                        <td className="p-3 font-medium text-slate-800 dark:text-slate-100 truncate max-w-[180px]">
-                          {r.original_filename}
-                        </td>
-                        <td className="p-3 text-slate-500">
-                          {[r.country_name, r.city_branch_name || r.country_branch_name].filter(Boolean).join(" / ") || "Multi-Country Scope"}
-                        </td>
-                        <td className="p-3 font-mono text-[11px] text-slate-500">
-                          {r.target_module || "purchase_orders"}
-                        </td>
-                        <td className="p-3">
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_TONE[r.status] || STATUS_TONE.uploaded}`}>
-                            {r.status}
-                          </span>
-                        </td>
-                        <td className="p-3 text-right">
-                          <button
-                            type="button"
-                            onClick={() => void openJobDetails(r.id)}
-                            className="inline-flex items-center gap-1 rounded-lg bg-blue-50 px-2.5 py-1 text-[11px] font-bold text-blue-700 hover:bg-blue-100 dark:bg-blue-950/50 dark:text-blue-300"
-                          >
-                            <ArrowRight className="h-3 w-3" />
-                            <span>{s.t("review", "Review & Edit")}</span>
+                    <tr><td colSpan={8} className="p-8 text-center text-slate-400">{s.t("empty_queue", "No intake jobs found matching your scope or criteria.")}</td></tr>
+                  ) : queueRows.map((r) => {
+                    const m = resolveModule(r.source_module_hint, r.target_module);
+                    return (
+                      <tr key={r.id} className="transition-colors hover:bg-slate-50/70 dark:hover:bg-slate-800/50" data-testid={`queue-row-${r.job_no}`}>
+                        <td className="p-3 font-mono font-bold text-blue-600 dark:text-blue-400" dir="ltr">{r.job_no}</td>
+                        <td className="max-w-[200px] truncate p-3 font-medium" dir="ltr">{r.original_filename}</td>
+                        <td className="p-3 text-slate-500">{[r.country_name, r.city_branch_name || r.country_branch_name].filter(Boolean).join(" / ") || "—"}</td>
+                        <td className="p-3 text-[11px] font-semibold text-slate-600 dark:text-slate-300">{m ? s.t(m.labelKey, m.label) : r.target_module || "—"}</td>
+                        <td className="p-3 font-mono text-[11px] text-slate-500" dir="ltr">{r.draft_reference || "—"}</td>
+                        <td className="p-3 font-mono text-[11px] text-slate-500">{r.field_count ?? 0}</td>
+                        <td className="p-3"><span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_TONE[r.status] || STATUS_TONE.uploaded}`}>{r.status}</span></td>
+                        <td className="p-3 text-end">
+                          <button type="button" onClick={() => openExisting(r)} data-testid={`open-${r.job_no}`}
+                            className="inline-flex items-center gap-1 rounded-lg bg-blue-50 px-2.5 py-1 text-[11px] font-bold text-blue-700 hover:bg-blue-100 dark:bg-blue-950/50 dark:text-blue-300">
+                            <ArrowRight className="h-3 w-3 rtl:rotate-180" /><span>{r.status === "linked" ? T("view", "View") : T("open_edit", "Open / Edit")}</span>
                           </button>
                         </td>
                       </tr>
-                    ))
-                  )}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
           </div>
         )}
       </div>
-
-      {/* ── 5. Quick Field Correction Modal ───────────────────────────────────── */}
-      {editFieldsModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
-          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-900 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
-              <h3 className="text-sm font-black text-slate-900 dark:text-slate-100">
-                {s.t("edit_fields_title", "Edit Extracted Intelligence Fields")}
-              </h3>
-              <button
-                type="button"
-                onClick={() => setEditFieldsModalOpen(false)}
-                className="rounded p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1 text-xs">
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Contract / Reference No.</label>
-                <input
-                  type="text"
-                  value={formData.contractNo}
-                  onChange={(e) => setFormData({ ...formData, contractNo: e.target.value })}
-                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Document Date</label>
-                <input
-                  type="date"
-                  value={formData.documentDate}
-                  onChange={(e) => setFormData({ ...formData, documentDate: e.target.value })}
-                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Supplier / Counterparty</label>
-                <input
-                  type="text"
-                  value={formData.supplierName}
-                  onChange={(e) => setFormData({ ...formData, supplierName: e.target.value })}
-                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Total Amount</label>
-                <input
-                  type="number"
-                  value={formData.totalAmount}
-                  onChange={(e) => setFormData({ ...formData, totalAmount: e.target.value })}
-                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
-              <button
-                type="button"
-                onClick={() => setEditFieldsModalOpen(false)}
-                className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-500"
-              >
-                {s.t("apply_changes", "Apply Changes")}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </section>
   );
 }
 
-function KpiCard({
-  label,
-  value,
-  tone,
-  icon: Icon,
-}: {
-  label: string;
-  value: number;
-  tone?: string;
-  icon?: any;
-}) {
+function Kpi({ label, value, tone, icon: Icon }: { label: string; value: number; tone?: string; icon?: any }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-xs dark:border-slate-800 dark:bg-slate-900">
-      <div className="flex items-center gap-1.5">
-        {Icon ? <Icon className={`h-3.5 w-3.5 ${tone || "text-slate-400"}`} /> : null}
-        <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">{label}</span>
-      </div>
-      <div className="mt-1 text-xl font-black text-slate-900 dark:text-slate-50">{value}</div>
+    <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-xs dark:border-slate-800 dark:bg-slate-900">
+      <div className="flex items-center gap-1.5">{Icon ? <Icon className={`h-3.5 w-3.5 ${tone || "text-slate-400"}`} /> : null}<span className="text-[10px] font-black uppercase tracking-wider text-slate-400">{label}</span></div>
+      <div className="mt-1 text-xl font-black">{value}</div>
     </div>
   );
+}
+
+// kept for any consumer that still resolves a destination from a legacy target module
+export function getDestinationInfo(targetModule?: string | null) {
+  const m = moduleForTarget(targetModule);
+  return { moduleName: m?.label ?? targetModule ?? "", routeUrl: m?.routeUrl ?? "/dashboard/document-intelligence", menuPath: m?.routeLabel ?? "", category: m?.group ?? "" };
 }

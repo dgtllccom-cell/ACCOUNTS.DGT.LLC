@@ -7,6 +7,7 @@
  */
 
 import type { FieldCandidate, LineItemCandidate, OcrPage } from "./types";
+import { parseTradeContract, type ContractParse } from "./contract-parser";
 
 const CURRENCIES = ["USD", "AED", "PKR", "AFN", "INR", "SAR", "EUR", "GBP", "CNY", "JPY", "QAR", "KWD", "BHD", "OMR", "IRR", "TRY"];
 const CURRENCY_SYMBOLS: Record<string, string> = { "$": "USD", "€": "EUR", "£": "GBP", "₹": "INR", "﷼": "SAR", "¥": "CNY", "درهم": "AED", "روپیہ": "PKR", "افغانی": "AFN" };
@@ -122,7 +123,7 @@ const RULES: Rule[] = [
     ] },
   { key: "company_type", label: "Legal Structure", kind: "text", patterns: [/\b(LLC|L\.L\.C\.|LLP|FZE|FZ-LLC|FZCO|Free\s*Zone\s*(?:Company|Establishment)|Sole\s*Proprietor(?:ship)?|Partnership|Private\s*Limited|Public\s*Limited|Branch\s*Office|Establishment)\b/i] },
   { key: "registration_number", label: "Registration / License No.", kind: "text", patterns: [
-      /(?:trade\s*licen[sc]e|licen[sc]e|commercial\s*registration|c\.?r\.?|cr\s*no|registration\s*(?:no\.?|number)|reg\.?\s*no|incorporation\s*(?:no\.?|number)|iec\s*(?:code|no)?)\s*[:.\-]?\s*([A-Z0-9][A-Z0-9/\-]{3,25})/i,
+      /\b(?:trade\s*licen[sc]e|licen[sc]e|commercial\s*registration|c\.?r\.?|cr\s*no|registration\s*(?:no\.?|number)|reg\.?\s*no|incorporation\s*(?:no\.?|number)|iec\s*(?:code|no)?)\s*[:.\-]?\s*([A-Z0-9][A-Z0-9/\-]{3,25})/i,
     ] },
   { key: "incorporation_date", label: "Incorporation / Issue Date", kind: "date", patterns: [/(?:incorporat(?:ion|ed)|date\s*of\s*(?:incorporation|establishment|issue|registration)|issue\s*date|establishment\s*date)\s*[:.\-]?\s*([0-3]?\d[-/. ][A-Za-z0-9]{2,9}[-/. ]\d{2,4}|\d{4}[-/.]\d{1,2}[-/.]\d{1,2}|[A-Za-z]{3,9}\.?\s+[0-3]?\d(?:st|nd|rd|th)?[.,]?\s+\d{4})/i] },
   { key: "owner_name", label: "Owner / Proprietor / Manager", kind: "text", patterns: [/(?:owner|proprietor|manager|managing\s*director|authorized\s*signatory|partner|shareholder|director)\s*(?:name)?\s*[:.\-]?\s*\n?\s*([A-Za-z][A-Za-z .'\-]{4,50})/i] },
@@ -169,12 +170,81 @@ const RULES: Rule[] = [
     ], onlyDocTypes: ["account_master"] },
 ];
 
+const TRADE_SKIP = new Set(["company_name", "company_type", "registration_number", "owner_name", "father_name", "national_id", "incorporation_date", "contract_parties", "phone", "email", "website", "address"]);
+
 const CONTAINER_RE = /\b([A-Z]{4}\d{7})\b/g;
 const SEAL_RE = /\bseal\s*(?:no\.?)?\s*[:.\-]?\s*([A-Z0-9\-]{4,15})/gi;
 // HS / tariff code: 4 digits, then a dot, then 2 digits, optionally a dot + 2-4
 // more. Must NOT be preceded by a digit/comma/currency (rules out amounts like
 // "250,000.00" / "USD 1234.56").
 const HS_RE = /(?<![\d.,]\s?)(?<!USD |AED |PKR |EUR |GBP |INR )\b(\d{4}\.\d{2}(?:\.\d{2,4})?)\b/g;
+
+function fc(key: string, label: string, raw: string | number | null | undefined, pages: OcrPage[], opts: { normalized?: string | null; confidence?: number; message?: string | null } = {}): FieldCandidate | null {
+  if (raw === null || raw === undefined) return null;
+  const rawValue = clean(String(raw));
+  if (!rawValue) return null;
+  const confidence = opts.confidence ?? 0.88;
+  return {
+    key,
+    label,
+    rawValue,
+    normalizedValue: opts.normalized === undefined ? rawValue : opts.normalized,
+    confidence,
+    pageNumber: pageOf(pages, rawValue),
+    bbox: null,
+    validationStatus: confidence >= 0.8 ? "green" : confidence >= 0.55 ? "amber" : "red",
+    validationMessage: opts.message ?? null,
+  };
+}
+
+/** Field candidates from the structured trade-contract parse (seller/buyer are the DOCUMENT's own roles). */
+export function contractFieldCandidates(c: ContractParse, pages: OcrPage[]): FieldCandidate[] {
+  const out: Array<FieldCandidate | null> = [];
+  const g0 = c.goods[0];
+  out.push(fc("supplier_name", "Seller (as written on the document)", c.sellerName, pages));
+  out.push(fc("customer_name", "Buyer (as written on the document)", c.buyerName, pages));
+  out.push(fc("seller_country", "Seller Country", c.sellerCountry, pages, { confidence: 0.8 }));
+  out.push(fc("buyer_country", "Buyer Country", c.buyerCountry, pages, { confidence: 0.8 }));
+  out.push(fc("contract_number", "Original Contract Number", c.contractNo, pages, { confidence: 0.92 }));
+  out.push(fc("document_date", "Contract / Document Date", c.contractDate, pages, { confidence: 0.9 }));
+  out.push(fc("currency", "Currency", c.currency, pages, { confidence: 0.9 }));
+  if (c.total) {
+    const calc = c.total.source !== "stated";
+    out.push(fc("grand_total", "Total Amount", String(c.total.amount), pages, {
+      normalized: String(c.total.amount),
+      confidence: calc ? 0.65 : 0.92,
+      message: c.total.source === "calculated" ? "Calculated from quantity × unit price — not printed on the document." : c.total.source === "lines" ? "Sum of the goods lines." : null,
+    }));
+  }
+  if (g0) {
+    out.push(fc("goods_description", "Goods Description", c.goods.map((g) => g.description).join("; "), pages));
+    out.push(fc("quantity", "Quantity", g0.quantity, pages, { normalized: g0.quantity == null ? null : String(g0.quantity) }));
+    out.push(fc("unit", "Unit", g0.unit, pages, { confidence: 0.85 }));
+    out.push(fc("unit_price", "Unit Price", g0.unitPrice, pages, { normalized: g0.unitPrice == null ? null : String(g0.unitPrice) }));
+  }
+  out.push(fc("hs_codes", "HS Code", c.hsCode, pages, { confidence: 0.75 }));
+  out.push(fc("lot_number", "Lot Number", c.lotNo, pages, { confidence: 0.8 }));
+  out.push(fc("variety", "Variety / Grade", c.variety, pages, { confidence: 0.75 }));
+  out.push(fc("quality", "Quality", c.quality, pages, { confidence: 0.8 }));
+  out.push(fc("packing", "Packing", c.packing, pages, { confidence: 0.8 }));
+  out.push(fc("gross_weight", "Gross Weight", c.grossWeight, pages, { normalized: c.grossWeight == null ? null : String(c.grossWeight) }));
+  out.push(fc("tare_weight", "Tare Weight", c.tareWeight, pages, { normalized: c.tareWeight == null ? null : String(c.tareWeight) }));
+  out.push(fc("net_weight", "Net Weight", c.netWeight, pages, { normalized: c.netWeight == null ? null : String(c.netWeight) }));
+  out.push(fc("truck_number", "Truck / Vehicle Number", c.truckNo, pages, { confidence: 0.8 }));
+  out.push(fc("bl_number", "Bill of Lading Number", c.blNo, pages, { confidence: 0.82 }));
+  out.push(fc("payment_terms", "Payment Terms", c.paymentTerms, pages, { confidence: 0.88 }));
+  out.push(fc("delivery_terms", "Delivery Terms", c.deliveryTerms, pages, { confidence: 0.88 }));
+  out.push(fc("incoterm", "Incoterm", c.incoterm, pages, { confidence: 0.9 }));
+  out.push(fc("delivery_place", "Delivery Place", c.deliveryPlace, pages, { confidence: 0.8 }));
+  out.push(fc("beneficiary_name", "Beneficiary / Account Title", c.bank.beneficiary, pages, { confidence: 0.85 }));
+  out.push(fc("bank_name", "Beneficiary Bank", c.bank.bankName, pages, { confidence: 0.85 }));
+  out.push(fc("branch_name", "Bank Branch", c.bank.branch, pages, { confidence: 0.75 }));
+  out.push(fc("account_number", "Bank Account Number", c.bank.accountNo, pages, { confidence: 0.88 }));
+  out.push(fc("iban", "IBAN", c.bank.iban, pages, { confidence: 0.9 }));
+  out.push(fc("swift_bic", "SWIFT / BIC", c.bank.swift, pages, { confidence: 0.9 }));
+  out.push(fc("bank_address", "Bank Address", c.bank.address, pages, { confidence: 0.75 }));
+  return out.filter((x): x is FieldCandidate => x !== null);
+}
 
 export function extractFields(text: string, pages: OcrPage[], docTypeCode: string): FieldCandidate[] {
   const out: FieldCandidate[] = [];
@@ -185,8 +255,18 @@ export function extractFields(text: string, pages: OcrPage[], docTypeCode: strin
     out.push(c);
   };
 
+  // Trade contracts: the structured parser reads seller / buyer / goods table / totals / terms / bank
+  // block as a whole. Its values take precedence over the one-regex-per-field RULES below.
+  const parsed = parseTradeContract(text);
+  const isTrade = parsed.isTradeContract;
+  if (parsed.isTradeContract || /contract|purchase_order|sales_order|proforma|booking/i.test(docTypeCode)) {
+    for (const c of contractFieldCandidates(parsed, pages)) push(c);
+  }
+
   for (const rule of RULES) {
     if (rule.onlyDocTypes && !rule.onlyDocTypes.includes(docTypeCode)) continue;
+    // master-data rules read legal-form / registration noise out of a trade contract (e.g. "CR" inside DESCRIPTION)
+    if (isTrade && TRADE_SKIP.has(rule.key)) continue;
     for (const re of rule.patterns) {
       const m = text.match(re);
       if (!m) continue;
@@ -251,6 +331,25 @@ export function extractFields(text: string, pages: OcrPage[], docTypeCode: strin
  * `<qty> <unit?> <unit_price> <amount>` or contain a description + a trailing number.
  */
 export function extractLineItems(text: string, pages: OcrPage[]): LineItemCandidate[] {
+  const contract = parseTradeContract(text);
+  if (contract.isTradeContract && contract.goods.length) {
+    return contract.goods.map((g, i) => ({
+      lineNo: i + 1,
+      description: g.description,
+      hsCode: g.hsCode,
+      brand: null,
+      quantity: g.quantity,
+      unit: g.unit ? g.unit.toLowerCase() : null,
+      packages: null,
+      grossWeight: contract.goods.length === 1 ? contract.grossWeight : null,
+      netWeight: contract.goods.length === 1 ? contract.netWeight : null,
+      unitPrice: g.unitPrice,
+      amount: g.amount ?? (g.quantity != null && g.unitPrice != null ? g.quantity * g.unitPrice : null),
+      currency: g.currency,
+      confidence: g.consistent === false ? 0.6 : 0.88,
+      pageNumber: pageOf(pages, g.description),
+    }));
+  }
   const rows: LineItemCandidate[] = [];
   const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
   let lineNo = 0;

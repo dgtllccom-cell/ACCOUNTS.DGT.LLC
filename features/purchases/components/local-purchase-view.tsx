@@ -594,6 +594,12 @@ export function LocalPurchaseView({
     if (p.exchangeRate && Number(p.exchangeRate) > 0) setExchangeRateToAed(String(p.exchangeRate));
     const first = (intake.goodsEntries ?? [])[0] as any;
     if (first?.unitPrice && Number(first.unitPrice) > 0) setPurchaseRate(String(first.unitPrice));
+    // The supplier account the reviewer picked in Document Intake (its code is what this form resolves),
+    // the lot, and the original contract no. — then land on the form, not the register behind it.
+    if (p.purchaseAccountNo) setPurchaseAccountNo(String(p.purchaseAccountNo));
+    if (p.contractNo && !p.manualBillNo) setContractNo(String(p.contractNo));
+    if (p.lotNo) setLotNo(String(p.lotNo));
+    setIsFormOpen(true);
   }, [intake.draft, intake.payload, intake.goodsEntries]);
   const [applyTax, setApplyTax] = useState("No");
   const [taxType, setTaxType] = useState("VAT");

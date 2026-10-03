@@ -519,6 +519,9 @@ export function PurchaseOrderWizard({ session }) {
     setDraftPrefillRef(prefill.draftNo || "");
     setDraftPrefillId(prefill.draftId || "");
     clearDraftPrefill();
+    // The wizard opens on the register; a hand-off from Document Intake must land on the pre-filled form
+    // (New Booking would reset it).
+    setIsFormOpen(true);
   }, []);
 
   // Record the reviewed AI draft against the saved Purchase Order (audit trail).

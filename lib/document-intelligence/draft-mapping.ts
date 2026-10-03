@@ -66,6 +66,12 @@ const MODULE_MAP: Record<string, Record<string, string>> = {
     port_of_discharge: "receivedPort",
     vessel: "vesselName",
     container_numbers: "containerNumbers",
+    goods_description: "goodsName",
+    hs_codes: "hsCode",
+    lot_number: "allotName",
+    unit_price: "coursePrice",
+    net_weight: "netWeight",
+    seal_numbers: "sealNumber",
   },
   sales_orders: {
     contract_number: "salesContractNo",
@@ -85,6 +91,10 @@ const MODULE_MAP: Record<string, Record<string, string>> = {
     payment_terms: "paymentTerms",
     delivery_terms: "deliveryTerms",
     trn: "customerTrn",
+    goods_description: "goodsName",
+    hs_codes: "hsCode",
+    unit_price: "coursePrice",
+    net_weight: "netWeight",
   },
   shipping_bl_records: {
     bl_number: "blNumber",
@@ -101,6 +111,22 @@ const MODULE_MAP: Record<string, Record<string, string>> = {
     etd: "etd",
     container_numbers: "containerNumbers",
     seal_numbers: "sealNumbers",
+  },
+  // Shipping Customer Order — the 1C CARGO form. It carries goods + weights + transport refs only: no price,
+  // currency, amount, payment or ledger fields exist here, so none are mapped.
+  clearing_customer_orders: {
+    goods_description: "goodsName",
+    hs_codes: "chsCode",
+    gross_weight: "grossWeight",
+    tare_weight: "tareWeight",
+    net_weight: "netWeight",
+    truck_number: "truckNumber",
+    bl_number: "blNumber",
+    container_numbers: "containerNumbers",
+    port_of_loading: "portOfLoading",
+    port_of_discharge: "portOfDischarge",
+    customer_name: "customerName",
+    quantity: "packagesCount",
   },
   clearing_agent_custom_entries: {
     customs_reference: "customsReferenceNo",
@@ -249,11 +275,23 @@ const MODULE_MAP: Record<string, Record<string, string>> = {
   // Local purchase bill (local supplier invoice) — pre-fill only; the Local Purchase form saves.
   local_purchases: {
     invoice_number: "manualBillNo",
+    contract_number: "contractNo",
     document_date: "purchaseDate",
     supplier_name: "supplierName",
     currency: "currency",
     grand_total: "totalAmount",
     exchange_rate: "exchangeRate",
+    goods_description: "goodsName",
+    hs_codes: "hsCode",
+    lot_number: "lotNo",
+    quantity: "quantity",
+    unit: "quantityName",
+    unit_price: "unitPrice",
+    gross_weight: "grossWeight",
+    tare_weight: "tareWeight",
+    net_weight: "netWeight",
+    truck_number: "truckNo",
+    payment_terms: "paymentTerms",
   },
   roznamcha_entries: {
     invoice_number: "billNumber",
@@ -272,6 +310,7 @@ const MODULE_MAP: Record<string, Record<string, string>> = {
 };
 
 const AMOUNT_KEYS = new Set([
+  "unit_price", "quantity", "gross_weight", "tare_weight", "net_weight",
   "grand_total", "subtotal", "freight_amount", "insurance_amount", "tax_amount",
   "advance_amount", "paid_amount", "balance_amount", "exchange_rate", "contract_value",
 ]);

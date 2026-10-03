@@ -182,6 +182,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         children: [
           { label: nt("User Registration"), href: "/dashboard/new-entry/users/registration", icon: Users },
           { label: nt("All Users Directory"), href: "/dashboard/new-entry/users/all", icon: Users },
+          { label: nt("User Credentials PDF"), href: "/dashboard/new-entry/users/credentials-pdf", icon: FileText, roles: ["super_admin"] },
           { label: nt("Permission Control Center"), href: "/dashboard/permissions/control-center", icon: ShieldCheck, roles: ["super_admin"] },
         ],
       },
@@ -743,6 +744,7 @@ export const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/dashboard/logistics": ["shipping_records:read", "route:/dashboard/logistics"],
   "/dashboard/new-entry/users/registration": ["users:create", "users:read", "route:/dashboard/new-entry/users/registration"],
   "/dashboard/new-entry/users/all": ["users:read", "route:/dashboard/new-entry/users/all"],
+  "/dashboard/new-entry/users/credentials-pdf": ["super_admin", "route:/dashboard/new-entry/users/credentials-pdf"],
   "/dashboard/new-entry/branch-entry/country-branch": ["country_branches:create", "country_branches:read", "route:/dashboard/new-entry/branch-entry/country-branch"],
   "/dashboard/new-entry/branch-entry/city-branch": ["city_branches:create", "city_branches:read", "route:/dashboard/new-entry/branch-entry/city-branch"],
   "/dashboard/new-entry/branches/super-admin": ["country_branches:create", "super_admin", "route:/dashboard/new-entry/branches/super-admin"],

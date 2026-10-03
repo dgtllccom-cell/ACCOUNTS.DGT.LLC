@@ -1478,6 +1478,19 @@ export function SalesOrderWizard({ session }) {
         // not a customerAccountId/customerAccountLedgerId link.
         next.customerAccountName = String(p.customerName);
       }
+      // Accounts the reviewer picked in Document Intake are REAL enterprise_accounts ids — carry the id and
+      // the display fields the account picker would have set, so the form shows (and saves) that account.
+      if (p.customerAccountId) {
+        next.customerAccountId = String(p.customerAccountId);
+        if (p.customerAccountNo) next.customerAccountNo = String(p.customerAccountNo);
+        if (p.customerAccountName) next.customerAccountName = String(p.customerAccountName);
+        if (p.customerAccountCurrency) next.customerAccountCurrency = String(p.customerAccountCurrency);
+        if (p.customerAccountKind) next.customerAccountKind = String(p.customerAccountKind);
+        if (p.customerId) next.customerId = String(p.customerId);
+      }
+      if (p.salesAccountId) next.salesAccountId = String(p.salesAccountId);
+      if (p.goodsName && "goodsName" in prev) next.goodsName = String(p.goodsName);
+      if (p.hsCode && "hsCode" in prev) next.hsCode = String(p.hsCode);
       if (p.paymentDueDate) next.paymentDate = String(p.paymentDueDate);
       if (p.deliveryTerms) next.deliveryTerm = String(p.deliveryTerms);
       if (p.paymentTerms) {

@@ -10,6 +10,10 @@ import {
 } from "@/lib/document-intelligence/scope";
 import { runScopedMatching } from "@/lib/document-intelligence/matching";
 import { buildPreparedDraft, DRAFTABLE_MODULES } from "@/lib/document-intelligence/draft-mapping";
+import { ApiClientError } from "@/lib/api/response";
+import { getIntakeModule, moduleForTarget, pruneAccountsForModule } from "@/lib/document-intelligence/intake-modules";
+import { buildTargetPayload, handoffBlockers, type ReviewState } from "@/lib/document-intelligence/review-state";
+import { loadAccountsInScope, verifyPartyInScope } from "@/lib/services/document-intake-review-service";
 
 /**
  * AI Document Intake service.
@@ -54,6 +58,37 @@ async function loadRegistry(countryId?: string | null): Promise<RegistryDocType[
 async function event(sql: any, jobId: string, action: string, detail: unknown, actorId: string | null, actorName: string | null) {
   await sql`INSERT INTO public.document_intake_events (job_id, action, detail, actor_id, actor_name)
     VALUES (${jobId}, ${action}, ${sql.json(detail ?? {})}, ${actorId}, ${actorName})`;
+}
+
+/** reviewer form key -> extracted field key, so corrections made on the review screen persist on the job. */
+const FORM_TO_FIELD: Array<[keyof ReviewState["form"], string]> = [
+  ["contractNo", "contract_number"], ["documentDate", "document_date"], ["currency", "currency"], ["totalAmount", "grand_total"],
+  ["paymentTerms", "payment_terms"], ["deliveryTerms", "delivery_terms"], ["incoterm", "incoterm"], ["quality", "quality"],
+  ["packing", "packing"], ["hsCode", "hs_codes"], ["lotNo", "lot_number"], ["variety", "variety"], ["goodsDescription", "goods_description"],
+  ["grossWeight", "gross_weight"], ["tareWeight", "tare_weight"], ["netWeight", "net_weight"], ["truckNo", "truck_number"],
+  ["blNo", "bl_number"], ["containerNos", "container_numbers"],
+];
+
+async function applyFormCorrections(sql: any, jobId: string, review: ReviewState, actorId: string) {
+  const existing = (await sql`SELECT field_key, corrected_value, normalized_value, raw_value FROM public.document_intake_fields WHERE job_id = ${jobId}`) as any[];
+  const byKey = new Map(existing.map((r) => [r.field_key, r]));
+  for (const [formKey, fieldKey] of FORM_TO_FIELD) {
+    const v = String(review.form[formKey] ?? "").trim();
+    const row = byKey.get(fieldKey);
+    if (!row) {
+      // a value the reviewer typed for a field the extractor could not find -> store it as a verified manual field
+      if (v) {
+        await sql`INSERT INTO public.document_intake_fields (job_id, field_key, field_label, raw_value, normalized_value, corrected_value, confidence, validation_status, verified, verified_by, verified_at)
+          VALUES (${jobId}, ${fieldKey}, ${fieldKey}, NULL, NULL, ${v}, 1, 'green', true, ${actorId}, now())`;
+      }
+      continue;
+    }
+    const current = String(row.corrected_value ?? row.normalized_value ?? row.raw_value ?? "").trim();
+    if (v !== current) {
+      await sql`UPDATE public.document_intake_fields SET corrected_value = ${v || null}, verified = true, verified_by = ${actorId}, verified_at = now(),
+          validation_status = 'green', updated_at = now() WHERE job_id = ${jobId} AND field_key = ${fieldKey}`;
+    }
+  }
 }
 
 export class DocumentIntakeService {
@@ -112,7 +147,11 @@ export class DocumentIntakeService {
         const lineItems = await sql`SELECT * FROM public.document_intake_line_items WHERE job_id = ${jobId} ORDER BY line_no`;
         const matches = await sql`SELECT * FROM public.document_intake_matches WHERE job_id = ${jobId} ORDER BY match_kind, score DESC`;
         const events = await sql`SELECT * FROM public.document_intake_events WHERE job_id = ${jobId} ORDER BY created_at DESC LIMIT 100`;
-        return { job, fields: fields ?? [], lineItems: lineItems ?? [], matches: matches ?? [], events: events ?? [] };
+        // The live draft (prepared, or consumed once its record exists) carries the reviewer's saved state.
+        const draft = (await sql`SELECT id, draft_no, status, target_module, draft_payload, line_items, currency, consumed_source_module, consumed_source_id, created_at, updated_at
+          FROM public.document_intake_drafts WHERE job_id = ${jobId} AND deleted_at IS NULL AND status IN ('prepared','consumed')
+          ORDER BY (status = 'consumed') DESC, created_at DESC LIMIT 1`)?.[0] ?? null;
+        return { job, fields: fields ?? [], lineItems: lineItems ?? [], matches: matches ?? [], events: events ?? [], draft };
       });
     } catch (err) {
       console.warn("document_intake_queue_v get notice:", err instanceof Error ? err.message : String(err));
@@ -162,8 +201,8 @@ export class DocumentIntakeService {
     return withLocalPg(async (sql) => {
       // idempotency
       if (input.idempotencyKey) {
-        const existing = await sql`SELECT id, job_no FROM public.document_intake_jobs WHERE idempotency_key = ${input.idempotencyKey} AND deleted_at IS NULL LIMIT 1`;
-        if (existing?.length) return { id: existing[0].id, jobNo: existing[0].job_no, deduped: true };
+        const existing = await sql`SELECT id, job_no, status FROM public.document_intake_jobs WHERE idempotency_key = ${input.idempotencyKey} AND deleted_at IS NULL AND status <> 'cancelled' LIMIT 1`;
+        if (existing?.length) return { id: existing[0].id, jobNo: existing[0].job_no, deduped: true, status: existing[0].status };
       }
       // same-file duplicate detection within scope
       const dup = await sql`SELECT id, job_no FROM public.document_intake_jobs
@@ -206,16 +245,21 @@ export class DocumentIntakeService {
       if (dup?.length) {
         await sql`UPDATE public.document_intake_jobs SET qvc_reason = ${`Possible duplicate of ${dup[0].job_no}`} WHERE id = ${jobId}`;
       }
-      return { id: jobId, jobNo, duplicateOf: dup?.[0]?.job_no ?? null };
+      return { id: jobId, jobNo, duplicateOf: dup?.[0]?.job_no ?? null, status: "uploaded" };
     });
   }
 
   // ── process (OCR → classify → extract → match) ────────────────────────
-  async processJob(jobId: string, actorId: string, actorName: string | null, scope: IntakeScope) {
+  async processJob(jobId: string, actorId: string, actorName: string | null, scope: IntakeScope, opts: { force?: boolean } = {}) {
     const job = await withLocalPg(async (sql) => (await sql`SELECT * FROM public.document_intake_jobs WHERE id = ${jobId} AND deleted_at IS NULL`)?.[0]);
     if (!job) throw new Error("Job not found.");
     assertRowInScope(scope, job);
     if (["linked", "cancelled"].includes(job.status)) throw new Error(`Job is ${job.status}.`);
+    // Extraction replaces every field (and the reviewer's corrections). An already-processed job is only
+    // re-extracted on an explicit request - opening / re-saving an existing document never does this.
+    if (!opts.force && ["review", "qvc", "draft_ready"].includes(job.status)) {
+      return { jobId, status: "already_processed" };
+    }
 
     const provider = getDocumentAiProvider();
     const buffer = await readIntakeFile(job.storage_key);
@@ -249,7 +293,9 @@ export class DocumentIntakeService {
 
     let docTypeDef = registry.find((d) => d.code === cls.code);
     if (job.source_module_hint) {
-      const hintedDoc = registry.find((d) => d.target_module === job.source_module_hint || d.code === job.source_module_hint);
+      // the hint is an intake module id ("local_purchase") or a legacy target module ("purchase_orders")
+      const hintTarget = getIntakeModule(job.source_module_hint)?.target ?? job.source_module_hint;
+      const hintedDoc = registry.find((d) => d.target_module === hintTarget || d.code === hintTarget);
       if (hintedDoc) {
         docTypeDef = hintedDoc;
         cls.code = hintedDoc.code;
@@ -272,18 +318,24 @@ export class DocumentIntakeService {
       await sql`BEGIN`;
       try {
         await sql`DELETE FROM public.document_intake_fields WHERE job_id = ${jobId}`;
-        for (const f of extraction.fields) {
-          await sql`INSERT INTO public.document_intake_fields
-            (job_id, field_key, field_label, raw_value, normalized_value, confidence, page_number, bbox, validation_status, validation_message)
-            VALUES (${jobId}, ${f.key}, ${f.label}, ${f.rawValue}, ${f.normalizedValue}, ${f.confidence},
-              ${f.pageNumber}, ${f.bbox ? sql.json(f.bbox) : null}, ${f.validationStatus}, ${f.validationMessage})`;
+        // one multi-row INSERT (not one round-trip per field): a contract now yields 20-40 fields
+        if (extraction.fields.length) {
+          const rows = extraction.fields.map((f) => ({
+            job_id: jobId, field_key: f.key, field_label: f.label, raw_value: f.rawValue ?? null, normalized_value: f.normalizedValue ?? null,
+            confidence: f.confidence ?? null, page_number: f.pageNumber ?? null, bbox: f.bbox ? JSON.stringify(f.bbox) : null,
+            validation_status: f.validationStatus ?? null, validation_message: f.validationMessage ?? null,
+          }));
+          await sql`INSERT INTO public.document_intake_fields ${sql(rows, "job_id", "field_key", "field_label", "raw_value", "normalized_value", "confidence", "page_number", "bbox", "validation_status", "validation_message")}`;
         }
         await sql`DELETE FROM public.document_intake_line_items WHERE job_id = ${jobId}`;
-        for (const li of extraction.lineItems) {
-          await sql`INSERT INTO public.document_intake_line_items
-            (job_id, line_no, description, hs_code, brand, quantity, unit, packages, gross_weight, net_weight, unit_price, amount, currency, confidence, page_number)
-            VALUES (${jobId}, ${li.lineNo}, ${li.description}, ${li.hsCode}, ${li.brand}, ${li.quantity}, ${li.unit},
-              ${li.packages}, ${li.grossWeight}, ${li.netWeight}, ${li.unitPrice}, ${li.amount}, ${li.currency}, ${li.confidence}, ${li.pageNumber})`;
+        if (extraction.lineItems.length) {
+          const rows = extraction.lineItems.map((li) => ({
+            job_id: jobId, line_no: li.lineNo, description: li.description ?? null, hs_code: li.hsCode ?? null, brand: li.brand ?? null,
+            quantity: li.quantity ?? null, unit: li.unit ?? null, packages: li.packages ?? null, gross_weight: li.grossWeight ?? null,
+            net_weight: li.netWeight ?? null, unit_price: li.unitPrice ?? null, amount: li.amount ?? null, currency: li.currency ?? null,
+            confidence: li.confidence ?? null, page_number: li.pageNumber ?? null,
+          }));
+          await sql`INSERT INTO public.document_intake_line_items ${sql(rows, "job_id", "line_no", "description", "hs_code", "brand", "quantity", "unit", "packages", "gross_weight", "net_weight", "unit_price", "amount", "currency", "confidence", "page_number")}`;
         }
         await sql`DELETE FROM public.document_intake_matches WHERE job_id = ${jobId}`;
         for (const m of matchResult.candidates) {
@@ -454,6 +506,26 @@ export class DocumentIntakeService {
     });
   }
 
+  /**
+   * The user picked a different module for this document. The module decides the target form, accounts and
+   * required fields; the review screen prunes incompatible mappings and revalidates. No re-extraction.
+   */
+  async updateModule(jobId: string, moduleId: string, actorId: string, actorName: string | null, scope: IntakeScope) {
+    const mod = getIntakeModule(moduleId);
+    if (!mod) throw new ApiClientError("Unknown intake module.", { status: 422, code: "UNKNOWN_MODULE" });
+    return withLocalPg(async (sql) => {
+      const job = (await sql`SELECT * FROM public.document_intake_jobs WHERE id = ${jobId} AND deleted_at IS NULL`)?.[0];
+      if (!job) throw new Error("Job not found.");
+      assertRowInScope(scope, job);
+      if (scope.domain && scope.domain !== mod.domain) throw new ApiClientError(`Your login is restricted to the ${scope.domain} domain.`, { status: 403, code: "DOMAIN_FORBIDDEN" });
+      if (job.status === "linked") throw new ApiClientError("This document is already entered - its module cannot be changed.", { status: 409, code: "ALREADY_POSTED" });
+      await sql`UPDATE public.document_intake_jobs SET source_module_hint = ${mod.id}, target_module = ${mod.target},
+          operational_domain = ${mod.domain}, updated_at = now() WHERE id = ${jobId}`;
+      await event(sql, jobId, "module_changed", { from: job.source_module_hint ?? job.target_module, to: mod.id, target: mod.target }, actorId, actorName);
+      return { jobId, moduleId: mod.id, targetModule: mod.target };
+    });
+  }
+
   // ── confirm draft (AI prepares a reviewed draft — never a posting) ────
   async confirmDraft(
     jobId: string,
@@ -475,6 +547,10 @@ export class DocumentIntakeService {
       currency?: string | null;
       totalAmount?: number | string | null;
       payloadOverrides?: Record<string, any>;
+      /** the reviewer's full state (module, form, party, accounts, items, exchange, bank) */
+      review?: ReviewState;
+      /** "draft" = save progress; "handoff" = about to open the target screen (stricter validation) */
+      intent?: "draft" | "handoff";
     },
     actorId: string,
     actorName: string | null,
@@ -484,19 +560,25 @@ export class DocumentIntakeService {
       const job = (await sql`SELECT * FROM public.document_intake_jobs WHERE id = ${jobId} AND deleted_at IS NULL`)?.[0];
       if (!job) throw new Error("Job not found.");
       assertRowInScope(scope, job);
+      if (job.status === "linked") {
+        throw new ApiClientError("This document has already been entered into its module. Use that module's authorised correction flow - saving here would not change the posted record.", { status: 409, code: "ALREADY_POSTED" });
+      }
       if (!["review", "qvc", "draft_ready"].includes(job.status)) {
         throw new Error(`A draft can only be prepared from a reviewed job (job is ${job.status}).`);
       }
 
-      const targetModule: string | null = opts.targetModuleOverride ?? job.target_module ?? null;
+      const reviewModule = opts.review ? (getIntakeModule(opts.review.moduleId) ?? moduleForTarget(opts.targetModuleOverride ?? job.target_module)) : null;
+      if (opts.review && !reviewModule) throw new ApiClientError("Unknown intake module.", { status: 422, code: "UNKNOWN_MODULE" });
+      const targetModule: string | null = reviewModule?.target ?? opts.targetModuleOverride ?? job.target_module ?? null;
       if (!targetModule) throw new Error("This document type has no target module — link it manually from its source module.");
       if (!DRAFTABLE_MODULES.includes(targetModule)) {
         throw new Error(`Automatic draft preparation is not available for ${targetModule} yet — use manual entry.`);
       }
 
-      const effectiveCountryId = opts.countryId !== undefined ? opts.countryId : job.country_id;
-      const effectiveCountryBranchId = opts.countryBranchId !== undefined ? opts.countryBranchId : job.country_branch_id;
-      const effectiveCityBranchId = opts.cityBranchId !== undefined ? opts.cityBranchId : job.city_branch_id;
+      // an empty / missing scope id from the client must never wipe the job's own scope (that hid the job from its owner)
+      const effectiveCountryId = opts.countryId || job.country_id;
+      const effectiveCountryBranchId = opts.countryBranchId || job.country_branch_id;
+      const effectiveCityBranchId = opts.cityBranchId || job.city_branch_id;
 
       const fields = await sql`SELECT field_key, corrected_value, normalized_value, raw_value, confidence, page_number, verified, validation_status
         FROM public.document_intake_fields WHERE job_id = ${jobId}`;
@@ -565,9 +647,65 @@ export class DocumentIntakeService {
         Object.assign(prepared.payload, opts.payloadOverrides);
       }
 
-      // supersede any earlier live draft for this job
-      await sql`UPDATE public.document_intake_drafts SET status = 'superseded', updated_at = now()
-        WHERE job_id = ${jobId} AND status = 'prepared' AND deleted_at IS NULL`;
+      let goodsForSave: any[] = prepared.goodsEntries as any[];
+      if (opts.review && reviewModule) {
+        // 1. accounts: drop the ones this module does not use, then every remaining id must be a REAL account in scope
+        const accounts = pruneAccountsForModule(opts.review.accounts, reviewModule);
+        const ids = Object.values(accounts).filter(Boolean);
+        const foundAccounts = await loadAccountsInScope(sql, ids as string[], scope);
+        const bad = (ids as string[]).filter((i) => !foundAccounts.has(i));
+        if (bad.length) {
+          throw new ApiClientError("One or more selected accounts do not exist or are outside your scope. Re-select them.", { status: 422, code: "ACCOUNT_INVALID", details: { accountIds: bad } });
+        }
+        // 2. the party (supplier / customer master) must exist and be authorised
+        if (opts.review.party.id && !(await verifyPartyInScope(sql, opts.review.party.id, opts.review.party.kind, scope))) {
+          throw new ApiClientError("The selected supplier / customer is outside your scope or no longer exists.", { status: 422, code: "PARTY_INVALID" });
+        }
+        const reviewForSave: ReviewState = { ...opts.review, moduleId: reviewModule.id, accounts };
+        if (opts.intent === "handoff") {
+          const blockers = handoffBlockers(reviewModule, reviewForSave);
+          if (blockers.length) throw new ApiClientError("The review is not complete: " + blockers.join(", "), { status: 422, code: "REVIEW_INCOMPLETE", details: { blockers } });
+        }
+        // 3. the target-form payload comes from the reviewed state (reviewer edits win over raw extraction)
+        if (!reviewModule.financial) {
+          for (const k of ["currency", "currencyCode", "purchaseCurrency", "totalAmount", "orderTotal", "grandTotal", "coursePrice", "exchangeRate", "paymentTerms", "advanceAmount"]) delete (prepared.payload as any)[k];
+        }
+        Object.assign(prepared.payload, buildTargetPayload(reviewModule, reviewForSave, { countryId: effectiveCountryId, countryBranchId: effectiveCountryBranchId, cityBranchId: effectiveCityBranchId }));
+        goodsForSave = reviewForSave.items.map((it) => ({
+          description: it.description, hsCode: it.hsCode || null, quantity: it.quantity, unit: it.unit || null,
+          ...(reviewModule.financial ? { unitPrice: it.unitPrice, amount: it.amount, currency: reviewForSave.form.currency || null } : {}),
+          grossWeight: it.grossWeight, netWeight: it.netWeight, lotNo: it.lotNo || null,
+        }));
+        // The target wizard shows the account it was handed by its picker fields - give it the same display data.
+        const sup = foundAccounts.get(accounts.supplierAccountId);
+        if (sup) Object.assign(prepared.payload, { purchaseAccountNo: sup.code, purchaseAccountName: sup.name, purchaseAccountCurrency: sup.currency ?? undefined, purchaseAccountKind: sup.kind ?? undefined, supplierId: sup.customer_id ?? sup.id, purchaseAccountLedgerId: sup.customer_id ?? sup.id });
+        const cus = foundAccounts.get(accounts.customerAccountId);
+        if (cus) Object.assign(prepared.payload, { customerAccountNo: cus.code, customerAccountName: cus.name, customerAccountCurrency: cus.currency ?? undefined, customerAccountKind: cus.kind ?? undefined, customerId: cus.customer_id ?? cus.id });
+        (prepared.payload as any)._review = reviewForSave;
+        // 4. write the reviewer's corrections back to the extracted fields so the queue / reopen agree
+        await applyFormCorrections(sql, jobId, reviewForSave, actorId);
+      }
+
+      // Re-saving an existing document UPDATES its live draft in place (same DID number, same row) -
+      // it never creates a second bill / draft. Nothing here posts anything.
+      const live = (await sql`SELECT id, draft_no FROM public.document_intake_drafts
+        WHERE job_id = ${jobId} AND status = 'prepared' AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 1`)?.[0];
+      if (live) {
+        await sql`UPDATE public.document_intake_drafts SET
+            operational_domain = ${job.operational_domain}, target_module = ${targetModule}, doc_type_code = ${job.doc_type_code},
+            country_id = ${effectiveCountryId ?? null}, country_branch_id = ${effectiveCountryBranchId ?? null}, city_branch_id = ${effectiveCityBranchId ?? null},
+            link_mode = ${linkMode}, linked_source_module = ${linkMode === "append_existing" ? job.matched_source_module : null}, linked_source_id = ${linkMode === "append_existing" ? job.matched_source_id : null},
+            draft_payload = ${sql.json(prepared.payload as never)}, line_items = ${sql.json(goodsForSave as never)},
+            field_provenance = ${sql.json(prepared.provenance as never)}, currency = ${prepared.currency}, updated_at = now()
+          WHERE id = ${live.id}`;
+        await sql`UPDATE public.document_intake_jobs SET
+            status = 'draft_ready', target_module = ${targetModule}, source_module_hint = ${reviewModule?.id ?? job.source_module_hint ?? null},
+            country_id = ${effectiveCountryId ?? null}, country_branch_id = ${effectiveCountryBranchId ?? null}, city_branch_id = ${effectiveCityBranchId ?? null},
+            reviewed_by = ${actorId}, reviewed_at = now(), qvc_reason = NULL, updated_at = now()
+          WHERE id = ${jobId}`;
+        await event(sql, jobId, "draft_updated", { draftNo: live.draft_no, targetModule, moduleId: reviewModule?.id ?? null, intent: opts.intent ?? "draft", unresolved: prepared.unresolved }, actorId, actorName);
+        return { jobId, draftId: live.id, draftNo: live.draft_no, targetModule, linkMode, unresolved: prepared.unresolved, updatedInPlace: true, payload: prepared.payload, goodsEntries: goodsForSave };
+      }
 
       const seq = (await sql`SELECT count(*)::int n FROM public.document_intake_drafts`)?.[0]?.n ?? 0;
       const draftNo = `DID-${new Date().getUTCFullYear()}-${String(seq + 1).padStart(5, "0")}`;
@@ -583,20 +721,20 @@ export class DocumentIntakeService {
           (${jobId}, ${draftNo}, ${job.operational_domain}, ${targetModule}, ${job.doc_type_code},
            ${job.company_id}, ${effectiveCountryId ?? null}, ${effectiveCountryBranchId ?? null}, ${effectiveCityBranchId ?? null}, ${job.clearing_agent_id}, ${job.scope_composite_id},
            ${linkMode}, ${linkMode === "append_existing" ? job.matched_source_module : null}, ${linkMode === "append_existing" ? job.matched_source_id : null},
-           ${sql.json(prepared.payload as never)}, ${sql.json(prepared.goodsEntries as never)}, ${sql.json(prepared.provenance as never)}, ${prepared.currency},
+           ${sql.json(prepared.payload as never)}, ${sql.json(goodsForSave as never)}, ${sql.json(prepared.provenance as never)}, ${prepared.currency},
            'prepared', ${actorId}, ${actorName})
         RETURNING id, draft_no`)?.[0];
 
       await sql`UPDATE public.document_intake_jobs SET
         status = 'draft_ready', draft_id = ${row.id}, draft_reference = ${row.draft_no},
-        target_module = ${targetModule},
+        target_module = ${targetModule}, source_module_hint = ${reviewModule?.id ?? job.source_module_hint ?? null},
         country_id = ${effectiveCountryId ?? null},
         country_branch_id = ${effectiveCountryBranchId ?? null},
         city_branch_id = ${effectiveCityBranchId ?? null},
         reviewed_by = ${actorId}, reviewed_at = now(), qvc_reason = NULL, updated_at = now()
         WHERE id = ${jobId}`;
       await event(sql, jobId, "draft_prepared", { draftNo: row.draft_no, targetModule, linkMode, countryId: effectiveCountryId, countryBranchId: effectiveCountryBranchId, cityBranchId: effectiveCityBranchId, unresolved: prepared.unresolved }, actorId, actorName);
-      return { jobId, draftId: row.id, draftNo: row.draft_no, targetModule, linkMode, unresolved: prepared.unresolved };
+      return { jobId, draftId: row.id, draftNo: row.draft_no, targetModule, linkMode, unresolved: prepared.unresolved, updatedInPlace: false, payload: prepared.payload, goodsEntries: goodsForSave };
     });
   }
 

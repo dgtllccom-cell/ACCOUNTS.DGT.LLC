@@ -1,0 +1,35 @@
+import type { NextRequest } from "next/server";
+import { z } from "zod";
+import { apiOk, apiError, handleApiError } from "@/lib/api/response";
+import { guardIntake } from "@/lib/services/document-intake-api";
+import { buildReviewContext } from "@/lib/services/document-intake-review-service";
+
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+export const revalidate = 0;
+
+const idSchema = z.object({ id: z.string().uuid() });
+const querySchema = z.object({
+  moduleId: z.string().trim().max(60).optional(),
+  partyId: z.string().uuid().optional(),
+  baseCurrency: z.string().trim().length(3).optional(),
+});
+
+/** Module-aware review context: counter-party candidates + linked accounts + banks + rate suggestion + duplicates. Read-only. */
+export async function GET(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+  try {
+    const { scope } = await guardIntake("read");
+    const { id } = idSchema.parse(await ctx.params);
+    const sp = request.nextUrl.searchParams;
+    const q = querySchema.parse({
+      moduleId: sp.get("moduleId") || undefined,
+      partyId: sp.get("partyId") || undefined,
+      baseCurrency: sp.get("baseCurrency") || undefined,
+    });
+    const data = await buildReviewContext(id, scope, q);
+    if (!data) return apiError("NOT_FOUND", "Document job not found in your scope.", 404);
+    return apiOk(data);
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
