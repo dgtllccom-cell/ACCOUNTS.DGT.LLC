@@ -34,6 +34,7 @@ import {
   UserCheck,
   UserPlus,
   Users,
+  Settings,
   X
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
@@ -773,7 +774,7 @@ export function DashboardFrame({
           </div>
         </header>
 
-        <main data-erp-content className="w-full min-w-0 flex-1 overflow-x-hidden p-3 sm:p-4 lg:p-6 bg-background">
+        <main data-erp-content className="w-full min-w-0 flex-1 overflow-x-hidden p-3 sm:p-4 lg:p-6 pb-24 lg:pb-6 bg-background">
           <ErpPageActions />
           {isRouteBlocked ? (
             <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6 bg-card rounded-2xl border border-border shadow-xs my-4 animate-in fade-in zoom-in-95 duration-150">
@@ -798,6 +799,61 @@ export function DashboardFrame({
             children
           )}
         </main>
+
+        {/* Mobile Bottom Navigation Bar matching Mobile Mockup */}
+        <nav className="fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-border/80 px-4 py-2 flex items-center justify-around lg:hidden shadow-lg">
+          <Link
+            href="/dashboard/super-admin"
+            className={cn(
+              "flex flex-col items-center gap-1 text-[10px] font-bold transition-colors",
+              pathname === "/dashboard/super-admin" || pathname === "/dashboard"
+                ? "text-blue-600 dark:text-blue-400"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Home className="h-5 w-5" />
+            <span>{t(lang, "nav.dashboard", "Dashboard")}</span>
+          </Link>
+
+          <Link
+            href="/dashboard/users"
+            className={cn(
+              "flex flex-col items-center gap-1 text-[10px] font-bold transition-colors",
+              pathname.startsWith("/dashboard/users")
+                ? "text-blue-600 dark:text-blue-400"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Users className="h-5 w-5" />
+            <span>{t(lang, "nav.users", "Users")}</span>
+          </Link>
+
+          <Link
+            href="/dashboard/ledgers"
+            className={cn(
+              "flex flex-col items-center gap-1 text-[10px] font-bold transition-colors",
+              pathname.startsWith("/dashboard/ledgers")
+                ? "text-blue-600 dark:text-blue-400"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <FileSpreadsheet className="h-5 w-5" />
+            <span>{t(lang, "nav.ledgers", "Ledgers")}</span>
+          </Link>
+
+          <Link
+            href="/dashboard/settings/profile"
+            className={cn(
+              "flex flex-col items-center gap-1 text-[10px] font-bold transition-colors",
+              pathname.startsWith("/dashboard/settings")
+                ? "text-blue-600 dark:text-blue-400"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Settings className="h-5 w-5" />
+            <span>{t(lang, "nav.settings", "Settings")}</span>
+          </Link>
+        </nav>
       </div>
 
       <CommandDialog open={searchOpen} onOpenChange={setSearchOpen}>
