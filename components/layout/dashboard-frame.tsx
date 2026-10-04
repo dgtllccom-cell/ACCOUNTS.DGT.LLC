@@ -820,7 +820,7 @@ export function DashboardFrame({
 
         {/* Mobile bottom navigation (phones / tablets). Every entry passes the same route policy as the sidebar and the
             server gate, so it never offers a page the login would be refused; Dashboard goes to the login's OWN home. */}
-        <nav className="fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-border/80 px-4 py-2 flex items-center justify-around lg:hidden shadow-lg">
+        <nav className="fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-border/80 px-4 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] flex items-center justify-around lg:hidden shadow-lg">
           {mobileNavItems.map((item) => {
             const Icon = item.icon;
             return (

@@ -4117,8 +4117,18 @@ export type UiKey =
   | "nav.language"
   | "nav.theme_mode"
   | "nav.theme_night"
-  | "nav.theme_studio"
+  | "nav.theme_system"
   | "urw2.step_label"
+  | "aump.admin_main_users"
+  | "aump.all_system_users"
+  | "aump.main_branches"
+  | "aump.total_users"
+  | "aump.main_branch_code"
+  | "aump.currency"
+  | "aump.city_branches"
+  | "aump.code"
+  | "aump.registered_users"
+  | "aump.no_users_assigned"
   | "nav.theme_day"
   | "nav.theme_soft"
   | "nav.theme_green_business"
@@ -15553,8 +15563,18 @@ const en: Dict = {
   "nav.language": "Language",
   "nav.theme_mode": "Theme Mode",
   "nav.theme_night": "Night / Dark",
-  "nav.theme_studio": "Studio / Mobile Design",
+  "nav.theme_system": "System (Auto Day / Night)",
   "urw2.step_label": "Step",
+  "aump.admin_main_users": "Admin / Main Users",
+  "aump.all_system_users": "All System Users",
+  "aump.main_branches": "Main Branches",
+  "aump.total_users": "Total Users",
+  "aump.main_branch_code": "Main Branch Code",
+  "aump.currency": "Currency",
+  "aump.city_branches": "City Branches",
+  "aump.code": "Code",
+  "aump.registered_users": "Registered Users",
+  "aump.no_users_assigned": "No users assigned to {city} branch ({code}) yet.",
   "nav.theme_day": "Day / White",
   "nav.theme_soft": "Soft Light",
   "nav.theme_green_business": "Green / Business",
@@ -39664,8 +39684,18 @@ const ur: Dict = {
   "nav.language": "زبان",
   "nav.theme_mode": "تھیم موڈ",
   "nav.theme_night": "رات / ڈارک",
-  "nav.theme_studio": "اسٹوڈیو / موبائل ڈیزائن",
+  "nav.theme_system": "سسٹم (خودکار دن / رات)",
   "urw2.step_label": "مرحلہ",
+  "aump.admin_main_users": "ایڈمن / مرکزی صارفین",
+  "aump.all_system_users": "تمام سسٹم صارفین",
+  "aump.main_branches": "مرکزی برانچیں",
+  "aump.total_users": "کل صارفین",
+  "aump.main_branch_code": "مرکزی برانچ کوڈ",
+  "aump.currency": "کرنسی",
+  "aump.city_branches": "شہری برانچیں",
+  "aump.code": "کوڈ",
+  "aump.registered_users": "رجسٹرڈ صارفین",
+  "aump.no_users_assigned": "{city} برانچ ({code}) میں ابھی کوئی صارف مقرر نہیں۔",
   "nav.theme_day": "دن / سفید",
   "nav.theme_soft": "نرم روشنی",
   "nav.theme_green_business": "گرین / بزنس",
@@ -62400,8 +62430,18 @@ const ar: Dict = {
   "nav.template_cyan": "سماوي",
   "nav.theme_mode": "وضع المظهر",
   "nav.theme_night": "ليلي / داكن",
-  "nav.theme_studio": "استوديو / تصميم الجوال",
+  "nav.theme_system": "النظام (نهار / ليل تلقائي)",
   "urw2.step_label": "الخطوة",
+  "aump.admin_main_users": "المسؤولون / المستخدمون الرئيسيون",
+  "aump.all_system_users": "جميع مستخدمي النظام",
+  "aump.main_branches": "الفروع الرئيسية",
+  "aump.total_users": "إجمالي المستخدمين",
+  "aump.main_branch_code": "رمز الفرع الرئيسي",
+  "aump.currency": "العملة",
+  "aump.city_branches": "فروع المدن",
+  "aump.code": "الرمز",
+  "aump.registered_users": "المستخدمون المسجلون",
+  "aump.no_users_assigned": "لا يوجد مستخدمون معيّنون لفرع {city} ({code}) بعد.",
   "nav.theme_day": "نهاري / أبيض",
   "nav.theme_soft": "إضاءة ناعمة",
   "nav.theme_green_business": "أخضر / أعمال",
@@ -85136,8 +85176,18 @@ const fa: Dict = {
   "nav.template_color": "رنگ قالب",
   "nav.theme_mode": "حالت پوسته",
   "nav.theme_night": "شب / تیره",
-  "nav.theme_studio": "استودیو / طراحی موبایل",
+  "nav.theme_system": "سیستم (روز / شب خودکار)",
   "urw2.step_label": "مرحله",
+  "aump.admin_main_users": "مدیران / کاربران اصلی",
+  "aump.all_system_users": "همه کاربران سیستم",
+  "aump.main_branches": "شعبه‌های اصلی",
+  "aump.total_users": "کل کاربران",
+  "aump.main_branch_code": "کد شعبه اصلی",
+  "aump.currency": "ارز",
+  "aump.city_branches": "شعبه‌های شهری",
+  "aump.code": "کد",
+  "aump.registered_users": "کاربران ثبت‌شده",
+  "aump.no_users_assigned": "هنوز کاربری به شعبه {city} ({code}) اختصاص داده نشده است.",
   "nav.theme_day": "روز / سفید",
   "nav.theme_soft": "نور ملایم",
   "nav.theme_green_business": "سبز / تجاری",
@@ -108480,8 +108530,18 @@ const ps: Dict = {
   "nav.template_purple": "بنفش",
   "nav.theme_mode": "د بڼې حالت",
   "nav.theme_night": "شپه / توره",
-  "nav.theme_studio": "سټوډیو / ګرځنده ډیزاین",
+  "nav.theme_system": "سیسټم (اتومات ورځ / شپه)",
   "urw2.step_label": "پړاو",
+  "aump.admin_main_users": "اډمینان / اصلي کاروونکي",
+  "aump.all_system_users": "د سیسټم ټول کاروونکي",
+  "aump.main_branches": "اصلي څانګې",
+  "aump.total_users": "ټول کاروونکي",
+  "aump.main_branch_code": "د اصلي څانګې کوډ",
+  "aump.currency": "اسعار",
+  "aump.city_branches": "د ښار څانګې",
+  "aump.code": "کوډ",
+  "aump.registered_users": "ثبت شوي کاروونکي",
+  "aump.no_users_assigned": "تر اوسه {city} څانګې ({code}) ته هیڅ کاروونکی نه دی ټاکل شوی.",
   "nav.theme_day": "ورځ / سپینه",
   "nav.theme_soft": "نرمه رڼا",
   "nav.theme_green_business": "شنه / سوداګریز",

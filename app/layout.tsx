@@ -1,9 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import "./studio-theme.css";
+import "./mobile-template.css";
 import { GoogleTranslateScript } from "@/components/layout/google-translate-script";
 import { PdfPreviewModal } from "@/components/ui/pdf-preview-modal";
-import { DARK_THEME_MODES, legacyThemeMode, themeModes } from "@/lib/ui/theme-modes";
+import { legacyThemeMode, themeModes } from "@/lib/ui/theme-modes";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { getHtmlLanguage, getLanguageDirection } from "@/lib/i18n/languages";
 
@@ -78,12 +78,21 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       : (legacyTheme === 'dark' || legacyTheme === 'light')
         ? (legacyTheme === 'dark' ? 'night' : 'day')
         : legacyValue;
-    document.documentElement.classList.remove('theme-night','theme-day','theme-soft','theme-green-business','theme-studio');
-    const darkModes = new Set(${JSON.stringify(DARK_THEME_MODES)});
+    document.documentElement.classList.remove('theme-night','theme-day','theme-soft','theme-green-business','theme-system');
+    // 'system' follows the device: dark at night (dark OS setting), white in daytime
+    const sysDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const isDark = mode === 'night' || (mode === 'system' && sysDark);
     document.documentElement.classList.add('theme-' + (mode === 'green' ? 'green-business' : mode));
-    document.documentElement.classList.toggle('dark', darkModes.has(mode));
+    document.documentElement.classList.toggle('dark', isDark);
     document.documentElement.dataset.erpThemeMode = mode;
-    document.documentElement.style.colorScheme = darkModes.has(mode) ? 'dark' : 'light';
+    document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+    if (mode === 'system' && window.matchMedia) {
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (e) {
+        if (document.documentElement.dataset.erpThemeMode !== 'system') return;
+        document.documentElement.classList.toggle('dark', e.matches);
+        document.documentElement.style.colorScheme = e.matches ? 'dark' : 'light';
+      });
+    }
     if (storedThemeMode !== mode) localStorage.setItem('erp_theme_mode', mode);
     document.cookie = 'erp_theme_mode=' + encodeURIComponent(mode) + '; Path=/; Max-Age=' + (60 * 60 * 24 * 365) + '; SameSite=Lax';
   } catch {}
