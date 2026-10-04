@@ -1,293 +1,107 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
+import { useState } from "react";
 import {
   ArrowRight,
-  Building2,
   ChevronDown,
+  Eye,
+  EyeOff,
+  Fingerprint,
   Globe,
-  LockKeyhole,
-  Mail,
-  MapPin,
+  Lock,
   ShieldCheck,
-  UserCircle2,
+  User,
   Loader2,
-  Server,
+  Check,
   AlertCircle,
-  CheckCircle2,
-  Sparkles
+  HelpCircle,
+  Sparkles,
+  KeyRound
 } from "lucide-react";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
-import { t } from "@/lib/i18n/ui";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { listCountries, listCities, type LocationCountry, type LocationCity } from "@/features/master-forms";
+import { LOGIN_TRANSLATIONS } from "./login-translations";
 import { useLoginScope } from "./login-scope-context";
+
+const LANGUAGES: { code: SupportedLanguage; name: string; nativeName: string; flag: string }[] = [
+  { code: "en", name: "English", nativeName: "English", flag: "🇺🇸" },
+  { code: "ur", name: "Urdu", nativeName: "اردو", flag: "🇵🇰" },
+  { code: "ar", name: "Arabic", nativeName: "العربية", flag: "🇦🇪" },
+  { code: "fa", name: "Farsi", nativeName: "فارسی", flag: "🇮🇷" },
+  { code: "ps", name: "Pashto", nativeName: "پښتو", flag: "🇦🇫" },
+];
+
+const DEMO_PRESETS = [
+  { presetName: "Super Admin", id: "superadmin@dgt.llc", scopeName: "Global Root" },
+  { presetName: "UAE Admin", id: "uae.admin@dgt.llc", scopeName: "Country Admin" },
+  { presetName: "Pakistan Admin", id: "pakistan.admin@dgt.llc", scopeName: "Country Admin" },
+  { presetName: "City Branch", id: "chaman.branch@dgt.llc", scopeName: "City Branch" },
+  { presetName: "Clearing Agent", id: "shipping@dgt.llc", scopeName: "Maritime Clearing" },
+];
 
 export type LoginTab = "super_admin" | "country" | "city" | "branch" | "agent";
 
-const TABS: { id: LoginTab; label: string; shortKey: string }[] = [
-  { id: "super_admin", label: "Super Admin", shortKey: "login.tab_admin" },
-  { id: "country", label: "Country Admin", shortKey: "login.tab_country" },
-  { id: "city", label: "City Branch", shortKey: "login.tab_city" },
-  { id: "branch", label: "Branch User", shortKey: "login.tab_branch" },
-  { id: "agent", label: "Clearing Agent", shortKey: "login.tab_agent" },
-];
-
-const ACCESS_PROFILES: Record<
-  LoginTab,
-  {
-    eyebrow: string;
-    title: string;
-    subtitle: string;
-    note: string;
-    scopeLabel: string;
-    formatPlaceholder: string;
-    quickExamples: string[];
-  }
-> = {
-  super_admin: {
-    eyebrow: "Global ERP Control",
-    title: "Super Admin Access",
-    subtitle: "Full system visibility for configuration, audit, reporting, and cross-country administration.",
-    note: "Use this entry point for global ERP operations and security oversight.",
-    scopeLabel: "All countries, all branches",
-    formatPlaceholder: "superadmin@dgt.llc, shipping.superadmin@dgt.llc, business.superadmin@dgt.llc",
-    quickExamples: ["superadmin@dgt.llc", "shipping.superadmin@dgt.llc", "business.superadmin@dgt.llc"]
-  },
-  country: {
-    eyebrow: "Country Workspace",
-    title: "Country Admin Access",
-    subtitle: "Scoped access for country-level operations, master data, and business oversight.",
-    note: "Format: {countryName}.admin@dgt.llc (e.g. pakistan.admin@dgt.llc, uae.admin@dgt.llc).",
-    scopeLabel: "Country-level access",
-    formatPlaceholder: "pakistan.admin@dgt.llc, uae.admin@dgt.llc",
-    quickExamples: ["pakistan.admin@dgt.llc", "uae.admin@dgt.llc"]
-  },
-  city: {
-    eyebrow: "City Branch Workspace",
-    title: "City Branch Access",
-    subtitle: "Operational entry for city-specific teams with branch-aware ERP workflows.",
-    note: "Format: {cityName}.branch@dgt.llc (e.g. chaman.branch@dgt.llc, quetta.branch@dgt.llc, dubai.branch@dgt.llc).",
-    scopeLabel: "City branch access",
-    formatPlaceholder: "chaman.branch@dgt.llc, quetta.branch@dgt.llc, dubai.branch@dgt.llc",
-    quickExamples: ["chaman.branch@dgt.llc", "quetta.branch@dgt.llc", "dubai.branch@dgt.llc"]
-  },
-  branch: {
-    eyebrow: "Branch Operations",
-    title: "Branch User Access",
-    subtitle: "Focused access for branch users handling local transactions, reports, and approvals.",
-    note: "Format: {cityName}.branch@dgt.llc or simple name (e.g. chaman)",
-    scopeLabel: "Branch-level access",
-    formatPlaceholder: "chaman.branch@dgt.llc, quetta.branch@dgt.llc, dubai.branch@dgt.llc",
-    quickExamples: ["chaman.branch@dgt.llc", "quetta.branch@dgt.llc", "dubai.branch@dgt.llc"]
-  },
-  agent: {
-    eyebrow: "Shipping & Clearing",
-    title: "Clearing Agent Access",
-    subtitle: "Workflow access for shipping line and clearing operations with linked order visibility.",
-    note: "Format: shipping@dgt.llc or {cityName}.shipping.agent@dgt.llc",
-    scopeLabel: "Agent workflow access",
-    formatPlaceholder: "shipping@dgt.llc, quetta.shipping.agent@dgt.llc",
-    quickExamples: ["shipping@dgt.llc", "quetta.shipping.agent@dgt.llc", "pakistan.shipping.admin@dgt.llc"]
-  },
-};
-
-const LANGUAGES = [
-  { code: "en", name: "English", flag: "🇺🇸" },
-  { code: "ur", name: "اردو", flag: "🇵🇰" },
-  { code: "ps", name: "پښتو", flag: "🇦🇫" },
-  { code: "ar", name: "العربية", flag: "🇦🇪" },
-  { code: "fa", name: "فارسی", flag: "🇮🇷" },
-];
-
-const DEFAULT_COUNTRIES = ["Pakistan", "Afghanistan", "United Arab Emirates", "Saudi Arabia", "India", "China"];
-const DEFAULT_CITIES: Record<string, string[]> = {
-  Pakistan: ["Chaman", "Quetta", "Karachi", "Lahore", "Islamabad", "Peshawar", "Gwadar", "Torkham"],
-  Afghanistan: ["Kabul", "Kandahar", "Herat", "Spin Boldak", "Mazar-i-Sharif"],
-  "United Arab Emirates": ["Dubai", "Abu Dhabi", "Sharjah", "Jebel Ali"],
-  "Saudi Arabia": ["Riyadh", "Jeddah", "Dammam", "Mecca"],
-  India: ["Delhi", "Mumbai", "Attari", "Bangalore"],
-  China: ["Shenzhen", "Dalian", "Guangzhou", "Shanghai"]
-};
-const BRANCHES = ["Main Branch", "North Branch", "South Branch", "East Branch", "West Branch"];
-
-function SelectField({
-  label,
-  name,
-  icon: Icon,
-  value,
-  onChange,
-  options,
-  placeholder,
-}: {
-  label: string;
-  name: string;
-  icon: React.ElementType;
-  value: string;
-  onChange: (v: string) => void;
-  options: string[];
-  placeholder: string;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <label className="block text-[10px] font-black uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-        {label}
-      </label>
-      <div className="relative">
-        <Icon className="pointer-events-none absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" aria-hidden />
-        <select
-          name={name}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="h-12 w-full appearance-none rounded-xl border border-slate-200 bg-white pl-10 pr-10 text-xs sm:text-sm font-semibold text-slate-700 shadow-xs outline-none transition-all focus:border-blue-600 focus:ring-4 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:focus:border-blue-400 dark:focus:ring-blue-950"
-        >
-          <option value="">{placeholder}</option>
-          {options.map((o) => (
-            <option key={o} value={o}>
-              {o}
-            </option>
-          ))}
-        </select>
-        <ChevronDown className="pointer-events-none absolute right-3.5 top-3.5 h-4 w-4 text-slate-400" aria-hidden />
-      </div>
-    </div>
-  );
-}
-
 export function LoginForm({
-  lang: initialLang,
-  initialTab = "super_admin",
-  showRoleTabs = true,
+  lang: propLang,
+  initialTab,
+  showRoleTabs = false,
 }: {
   lang?: SupportedLanguage;
   initialTab?: LoginTab;
   showRoleTabs?: boolean;
 }) {
   const scope = useLoginScope();
-  const [activeTab, setActiveTab] = useState<LoginTab>(initialTab);
-  const [selectedLang, setSelectedLang] = useState<string>(initialLang || "en");
-  const [selectedCountry, setSelectedCountry] = useState("");
-  const [selectedCity, setSelectedCity] = useState("");
-  const [selectedBranch, setSelectedBranch] = useState("");
+  const lang = (scope.selectedLang || propLang || "en") as SupportedLanguage;
+  const t = LOGIN_TRANSLATIONS[lang] || LOGIN_TRANSLATIONS.en;
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
+
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorState, setErrorState] = useState<string | null>(null);
-  const [idFocused, setIdFocused] = useState(false);
-  const [pwFocused, setPwFocused] = useState(false);
 
-  const lang = (selectedLang || "en") as SupportedLanguage;
-  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
+  // UI state toggles
+  const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
+  const [showSandbox, setShowSandbox] = useState(false);
+  const [showBiometricModal, setShowBiometricModal] = useState(false);
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [biometricFeedback, setBiometricFeedback] = useState<string | null>(null);
 
-  const [masterCountries, setMasterCountries] = useState<LocationCountry[]>([]);
-  const [masterCities, setMasterCities] = useState<LocationCity[]>([]);
+  const currentLangObj = LANGUAGES.find((l) => l.code === lang) || LANGUAGES[0];
 
-  useEffect(() => {
-    setActiveTab(initialTab);
+  function handleSwitchLanguage(code: SupportedLanguage) {
+    scope.setSelectedLang(code);
+    setIsLangMenuOpen(false);
     if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const emailParam = params.get("email");
-      if (emailParam) {
-        setIdentifier(emailParam);
-      }
-    }
-  }, [initialTab]);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
       try {
-        const rows = await listCountries();
-        if (!cancelled && rows && rows.length > 0) {
-          setMasterCountries(rows);
+        localStorage.setItem("erp_lang", code);
+        document.cookie = `erp_lang=${encodeURIComponent(code)}; Path=/; Max-Age=${60 * 60 * 24 * 365}; SameSite=Lax`;
+        const newRtl = ["ar", "ur", "fa", "ps"].includes(code);
+        document.documentElement.lang = code;
+        document.documentElement.dir = newRtl ? "rtl" : "ltr";
+        const headerSelect = document.querySelector('select[data-language-picker], select[aria-label*="Lang"]') as HTMLSelectElement | null;
+        if (headerSelect && headerSelect.value !== code) {
+          headerSelect.value = code;
+          headerSelect.dispatchEvent(new Event("change", { bubbles: true }));
         }
-      } catch {
-        // Fallback to default
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const countryOptions = masterCountries.length > 0 ? masterCountries.map((c) => c.name) : DEFAULT_COUNTRIES;
-
-  useEffect(() => {
-    let cancelled = false;
-    setMasterCities([]);
-    if (!selectedCountry) return;
-
-    const matchedCountry = masterCountries.find((c) => c.name === selectedCountry || c.id === selectedCountry);
-    if (matchedCountry) {
-      (async () => {
-        try {
-          const rows = await listCities({ countryId: matchedCountry.id });
-          if (!cancelled) setMasterCities(rows);
-        } catch {
-          // Fallback to default
-        }
-      })();
+      } catch (e) {}
     }
-    return () => {
-      cancelled = true;
-    };
-  }, [selectedCountry, masterCountries]);
-
-  const availableCities =
-    masterCities.length > 0
-      ? masterCities.map((c) => c.name)
-      : selectedCountry
-      ? DEFAULT_CITIES[selectedCountry] ?? []
-      : [];
-
-  const needsCountry = ["country", "city", "branch", "agent"].includes(activeTab);
-  const needsCity = ["city", "branch", "agent"].includes(activeTab);
-  const needsBranch = ["branch"].includes(activeTab);
-
-  function handleTabChange(tab: LoginTab) {
-    setActiveTab(tab);
-    scope.setActiveTab(tab);
-    setSelectedCountry("");
-    scope.setSelectedCountry("");
-    setSelectedCity("");
-    scope.setSelectedCity("");
-    setSelectedBranch("");
-    setErrorState(null);
   }
-
-  // Smart Username Generator based on selected country & city
-  function generateSuggestedUsername() {
-    if (activeTab === "country" && selectedCountry) {
-      if (selectedCountry === "United Arab Emirates") return "uae.admin@dgt.llc";
-      return `${selectedCountry.toLowerCase().replace(/\s+/g, "")}.admin@dgt.llc`;
-    }
-    if ((activeTab === "city" || activeTab === "branch") && selectedCity) {
-      return `${selectedCity.toLowerCase().replace(/\s+/g, "")}.branch@dgt.llc`;
-    }
-    if (activeTab === "agent") {
-      if (selectedCity) {
-        return `${selectedCity.toLowerCase().replace(/\s+/g, "")}.shipping.agent@dgt.llc`;
-      }
-      if (selectedCountry) {
-        return `${selectedCountry.toLowerCase().replace(/\s+/g, "")}.shipping.admin@dgt.llc`;
-      }
-      return "shipping@dgt.llc";
-    }
-    return "";
-  }
-
-  const suggestedUser = generateSuggestedUsername();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorState(null);
 
     if (!identifier.trim() || !password.trim()) {
-      setErrorState(tt("login.err_required", "Please enter both User ID / Email and Password."));
+      setErrorState(
+        lang === "ur"
+          ? "برائے مہربانی ای میل / یوزر کوڈ اور پاس ورڈ درج کریں۔"
+          : lang === "ar"
+          ? "الرجاء إدخال البريد الإلكتروني أو رمز المستخدم وكلمة المرور."
+          : "Please enter both Email / User Code and Password."
+      );
       return;
     }
 
@@ -304,7 +118,6 @@ export function LoginForm({
           identifier: identifier.trim(),
           password: password.trim(),
           remember: rememberMe,
-          login_type: activeTab,
         }),
       });
 
@@ -320,7 +133,6 @@ export function LoginForm({
         }
       }
 
-      // Successful login redirect to dashboard
       window.location.href = data.redirectUrl || "/dashboard";
     } catch (err: any) {
       setErrorState(err.message || "Invalid credentials or unauthorized user.");
@@ -329,312 +141,293 @@ export function LoginForm({
     }
   };
 
+  async function handleBiometricAuth() {
+    setBiometricFeedback(null);
+    setShowBiometricModal(true);
+
+    if (typeof window !== "undefined" && window.PublicKeyCredential) {
+      try {
+        const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+        if (!available) {
+          setBiometricFeedback(t.biometricNotEnrolled);
+        }
+      } catch (e) {
+        setBiometricFeedback(t.biometricNotEnrolled);
+      }
+    } else {
+      setBiometricFeedback(t.biometricNotEnrolled);
+    }
+  }
+
   return (
-    <div className="w-full rounded-[2rem] border border-slate-200/80 bg-white/95 p-4 shadow-xl shadow-slate-900/5 backdrop-blur-sm sm:p-6 dark:border-slate-800 dark:bg-slate-950/90 dark:shadow-black/20">
-      {/* ── Server Connection Status Badge ── */}
-      <div className="mb-3 hidden flex-wrap items-center justify-between gap-2 rounded-xl bg-slate-100/90 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 px-3 py-2 text-[11px] font-bold">
-        <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
-          <span className="relative flex h-2.5 w-2.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+    <div className="w-full max-w-[420px] mx-auto" dir={isRtl ? "rtl" : "ltr"}>
+      {/* ── App Icon & Header matching the mockup ── */}
+      <div className="flex flex-col items-center text-center">
+        {/* Blue Square DGT App Icon */}
+        <div className="w-16 h-16 rounded-[22px] bg-gradient-to-br from-[#1e60f0] via-[#1a56db] to-[#0c3da8] shadow-xl shadow-blue-500/25 flex items-center justify-center transition-transform hover:scale-105 cursor-pointer">
+          <span className="text-2xl font-black tracking-tight text-white font-sans drop-shadow-xs">
+            DGT
           </span>
-          <span className="font-mono text-[10.5px]">Production Cloud Server (72.60.209.121)</span>
         </div>
-        <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 text-[10px] font-extrabold">
-          <ShieldCheck className="h-3.5 w-3.5" />
-          <span>{tt("login.secure_access", "Secure Upcountry ERP Access")}</span>
-        </div>
-      </div>
 
-      {/* ── Welcome Heading ── */}
-      <div className="mb-5 flex items-center gap-3.5">
-        <img
-          src="/images/damaan-logo.png"
-          alt="Damaan Business Group"
-          className="h-12 w-12 shrink-0 rounded-full object-contain shadow-md border border-amber-500/30"
-        />
-        <div>
-          <h2 className="text-lg sm:text-xl font-black leading-tight tracking-tight text-slate-900 dark:text-white">
-            {lang === "ur"
-              ? "دامان بزنس گروپ میں خوش آمدید"
-              : lang === "ar"
-              ? "مرحباً بكم في مجموعة ضمان للأعمال"
-              : lang === "fa"
-              ? "به گروه تجاری دامان خوش آمدید"
-              : lang === "ps"
-              ? "د دامان سوداګریزې ډلې ته ښه راغلاست"
-              : "Welcome to Damaan Business Group"}
-          </h2>
-          <p className="mt-0.5 text-[11px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
-            {lang === "ur"
-              ? "DGT.LLC • دامان جنرل ٹریڈنگ"
-              : lang === "ar"
-              ? "DGT.LLC • شركة ضمان للتجارة العامة"
-              : lang === "fa"
-              ? "DGT.LLC • شرکت تجارت عمومی دامان"
-              : lang === "ps"
-              ? "DGT.LLC • د دامان عمومي سوداګریز شرکت"
-              : "DGT.LLC • Damaan General Trading LLC"}
-          </p>
-        </div>
-      </div>
+        {/* Title */}
+        <h1 className="text-2xl sm:text-[26px] font-black tracking-tight text-slate-900 dark:text-white mt-5">
+          {t.brandTitle}
+        </h1>
 
-      {/* ── 5-Language Switcher Pills ── */}
-      <div className="mb-4">
-        <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400 mb-1.5 flex items-center gap-1">
-          <Globe className="h-3 w-3 text-blue-600" /> {tt("login.select_lang", "Select System Language")}
-        </div>
-        <div className="flex flex-wrap gap-1.5">
-          {LANGUAGES.map((l) => (
-            <button
-              key={l.code}
-              type="button"
-              onClick={() => {
-                setSelectedLang(l.code);
-                scope.setSelectedLang(l.code);
-                if (typeof window !== "undefined") {
-                  try {
-                    localStorage.setItem("erp_lang", l.code);
-                    document.cookie = `erp_lang=${encodeURIComponent(l.code)}; Path=/; Max-Age=${60 * 60 * 24 * 365}; SameSite=Lax`;
-                    const isRtl = ["ar", "ur", "fa", "ps"].includes(l.code);
-                    document.documentElement.lang = l.code;
-                    document.documentElement.dir = isRtl ? "rtl" : "ltr";
-                    const headerSelect = document.querySelector('select[aria-label="Language"]') as HTMLSelectElement | null;
-                    if (headerSelect && headerSelect.value !== l.code) {
-                      headerSelect.value = l.code;
-                      headerSelect.dispatchEvent(new Event("change", { bubbles: true }));
-                    }
-                  } catch (e) {}
-                }
-              }}
-              className={cn(
-                "flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer",
-                selectedLang === l.code
-                  ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                  : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 dark:bg-slate-900 dark:text-slate-300 dark:border-slate-800"
-              )}
-            >
-              <span>{l.flag}</span>
-              <span>{l.name}</span>
-            </button>
-          ))}
-        </div>
+        {/* Subtitle */}
+        <p className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 mt-1 mb-8">
+          {t.brandSubtitle}
+        </p>
       </div>
-
-      {/* ── Role Scope Pills ── */}
-      {showRoleTabs && (
-        <div className="mb-4 flex gap-1 overflow-x-auto rounded-2xl border border-slate-200 bg-slate-100/90 p-1.5 shadow-xs no-scrollbar dark:border-slate-800 dark:bg-slate-800/60">
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              aria-label={tab.label}
-              title={tab.label}
-              onClick={() => handleTabChange(tab.id)}
-              className={cn(
-                "shrink-0 flex-1 rounded-xl px-3 py-2 text-[9px] sm:text-[9.5px] font-black uppercase tracking-[0.14em] text-center whitespace-nowrap transition-all duration-200 cursor-pointer border",
-                activeTab === tab.id
-                  ? "border-slate-900 bg-slate-900 text-white shadow-md shadow-slate-900/10 dark:border-white dark:bg-white dark:text-slate-900"
-                  : "border-transparent bg-transparent text-slate-500 hover:border-slate-200 hover:bg-white hover:text-slate-900 dark:text-slate-400 dark:hover:border-slate-700 dark:hover:bg-slate-900/60 dark:hover:text-white"
-              )}
-            >
-              {tt(tab.shortKey, tab.label)}
-            </button>
-          ))}
-        </div>
-      )}
 
       {/* ── Error Banner ── */}
       {errorState && (
-        <div className="mb-4 flex items-start gap-2.5 rounded-2xl border border-rose-200 bg-rose-50 p-3.5 text-xs font-bold text-rose-700 shadow-sm dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300 animate-in fade-in zoom-in-95 duration-150">
-          <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-rose-600" />
-          <div>{errorState}</div>
+        <div className="mb-5 flex items-start gap-2.5 rounded-2xl border border-rose-200 bg-rose-50 p-3.5 text-xs font-bold text-rose-700 shadow-xs dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300 animate-in fade-in duration-150">
+          <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-rose-600 dark:text-rose-400" />
+          <span className="flex-1 leading-snug">{errorState}</span>
         </div>
       )}
 
       {/* ── Login Form ── */}
-      <form method="post" action="/api/erp/auth/login" onSubmit={handleSubmit} className="space-y-4">
-        {needsCountry && (
-          <SelectField
-            label={tt("login.country_scope", "Country Scope")}
-            name="country"
-            icon={Globe}
-            value={selectedCountry}
-            onChange={(v) => {
-              setSelectedCountry(v);
-              scope.setSelectedCountry(v);
-              setSelectedCity("");
-              scope.setSelectedCity("");
-              setSelectedBranch("");
-            }}
-            options={countryOptions}
-            placeholder={tt("login.select_country", "Select Country")}
-          />
-        )}
-
-        {needsCity && (
-          <SelectField
-            label={tt("login.city_scope", "City Branch Scope")}
-            name="city"
-            icon={MapPin}
-            value={selectedCity}
-            onChange={(v) => {
-              setSelectedCity(v);
-              scope.setSelectedCity(v);
-              setSelectedBranch("");
-            }}
-            options={availableCities}
-            placeholder={selectedCountry ? tt("login.select_city", "Select City") : tt("login.select_country_first", "Select a country first")}
-          />
-        )}
-
-        {needsBranch && (
-          <SelectField
-            label={tt("login.tab_branch", "Branch")}
-            name="branch"
-            icon={Building2}
-            value={selectedBranch}
-            onChange={setSelectedBranch}
-            options={BRANCHES}
-            placeholder={tt("login.select_branch", "Select Branch")}
-          />
-        )}
-
-        {/* Email / User ID */}
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <label htmlFor="identifier" className="block text-[11px] font-bold uppercase tracking-[0.12em] text-slate-600 dark:text-slate-300">
-              {tt("login.email_label", "User ID or Email")}
-            </label>
-            {suggestedUser && (
-              <button
-                type="button"
-                onClick={() => {
-                  setIdentifier(suggestedUser);
-                  scope.setIdentifier(suggestedUser);
-                }}
-                className="text-[10.5px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer"
-              >
-                <Sparkles className="h-3 w-3" /> Auto-fill: <span className="font-mono font-black">{suggestedUser}</span>
-              </button>
-            )}
-          </div>
-          <div className="relative">
-            <Mail
-              className={cn(
-                "pointer-events-none absolute left-3.5 top-3.5 h-4 w-4 transition-colors duration-200",
-                idFocused ? "text-blue-600" : "text-slate-400"
-              )}
-              aria-hidden
-            />
-            <Input
-              id="identifier"
-              name="identifier"
-              type="text"
-              value={identifier}
-              onChange={(e) => {
-                setIdentifier(e.target.value);
-                scope.setIdentifier(e.target.value);
-              }}
-              onFocus={() => setIdFocused(true)}
-              onBlur={() => setIdFocused(false)}
-              className="h-12 rounded-xl border border-slate-200 bg-white pl-10 text-xs sm:text-sm font-semibold shadow-xs placeholder:font-normal placeholder:text-slate-400 transition-all focus-visible:border-blue-600 focus-visible:ring-4 focus-visible:ring-blue-100 dark:border-slate-700 dark:bg-slate-900 dark:focus-visible:border-blue-400 dark:focus-visible:ring-blue-950"
-              placeholder="Enter your User ID or Email"
-              autoComplete="username"
-              required
-            />
-          </div>
-        </div>
-
-
-        {/* Password */}
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <label htmlFor="password" className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-              {tt("login.password_label", "Password")}
-            </label>
-            <Link
-              href="/auth/forgot-password"
-              className="text-[11px] font-bold text-blue-600 hover:text-blue-700 transition-colors hover:underline dark:text-blue-400"
-            >
-              {tt("login.forgot_password", "Forgot Password?")}
-            </Link>
-          </div>
-          <div className="relative">
-            <LockKeyhole
-              className={cn(
-                "pointer-events-none absolute left-3.5 top-3.5 h-4 w-4 transition-colors duration-200",
-                pwFocused ? "text-blue-600" : "text-slate-400"
-              )}
-              aria-hidden
-            />
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onFocus={() => setPwFocused(true)}
-              onBlur={() => setPwFocused(false)}
-              className="h-12 rounded-xl border border-slate-200 bg-white pl-10 text-xs sm:text-sm font-semibold shadow-xs placeholder:font-normal placeholder:text-slate-400 transition-all focus-visible:border-blue-600 focus-visible:ring-4 focus-visible:ring-blue-100 dark:border-slate-700 dark:bg-slate-900 dark:focus-visible:border-blue-400 dark:focus-visible:ring-blue-950"
-              placeholder="••••••••••••"
-              autoComplete="current-password"
-              required
-            />
-          </div>
-        </div>
-
-        {/* Remember me */}
-        <div className="flex items-center gap-2 pt-0.5">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* 1. Email / User Code Input */}
+        <div className="relative">
+          <User className={cn("h-4 w-4 text-slate-400 absolute top-1/2 -translate-y-1/2 pointer-events-none transition-colors", isRtl ? "right-4" : "left-4")} />
           <input
-            id="remember"
-            type="checkbox"
-            checked={rememberMe}
-            onChange={(e) => setRememberMe(e.target.checked)}
-            className="h-4 w-4 cursor-pointer rounded border-slate-300 accent-blue-600 dark:accent-blue-400"
+            type="text"
+            id="identifier"
+            autoComplete="username"
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
+            placeholder={t.identifierPlaceholder}
+            className={cn(
+              "h-12 w-full rounded-xl border border-slate-200/90 bg-slate-50/70 text-sm font-semibold text-slate-800 placeholder:text-slate-400 shadow-2xs transition-all outline-none",
+              "focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100",
+              "dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:bg-slate-900 dark:focus:border-blue-500 dark:focus:ring-blue-950/50",
+              isRtl ? "pr-11 pl-4 text-right" : "pl-11 pr-4 text-left"
+            )}
           />
-          <label htmlFor="remember" className="cursor-pointer select-none text-xs font-semibold text-slate-600 dark:text-slate-400">
-            {tt("login.remember_me", "Remember Me")}
-          </label>
         </div>
 
-        {/* Secure Login Button */}
-        <Button
+        {/* 2. Password Input */}
+        <div className="relative">
+          <Lock className={cn("h-4 w-4 text-slate-400 absolute top-1/2 -translate-y-1/2 pointer-events-none transition-colors", isRtl ? "right-4" : "left-4")} />
+          <input
+            type={showPassword ? "text" : "password"}
+            id="password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder={t.passwordPlaceholder}
+            className={cn(
+              "h-12 w-full rounded-xl border border-slate-200/90 bg-slate-50/70 text-sm font-semibold text-slate-800 placeholder:text-slate-400 shadow-2xs transition-all outline-none",
+              "focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100",
+              "dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-100 dark:focus:bg-slate-900 dark:focus:border-blue-500 dark:focus:ring-blue-950/50",
+              isRtl ? "pr-11 pl-11 text-right" : "pl-11 pr-11 text-left"
+            )}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((prev) => !prev)}
+            aria-label={t.passwordPlaceholder}
+            className={cn(
+              "absolute top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg transition-colors cursor-pointer",
+              isRtl ? "left-2.5" : "right-2.5"
+            )}
+          >
+            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        </div>
+
+        {/* 3. Remember Me & Forgot Password Row */}
+        <div className="flex items-center justify-between pt-1 text-xs">
+          <label className="flex items-center gap-2 cursor-pointer select-none font-semibold text-slate-600 dark:text-slate-300">
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="h-4 w-4 rounded-md border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:focus:ring-blue-600 accent-blue-600 cursor-pointer"
+            />
+            <span>{t.rememberMe}</span>
+          </label>
+
+          <button
+            type="button"
+            onClick={() => setShowForgotModal(true)}
+            className="font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 hover:underline transition-colors cursor-pointer"
+          >
+            {t.forgotPassword}
+          </button>
+        </div>
+
+        {/* 4. Primary Submit Button: SIGN IN SECURELY */}
+        <button
           type="submit"
           disabled={loading}
-          className="h-12 w-full rounded-xl bg-gradient-to-r from-[#e95435] via-[#ed5b3d] to-[#df4b2d] px-4 text-xs font-black tracking-[0.08em] text-white shadow-[0_12px_30px_rgba(223,75,45,0.24)] transition-all duration-200 hover:-translate-y-0.5 hover:from-[#d94a2d] hover:via-[#e95435] hover:to-[#c94027] hover:shadow-[0_16px_36px_rgba(223,75,45,0.3)] sm:text-sm cursor-pointer"
+          className="h-12 w-full mt-4 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-xs sm:text-sm tracking-wider uppercase shadow-md shadow-blue-600/25 flex items-center justify-center gap-2.5 transition-all active:scale-[0.99] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {loading ? (
             <>
-              <Loader2 className="h-4 w-4 animate-spin text-white" />
-              {tt("login.authenticating", "Authenticating Security Credentials...")}
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>{t.authenticating}</span>
             </>
           ) : (
             <>
-              <ShieldCheck className="h-4 w-4 text-white" />
-              {tt("login.btn", "SECURE ERP LOGIN")} <ArrowRight className="h-4 w-4 ml-1" />
+              <ShieldCheck className="h-4.5 w-4.5 shrink-0" />
+              <span>{t.signInSecurely}</span>
+              <ArrowRight className={cn("h-4 w-4 shrink-0 transition-transform", isRtl ? "rotate-180" : "")} />
             </>
           )}
-        </Button>
+        </button>
+
+        {/* 5. Secondary Biometric Button: Face ID / Fingerprint */}
+        <button
+          type="button"
+          onClick={handleBiometricAuth}
+          className="h-12 w-full rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-200 font-bold text-xs sm:text-sm shadow-2xs flex items-center justify-center gap-2.5 transition-all cursor-pointer active:scale-[0.99]"
+        >
+          <Fingerprint className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0" />
+          <span>{t.faceIdFingerprint}</span>
+        </button>
       </form>
 
-      {/* Public DGT Webmail Access */}
-      <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 text-center">
-        <Link
-          href="/mail"
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-bold transition-all border border-blue-200 dark:border-blue-800 shadow-xs"
+      {/* ── 6. Centered Language Selector Dropdown ── */}
+      <div className="relative mt-6 flex justify-center">
+        <button
+          type="button"
+          onClick={() => setIsLangMenuOpen((prev) => !prev)}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-slate-50/80 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900 text-xs font-bold text-slate-700 dark:text-slate-300 transition-all shadow-2xs cursor-pointer"
         >
-          <Mail className="h-4 w-4 text-blue-600" />
-          <span>DGT Public Webmail (username@dgt.llc)</span>
-          <ArrowRight className="h-3 w-3 ml-0.5 text-blue-500" />
-        </Link>
+          <Globe className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+          <span>{currentLangObj.flag} {currentLangObj.name}</span>
+          <ChevronDown className={cn("h-3.5 w-3.5 text-slate-400 transition-transform", isLangMenuOpen ? "rotate-180" : "")} />
+        </button>
+
+        {/* Language Options Popover */}
+        {isLangMenuOpen && (
+          <div className="absolute bottom-11 z-50 w-52 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-2xl dark:border-slate-800 dark:bg-slate-900 animate-in fade-in zoom-in-95 duration-100">
+            <div className="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800 mb-1">
+              {t.selectLanguage}
+            </div>
+            {LANGUAGES.map((l) => (
+              <button
+                key={l.code}
+                type="button"
+                onClick={() => handleSwitchLanguage(l.code)}
+                className={cn(
+                  "w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer",
+                  lang === l.code
+                    ? "bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300"
+                    : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800/60"
+                )}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">{l.flag}</span>
+                  <span>{l.nativeName}</span>
+                </div>
+                {lang === l.code && <Check className="h-3.5 w-3.5 text-blue-600" />}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Security footer note */}
-      <div className="mt-4 hidden items-center justify-center gap-2 border-t border-slate-100 pt-4 text-[10.5px] font-bold text-slate-400 dark:border-slate-800">
-        <ShieldCheck className="h-4 w-4 text-emerald-500 shrink-0" />
-        <span>{tt("login.footer", "Private ERP System • 256-Bit SSL Encrypted Access Only")}</span>
+      {/* ── 7. Preview / Sandbox Mode Divider ── */}
+      <div className="mt-7 flex items-center gap-3">
+        <div className="flex-1 h-px bg-slate-200 dark:bg-slate-800" />
+        <button
+          type="button"
+          onClick={() => setShowSandbox((prev) => !prev)}
+          className="text-[11px] font-semibold text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer select-none"
+        >
+          {t.sandboxMode}
+        </button>
+        <div className="flex-1 h-px bg-slate-200 dark:bg-slate-800" />
       </div>
+
+      {/* ── Sandbox Preset Credentials Drawer ── */}
+      {showSandbox && (
+        <div className="mt-4 p-3.5 rounded-2xl border border-blue-200/70 bg-blue-50/50 dark:border-blue-900/40 dark:bg-blue-950/20 text-xs animate-in fade-in duration-200">
+          <div className="flex items-center justify-between mb-2">
+            <span className="font-extrabold text-[11px] text-blue-900 dark:text-blue-300 flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5 text-blue-600" />
+              {t.demoCredentialsTitle}
+            </span>
+            <span className="text-[10px] text-blue-600/80 font-semibold">{t.fillCreds}</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {DEMO_PRESETS.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => {
+                  setIdentifier(p.id);
+                }}
+                className="flex flex-col text-left p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-500 hover:shadow-xs transition-all cursor-pointer"
+              >
+                <div className="flex items-center justify-between w-full">
+                  <span className="font-bold text-[11px] text-slate-800 dark:text-slate-200">{p.presetName}</span>
+                  <span className="text-[9px] font-semibold text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">{p.scopeName}</span>
+                </div>
+                <span className="text-[10px] text-slate-500 font-mono truncate mt-0.5">{p.id}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Biometric Dialog Modal ── */}
+      {showBiometricModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4" dir={isRtl ? "rtl" : "ltr"}>
+          <div className="w-full max-w-sm rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 text-center space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="w-14 h-14 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto">
+              <Fingerprint className="h-8 w-8 animate-pulse" />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">
+                {t.passkeyPromptTitle}
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                {biometricFeedback || t.passkeyPromptDesc}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowBiometricModal(false)}
+              className="w-full h-10 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition-all cursor-pointer"
+            >
+              {t.close}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Forgot Password Dialog Modal ── */}
+      {showForgotModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4" dir={isRtl ? "rtl" : "ltr"}>
+          <div className="w-full max-w-sm rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 text-center space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="w-14 h-14 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto">
+              <KeyRound className="h-7 w-7" />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">
+                {t.forgotPasswordTitle}
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
+                {t.forgotPasswordDesc}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowForgotModal(false)}
+              className="w-full h-10 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all cursor-pointer"
+            >
+              {t.close}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

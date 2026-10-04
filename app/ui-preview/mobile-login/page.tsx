@@ -110,23 +110,25 @@ export default function MobileLoginPreviewPage() {
             </div>
 
             {/* Screen Content Area */}
-            <div className="bg-white dark:bg-slate-950 rounded-[38px] p-5 h-full overflow-y-auto shadow-inner text-slate-900 dark:text-slate-100 flex flex-col justify-between">
-              {/* Header */}
-              <div className="flex items-center gap-2 mb-4">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white font-black text-xs">
-                  DB
-                </div>
-                <div>
-                  <div className="text-xs font-black tracking-widest text-slate-900 dark:text-white">{brandLine}</div>
-                  <div className="text-[8px] font-extrabold uppercase tracking-widest text-slate-400">{tt("enterprise_erp", "Enterprise ERP")}</div>
-                </div>
+            <div className="bg-white dark:bg-slate-950 rounded-[38px] p-5 h-full overflow-y-auto shadow-inner text-slate-900 dark:text-slate-100 flex flex-col justify-between relative">
+              {/* Login Form */}
+              <div className="relative z-10">
+                <LoginForm />
               </div>
 
-              {/* Login Form */}
-              <LoginForm />
+              {/* Bottom Faded Hero Illustration matching mockup */}
+              <div className="absolute inset-x-0 bottom-0 h-48 pointer-events-none overflow-hidden rounded-b-[38px] select-none z-0">
+                <img
+                  src="/images/global_logistics_hero.jpg"
+                  alt=""
+                  aria-hidden="true"
+                  className="w-full h-full object-cover object-bottom opacity-30"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent dark:from-slate-950 dark:via-slate-950/80" />
+              </div>
 
               {/* Home Bar Indicator */}
-              <div className="w-32 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mt-6" />
+              <div className="w-32 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mt-6 relative z-10" />
             </div>
           </div>
         )}
@@ -138,18 +140,22 @@ export default function MobileLoginPreviewPage() {
             <div className="w-4 h-4 bg-black rounded-full mx-auto mb-3 flex items-center justify-center" />
 
             {/* Screen Content Area */}
-            <div className="bg-white dark:bg-slate-950 rounded-[32px] p-5 h-full overflow-y-auto shadow-inner text-slate-900 dark:text-slate-100 flex flex-col justify-between">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-600 text-white font-black text-xs">
-                  ERP
-                </div>
-                <div>
-                  <div className="text-xs font-black tracking-widest text-slate-900 dark:text-white">{brandLine}</div>
-                  <div className="text-[8px] font-extrabold uppercase tracking-widest text-slate-400">{tt("enterprise_system", "Enterprise System")}</div>
-                </div>
+            <div className="bg-white dark:bg-slate-950 rounded-[32px] p-5 h-full overflow-y-auto shadow-inner text-slate-900 dark:text-slate-100 flex flex-col justify-between relative">
+              {/* Login Form */}
+              <div className="relative z-10">
+                <LoginForm />
               </div>
 
-              <LoginForm />
+              {/* Bottom Faded Hero Illustration matching mockup */}
+              <div className="absolute inset-x-0 bottom-0 h-48 pointer-events-none overflow-hidden rounded-b-[32px] select-none z-0">
+                <img
+                  src="/images/global_logistics_hero.jpg"
+                  alt=""
+                  aria-hidden="true"
+                  className="w-full h-full object-cover object-bottom opacity-30"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent dark:from-slate-950 dark:via-slate-950/80" />
+              </div>
             </div>
           </div>
         )}
