@@ -1210,8 +1210,8 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         </div>
       </div>
 
-      {/* Progress Steps Header */}
-      <div className="grid gap-2 sm:grid-cols-4">
+      {/* Progress Steps Header (data-studio-steps: compact 4-across strip on phones in the Studio theme) */}
+      <div className="grid gap-2 sm:grid-cols-4" data-studio-steps>
         {steps.map((s) => {
           const isActive = step === s.number;
           const isDone = step > s.number;
@@ -1241,7 +1241,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                 {isDone ? <Check className="h-4 w-4" /> : s.number}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Step {s.number}</div>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{centralT(activeLang, "urw2.step_label" as never, "Step")} {s.number}</div>
                 <div className="truncate text-xs font-bold text-slate-900 dark:text-slate-100">{s.label}</div>
               </div>
             </button>

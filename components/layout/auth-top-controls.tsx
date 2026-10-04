@@ -5,7 +5,7 @@ import { HelpCircle } from "lucide-react";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { rtlLanguages, getHtmlLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
-import { applyThemeMode, legacyThemeMode, normalizeThemeMode, type ThemeMode } from "@/lib/ui/theme-modes";
+import { applyThemeMode, DARK_THEME_MODES, legacyThemeMode, normalizeThemeMode, type ThemeMode } from "@/lib/ui/theme-modes";
 import { QuickPreferencesPopover } from "@/components/layout/quick-preferences-popover";
 
 function getInitialThemeMode(): ThemeMode {
@@ -41,7 +41,7 @@ export function AuthTopControls({ lang }: { lang: SupportedLanguage }) {
     applyThemeMode(next);
     localStorage.setItem("erp_theme_mode", next);
     document.cookie = `erp_theme_mode=${encodeURIComponent(next)}; Path=/; Max-Age=${60 * 60 * 24 * 365}; SameSite=Lax`;
-    localStorage.setItem("erp_theme", next === "night" ? "dark" : "light");
+    localStorage.setItem("erp_theme", DARK_THEME_MODES.includes(next) ? "dark" : "light");
     setThemeMode(next);
   }
 

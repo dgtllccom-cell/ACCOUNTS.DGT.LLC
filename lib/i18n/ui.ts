@@ -4117,6 +4117,8 @@ export type UiKey =
   | "nav.language"
   | "nav.theme_mode"
   | "nav.theme_night"
+  | "nav.theme_studio"
+  | "urw2.step_label"
   | "nav.theme_day"
   | "nav.theme_soft"
   | "nav.theme_green_business"
@@ -15551,6 +15553,8 @@ const en: Dict = {
   "nav.language": "Language",
   "nav.theme_mode": "Theme Mode",
   "nav.theme_night": "Night / Dark",
+  "nav.theme_studio": "Studio / Mobile Design",
+  "urw2.step_label": "Step",
   "nav.theme_day": "Day / White",
   "nav.theme_soft": "Soft Light",
   "nav.theme_green_business": "Green / Business",
@@ -39660,6 +39664,8 @@ const ur: Dict = {
   "nav.language": "زبان",
   "nav.theme_mode": "تھیم موڈ",
   "nav.theme_night": "رات / ڈارک",
+  "nav.theme_studio": "اسٹوڈیو / موبائل ڈیزائن",
+  "urw2.step_label": "مرحلہ",
   "nav.theme_day": "دن / سفید",
   "nav.theme_soft": "نرم روشنی",
   "nav.theme_green_business": "گرین / بزنس",
@@ -62394,6 +62400,8 @@ const ar: Dict = {
   "nav.template_cyan": "سماوي",
   "nav.theme_mode": "وضع المظهر",
   "nav.theme_night": "ليلي / داكن",
+  "nav.theme_studio": "استوديو / تصميم الجوال",
+  "urw2.step_label": "الخطوة",
   "nav.theme_day": "نهاري / أبيض",
   "nav.theme_soft": "إضاءة ناعمة",
   "nav.theme_green_business": "أخضر / أعمال",
@@ -85128,6 +85136,8 @@ const fa: Dict = {
   "nav.template_color": "رنگ قالب",
   "nav.theme_mode": "حالت پوسته",
   "nav.theme_night": "شب / تیره",
+  "nav.theme_studio": "استودیو / طراحی موبایل",
+  "urw2.step_label": "مرحله",
   "nav.theme_day": "روز / سفید",
   "nav.theme_soft": "نور ملایم",
   "nav.theme_green_business": "سبز / تجاری",
@@ -108470,6 +108480,8 @@ const ps: Dict = {
   "nav.template_purple": "بنفش",
   "nav.theme_mode": "د بڼې حالت",
   "nav.theme_night": "شپه / توره",
+  "nav.theme_studio": "سټوډیو / ګرځنده ډیزاین",
+  "urw2.step_label": "پړاو",
   "nav.theme_day": "ورځ / سپینه",
   "nav.theme_soft": "نرمه رڼا",
   "nav.theme_green_business": "شنه / سوداګریز",
