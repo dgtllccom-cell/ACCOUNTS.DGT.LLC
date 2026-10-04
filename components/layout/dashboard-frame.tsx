@@ -377,7 +377,9 @@ export function DashboardFrame({
       country_operations_admin: t(lang, "role.country_operations_admin", "Country Operations Admin"),
       city_operations_admin: t(lang, "role.city_operations_admin", "City Branch Operations Admin"),
       shipping_line_admin: t(lang, "role.shipping_line_admin", "Shipping Line Admin"),
-      shipping_line_user: t(lang, "role.shipping_line_user", "Shipping Line User")
+      shipping_line_user: t(lang, "role.shipping_line_user", "Shipping Line User"),
+      business_super_admin: t(lang, "role.business_super_admin", "Business Super Admin"),
+      shipping_super_admin: t(lang, "role.shipping_super_admin", "Shipping Line Super Admin")
     };
 
     // virtual (profile-derived) roles first: an operations login must not be labelled with the business role that shares its scope

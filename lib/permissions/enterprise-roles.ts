@@ -23,6 +23,8 @@ export type StoredEnterpriseRole = (typeof enterpriseRoles)[number];
  * business role that shares its scope level (a Global Operations Admin is NOT a Super Admin).
  */
 export const virtualRoles = [
+  "business_super_admin",
+  "shipping_super_admin",
   "global_operations_admin",
   "country_operations_admin",
   "city_operations_admin",
@@ -61,7 +63,13 @@ export function storedRoleScopeLevel(role: string): ScopeLevel {
  *   operations    @ global/country/branch -> global / country / city operations admin
  *   shipping_line @ admin level          -> shipping line admin ; @ user level (agent_user, staff) -> shipping line user
  */
-export function deriveEffectiveRole(storedRole: StoredEnterpriseRole, profile: AccessProfile | null | undefined): EnterpriseRole {
+export function deriveEffectiveRole(storedRole: StoredEnterpriseRole, profile: AccessProfile | null | undefined, operationalDomain?: string | null): EnterpriseRole {
+  // A Super Admin assignment bound to ONE operational domain is a domain super admin: it manages that domain's branches and
+  // users across the network, never the other domain and never the Global Super Admin surface. 'both' = Global Super Admin.
+  if (storedRole === "super_admin" && !profile) {
+    if (operationalDomain === "business") return "business_super_admin";
+    if (operationalDomain === "shipping") return "shipping_super_admin";
+  }
   if (!profile) return storedRole;
   const level = storedRoleScopeLevel(storedRole);
   if (profile === "operations") {
@@ -79,8 +87,29 @@ export const COUNTRY_LEVEL_ROLES: readonly string[] = ["country_admin", "country
 export const GLOBAL_SCOPE_ROLES: readonly string[] = ["super_admin", "super_admin_reports", "global_operations_admin"];
 /** Operational / shipping-line roles: financial modules are denied by construction. */
 export const NON_FINANCIAL_ROLES: readonly string[] = [
-  "global_operations_admin", "country_operations_admin", "city_operations_admin", "shipping_line_admin", "shipping_line_user"
+  "global_operations_admin", "country_operations_admin", "city_operations_admin", "shipping_line_admin", "shipping_line_user",
+  "shipping_super_admin"
 ];
+/**
+ * Domain super admins (stored role super_admin + operational_domain business|shipping). NOT Super Admins: no wildcard, no
+ * Super Admin pages, and their data scope is every branch of THEIR domain only (see the session builder).
+ */
+export const DOMAIN_SUPER_ADMIN_ROLES: readonly string[] = ["business_super_admin", "shipping_super_admin"];
+export function domainSuperAdminDomain(roles: readonly string[] | null | undefined): "business" | "shipping" | null {
+  const r = roles ?? [];
+  if (r.includes("super_admin")) return null;
+  if (r.includes("business_super_admin")) return "business";
+  if (r.includes("shipping_super_admin")) return "shipping";
+  return null;
+}
+/**
+ * Menu-only role aliases: sidebar entries declare the stored roles that may see them. A domain super admin sees the entries
+ * of the admin roles it stands above; the route policy and the APIs still decide by its own permissions and domain.
+ */
+export const MENU_ROLE_ALIASES: Readonly<Record<string, readonly string[]>> = {
+  business_super_admin: ["country_admin", "main_branch_admin", "city_branch_admin", "accountant"],
+  shipping_super_admin: ["country_admin", "main_branch_admin", "city_branch_admin", "shipping_line_admin"]
+};
 
 export function isCountryLevelRole(role: string): boolean { return COUNTRY_LEVEL_ROLES.includes(role); }
 
@@ -96,6 +125,8 @@ export const enterpriseRoleScopes: Record<EnterpriseRole, string> = {
   agent_user: "Assigned agent tasks",
   staff_user: "Assigned staff tasks",
   auditor_viewer: "Read-only assigned scope",
+  business_super_admin: "Every Business branch of the network (no Shipping Line control)",
+  shipping_super_admin: "Every Shipping Line branch of the network (no Business / Finance)",
   global_operations_admin: "Operational modules across all permitted countries (no Finance)",
   country_operations_admin: "Operational modules of the assigned country (no Finance)",
   city_operations_admin: "Operational modules of the assigned branch (no Finance)",
@@ -762,8 +793,39 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
   country_operations_admin: [...OPERATIONS_PERMISSIONS],
   city_operations_admin: [...OPERATIONS_PERMISSIONS],
   shipping_line_admin: [...SHIPPING_LINE_ADMIN_PERMISSIONS],
-  shipping_line_user: [...SHIPPING_LINE_USER_PERMISSIONS]
+  shipping_line_user: [...SHIPPING_LINE_USER_PERMISSIONS],
+  // filled in below from the country_admin template (single source)
+  business_super_admin: [],
+  shipping_super_admin: [
+    ...SHIPPING_LINE_ADMIN_PERMISSIONS,
+    "shipments:create", "shipping_transfers:approve",
+    "countries:read", "country_branches:read",
+    "city_branches:create", "city_branches:read", "city_branches:update",
+    "users:create", "users:read", "users:update", "users:delete",
+    "assignments:create",
+    "clearing_agents:read", "clearing_agent_branches:create", "clearing_agent_branches:read", "clearing_agent_branches:update",
+    "route_templates:create", "route_templates:update",
+    "customers:read", "companies:read", "location_master:read", "tasks:create", "documents:export", "whatsapp:read"
+  ]
 };
+
+/** Resources that belong to the Shipping Line / Clearing domain (a Business Super Admin never holds them). */
+export const SHIPPING_DOMAIN_RESOURCES: readonly string[] = [
+  "shipping_records", "shipping_transfers", "shipments", "shipping", "shipping_reports", "bl_records", "customs_entries",
+  "clearing_agents", "clearing_agent_branches", "clearing_bill_customer_charges", "customer_receipts", "clearing"
+];
+
+// Business Super Admin = the Country Admin business template across every Business branch, minus every Shipping-domain
+// resource, plus branch-network and user management. No wildcard, no Super Admin pages.
+enterpriseRolePermissions.business_super_admin = [...new Set([
+  // main branches (country structure) stay with the Global Super Admin
+  ...enterpriseRolePermissions.country_admin.filter((p) => !SHIPPING_DOMAIN_RESOURCES.includes(p.split(":")[0]) && p !== "country_branches:create" && p !== "country_branches:update"),
+  "dashboard:read", "countries:read", "country_branches:read",
+  "city_branches:create", "city_branches:read", "city_branches:update",
+  "users:create", "users:read", "users:update", "users:delete",
+  "purchase_logistics:create", "purchase_logistics:read", "purchase_logistics:update",
+  "inventory:read", "tasks:create", "tasks:read", "tasks:update"
+])];
 
 export const dashboardByRole: Record<EnterpriseRole, string> = {
   super_admin: "/dashboard/super-admin",
@@ -777,6 +839,8 @@ export const dashboardByRole: Record<EnterpriseRole, string> = {
   agent_user: "/dashboard/agent",
   staff_user: "/dashboard/city",
   auditor_viewer: "/dashboard/reports",
+  business_super_admin: "/dashboard/country",
+  shipping_super_admin: "/dashboard/logistics",
   // The existing, already-scoped operational dashboards (shipments, routes, BL/containers, tasks) — no duplicate dashboards.
   global_operations_admin: "/dashboard/logistics",
   country_operations_admin: "/dashboard/logistics",
@@ -793,6 +857,8 @@ export const dashboardByRole: Record<EnterpriseRole, string> = {
  */
 export function dashboardForRoles(roles: readonly string[], opts: { isSuperAdmin?: boolean; isShippingScoped?: boolean } = {}): string {
   if (opts.isSuperAdmin || roles.includes("super_admin")) return "/dashboard/super-admin";
+  if (roles.includes("business_super_admin")) return dashboardByRole.business_super_admin;
+  if (roles.includes("shipping_super_admin")) return dashboardByRole.shipping_super_admin;
   const order: EnterpriseRole[] = [
     "country_admin", "country_user",
     "main_branch_admin", "city_branch_admin", "accountant", "cashier",

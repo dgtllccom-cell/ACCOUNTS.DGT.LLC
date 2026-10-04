@@ -14,6 +14,8 @@ import { MOBILE_PROFILE_ALLOWED, capPermissionsToProfile, normalizeMobileProfile
 import { issueNextUserCode, normalizeUserCode } from "@/lib/services/user-identity-service";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordFields } from "@/lib/i18n/localize-records";
+import { SUPER_ADMIN_ONLY_ROLES, domainManagerTargetError, isUserManager, userInManagerScope } from "@/lib/permissions/user-management-scope";
+import { domainSuperAdminDomain } from "@/lib/permissions/enterprise-roles";
 
 function isUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
@@ -62,8 +64,6 @@ function assertScopeForRole(role: EnterpriseRole, scope: { countryId: string | n
   }
 }
 
-/** Roles only a Super Admin may grant (a country / branch manager can never mint a peer or a global login). */
-const SUPER_ADMIN_ONLY_ROLES = new Set(["super_admin", "super_admin_reports", "country_admin"]);
 
 /**
  * Field-level financial permission → permission tokens. "deny" always wins at session time (deriveCanViewFinancials);
@@ -96,7 +96,18 @@ function assertAccessProfile(storedRole: string, input: { accessProfile?: string
   }
 }
 
-const ACCESS_COLUMNS = /access_profile|shipping_line_id|warehouse_ids|effective_from|effective_to/;
+/**
+ * How a saved permission set is stamped. "role_default" sets are recomputed live from the role template by the session
+ * builder, so a set that the creator's own authority NARROWED (a Business Super Admin issuing a staff template without its
+ * shipping tokens, a Country Admin without a token it lacks) must not be stamped role_default — the narrowing would be lost.
+ */
+function permissionSetSource(requested: string[], issued: string[], template: string[]): string {
+  if (requested.length) return "manual";
+  const strip = (l: string[]) => [...new Set(l.filter((p) => p !== "finance_amounts:deny" && p !== "finance_amounts:read"))].sort().join("|");
+  return strip(issued) === strip(template) ? "role_default" : "creator_limited";
+}
+
+const ACCESS_COLUMNS =/access_profile|shipping_line_id|warehouse_ids|effective_from|effective_to/;
 
 function normalizePermissions(input: unknown) {
   return Array.isArray(input)
@@ -147,12 +158,6 @@ async function loadScopePermissionLimit(
   return null;
 }
 
-/** A Country Admin manages its country; a Main Branch Admin only its own branch tree. Unassigned / global users are out of scope. */
-function userInManagerScope(session: { roles: string[]; countryIds: string[]; countryBranchIds: string[] }, assignment: any): boolean {
-  if (!assignment?.country_id || !session.countryIds.includes(assignment.country_id)) return false;
-  if (session.roles.includes("country_admin")) return true;
-  return Boolean(assignment.country_branch_id && session.countryBranchIds.includes(assignment.country_branch_id));
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -162,15 +167,23 @@ export async function POST(request: NextRequest) {
     // Authorization:
     // - Super Admin can create all users.
     // - Country/Main branch admins can create non-admin users within their own country.
-    const isCountryManager = session.roles.some((r) => r === "country_admin" || r === "main_branch_admin");
+    // - Business / Shipping Super Admins create branch users of their own domain, in their domain's branches only.
+    const managerDomain = session.isSuperAdmin ? null : domainSuperAdminDomain(session.roles);
+    // Omitted domain: a Super Admin is the Global Super Admin ("both"); everyone else is Business.
+    const requestedDomain = body.operationalDomain ?? (body.role === "super_admin" ? "both" : "business");
     if (!session.isSuperAdmin) {
-      if (!isCountryManager) throw new ApiClientError("Not authorized to create users.", { status: 403 });
+      if (!isUserManager(session)) throw new ApiClientError("Not authorized to create users.", { status: 403 });
+      const domainError = domainManagerTargetError(session, {
+        role: body.role, operationalDomain: requestedDomain, countryBranchId: body.countryBranchId ?? null,
+        cityBranchId: body.cityBranchId ?? null, accessProfile: body.accessProfile ?? null,
+      });
+      if (domainError) throw new ApiClientError(domainError, { status: 403 });
       if (SUPER_ADMIN_ONLY_ROLES.has(body.role)) {
         throw new ApiClientError("Only Super Admin can create Super Admin, Reports Auditor or Country Admin users.", { status: 403 });
       }
       // A Main Branch Admin creates users only inside its OWN branch tree, never in a sibling branch of the same country.
       const isCountryAdmin = session.roles.includes("country_admin");
-      if (!isCountryAdmin) {
+      if (!isCountryAdmin && !managerDomain) {
         if (!body.countryBranchId || !session.countryBranchIds.includes(body.countryBranchId)) {
           throw new ApiClientError("Branch scope is not allowed.", { status: 403 });
         }
@@ -190,14 +203,17 @@ export async function POST(request: NextRequest) {
     });
     assertAccessProfile(body.role, body);
     const accessProfile = (body.accessProfile ?? null) as AccessProfile | null;
-    const effectiveRole = deriveEffectiveRole(body.role as StoredEnterpriseRole, accessProfile);
+    const domain = requestedDomain;
+    const effectiveRole = deriveEffectiveRole(body.role as StoredEnterpriseRole, accessProfile, domain);
 
     // ── Operational domain consistency ──────────────────────────────────────
     // A creator can only create users in a domain they themselves belong to
     // (unless super admin). Shipping users must be bound to a clearing agent;
     // ledger visibility defaults to the domain norm.
-    const domain = body.operationalDomain ?? "business";
     if (!session.isSuperAdmin) {
+      if (domain === "both" && !(session.assignments ?? []).some((a: any) => a.operationalDomain === "both")) {
+        throw new ApiClientError("Only a manager in both operational domains can create a user for both domains.", { status: 403 });
+      }
       const creatorDomains = new Set(
         (session.assignments ?? []).map((a: any) => a.operationalDomain ?? "business")
       );
@@ -370,7 +386,7 @@ export async function POST(request: NextRequest) {
         {
           user_id: newUserId,
           permissions: issuedPermissions,
-          source: requestedPermissions.length ? "manual" : "role_default",
+          source: permissionSetSource(requestedPermissions, issuedPermissions, defaultRolePermissions),
           updated_at: new Date().toISOString()
         },
         { onConflict: "user_id" }
@@ -464,8 +480,7 @@ export async function GET(request: NextRequest) {
       throw new ApiClientError("userId is required.");
     }
 
-    const isCountryManager = session.roles.some((r) => r === "country_admin" || r === "main_branch_admin");
-    if (!session.isSuperAdmin && !isCountryManager) {
+    if (!isUserManager(session)) {
       throw new ApiClientError("Not authorized to view user details.", { status: 403 });
     }
 
@@ -526,7 +541,7 @@ export async function GET(request: NextRequest) {
       financialAccess: permissions.includes("finance_amounts:deny") ? "deny" : permissions.includes("finance_amounts:read") ? "allow" : "role_default",
       assignments: (allAssignments ?? []).map((a: any) => ({
         id: a.id, role: a.role, isActive: a.is_active, countryId: a.country_id, countryBranchId: a.country_branch_id, cityBranchId: a.city_branch_id,
-        accessProfile: a.access_profile ?? null, effectiveRole: deriveEffectiveRole(a.role === "staff" ? "staff_user" : a.role, a.access_profile ?? null),
+        accessProfile: a.access_profile ?? null, effectiveRole: deriveEffectiveRole(a.role === "staff" ? "staff_user" : a.role, a.access_profile ?? null, a.operational_domain ?? null),
         shippingLineId: a.shipping_line_id ?? null, clearingAgentId: a.clearing_agent_id ?? null, operationalDomain: a.operational_domain ?? "business",
         warehouseIds: a.warehouse_ids ?? [], effectiveFrom: a.effective_from ?? null, effectiveTo: a.effective_to ?? null,
       })),
@@ -615,9 +630,8 @@ export async function PATCH(request: NextRequest) {
     // Authorization check:
     // Super Admin can edit any user.
     // Country Admin and Main Branch Admin can edit users in their country.
-    const isCountryManager = session.roles.some((r) => r === "country_admin" || r === "main_branch_admin");
     if (!session.isSuperAdmin) {
-      if (!isCountryManager) throw new ApiClientError("Not authorized to update users.", { status: 403 });
+      if (!isUserManager(session)) throw new ApiClientError("Not authorized to update users.", { status: 403 });
       // If updating scope, ensure it matches current session country.
       if (body.countryId && !session.countryIds.includes(body.countryId as string)) {
         throw new ApiClientError("Country scope is not allowed.", { status: 403 });
@@ -714,6 +728,15 @@ export async function PATCH(request: NextRequest) {
       if (SUPER_ADMIN_ONLY_ROLES.has(targetAssignment.role)) {
         throw new ApiClientError("Only Super Admin can update Super Admin, Reports Auditor or Country Admin users.", { status: 403 });
       }
+      // a domain super admin's edit must leave the user inside its own domain and branches
+      const domainError = domainManagerTargetError(session, {
+        role: body.role ?? (targetAssignment.role === "staff" ? "staff_user" : targetAssignment.role),
+        operationalDomain: targetAssignment.operational_domain ?? "business",
+        countryBranchId: body.countryBranchId !== undefined ? body.countryBranchId : targetAssignment.country_branch_id,
+        cityBranchId: body.cityBranchId !== undefined ? body.cityBranchId : targetAssignment.city_branch_id,
+        accessProfile: body.accessProfile !== undefined ? body.accessProfile : targetAssignment.access_profile,
+      });
+      if (domainError) throw new ApiClientError(domainError, { status: 403 });
     }
     const nextStoredRole = (body.role ?? (targetAssignment?.role === "staff" ? "staff_user" : targetAssignment?.role) ?? "city_branch_admin") as StoredEnterpriseRole;
     const nextAccessProfile = (body.accessProfile !== undefined ? body.accessProfile : (targetAssignment?.access_profile ?? null)) as AccessProfile | null;
@@ -877,7 +900,7 @@ export async function PATCH(request: NextRequest) {
       // old, wider set), and a financial-only change keeps the current list and just flips the token.
       const keepCurrent = body.permissions === undefined && body.role === undefined && body.accessProfile === undefined && body.mobileProfile === undefined;
       const requestedPermissions = keepCurrent ? normalizePermissions(beforePermissionSet?.permissions) : normalizePermissions(body.permissions);
-      const targetRole = deriveEffectiveRole(nextStoredRole, nextAccessProfile) as EnterpriseRole;
+      const targetRole = deriveEffectiveRole(nextStoredRole, nextAccessProfile, targetAssignment?.operational_domain ?? null) as EnterpriseRole;
       const defaultRolePermissions = [...new Set(enterpriseRolePermissions[targetRole] ?? [])];
       const baseline =
         effectiveMobileProfile === "standard"
@@ -904,7 +927,7 @@ export async function PATCH(request: NextRequest) {
           {
             user_id: body.userId,
             permissions: issuedPermissions,
-            source: effectiveMobileProfile !== "standard" ? "mobile_profile" : (requestedPermissions.length ? "manual" : "role_default"),
+            source: effectiveMobileProfile !== "standard" ? "mobile_profile" : permissionSetSource(requestedPermissions, issuedPermissions, defaultRolePermissions),
             updated_at: new Date().toISOString()
           },
           { onConflict: "user_id" }
@@ -935,7 +958,7 @@ export async function PATCH(request: NextRequest) {
         cityBranchId: body.cityBranchId,
         mobileProfile: body.mobileProfile,
         accessProfile: body.accessProfile,
-        effectiveRole: deriveEffectiveRole(nextStoredRole, nextAccessProfile),
+        effectiveRole: deriveEffectiveRole(nextStoredRole, nextAccessProfile, targetAssignment?.operational_domain ?? null),
         shippingLineId: body.shippingLineId,
         warehouseIds: body.warehouseIds,
         effectiveFrom: body.effectiveFrom,
@@ -959,8 +982,7 @@ export async function DELETE(request: NextRequest) {
       throw new ApiClientError("userId is required.");
     }
 
-    const isCountryManager = session.roles.some((r) => r === "country_admin" || r === "main_branch_admin");
-    if (!session.isSuperAdmin && !isCountryManager) {
+    if (!isUserManager(session)) {
       throw new ApiClientError("Not authorized to delete users.", { status: 403 });
     }
 
@@ -968,17 +990,21 @@ export async function DELETE(request: NextRequest) {
 
     const { data: targetAssignment } = await admin
       .from("user_role_assignments")
-      .select("country_id, role")
+      .select("country_id, country_branch_id, city_branch_id, operational_domain, role")
       .eq("user_id", userId)
       .is("deleted_at", null)
+      .order("created_at", { ascending: false })
+      .limit(1)
       .maybeSingle();
 
-    if (!session.isSuperAdmin && targetAssignment) {
-      if (targetAssignment.role === "super_admin" || targetAssignment.role === "country_admin") {
-        throw new Error("Only Super Admin can delete Super Admin or Country Admin users.");
+    if (!session.isSuperAdmin) {
+      // fail closed: an unassigned user (no scope) is outside every manager's scope
+      if (!targetAssignment) throw new ApiClientError("Not authorized to delete users outside of your scope.", { status: 403 });
+      if (SUPER_ADMIN_ONLY_ROLES.has(targetAssignment.role)) {
+        throw new ApiClientError("Only Super Admin can delete Super Admin, Reports Auditor or Country Admin users.", { status: 403 });
       }
-      if (targetAssignment.country_id && !session.countryIds.includes(targetAssignment.country_id)) {
-        throw new ApiClientError("Not authorized to delete users outside of your country.", { status: 403 });
+      if (!userInManagerScope(session, targetAssignment)) {
+        throw new ApiClientError("Not authorized to delete users outside of your scope.", { status: 403 });
       }
     }
 

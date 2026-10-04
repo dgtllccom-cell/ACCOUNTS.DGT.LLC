@@ -12,6 +12,8 @@ import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { hasRolePermission } from "@/lib/permissions/middleware";
+import { domainSuperAdminDomain, isCountryLevelRole } from "@/lib/permissions/enterprise-roles";
 
 function formatError(message: string, _isSuperAdmin?: boolean) {
   return message;
@@ -92,6 +94,9 @@ function buildCityBranchQuery(
   if (countryBranchId) {
     query = query.eq("country_branch_id", countryBranchId);
   }
+  if (!session.isSuperAdmin && domainSuperAdminDomain(session.roles)) {
+    query = query.in("id", session.cityBranchIds.length ? session.cityBranchIds : ["00000000-0000-0000-0000-000000000000"]);
+  }
 
   return query;
 }
@@ -133,6 +138,7 @@ export async function GET(request: Request) {
           and (${!countryId && !session.isSuperAdmin ? sql`country_id = any(${session.countryIds})` : sql`true`})
           and (${countryBranchId ? sql`country_branch_id = ${countryBranchId}` : sql`true`})
           and (${operationalDomain ? sql`operational_domain = ${operationalDomain}` : sql`true`})
+          and (${!session.isSuperAdmin && domainSuperAdminDomain(session.roles) ? sql`id = any(${session.cityBranchIds})` : sql`true`})
         order by created_at asc
       `;
       return { cityBranches: normalizeCityBranchRows(rows as any[]) };
@@ -182,8 +188,18 @@ export async function POST(request: Request) {
     }
 
     // Super Admin can create everywhere. Country/Main branch roles can create under their country scope.
+    if (!session.isSuperAdmin && !hasRolePermission(session, "city_branches", "create")) {
+      return NextResponse.json({ error: formatError("Missing permission: city_branches:create", session.isSuperAdmin) }, { status: 403 });
+    }
     if (!session.isSuperAdmin && !session.countryIds.includes(parsed.data.countryId)) {
       return NextResponse.json({ error: formatError("Country scope is not allowed.", session.isSuperAdmin) }, { status: 403 });
+    }
+    // a Business / Shipping Super Admin creates branches of its own domain only (never "both", never the other domain)
+    {
+      const ownDomain = domainSuperAdminDomain(session.roles);
+      if (ownDomain && parsed.data.operationalDomain !== ownDomain) {
+        return NextResponse.json({ error: formatError(`You can only create ${ownDomain === "business" ? "Business" : "Shipping Line"} branches.`, session.isSuperAdmin) }, { status: 403 });
+      }
     }
     if (!sessionInDomain(session, parsed.data.operationalDomain)) {
       return NextResponse.json({ error: formatError(`You do not have ${parsed.data.operationalDomain} domain access to create this branch.`, session.isSuperAdmin) }, { status: 403 });
@@ -443,11 +459,31 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
     }
 
+    if (!session.isSuperAdmin && !hasRolePermission(session, "city_branches", "update") && !hasRolePermission(session, "city_branches", "create")) {
+      return NextResponse.json({ error: formatError("Missing permission: city_branches:update", session.isSuperAdmin) }, { status: 403 });
+    }
     if (!session.isSuperAdmin && !session.countryIds.includes(parsed.data.countryId)) {
       return NextResponse.json({ error: formatError("Country scope is not allowed.", session.isSuperAdmin) }, { status: 403 });
     }
     if (!sessionInDomain(session, parsed.data.operationalDomain)) {
       return NextResponse.json({ error: formatError(`You do not have ${parsed.data.operationalDomain} domain access to update this branch.`, session.isSuperAdmin) }, { status: 403 });
+    }
+    // the branch being edited must itself be inside the caller's scope and domain — not only the values it is changed to
+    if (!session.isSuperAdmin) {
+      const existing = await withLocalPg(async (sql) => {
+        const rows = await sql`select id, country_id, operational_domain from public.city_branches where id = ${id} and deleted_at is null limit 1`;
+        return (rows as any[])[0] ?? null;
+      });
+      const ownDomain = domainSuperAdminDomain(session.roles);
+      const countryLevel = (session.roles ?? []).some((r) => isCountryLevelRole(r));
+      const inScope = existing
+        && session.countryIds.includes(existing.country_id)
+        && sessionInDomain(session, (existing.operational_domain ?? "business") as any)
+        && (countryLevel || session.cityBranchIds.includes(existing.id))
+        && (!ownDomain || ((existing.operational_domain ?? "business") === ownDomain && parsed.data.operationalDomain === ownDomain));
+      if (!inScope) {
+        return NextResponse.json({ error: formatError("This branch is outside your scope.", session.isSuperAdmin) }, { status: 403 });
+      }
     }
 
     let mainBranch: { id: string; country_id: string; local_currency: string; permission_grants: any } | null = null;
@@ -704,27 +740,37 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "Valid Branch ID is required" }, { status: 400 });
     }
 
-    const admin = createSupabaseAdminClient();
-    
-    // Soft-delete in Supabase
-    await (admin.from("city_branches") as any)
-      .update({ deleted_at: new Date().toISOString(), status: "Inactive" })
-      .eq("id", id);
-
-    // Also soft-delete via direct Postgres
-    await withLocalPg(async (sql) => {
-      await sql`
+    // Soft delete (identity and history kept). status is the branch_status enum (active | inactive | closed): the old
+    // 'Inactive' value was rejected by both writes and the errors were swallowed, so the API reported success while the
+    // branch stayed active. Now the write must actually hit the row.
+    let deleted = await withLocalPg(async (sql) => {
+      const rows = await sql`
         UPDATE public.city_branches
-        SET deleted_at = NOW(), status = 'Inactive'
-        WHERE id = ${id}
+        SET deleted_at = NOW(), status = 'inactive'
+        WHERE id = ${id} AND deleted_at IS NULL
+        RETURNING id
       `;
-    }).catch(() => null);
+      return (rows as any[]).length;
+    });
+    if (deleted === null) {
+      const admin = createSupabaseAdminClient();
+      const { data, error } = await (admin.from("city_branches") as any)
+        .update({ deleted_at: new Date().toISOString(), status: "inactive" })
+        .eq("id", id)
+        .is("deleted_at", null)
+        .select("id");
+      if (error) throw new Error(error.message);
+      deleted = (data ?? []).length;
+    }
+    if (!deleted) {
+      return NextResponse.json({ error: "City branch not found or already deleted." }, { status: 404 });
+    }
 
     await auditApiAction(request as any, {
       action: "city_branches.delete.api",
       entityTable: "city_branches",
       entityId: id,
-      after: { deleted_at: new Date().toISOString(), status: "Inactive" }
+      after: { deleted_at: new Date().toISOString(), status: "inactive" }
     });
 
     return NextResponse.json({ success: true, message: "City branch deleted successfully", id });

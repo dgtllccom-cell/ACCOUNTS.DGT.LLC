@@ -4,7 +4,7 @@ import type { Route } from "next";
 import { isDemoAuthEnabled, isSupabaseConfigured } from "@/lib/supabase/config";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { dashboardForRoles, type EnterpriseRole } from "@/lib/permissions/enterprise-roles";
+import { dashboardForRoles, deriveEffectiveRole, enterpriseRoles, type EnterpriseRole, type StoredEnterpriseRole } from "@/lib/permissions/enterprise-roles";
 import { MOBILE_PROFILE_HOME } from "@/lib/permissions/mobile-profiles";
 import { normalizeUserCode } from "@/lib/services/user-identity-service";
 import { setTempSuperAdminSession, setDirectUserSession } from "@/lib/auth/temp-session";
@@ -18,6 +18,65 @@ function toEnterpriseRole(role: string): EnterpriseRole {
 
 function dashboardForRolesLocal(roles: EnterpriseRole[]) {
   return dashboardForRoles(roles);
+}
+
+/**
+ * The authoritative account state at login, read AFTER the password was verified: a banned auth user or an archived
+ * profile never receives a session (the direct crypt() check above does not look at either), and the cookie carries the
+ * EFFECTIVE roles (stored role + access profile + operational domain), never a role guessed from the login name.
+ */
+async function loadLoginAccountState(admin: any, userId: string): Promise<{ blocked: boolean; roles: EnterpriseRole[]; assignments: any[] }> {
+  type Row = { role: string; country_id: string | null; country_branch_id: string | null; city_branch_id: string | null; clearing_agent_id: string | null;
+    ledger_visibility: string | null; mobile_profile: string | null; operational_domain: string | null; access_profile: string | null;
+    shipping_line_id: string | null; effective_from: string | null; effective_to: string | null };
+  let blocked = false;
+  let rows: Row[] | null = null;
+  const viaPg = await withLocalPg(async (sql) => {
+    const st = await sql`
+      select u.banned_until, p.id as profile_id, p.deleted_at
+      from auth.users u left join public.profiles p on p.id = u.id
+      where u.id = ${userId}::uuid limit 1`;
+    const a = await sql`
+      select role::text as role, country_id, country_branch_id, city_branch_id, clearing_agent_id, ledger_visibility, mobile_profile,
+             operational_domain, access_profile, shipping_line_id, effective_from::text as effective_from, effective_to::text as effective_to
+      from public.user_role_assignments
+      where user_id = ${userId}::uuid and is_active = true and deleted_at is null`;
+    return { st: (st as any[])[0] ?? null, a: a as unknown as Row[] };
+  }).catch(() => null);
+  if (viaPg) {
+    const st = viaPg.st;
+    blocked = !st || !st.profile_id || Boolean(st.deleted_at) || Boolean(st.banned_until && new Date(st.banned_until).getTime() > Date.now());
+    rows = viaPg.a;
+  } else {
+    const [{ data: authUser }, { data: prof }, { data: a }] = await Promise.all([
+      admin.auth.admin.getUserById(userId),
+      admin.from("profiles").select("id, deleted_at").eq("id", userId).maybeSingle(),
+      admin.from("user_role_assignments")
+        .select("role, country_id, country_branch_id, city_branch_id, clearing_agent_id, ledger_visibility, mobile_profile, operational_domain, access_profile, shipping_line_id, effective_from, effective_to")
+        .eq("user_id", userId).eq("is_active", true).is("deleted_at", null),
+    ]);
+    const bannedUntil = authUser?.user?.banned_until ? new Date(authUser.user.banned_until).getTime() : 0;
+    blocked = !prof?.id || Boolean(prof?.deleted_at) || bannedUntil > Date.now();
+    rows = (a ?? []) as Row[];
+  }
+  const today = new Date().toISOString().slice(0, 10);
+  const assignments = (rows ?? [])
+    .filter((r) => (!r.effective_from || r.effective_from.slice(0, 10) <= today) && (!r.effective_to || r.effective_to.slice(0, 10) >= today))
+    .map((r) => {
+      const stored = toEnterpriseRole(r.role);
+      if (!(enterpriseRoles as readonly string[]).includes(stored)) return null;
+      const profile = r.access_profile === "operations" || r.access_profile === "shipping_line" ? r.access_profile : null;
+      const domain = r.operational_domain === "shipping" || r.operational_domain === "both" ? r.operational_domain : "business";
+      return {
+        role: deriveEffectiveRole(stored as StoredEnterpriseRole, profile, domain),
+        countryId: r.country_id, countryBranchId: r.country_branch_id, cityBranchId: r.city_branch_id,
+        clearingAgentId: r.clearing_agent_id, ledgerVisibility: r.ledger_visibility ?? "scoped",
+        mobileProfile: r.mobile_profile ?? "standard", operationalDomain: domain, accessProfile: profile,
+        shippingLineId: r.shipping_line_id, effectiveFrom: r.effective_from, effectiveTo: r.effective_to,
+      };
+    })
+    .filter((x): x is NonNullable<typeof x> => Boolean(x));
+  return { blocked, roles: [...new Set(assignments.map((x) => x.role))], assignments };
 }
 
 const BOOTSTRAP_IDENTIFIER = (process.env.BOOTSTRAP_SUPERADMIN_EMAIL || "superadmin@damaan.com").trim().toLowerCase();
@@ -471,43 +530,21 @@ export async function POST(request: NextRequest) {
   // hardcoded a shared password and let anyone mint a branch/agent session.
   // Branch users now authenticate through Supabase Auth like everyone else.)
 
-  if (isBootstrapSuperAdmin) {
-    isAuthenticated = true;
-    if (!profileRecord) {
-      profileRecord = {
-        id: "00000000-0000-4000-8000-000000000001",
-        user_code: rawIdentifier,
-        full_name: "Super Admin"
-      };
-      userRoles = ["super_admin"];
-    }
-  }
-
   if (!isAuthenticated || !profileRecord) {
     return respondError("Invalid User ID or Password. Please verify your credentials.", 401);
   }
 
-  // 4. Fallback role if no DB assignment found
-  if (userRoles.length === 0) {
-    if (cleanLower.includes("superadmin") || cleanLower === "asad@dgt.llc" || cleanLower === "asad.s" || cleanLower === "super.admin@dgt.llc") {
-      userRoles = ["super_admin"];
-    } else if (cleanLower.includes("shipping") || cleanLower.includes("clearing") || cleanLower.includes("agent")) {
-      userRoles = ["agent_user" as any];
-    } else if (
-      cleanLower.includes("country") ||
-      cleanLower.includes("pakistan") ||
-      cleanLower.includes("usa") ||
-      cleanLower.includes("saudi") ||
-      cleanLower.includes("iran") ||
-      cleanLower.includes("uzb") ||
-      cleanLower.includes("tjk") ||
-      cleanLower.includes("ind.")
-    ) {
-      userRoles = ["country_admin"];
-    } else {
-      userRoles = ["city_branch_admin"];
-    }
+  // 4. Authoritative account state. (The old "guess a role from the login name" fallback is gone: it minted a Super Admin
+  //    cookie for any authenticated identity whose name contained "superadmin", even with no active assignment.)
+  const accountState = await loadLoginAccountState(admin, profileRecord.id);
+  if (accountState.blocked) {
+    return respondError("This account is disabled. Please contact your administrator.", 403);
   }
+  if (!accountState.roles.length) {
+    return respondError("This account has no active access assignment. Please contact your administrator.", 403);
+  }
+  userRoles = accountState.roles;
+  roleAssignments = accountState.assignments;
 
   // 5. Establish Session Cookie
   await setDirectUserSession({

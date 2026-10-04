@@ -10646,6 +10646,8 @@ export type UiKey =
   | "role.city_operations_admin"
   | "role.shipping_line_admin"
   | "role.shipping_line_user"
+  | "role.business_super_admin"
+  | "role.shipping_super_admin"
   | "rbac.denied_title"
   | "rbac.denied_body"
   | "rbac.denied_home"
@@ -33461,6 +33463,8 @@ const en: Dict = {
   "role.city_operations_admin": "City Branch Operations Admin",
   "role.shipping_line_admin": "Shipping Line Admin",
   "role.shipping_line_user": "Branch Shipping Line User",
+  "role.business_super_admin": "Business Super Admin",
+  "role.shipping_super_admin": "Shipping Line Super Admin",
   "rbac.denied_title": "Access denied (403)",
   "rbac.denied_body": "Your role, country, branch or assignment does not allow this page. Ask an administrator if you need access.",
   "rbac.denied_home": "Go to my dashboard",
@@ -56245,6 +56249,8 @@ const ur: Dict = {
   "role.city_operations_admin": "سٹی برانچ آپریشنز ایڈمن",
   "role.shipping_line_admin": "شپنگ لائن ایڈمن",
   "role.shipping_line_user": "برانچ شپنگ لائن یوزر",
+  "role.business_super_admin": "بزنس سپر ایڈمن",
+  "role.shipping_super_admin": "شپنگ لائن سپر ایڈمن",
   "rbac.denied_title": "رسائی ممنوع ہے (403)",
   "rbac.denied_body": "آپ کا رول، ملک، برانچ یا اسائنمنٹ اس صفحے کی اجازت نہیں دیتا۔ رسائی درکار ہو تو ایڈمنسٹریٹر سے رابطہ کریں۔",
   "rbac.denied_home": "میرے ڈیش بورڈ پر جائیں",
@@ -79030,6 +79036,8 @@ const ar: Dict = {
   "role.city_operations_admin": "مسؤول عمليات فرع المدينة",
   "role.shipping_line_admin": "مسؤول خط الشحن",
   "role.shipping_line_user": "مستخدم خط الشحن في الفرع",
+  "role.business_super_admin": "المسؤول الأعلى للأعمال",
+  "role.shipping_super_admin": "المسؤول الأعلى لخط الشحن",
   "rbac.denied_title": "تم رفض الوصول (403)",
   "rbac.denied_body": "لا يسمح دورك أو دولتك أو فرعك أو مهمتك بهذه الصفحة. اطلب من المسؤول إذا كنت بحاجة إلى الوصول.",
   "rbac.denied_home": "الانتقال إلى لوحة التحكم الخاصة بي",
@@ -101814,6 +101822,8 @@ const fa: Dict = {
   "role.city_operations_admin": "مدیر عملیات شعبه شهر",
   "role.shipping_line_admin": "مدیر خط کشتیرانی",
   "role.shipping_line_user": "کاربر خط کشتیرانی شعبه",
+  "role.business_super_admin": "مدیر ارشد بازرگانی",
+  "role.shipping_super_admin": "مدیر ارشد خط کشتیرانی",
   "rbac.denied_title": "دسترسی مجاز نیست (403)",
   "rbac.denied_body": "نقش، کشور، شعبه یا تخصیص شما اجازه دسترسی به این صفحه را نمی‌دهد. در صورت نیاز از مدیر سیستم درخواست کنید.",
   "rbac.denied_home": "رفتن به داشبورد من",
@@ -124605,6 +124615,8 @@ const ps: Dict = {
   "role.city_operations_admin": "د ښار د څانګې د عملیاتو اداره کوونکی",
   "role.shipping_line_admin": "د بار وړلو کرښې اداره کوونکی",
   "role.shipping_line_user": "د څانګې د بار وړلو کرښې کاروونکی",
+  "role.business_super_admin": "د سوداګرۍ سوپر اډمین",
+  "role.shipping_super_admin": "د بار وړلو کرښې سوپر اډمین",
   "rbac.denied_title": "لاسرسی منع ده (403)",
   "rbac.denied_body": "ستاسو رول، هېواد، څانګه یا دنده دې پاڼې ته اجازه نه ورکوي. که لاسرسی ته اړتیا لرئ له مدیر سره اړیکه ونیسئ.",
   "rbac.denied_home": "زما ډشبورډ ته لاړ شئ",

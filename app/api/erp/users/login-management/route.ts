@@ -4,6 +4,8 @@ import { requireErpSession } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordFields } from "@/lib/i18n/localize-records";
+import { isUserManager, userInManagerScope } from "@/lib/permissions/user-management-scope";
+import { domainSuperAdminDomain } from "@/lib/permissions/enterprise-roles";
 
 type CountryRow = {
   id: string;
@@ -56,6 +58,7 @@ type AssignmentRow = {
   country_branch_id: string | null;
   city_branch_id: string | null;
   clearing_agent_id?: string | null;
+  operational_domain?: string | null;
   is_active: boolean;
   created_at: string | null;
   updated_at: string | null;
@@ -172,7 +175,7 @@ async function loadViaPg(lang: Awaited<ReturnType<typeof getRequestLanguage>>, s
     const clearingAgentRowsRaw = await sql<any[]>`select id, name, code, head_office_country_id from clearing_agents where deleted_at is null`;
     const clearingBranchRowsRaw = await sql<any[]>`select id, name, code, clearing_agent_id, branch_level from clearing_agent_branches where deleted_at is null`;
     const authUserRowsRaw = await sql<any[]>`select id, email from auth.users`;
-    const assignmentRowsRaw = await sql<AssignmentRow[]>`select user_id, role, country_id, country_branch_id, city_branch_id, clearing_agent_id, is_active, created_at, updated_at, deleted_at from user_role_assignments where deleted_at is null order by created_at desc`;
+    const assignmentRowsRaw = await sql<AssignmentRow[]>`select user_id, role, country_id, country_branch_id, city_branch_id, clearing_agent_id, operational_domain, is_active, created_at, updated_at, deleted_at from user_role_assignments where deleted_at is null order by created_at desc`;
     const profileRowsRaw = await sql<ProfileRow[]>`select id, full_name, user_code, created_at, updated_at, deleted_at, default_company_id from profiles where deleted_at is null`;
     const permissionRowsRaw = await sql<PermissionSetRow[]>`select user_id, permissions from user_permission_sets where deleted_at is null`;
 
@@ -207,7 +210,13 @@ async function loadViaPg(lang: Awaited<ReturnType<typeof getRequestLanguage>>, s
     const clearingAgents = clearingAgentRowsRaw as Array<{ id: string; name: string; code: string; head_office_country_id: string | null }>;
     const clearingBranches = clearingBranchRowsRaw as Array<{ id: string; name: string; code: string; clearing_agent_id: string; branch_level: string }>;
     const authUsers = authUserRowsRaw as Array<{ id: string; email: string }>;
-    const assignmentRows = assignmentRowsRaw as AssignmentRow[];
+    // A non-Super-Admin manager lists only the users it may manage (same rule as the users API); a Business / Shipping
+    // Super Admin additionally sees only its own domain's city branches.
+    const assignmentRows = (assignmentRowsRaw as AssignmentRow[]).filter((a) => !session || session.isSuperAdmin || userInManagerScope(session, a));
+    if (session && !session.isSuperAdmin && domainSuperAdminDomain(session.roles)) {
+      const allowedCities = new Set(session.cityBranchIds);
+      cityRows = cityRows.filter((cb) => allowedCities.has(cb.id));
+    }
     const profileRows = profileRowsLocalized;
     const permissionRows = permissionRowsRaw as PermissionSetRow[];
 
@@ -420,8 +429,7 @@ async function loadViaPg(lang: Awaited<ReturnType<typeof getRequestLanguage>>, s
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
-    const isCountryManager = session.roles?.some((r) => r === "country_admin" || r === "main_branch_admin");
-    if (!session.isSuperAdmin && !isCountryManager) {
+    if (!isUserManager(session)) {
       return apiError("FORBIDDEN", "Administrative access is required.", 403);
     }
 

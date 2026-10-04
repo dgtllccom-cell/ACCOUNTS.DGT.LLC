@@ -3,6 +3,7 @@ import type { Route } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentErpSession } from "@/lib/auth/session";
 import { dashboardByRole } from "@/lib/permissions/enterprise-roles";
+import { isUserManager } from "@/lib/permissions/user-management-scope";
 import { AdminUserManagementPanel } from "@/features/users/components/admin-user-management-panel";
 
 export const metadata: Metadata = {
@@ -14,8 +15,7 @@ export default async function UsersPage() {
   const session = await getCurrentErpSession();
   if (!session) redirect("/auth/login");
 
-  const isCountryManager = session.roles?.some((r) => r === "country_admin" || r === "main_branch_admin");
-  if (!session.isSuperAdmin && !isCountryManager) {
+  if (!isUserManager(session)) {
     const role = session.roles?.[0];
     const target = role ? dashboardByRole[role] : "/dashboard";
     redirect((target || "/dashboard") as Route);

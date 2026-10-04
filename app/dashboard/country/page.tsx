@@ -12,6 +12,7 @@ import { CountryProductsDashboard } from "@/features/dashboard/components/countr
 import { CountryDashboardOverview } from "@/features/dashboard/components/country-dashboard-overview";
 
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { domainSuperAdminDomain } from "@/lib/permissions/enterprise-roles";
 
 export const metadata = { title: "Country Dashboard" };
 
@@ -291,9 +292,17 @@ export default async function CountryDashboardPage(props: { searchParams?: Promi
   const session = await getCurrentErpSession();
   const isSuperAdmin = Boolean(session?.isSuperAdmin || session?.roles.includes("super_admin"));
 
-  const countries = await loadCountryList();
+  // A Business Super Admin works across every country that has a branch network: it may switch between those countries
+  // (never "all", never a country outside its scope) and sees only its own domain's branches.
+  const domainSuper = !isSuperAdmin && session ? domainSuperAdminDomain(session.roles) : null;
+  const allCountries = await loadCountryList();
+  const countries = domainSuper ? allCountries.filter((c) => session!.countryIds.includes(c.id)) : allCountries;
 
   let countryId = session?.countryIds?.[0];
+
+  if (domainSuper && searchParams.countryId && session!.countryIds.includes(searchParams.countryId)) {
+    countryId = searchParams.countryId;
+  }
 
   if (isSuperAdmin) {
     // Super Admin defaults to 'all' or selected country or the first available country
@@ -319,7 +328,17 @@ export default async function CountryDashboardPage(props: { searchParams?: Promi
     );
   }
 
-  const loaded = await loadCountryData(countryId);
+  const loadedRaw = await loadCountryData(countryId);
+  // domain super admin: branch lists / per-branch summaries only for its own domain's city branches
+  const ownCities = new Set(session?.cityBranchIds ?? []);
+  const loaded = domainSuper
+    ? (() => {
+        const cityBranches = loadedRaw.cityBranches.filter((b) => ownCities.has(b.id));
+        const branchSummaries = loadedRaw.branchSummaries.filter((b) => b.type === "main" || ownCities.has(b.id));
+        const mains = loadedRaw.branchSummaries.filter((b) => b.type === "main").length;
+        return { ...loadedRaw, cityBranches, branchSummaries, branchesCount: mains + cityBranches.length };
+      })()
+    : loadedRaw;
   // Field-level financial permission: amounts are never SENT to a login that may not see them (zeros + empty lists in the
   // payload, every numeric field of the per-branch summaries zeroed) and a notice explains why.
   const financialsHidden = !isSuperAdmin && session?.canViewFinancials === false;
@@ -333,7 +352,7 @@ export default async function CountryDashboardPage(props: { searchParams?: Promi
   return (
     <div className="space-y-6">
       {/* Super Admin Country Selector Bar */}
-      {isSuperAdmin && countries.length > 0 && (
+      {(isSuperAdmin || (domainSuper && countries.length > 1)) && countries.length > 0 && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <div className="flex items-center gap-2">
             <Globe className="h-5 w-5 text-primary" />
@@ -342,16 +361,18 @@ export default async function CountryDashboardPage(props: { searchParams?: Promi
             </span>
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
-            <Button
-              asChild
-              size="sm"
-              variant={countryId === "all" ? "default" : "outline"}
-              className="h-8 rounded-lg text-xs font-bold"
-            >
-              <Link href={`/dashboard/country?countryId=all&tab=${currentTab}` as Route}>
-                {t(lang, "cpage.all_countries_global", "All Countries (Global)")}
-              </Link>
-            </Button>
+            {isSuperAdmin && (
+              <Button
+                asChild
+                size="sm"
+                variant={countryId === "all" ? "default" : "outline"}
+                className="h-8 rounded-lg text-xs font-bold"
+              >
+                <Link href={`/dashboard/country?countryId=all&tab=${currentTab}` as Route}>
+                  {t(lang, "cpage.all_countries_global", "All Countries (Global)")}
+                </Link>
+              </Button>
+            )}
             {countries.map((c) => (
               <Button
                 key={c.id}
@@ -373,7 +394,11 @@ export default async function CountryDashboardPage(props: { searchParams?: Promi
         <div>
           <div className="flex items-center gap-2">
             <span className="inline-flex h-6 items-center rounded-md bg-sky-50 px-2 py-0.5 text-xs font-semibold text-sky-700 ring-1 ring-inset ring-sky-700/10 dark:bg-sky-950/40 dark:text-sky-300 dark:ring-sky-500/20">
-              {isSuperAdmin ? t(lang, "cpage.global_super_admin_scope", "Global Super Admin Scope") : t(lang, "cpage.country_admin_scope", "Country Admin Scope")}
+              {isSuperAdmin
+                ? t(lang, "cpage.global_super_admin_scope", "Global Super Admin Scope")
+                : domainSuper
+                  ? t(lang, "role.business_super_admin", "Business Super Admin")
+                  : t(lang, "cpage.country_admin_scope", "Country Admin Scope")}
             </span>
           </div>
           <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">

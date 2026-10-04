@@ -5,6 +5,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { optionalUuidSchema, roleNameSchema } from "@/lib/api/erp-validation";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { issueNextUserCode } from "@/lib/services/user-identity-service";
+import { isUserManager } from "@/lib/permissions/user-management-scope";
 
 const querySchema = z.object({
   role: roleNameSchema,
@@ -20,9 +21,8 @@ export async function GET(request: NextRequest) {
     });
 
     // Keep security consistent with user creation rules.
-    const isCountryManager = session.roles.some((r) => r === "country_admin" || r === "main_branch_admin");
     if (!session.isSuperAdmin) {
-      if (!isCountryManager) throw new Error("Not authorized to generate user codes.");
+      if (!isUserManager(session)) throw new Error("Not authorized to generate user codes.");
       if (query.role === "super_admin" || query.role === "country_admin") {
         throw new Error("Only Super Admin can create Super Admin or Country Admin users.");
       }

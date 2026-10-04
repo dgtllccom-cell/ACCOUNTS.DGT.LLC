@@ -28,6 +28,9 @@ const PLAN = {
   finance: { rtl: "ar", denied: "/dashboard/super-admin" },
   restricted: { rtl: "ps", denied: "/dashboard/ledger/detailed" },
   combo: { rtl: "fa", denied: "/dashboard/super-admin" },
+  // Business / Shipping Line Super Admins (created by scripts/e2e-domain-super-admins.mjs; merge its DSA_STATE into RBAC_USERS)
+  biz_super: { rtl: "ur", denied: "/dashboard/logistics" },
+  ship_super: { rtl: "ar", denied: "/dashboard/ledger/detailed" },
 };
 
 const browser = await chromium.launch();

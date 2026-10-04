@@ -701,6 +701,7 @@ function UpgradedMark({ lang }: { lang: string }) {
 function isPathActive(href: string | undefined, currentPath: string): boolean {
   if (!href) return false;
   if (currentPath === href) return true;
+  if (href === "/dashboard" && (currentPath === "/dashboard/super-admin" || currentPath === "/dashboard/country" || currentPath === "/dashboard/branch")) return true;
   if (href !== "/dashboard" && currentPath.startsWith(href)) return true;
   return false;
 }
@@ -739,6 +740,7 @@ export interface DigitalDockPremiumSidebarProps {
 }
 
 import { ROUTE_PERMISSION_MAP, evaluateRouteAccess } from "@/lib/navigation/route-policy";
+import { MENU_ROLE_ALIASES } from "@/lib/permissions/enterprise-roles";
 export { ROUTE_PERMISSION_MAP };
 
 type ShippingContext = {
@@ -757,6 +759,10 @@ function filterByRolesAndPermissions<T extends { key?: string; roles?: string[];
   shippingContext?: ShippingContext
 ): T[] {
   const isSuper = userRoles.has("super_admin") || userPermissions.has("*:*");
+  // menu-only aliases (Business / Shipping Super Admin see the entries of the admin roles they stand above; the route policy
+  // below still decides by their own permissions and domain)
+  const menuRoles = new Set<string>([...userRoles, ...[...userRoles].flatMap((r) => MENU_ROLE_ALIASES[r] ?? [])]);
+  const isShippingSuperAdmin = userRoles.has("shipping_super_admin");
 
   // Determine if this user is exclusively a Shipping Line / Clearing Agent user:
   // 1. Bound to clearing agent with shipping_only ledger (isShippingScoped = true)
@@ -804,7 +810,7 @@ function filterByRolesAndPermissions<T extends { key?: string; roles?: string[];
 
     // 1. Role check
     const r = it.roles;
-    const roleOk = !r || r.length === 0 || isSuper || r.some((x) => userRoles.has(x));
+    const roleOk = !r || r.length === 0 || isSuper || r.some((x) => menuRoles.has(x));
     if (!roleOk) return false;
 
     // Super Admin sees all role-permitted entries
@@ -872,7 +878,9 @@ function filterByRolesAndPermissions<T extends { key?: string; roles?: string[];
       "shipping-cleaning",
       "ledgers",
       "transfer-handover-center",
-      "daily-payment"
+      "daily-payment",
+      // the Shipping Line Super Admin also manages its branches and their users (each entry still route-policy filtered)
+      ...(isShippingSuperAdmin ? ["new-entry"] : [])
     ]);
 
     return items
@@ -1386,22 +1394,17 @@ export function DigitalDockPremiumSidebar({
                     isDirectActive
                       ? isRed
                         ? "bg-red-50 text-red-600 font-bold border border-red-200/80 shadow-xs"
-                        : "bg-[#edf5ff] text-[#2563eb] font-bold"
+                        : "bg-[#2563eb] text-white font-bold shadow-md shadow-blue-500/25"
                       : isRed
                         ? "text-red-600 font-bold hover:bg-red-100/70 hover:text-red-700 bg-red-50/40 border border-red-200/60"
                         : "text-[#0f172a] hover:bg-slate-50 font-medium hover:text-[#2563eb]"
                   }`}
                 >
-                  {isDirectActive && (
-                    <span className={`absolute left-0 top-1.5 bottom-1.5 w-[3.5px] rounded-r-md ${
-                      isRed ? "bg-red-600" : "bg-[#2563eb]"
-                    }`} />
-                  )}
                   <Icon className={`h-[18px] w-[18px] shrink-0 transition-colors ${
                     isRed
                       ? "text-red-600"
                       : isDirectActive
-                        ? "text-[#2563eb]"
+                        ? "text-white"
                         : "text-[#0f172a]"
                   }`} />
                   <span className={`truncate tracking-tight flex-1 ${isRed ? "text-red-600 font-bold" : ""}`}>

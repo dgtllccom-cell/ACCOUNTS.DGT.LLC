@@ -3,7 +3,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import {
   type EnterpriseRole, type StoredEnterpriseRole, type AccessProfile, enterpriseRoles, accessProfiles,
-  deriveEffectiveRole, storedRoleScopeLevel, NON_FINANCIAL_ROLES, GLOBAL_SCOPE_ROLES,
+  deriveEffectiveRole, storedRoleScopeLevel, NON_FINANCIAL_ROLES, GLOBAL_SCOPE_ROLES, domainSuperAdminDomain,
 } from "@/lib/permissions/enterprise-roles";
 import { enterpriseRolePermissions, SHIPPING_BUNDLE_SHIPPING_DOMAIN_ONLY, capPermissionsForRoles } from "@/lib/permissions/enterprise-roles";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
@@ -376,6 +376,33 @@ async function expandToWholeNetwork(db: any, scopes: { countryIds: string[]; cou
 }
 
 /**
+ * Business / Shipping Super Admin data scope: every operational country and main branch (the parents new branches are
+ * created under) and ONLY the city branches of the login's own domain ('both' branches included). Never the other domain.
+ */
+async function expandToDomainNetwork(db: any, scopes: { countryIds: string[]; countryBranchIds: string[]; cityBranchIds: string[] }, domain: "business" | "shipping") {
+  try {
+    const [cb, ci] = await Promise.all([
+      db.from("country_branches").select("id, country_id").is("deleted_at", null),
+      db.from("city_branches").select("id, country_id, country_branch_id, operational_domain").is("deleted_at", null),
+    ]);
+    const mains = (cb?.data ?? []) as Array<{ id: string; country_id: string | null }>;
+    const cities = ((ci?.data ?? []) as Array<{ id: string; operational_domain: string | null }>)
+      .filter((r) => (r.operational_domain ?? "business") === domain || r.operational_domain === "both");
+    scopes.countryBranchIds = [...new Set(mains.map((r) => r.id))];
+    scopes.countryIds = [...new Set(mains.map((r) => r.country_id).filter((v): v is string => Boolean(v)))];
+    scopes.cityBranchIds = cities.map((r) => r.id);
+  } catch (e) {
+    console.error("Error expanding domain scope:", e);
+    scopes.countryIds = []; scopes.countryBranchIds = []; scopes.cityBranchIds = [];
+  }
+}
+
+/** Bootstrap identities bypass the live DB re-check — only ever honoured where demo auth is explicitly enabled (never Production). */
+function bootstrapBypassEnabled(): boolean {
+  return isDemoAuthEnabled();
+}
+
+/**
  * Per-assignment scope + permissions. Only built when the login has several assignments whose permission sets differ —
  * that is the only case where the flat union (all permissions x all scopes) would over-grant (e.g. Country Admin in UAE
  * plus Finance in ONE branch must not give Finance for the whole country). authorize() narrows the session to the
@@ -395,7 +422,8 @@ async function buildAssignmentGrants(db: any, assignments: RoleAssignmentScope[]
   return out;
 }
 
-const BOOTSTRAP_EMAILS = new Set(["superadmin@damaan.com", "asmatdgtllc@users.damaan.local", "superadmin@dgt.llc", "shipping@dgt.llc"]);
+// (shipping@dgt.llc removed: a Shipping login must never be force-promoted to Super Admin.)
+const BOOTSTRAP_EMAILS = new Set(["superadmin@damaan.com", "asmatdgtllc@users.damaan.local", "superadmin@dgt.llc"]);
 // Synthetic UUIDs minted by readTempSession() for the bootstrap identities
 // (temp-super-admin / temp-pakistan-country-admin / temp-quetta-city-admin / temp-shipping-line) —
 // these have no DB row, so the live DB re-check is skipped for them.
@@ -422,7 +450,7 @@ async function resolveErpSessionFromDb(
   db: { from(table: string): any },
   identity: { userId: string; email: string | null; preferredLanguage?: SupportedLanguage },
 ): Promise<ErpSession | null> {
-  const isBootstrapEmail = Boolean(identity.email && BOOTSTRAP_EMAILS.has(identity.email.toLowerCase()));
+  const isBootstrapEmail = bootstrapBypassEnabled() && Boolean(identity.email && BOOTSTRAP_EMAILS.has(identity.email.toLowerCase()));
 
   // 1. Current profile — a soft-deleted profile is a disabled account.
   //    An infrastructure error (client misconfigured) THROWS so the caller can
@@ -468,7 +496,7 @@ async function resolveErpSessionFromDb(
       const rawDomain = (assignment as AssignmentRow).operational_domain;
       const operationalDomain: OperationalDomain = rawDomain === "shipping" || rawDomain === "both" ? rawDomain : "business";
       const accessProfile = normalizeAccessProfile((assignment as AssignmentRow).access_profile);
-      const role = deriveEffectiveRole(storedRole, accessProfile);
+      const role = deriveEffectiveRole(storedRole, accessProfile, operationalDomain);
       return {
         role,
         storedRole,
@@ -536,6 +564,8 @@ async function resolveErpSessionFromDb(
   // A Global Operations Admin is global in DATA scope but not a Super Admin: give it every active country/branch id so both
   // "no filter" and "filter by session ids" call styles see the whole network (and nothing else).
   if (isGlobalScope && !isSuperAdmin) await expandToWholeNetwork(db, resolvedScopes);
+  const domainSuper = isSuperAdmin ? null : domainSuperAdminDomain(roles);
+  if (domainSuper) await expandToDomainNetwork(db, resolvedScopes, domainSuper);
   const assignmentGrants = await buildAssignmentGrants(db, assignments, isSuperAdmin, usedExplicitPermissionSet ? permissions : null);
 
   // 3b. Apply Branch Rules & Scoped Permission Overrides / Denials
@@ -620,9 +650,11 @@ export async function getCurrentErpSession(): Promise<ErpSession | null> {
     // ── Custom login path (POST /api/erp/auth/login → signed temp-session JWT) ──
     const temp = await readTempSession();
     if (temp) {
-      const isBootstrap =
+      // A real account whose id happens to equal a synthetic bootstrap UUID (or whose email is a bootstrap email) must
+      // still be re-checked against the database: the bypass exists only where demo auth is explicitly enabled.
+      const isBootstrap = bootstrapBypassEnabled() && (
         Boolean(temp.email && BOOTSTRAP_EMAILS.has(temp.email.toLowerCase())) ||
-        BOOTSTRAP_TEMP_UUIDS.has(temp.userId);
+        BOOTSTRAP_TEMP_UUIDS.has(temp.userId));
 
       // Re-validate against the database on EVERY request so a disablement /
       // permission change / scope change / mobile-profile change is enforced on
@@ -665,10 +697,14 @@ export async function getCurrentErpSession(): Promise<ErpSession | null> {
       // — isSuperAdmin short-circuits resolveHierarchyScopes anyway) so a
       // city-branch-only assignment reached via this path still inherits its
       // parent country-branch/country scope, same as the DB-driven path above.
+      // Effective roles are re-derived from the signed assignments (stored role + access profile + domain): a Business /
+      // Shipping Super Admin cookie never turns into a Global Super Admin on this fallback path. Only the domain the cookie
+      // actually carries counts — a legacy cookie without one keeps its stored role.
       const tempAssignments: RoleAssignmentScope[] = (temp.assignments ?? []).map((a) => {
         const d = (a as any).operationalDomain;
+        const stored = normalizeRole(String(a.role));
         return {
-          role: a.role,
+          role: stored ? deriveEffectiveRole(stored, normalizeAccessProfile((a as any).accessProfile), d ?? null) : a.role,
           countryId: a.countryId,
           countryBranchId: a.countryBranchId,
           cityBranchId: a.cityBranchId,
@@ -683,11 +719,15 @@ export async function getCurrentErpSession(): Promise<ErpSession | null> {
           warehouseIds: (a as any).warehouseIds ?? null,
         };
       }).filter((a) => assignmentIsEffective(a));
+      const tempRoles: EnterpriseRole[] = tempAssignments.length ? [...new Set(tempAssignments.map((a) => a.role))] : temp.roles;
+      temp.roles = tempRoles;
       const { initialCountryIds, initialCountryBranchIds, initialCityBranchIds, downwardCountryIds, downwardCountryBranchIds } = getAssignmentRoots(tempAssignments);
       const isSuperAdmin = temp.roles.includes("super_admin");
       const isGlobalScope = isSuperAdmin || temp.roles.some((r) => GLOBAL_SCOPE_ROLES.includes(r));
       const resolvedScopes = await resolveHierarchyScopes(admin, initialCountryIds, initialCountryBranchIds, initialCityBranchIds, isSuperAdmin, downwardCountryIds, downwardCountryBranchIds);
       if (isGlobalScope && !isSuperAdmin && admin) await expandToWholeNetwork(admin, resolvedScopes);
+      const tempDomainSuper = isSuperAdmin ? null : domainSuperAdminDomain(temp.roles);
+      if (tempDomainSuper && admin) await expandToDomainNetwork(admin, resolvedScopes, tempDomainSuper);
       let perms = roleTemplatePermissions(temp.roles, tempAssignments);
 
       // Same branch_rules custom-grant/deny application as resolveErpSessionFromDb,

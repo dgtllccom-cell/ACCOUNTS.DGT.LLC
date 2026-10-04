@@ -185,7 +185,12 @@ export const approvalStatusSchema = z.enum(approvalStatuses);
  */
 export const assignmentAccessFields = {
   accessProfile: z.enum(["operations", "shipping_line"]).nullable().optional(),
-  shippingLineId: optionalUuidSchema,
+  // absent must stay ABSENT (undefined): optionalUuidSchema turns undefined into null, which made every user edit (even a
+  // plain deactivation) look like "remove the shipping line" and fail for a Shipping Line login
+  shippingLineId: z.preprocess(
+    (v) => (v === undefined ? undefined : v === null || v === "" || v === "none" || v === "null" ? null : v),
+    uuidSchema.nullable().optional()
+  ),
   warehouseIds: z.array(uuidSchema).max(50).nullable().optional(),
   effectiveFrom: z.string().date().nullable().optional(),
   effectiveTo: z.string().date().nullable().optional(),
@@ -219,7 +224,9 @@ export const userCreateSchema = scopeSchema.extend({
   photoUrl: z.string().trim().max(10_000_000).nullable().optional(),
   // Mandatory operational domain — decides which data world the user belongs to.
   // "business" = Purchase/Sales/Ledger/Accounting; "shipping" = Clearing Agent / Shipping Line.
-  operationalDomain: z.enum(["business", "shipping", "both"]).default("business"),
+  // Omitted = "business", except a Super Admin, which defaults to "both" (Global Super Admin); a Super Admin created with
+  // "business" / "shipping" is a Business / Shipping Line Super Admin (deriveEffectiveRole).
+  operationalDomain: z.enum(["business", "shipping", "both"]).optional(),
   // Only meaningful for the shipping domain — binds the login to one clearing agent.
   clearingAgentId: optionalUuidSchema,
   // "scoped" (business default), "shipping_only" (clearing/shipping default), "full" (explicit grant).

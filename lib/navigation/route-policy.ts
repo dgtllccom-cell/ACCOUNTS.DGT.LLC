@@ -25,6 +25,8 @@ const BASE_ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/dashboard/logistics": ["shipping_records:read", "route:/dashboard/logistics"],
   "/dashboard/new-entry/users/registration": ["users:create", "users:read", "route:/dashboard/new-entry/users/registration"],
   "/dashboard/new-entry/users/all": ["users:read", "route:/dashboard/new-entry/users/all"],
+  "/dashboard/new-entry/users/branch": ["users:create", "users:read", "route:/dashboard/new-entry/users/branch"],
+  "/dashboard/new-entry/users/country": ["country_admin", "main_branch_admin", "city_branch_admin", "business_super_admin", "route:/dashboard/new-entry/users/country"],
   "/dashboard/new-entry/users/credentials-pdf": ["super_admin", "route:/dashboard/new-entry/users/credentials-pdf"],
   "/dashboard/new-entry/branch-entry/country-branch": ["country_branches:create", "country_branches:read", "route:/dashboard/new-entry/branch-entry/country-branch"],
   "/dashboard/new-entry/branch-entry/city-branch": ["city_branches:create", "city_branches:read", "route:/dashboard/new-entry/branch-entry/city-branch"],
@@ -33,7 +35,7 @@ const BASE_ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/dashboard/accounts/setup": ["accounts:read", "accounts:create", "accounts:update", "accounts.setup", "accounts.new_entry", "route:/dashboard/accounts/setup"],
   "/dashboard/ledger/new": ["ledgers:read", "ledgers:create", "ledgers.new", "route:/dashboard/ledger/new"],
   "/dashboard/new-entry/accounts/general-report": ["accounts:read", "accounts.reports", "reports:read", "route:/dashboard/new-entry/accounts/general-report"],
-  "/dashboard/new-entry": ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "route:/dashboard/new-entry"],
+  "/dashboard/new-entry": ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "business_super_admin", "route:/dashboard/new-entry"],
   "/dashboard/business-edit-invoice": ["transactions:update", "purchases:update", "route:/dashboard/business-edit-invoice"],
   "/dashboard/super-admin/edit-history": ["transactions:read", "audit_logs:read", "super_admin", "route:/dashboard/super-admin/edit-history"],
   "/dashboard/super-admin/deleted-records": ["transactions:read", "audit_logs:read", "super_admin", "country_admin", "route:/dashboard/super-admin/deleted-records"],
@@ -242,6 +244,9 @@ export const SHARED_ROUTES: readonly string[] = [
   "/dashboard", "/dashboard/search", "/dashboard/settings/profile", "/dashboard/general-office/my-profile", "/dashboard/walkthrough-video", "/dashboard/user-tasks"
 ];
 
+/** User-management pages (inside FINANCIAL_ROUTE_PREFIXES for ordinary strict logins). */
+const USER_ADMIN_ROUTE_PREFIXES: readonly string[] = ["/dashboard/new-entry/users", "/dashboard/users"];
+
 /** Financial / HR-money / system areas an operations or shipping-line login never opens, whatever its map entry says. */
 export const FINANCIAL_ROUTE_PREFIXES: readonly string[] = [
   "/dashboard/ledger", "/dashboard/roznamcha", "/dashboard/accounts", "/dashboard/journal", "/dashboard/tax", "/dashboard/tax-einvoicing",
@@ -307,7 +312,10 @@ export function evaluateRouteAccess(input: RouteAccessInput): RouteDecision {
   }
 
   const strict = isStrictLogin(input.roles);
-  if (strict && FINANCIAL_ROUTE_PREFIXES.some((p) => matchesPrefix(path, p))) return { allowed: false, reason: "financial_denied" };
+  // the Shipping Line Super Admin is strict (no finance) but manages its own branches' users; each user page still needs its
+  // own permission below, and the users API keeps it inside its domain
+  const strictUserManager = (input.roles ?? []).includes("shipping_super_admin") && USER_ADMIN_ROUTE_PREFIXES.some((p) => matchesPrefix(path, p));
+  if (strict && !strictUserManager && FINANCIAL_ROUTE_PREFIXES.some((p) => matchesPrefix(path, p))) return { allowed: false, reason: "financial_denied" };
   if (input.canViewFinancials === false && AMOUNT_ROUTE_PREFIXES.some((p) => matchesPrefix(path, p))) return { allowed: false, reason: "financial_denied" };
 
   if (SHARED_ROUTES.includes(path)) return { allowed: true, reason: "shared" };
