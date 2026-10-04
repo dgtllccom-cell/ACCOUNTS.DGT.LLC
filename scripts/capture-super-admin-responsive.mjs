@@ -21,8 +21,8 @@ async function run() {
     const passInput = page.locator('input[name="password"], input[type="password"]').first();
     const submitBtn = page.locator('button[type="submit"]').first();
     
-    await idInput.fill('superadmin@dgt.llc');
-    await passInput.fill('Chaman@9090');
+    await idInput.fill(process.env.ADMIN_EMAIL || 'superadmin@dgt.llc');
+    await passInput.fill(process.env.ADMIN_PASSWORD || '');
     await submitBtn.click();
     
     // Wait for navigation away from login
