@@ -117,17 +117,17 @@ export async function createPurchaseOrderViaLocalPg(input: {
         }
       }
 
-      const branchCountRows = effective.cityBranchId ? await tx`select count(*)::int as count from purchase_orders where city_branch_id = ${effective.cityBranchId}::uuid` : [];
-      const countryCountRows = effective.countryId ? await tx`select count(*)::int as count from purchase_orders where country_id = ${effective.countryId}::uuid` : [];
-      const totalCountRows = await tx`select count(*)::int as count from purchase_orders`;
-
-      const branchSeq = (branchCountRows[0]?.count ?? 0) + 1;
-      const countrySeq = (countryCountRows[0]?.count ?? 0) + 1;
-      const totalSeq = (totalCountRows[0]?.count ?? 0) + 1;
-
-      const branchTransactionSerialNumber = effective.cityBranchId ? `${countryPrefix}-${branchPrefix}-${String(branchSeq).padStart(4, "0")}` : null;
-      const countryTransactionSerialNumber = effective.countryId ? `${countryPrefix}-${String(countrySeq).padStart(6, "0")}` : null;
-      const superAdminSerialNumber = String(totalSeq).padStart(8, "0");
+      // Persistent counters (transaction_serial_sequences, entity purchase_order) — never count(*):
+      // a number that was ever issued (live, soft-deleted or hard-deleted into a backup) is not reused.
+      const serialRows = await tx`
+        select public.allocate_purchase_order_serials(
+          ${effective.countryId ? countryPrefix : null},
+          ${effective.cityBranchId ? `${countryPrefix}-${branchPrefix}` : null}
+        ) as s`;
+      const serials = (serialRows[0]?.s ?? {}) as Record<string, string | null>;
+      const branchTransactionSerialNumber = effective.cityBranchId ? serials.branchTransactionSerialNumber ?? null : null;
+      const countryTransactionSerialNumber = effective.countryId ? serials.countryTransactionSerialNumber ?? null : null;
+      const superAdminSerialNumber = serials.superAdminSerialNumber as string;
 
       const purchaseOrderNo = !body.purchaseOrderNo || body.purchaseOrderNo === "AUTO"
         ? branchTransactionSerialNumber || `PO-${Date.now()}`

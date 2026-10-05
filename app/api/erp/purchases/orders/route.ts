@@ -509,10 +509,6 @@ export async function POST(request: NextRequest) {
     }
 
     let branchPrefix = "QTA";
-    let branchTransactionSerialNumber = null;
-    let countryTransactionSerialNumber = null;
-    let superAdminSerialNumber = null;
-
     if (effective.cityBranchId) {
       const { data: cityRow } = await adminSupabase
         .from("city_branches")
@@ -523,29 +519,19 @@ export async function POST(request: NextRequest) {
         const parts = cityRow.code.split("-");
         branchPrefix = parts.length > 1 ? parts[parts.length - 1].toUpperCase() : cityRow.code.toUpperCase();
       }
-
-      const { count: branchCount } = await adminSupabase
-        .from("purchase_orders")
-        .select("id", { count: "exact", head: true })
-        .eq("city_branch_id", effective.cityBranchId);
-      const bSeq = (branchCount || 0) + 1;
-      branchTransactionSerialNumber = `${countryPrefix}-${branchPrefix}-${String(bSeq).padStart(4, "0")}`;
     }
 
-    if (effective.countryId) {
-      const { count: countryCount } = await adminSupabase
-        .from("purchase_orders")
-        .select("id", { count: "exact", head: true })
-        .eq("country_id", effective.countryId);
-      const cSeq = (countryCount || 0) + 1;
-      countryTransactionSerialNumber = `${countryPrefix}-${String(cSeq).padStart(6, "0")}`;
+    // Same persistent allocator as the local-pg path (never count(*), never a reused number).
+    const { data: serials, error: serialError } = await (adminSupabase as any).rpc("allocate_purchase_order_serials", {
+      p_country_prefix: effective.countryId ? countryPrefix : null,
+      p_branch_prefix: effective.cityBranchId ? `${countryPrefix}-${branchPrefix}` : null,
+    });
+    if (serialError || !serials) {
+      throw new Error(`Could not allocate the purchase booking number: ${serialError?.message ?? "no result"}`);
     }
-
-    const { count: totalCount } = await adminSupabase
-      .from("purchase_orders")
-      .select("id", { count: "exact", head: true });
-    const sSeq = (totalCount || 0) + 1;
-    superAdminSerialNumber = String(sSeq).padStart(8, "0");
+    const branchTransactionSerialNumber: string | null = effective.cityBranchId ? serials.branchTransactionSerialNumber ?? null : null;
+    const countryTransactionSerialNumber: string | null = effective.countryId ? serials.countryTransactionSerialNumber ?? null : null;
+    const superAdminSerialNumber: string = serials.superAdminSerialNumber;
 
     const purchaseOrderNo =
       !body.purchaseOrderNo || body.purchaseOrderNo === "AUTO"
