@@ -862,7 +862,6 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
                 <Th className="px-3 py-3 text-center text-[10px] tracking-wider">{tr("SR#")}</Th>
                 <Th className="px-3 py-3 text-center text-[10px] tracking-wider">
                   <div>{tr("START DATE")}</div>
-                  <div className="text-[9px] font-normal text-emerald-600 normal-case">({tr("This is start date")})</div>
                 </Th>
                 <Th className="px-3 py-3 text-[10px] tracking-wider">{tr("CODE")}</Th>
                 <Th className="px-3 py-3 text-[10px] tracking-wider">{tr("ACCOUNT NO")}</Th>
@@ -875,7 +874,6 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
                 <Th className="px-3 py-3 text-center text-[10px] tracking-wider">{tr("CURR")}</Th>
                 <Th className="px-3 py-3 text-center text-[10px] tracking-wider">
                   <div>{tr("LAST DATE")}</div>
-                  <div className="text-[9px] font-normal text-rose-600 normal-case">({tr("This is last date")})</div>
                 </Th>
                 <Th className="px-3 py-3 text-right text-[10px] tracking-wider">{tr("DAYS (Diff.)")}</Th>
                 <Th className="px-3 py-3 text-center text-[10px] tracking-wider">{tr("TYPE")}</Th>

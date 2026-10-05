@@ -14,7 +14,7 @@ const out = {};
 for (const r of ROUTES) {
   const p = await ctx.newPage();
   try {
-    await p.goto(BASE + r, { waitUntil: "load", timeout: 90000 }); await p.waitForLoadState("networkidle", { timeout: 12000 }).catch(() => {}); await p.waitForTimeout(1500);
+    await p.goto(BASE + r, { waitUntil: "load", timeout: 90000 }); await p.waitForLoadState("networkidle", { timeout: 12000 }).catch(() => {}); await p.waitForTimeout(Number(process.env.WAIT || 1500));
     for (let i = 0; i < 12; i++) { const sl = await p.evaluate(() => [...document.querySelectorAll("[data-erp-content] .animate-spin")].some((el) => el.getBoundingClientRect().width >= 14)).catch(() => false); if (!sl) break; await p.waitForTimeout(2500); }
     out[r] = await p.evaluate(() => [...document.querySelectorAll("table")].map((t) => [...t.querySelectorAll("thead th, tr:first-child th")].map((th) => { const cs = getComputedStyle(th); const r = th.getBoundingClientRect(); return { t: (th.innerText || th.textContent || "").trim().replace(/\s+/g, " "), a: cs.textAlign, f: cs.fontSize, w: cs.whiteSpace, h: Math.round(r.height), lh: parseFloat(cs.lineHeight) || 0 }; }).filter((x) => x.t)));
     console.log("ok", r, out[r].length);

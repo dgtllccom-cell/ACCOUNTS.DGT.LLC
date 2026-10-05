@@ -8,7 +8,7 @@ const token = lr.headers.getSetCookie().map((c) => c.split(";")[0]).find((c) => 
 const b = await webkit.launch();
 const THEME = process.env.THEME || "night";
 const ctx = await b.newContext({ viewport: { width: Number(process.env.W || 1440), height: Number(process.env.H || 900) } });
-await ctx.addCookies([{ name: "erp_session", value: token, domain: "localhost", path: "/" }, { name: "erp_theme_mode", value: THEME, domain: "localhost", path: "/" }]);
+await ctx.addCookies([{ name: "erp_lang", value: process.env.LANG_CODE || "en", domain: "localhost", path: "/" }, { name: "erp_session", value: token, domain: "localhost", path: "/" }, { name: "erp_theme_mode", value: THEME, domain: "localhost", path: "/" }]);
 await ctx.addInitScript((t) => { try { localStorage.setItem("erp_theme_mode", t); } catch {} }, THEME);
 const p = await ctx.newPage();
 await p.goto(BASE + process.env.PAGE_PATH, { waitUntil: "load", timeout: 90000 }); await p.waitForTimeout(6000);

@@ -55,8 +55,8 @@ const BASELINE = `
   :where(${C}) thead th { background-color: hsl(var(--muted) / 0.6); color: hsl(var(--muted-foreground)); font-weight: 700; }
   /* table column headings, everywhere: centred, one moderate size, one line where practical (headings are shortened in the shared
      heading dictionary; the data cells, values and columns are untouched) */
-  ${C} table :is(thead th, tfoot th, > tr > th), [role="dialog"] table :is(thead th, > tr > th) {
-    text-align: center; font-size: 0.6875rem; line-height: 1.25; font-weight: 700; white-space: nowrap; vertical-align: middle;
+  ${C} table :is(thead th, tfoot th, > tr > th, th[scope="col"]), [role="dialog"] table :is(thead th, > tr > th, th[scope="col"]) {
+    text-align: center; font-size: 0.8125rem; line-height: 1.25; font-weight: 700; white-space: nowrap; vertical-align: middle;
     padding-inline: 0.625rem;
   }
   ${C} table thead th > :is(div, span).flex, ${C} table thead th > :is(div, span).inline-flex, [role="dialog"] table thead th > :is(div, span).flex { justify-content: center; text-align: center; }
