@@ -480,10 +480,10 @@ export function AdminUserManagementPanel() {
             <span>{tt("nav.admin_panel", "Admin Control Panel")}</span>
           </div>
           <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            {tt("nav.user_management", "User Login Management & Branch Scope Directory")}
+            {tt("aump.page_title", "User Login Management & Branch Scope Directory")}
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            {tt("nav.user_management", "Country Main Branches, City Branch Codes, Login IDs & Hierarchical Access Table")}
+            {tt("aump.page_subtitle", "Country Main Branches, City Branch Codes, Login IDs & Hierarchical Access Table")}
           </p>
         </div>
 
@@ -502,21 +502,21 @@ export function AdminUserManagementPanel() {
           <Link href="/dashboard/country">
             <Button variant="outline" size="sm" className="gap-2">
               <Building2 className="h-4 w-4 text-slate-500" />
-              <span>+ {tt("nav.country_management", "Add Branch / Country")}</span>
+              <span>+ {tt("aump.add_branch_country", "Add Branch / Country")}</span>
             </Button>
           </Link>
 
           <Link href="/dashboard/users/live">
             <Button size="sm" className="gap-2 bg-cyan-600 hover:bg-cyan-700 text-white font-medium shadow-sm">
               <Radio className="h-4 w-4 animate-pulse" />
-              <span>{tt("live_users_work", "Live Users / Current Work")}</span>
+              <span>{tt("aump.live_users_work", "Live Users / Current Work")}</span>
             </Button>
           </Link>
 
           <Link href="/dashboard/users/new">
             <Button size="sm" className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-sm">
               <UserPlus className="h-4 w-4" />
-              <span>{tt("nav.user_registration", "Register New User")}</span>
+              <span>{tt("aump.register_new_user", "Register New User")}</span>
             </Button>
           </Link>
 
@@ -538,7 +538,7 @@ export function AdminUserManagementPanel() {
       <div className="grid gap-4 max-sm:grid-cols-2 max-sm:gap-2 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-xl border bg-card p-4 shadow-sm max-sm:p-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 max-sm:text-[10px] max-sm:tracking-normal">{tt("nav.users", "Total Users")}</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 max-sm:text-[10px] max-sm:tracking-normal">{tt("aump.total_users", "Total Users")}</span>
             <div className="grid h-8 w-8 place-items-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
               <Users className="h-4 w-4" />
             </div>
@@ -549,7 +549,7 @@ export function AdminUserManagementPanel() {
 
         <div className="rounded-xl border bg-card p-4 shadow-sm max-sm:p-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 max-sm:text-[10px] max-sm:tracking-normal">{tt("nav.countries", "Countries")}</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 max-sm:text-[10px] max-sm:tracking-normal">{tt("aump.card_countries", "Countries")}</span>
             <div className="grid h-8 w-8 place-items-center rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400">
               <Globe2 className="h-4 w-4" />
             </div>
@@ -560,7 +560,7 @@ export function AdminUserManagementPanel() {
 
         <div className="rounded-xl border bg-card p-4 shadow-sm max-sm:p-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 max-sm:text-[10px] max-sm:tracking-normal">{tt("nav.country_branch", "Main Country Branches")}</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 max-sm:text-[10px] max-sm:tracking-normal">{tt("aump.card_main_branches", "Main Country Branches")}</span>
             <div className="grid h-8 w-8 place-items-center rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400">
               <Building2 className="h-4 w-4" />
             </div>
@@ -571,7 +571,7 @@ export function AdminUserManagementPanel() {
 
         <div className="rounded-xl border bg-card p-4 shadow-sm max-sm:p-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 max-sm:text-[10px] max-sm:tracking-normal">{tt("nav.city_branch", "City / Sub Branches")}</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 max-sm:text-[10px] max-sm:tracking-normal">{tt("aump.card_city_branches", "City / Sub Branches")}</span>
             <div className="grid h-8 w-8 place-items-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
               <GitBranch className="h-4 w-4" />
             </div>
@@ -594,7 +594,7 @@ export function AdminUserManagementPanel() {
             }`}
           >
             <Layers className="h-4 w-4" />
-            <span>{tt("nav.country_management", "Country & Branch Hierarchy")}</span>
+            <span>{tt("aump.tab_hierarchy", "Country & Branch Hierarchy")}</span>
           </button>
 
           <button
@@ -632,7 +632,7 @@ export function AdminUserManagementPanel() {
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
             </span>
             <Radio className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-            <span>{tt("live_users_work", "Live Users / Current Work")}</span>
+            <span>{tt("aump.live_users_work", "Live Users / Current Work")}</span>
           </Link>
         </div>
 
@@ -641,7 +641,7 @@ export function AdminUserManagementPanel() {
             <div className="relative w-full sm:w-72">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
               <Input
-                placeholder={tt("common.search", "Search user, branch code, city...")}
+                placeholder={tt("aump.search_placeholder", "Search user, branch code, city...")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9 text-xs h-9"
@@ -655,7 +655,7 @@ export function AdminUserManagementPanel() {
       {loading ? (
         <div className="flex flex-col items-center justify-center py-16 text-slate-400">
           <RefreshCw className="h-8 w-8 animate-spin text-emerald-600 mb-3" />
-          <p className="text-sm font-medium">{tt("common.loading", "Loading Branch Codes & User Hierarchy...")}</p>
+          <p className="text-sm font-medium">{tt("aump.loading_hierarchy", "Loading Branch Codes & User Hierarchy...")}</p>
         </div>
       ) : activeTab === "roles" ? (
         <RolePermissionMatrix />
@@ -710,7 +710,7 @@ export function AdminUserManagementPanel() {
                 {filteredUsers.length === 0 ? (
                   <tr>
                     <td colSpan={10} className="px-4 py-12 text-center text-slate-400">
-                      {tt("inv.no_records", "No matching users found for your search criteria.")}
+                      {tt("aump.no_matching_users", "No matching users found for your search criteria.")}
                     </td>
                   </tr>
                 ) : (
@@ -731,7 +731,7 @@ export function AdminUserManagementPanel() {
               <Link href="/dashboard/country" className="inline-block mt-4">
                 <Button size="sm" className="gap-2">
                   <Plus className="h-4 w-4" />
-                  <span>{tt("nav.country_management", "Create Country & Main Branch")}</span>
+                  <span>{tt("aump.create_country_main_branch", "Create Country & Main Branch")}</span>
                 </Button>
               </Link>
             </div>
@@ -900,7 +900,7 @@ export function AdminUserManagementPanel() {
                                     </div>
                                   ) : (
                                     <div className="rounded-md border border-dashed p-4 text-center text-xs text-slate-400">
-                                      {tt("inv.no_records", "No direct users registered for this main branch yet.")}
+                                      {tt("aump.no_direct_users", "No direct users registered for this main branch yet.")}
                                     </div>
                                   )}
                                 </div>
@@ -910,7 +910,7 @@ export function AdminUserManagementPanel() {
                                   <div className="pt-2 border-t space-y-4">
                                     <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                                       <MapPin className="h-3.5 w-3.5 text-amber-500" />
-                                      <span>{tt("nav.city_branch", "City Branches under")} {mainBranch.name}</span>
+                                      <span>{tt("aump.city_branches_under", "City Branches under {name}").replace("{name}", mainBranch.name)}</span>
                                     </h4>
 
                                     <div className="grid gap-4">

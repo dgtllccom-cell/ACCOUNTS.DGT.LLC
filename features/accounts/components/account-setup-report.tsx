@@ -507,7 +507,8 @@ export function AccountSetupReport({
     : (reportSeed?.branchName ?? "All Branches");
 
   const reportContext = {
-    countryName: country !== "all" ? country : fallbackCountry,
+    // empty register (no accounts yet) leaves the fallback undefined — never print "undefined" in titles
+    countryName: (country !== "all" ? country : fallbackCountry) || t(lang, "common.all_countries", "All Countries"),
     countryCode: reportSeed?.countryCode || "-",
     branchName: branch !== "all" ? branch : fallbackBranch,
     branchCode: reportSeed?.branchCode || "-",

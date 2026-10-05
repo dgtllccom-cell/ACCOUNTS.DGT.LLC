@@ -11539,6 +11539,21 @@ export type UiKey =
   | "bank.status_inactive"
   | "bank.status_frozen"
   | "bank.status_closed"
+  | "aump.page_title"
+  | "aump.page_subtitle"
+  | "aump.add_branch_country"
+  | "aump.live_users_work"
+  | "aump.register_new_user"
+  | "aump.card_countries"
+  | "aump.card_main_branches"
+  | "aump.card_city_branches"
+  | "aump.tab_hierarchy"
+  | "aump.search_placeholder"
+  | "aump.loading_hierarchy"
+  | "aump.no_matching_users"
+  | "aump.create_country_main_branch"
+  | "aump.no_direct_users"
+  | "aump.city_branches_under"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -34368,6 +34383,21 @@ const en: Dict = {
   "bank.status_inactive": "Inactive",
   "bank.status_frozen": "Frozen",
   "bank.status_closed": "Closed",
+  "aump.page_title": "User Login Management & Branch Scope Directory",
+  "aump.page_subtitle": "Country Main Branches, City Branch Codes, Login IDs & Hierarchical Access Table",
+  "aump.add_branch_country": "Add Branch / Country",
+  "aump.live_users_work": "Live Users / Current Work",
+  "aump.register_new_user": "Register New User",
+  "aump.card_countries": "Countries",
+  "aump.card_main_branches": "Main Country Branches",
+  "aump.card_city_branches": "City / Sub Branches",
+  "aump.tab_hierarchy": "Country & Branch Hierarchy",
+  "aump.search_placeholder": "Search user, branch code, city...",
+  "aump.loading_hierarchy": "Loading Branch Codes & User Hierarchy...",
+  "aump.no_matching_users": "No matching users found for your search criteria.",
+  "aump.create_country_main_branch": "Create Country & Main Branch",
+  "aump.no_direct_users": "No direct users registered for this main branch yet.",
+  "aump.city_branches_under": "City Branches under {name}",
 };
 
 const ur: Dict = {
@@ -57166,6 +57196,21 @@ const ur: Dict = {
   "bank.status_inactive": "غیر فعال",
   "bank.status_frozen": "منجمد",
   "bank.status_closed": "بند",
+  "aump.page_title": "یوزر لاگ اِن مینجمنٹ اور برانچ اسکوپ ڈائریکٹری",
+  "aump.page_subtitle": "ملکی مین برانچیں، سٹی برانچ کوڈز، لاگ اِن آئی ڈیز اور درجہ بندی رسائی ٹیبل",
+  "aump.add_branch_country": "برانچ / ملک شامل کریں",
+  "aump.live_users_work": "فعال صارفین / موجودہ کام",
+  "aump.register_new_user": "نیا صارف رجسٹر کریں",
+  "aump.card_countries": "ممالک",
+  "aump.card_main_branches": "ملکی مین برانچیں",
+  "aump.card_city_branches": "سٹی / ذیلی برانچیں",
+  "aump.tab_hierarchy": "ملک اور برانچ کا درجہ بندی ڈھانچہ",
+  "aump.search_placeholder": "صارف، برانچ کوڈ، شہر تلاش کریں...",
+  "aump.loading_hierarchy": "برانچ کوڈز اور صارف ڈھانچہ لوڈ ہو رہا ہے...",
+  "aump.no_matching_users": "آپ کی تلاش سے کوئی صارف نہیں ملا۔",
+  "aump.create_country_main_branch": "ملک اور مین برانچ بنائیں",
+  "aump.no_direct_users": "اس مین برانچ کے لیے ابھی کوئی براہِ راست صارف رجسٹر نہیں۔",
+  "aump.city_branches_under": "{name} کے تحت سٹی برانچیں",
 };
 
 const ar: Dict = {
@@ -79965,6 +80010,21 @@ const ar: Dict = {
   "bank.status_inactive": "غير نشط",
   "bank.status_frozen": "مجمد",
   "bank.status_closed": "مغلق",
+  "aump.page_title": "إدارة تسجيل دخول المستخدمين ودليل نطاق الفروع",
+  "aump.page_subtitle": "الفروع الرئيسية للدول، رموز فروع المدن، معرّفات الدخول وجدول الوصول الهرمي",
+  "aump.add_branch_country": "إضافة فرع / دولة",
+  "aump.live_users_work": "المستخدمون النشطون / العمل الحالي",
+  "aump.register_new_user": "تسجيل مستخدم جديد",
+  "aump.card_countries": "الدول",
+  "aump.card_main_branches": "الفروع الرئيسية للدول",
+  "aump.card_city_branches": "فروع المدن / الفروع الفرعية",
+  "aump.tab_hierarchy": "التسلسل الهرمي للدول والفروع",
+  "aump.search_placeholder": "ابحث عن مستخدم أو رمز فرع أو مدينة...",
+  "aump.loading_hierarchy": "جارٍ تحميل رموز الفروع وهرمية المستخدمين...",
+  "aump.no_matching_users": "لا يوجد مستخدمون مطابقون لمعايير البحث.",
+  "aump.create_country_main_branch": "إنشاء دولة وفرع رئيسي",
+  "aump.no_direct_users": "لا يوجد مستخدمون مسجّلون مباشرةً لهذا الفرع الرئيسي بعد.",
+  "aump.city_branches_under": "فروع المدينة التابعة لـ {name}",
 };
 
 const fa: Dict = {
@@ -102763,6 +102823,21 @@ const fa: Dict = {
   "bank.status_inactive": "غیرفعال",
   "bank.status_frozen": "مسدود",
   "bank.status_closed": "بسته",
+  "aump.page_title": "مدیریت ورود کاربران و فهرست دامنه شعب",
+  "aump.page_subtitle": "شعب اصلی کشور، کدهای شعبه شهر، شناسه‌های ورود و جدول دسترسی سلسله‌مراتبی",
+  "aump.add_branch_country": "افزودن شعبه / کشور",
+  "aump.live_users_work": "کاربران فعال / کار جاری",
+  "aump.register_new_user": "ثبت کاربر جدید",
+  "aump.card_countries": "کشورها",
+  "aump.card_main_branches": "شعب اصلی کشورها",
+  "aump.card_city_branches": "شعب شهر / زیرشاخه",
+  "aump.tab_hierarchy": "سلسله‌مراتب کشور و شعبه",
+  "aump.search_placeholder": "جستجوی کاربر، کد شعبه، شهر...",
+  "aump.loading_hierarchy": "در حال بارگذاری کدهای شعب و سلسله‌مراتب کاربران...",
+  "aump.no_matching_users": "کاربری مطابق با جستجوی شما یافت نشد.",
+  "aump.create_country_main_branch": "ایجاد کشور و شعبه اصلی",
+  "aump.no_direct_users": "هنوز کاربری مستقیماً برای این شعبه اصلی ثبت نشده است.",
+  "aump.city_branches_under": "شعب شهر زیرمجموعه {name}",
 };
 
 const ps: Dict = {
@@ -125568,6 +125643,21 @@ const ps: Dict = {
   "bank.status_inactive": "غیر فعال",
   "bank.status_frozen": "کنګل شوی",
   "bank.status_closed": "تړل شوی",
+  "aump.page_title": "د کاروونکو د ننوتلو مدیریت او د څانګو د پراخوالي لارښود",
+  "aump.page_subtitle": "د هېواد اصلي څانګې، د ښار د څانګې کوډونه، د ننوتلو پېژندنې او د درجه‌بندۍ د لاسرسي جدول",
+  "aump.add_branch_country": "څانګه / هېواد زیات کړئ",
+  "aump.live_users_work": "فعال کاروونکي / اوسنی کار",
+  "aump.register_new_user": "نوی کارن ثبت کړئ",
+  "aump.card_countries": "هېوادونه",
+  "aump.card_main_branches": "د هېوادونو اصلي څانګې",
+  "aump.card_city_branches": "د ښار / فرعي څانګې",
+  "aump.tab_hierarchy": "د هېواد او څانګو درجه‌بندي",
+  "aump.search_placeholder": "کارن، د څانګې کوډ، ښار ولټوئ...",
+  "aump.loading_hierarchy": "د څانګو کوډونه او د کاروونکو ترتیب بارېږي...",
+  "aump.no_matching_users": "ستاسو د لټون سره سم هیڅ کارن ونه موندل شو.",
+  "aump.create_country_main_branch": "هېواد او اصلي څانګه جوړ کړئ",
+  "aump.no_direct_users": "د دې اصلي څانګې لپاره تر اوسه مستقیم کارن نه دی ثبت شوی.",
+  "aump.city_branches_under": "د {name} لاندې د ښار څانګې",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

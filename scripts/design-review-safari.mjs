@@ -19,6 +19,7 @@ const SEGMENTS = Number(process.env.SEGMENTS || 4);
 const ALL_DEVICES = [
   { key: "iphone17promax", w: 440, h: 956, dpr: 3, phone: true },
   { key: "iphone17promax-land", w: 956, h: 440, dpr: 3, phone: true },
+  { key: "iphone-se", w: 375, h: 667, dpr: 2, phone: true },
   { key: "iphone15", w: 393, h: 852, dpr: 3, phone: true },
   { key: "samsung-s", w: 412, h: 915, dpr: 3, phone: true },
   { key: "huawei-p", w: 360, h: 780, dpr: 3, phone: true },

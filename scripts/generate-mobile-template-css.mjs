@@ -69,6 +69,9 @@ const css = `/*
 @media ${TOUCH} {
   /* ================= layout layer: every theme, phones + tablets ================= */
   ${C} { overflow-x: hidden; }
+  /* a toolbar group of buttons that was kept at its full width (shrink-0) is pushed off-screen and clipped by the content's
+     overflow: let it use the available width and wrap its buttons instead, so every action stays reachable */
+  ${C} .flex.shrink-0:has(> button, > a) { max-width: 100%; flex-wrap: wrap; }
   ${C} ${FIELD},
   ${C} select { min-height: 2.75rem; font-size: 0.875rem; border-radius: 0.75rem; max-width: 100%; }
   ${C} textarea { font-size: 0.875rem; border-radius: 0.75rem; max-width: 100%; }

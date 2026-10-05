@@ -4222,7 +4222,7 @@ export function CashEntryForm({
         {/* Right: Date Pickers & Navigation Buttons based on active mode */}
         <div className="flex flex-wrap items-center gap-2">
           {tableDateMode === "day" && (
-            <div className="flex items-center gap-1.5 bg-white dark:bg-slate-950 p-1 rounded-lg border border-slate-200 dark:border-slate-800 shadow-2xs">
+            <div className="flex max-w-full flex-wrap lg:max-w-none lg:flex-nowrap items-center gap-1.5 bg-white dark:bg-slate-950 p-1 rounded-lg border border-slate-200 dark:border-slate-800 shadow-2xs">
               <Button
                 type="button"
                 variant="ghost"
