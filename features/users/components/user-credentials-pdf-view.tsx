@@ -23,6 +23,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { Th } from "@/components/ui/translated-th";
 
 interface CredentialUser {
   id: string;
@@ -249,14 +250,14 @@ export function UserCredentialsPdfView() {
           <table className="w-full text-left border-collapse text-xs">
             <thead className="sticky top-0 bg-slate-100 dark:bg-slate-800 z-10 text-[11px] uppercase tracking-wider text-slate-600 dark:text-slate-300">
               <tr>
-                <th className="py-2.5 px-3">#</th>
-                <th className="py-2.5 px-3">Username (لاگ ان یوزر نیم)</th>
-                <th className="py-2.5 px-3">Full Name (صارف کا نام)</th>
-                <th className="py-2.5 px-3">Login Email</th>
-                <th className="py-2.5 px-3">Password</th>
-                <th className="py-2.5 px-3">Role</th>
-                <th className="py-2.5 px-3">Branch / Country</th>
-                <th className="py-2.5 px-3 text-center">Copy</th>
+                <Th className="py-2.5 px-3">#</Th>
+                <Th className="py-2.5 px-3">Username (لاگ ان یوزر نیم)</Th>
+                <Th className="py-2.5 px-3">Full Name (صارف کا نام)</Th>
+                <Th className="py-2.5 px-3">Login Email</Th>
+                <Th className="py-2.5 px-3">Password</Th>
+                <Th className="py-2.5 px-3">Role</Th>
+                <Th className="py-2.5 px-3">Branch / Country</Th>
+                <Th className="py-2.5 px-3 text-center">Copy</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

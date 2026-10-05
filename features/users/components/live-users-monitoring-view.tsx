@@ -38,6 +38,7 @@ import { t } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { useBranchUserContext } from "@/lib/hooks/use-branch-user-context";
 import { UserLiveReportPanel } from "./user-live-report-panel";
+import { Th } from "@/components/ui/translated-th";
 
 export interface LiveUserRecord {
   id: string;
@@ -560,15 +561,15 @@ export function LiveUsersMonitoringView() {
             <table className="w-full text-left rtl:text-right text-xs">
               <thead className="bg-[#0b1626] text-white border-b border-slate-800 text-[10.5px] font-black uppercase tracking-wider">
                 <tr>
-                  <th className="py-3 px-4 whitespace-nowrap">{tt("th_user_id", "USER ID")}</th>
-                  <th className="py-3 px-4 whitespace-nowrap">{tt("th_user_name", "USER NAME & ROLE")}</th>
-                  <th className="py-3 px-4 whitespace-nowrap">{tt("th_location_scope", "COUNTRY & BRANCH")}</th>
-                  <th className="py-3 px-4 whitespace-nowrap">{tt("th_user_type", "USER TYPE")}</th>
-                  <th className="py-3 px-4 whitespace-nowrap">{tt("th_current_work", "CURRENT WORK / ACTIVE MODULE")}</th>
-                  <th className="py-3 px-3 whitespace-nowrap">{tt("th_date", "DATE")}</th>
-                  <th className="py-3 px-3 whitespace-nowrap">{tt("th_time", "TIME")}</th>
-                  <th className="py-3 px-3 text-center whitespace-nowrap">{tt("th_status", "STATUS")}</th>
-                  <th className="py-3 px-4 text-center whitespace-nowrap">{tt("th_actions", "ACTIONS")}</th>
+                  <Th className="py-3 px-4 whitespace-nowrap">{tt("th_user_id", "USER ID")}</Th>
+                  <Th className="py-3 px-4 whitespace-nowrap">{tt("th_user_name", "USER NAME & ROLE")}</Th>
+                  <Th className="py-3 px-4 whitespace-nowrap">{tt("th_location_scope", "COUNTRY & BRANCH")}</Th>
+                  <Th className="py-3 px-4 whitespace-nowrap">{tt("th_user_type", "USER TYPE")}</Th>
+                  <Th className="py-3 px-4 whitespace-nowrap">{tt("th_current_work", "CURRENT WORK / ACTIVE MODULE")}</Th>
+                  <Th className="py-3 px-3 whitespace-nowrap">{tt("th_date", "DATE")}</Th>
+                  <Th className="py-3 px-3 whitespace-nowrap">{tt("th_time", "TIME")}</Th>
+                  <Th className="py-3 px-3 text-center whitespace-nowrap">{tt("th_status", "STATUS")}</Th>
+                  <Th className="py-3 px-4 text-center whitespace-nowrap">{tt("th_actions", "ACTIONS")}</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">

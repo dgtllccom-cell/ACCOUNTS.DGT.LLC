@@ -978,26 +978,26 @@ export function AccountSetupReport({
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/50 text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
-                <th className="p-3 w-8 text-center">
+                <Th className="p-3 w-8 text-center">
                   <input
                     type="checkbox"
                     className="rounded border-slate-300"
                     checked={filtered.length > 0 && Object.keys(selectedIds).length === filtered.length}
                     onChange={toggleSelectAll}
                   />
-                </th>
-                <th className="p-3">{t(lang, "asr.col_account_code", "Account Code")} <ArrowUpDown className="inline h-3 w-3 text-slate-400 ml-0.5" /></th>
-                <th className="p-3">{t(lang, "asr.col_account_name", "Account Name")} <ArrowUpDown className="inline h-3 w-3 text-slate-400 ml-0.5" /></th>
-                <th className="p-3">{t(lang, "asr.col_account_type", "Account Type")} <ArrowUpDown className="inline h-3 w-3 text-slate-400 ml-0.5" /></th>
-                <th className="p-3">{t(lang, "asr.country", "Country")} <ArrowUpDown className="inline h-3 w-3 text-slate-400 ml-0.5" /></th>
-                <th className="p-3">{t(lang, "asr.branch", "Branch")} <ArrowUpDown className="inline h-3 w-3 text-slate-400 ml-0.5" /></th>
-                <th className="p-3">{t(lang, "asr.currency", "Currency")} <ArrowUpDown className="inline h-3 w-3 text-slate-400 ml-0.5" /></th>
-                <th className="p-3 text-right">{t(lang, "asr.col_opening_debit", "Opening Debit")} <ArrowUpDown className="inline h-3 w-3 text-slate-400 ml-0.5" /></th>
-                <th className="p-3 text-right">{t(lang, "asr.col_opening_credit", "Opening Credit")} <ArrowUpDown className="inline h-3 w-3 text-slate-400 ml-0.5" /></th>
-                <th className="p-3 text-right">{t(lang, "asr.col_current_balance", "Current Balance")} <ArrowUpDown className="inline h-3 w-3 text-slate-400 ml-0.5" /></th>
-                <th className="p-3">{t(lang, "asr.col_parent_account", "Parent Account")} <ArrowUpDown className="inline h-3 w-3 text-slate-400 ml-0.5" /></th>
-                <th className="p-3 text-center">{t(lang, "asr.status", "Status")} <ArrowUpDown className="inline h-3 w-3 text-slate-400 ml-0.5" /></th>
-                <th className="p-3 text-center">{t(lang, "asr.actions", "Actions")}</th>
+                </Th>
+                <Th className="p-3">{t(lang, "asr.col_account_code", "Account Code")} <ArrowUpDown className="inline h-3 w-3 text-slate-400 ml-0.5" /></Th>
+                <Th className="p-3">{t(lang, "asr.col_account_name", "Account Name")} <ArrowUpDown className="inline h-3 w-3 text-slate-400 ml-0.5" /></Th>
+                <Th className="p-3">{t(lang, "asr.col_account_type", "Account Type")} <ArrowUpDown className="inline h-3 w-3 text-slate-400 ml-0.5" /></Th>
+                <Th className="p-3">{t(lang, "asr.country", "Country")} <ArrowUpDown className="inline h-3 w-3 text-slate-400 ml-0.5" /></Th>
+                <Th className="p-3">{t(lang, "asr.branch", "Branch")} <ArrowUpDown className="inline h-3 w-3 text-slate-400 ml-0.5" /></Th>
+                <Th className="p-3">{t(lang, "asr.currency", "Currency")} <ArrowUpDown className="inline h-3 w-3 text-slate-400 ml-0.5" /></Th>
+                <Th className="p-3 text-right">{t(lang, "asr.col_opening_debit", "Opening Debit")} <ArrowUpDown className="inline h-3 w-3 text-slate-400 ml-0.5" /></Th>
+                <Th className="p-3 text-right">{t(lang, "asr.col_opening_credit", "Opening Credit")} <ArrowUpDown className="inline h-3 w-3 text-slate-400 ml-0.5" /></Th>
+                <Th className="p-3 text-right">{t(lang, "asr.col_current_balance", "Current Balance")} <ArrowUpDown className="inline h-3 w-3 text-slate-400 ml-0.5" /></Th>
+                <Th className="p-3">{t(lang, "asr.col_parent_account", "Parent Account")} <ArrowUpDown className="inline h-3 w-3 text-slate-400 ml-0.5" /></Th>
+                <Th className="p-3 text-center">{t(lang, "asr.status", "Status")} <ArrowUpDown className="inline h-3 w-3 text-slate-400 ml-0.5" /></Th>
+                <Th className="p-3 text-center">{t(lang, "asr.actions", "Actions")}</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

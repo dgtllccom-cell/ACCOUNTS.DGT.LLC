@@ -2834,11 +2834,11 @@ export function CashEntryForm({
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
                     <tr className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 text-[10px] font-black uppercase tracking-wider text-slate-500">
-                      <th className="py-2 px-3">Country</th>
-                      <th className="py-2 px-2.5">Date/Time</th>
-                      <th className="py-2 px-2.5">DR Rate</th>
-                      <th className="py-2 px-2.5">CR Rate</th>
-                      <th className="py-2 px-2 text-center">Action</th>
+                      <Th className="py-2 px-3">Country</Th>
+                      <Th className="py-2 px-2.5">Date/Time</Th>
+                      <Th className="py-2 px-2.5">DR Rate</Th>
+                      <Th className="py-2 px-2.5">CR Rate</Th>
+                      <Th className="py-2 px-2 text-center">Action</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
@@ -3003,11 +3003,11 @@ export function CashEntryForm({
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 text-[10px] font-black uppercase tracking-wider text-slate-500">
-                    <th className="py-2 px-3">Country</th>
-                    <th className="py-2 px-2.5">Credit Local</th>
-                    <th className="py-2 px-2.5">Debit Local</th>
-                    <th className="py-2 px-2.5 text-right">Credit USD</th>
-                    <th className="py-2 px-2.5 text-right">Debit USD</th>
+                    <Th className="py-2 px-3">Country</Th>
+                    <Th className="py-2 px-2.5">Credit Local</Th>
+                    <Th className="py-2 px-2.5">Debit Local</Th>
+                    <Th className="py-2 px-2.5 text-right">Credit USD</Th>
+                    <Th className="py-2 px-2.5 text-right">Debit USD</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">

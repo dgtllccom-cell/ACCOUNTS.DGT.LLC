@@ -1606,11 +1606,11 @@ export function LocalPurchaseDestinationQueueView({
                     <table className="w-full border text-[11px]">
                       <thead className="bg-slate-100 font-bold">
                         <tr>
-                          <th className="p-2 border text-left">Goods</th>
-                          <th className="p-2 border text-left">Brand</th>
-                          <th className="p-2 border text-right">Quantity</th>
-                          <th className="p-2 border text-right">Rate</th>
-                          <th className="p-2 border text-right">Total</th>
+                          <Th className="p-2 border text-left">Goods</Th>
+                          <Th className="p-2 border text-left">Brand</Th>
+                          <Th className="p-2 border text-right">Quantity</Th>
+                          <Th className="p-2 border text-right">Rate</Th>
+                          <Th className="p-2 border text-right">Total</Th>
                         </tr>
                       </thead>
                       <tbody>

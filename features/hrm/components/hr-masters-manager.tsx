@@ -9,6 +9,7 @@ import {
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { apiGet, apiPost, apiPatch, apiDelete } from "@/lib/api/client";
 import { UniversalPrintActionButton } from "@/components/reports/universal-print-action-button";
+import { Th } from "@/components/ui/translated-th";
 
 type Kind = "department" | "designation";
 type Row = Record<string, any>;
@@ -518,16 +519,16 @@ export function HrMastersManager({ kind, lang }: { kind: Kind; lang?: string }) 
             <table className="w-full text-xs border-collapse">
               <thead>
                 <tr className={`border-b border-slate-200/80 bg-slate-50/80 text-[11px] font-black uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-400 ${s.textStart}`}>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{s.t("code", "Code")}</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{isDept ? s.t("name", "Name") : s.t("title_col", "Title")}</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{isDept ? s.t("country", "Country") : s.t("department", "Department")}</th>
-                  {isDept ? <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{s.tGlobal("common.branch", "Branch")}</th> : null}
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{isDept ? s.t("head", "Head") : s.t("pay_grade", "Pay Grade")}</th>
-                  <th className={`px-3 py-3 font-black text-slate-700 dark:text-slate-200 ${s.textEnd}`}>{isDept ? s.t("budget", "Monthly Budget") : s.t("salary_range", "Basic Salary Range")}</th>
-                  <th className={`px-3 py-3 font-black text-slate-700 dark:text-slate-200 ${s.textEnd}`}>{s.t("employees", "Employees")}</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{s.tGlobal("common.status", "Status")}</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{s.t("created_date", "Created Date")}</th>
-                  <th className={`w-16 px-3 py-3 font-black text-slate-700 dark:text-slate-200 ${s.textEnd}`}>{s.t("actions", "Actions")}</th>
+                  <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{s.t("code", "Code")}</Th>
+                  <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{isDept ? s.t("name", "Name") : s.t("title_col", "Title")}</Th>
+                  <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{isDept ? s.t("country", "Country") : s.t("department", "Department")}</Th>
+                  {isDept ? <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{s.tGlobal("common.branch", "Branch")}</Th> : null}
+                  <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{isDept ? s.t("head", "Head") : s.t("pay_grade", "Pay Grade")}</Th>
+                  <Th className={`px-3 py-3 font-black text-slate-700 dark:text-slate-200 ${s.textEnd}`}>{isDept ? s.t("budget", "Monthly Budget") : s.t("salary_range", "Basic Salary Range")}</Th>
+                  <Th className={`px-3 py-3 font-black text-slate-700 dark:text-slate-200 ${s.textEnd}`}>{s.t("employees", "Employees")}</Th>
+                  <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{s.tGlobal("common.status", "Status")}</Th>
+                  <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{s.t("created_date", "Created Date")}</Th>
+                  <Th className={`w-16 px-3 py-3 font-black text-slate-700 dark:text-slate-200 ${s.textEnd}`}>{s.t("actions", "Actions")}</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

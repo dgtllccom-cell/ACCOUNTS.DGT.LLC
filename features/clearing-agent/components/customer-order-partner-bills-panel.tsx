@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { t } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { Th } from "@/components/ui/translated-th";
 
 export interface RouteLegPartnerBillItem {
   id: string;
@@ -818,12 +819,12 @@ export function CustomerOrderPartnerBillsPanel({
                     <table className="w-full text-left text-[11px]">
                       <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 font-bold uppercase text-[9px]">
                         <tr>
-                          <th className="px-2 py-1">#</th>
-                          <th className="px-2 py-1">{tt("col_date", "Date")}</th>
-                          <th className="px-2 py-1">{tt("col_amount", "Amount")}</th>
-                          <th className="px-2 py-1">{tt("col_method", "Method")}</th>
-                          <th className="px-2 py-1">{tt("col_account", "Paid From Account")}</th>
-                          <th className="px-2 py-1">{tt("col_voucher", "Roznamcha Voucher")}</th>
+                          <Th className="px-2 py-1">#</Th>
+                          <Th className="px-2 py-1">{tt("col_date", "Date")}</Th>
+                          <Th className="px-2 py-1">{tt("col_amount", "Amount")}</Th>
+                          <Th className="px-2 py-1">{tt("col_method", "Method")}</Th>
+                          <Th className="px-2 py-1">{tt("col_account", "Paid From Account")}</Th>
+                          <Th className="px-2 py-1">{tt("col_voucher", "Roznamcha Voucher")}</Th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

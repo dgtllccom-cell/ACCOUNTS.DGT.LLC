@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import type { ClearingAgentRow } from "@/lib/repositories/clearing-agents-repository";
+import { Th } from "@/components/ui/translated-th";
 
 export function ClearingAgentListView({ initialAgents }: { initialAgents: ClearingAgentRow[] }) {
   const [search, setSearch] = useState("");
@@ -84,13 +85,13 @@ export function ClearingAgentListView({ initialAgents }: { initialAgents: Cleari
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-[10px] font-black uppercase text-slate-500 tracking-wider">
-                <th className="px-4 py-3">#</th>
-                <th className="px-4 py-3">Agent Code</th>
-                <th className="px-4 py-3">Agent Name</th>
-                <th className="px-4 py-3">Contact Person</th>
-                <th className="px-4 py-3">Phone & Email</th>
-                <th className="px-4 py-3 text-center">Status</th>
-                <th className="px-4 py-3 text-right">Actions</th>
+                <Th className="px-4 py-3">#</Th>
+                <Th className="px-4 py-3">Agent Code</Th>
+                <Th className="px-4 py-3">Agent Name</Th>
+                <Th className="px-4 py-3">Contact Person</Th>
+                <Th className="px-4 py-3">Phone & Email</Th>
+                <Th className="px-4 py-3 text-center">Status</Th>
+                <Th className="px-4 py-3 text-right">Actions</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium text-slate-700 dark:text-slate-300">

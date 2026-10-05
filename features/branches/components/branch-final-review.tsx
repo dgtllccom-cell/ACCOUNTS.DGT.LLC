@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Th } from "@/components/ui/translated-th";
 
 export type BranchLevelType = "city" | "country" | "administrative";
 
@@ -883,14 +884,14 @@ export function BranchFinalReview({
             <table className="w-full text-left text-xs border-collapse">
               <thead className="bg-slate-100 dark:bg-slate-800/80 sticky top-0 z-10 text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
                 <tr>
-                  <th className="py-2.5 px-3">User Name</th>
-                  <th className="py-2.5 px-3">Role</th>
-                  <th className="py-2.5 px-3">Operational Domain</th>
-                  <th className="py-2.5 px-3">Country Scope</th>
-                  <th className="py-2.5 px-3">Branch Scope</th>
-                  <th className="py-2.5 px-3">Permission Group</th>
-                  <th className="py-2.5 px-3">Ledger Visibility</th>
-                  <th className="py-2.5 px-3 text-right">Status</th>
+                  <Th className="py-2.5 px-3">User Name</Th>
+                  <Th className="py-2.5 px-3">Role</Th>
+                  <Th className="py-2.5 px-3">Operational Domain</Th>
+                  <Th className="py-2.5 px-3">Country Scope</Th>
+                  <Th className="py-2.5 px-3">Branch Scope</Th>
+                  <Th className="py-2.5 px-3">Permission Group</Th>
+                  <Th className="py-2.5 px-3">Ledger Visibility</Th>
+                  <Th className="py-2.5 px-3 text-right">Status</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11px]">

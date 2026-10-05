@@ -45,12 +45,21 @@ const BASELINE = `
   :root { --ds-radius: 0.75rem; --ds-radius-lg: 1rem; --ds-shadow-xs: 0 1px 2px hsl(var(--foreground) / 0.05); --ds-shadow-sm: 0 1px 3px hsl(var(--foreground) / 0.08), 0 1px 2px hsl(var(--foreground) / 0.05); --ds-focus: 0 0 0 3px hsl(var(--ring) / 0.28); }
   body { font-feature-settings: "kern", "liga", "calt"; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
   :where(${C}) :where(h1, h2, h3) { letter-spacing: -0.01em; text-wrap: balance; }
+  /* micro-badges ("SUPER ADMIN ONLY", "PAID", "DRAFT") never break into a narrow vertical stack; their row wraps instead */
+  :where(${C}) :is(span, div).uppercase:where(.rounded, .rounded-md, .rounded-full, .rounded-sm):where([class*="text-[9px]"], [class*="text-[10px]"], .text-xs) { white-space: nowrap; flex-shrink: 0; }
   :where(${C}) table { font-variant-numeric: tabular-nums; }
   /* a native dropdown never grows wider than its own cell (appearance-none selects used to spill over the next column) */
   :where(${C}, [role="dialog"]) select { max-width: 100%; min-width: 0; text-overflow: ellipsis; }
   /* ...and the grid / flex cell that holds a dropdown may shrink with its column instead of forcing the next column to overlap */
   :where(${C}, [role="dialog"]) :is(.grid, .flex) > :has(> select) { min-width: 0; }
   :where(${C}) thead th { background-color: hsl(var(--muted) / 0.6); color: hsl(var(--muted-foreground)); font-weight: 700; }
+  /* table column headings, everywhere: centred, one moderate size, one line where practical (headings are shortened in the shared
+     heading dictionary; the data cells, values and columns are untouched) */
+  ${C} table :is(thead th, tfoot th, > tr > th), [role="dialog"] table :is(thead th, > tr > th) {
+    text-align: center; font-size: 0.6875rem; line-height: 1.25; font-weight: 700; white-space: nowrap; vertical-align: middle;
+    padding-inline: 0.625rem;
+  }
+  ${C} table thead th > :is(div, span).flex, ${C} table thead th > :is(div, span).inline-flex, [role="dialog"] table thead th > :is(div, span).flex { justify-content: center; text-align: center; }
   /* a hovered table row is tinted without replacing a cell's own colour (status cells keep theirs) */
   ${C} tbody tr:hover > td { background-image: linear-gradient(hsl(var(--primary) / 0.05), hsl(var(--primary) / 0.05)); }
   :where(${C}, [role="dialog"]) :where(${FIELD}, select, textarea) { border-radius: var(--ds-radius); border-color: hsl(var(--input)); transition: border-color 0.15s ease, box-shadow 0.15s ease; }

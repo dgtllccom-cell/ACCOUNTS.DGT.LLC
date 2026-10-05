@@ -21,6 +21,7 @@ import { SimpleModal } from "@/components/ui/simple-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { Th } from "@/components/ui/translated-th";
 
 export interface ModulePermissionModalProps {
   initialModuleKey?: string;
@@ -298,15 +299,15 @@ export function ModulePermissionModal({
               <table className="w-full text-left text-xs border-collapse">
                 <thead className="bg-slate-100 dark:bg-slate-800/80 sticky top-0 z-10 text-[10px] uppercase font-bold text-slate-600 dark:text-slate-300 border-b border-slate-200 dark:border-slate-800">
                   <tr>
-                    <th className="p-3">User & Credentials</th>
-                    <th className="p-3">Role / Level</th>
-                    <th className="p-3">Country & Branch Scope</th>
-                    <th className="p-3 text-center w-36 bg-blue-50/50 dark:bg-blue-950/20 text-blue-900 dark:text-blue-300">
+                    <Th className="p-3">User & Credentials</Th>
+                    <Th className="p-3">Role / Level</Th>
+                    <Th className="p-3">Country & Branch Scope</Th>
+                    <Th className="p-3 text-center w-36 bg-blue-50/50 dark:bg-blue-950/20 text-blue-900 dark:text-blue-300">
                       Who Can Edit?
-                    </th>
-                    <th className="p-3 text-center w-36 bg-rose-50/50 dark:bg-rose-950/20 text-rose-900 dark:text-rose-300">
+                    </Th>
+                    <Th className="p-3 text-center w-36 bg-rose-50/50 dark:bg-rose-950/20 text-rose-900 dark:text-rose-300">
                       Who Can Delete?
-                    </th>
+                    </Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">

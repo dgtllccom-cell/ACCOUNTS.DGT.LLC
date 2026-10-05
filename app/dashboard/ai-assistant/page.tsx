@@ -28,6 +28,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { VoiceRemarksMic } from "@/components/erp/voice-remarks-mic";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { Th } from "@/components/ui/translated-th";
 
 type ChatMessage = {
   id: string;
@@ -649,13 +650,13 @@ export default function AiAssistantPage() {
               <table className="w-full text-xs text-left">
                 <thead className="bg-slate-900 border-b border-slate-800 text-slate-400 uppercase font-mono text-[10px]">
                   <tr>
-                    <th className="px-4 py-3">Timestamp</th>
-                    <th className="px-4 py-3">User</th>
-                    <th className="px-4 py-3">Lang</th>
-                    <th className="px-4 py-3">Query Type</th>
-                    <th className="px-4 py-3">Decision</th>
-                    <th className="px-4 py-3">Query</th>
-                    <th className="px-4 py-3">Refusal Reason</th>
+                    <Th className="px-4 py-3">Timestamp</Th>
+                    <Th className="px-4 py-3">User</Th>
+                    <Th className="px-4 py-3">Lang</Th>
+                    <Th className="px-4 py-3">Query Type</Th>
+                    <Th className="px-4 py-3">Decision</Th>
+                    <Th className="px-4 py-3">Query</Th>
+                    <Th className="px-4 py-3">Refusal Reason</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800 text-slate-300">

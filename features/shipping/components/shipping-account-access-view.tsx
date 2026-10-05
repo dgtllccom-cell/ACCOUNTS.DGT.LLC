@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
+import { Th } from "@/components/ui/translated-th";
 
 type MinimalAccountView = {
   id: string;
@@ -228,11 +229,11 @@ export function ShippingAccountAccessView({ lang: langProp }: { lang?: Supported
               <table className="w-full text-sm">
                 <thead className="bg-muted/50">
                   <tr>
-                    <th className={`p-2 font-medium ${s.textStart}`}>{s.t("col_code", "Code")}</th>
-                    <th className={`p-2 font-medium ${s.textStart}`}>{s.t("col_name", "Account Name")}</th>
-                    <th className={`p-2 font-medium ${s.textStart}`}>{s.t("col_currency", "Currency")}</th>
-                    <th className={`p-2 font-medium ${s.textStart}`}>{s.t("col_branch", "Branch")}</th>
-                    <th className="p-2" />
+                    <Th className={`p-2 font-medium ${s.textStart}`}>{s.t("col_code", "Code")}</Th>
+                    <Th className={`p-2 font-medium ${s.textStart}`}>{s.t("col_name", "Account Name")}</Th>
+                    <Th className={`p-2 font-medium ${s.textStart}`}>{s.t("col_currency", "Currency")}</Th>
+                    <Th className={`p-2 font-medium ${s.textStart}`}>{s.t("col_branch", "Branch")}</Th>
+                    <Th className="p-2" />
                   </tr>
                 </thead>
                 <tbody>
@@ -364,15 +365,15 @@ export function ShippingAccountAccessView({ lang: langProp }: { lang?: Supported
                     <table className="w-full text-xs">
                       <thead className="bg-muted/50">
                         <tr>
-                          <th className={`p-1 ${s.textStart}`}>{s.t("col_date", "Date")}</th>
-                          <th className={`p-1 ${s.textStart}`}>{s.t("col_voucher", "Voucher")}</th>
-                          <th className={`p-1 ${s.textStart}`}>{s.t("col_reference", "Reference")}</th>
-                          <th className={`p-1 ${s.textStart}`}>{s.t("col_user", "User")}</th>
-                          <th className={`p-1 ${s.textStart}`}>{s.t("col_branch", "Branch")}</th>
-                          <th className={`p-1 ${s.textStart}`}>{s.t("col_source", "Source")}</th>
-                          <th className={`p-1 ${s.textEnd}`}>{s.t("col_debit", "Debit")}</th>
-                          <th className={`p-1 ${s.textEnd}`}>{s.t("col_credit", "Credit")}</th>
-                          <th className={`p-1 ${s.textEnd}`}>{s.t("col_balance", "Balance")}</th>
+                          <Th className={`p-1 ${s.textStart}`}>{s.t("col_date", "Date")}</Th>
+                          <Th className={`p-1 ${s.textStart}`}>{s.t("col_voucher", "Voucher")}</Th>
+                          <Th className={`p-1 ${s.textStart}`}>{s.t("col_reference", "Reference")}</Th>
+                          <Th className={`p-1 ${s.textStart}`}>{s.t("col_user", "User")}</Th>
+                          <Th className={`p-1 ${s.textStart}`}>{s.t("col_branch", "Branch")}</Th>
+                          <Th className={`p-1 ${s.textStart}`}>{s.t("col_source", "Source")}</Th>
+                          <Th className={`p-1 ${s.textEnd}`}>{s.t("col_debit", "Debit")}</Th>
+                          <Th className={`p-1 ${s.textEnd}`}>{s.t("col_credit", "Credit")}</Th>
+                          <Th className={`p-1 ${s.textEnd}`}>{s.t("col_balance", "Balance")}</Th>
                         </tr>
                       </thead>
                       <tbody>

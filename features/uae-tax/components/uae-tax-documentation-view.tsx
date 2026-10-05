@@ -7,6 +7,7 @@ import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { apiGet } from "@/lib/api/client";
 import { FilterBar, fmtAed, useEntitiesAndPeriods } from "@/features/uae-tax/components/uae-tax-shared";
+import { Th } from "@/components/ui/translated-th";
 
 type Row = {
   tax_entity_name: string;
@@ -109,13 +110,13 @@ export function UaeTaxDocumentationView({ lang: langProp }: { lang?: SupportedLa
           <table className="w-full text-xs">
             <thead className="bg-slate-50 dark:bg-slate-800/60">
               <tr className="text-left">
-                <th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("cc_period", "Tax Period")}</th>
-                <th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("ln_tax_category", "Category")}</th>
-                <th className="px-4 py-2.5 text-right font-bold uppercase tracking-wider text-slate-400">{s.t("doc_expected", "Expected")}</th>
-                <th className="px-4 py-2.5 text-right font-bold uppercase tracking-wider text-slate-400">{s.t("doc_attached", "Attached")}</th>
-                <th className="px-4 py-2.5 text-right font-bold uppercase tracking-wider text-slate-400">{s.t("doc_missing_c", "Missing")}</th>
-                <th className="px-4 py-2.5 text-right font-bold uppercase tracking-wider text-slate-400">{s.t("ln_vat_aed", "VAT (AED)")}</th>
-                <th className="px-4 py-2.5" />
+                <Th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("cc_period", "Tax Period")}</Th>
+                <Th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("ln_tax_category", "Category")}</Th>
+                <Th className="px-4 py-2.5 text-right font-bold uppercase tracking-wider text-slate-400">{s.t("doc_expected", "Expected")}</Th>
+                <Th className="px-4 py-2.5 text-right font-bold uppercase tracking-wider text-slate-400">{s.t("doc_attached", "Attached")}</Th>
+                <Th className="px-4 py-2.5 text-right font-bold uppercase tracking-wider text-slate-400">{s.t("doc_missing_c", "Missing")}</Th>
+                <Th className="px-4 py-2.5 text-right font-bold uppercase tracking-wider text-slate-400">{s.t("ln_vat_aed", "VAT (AED)")}</Th>
+                <Th className="px-4 py-2.5" />
               </tr>
             </thead>
             <tbody>

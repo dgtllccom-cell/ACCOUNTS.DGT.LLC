@@ -17,6 +17,7 @@ import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { TaskHandoverModal } from "@/features/transfer-center/components/task-handover-modal";
 import { COMPANY_STATUS_OPTIONS, COMPANY_TYPES, STATUS_TONE, optionLabel } from "@/features/companies/company-labels";
 import { cn } from "@/lib/utils";
+import { Th } from "@/components/ui/translated-th";
 
 type Row = {
   id: string;
@@ -248,7 +249,7 @@ export function CompanyRegistry({
                 s.t("col_status", "Status"),
                 s.t("tip_actions", "Actions"),
               ].map((h) => (
-                <th key={h} className={cn("px-3 py-2.5 font-semibold", s.textStart)}>{h}</th>
+                <Th key={h} className={cn("px-3 py-2.5 font-semibold", s.textStart)}>{h}</Th>
               ))}
             </tr>
           </thead>

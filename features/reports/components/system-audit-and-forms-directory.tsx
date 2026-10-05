@@ -34,6 +34,7 @@ import { fetchBranding, brandingName } from "@/lib/branding/client";
 import { openJournalReportWindow } from "@/lib/reports/open-journal-report-window";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Th } from "@/components/ui/translated-th";
 
 export interface ErpFormItem {
   id: string;
@@ -748,13 +749,13 @@ export function SystemAuditAndFormsDirectoryView({ lang: langProp = "en" }: { la
             <table className="w-full text-xs text-left">
               <thead className="bg-muted/60 text-[10px] font-black uppercase tracking-wider text-muted-foreground border-b border-border">
                 <tr>
-                  <th className="px-3.5 py-3">#</th>
-                  <th className="px-3.5 py-3">{t(lang, "safd.safd_form_module_name", "Form / Module Name")}</th>
-                  <th className="px-3.5 py-3">{t(lang, "god.asset_category", "Category")}</th>
-                  <th className="px-3.5 py-3">{t(lang, "safd.safd_system_route", "System Route")}</th>
-                  <th className="px-3.5 py-3">{t(lang, "safd.safd_accessible_roles", "Accessible Roles")}</th>
-                  <th className="px-3.5 py-3">{t(lang, "safd.safd_description_purpose", "Description / Purpose")}</th>
-                  <th className="px-3.5 py-3 text-center no-print">{t(lang, "purchase.th_action", "Action")}</th>
+                  <Th className="px-3.5 py-3">#</Th>
+                  <Th className="px-3.5 py-3">{t(lang, "safd.safd_form_module_name", "Form / Module Name")}</Th>
+                  <Th className="px-3.5 py-3">{t(lang, "god.asset_category", "Category")}</Th>
+                  <Th className="px-3.5 py-3">{t(lang, "safd.safd_system_route", "System Route")}</Th>
+                  <Th className="px-3.5 py-3">{t(lang, "safd.safd_accessible_roles", "Accessible Roles")}</Th>
+                  <Th className="px-3.5 py-3">{t(lang, "safd.safd_description_purpose", "Description / Purpose")}</Th>
+                  <Th className="px-3.5 py-3 text-center no-print">{t(lang, "purchase.th_action", "Action")}</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">

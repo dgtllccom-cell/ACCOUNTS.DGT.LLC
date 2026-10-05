@@ -67,6 +67,7 @@ import { openAccountA4ReportWindow } from "@/lib/reports/open-account-a4-report-
 import { useErpScope } from "@/lib/hooks/use-erp-scope";
 import { LoginScopeBanner } from "@/components/layout/login-scope-banner";
 import { fetchBranding } from "@/lib/branding/client";
+import { Th } from "@/components/ui/translated-th";
 
 /**
  * Normalizes reference numbers to support English letters (ABC) and numbers (0-9)
@@ -2913,10 +2914,10 @@ export function NewAccountSetup({
                     <table className="w-full text-left text-xs">
                       <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 font-semibold border-b border-slate-200 dark:border-slate-800">
                         <tr>
-                          <th className="p-3">{getLabel("company", lang) || "Company Name"}</th>
-                          <th className="p-3">{getLabel("country", lang)}</th>
-                          <th className="p-3">{getLabel("primary", lang) || "Primary"}</th>
-                          <th className="p-3 text-right">{getLabel("actions", lang) || "Actions"}</th>
+                          <Th className="p-3">{getLabel("company", lang) || "Company Name"}</Th>
+                          <Th className="p-3">{getLabel("country", lang)}</Th>
+                          <Th className="p-3">{getLabel("primary", lang) || "Primary"}</Th>
+                          <Th className="p-3 text-right">{getLabel("actions", lang) || "Actions"}</Th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -3141,11 +3142,11 @@ export function NewAccountSetup({
                     <table className="w-full text-left text-xs">
                       <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 font-semibold border-b border-slate-200 dark:border-slate-800">
                         <tr>
-                          <th className="p-3">{getLabel("bank", lang) || "Bank Name"}</th>
-                          <th className="p-3">{getLabel("branch", lang) || "Branch"}</th>
-                          <th className="p-3">{getLabel("accountReference", lang) || "Account / Reference"}</th>
-                          <th className="p-3">{getLabel("primary", lang) || "Primary"}</th>
-                          <th className="p-3 text-right">{getLabel("actions", lang) || "Actions"}</th>
+                          <Th className="p-3">{getLabel("bank", lang) || "Bank Name"}</Th>
+                          <Th className="p-3">{getLabel("branch", lang) || "Branch"}</Th>
+                          <Th className="p-3">{getLabel("accountReference", lang) || "Account / Reference"}</Th>
+                          <Th className="p-3">{getLabel("primary", lang) || "Primary"}</Th>
+                          <Th className="p-3 text-right">{getLabel("actions", lang) || "Actions"}</Th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -3355,10 +3356,10 @@ export function NewAccountSetup({
                     <table className="w-full text-left text-xs">
                       <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 font-semibold border-b border-slate-200 dark:border-slate-800">
                         <tr>
-                          <th className="p-3">{getLabel("warehouse", lang)}</th>
-                          <th className="p-3">{getLabel("branchCode", lang)}</th>
-                          <th className="p-3">{getLabel("status", lang)}</th>
-                          <th className="p-3 text-right">{getLabel("actions", lang) || "Actions"}</th>
+                          <Th className="p-3">{getLabel("warehouse", lang)}</Th>
+                          <Th className="p-3">{getLabel("branchCode", lang)}</Th>
+                          <Th className="p-3">{getLabel("status", lang)}</Th>
+                          <Th className="p-3 text-right">{getLabel("actions", lang) || "Actions"}</Th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

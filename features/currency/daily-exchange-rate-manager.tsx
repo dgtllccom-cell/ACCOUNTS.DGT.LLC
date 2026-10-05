@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { openGenericErpReport } from "@/lib/reports/open-generic-erp-report";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import { Th } from "@/components/ui/translated-th";
 
 type CountryRate = {
   id: string;
@@ -715,15 +716,15 @@ export function DailyExchangeRateManager() {
               <table className="w-full text-xs text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-black uppercase text-[9px] border-b border-slate-200 dark:border-slate-700 whitespace-nowrap">
-                    <th className="py-2.5 px-3 text-center">{th("SR NO")}</th>
-                    <th className="py-2.5 px-3">{th("COUNTRY NAME")}</th>
-                    <th className="py-2.5 px-3">{th("BRANCH NAME")}</th>
-                    <th className="py-2.5 px-3">{th("USER NAME")}</th>
-                    <th className="py-2.5 px-3 text-center">{th("CURRENCY")}</th>
-                    <th className="py-2.5 px-3">{th("DATE & TIME")}</th>
-                    <th className="py-2.5 px-3 text-right text-emerald-600 dark:text-emerald-400">{th("CREDIT RATE (LOCAL/$)")}</th>
-                    <th className="py-2.5 px-3 text-right text-blue-600 dark:text-blue-400">{th("DEBIT RATE (LOCAL/$)")}</th>
-                    <th className="py-2.5 px-3 text-right">{th("LAST UPDATED")}</th>
+                    <Th className="py-2.5 px-3 text-center">{th("SR NO")}</Th>
+                    <Th className="py-2.5 px-3">{th("COUNTRY NAME")}</Th>
+                    <Th className="py-2.5 px-3">{th("BRANCH NAME")}</Th>
+                    <Th className="py-2.5 px-3">{th("USER NAME")}</Th>
+                    <Th className="py-2.5 px-3 text-center">{th("CURRENCY")}</Th>
+                    <Th className="py-2.5 px-3">{th("DATE & TIME")}</Th>
+                    <Th className="py-2.5 px-3 text-right text-emerald-600 dark:text-emerald-400">{th("CREDIT RATE (LOCAL/$)")}</Th>
+                    <Th className="py-2.5 px-3 text-right text-blue-600 dark:text-blue-400">{th("DEBIT RATE (LOCAL/$)")}</Th>
+                    <Th className="py-2.5 px-3 text-right">{th("LAST UPDATED")}</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-150 dark:divide-slate-800 font-semibold text-slate-800 dark:text-slate-200">

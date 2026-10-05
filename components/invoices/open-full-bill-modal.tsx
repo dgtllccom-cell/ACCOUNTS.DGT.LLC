@@ -15,6 +15,7 @@ import type { SupportedLanguage as LanguageCode } from "@/lib/i18n/languages";
 import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
 import { openPurchaseBookingOrderPrintReport } from "@/lib/reports/open-purchase-booking-print-report";
 import { cn } from "@/lib/utils";
+import { Th } from "@/components/ui/translated-th";
 
 export interface OpenFullBillModalProps {
   isOpen: boolean;
@@ -560,14 +561,14 @@ export function OpenFullBillModal({
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
                   <tr className="bg-slate-100/60 dark:bg-slate-800/40 text-slate-500 font-bold uppercase text-[10px] border-b border-slate-200 dark:border-slate-800">
-                    <th className="px-4 py-2.5">{t("INVOICE NO.")}</th>
-                    <th className="px-4 py-2.5">{t("INVOICE DATE")}</th>
-                    <th className="px-4 py-2.5">{t("ENDORSED TO")}</th>
-                    <th className="px-4 py-2.5 text-right">{t("INVOICE AMOUNT")} ({currency})</th>
-                    <th className="px-4 py-2.5 text-right">{t("PAID AMOUNT")} ({currency})</th>
-                    <th className="px-4 py-2.5 text-right">{t("REMAINING")} ({currency})</th>
-                    <th className="px-4 py-2.5 text-center">{t("STATUS")}</th>
-                    <th className="px-4 py-2.5 text-center">{t("DUE DATE")}</th>
+                    <Th className="px-4 py-2.5">{t("INVOICE NO.")}</Th>
+                    <Th className="px-4 py-2.5">{t("INVOICE DATE")}</Th>
+                    <Th className="px-4 py-2.5">{t("ENDORSED TO")}</Th>
+                    <Th className="px-4 py-2.5 text-right">{t("INVOICE AMOUNT")} ({currency})</Th>
+                    <Th className="px-4 py-2.5 text-right">{t("PAID AMOUNT")} ({currency})</Th>
+                    <Th className="px-4 py-2.5 text-right">{t("REMAINING")} ({currency})</Th>
+                    <Th className="px-4 py-2.5 text-center">{t("STATUS")}</Th>
+                    <Th className="px-4 py-2.5 text-center">{t("DUE DATE")}</Th>
                   </tr>
                 </thead>
                 <tbody>
@@ -604,14 +605,14 @@ export function OpenFullBillModal({
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
                   <tr className="bg-slate-100/60 dark:bg-slate-800/40 text-slate-500 font-bold uppercase text-[10px] border-b border-slate-200 dark:border-slate-800">
-                    <th className="px-3 py-2.5 text-center w-10">#</th>
-                    <th className="px-4 py-2.5">{t("GOODS NAME")}</th>
-                    <th className="px-4 py-2.5 text-right">{t("QTY")}</th>
-                    <th className="px-4 py-2.5 text-right">{t("GROSS WT")}</th>
-                    <th className="px-4 py-2.5 text-right">{t("NET WT")}</th>
-                    <th className="px-4 py-2.5 text-right">{t("UNIT PRICE")} ({currency})</th>
-                    <th className="px-4 py-2.5 text-right">{t("TOTAL")} ({currency})</th>
-                    <th className="px-4 py-2.5 text-right">{t("FINAL AMOUNT")} ({currency})</th>
+                    <Th className="px-3 py-2.5 text-center w-10">#</Th>
+                    <Th className="px-4 py-2.5">{t("GOODS NAME")}</Th>
+                    <Th className="px-4 py-2.5 text-right">{t("QTY")}</Th>
+                    <Th className="px-4 py-2.5 text-right">{t("GROSS WT")}</Th>
+                    <Th className="px-4 py-2.5 text-right">{t("NET WT")}</Th>
+                    <Th className="px-4 py-2.5 text-right">{t("UNIT PRICE")} ({currency})</Th>
+                    <Th className="px-4 py-2.5 text-right">{t("TOTAL")} ({currency})</Th>
+                    <Th className="px-4 py-2.5 text-right">{t("FINAL AMOUNT")} ({currency})</Th>
                   </tr>
                 </thead>
                 <tbody>
@@ -674,12 +675,12 @@ export function OpenFullBillModal({
                   <table className="w-full text-left border-collapse text-xs">
                     <thead>
                       <tr className="bg-slate-100/60 dark:bg-slate-800/40 text-slate-500 font-bold uppercase text-[9px] border-b border-slate-200 dark:border-slate-800">
-                        <th className="px-3 py-2 text-center w-10">{t("SR#")}</th>
-                        <th className="px-3 py-2">{t("DATE")}</th>
-                        <th className="px-3 py-2">{t("VOUCHER / REF NO.")}</th>
-                        <th className="px-3 py-2">{t("NARRATION")}</th>
-                        <th className="px-3 py-2 text-right">{t("AMOUNT")} ({currency})</th>
-                        <th className="px-3 py-2 text-right">{t("FINAL AMOUNT")} ({localCurrency})</th>
+                        <Th className="px-3 py-2 text-center w-10">{t("SR#")}</Th>
+                        <Th className="px-3 py-2">{t("DATE")}</Th>
+                        <Th className="px-3 py-2">{t("VOUCHER / REF NO.")}</Th>
+                        <Th className="px-3 py-2">{t("NARRATION")}</Th>
+                        <Th className="px-3 py-2 text-right">{t("AMOUNT")} ({currency})</Th>
+                        <Th className="px-3 py-2 text-right">{t("FINAL AMOUNT")} ({localCurrency})</Th>
                       </tr>
                     </thead>
                     <tbody>
@@ -746,13 +747,13 @@ export function OpenFullBillModal({
                   <table className="w-full text-left border-collapse text-xs">
                     <thead>
                       <tr className="bg-slate-100/60 dark:bg-slate-800/40 text-slate-500 font-bold uppercase text-[9px] border-b border-slate-200 dark:border-slate-800">
-                        <th className="px-3 py-2 text-center w-10">{t("SR#")}</th>
-                        <th className="px-3 py-2">{t("DATE")}</th>
-                        <th className="px-3 py-2">{t("VOUCHER / REF NO.")}</th>
-                        <th className="px-3 py-2">{t("NARRATION")}</th>
-                        <th className="px-3 py-2 text-right">{t("AMOUNT")} ({currency})</th>
-                        <th className="px-3 py-2 text-right">{t("FINAL AMOUNT")} ({localCurrency})</th>
-                        <th className="px-3 py-2 text-center w-12">{t("ACTION")}</th>
+                        <Th className="px-3 py-2 text-center w-10">{t("SR#")}</Th>
+                        <Th className="px-3 py-2">{t("DATE")}</Th>
+                        <Th className="px-3 py-2">{t("VOUCHER / REF NO.")}</Th>
+                        <Th className="px-3 py-2">{t("NARRATION")}</Th>
+                        <Th className="px-3 py-2 text-right">{t("AMOUNT")} ({currency})</Th>
+                        <Th className="px-3 py-2 text-right">{t("FINAL AMOUNT")} ({localCurrency})</Th>
+                        <Th className="px-3 py-2 text-center w-12">{t("ACTION")}</Th>
                       </tr>
                     </thead>
                     <tbody>
@@ -853,19 +854,19 @@ export function OpenFullBillModal({
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
                   <tr className="bg-slate-100/60 dark:bg-slate-800/40 text-slate-500 font-bold uppercase text-[9px] border-b border-slate-200 dark:border-slate-800">
-                    <th className="px-3 py-2 text-center w-10">{t("SR#")}</th>
-                    <th className="px-3 py-2">{t("DATE")}</th>
-                    <th className="px-3 py-2">{t("USER NAME")}</th>
-                    <th className="px-3 py-2">{t("ROZNAMCHA NO.")}</th>
-                    <th className="px-3 py-2">{t("DETAILS / NARRATION")}</th>
-                    <th className="px-3 py-2">{t("DR ACCOUNT (SUPPLIER)")}</th>
-                    <th className="px-3 py-2 text-right">{t("DR AMOUNT")} ({currency})</th>
-                    <th className="px-3 py-2">{t("CR ACCOUNT (PAID FROM)")}</th>
-                    <th className="px-3 py-2 text-right">{t("CR AMOUNT")} ({currency})</th>
-                    <th className="px-3 py-2 text-center">{t("EXCHANGE RATE")}</th>
-                    <th className="px-3 py-2 text-right">{t("FINAL AMOUNT")} ({localCurrency})</th>
-                    <th className="px-3 py-2 text-right">{t("BALANCE AFTER")} ({currency})</th>
-                    <th className="px-3 py-2 text-center w-12">{t("ACTION")}</th>
+                    <Th className="px-3 py-2 text-center w-10">{t("SR#")}</Th>
+                    <Th className="px-3 py-2">{t("DATE")}</Th>
+                    <Th className="px-3 py-2">{t("USER NAME")}</Th>
+                    <Th className="px-3 py-2">{t("ROZNAMCHA NO.")}</Th>
+                    <Th className="px-3 py-2">{t("DETAILS / NARRATION")}</Th>
+                    <Th className="px-3 py-2">{t("DR ACCOUNT (SUPPLIER)")}</Th>
+                    <Th className="px-3 py-2 text-right">{t("DR AMOUNT")} ({currency})</Th>
+                    <Th className="px-3 py-2">{t("CR ACCOUNT (PAID FROM)")}</Th>
+                    <Th className="px-3 py-2 text-right">{t("CR AMOUNT")} ({currency})</Th>
+                    <Th className="px-3 py-2 text-center">{t("EXCHANGE RATE")}</Th>
+                    <Th className="px-3 py-2 text-right">{t("FINAL AMOUNT")} ({localCurrency})</Th>
+                    <Th className="px-3 py-2 text-right">{t("BALANCE AFTER")} ({currency})</Th>
+                    <Th className="px-3 py-2 text-center w-12">{t("ACTION")}</Th>
                   </tr>
                 </thead>
                 <tbody>
@@ -953,19 +954,19 @@ export function OpenFullBillModal({
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
                   <tr className="bg-slate-100/60 dark:bg-slate-800/40 text-slate-500 font-bold uppercase text-[9px] border-b border-slate-200 dark:border-slate-800">
-                    <th className="px-3 py-2 text-center w-10">{t("SR#")}</th>
-                    <th className="px-3 py-2">{t("DATE")}</th>
-                    <th className="px-3 py-2">{t("VOUCHER / REF NO.")}</th>
-                    <th className="px-3 py-2">{t("TYPE")}</th>
-                    <th className="px-3 py-2">{t("DR ACCOUNT (SUPPLIER)")}</th>
-                    <th className="px-3 py-2">{t("CR ACCOUNT")}</th>
-                    <th className="px-3 py-2 text-right">{t("DR AMOUNT")} ({currency})</th>
-                    <th className="px-3 py-2 text-right">{t("CR AMOUNT")} ({currency})</th>
-                    <th className="px-3 py-2 text-center">{t("EXCHANGE RATE")}</th>
-                    <th className="px-3 py-2 text-right">{t("FINAL AMOUNT")} ({localCurrency})</th>
-                    <th className="px-3 py-2 text-right">{t("REMAINING BALANCE")} ({currency})</th>
-                    <th className="px-3 py-2 text-center">{t("STATUS")}</th>
-                    <th className="px-3 py-2 text-center w-12">{t("ACTION")}</th>
+                    <Th className="px-3 py-2 text-center w-10">{t("SR#")}</Th>
+                    <Th className="px-3 py-2">{t("DATE")}</Th>
+                    <Th className="px-3 py-2">{t("VOUCHER / REF NO.")}</Th>
+                    <Th className="px-3 py-2">{t("TYPE")}</Th>
+                    <Th className="px-3 py-2">{t("DR ACCOUNT (SUPPLIER)")}</Th>
+                    <Th className="px-3 py-2">{t("CR ACCOUNT")}</Th>
+                    <Th className="px-3 py-2 text-right">{t("DR AMOUNT")} ({currency})</Th>
+                    <Th className="px-3 py-2 text-right">{t("CR AMOUNT")} ({currency})</Th>
+                    <Th className="px-3 py-2 text-center">{t("EXCHANGE RATE")}</Th>
+                    <Th className="px-3 py-2 text-right">{t("FINAL AMOUNT")} ({localCurrency})</Th>
+                    <Th className="px-3 py-2 text-right">{t("REMAINING BALANCE")} ({currency})</Th>
+                    <Th className="px-3 py-2 text-center">{t("STATUS")}</Th>
+                    <Th className="px-3 py-2 text-center w-12">{t("ACTION")}</Th>
                   </tr>
                 </thead>
                 <tbody>

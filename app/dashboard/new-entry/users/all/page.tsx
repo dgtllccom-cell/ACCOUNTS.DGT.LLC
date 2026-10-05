@@ -50,6 +50,7 @@ import { t } from "@/lib/i18n/ui";
 import { fetchBranding, brandingName } from "@/lib/branding/client";
 import { cn } from "@/lib/utils";
 import { ModulePermissionModal } from "@/components/permissions/module-permission-modal";
+import { Th } from "@/components/ui/translated-th";
 
 interface UserDirectoryItem {
   userId: string;
@@ -2078,19 +2079,19 @@ export default function SuperAdminAllUsersDirectoryPage() {
           <table className="w-full text-xs text-left border-collapse">
             <thead className="bg-slate-50/80 dark:bg-slate-900/60 border-b border-border text-slate-600 dark:text-slate-400 font-bold text-[11px]">
               <tr>
-                <th className="py-3 px-3.5 text-center w-10">#</th>
-                <th className="py-3 px-3.5 min-w-[210px]">{th("Employee Name")}</th>
-                <th className="py-3 px-3.5 min-w-[130px]">{th("Username")}</th>
-                <th className="py-3 px-3.5 min-w-[170px]">{th("Role / Level")}</th>
-                <th className="py-3 px-3.5 min-w-[170px]">{th("ID Type / Business Scope")}</th>
-                <th className="py-3 px-3.5 min-w-[190px]">{th("Business ID / Shipping Line ID")}</th>
-                <th className="py-3 px-3.5 min-w-[160px]">{th("Country")}</th>
-                <th className="py-3 px-3.5 min-w-[140px]">{th("Branch / City")}</th>
-                <th className="py-3 px-3.5 min-w-[190px]">{th("Email")}</th>
-                <th className="py-3 px-3.5 min-w-[120px]">{th("Password")}</th>
-                <th className="py-3 px-3.5 text-center min-w-[90px]">{th("Status")}</th>
-                <th className="py-3 px-3.5 min-w-[110px]">{th("Last Login")}</th>
-                <th className="py-3 px-3.5 text-center min-w-[130px] print:hidden">{th("Actions")}</th>
+                <Th className="py-3 px-3.5 text-center w-10">#</Th>
+                <Th className="py-3 px-3.5 min-w-[210px]">{th("Employee Name")}</Th>
+                <Th className="py-3 px-3.5 min-w-[130px]">{th("Username")}</Th>
+                <Th className="py-3 px-3.5 min-w-[170px]">{th("Role / Level")}</Th>
+                <Th className="py-3 px-3.5 min-w-[170px]">{th("ID Type / Business Scope")}</Th>
+                <Th className="py-3 px-3.5 min-w-[190px]">{th("Business ID / Shipping Line ID")}</Th>
+                <Th className="py-3 px-3.5 min-w-[160px]">{th("Country")}</Th>
+                <Th className="py-3 px-3.5 min-w-[140px]">{th("Branch / City")}</Th>
+                <Th className="py-3 px-3.5 min-w-[190px]">{th("Email")}</Th>
+                <Th className="py-3 px-3.5 min-w-[120px]">{th("Password")}</Th>
+                <Th className="py-3 px-3.5 text-center min-w-[90px]">{th("Status")}</Th>
+                <Th className="py-3 px-3.5 min-w-[110px]">{th("Last Login")}</Th>
+                <Th className="py-3 px-3.5 text-center min-w-[130px] print:hidden">{th("Actions")}</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/60 bg-card">
@@ -2687,12 +2688,12 @@ export default function SuperAdminAllUsersDirectoryPage() {
                       <table className="w-full text-xs text-left">
                         <thead className="bg-muted/70 text-[10px] font-black uppercase tracking-wider text-muted-foreground border-b border-border">
                           <tr>
-                            <th className="px-4 py-3">{th("Form / Module & URL")}</th>
-                            <th className="px-3 py-3">{th("Category")}</th>
-                            <th className="px-3 py-3 text-center">{th("Form Allocation (Menu)")}</th>
-                            <th className="px-3 py-3 text-center">{th("Read")} (دیکھنا)</th>
-                            <th className="px-3 py-3 text-center">{th("Edit / Create")} (ترمیم)</th>
-                            <th className="px-3 py-3 text-center">{th("Delete")} (حذف)</th>
+                            <Th className="px-4 py-3">{th("Form / Module & URL")}</Th>
+                            <Th className="px-3 py-3">{th("Category")}</Th>
+                            <Th className="px-3 py-3 text-center">{th("Form Allocation (Menu)")}</Th>
+                            <Th className="px-3 py-3 text-center">{th("Read")} (دیکھنا)</Th>
+                            <Th className="px-3 py-3 text-center">{th("Edit / Create")} (ترمیم)</Th>
+                            <Th className="px-3 py-3 text-center">{th("Delete")} (حذف)</Th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
@@ -3122,13 +3123,13 @@ export default function SuperAdminAllUsersDirectoryPage() {
                     <table className="w-full text-[11px] text-left border-collapse">
                       <thead className="bg-slate-100 font-bold text-slate-800 border-b border-slate-300">
                         <tr>
-                          <th className="p-2 border-r border-slate-300 w-8 text-center">#</th>
-                          <th className="p-2 border-r border-slate-300">{th("User Code")}</th>
-                          <th className="p-2 border-r border-slate-300">{th("Full Name & Role")}</th>
-                          <th className="p-2 border-r border-slate-300">{th("Assigned Branch")}</th>
-                          <th className="p-2 border-r border-slate-300">{th("Login Username / Email")}</th>
-                          <th className="p-2 border-r border-slate-300">{th("Password Key")}</th>
-                          <th className="p-2">{th("Recipient Signature")}</th>
+                          <Th className="p-2 border-r border-slate-300 w-8 text-center">#</Th>
+                          <Th className="p-2 border-r border-slate-300">{th("User Code")}</Th>
+                          <Th className="p-2 border-r border-slate-300">{th("Full Name & Role")}</Th>
+                          <Th className="p-2 border-r border-slate-300">{th("Assigned Branch")}</Th>
+                          <Th className="p-2 border-r border-slate-300">{th("Login Username / Email")}</Th>
+                          <Th className="p-2 border-r border-slate-300">{th("Password Key")}</Th>
+                          <Th className="p-2">{th("Recipient Signature")}</Th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-200">

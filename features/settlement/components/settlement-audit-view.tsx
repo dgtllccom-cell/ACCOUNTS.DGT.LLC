@@ -5,6 +5,7 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { ShieldCheck, RefreshCw, Clock, Filter } from "lucide-react";
+import { Th } from "@/components/ui/translated-th";
 
 export function SettlementAuditView() {
   const [history, setHistory] = useState<any[]>([]);
@@ -76,13 +77,13 @@ export function SettlementAuditView() {
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 font-semibold uppercase text-[10px]">
               <tr>
-                <th className="py-3 px-4">{th("Timestamp")}</th>
-                <th className="py-3 px-4">{th("Actor")}</th>
-                <th className="py-3 px-4">{th("Action")}</th>
-                <th className="py-3 px-4">{th("Ref / Entity")}</th>
-                <th className="py-3 px-4 text-right">{th("Amount")}</th>
-                <th className="py-3 px-4">{th("Status Change")}</th>
-                <th className="py-3 px-4">{th("Reason / Notes")}</th>
+                <Th className="py-3 px-4">{th("Timestamp")}</Th>
+                <Th className="py-3 px-4">{th("Actor")}</Th>
+                <Th className="py-3 px-4">{th("Action")}</Th>
+                <Th className="py-3 px-4">{th("Ref / Entity")}</Th>
+                <Th className="py-3 px-4 text-right">{th("Amount")}</Th>
+                <Th className="py-3 px-4">{th("Status Change")}</Th>
+                <Th className="py-3 px-4">{th("Reason / Notes")}</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

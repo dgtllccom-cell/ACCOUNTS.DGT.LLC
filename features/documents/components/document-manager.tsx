@@ -61,6 +61,7 @@ import {
   buildDocumentFileName,
   buildDocumentFolderPath
 } from "@/lib/documents/document-filing";
+import { Th } from "@/components/ui/translated-th";
 
 interface OfficeDocument {
   id: string;
@@ -2250,13 +2251,13 @@ export function DocumentManager() {
                 <table className="w-full text-xs text-left">
                   <thead className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-bold uppercase text-[10px]">
                     <tr>
-                      <th className="p-2.5">{th("Title / File")}</th>
-                      <th className="p-2.5">{th("Country & Branch")}</th>
-                      <th className="p-2.5">{th("Module & Type")}</th>
-                      <th className="p-2.5">{th("Party / Company")}</th>
-                      <th className="p-2.5">{th("Size")}</th>
-                      <th className="p-2.5">{th("Date")}</th>
-                      <th className="p-2.5 text-right">{th("Actions")}</th>
+                      <Th className="p-2.5">{th("Title / File")}</Th>
+                      <Th className="p-2.5">{th("Country & Branch")}</Th>
+                      <Th className="p-2.5">{th("Module & Type")}</Th>
+                      <Th className="p-2.5">{th("Party / Company")}</Th>
+                      <Th className="p-2.5">{th("Size")}</Th>
+                      <Th className="p-2.5">{th("Date")}</Th>
+                      <Th className="p-2.5 text-right">{th("Actions")}</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

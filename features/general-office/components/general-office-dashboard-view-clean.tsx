@@ -1277,18 +1277,18 @@ export function GeneralOfficeDashboardView() {
           <table className="w-full text-xs text-left">
             <thead className="bg-slate-50/70 dark:bg-slate-950 text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px] tracking-wider border-b border-slate-200/80 dark:border-slate-800">
               <tr>
-                <th className="p-3.5 w-10">#</th>
-                <th className="p-3.5">{t.colEmpCode}</th>
-                <th className="p-3.5">{t.colName}</th>
-                <th className="p-3.5">{t.colCategory}</th>
-                <th className="p-3.5">{t.colDesigDept}</th>
-                <th className="p-3.5">{ct(lang, "common.country", "Country")}</th>
-                <th className="p-3.5">{ct(lang, "common.branch", "Branch")}</th>
-                <th className="p-3.5">{t.colJoining}</th>
-                <th className="p-3.5">{t.colNetSalary}</th>
-                <th className="p-3.5">{t.colDeductions}</th>
-                <th className="p-3.5">{t.colStatus}</th>
-                <th className="p-3.5 text-center">{t.colActions}</th>
+                <Th className="p-3.5 w-10">#</Th>
+                <Th className="p-3.5">{t.colEmpCode}</Th>
+                <Th className="p-3.5">{t.colName}</Th>
+                <Th className="p-3.5">{t.colCategory}</Th>
+                <Th className="p-3.5">{t.colDesigDept}</Th>
+                <Th className="p-3.5">{ct(lang, "common.country", "Country")}</Th>
+                <Th className="p-3.5">{ct(lang, "common.branch", "Branch")}</Th>
+                <Th className="p-3.5">{t.colJoining}</Th>
+                <Th className="p-3.5">{t.colNetSalary}</Th>
+                <Th className="p-3.5">{t.colDeductions}</Th>
+                <Th className="p-3.5">{t.colStatus}</Th>
+                <Th className="p-3.5 text-center">{t.colActions}</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">

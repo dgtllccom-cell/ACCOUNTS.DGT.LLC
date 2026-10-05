@@ -8,6 +8,7 @@ import { translateHeader } from "@/lib/i18n/table-headers";
 import { useErpScope } from "@/lib/hooks/use-erp-scope";
 import { openScopedGenericReport, type GenericReportColumn } from "@/lib/reports/open-scoped-report";
 import { DataEmptyState } from "@/components/ui/data-empty-state";
+import { Th } from "@/components/ui/translated-th";
 
 export function DailySettlementView() {
   const [dailyRows, setDailyRows] = useState<SettlementDailySummary[]>([]);
@@ -95,14 +96,14 @@ export function DailySettlementView() {
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 font-semibold uppercase text-[10px]">
               <tr>
-                <th className="py-3 px-4">{th("Date")}</th>
-                <th className="py-3 px-4">{th("Country & Branch")}</th>
-                <th className="py-3 px-4 text-center">{th("Entries")}</th>
-                <th className="py-3 px-4 text-right">{th("Total CR")}</th>
-                <th className="py-3 px-4 text-right">{th("Total DR")}</th>
-                <th className="py-3 px-4 text-right">{th("Open Balance")}</th>
-                <th className="py-3 px-4 text-center">{th("Settled / Open")}</th>
-                <th className="py-3 px-4 text-right">{th("FX Realized")}</th>
+                <Th className="py-3 px-4">{th("Date")}</Th>
+                <Th className="py-3 px-4">{th("Country & Branch")}</Th>
+                <Th className="py-3 px-4 text-center">{th("Entries")}</Th>
+                <Th className="py-3 px-4 text-right">{th("Total CR")}</Th>
+                <Th className="py-3 px-4 text-right">{th("Total DR")}</Th>
+                <Th className="py-3 px-4 text-right">{th("Open Balance")}</Th>
+                <Th className="py-3 px-4 text-center">{th("Settled / Open")}</Th>
+                <Th className="py-3 px-4 text-right">{th("FX Realized")}</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

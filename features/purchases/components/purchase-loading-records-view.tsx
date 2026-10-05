@@ -2002,7 +2002,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
               <table className="w-full min-w-[1500px] text-left text-xs">
                 <thead>
                   <tr className="border-b border-slate-200 bg-slate-50 text-[10px] uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-900/60">
-                    <th className="px-3 py-3 w-8" />
+                    <Th className="px-3 py-3 w-8" />
                     <Th className="px-3 py-3">{tt("common.sr_no", "SR#")}</Th>
                     <Th className="px-3 py-3">{tt("plr.col_booking_no", "Purchase Booking No.")}</Th>
                     <Th className="px-3 py-3">{tt("plr.col_supplier", "Supplier")}</Th>

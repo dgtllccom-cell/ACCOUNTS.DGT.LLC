@@ -6,6 +6,7 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { t } from "@/lib/i18n/ui";
 import { UniversalReportModal, type ReportColumn } from "@/components/ui/universal-report-modal";
+import { Th } from "@/components/ui/translated-th";
 
 function buildTt(lang: string) {
   return (key: string, fb: string) => t((lang || "en") as any, key as any, fb);
@@ -206,9 +207,9 @@ export function CountryPurchaseReportsView() {
           <thead className="bg-slate-50 dark:bg-slate-900">
             <tr className="text-[10px] font-black uppercase tracking-wider text-slate-500">
               {columns.map((c) => (
-                <th key={c.key} className={`px-3 py-2 ${c.isNumeric ? "text-end" : "text-start"}`}>{c.label}</th>
+                <Th key={c.key} className={`px-3 py-2 ${c.isNumeric ? "text-end" : "text-start"}`}>{c.label}</Th>
               ))}
-              <th className="px-3 py-2 text-start">{tt("common.actions", "Actions")}</th>
+              <Th className="px-3 py-2 text-start">{tt("common.actions", "Actions")}</Th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

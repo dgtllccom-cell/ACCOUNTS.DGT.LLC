@@ -35,6 +35,7 @@ import { EffectiveAccessForUser } from "@/features/users/components/user-access-
 import { openUserA4ReportWindow, UserReportData } from "@/lib/reports/open-user-a4-report-window";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import { Th } from "@/components/ui/translated-th";
 
 export interface UserProfileData {
   userId: string;
@@ -319,15 +320,15 @@ export function UserProfileReportModal({
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold uppercase text-[10px]">
                   <tr>
-                    <th className="p-3">{th("ERP Form / Module")}</th>
-                    <th className="p-3">{th("Category")}</th>
-                    <th className="p-3 text-center">{th("View")}</th>
-                    <th className="p-3 text-center">{th("Create")}</th>
-                    <th className="p-3 text-center">{th("Edit")}</th>
-                    <th className="p-3 text-center">{th("Delete")}</th>
-                    <th className="p-3 text-center">{th("Post / Approve")}</th>
-                    <th className="p-3 text-center">{th("Print / Export")}</th>
-                    <th className="p-3">{th("Status")}</th>
+                    <Th className="p-3">{th("ERP Form / Module")}</Th>
+                    <Th className="p-3">{th("Category")}</Th>
+                    <Th className="p-3 text-center">{th("View")}</Th>
+                    <Th className="p-3 text-center">{th("Create")}</Th>
+                    <Th className="p-3 text-center">{th("Edit")}</Th>
+                    <Th className="p-3 text-center">{th("Delete")}</Th>
+                    <Th className="p-3 text-center">{th("Post / Approve")}</Th>
+                    <Th className="p-3 text-center">{th("Print / Export")}</Th>
+                    <Th className="p-3">{th("Status")}</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11px]">

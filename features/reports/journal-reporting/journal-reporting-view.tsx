@@ -31,6 +31,7 @@ import {
   ExternalLink,
   X
 } from "lucide-react";
+import { Th } from "@/components/ui/translated-th";
 
 // Mirrors lib/services/journal-report-service.ts's JournalRegisterRow — NOT imported directly
 // because that module pulls in withLocalPg/ErpSession (server-only) which must never reach the
@@ -731,11 +732,11 @@ export function JournalReportingView({ context, langProp }: { context: ReportCon
           <thead className="bg-slate-50 dark:bg-slate-800">
             <tr>
               {visibleColumns.map((c) => (
-                <th key={c.key} style={{ width: c.width }} className={`px-3 py-2 font-medium text-slate-600 dark:text-slate-300 ${s.textStart}`}>
+                <Th key={c.key} style={{ width: c.width }} className={`px-3 py-2 font-medium text-slate-600 dark:text-slate-300 ${s.textStart}`}>
                   {columnLabel(s, c.key)}
-                </th>
+                </Th>
               ))}
-              <th className={`px-3 py-2 font-medium text-slate-600 dark:text-slate-300 ${s.textStart}`}>{s.t("view_original", "View Original")}</th>
+              <Th className={`px-3 py-2 font-medium text-slate-600 dark:text-slate-300 ${s.textStart}`}>{s.t("view_original", "View Original")}</Th>
             </tr>
           </thead>
           <tbody>

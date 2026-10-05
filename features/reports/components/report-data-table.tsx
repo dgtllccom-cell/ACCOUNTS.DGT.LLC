@@ -5,6 +5,7 @@ import { Search, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 import { t, type UiKey } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { cn } from "@/lib/utils";
+import { Th } from "@/components/ui/translated-th";
 
 type SortDirection = "asc" | "desc" | null;
 
@@ -225,7 +226,7 @@ export function ReportDataTable({
             <thead>
               <tr className="bg-slate-100/90 dark:bg-slate-800/90 border-b border-slate-200 dark:border-slate-700">
                 {columns.map((col) => (
-                  <th
+                  <Th
                     key={col.key}
                     className={cn(
                       "px-4 py-2.5 font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200 whitespace-nowrap select-none",
@@ -248,12 +249,12 @@ export function ReportDataTable({
                         </span>
                       )}
                     </div>
-                  </th>
+                  </Th>
                 ))}
               </tr>
               <tr className="bg-slate-50/90 dark:bg-slate-850/80 border-b border-slate-200 dark:border-slate-700">
                 {columns.map((column) => (
-                  <th key={`${column.key}-filter`} className="px-2 py-1.5">
+                  <Th key={`${column.key}-filter`} className="px-2 py-1.5">
                     <input
                       value={columnFilters[column.key] ?? ""}
                       onChange={(event) => setColumnFilters((current) => ({ ...current, [column.key]: event.target.value }))}
@@ -262,7 +263,7 @@ export function ReportDataTable({
                       aria-label={`${_("report.search")} ${column.label}`}
                       className="w-full min-w-[70px] rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1 text-[10px] font-medium text-slate-800 dark:text-slate-200 outline-none placeholder:text-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 shadow-2xs transition-all"
                     />
-                  </th>
+                  </Th>
                 ))}
               </tr>
             </thead>

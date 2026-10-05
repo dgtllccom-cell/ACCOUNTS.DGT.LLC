@@ -59,6 +59,7 @@ import { resolveVerifiedTranslation, translationPendingLabel } from "@/lib/i18n/
 import { RecordTranslationCorrectionDialog } from "@/features/translations/components/record-translation-correction-dialog";
 import { AddExpenseBillButton } from "@/features/expenses/components/add-expense-bill-button";
 import { buildPurchaseBookingTransferUrl } from "@/lib/services/purchase-booking-transfer-routing";
+import { Th } from "@/components/ui/translated-th";
 
 type PurchaseReport = {
   [key: string]: any;
@@ -2260,13 +2261,13 @@ export function PurchaseOrderManagementDashboard() {
                     { label: "Status", span: 1, cls: "bg-amber-50/50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-400 border-t-2 border-t-amber-500" },
                     { label: "Actions", span: 2, cls: "bg-slate-100 dark:bg-slate-800/40 text-slate-600 dark:text-slate-400 border-t-2 border-t-slate-300" },
                   ].map((group) => (
-                    <th
+                    <Th
                       key={group.label}
                       colSpan={group.span}
                       className={`${group.cls} px-3 py-2 text-[10px] font-extrabold uppercase tracking-widest text-center border-r border-slate-200 dark:border-slate-800 last:border-r-0`}
                     >
                       {translateHeader(activeLang, group.label)}
-                    </th>
+                    </Th>
                   ))}
                 </tr>
                 {/* Column headers */}
@@ -2283,9 +2284,9 @@ export function PurchaseOrderManagementDashboard() {
                     "TRANSFER THE BILL",
                     "DOCS", "ACTIONS"
                   ].map((header, i) => (
-                    <th key={i} className="px-3 py-3 border-r border-slate-100 dark:border-slate-800/50 last:border-r-0 whitespace-nowrap text-center align-middle">
+                    <Th key={i} className="px-3 py-3 border-r border-slate-100 dark:border-slate-800/50 last:border-r-0 whitespace-nowrap text-center align-middle">
                       {translateHeader(activeLang, header)}
-                    </th>
+                    </Th>
                   ))}
                 </tr>
               </thead>
@@ -2583,15 +2584,15 @@ export function PurchaseOrderManagementDashboard() {
                               <table className="w-full text-left text-[10px] border border-slate-150 dark:border-slate-800">
                                 <thead className="bg-slate-50 dark:bg-slate-900 text-slate-650 dark:text-slate-400 font-bold uppercase tracking-wider text-[8.5px]">
                                   <tr>
-                                    <th className="p-2 border-b">{tr("Goods Name")}</th>
-                                    <th className="p-2 border-b">{tr("Brand/Size")}</th>
-                                    <th className="p-2 border-b">{tr("Origin")}</th>
-                                    <th className="p-2 border-b text-right">{tr("Qty")}</th>
-                                    <th className="p-2 border-b text-right">{tr("Gross Wt")}</th>
-                                    <th className="p-2 border-b text-right">{tr("Net Wt")}</th>
-                                    <th className="p-2 border-b text-right">{tr("Price")}</th>
-                                    <th className="p-2 border-b text-right">{tr("Total Amount")}</th>
-                                    <th className="p-2 border-b text-right font-black">{tr("Final Amount")}</th>
+                                    <Th className="p-2 border-b">{tr("Goods Name")}</Th>
+                                    <Th className="p-2 border-b">{tr("Brand/Size")}</Th>
+                                    <Th className="p-2 border-b">{tr("Origin")}</Th>
+                                    <Th className="p-2 border-b text-right">{tr("Qty")}</Th>
+                                    <Th className="p-2 border-b text-right">{tr("Gross Wt")}</Th>
+                                    <Th className="p-2 border-b text-right">{tr("Net Wt")}</Th>
+                                    <Th className="p-2 border-b text-right">{tr("Price")}</Th>
+                                    <Th className="p-2 border-b text-right">{tr("Total Amount")}</Th>
+                                    <Th className="p-2 border-b text-right font-black">{tr("Final Amount")}</Th>
                                   </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100 dark:divide-slate-850 font-medium">
@@ -3047,10 +3048,10 @@ export function PurchaseOrderManagementDashboard() {
                     <table className="w-full text-[8px] text-left border-collapse font-semibold text-slate-700">
                       <thead>
                         <tr className="border-b border-slate-200 bg-slate-50/50 text-[7.5px] uppercase tracking-wider text-slate-500">
-                          <th className="px-2 py-1.5 font-bold w-[20%]">{tr("GL Code")}</th>
-                          <th className="px-2 py-1.5 font-bold w-[40%]">{tr("Account Name")}</th>
-                          <th className="px-2 py-1.5 font-bold text-right w-[20%]">{tr("Debit")}</th>
-                          <th className="px-2 py-1.5 font-bold text-right w-[20%]">{tr("Credit")}</th>
+                          <Th className="px-2 py-1.5 font-bold w-[20%]">{tr("GL Code")}</Th>
+                          <Th className="px-2 py-1.5 font-bold w-[40%]">{tr("Account Name")}</Th>
+                          <Th className="px-2 py-1.5 font-bold text-right w-[20%]">{tr("Debit")}</Th>
+                          <Th className="px-2 py-1.5 font-bold text-right w-[20%]">{tr("Credit")}</Th>
                         </tr>
                       </thead>
                       <tbody>
@@ -3101,19 +3102,19 @@ export function PurchaseOrderManagementDashboard() {
                     <table className="w-full text-[8px] text-left border-collapse">
                       <thead>
                         <tr className="bg-slate-100 border-b border-slate-200 text-slate-700 font-black uppercase">
-                          <th className="p-1 border-r border-slate-200 text-center w-[3%]">{tr("SR.")}</th>
-                          <th className="p-1 border-r border-slate-200 w-[17%]">{tr("GOODS NAME")}</th>
-                          <th className="p-1 border-r border-slate-200 text-center w-[8%]">{tr("BRAND")}</th>
-                          <th className="p-1 border-r border-slate-200 text-center w-[8%]">{tr("SIZE")}</th>
-                          <th className="p-1 border-r border-slate-200 text-center w-[8%]">{tr("ORIGIN")}</th>
-                          <th className="p-1 border-r border-slate-200 text-right w-[8%]">{tr("QUANTITY")}</th>
-                          <th className="p-1 border-r border-slate-200 text-right w-[8%]">{tr("QTY (KGS)")}</th>
-                          <th className="p-1 border-r border-slate-200 text-right w-[8%]">{tr("GROSS WT")}</th>
-                          <th className="p-1 border-r border-slate-200 text-right w-[8%]">{tr("NET WT")}</th>
-                          <th className="p-1 border-r border-slate-200 text-right w-[8%]">{tr("RATE / KG")}</th>
-                          <th className="p-1 border-r border-slate-200 text-right w-[10%]">{tr("AMOUNT (USD)")}</th>
-                          <th className="p-1 border-r border-slate-200 text-right w-[6%]">{tr("EX. RATE")}</th>
-                          <th className="p-1 text-right w-[10%]">{tr("FINAL AMOUNT")}</th>
+                          <Th className="p-1 border-r border-slate-200 text-center w-[3%]">{tr("SR.")}</Th>
+                          <Th className="p-1 border-r border-slate-200 w-[17%]">{tr("GOODS NAME")}</Th>
+                          <Th className="p-1 border-r border-slate-200 text-center w-[8%]">{tr("BRAND")}</Th>
+                          <Th className="p-1 border-r border-slate-200 text-center w-[8%]">{tr("SIZE")}</Th>
+                          <Th className="p-1 border-r border-slate-200 text-center w-[8%]">{tr("ORIGIN")}</Th>
+                          <Th className="p-1 border-r border-slate-200 text-right w-[8%]">{tr("QUANTITY")}</Th>
+                          <Th className="p-1 border-r border-slate-200 text-right w-[8%]">{tr("QTY (KGS)")}</Th>
+                          <Th className="p-1 border-r border-slate-200 text-right w-[8%]">{tr("GROSS WT")}</Th>
+                          <Th className="p-1 border-r border-slate-200 text-right w-[8%]">{tr("NET WT")}</Th>
+                          <Th className="p-1 border-r border-slate-200 text-right w-[8%]">{tr("RATE / KG")}</Th>
+                          <Th className="p-1 border-r border-slate-200 text-right w-[10%]">{tr("AMOUNT (USD)")}</Th>
+                          <Th className="p-1 border-r border-slate-200 text-right w-[6%]">{tr("EX. RATE")}</Th>
+                          <Th className="p-1 text-right w-[10%]">{tr("FINAL AMOUNT")}</Th>
                         </tr>
                       </thead>
                       <tbody>

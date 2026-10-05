@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { MailPageHeader } from "@/components/mail-management/mail-page-header";
 import { MailStatusBadge } from "@/components/mail-management/mail-status-badge";
+import { Th } from "@/components/ui/translated-th";
 
 interface MailUser {
   id: string;
@@ -236,13 +237,13 @@ export default function DgtMailUsersDirectoryPage() {
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-400 uppercase font-semibold text-[10px] tracking-wider">
               <tr>
-                <th className="px-5 py-3.5">Email Address & User</th>
-                <th className="px-5 py-3.5">Country / Branch</th>
-                <th className="px-5 py-3.5">IMAP / SMTP</th>
-                <th className="px-5 py-3.5">Storage Used / Quota</th>
-                <th className="px-5 py-3.5">Status</th>
-                <th className="px-5 py-3.5">Last Test</th>
-                <th className="px-5 py-3.5 text-right">Actions</th>
+                <Th className="px-5 py-3.5">Email Address & User</Th>
+                <Th className="px-5 py-3.5">Country / Branch</Th>
+                <Th className="px-5 py-3.5">IMAP / SMTP</Th>
+                <Th className="px-5 py-3.5">Storage Used / Quota</Th>
+                <Th className="px-5 py-3.5">Status</Th>
+                <Th className="px-5 py-3.5">Last Test</Th>
+                <Th className="px-5 py-3.5 text-right">Actions</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">

@@ -30,6 +30,7 @@ import {
   Clock,
   ExternalLink,
 } from "lucide-react";
+import { Th } from "@/components/ui/translated-th";
 
 type TransferRecord = {
   id: string;
@@ -663,16 +664,16 @@ export default function InterCountryTransfersPage() {
             <table className="w-full text-xs md:text-sm">
               <thead className="bg-muted/40 border-b border-border text-muted-foreground font-medium">
                 <tr>
-                  <th className="py-3 px-3 text-left">{t("TRANSFER NO")}</th>
-                  <th className="py-3 px-3 text-left">{t("CATEGORY")}</th>
-                  <th className="py-3 px-3 text-left">{t("FROM / ORIGIN")}</th>
-                  <th className="py-3 px-3 text-left">{t("TO / TARGET")}</th>
-                  <th className="py-3 px-3 text-left">{t("REFERENCES")}</th>
-                  <th className="py-3 px-3 text-left">{t("CUSTOMER / PARTY")}</th>
-                  <th className="py-3 px-3 text-right">{t("AMOUNT")}</th>
-                  <th className="py-3 px-3 text-center">{t("STATUS")}</th>
-                  <th className="py-3 px-3 text-left">{t("DATE")}</th>
-                  <th className="py-3 px-3 text-center">{t("ACTIONS")}</th>
+                  <Th className="py-3 px-3 text-left">{t("TRANSFER NO")}</Th>
+                  <Th className="py-3 px-3 text-left">{t("CATEGORY")}</Th>
+                  <Th className="py-3 px-3 text-left">{t("FROM / ORIGIN")}</Th>
+                  <Th className="py-3 px-3 text-left">{t("TO / TARGET")}</Th>
+                  <Th className="py-3 px-3 text-left">{t("REFERENCES")}</Th>
+                  <Th className="py-3 px-3 text-left">{t("CUSTOMER / PARTY")}</Th>
+                  <Th className="py-3 px-3 text-right">{t("AMOUNT")}</Th>
+                  <Th className="py-3 px-3 text-center">{t("STATUS")}</Th>
+                  <Th className="py-3 px-3 text-left">{t("DATE")}</Th>
+                  <Th className="py-3 px-3 text-center">{t("ACTIONS")}</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">

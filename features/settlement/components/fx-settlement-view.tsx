@@ -6,6 +6,7 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader as th } from "@/lib/i18n/table-headers";
 import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { getLanguageDirection } from "@/lib/i18n/languages";
+import { Th } from "@/components/ui/translated-th";
 
 export function FxSettlementView() {
   const lang = useActiveLanguage();
@@ -105,14 +106,14 @@ export function FxSettlementView() {
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 font-semibold uppercase text-[10px]">
               <tr>
-                <th className="py-3 px-4">{T("Date")}</th>
-                <th className="py-3 px-4">{T("CR Side (Source)")}</th>
-                <th className="py-3 px-4">{T("DR Side (Target)")}</th>
-                <th className="py-3 px-4 text-right">{T("Linked Local")}</th>
-                <th className="py-3 px-4 text-right">{T("CR Rate")}</th>
-                <th className="py-3 px-4 text-right">{T("DR Rate")}</th>
-                <th className="py-3 px-4 text-right">{T("FX Diff (USD)")}</th>
-                <th className="py-3 px-4 text-center">{T("Direction")}</th>
+                <Th className="py-3 px-4">{T("Date")}</Th>
+                <Th className="py-3 px-4">{T("CR Side (Source)")}</Th>
+                <Th className="py-3 px-4">{T("DR Side (Target)")}</Th>
+                <Th className="py-3 px-4 text-right">{T("Linked Local")}</Th>
+                <Th className="py-3 px-4 text-right">{T("CR Rate")}</Th>
+                <Th className="py-3 px-4 text-right">{T("DR Rate")}</Th>
+                <Th className="py-3 px-4 text-right">{T("FX Diff (USD)")}</Th>
+                <Th className="py-3 px-4 text-center">{T("Direction")}</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

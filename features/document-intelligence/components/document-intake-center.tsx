@@ -21,6 +21,7 @@ import { isNativeApp, captureDocumentPhoto } from "@/lib/mobile/native-bridge";
 import { apiGet, apiPatch } from "@/lib/api/client";
 import { IntakeReviewWorkspace } from "@/features/document-intelligence/components/intake-review-workspace";
 import { INTAKE_MODULES, INTAKE_MODULE_GROUPS, getIntakeModule, moduleForTarget, resolveModule, type IntakeModule } from "@/lib/document-intelligence/intake-modules";
+import { Th } from "@/components/ui/translated-th";
 
 type Row = Record<string, any>;
 
@@ -433,8 +434,8 @@ export function DocumentIntakeCenter({ lang }: { lang?: string }) {
               <table className="w-full min-w-[720px] text-start text-xs">
                 <thead className="border-b border-slate-100 bg-slate-50 text-[10px] uppercase tracking-wider text-slate-400 dark:border-slate-800 dark:bg-slate-800">
                   <tr>
-                    <th className="p-3 text-start">{T("q_job", "Job no.")}</th><th className="p-3 text-start">{T("q_file", "Document")}</th><th className="p-3 text-start">{T("q_scope", "Scope / office")}</th>
-                    <th className="p-3 text-start">{T("q_module", "Module")}</th><th className="p-3 text-start">{T("q_draft", "Draft")}</th><th className="p-3 text-start">{T("q_fields", "Fields")}</th><th className="p-3 text-start">{T("q_status", "Status")}</th><th className="p-3 text-end">{T("q_actions", "Actions")}</th>
+                    <Th className="p-3 text-start">{T("q_job", "Job no.")}</Th><Th className="p-3 text-start">{T("q_file", "Document")}</Th><Th className="p-3 text-start">{T("q_scope", "Scope / office")}</Th>
+                    <Th className="p-3 text-start">{T("q_module", "Module")}</Th><Th className="p-3 text-start">{T("q_draft", "Draft")}</Th><Th className="p-3 text-start">{T("q_fields", "Fields")}</Th><Th className="p-3 text-start">{T("q_status", "Status")}</Th><Th className="p-3 text-end">{T("q_actions", "Actions")}</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

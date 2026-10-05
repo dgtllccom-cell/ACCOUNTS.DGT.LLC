@@ -1409,17 +1409,17 @@ function NestedPaymentHistory({
           <table className="w-full min-w-[1100px] border-collapse text-left text-[11px]">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-100/90 text-[9px] font-bold uppercase tracking-wider text-slate-600 dark:border-slate-800 dark:bg-slate-800/80 dark:text-slate-400">
-                <th className="border-r border-slate-200 px-2.5 py-1.5 dark:border-slate-800">{translateHeader(currentLanguage, "General Serial / Date")}</th>
-                <th className="border-r border-slate-200 px-2.5 py-1.5 dark:border-slate-800">{translateHeader(currentLanguage, "Reference / User")}</th>
-                <th className="border-r border-slate-200 px-2.5 py-1.5 dark:border-slate-800">{translateHeader(currentLanguage, "Debit & Credit Ledger Account")}</th>
-                <th className="border-r border-slate-200 px-2.5 py-1.5 text-right dark:border-slate-800">Target ({purchaseCurrency})</th>
-                <th className="border-r border-slate-200 px-2.5 py-1.5 text-right dark:border-slate-800">Paid ({purchaseCurrency})</th>
-                <th className="border-r border-slate-200 px-2.5 py-1.5 text-right dark:border-slate-800">Balance ({purchaseCurrency})</th>
-                <th className="border-r border-slate-200 px-2.5 py-1.5 text-center dark:border-slate-800">{translateHeader(currentLanguage, "Exchange Rate")}</th>
-                <th className="border-r border-slate-200 px-2.5 py-1.5 text-right dark:border-slate-800">Target ({calcs.finalCurr})</th>
-                <th className="border-r border-slate-200 px-2.5 py-1.5 text-right dark:border-slate-800">Paid ({calcs.finalCurr})</th>
-                <th className="border-r border-slate-200 px-2.5 py-1.5 text-right dark:border-slate-800">Balance ({calcs.finalCurr})</th>
-                <th className="w-20 px-2.5 py-1.5 text-center">{translateHeader(currentLanguage, "Actions")}</th>
+                <Th className="border-r border-slate-200 px-2.5 py-1.5 dark:border-slate-800">{translateHeader(currentLanguage, "General Serial / Date")}</Th>
+                <Th className="border-r border-slate-200 px-2.5 py-1.5 dark:border-slate-800">{translateHeader(currentLanguage, "Reference / User")}</Th>
+                <Th className="border-r border-slate-200 px-2.5 py-1.5 dark:border-slate-800">{translateHeader(currentLanguage, "Debit & Credit Ledger Account")}</Th>
+                <Th className="border-r border-slate-200 px-2.5 py-1.5 text-right dark:border-slate-800">Target ({purchaseCurrency})</Th>
+                <Th className="border-r border-slate-200 px-2.5 py-1.5 text-right dark:border-slate-800">Paid ({purchaseCurrency})</Th>
+                <Th className="border-r border-slate-200 px-2.5 py-1.5 text-right dark:border-slate-800">Balance ({purchaseCurrency})</Th>
+                <Th className="border-r border-slate-200 px-2.5 py-1.5 text-center dark:border-slate-800">{translateHeader(currentLanguage, "Exchange Rate")}</Th>
+                <Th className="border-r border-slate-200 px-2.5 py-1.5 text-right dark:border-slate-800">Target ({calcs.finalCurr})</Th>
+                <Th className="border-r border-slate-200 px-2.5 py-1.5 text-right dark:border-slate-800">Paid ({calcs.finalCurr})</Th>
+                <Th className="border-r border-slate-200 px-2.5 py-1.5 text-right dark:border-slate-800">Balance ({calcs.finalCurr})</Th>
+                <Th className="w-20 px-2.5 py-1.5 text-center">{translateHeader(currentLanguage, "Actions")}</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -2580,12 +2580,12 @@ function DashboardSummaryHeader({
               <table className="w-full text-left text-[10.5px] border-collapse font-sans">
                 <thead>
                   <tr className="text-slate-500 dark:text-slate-400 text-[9px] uppercase font-black border-b border-slate-200 dark:border-slate-800">
-                    <th className="py-1 px-1.5">{th("Branch Code")}</th>
-                    <th className="py-1 px-1.5">{th("Country Code")}</th>
-                    <th className="py-1 px-1.5">{th("Final Currency")}</th>
-                    <th className="py-1 px-1.5 text-center">{th("Total Entries")}</th>
-                    <th className="py-1 px-1.5 text-right">{th("Final Amount")}</th>
-                    <th className="py-1 px-1.5 text-right">{th("Final Advance Amount")}</th>
+                    <Th className="py-1 px-1.5">{th("Branch Code")}</Th>
+                    <Th className="py-1 px-1.5">{th("Country Code")}</Th>
+                    <Th className="py-1 px-1.5">{th("Final Currency")}</Th>
+                    <Th className="py-1 px-1.5 text-center">{th("Total Entries")}</Th>
+                    <Th className="py-1 px-1.5 text-right">{th("Final Amount")}</Th>
+                    <Th className="py-1 px-1.5 text-right">{th("Final Advance Amount")}</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-semibold text-slate-800 dark:text-slate-200">

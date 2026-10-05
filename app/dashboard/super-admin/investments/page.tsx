@@ -20,6 +20,7 @@ import {
   AlertCircle,
   Wallet,
 } from "lucide-react";
+import { Th } from "@/components/ui/translated-th";
 
 type CapitalSummary = {
   total_opening_capital?: number;
@@ -406,12 +407,12 @@ export default function SuperAdminInvestmentsPage() {
               <table className="w-full text-xs md:text-sm">
                 <thead className="bg-muted/50 border-y border-border">
                   <tr>
-                    <th className="py-2.5 px-3 text-left font-semibold">{t("COUNTRY")}</th>
-                    <th className="py-2.5 px-3 text-right font-semibold">{t("NET INVESTMENT")}</th>
-                    <th className="py-2.5 px-3 text-right font-semibold">{t("INCOME")}</th>
-                    <th className="py-2.5 px-3 text-right font-semibold">{t("EXPENSES")}</th>
-                    <th className="py-2.5 px-3 text-right font-semibold">{t("CLOSING POSITION")}</th>
-                    <th className="py-2.5 px-3 text-center font-semibold">{t("ACTIONS")}</th>
+                    <Th className="py-2.5 px-3 text-left font-semibold">{t("COUNTRY")}</Th>
+                    <Th className="py-2.5 px-3 text-right font-semibold">{t("NET INVESTMENT")}</Th>
+                    <Th className="py-2.5 px-3 text-right font-semibold">{t("INCOME")}</Th>
+                    <Th className="py-2.5 px-3 text-right font-semibold">{t("EXPENSES")}</Th>
+                    <Th className="py-2.5 px-3 text-right font-semibold">{t("CLOSING POSITION")}</Th>
+                    <Th className="py-2.5 px-3 text-center font-semibold">{t("ACTIONS")}</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -468,14 +469,14 @@ export default function SuperAdminInvestmentsPage() {
             <table className="w-full text-xs md:text-sm">
               <thead className="bg-muted/50 border-y border-border">
                 <tr>
-                  <th className="py-2.5 px-4 text-left font-semibold">Ref</th>
-                  <th className="py-2.5 px-4 text-left font-semibold">{t("ENTRY TYPE")}</th>
-                  <th className="py-2.5 px-4 text-left font-semibold">{t("COUNTRY")}</th>
-                  <th className="py-2.5 px-4 text-right font-semibold">{t("AMOUNT")}</th>
-                  <th className="py-2.5 px-4 text-right font-semibold">Base (USD)</th>
-                  <th className="py-2.5 px-4 text-left font-semibold">{t("DESCRIPTION / PARTICULARS")}</th>
-                  <th className="py-2.5 px-4 text-left font-semibold">{t("USER / OPERATOR")}</th>
-                  <th className="py-2.5 px-4 text-left font-semibold">{t("DATE")}</th>
+                  <Th className="py-2.5 px-4 text-left font-semibold">Ref</Th>
+                  <Th className="py-2.5 px-4 text-left font-semibold">{t("ENTRY TYPE")}</Th>
+                  <Th className="py-2.5 px-4 text-left font-semibold">{t("COUNTRY")}</Th>
+                  <Th className="py-2.5 px-4 text-right font-semibold">{t("AMOUNT")}</Th>
+                  <Th className="py-2.5 px-4 text-right font-semibold">Base (USD)</Th>
+                  <Th className="py-2.5 px-4 text-left font-semibold">{t("DESCRIPTION / PARTICULARS")}</Th>
+                  <Th className="py-2.5 px-4 text-left font-semibold">{t("USER / OPERATOR")}</Th>
+                  <Th className="py-2.5 px-4 text-left font-semibold">{t("DATE")}</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">

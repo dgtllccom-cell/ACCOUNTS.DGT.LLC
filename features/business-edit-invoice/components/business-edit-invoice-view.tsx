@@ -12,6 +12,7 @@ import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { printStore } from "@/lib/store/print-store";
 import { apiGet } from "@/lib/api/client";
 import { UniversalPrintActionButton } from "@/components/reports/universal-print-action-button";
+import { Th } from "@/components/ui/translated-th";
 
 type SessionInfo = {
   user?: { fullName?: string | null; email?: string | null };
@@ -483,19 +484,19 @@ export function BusinessEditInvoiceView({ lang: langProp }: { lang?: string }) {
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-slate-200/80 bg-slate-50/80 text-[11px] font-black uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-400">
-                  <th className="w-10 px-3 py-3 text-center">#</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{s.t("invoice_no", "Edit Invoice No")}</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{s.t("doc_type", "Document Type")}</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{s.t("source_module", "Source")}</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{s.t("original_bill_no", "Original Bill No")}</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{s.t("party", "Party")}</th>
-                  <th className="px-3 py-3 text-right font-black text-slate-700 dark:text-slate-200">{s.t("original_value", "Original Value")}</th>
-                  <th className="px-3 py-3 text-right font-black text-slate-700 dark:text-slate-200">{s.t("document_value", "Document Value")}</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{s.t("currency", "Currency")}</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{s.t("created_by", "Created By")}</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{s.t("created_at", "Created Date")}</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{s.t("status", "Status")}</th>
-                  <th className="w-20 px-3 py-3 text-right font-black text-slate-700 dark:text-slate-200">{s.t("actions", "Actions")}</th>
+                  <Th className="w-10 px-3 py-3 text-center">#</Th>
+                  <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{s.t("invoice_no", "Edit Invoice No")}</Th>
+                  <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{s.t("doc_type", "Document Type")}</Th>
+                  <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{s.t("source_module", "Source")}</Th>
+                  <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{s.t("original_bill_no", "Original Bill No")}</Th>
+                  <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{s.t("party", "Party")}</Th>
+                  <Th className="px-3 py-3 text-right font-black text-slate-700 dark:text-slate-200">{s.t("original_value", "Original Value")}</Th>
+                  <Th className="px-3 py-3 text-right font-black text-slate-700 dark:text-slate-200">{s.t("document_value", "Document Value")}</Th>
+                  <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{s.t("currency", "Currency")}</Th>
+                  <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{s.t("created_by", "Created By")}</Th>
+                  <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{s.t("created_at", "Created Date")}</Th>
+                  <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{s.t("status", "Status")}</Th>
+                  <Th className="w-20 px-3 py-3 text-right font-black text-slate-700 dark:text-slate-200">{s.t("actions", "Actions")}</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -712,12 +713,12 @@ function BillPicker({ s, onClose, onCreated }: { s: Screen; onClose: () => void;
         <table className="w-full text-start text-xs">
           <thead className="sticky top-0 bg-slate-50 text-slate-500 dark:bg-slate-800/70">
             <tr>
-              <th className={`p-2 ${s.textStart}`}>{s.t("original_bill_no", "Original Bill No")}</th>
-              <th className={`p-2 ${s.textStart}`}>{s.t("source_module", "Source")}</th>
-              <th className={`p-2 ${s.textStart}`}>{s.t("branch_company", "Branch / Company")}</th>
-              <th className={`p-2 ${s.textStart}`}>{s.t("party", "Party")}</th>
-              <th className="p-2 text-end">{s.t("original_value", "Original Value")}</th>
-              <th className="p-2" />
+              <Th className={`p-2 ${s.textStart}`}>{s.t("original_bill_no", "Original Bill No")}</Th>
+              <Th className={`p-2 ${s.textStart}`}>{s.t("source_module", "Source")}</Th>
+              <Th className={`p-2 ${s.textStart}`}>{s.t("branch_company", "Branch / Company")}</Th>
+              <Th className={`p-2 ${s.textStart}`}>{s.t("party", "Party")}</Th>
+              <Th className="p-2 text-end">{s.t("original_value", "Original Value")}</Th>
+              <Th className="p-2" />
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -882,14 +883,14 @@ function InvoiceEditor({ s, id, onClose }: { s: Screen; id: string; onClose: () 
             <table className="w-full text-start text-[11px]">
               <thead className="bg-slate-50 text-slate-500 dark:bg-slate-800/50">
                 <tr>
-                  <th className={`p-1.5 ${s.textStart}`}>{s.t("description", "Description")}</th>
-                  <th className={`p-1.5 ${s.textStart}`}>{s.t("hs_code", "HS Code")}</th>
-                  <th className="p-1.5 text-end">{s.t("quantity", "Quantity")}</th>
-                  <th className={`p-1.5 ${s.textStart}`}>{s.t("unit", "Unit")}</th>
-                  <th className="p-1.5 text-end">{s.t("net_weight", "Net Weight")}</th>
-                  <th className="p-1.5 text-end">{s.t("original_unit_price", "Original Unit Price")}</th>
-                  <th className="p-1.5 text-end">{s.t("document_unit_price", "Document Unit Price")}</th>
-                  <th className="p-1.5 text-end">{s.t("amount", "Amount")}</th>
+                  <Th className={`p-1.5 ${s.textStart}`}>{s.t("description", "Description")}</Th>
+                  <Th className={`p-1.5 ${s.textStart}`}>{s.t("hs_code", "HS Code")}</Th>
+                  <Th className="p-1.5 text-end">{s.t("quantity", "Quantity")}</Th>
+                  <Th className={`p-1.5 ${s.textStart}`}>{s.t("unit", "Unit")}</Th>
+                  <Th className="p-1.5 text-end">{s.t("net_weight", "Net Weight")}</Th>
+                  <Th className="p-1.5 text-end">{s.t("original_unit_price", "Original Unit Price")}</Th>
+                  <Th className="p-1.5 text-end">{s.t("document_unit_price", "Document Unit Price")}</Th>
+                  <Th className="p-1.5 text-end">{s.t("amount", "Amount")}</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -929,10 +930,10 @@ function InvoiceEditor({ s, id, onClose }: { s: Screen; id: string; onClose: () 
         <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
           <table className="w-full text-start text-xs">
             <thead className="bg-slate-50 text-slate-500 dark:bg-slate-800/50"><tr>
-              <th className={`p-2 ${s.textStart}`}>{s.t("version", "Version")}</th>
-              <th className="p-2 text-end">{s.t("document_value", "Document Value")}</th>
-              <th className={`p-2 ${s.textStart}`}>{s.t("created_by", "Created By")}</th>
-              <th className={`p-2 ${s.textStart}`}>{s.t("created_at", "Date / Time")}</th>
+              <Th className={`p-2 ${s.textStart}`}>{s.t("version", "Version")}</Th>
+              <Th className="p-2 text-end">{s.t("document_value", "Document Value")}</Th>
+              <Th className={`p-2 ${s.textStart}`}>{s.t("created_by", "Created By")}</Th>
+              <Th className={`p-2 ${s.textStart}`}>{s.t("created_at", "Date / Time")}</Th>
             </tr></thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {versions.map((v) => (

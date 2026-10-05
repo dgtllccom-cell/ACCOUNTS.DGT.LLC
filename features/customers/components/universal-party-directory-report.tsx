@@ -24,6 +24,7 @@ import type { PartyAffiliationSummary } from "@/lib/services/party-360-service";
 import { Party360Modal } from "./party-360-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Th } from "@/components/ui/translated-th";
 
 export type UniversalPartyDirectoryReportProps = {
   lang?: SupportedLanguage;
@@ -279,16 +280,16 @@ export function UniversalPartyDirectoryReport({
           <table className="w-full text-right text-xs">
             <thead className="bg-slate-50 dark:bg-slate-950/80 text-slate-600 dark:text-slate-300 font-extrabold border-b border-slate-200 dark:border-slate-800">
               <tr>
-                <th className="p-3.5 w-12 text-center">#</th>
-                <th className="p-3.5">کوڈ (ID)</th>
-                <th className="p-3.5">نام (Full Name)</th>
-                <th className="p-3.5">ولدیت (Father Name)</th>
-                <th className="p-3.5">ملک / صوبہ / شہر</th>
-                <th className="p-3.5">پتہ (Address)</th>
-                <th className="p-3.5 text-center">منسلک کمپنیاں</th>
-                <th className="p-3.5 text-center">ملازمت / عہدہ</th>
-                <th className="p-3.5 text-center">بینک اکاؤنٹس</th>
-                <th className="p-3.5 text-center w-24">360° ایکشن</th>
+                <Th className="p-3.5 w-12 text-center">#</Th>
+                <Th className="p-3.5">کوڈ (ID)</Th>
+                <Th className="p-3.5">نام (Full Name)</Th>
+                <Th className="p-3.5">ولدیت (Father Name)</Th>
+                <Th className="p-3.5">ملک / صوبہ / شہر</Th>
+                <Th className="p-3.5">پتہ (Address)</Th>
+                <Th className="p-3.5 text-center">منسلک کمپنیاں</Th>
+                <Th className="p-3.5 text-center">ملازمت / عہدہ</Th>
+                <Th className="p-3.5 text-center">بینک اکاؤنٹس</Th>
+                <Th className="p-3.5 text-center w-24">360° ایکشن</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">

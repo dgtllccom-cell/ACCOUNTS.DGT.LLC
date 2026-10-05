@@ -40,8 +40,9 @@ const measure = () => {
   const outside = [...document.querySelectorAll("button, a, input, select, textarea, h1, h2, h3, h4, label, th, [role=dialog] *")]
     .filter((el) => vis(el) && !inScroller(el) && (el.getBoundingClientRect().right > vw + 1 || el.getBoundingClientRect().left < -1))
     .slice(0, 6).map((el) => `${el.tagName.toLowerCase()}:${(el.textContent || el.placeholder || el.name || "").trim().slice(0, 24)}`);
-  const stacks = [...document.querySelectorAll("[data-erp-content] h1, [data-erp-content] h2, [data-erp-content] h3, [data-erp-content] span.font-bold, [data-erp-content] span.font-mono")]
-    .filter((el) => { const r = el.getBoundingClientRect(); const lh = parseFloat(getComputedStyle(el).lineHeight) || 16; return r.width > 0 && r.width < 90 && r.height > lh * 3; })
+  // a single word / code broken across lines (letter-by-letter wrapping) — wrapping BETWEEN words is normal and not flagged
+  const stacks = [...document.querySelectorAll("[data-erp-content] *")]
+    .filter((el) => { if (el.children.length) return false; const t = (el.textContent || "").trim(); if (t.length < 6 || t.length > 60 || /\s/.test(t) || !vis(el)) return false; const lh = parseFloat(getComputedStyle(el).lineHeight) || 16; return el.getBoundingClientRect().height > lh * 2.2; })
     .map((el) => el.textContent.trim().slice(0, 24)).slice(0, 5);
   const tables = [...document.querySelectorAll("table")].filter(vis);
   const nav = document.querySelector("nav.fixed.bottom-0"), fab = document.querySelector("[data-dgt-connect] button");
@@ -54,7 +55,7 @@ const measure = () => {
   // English left on a non-English screen: visible text nodes made only of Latin words (not codes / numbers / names) in the content area
   return {
     themeAttr: de.dataset.erpThemeMode, dark: de.classList.contains("dark"), dir: de.dir, htmlLang: de.lang,
-    overflowX: de.scrollWidth > vw + 1, outside, stacks, tables: tables.length, tablesNoScroller: tables.filter((t) => !inScroller(t)).length,
+    overflowX: de.scrollWidth > vw + 1, outside, stacks, tables: tables.length, tablesNoScroller: tables.filter((t) => !inScroller(t) && (t.getBoundingClientRect().right > vw + 1 || t.scrollWidth > (t.parentElement ? t.parentElement.clientWidth : vw) + 1)).length,
     fabOverNav, loading, errorPage, textLen: body.length, h1, h: de.scrollHeight,
     tiny: [...document.querySelectorAll("button, a, input, select")].filter((el) => vis(el) && el.getBoundingClientRect().height < 24 && el.getBoundingClientRect().width < 24).length,
   };
@@ -69,6 +70,7 @@ for (const route of myRoutes) for (const lang of LANGS) for (const theme of THEM
   const [d0, w0, h0] = C.sizes[0];
   const ctx = await browser.newContext({ viewport: { width: w0, height: h0 }, deviceScaleFactor: C.dpr, isMobile: C.mobile !== false, hasTouch: C.mobile !== false, userAgent: C.ua, colorScheme: theme === "system" ? "dark" : "light" });
   const t0 = Date.now();
+  const wd = setTimeout(() => { ctx.close().catch(() => {}); }, 240000); // watchdog: a hung page / a sleeping PC can never block a worker
   const page = await ctx.newPage();
   const errs = [], badApi = [];
   try {
@@ -113,7 +115,7 @@ for (const route of myRoutes) for (const lang of LANGS) for (const theme of THEM
     }
   } catch (e) {
     for (const [dev] of C.sizes) log({ key: `${route}|${dev}|${lang}|${theme}`, r: route, device: dev, lang, theme, cls, bad: ["loadFailed"], err: String(e).slice(0, 140) });
-  } finally { await page.close().catch(() => {}); await ctx.close().catch(() => {}); }
+  } finally { clearTimeout(wd); await page.close().catch(() => {}); await ctx.close().catch(() => {}); }
 }
 await browser.close();
 console.log("SHARD-DONE", SHARD);

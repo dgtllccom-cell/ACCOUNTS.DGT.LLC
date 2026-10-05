@@ -52,6 +52,7 @@ import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { UniversalReportModal } from "@/components/ui/universal-report-modal";
 import { cn } from "@/lib/utils";
+import { Th } from "@/components/ui/translated-th";
 
 type CustomerRow = {
   id: string;
@@ -907,7 +908,7 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
             <thead>
               <tr className="border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/40 text-slate-500 dark:text-slate-400 font-bold uppercase text-[11px] tracking-wider">
                 {/* Select All Checkbox */}
-                <th className="px-3.5 py-3.5 w-10 text-center">
+                <Th className="px-3.5 py-3.5 w-10 text-center">
                   <input
                     type="checkbox"
                     checked={
@@ -918,19 +919,19 @@ export function CustomerList({ lang: langProp }: { lang: SupportedLanguage }) {
                     aria-label={t(lang, "cl.aria_select_all", "Select all leads on current page")}
                     className="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                   />
-                </th>
-                <th className="px-3 py-3.5 w-12 text-slate-400">#</th>
-                <th className="px-4 py-3.5 font-bold">{t(lang, "cl.col_customer_id", "Customer ID")}</th>
-                <th className="px-4 py-3.5 font-bold">{t(lang, "cl.col_customer_name", "Customer Name")}</th>
-                <th className="px-4 py-3.5 font-bold">{t(lang, "cl.col_company", "Company")}</th>
-                <th className="px-4 py-3.5 font-bold">{t(lang, "cl.col_country", "Country")}</th>
-                <th className="px-4 py-3.5 font-bold">{t(lang, "cl.f_branch", "Branch")}</th>
-                <th className="px-4 py-3.5 font-bold">{t(lang, "cl.col_source", "Source")}</th>
-                <th className="px-4 py-3.5 font-bold">{t(lang, "cl.col_status", "Status")}</th>
-                <th className="px-4 py-3.5 font-bold">{t(lang, "cl.col_assigned_to", "Assigned To")}</th>
-                <th className="px-4 py-3.5 font-bold">{t(lang, "cl.col_mobile", "Mobile")}</th>
-                <th className="px-4 py-3.5 font-bold">{t(lang, "cl.col_created_date", "Created Date")}</th>
-                <th className="px-4 py-3.5 text-center font-bold">{t(lang, "cl.col_actions", "Actions")}</th>
+                </Th>
+                <Th className="px-3 py-3.5 w-12 text-slate-400">#</Th>
+                <Th className="px-4 py-3.5 font-bold">{t(lang, "cl.col_customer_id", "Customer ID")}</Th>
+                <Th className="px-4 py-3.5 font-bold">{t(lang, "cl.col_customer_name", "Customer Name")}</Th>
+                <Th className="px-4 py-3.5 font-bold">{t(lang, "cl.col_company", "Company")}</Th>
+                <Th className="px-4 py-3.5 font-bold">{t(lang, "cl.col_country", "Country")}</Th>
+                <Th className="px-4 py-3.5 font-bold">{t(lang, "cl.f_branch", "Branch")}</Th>
+                <Th className="px-4 py-3.5 font-bold">{t(lang, "cl.col_source", "Source")}</Th>
+                <Th className="px-4 py-3.5 font-bold">{t(lang, "cl.col_status", "Status")}</Th>
+                <Th className="px-4 py-3.5 font-bold">{t(lang, "cl.col_assigned_to", "Assigned To")}</Th>
+                <Th className="px-4 py-3.5 font-bold">{t(lang, "cl.col_mobile", "Mobile")}</Th>
+                <Th className="px-4 py-3.5 font-bold">{t(lang, "cl.col_created_date", "Created Date")}</Th>
+                <Th className="px-4 py-3.5 text-center font-bold">{t(lang, "cl.col_actions", "Actions")}</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">

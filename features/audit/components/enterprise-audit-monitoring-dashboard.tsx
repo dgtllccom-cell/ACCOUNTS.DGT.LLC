@@ -37,6 +37,7 @@ import { DeletedRecordDetailDialog } from "./deleted-record-detail-dialog";
 import { SecurityPinAuthDialog } from "./security-pin-auth-dialog";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { Th } from "@/components/ui/translated-th";
 
 export function EnterpriseAuditMonitoringDashboard() {
   const lang = useActiveLanguage();
@@ -552,12 +553,12 @@ export function EnterpriseAuditMonitoringDashboard() {
                       <table className="w-full text-xs text-left border-collapse">
                         <thead className="bg-muted text-muted-foreground font-semibold">
                           <tr>
-                            <th className="p-2.5 border-b">{tt("eaud.entity_type", "Entity Type")}</th>
-                            <th className="p-2.5 border-b">{tt("common.ref_no", "Reference No")}</th>
-                            <th className="p-2.5 border-b">{tt("common.country", "Country")} / {tt("common.branch", "Branch")}</th>
-                            <th className="p-2.5 border-b text-center">{tt("eaud.edit_count", "Edit Count")}</th>
-                            <th className="p-2.5 border-b">{tt("eaud.last_edited", "Last Edited")}</th>
-                            <th className="p-2.5 border-b text-right">{tt("common.actions", "Actions")}</th>
+                            <Th className="p-2.5 border-b">{tt("eaud.entity_type", "Entity Type")}</Th>
+                            <Th className="p-2.5 border-b">{tt("common.ref_no", "Reference No")}</Th>
+                            <Th className="p-2.5 border-b">{tt("common.country", "Country")} / {tt("common.branch", "Branch")}</Th>
+                            <Th className="p-2.5 border-b text-center">{tt("eaud.edit_count", "Edit Count")}</Th>
+                            <Th className="p-2.5 border-b">{tt("eaud.last_edited", "Last Edited")}</Th>
+                            <Th className="p-2.5 border-b text-right">{tt("common.actions", "Actions")}</Th>
                           </tr>
                         </thead>
                         <tbody>
@@ -641,14 +642,14 @@ export function EnterpriseAuditMonitoringDashboard() {
                   <table className="w-full text-xs text-left border-collapse">
                     <thead className="bg-rose-50/50 dark:bg-rose-950/20 text-rose-900 dark:text-rose-300 font-semibold">
                       <tr>
-                        <th className="p-2.5 border-b">{tt("common.status", "Status")}</th>
-                        <th className="p-2.5 border-b">{tt("eaud.entity_type", "Entity")}</th>
-                        <th className="p-2.5 border-b">{tt("common.ref_no", "Reference No")}</th>
-                        <th className="p-2.5 border-b">{tt("eaud.deleted_by", "Deleted By")}</th>
-                        <th className="p-2.5 border-b">{tt("common.country", "Country")} / {tt("common.branch", "Branch")}</th>
-                        <th className="p-2.5 border-b">{tt("eaud.deletion_reason", "Deletion Reason")}</th>
-                        <th className="p-2.5 border-b">{tt("eaud.deleted_at", "Deleted At")}</th>
-                        <th className="p-2.5 border-b text-right">{tt("common.actions", "Actions")}</th>
+                        <Th className="p-2.5 border-b">{tt("common.status", "Status")}</Th>
+                        <Th className="p-2.5 border-b">{tt("eaud.entity_type", "Entity")}</Th>
+                        <Th className="p-2.5 border-b">{tt("common.ref_no", "Reference No")}</Th>
+                        <Th className="p-2.5 border-b">{tt("eaud.deleted_by", "Deleted By")}</Th>
+                        <Th className="p-2.5 border-b">{tt("common.country", "Country")} / {tt("common.branch", "Branch")}</Th>
+                        <Th className="p-2.5 border-b">{tt("eaud.deletion_reason", "Deletion Reason")}</Th>
+                        <Th className="p-2.5 border-b">{tt("eaud.deleted_at", "Deleted At")}</Th>
+                        <Th className="p-2.5 border-b text-right">{tt("common.actions", "Actions")}</Th>
                       </tr>
                     </thead>
                     <tbody>
@@ -775,13 +776,13 @@ export function EnterpriseAuditMonitoringDashboard() {
                     <table className="w-full text-xs text-left border-collapse">
                       <thead className="bg-muted text-muted-foreground font-semibold">
                         <tr>
-                          <th className="p-2.5 border-b">{tt("common.country", "Country")}</th>
-                          <th className="p-2.5 border-b">{tt("common.branch_name", "Branch Name")}</th>
-                          <th className="p-2.5 border-b text-right">{tt("nav.purchases", "Purchases")}</th>
-                          <th className="p-2.5 border-b text-right">{tt("nav.sales", "Sales")}</th>
-                          <th className="p-2.5 border-b text-right">{tt("nav.payments", "Payments")}</th>
-                          <th className="p-2.5 border-b text-center">{tt("nav.roznamcha", "Roznamcha")}</th>
-                          <th className="p-2.5 border-b text-center">{tt("eaud.edits_deletes", "Edits/Deletes")}</th>
+                          <Th className="p-2.5 border-b">{tt("common.country", "Country")}</Th>
+                          <Th className="p-2.5 border-b">{tt("common.branch_name", "Branch Name")}</Th>
+                          <Th className="p-2.5 border-b text-right">{tt("nav.purchases", "Purchases")}</Th>
+                          <Th className="p-2.5 border-b text-right">{tt("nav.sales", "Sales")}</Th>
+                          <Th className="p-2.5 border-b text-right">{tt("nav.payments", "Payments")}</Th>
+                          <Th className="p-2.5 border-b text-center">{tt("nav.roznamcha", "Roznamcha")}</Th>
+                          <Th className="p-2.5 border-b text-center">{tt("eaud.edits_deletes", "Edits/Deletes")}</Th>
                         </tr>
                       </thead>
                       <tbody>
@@ -845,13 +846,13 @@ export function EnterpriseAuditMonitoringDashboard() {
                   <table className="w-full text-xs text-left border-collapse">
                     <thead className="bg-muted text-muted-foreground font-semibold">
                       <tr>
-                        <th className="p-2.5 border-b">{tt("eaud.col_user", "User")}</th>
-                        <th className="p-2.5 border-b">{tt("eaud.col_role", "Role")}</th>
-                        <th className="p-2.5 border-b">{tt("eaud.col_country_branch", "Country / Branch")}</th>
-                        <th className="p-2.5 border-b text-center">{tt("eaud.entries_created", "Entries Created")}</th>
-                        <th className="p-2.5 border-b text-center">{tt("eaud.entries_edited", "Entries Edited")}</th>
-                        <th className="p-2.5 border-b text-center">{tt("eaud.entries_deleted", "Entries Deleted")}</th>
-                        <th className="p-2.5 border-b text-right">{tt("common.status", "Status")}</th>
+                        <Th className="p-2.5 border-b">{tt("eaud.col_user", "User")}</Th>
+                        <Th className="p-2.5 border-b">{tt("eaud.col_role", "Role")}</Th>
+                        <Th className="p-2.5 border-b">{tt("eaud.col_country_branch", "Country / Branch")}</Th>
+                        <Th className="p-2.5 border-b text-center">{tt("eaud.entries_created", "Entries Created")}</Th>
+                        <Th className="p-2.5 border-b text-center">{tt("eaud.entries_edited", "Entries Edited")}</Th>
+                        <Th className="p-2.5 border-b text-center">{tt("eaud.entries_deleted", "Entries Deleted")}</Th>
+                        <Th className="p-2.5 border-b text-right">{tt("common.status", "Status")}</Th>
                       </tr>
                     </thead>
                     <tbody>

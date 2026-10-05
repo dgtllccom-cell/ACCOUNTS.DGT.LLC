@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { apiGet } from "@/lib/api/client";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { CUSTOMS_STATUSES } from "@/lib/services/clearing-country-customs-config";
+import { Th } from "@/components/ui/translated-th";
 
 type WorkspaceLeg = {
   id: string;
@@ -105,13 +106,13 @@ export function ClearingWorkspaceView({
         <table className="w-full min-w-[720px] text-sm">
           <thead className="bg-slate-50 dark:bg-slate-900">
             <tr>
-              <th className="p-2 text-start text-xs font-bold text-slate-500">{s.t("col_order", "Order")}</th>
-              <th className="p-2 text-start text-xs font-bold text-slate-500">{s.t("col_route", "Route")}</th>
-              <th className="p-2 text-start text-xs font-bold text-slate-500">{s.t("col_customs_country", "Customs Country")}</th>
-              <th className="p-2 text-start text-xs font-bold text-slate-500">{s.t("col_clearance_type", "Clearance Type")}</th>
-              <th className="p-2 text-start text-xs font-bold text-slate-500">{s.t("col_reference", "Reference")}</th>
-              <th className="p-2 text-start text-xs font-bold text-slate-500">{s.t("col_status", "Status")}</th>
-              <th className="p-2" />
+              <Th className="p-2 text-start text-xs font-bold text-slate-500">{s.t("col_order", "Order")}</Th>
+              <Th className="p-2 text-start text-xs font-bold text-slate-500">{s.t("col_route", "Route")}</Th>
+              <Th className="p-2 text-start text-xs font-bold text-slate-500">{s.t("col_customs_country", "Customs Country")}</Th>
+              <Th className="p-2 text-start text-xs font-bold text-slate-500">{s.t("col_clearance_type", "Clearance Type")}</Th>
+              <Th className="p-2 text-start text-xs font-bold text-slate-500">{s.t("col_reference", "Reference")}</Th>
+              <Th className="p-2 text-start text-xs font-bold text-slate-500">{s.t("col_status", "Status")}</Th>
+              <Th className="p-2" />
             </tr>
           </thead>
           <tbody>

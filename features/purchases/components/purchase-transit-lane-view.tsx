@@ -19,6 +19,7 @@ import {
   LANE_STATUSES, LANE_STATUS_LABEL, RESPONSIBILITIES, TRANSFER_TYPES, allowedNextStatuses, canChooseDisposition, transferProblems,
   type Disposition, type LaneStatus, type TransferType,
 } from "@/lib/purchases/lane-rules";
+import { Th } from "@/components/ui/translated-th";
 
 type Row = Record<string, any>;
 type Detail = { load: Row; events: Row[]; expenses: Row[]; canAct: boolean };
@@ -183,18 +184,18 @@ export function PurchaseTransitLaneView({ lang, source }: { lang?: string; sourc
               <table className="w-full min-w-[1100px] text-start text-xs" data-testid="lane-table">
                 <thead className="border-b border-slate-100 bg-slate-50 text-[10px] uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-800">
                   <tr>
-                    <th className="p-2.5" />
-                    <th className="p-2.5 text-start">{T("col_purchase", "Purchase no.")}</th>
-                    <th className="p-2.5 text-start">{T("col_supplier", "Supplier")}</th>
-                    <th className="p-2.5 text-start">{T("col_goods", "Goods")}</th>
-                    <th className="p-2.5 text-start">{T("col_bl", "BL no.")}</th>
-                    <th className="p-2.5 text-start">{T("col_container", "Container")}</th>
-                    <th className="p-2.5 text-end">{T("col_qty", "Loaded qty")}</th>
-                    <th className="p-2.5 text-end">{T("col_weight", "Gross / Net")}</th>
-                    <th className="p-2.5 text-start">{T("col_status", "Lane status")}</th>
-                    <th className="p-2.5 text-start">{T("col_location", "Location")}</th>
-                    <th className="p-2.5 text-start">{T("col_assigned", "Assigned to")}</th>
-                    <th className="p-2.5 text-start">{T("col_next", "Next action")}</th>
+                    <Th className="p-2.5" />
+                    <Th className="p-2.5 text-start">{T("col_purchase", "Purchase no.")}</Th>
+                    <Th className="p-2.5 text-start">{T("col_supplier", "Supplier")}</Th>
+                    <Th className="p-2.5 text-start">{T("col_goods", "Goods")}</Th>
+                    <Th className="p-2.5 text-start">{T("col_bl", "BL no.")}</Th>
+                    <Th className="p-2.5 text-start">{T("col_container", "Container")}</Th>
+                    <Th className="p-2.5 text-end">{T("col_qty", "Loaded qty")}</Th>
+                    <Th className="p-2.5 text-end">{T("col_weight", "Gross / Net")}</Th>
+                    <Th className="p-2.5 text-start">{T("col_status", "Lane status")}</Th>
+                    <Th className="p-2.5 text-start">{T("col_location", "Location")}</Th>
+                    <Th className="p-2.5 text-start">{T("col_assigned", "Assigned to")}</Th>
+                    <Th className="p-2.5 text-start">{T("col_next", "Next action")}</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

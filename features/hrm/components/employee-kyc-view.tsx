@@ -10,6 +10,7 @@ import {
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { apiGet, apiPost, apiPatch } from "@/lib/api/client";
 import { UniversalPrintActionButton } from "@/components/reports/universal-print-action-button";
+import { Th } from "@/components/ui/translated-th";
 
 type Row = Record<string, any>;
 type SessionInfo = {
@@ -566,27 +567,27 @@ export function EmployeeKycView({ lang }: { lang?: string }) {
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-slate-200/80 bg-slate-50/80 text-[11px] font-black uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-400">
-                  <th className="w-10 px-4 py-3 text-center">
+                  <Th className="w-10 px-4 py-3 text-center">
                     <input
                       type="checkbox"
                       checked={kycList.length > 0 && Object.keys(selectedIds).length === kycList.length}
                       onChange={toggleSelectAll}
                       className="rounded border-slate-300 text-purple-600 focus:ring-purple-500"
                     />
-                  </th>
-                  <th className="w-12 px-3 py-3 text-center">#</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{s.t("kyc_col_employee_id", "Employee ID")}</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{s.t("kyc_col_employee_name", "Employee Name")}</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{s.t("country", "Country")}</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{s.tGlobal("common.branch", "Branch")}</th>
-                  <th className="px-3 py-3 text-center font-black text-slate-700 dark:text-slate-200">{s.t("kyc_col_required_docs", "Required Docs")}</th>
-                  <th className="px-3 py-3 text-center font-black text-slate-700 dark:text-slate-200">{s.t("kyc_k_verified", "Verified")}</th>
-                  <th className="px-3 py-3 text-center font-black text-slate-700 dark:text-slate-200">{s.t("kyc_missing", "Missing")}</th>
-                  <th className="px-3 py-3 text-center font-black text-slate-700 dark:text-slate-200">{s.t("kyc_col_expired", "Expired")}</th>
-                  <th className="px-3 py-3 text-center font-black text-slate-700 dark:text-slate-200">{s.t("kyc_k_expiring_soon", "Expiring Soon")}</th>
-                  <th className="px-4 py-3 font-black text-slate-700 dark:text-slate-200 min-w-[140px]">{s.t("kyc_col_compliance", "Compliance %")}</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{s.tGlobal("common.status", "Status")}</th>
-                  <th className="w-28 px-3 py-3 text-right font-black text-slate-700 dark:text-slate-200">{s.t("actions", "Actions")}</th>
+                  </Th>
+                  <Th className="w-12 px-3 py-3 text-center">#</Th>
+                  <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{s.t("kyc_col_employee_id", "Employee ID")}</Th>
+                  <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{s.t("kyc_col_employee_name", "Employee Name")}</Th>
+                  <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{s.t("country", "Country")}</Th>
+                  <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{s.tGlobal("common.branch", "Branch")}</Th>
+                  <Th className="px-3 py-3 text-center font-black text-slate-700 dark:text-slate-200">{s.t("kyc_col_required_docs", "Required Docs")}</Th>
+                  <Th className="px-3 py-3 text-center font-black text-slate-700 dark:text-slate-200">{s.t("kyc_k_verified", "Verified")}</Th>
+                  <Th className="px-3 py-3 text-center font-black text-slate-700 dark:text-slate-200">{s.t("kyc_missing", "Missing")}</Th>
+                  <Th className="px-3 py-3 text-center font-black text-slate-700 dark:text-slate-200">{s.t("kyc_col_expired", "Expired")}</Th>
+                  <Th className="px-3 py-3 text-center font-black text-slate-700 dark:text-slate-200">{s.t("kyc_k_expiring_soon", "Expiring Soon")}</Th>
+                  <Th className="px-4 py-3 font-black text-slate-700 dark:text-slate-200 min-w-[140px]">{s.t("kyc_col_compliance", "Compliance %")}</Th>
+                  <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{s.tGlobal("common.status", "Status")}</Th>
+                  <Th className="w-28 px-3 py-3 text-right font-black text-slate-700 dark:text-slate-200">{s.t("actions", "Actions")}</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

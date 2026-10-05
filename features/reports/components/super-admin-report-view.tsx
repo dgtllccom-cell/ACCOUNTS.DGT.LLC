@@ -25,6 +25,7 @@ import { apiGet } from "@/lib/api/client";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import { getLanguageDirection } from "@/lib/i18n/languages";
+import { Th } from "@/components/ui/translated-th";
 
 interface CountryPerformanceRow {
   id: string;
@@ -738,13 +739,13 @@ export function SuperAdminReportView({
             <table className="w-full text-start text-xs">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-100/60 dark:border-slate-800 dark:bg-slate-900/90 text-[10px] font-black uppercase tracking-wider text-slate-500">
-                  {visibleColumns.index && <th className="py-2.5 px-3 w-10 text-center">#</th>}
-                  {visibleColumns.country && <th className="py-2.5 px-4 text-start">{tt("sarh.col_country", "Country")}</th>}
-                  {visibleColumns.totalBranches && <th className="py-2.5 px-3 text-center">{tt("sarh.col_total_branches", "Total Branches")}</th>}
-                  {visibleColumns.activeBranches && <th className="py-2.5 px-3 text-center">{tt("sarh.col_active_branches", "Active Branches")}</th>}
-                  {visibleColumns.totalUsers && <th className="py-2.5 px-3 text-center">{tt("sarh.col_total_users", "Total Users")}</th>}
-                  {visibleColumns.status && <th className="py-2.5 px-3 text-center">{t(lang, "common.status", "Status")}</th>}
-                  {visibleColumns.actions && <th className="py-2.5 px-3 text-center">{t(lang, "common.actions", "Actions")}</th>}
+                  {visibleColumns.index && <Th className="py-2.5 px-3 w-10 text-center">#</Th>}
+                  {visibleColumns.country && <Th className="py-2.5 px-4 text-start">{tt("sarh.col_country", "Country")}</Th>}
+                  {visibleColumns.totalBranches && <Th className="py-2.5 px-3 text-center">{tt("sarh.col_total_branches", "Total Branches")}</Th>}
+                  {visibleColumns.activeBranches && <Th className="py-2.5 px-3 text-center">{tt("sarh.col_active_branches", "Active Branches")}</Th>}
+                  {visibleColumns.totalUsers && <Th className="py-2.5 px-3 text-center">{tt("sarh.col_total_users", "Total Users")}</Th>}
+                  {visibleColumns.status && <Th className="py-2.5 px-3 text-center">{t(lang, "common.status", "Status")}</Th>}
+                  {visibleColumns.actions && <Th className="py-2.5 px-3 text-center">{t(lang, "common.actions", "Actions")}</Th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">

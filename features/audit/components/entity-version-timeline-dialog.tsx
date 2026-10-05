@@ -25,6 +25,7 @@ import {
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
+import { Th } from "@/components/ui/translated-th";
 
 interface VersionEvent {
   id: string;
@@ -236,9 +237,9 @@ export function EntityVersionTimelineDialog({
                             <table className="w-full text-left border-collapse">
                               <thead className="bg-muted text-muted-foreground font-semibold">
                                 <tr>
-                                  <th className="p-2 border-b">{tt("aud.field_name", "Field Name")}</th>
-                                  <th className="p-2 border-b text-rose-600">{tt("aud.prev_value", "Previous Value")}</th>
-                                  <th className="p-2 border-b text-emerald-600">{tt("aud.new_value", "New Value")}</th>
+                                  <Th className="p-2 border-b">{tt("aud.field_name", "Field Name")}</Th>
+                                  <Th className="p-2 border-b text-rose-600">{tt("aud.prev_value", "Previous Value")}</Th>
+                                  <Th className="p-2 border-b text-emerald-600">{tt("aud.new_value", "New Value")}</Th>
                                 </tr>
                               </thead>
                               <tbody>

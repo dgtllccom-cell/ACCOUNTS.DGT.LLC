@@ -47,6 +47,7 @@ import {
   type LocationCountry,
   type LocationState
 } from "@/features/locations/location-api";
+import { Th } from "@/components/ui/translated-th";
 
 type WarehouseMode = "create" | "edit";
 
@@ -572,25 +573,25 @@ export function WarehouseManagement() {
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-slate-200/80 bg-slate-50/80 text-[11px] font-black uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-400">
-                  <th className="w-10 px-4 py-3 text-center">
+                  <Th className="w-10 px-4 py-3 text-center">
                     <input
                       type="checkbox"
                       checked={displayList.length > 0 && Object.keys(selectedIds).length === displayList.length}
                       onChange={toggleSelectAll}
                       className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                     />
-                  </th>
-                  <th className="w-10 px-3 py-3 text-center">#</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{tt("wh.col_code", "Warehouse Code")}</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{tt("wh.col_warehouse", "Warehouse Name")}</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{tt("wh.col_owner", "Owner")}</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{tt("common.country", "Country")}</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{tt("common.branch", "Branch")}</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{tt("wh.col_city_area", "City / Area")}</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{tt("wh.col_type", "Type")}</th>
-                  <th className="px-3 py-3 text-right font-black text-slate-700 dark:text-slate-200">{tt("wh.col_capacity", "Capacity (MT)")}</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{tt("common.status", "Status")}</th>
-                  <th className="w-16 px-3 py-3 text-right font-black text-slate-700 dark:text-slate-200">{tt("wh.actions", "Actions")}</th>
+                  </Th>
+                  <Th className="w-10 px-3 py-3 text-center">#</Th>
+                  <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{tt("wh.col_code", "Warehouse Code")}</Th>
+                  <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{tt("wh.col_warehouse", "Warehouse Name")}</Th>
+                  <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{tt("wh.col_owner", "Owner")}</Th>
+                  <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{tt("common.country", "Country")}</Th>
+                  <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{tt("common.branch", "Branch")}</Th>
+                  <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{tt("wh.col_city_area", "City / Area")}</Th>
+                  <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{tt("wh.col_type", "Type")}</Th>
+                  <Th className="px-3 py-3 text-right font-black text-slate-700 dark:text-slate-200">{tt("wh.col_capacity", "Capacity (MT)")}</Th>
+                  <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{tt("common.status", "Status")}</Th>
+                  <Th className="w-16 px-3 py-3 text-right font-black text-slate-700 dark:text-slate-200">{tt("wh.actions", "Actions")}</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

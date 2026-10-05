@@ -26,6 +26,7 @@ import { Input } from "@/components/ui/input";
 import { ERP_MODULE_DEFINITIONS } from "@/lib/permissions/rbac-matrix-builder";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
+import { Th } from "@/components/ui/translated-th";
 
 export type BranchRulesScope = {
   scopeType: "country" | "country_branch" | "city_branch";
@@ -413,13 +414,13 @@ export function BranchRulesDrawer({
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
                     <tr className="bg-slate-100/80 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 font-bold text-slate-700 dark:text-slate-200">
-                      <th className="p-3">Module Name</th>
-                      <th className="p-2 text-center w-20">View</th>
-                      <th className="p-2 text-center w-20">Create</th>
-                      <th className="p-2 text-center w-20">Edit</th>
-                      <th className="p-2 text-center w-20">Delete</th>
-                      <th className="p-2 text-center w-20">Approve</th>
-                      <th className="p-2 text-center w-20">Export</th>
+                      <Th className="p-3">Module Name</Th>
+                      <Th className="p-2 text-center w-20">View</Th>
+                      <Th className="p-2 text-center w-20">Create</Th>
+                      <Th className="p-2 text-center w-20">Edit</Th>
+                      <Th className="p-2 text-center w-20">Delete</Th>
+                      <Th className="p-2 text-center w-20">Approve</Th>
+                      <Th className="p-2 text-center w-20">Export</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

@@ -52,6 +52,7 @@ import {
   CustomerOrderMultiSelect,
   type CustomerOrderOption
 } from "@/features/clearing-agent/components/customer-order-multi-select";
+import { Th } from "@/components/ui/translated-th";
 
 const CHARGE_CATEGORIES = [
   { value: "freight", labelKey: "cbill.charge_freight", defaultLabel: "Freight Charges" },
@@ -1294,13 +1295,13 @@ export function CustomerBillManagementView({ initialBillId }: { initialBillId?: 
                       <table className="w-full text-left text-xs">
                         <thead className="bg-slate-50 dark:bg-slate-800/80 text-[10px] uppercase font-bold text-slate-500 border-b border-slate-200 dark:border-slate-700">
                           <tr>
-                            <th className="py-2.5 px-3">#</th>
-                            <th className="py-2.5 px-3">{tt("cbill.charge_name", "Charge Item")}</th>
-                            <th className="py-2.5 px-3 text-center">{tt("cbill.quantity", "Qty")}</th>
-                            <th className="py-2.5 px-3 text-right">{tt("cbill.rate", "Rate")}</th>
-                            <th className="py-2.5 px-3 text-right">{tt("cbill.tax_pct", "Tax")}</th>
-                            <th className="py-2.5 px-3 text-right">{tt("cbill.total_amount", "Total")}</th>
-                            {!isLocked && <th className="py-2.5 px-2 text-center w-8"></th>}
+                            <Th className="py-2.5 px-3">#</Th>
+                            <Th className="py-2.5 px-3">{tt("cbill.charge_name", "Charge Item")}</Th>
+                            <Th className="py-2.5 px-3 text-center">{tt("cbill.quantity", "Qty")}</Th>
+                            <Th className="py-2.5 px-3 text-right">{tt("cbill.rate", "Rate")}</Th>
+                            <Th className="py-2.5 px-3 text-right">{tt("cbill.tax_pct", "Tax")}</Th>
+                            <Th className="py-2.5 px-3 text-right">{tt("cbill.total_amount", "Total")}</Th>
+                            {!isLocked && <Th className="py-2.5 px-2 text-center w-8"></Th>}
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
@@ -1553,12 +1554,12 @@ export function CustomerBillManagementView({ initialBillId }: { initialBillId?: 
                   <table className="w-full text-left text-xs">
                     <thead className="bg-slate-50 dark:bg-slate-800/80 text-[10px] uppercase font-bold text-slate-500 border-b border-slate-200 dark:border-slate-700">
                       <tr>
-                        <th className="py-2.5 px-3">#</th>
-                        <th className="py-2.5 px-3">{tt("cbill.charge_name", "Description")}</th>
-                        <th className="py-2.5 px-3 text-center">{tt("cbill.quantity", "Qty")}</th>
-                        <th className="py-2.5 px-3 text-right">{tt("cbill.rate", "Rate")}</th>
-                        <th className="py-2.5 px-3 text-right">{tt("cbill.tax_pct", "Tax %")}</th>
-                        <th className="py-2.5 px-3 text-right">{tt("cbill.amount", "Amount")}</th>
+                        <Th className="py-2.5 px-3">#</Th>
+                        <Th className="py-2.5 px-3">{tt("cbill.charge_name", "Description")}</Th>
+                        <Th className="py-2.5 px-3 text-center">{tt("cbill.quantity", "Qty")}</Th>
+                        <Th className="py-2.5 px-3 text-right">{tt("cbill.rate", "Rate")}</Th>
+                        <Th className="py-2.5 px-3 text-right">{tt("cbill.tax_pct", "Tax %")}</Th>
+                        <Th className="py-2.5 px-3 text-right">{tt("cbill.amount", "Amount")}</Th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

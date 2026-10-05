@@ -9,6 +9,7 @@ import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { useErpScope } from "@/lib/hooks/use-erp-scope";
 import { openScopedGenericReport, type GenericReportColumn } from "@/lib/reports/open-scoped-report";
+import { Th } from "@/components/ui/translated-th";
 
 export function PerformanceReportView({ lang: langProp }: { lang?: string }) {
   const s = useErpScreen("utask", langProp);
@@ -116,16 +117,16 @@ export function PerformanceReportView({ lang: langProp }: { lang?: string }) {
             <table className="w-full text-start text-sm">
               <thead className="border-b bg-slate-50 text-[11px] uppercase text-slate-500">
                 <tr>
-                  <th className="px-3 py-2 text-start font-semibold">{s.t("col_assignee", "Assignee")}</th>
-                  <th className="px-3 py-2 text-start font-semibold">{s.t("col_country", "Country")}</th>
-                  <th className="px-3 py-2 text-right font-semibold">{s.t("k_assigned", "Assigned")}</th>
-                  <th className="px-3 py-2 text-right font-semibold">{s.t("k_completed", "Completed")}</th>
-                  <th className="px-3 py-2 text-right font-semibold">{s.t("k_verified", "Verified")}</th>
-                  <th className="px-3 py-2 text-right font-semibold">{s.t("k_in_progress", "In Progress")}</th>
-                  <th className="px-3 py-2 text-right font-semibold">{s.t("k_pending", "Pending")}</th>
-                  <th className="px-3 py-2 text-right font-semibold">{s.t("k_overdue", "Overdue")}</th>
-                  <th className="px-3 py-2 text-right font-semibold">{s.t("k_returned", "Returned")}</th>
-                  <th className="px-3 py-2 text-right font-semibold">{s.t("k_on_time", "On-time Rate")}</th>
+                  <Th className="px-3 py-2 text-start font-semibold">{s.t("col_assignee", "Assignee")}</Th>
+                  <Th className="px-3 py-2 text-start font-semibold">{s.t("col_country", "Country")}</Th>
+                  <Th className="px-3 py-2 text-right font-semibold">{s.t("k_assigned", "Assigned")}</Th>
+                  <Th className="px-3 py-2 text-right font-semibold">{s.t("k_completed", "Completed")}</Th>
+                  <Th className="px-3 py-2 text-right font-semibold">{s.t("k_verified", "Verified")}</Th>
+                  <Th className="px-3 py-2 text-right font-semibold">{s.t("k_in_progress", "In Progress")}</Th>
+                  <Th className="px-3 py-2 text-right font-semibold">{s.t("k_pending", "Pending")}</Th>
+                  <Th className="px-3 py-2 text-right font-semibold">{s.t("k_overdue", "Overdue")}</Th>
+                  <Th className="px-3 py-2 text-right font-semibold">{s.t("k_returned", "Returned")}</Th>
+                  <Th className="px-3 py-2 text-right font-semibold">{s.t("k_on_time", "On-time Rate")}</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">

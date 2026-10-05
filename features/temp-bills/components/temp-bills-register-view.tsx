@@ -14,6 +14,7 @@ import {
   type TempBillInput,
 } from "@/features/temp-bills/temp-bills-api";
 import { ErpDatePicker } from "@/components/ui/erp-date-picker";
+import { Th } from "@/components/ui/translated-th";
 
 const CCY = ["USD", "AED", "PKR", "AFN", "EUR", "GBP", "INR", "CNY", "SAR", "IRR"];
 const UNITS = ["kg", "carton", "bag", "ton", "pcs", "box", "pallet"];
@@ -225,17 +226,17 @@ export function TempBillsRegisterView({ lang: langProp, section = "all" }: { lan
                     <table className="w-full min-w-[900px] text-sm">
                       <thead>
                         <tr className="border-b border-border bg-background text-xs uppercase text-muted-foreground">
-                          <th className={`px-2 py-1.5 ${textStart}`}>{s.t("col_date", "Date")}</th>
-                          <th className={`px-2 py-1.5 ${textStart}`}>{s.t("col_kind", "Type")}</th>
-                          <th className={`px-2 py-1.5 ${textStart}`}>{s.t("col_goods", "Goods")}</th>
-                          <th className={`px-2 py-1.5 ${textStart}`}>{s.t("col_billno", "Bill No")}</th>
-                          <th className={`px-2 py-1.5 ${textStart}`}>{s.t("col_container", "Container")}</th>
-                          <th className={`px-2 py-1.5 ${textStart}`}>{s.t("col_bl", "BL No")}</th>
-                          <th className={`px-2 py-1.5 ${textEnd}`}>{s.t("col_qty", "Qty")}</th>
-                          <th className={`px-2 py-1.5 ${textEnd}`}>{s.t("col_weight", "Wt/Ctn")}</th>
-                          <th className={`px-2 py-1.5 ${textEnd}`}>{s.t("col_rate", "Rate")}</th>
-                          <th className={`px-2 py-1.5 ${textEnd}`}>{s.t("col_amount", "Amount")}</th>
-                          <th className={`px-2 py-1.5 ${textEnd}`}>{s.t("col_actions", "Actions")}</th>
+                          <Th className={`px-2 py-1.5 ${textStart}`}>{s.t("col_date", "Date")}</Th>
+                          <Th className={`px-2 py-1.5 ${textStart}`}>{s.t("col_kind", "Type")}</Th>
+                          <Th className={`px-2 py-1.5 ${textStart}`}>{s.t("col_goods", "Goods")}</Th>
+                          <Th className={`px-2 py-1.5 ${textStart}`}>{s.t("col_billno", "Bill No")}</Th>
+                          <Th className={`px-2 py-1.5 ${textStart}`}>{s.t("col_container", "Container")}</Th>
+                          <Th className={`px-2 py-1.5 ${textStart}`}>{s.t("col_bl", "BL No")}</Th>
+                          <Th className={`px-2 py-1.5 ${textEnd}`}>{s.t("col_qty", "Qty")}</Th>
+                          <Th className={`px-2 py-1.5 ${textEnd}`}>{s.t("col_weight", "Wt/Ctn")}</Th>
+                          <Th className={`px-2 py-1.5 ${textEnd}`}>{s.t("col_rate", "Rate")}</Th>
+                          <Th className={`px-2 py-1.5 ${textEnd}`}>{s.t("col_amount", "Amount")}</Th>
+                          <Th className={`px-2 py-1.5 ${textEnd}`}>{s.t("col_actions", "Actions")}</Th>
                         </tr>
                       </thead>
                       <tbody>

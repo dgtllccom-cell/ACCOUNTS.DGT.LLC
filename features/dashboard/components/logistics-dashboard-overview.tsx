@@ -51,6 +51,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { Th } from "@/components/ui/translated-th";
 
 export type LogisticsShipment = {
   id: string;
@@ -752,14 +753,14 @@ export function LogisticsDashboardOverview({
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 text-[10px] font-black uppercase text-slate-500 tracking-wider">
-                  <th className="px-3.5 py-2.5">#</th>
-                  <th className="px-3.5 py-2.5">Date</th>
-                  <th className="px-3.5 py-2.5">Shipping Line</th>
-                  <th className="px-3.5 py-2.5">Container</th>
-                  <th className="px-3.5 py-2.5">Vessel</th>
-                  <th className="px-3.5 py-2.5">ETA</th>
-                  <th className="px-3.5 py-2.5 text-center">Status</th>
-                  <th className="px-3.5 py-2.5 text-right">Actions</th>
+                  <Th className="px-3.5 py-2.5">#</Th>
+                  <Th className="px-3.5 py-2.5">Date</Th>
+                  <Th className="px-3.5 py-2.5">Shipping Line</Th>
+                  <Th className="px-3.5 py-2.5">Container</Th>
+                  <Th className="px-3.5 py-2.5">Vessel</Th>
+                  <Th className="px-3.5 py-2.5">ETA</Th>
+                  <Th className="px-3.5 py-2.5 text-center">Status</Th>
+                  <Th className="px-3.5 py-2.5 text-right">Actions</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium text-slate-700 dark:text-slate-300">
@@ -833,13 +834,13 @@ export function LogisticsDashboardOverview({
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 text-[10px] font-black uppercase text-slate-500 tracking-wider">
-                  <th className="px-3.5 py-2.5">#</th>
-                  <th className="px-3.5 py-2.5">Task</th>
-                  <th className="px-3.5 py-2.5">Related To</th>
-                  <th className="px-3.5 py-2.5">Due Date</th>
-                  <th className="px-3.5 py-2.5">Priority</th>
-                  <th className="px-3.5 py-2.5 text-center">Status</th>
-                  <th className="px-3.5 py-2.5 text-right">Actions</th>
+                  <Th className="px-3.5 py-2.5">#</Th>
+                  <Th className="px-3.5 py-2.5">Task</Th>
+                  <Th className="px-3.5 py-2.5">Related To</Th>
+                  <Th className="px-3.5 py-2.5">Due Date</Th>
+                  <Th className="px-3.5 py-2.5">Priority</Th>
+                  <Th className="px-3.5 py-2.5 text-center">Status</Th>
+                  <Th className="px-3.5 py-2.5 text-right">Actions</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium text-slate-700 dark:text-slate-300">
@@ -984,13 +985,13 @@ export function LogisticsDashboardOverview({
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 text-[10px] font-black uppercase text-slate-500 tracking-wider">
-                  <th className="px-4 py-3">#</th>
-                  <th className="px-4 py-3">Date</th>
-                  <th className="px-4 py-3">Document Type</th>
-                  <th className="px-4 py-3">Reference No</th>
-                  <th className="px-4 py-3">Related To</th>
-                  <th className="px-4 py-3 text-center">Status</th>
-                  <th className="px-4 py-3 text-right">Actions</th>
+                  <Th className="px-4 py-3">#</Th>
+                  <Th className="px-4 py-3">Date</Th>
+                  <Th className="px-4 py-3">Document Type</Th>
+                  <Th className="px-4 py-3">Reference No</Th>
+                  <Th className="px-4 py-3">Related To</Th>
+                  <Th className="px-4 py-3 text-center">Status</Th>
+                  <Th className="px-4 py-3 text-right">Actions</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium text-slate-700 dark:text-slate-300">
@@ -1039,15 +1040,15 @@ export function LogisticsDashboardOverview({
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 text-[10px] font-black uppercase text-slate-500 tracking-wider">
-                  <th className="px-4 py-3">#</th>
-                  <th className="px-4 py-3">Container No</th>
-                  <th className="px-4 py-3">Shipping Line</th>
-                  <th className="px-4 py-3">Size / Type</th>
-                  <th className="px-4 py-3">Vessel</th>
-                  <th className="px-4 py-3">Current Location</th>
-                  <th className="px-4 py-3">Seal No</th>
-                  <th className="px-4 py-3 text-center">Status</th>
-                  <th className="px-4 py-3 text-right">Actions</th>
+                  <Th className="px-4 py-3">#</Th>
+                  <Th className="px-4 py-3">Container No</Th>
+                  <Th className="px-4 py-3">Shipping Line</Th>
+                  <Th className="px-4 py-3">Size / Type</Th>
+                  <Th className="px-4 py-3">Vessel</Th>
+                  <Th className="px-4 py-3">Current Location</Th>
+                  <Th className="px-4 py-3">Seal No</Th>
+                  <Th className="px-4 py-3 text-center">Status</Th>
+                  <Th className="px-4 py-3 text-right">Actions</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium text-slate-700 dark:text-slate-300">
@@ -1097,14 +1098,14 @@ export function LogisticsDashboardOverview({
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 text-[10px] font-black uppercase text-slate-500 tracking-wider">
-                  <th className="px-4 py-3">#</th>
-                  <th className="px-4 py-3">Date</th>
-                  <th className="px-4 py-3">Truck No</th>
-                  <th className="px-4 py-3">Driver Name</th>
-                  <th className="px-4 py-3">Origin - Destination</th>
-                  <th className="px-4 py-3">Cargo Type</th>
-                  <th className="px-4 py-3 text-center">Status</th>
-                  <th className="px-4 py-3 text-right">Actions</th>
+                  <Th className="px-4 py-3">#</Th>
+                  <Th className="px-4 py-3">Date</Th>
+                  <Th className="px-4 py-3">Truck No</Th>
+                  <Th className="px-4 py-3">Driver Name</Th>
+                  <Th className="px-4 py-3">Origin - Destination</Th>
+                  <Th className="px-4 py-3">Cargo Type</Th>
+                  <Th className="px-4 py-3 text-center">Status</Th>
+                  <Th className="px-4 py-3 text-right">Actions</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium text-slate-700 dark:text-slate-300">
@@ -1124,13 +1125,13 @@ export function LogisticsDashboardOverview({
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 text-[10px] font-black uppercase text-slate-500 tracking-wider">
-                  <th className="px-4 py-3">#</th>
-                  <th className="px-4 py-3">Date & Time</th>
-                  <th className="px-4 py-3">Agent Name</th>
-                  <th className="px-4 py-3">Activity / Operation</th>
-                  <th className="px-4 py-3">Reference</th>
-                  <th className="px-4 py-3 text-center">Status</th>
-                  <th className="px-4 py-3 text-right">Actions</th>
+                  <Th className="px-4 py-3">#</Th>
+                  <Th className="px-4 py-3">Date & Time</Th>
+                  <Th className="px-4 py-3">Agent Name</Th>
+                  <Th className="px-4 py-3">Activity / Operation</Th>
+                  <Th className="px-4 py-3">Reference</Th>
+                  <Th className="px-4 py-3 text-center">Status</Th>
+                  <Th className="px-4 py-3 text-right">Actions</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium text-slate-700 dark:text-slate-300">
@@ -1150,13 +1151,13 @@ export function LogisticsDashboardOverview({
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 text-[10px] font-black uppercase text-slate-500 tracking-wider">
-                  <th className="px-4 py-3">#</th>
-                  <th className="px-4 py-3">Alert Description</th>
-                  <th className="px-4 py-3">Affected Entity</th>
-                  <th className="px-4 py-3">Date</th>
-                  <th className="px-4 py-3">Severity</th>
-                  <th className="px-4 py-3 text-center">Status</th>
-                  <th className="px-4 py-3 text-right">Actions</th>
+                  <Th className="px-4 py-3">#</Th>
+                  <Th className="px-4 py-3">Alert Description</Th>
+                  <Th className="px-4 py-3">Affected Entity</Th>
+                  <Th className="px-4 py-3">Date</Th>
+                  <Th className="px-4 py-3">Severity</Th>
+                  <Th className="px-4 py-3 text-center">Status</Th>
+                  <Th className="px-4 py-3 text-right">Actions</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium text-slate-700 dark:text-slate-300">

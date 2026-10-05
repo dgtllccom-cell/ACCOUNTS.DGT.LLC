@@ -35,6 +35,7 @@ import { t } from "@/lib/i18n/ui";
 import { localizeTerm } from "@/lib/i18n/transliteration";
 import { openCompany360Report } from "@/lib/reports/open-company-360-report-window";
 import { openMasterProfile } from "@/lib/reports/master-profiles";
+import { Th } from "@/components/ui/translated-th";
 
 export type GroupCompanyItem = {
   id: string;
@@ -890,10 +891,10 @@ export function Group360ProfileModal({
                 <table className="w-full text-xs text-left">
                   <thead className="bg-slate-50 dark:bg-slate-950 text-slate-500 font-black uppercase text-[10px]">
                     <tr>
-                      <th className="p-3">Entity / Stakeholder</th>
-                      <th className="p-3">Contact Type</th>
-                      <th className="p-3">Value</th>
-                      <th className="p-3 text-center">Actions</th>
+                      <Th className="p-3">Entity / Stakeholder</Th>
+                      <Th className="p-3">Contact Type</Th>
+                      <Th className="p-3">Value</Th>
+                      <Th className="p-3 text-center">Actions</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -961,11 +962,11 @@ export function Group360ProfileModal({
                 <table className="w-full text-xs text-left">
                   <thead className="bg-slate-50 dark:bg-slate-950 text-slate-500 font-black uppercase text-[10px]">
                     <tr>
-                      <th className="p-3 text-center w-10">#</th>
-                      <th className="p-3">Sister Company</th>
-                      <th className="p-3">License / Contract Type</th>
-                      <th className="p-3">Registration Number / ID</th>
-                      <th className="p-3 text-center">Status</th>
+                      <Th className="p-3 text-center w-10">#</Th>
+                      <Th className="p-3">Sister Company</Th>
+                      <Th className="p-3">License / Contract Type</Th>
+                      <Th className="p-3">Registration Number / ID</Th>
+                      <Th className="p-3 text-center">Status</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

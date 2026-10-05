@@ -48,6 +48,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { Th } from "@/components/ui/translated-th";
 
 // ─── Dictionary ───────────────────────────────────────────────────────────────
 
@@ -514,14 +515,14 @@ export function ShareFormsTab({ lang }: ShareFormsTabProps) {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                  <th className="py-3 px-4">{tx("colSerial", lang)}</th>
-                  <th className="py-3 px-4">{tx("colFormType", lang)}</th>
-                  <th className="py-3 px-4">{tx("colStatus", lang)}</th>
-                  <th className="py-3 px-4">{tx("colCreatedBy", lang)}</th>
-                  <th className="py-3 px-4">{tx("colCreatedAt", lang)}</th>
-                  <th className="py-3 px-4">{tx("colExpiry", lang)}</th>
-                  <th className="py-3 px-4">{tx("colSubmission", lang)}</th>
-                  <th className="py-3 px-4 text-right">{tx("colActions", lang)}</th>
+                  <Th className="py-3 px-4">{tx("colSerial", lang)}</Th>
+                  <Th className="py-3 px-4">{tx("colFormType", lang)}</Th>
+                  <Th className="py-3 px-4">{tx("colStatus", lang)}</Th>
+                  <Th className="py-3 px-4">{tx("colCreatedBy", lang)}</Th>
+                  <Th className="py-3 px-4">{tx("colCreatedAt", lang)}</Th>
+                  <Th className="py-3 px-4">{tx("colExpiry", lang)}</Th>
+                  <Th className="py-3 px-4">{tx("colSubmission", lang)}</Th>
+                  <Th className="py-3 px-4 text-right">{tx("colActions", lang)}</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-xs">

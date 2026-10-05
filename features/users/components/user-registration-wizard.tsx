@@ -77,6 +77,7 @@ import { openUserA4ReportWindow } from "@/lib/reports/open-user-a4-report-window
 import { UserProfileReportModal, UserProfileData } from "./user-profile-report-modal";
 import { ClearingAgentPicker } from "@/features/shipping/components/clearing-agent-picker";
 import { useErpScope } from "@/lib/hooks/use-erp-scope";
+import { Th } from "@/components/ui/translated-th";
 
 type MainBranchRow = { id: string; name: string; code: string; local_currency: string; is_main: boolean; city_id?: string | null };
 type CityBranchRow = { id: string; name: string; code: string; city_name: string; cityName?: string; local_currency: string; country_branch_id: string };
@@ -2360,13 +2361,13 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                         <table className="w-full text-left border-collapse">
                           <thead className="bg-slate-100 dark:bg-slate-800 sticky top-0 z-10 text-[10px] uppercase font-bold text-slate-600 dark:text-slate-300">
                             <tr>
-                              <th className="p-2 pl-3">Module / Form</th>
-                              <th className="p-2 text-center">View</th>
-                              <th className="p-2 text-center">Create</th>
-                              <th className="p-2 text-center">Edit</th>
-                              <th className="p-2 text-center">Delete</th>
-                              <th className="p-2 text-center">Post</th>
-                              <th className="p-2 text-center pr-3">Print</th>
+                              <Th className="p-2 pl-3">Module / Form</Th>
+                              <Th className="p-2 text-center">View</Th>
+                              <Th className="p-2 text-center">Create</Th>
+                              <Th className="p-2 text-center">Edit</Th>
+                              <Th className="p-2 text-center">Delete</Th>
+                              <Th className="p-2 text-center">Post</Th>
+                              <Th className="p-2 text-center pr-3">Print</Th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">

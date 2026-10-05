@@ -35,6 +35,7 @@ import { t } from "@/lib/i18n/ui";
 import { openJournalReportWindow } from "@/lib/reports/open-journal-report-window";
 import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
 import { resolveLedgerBranding } from "@/lib/reports/resolve-ledger-branding";
+import { Th } from "@/components/ui/translated-th";
 
 export type RoznamchaEntryCategory = "business" | "bank" | "cash" | "invoice" | "transfer";
 
@@ -953,12 +954,12 @@ export function RoznamchaTypeReportView({
               <thead className="bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700">
                 <tr>
                   <ReportTh className="text-center">{tt("rozrep.sno", "S.No")}</ReportTh>
-                  <th
+                  <Th
                     className="p-2.5 text-center font-bold cursor-pointer select-none hover:bg-slate-200 dark:hover:bg-slate-700 whitespace-nowrap"
                     onClick={() => toggleSort("entry_date")}
                   >
                     {tt("rozrep.date", "Date")}{sortBy === "entry_date" ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
-                  </th>
+                  </Th>
                   <ReportTh className="text-center">{tt("rozrep.entry_serial", "Entry Serial")}</ReportTh>
                   <ReportTh className="text-center">{tt("rozrep.country", "Country")}</ReportTh>
                   <ReportTh className="text-center">{tt("rozrep.branch", "Branch")}</ReportTh>

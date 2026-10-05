@@ -6,6 +6,7 @@ import { apiGet } from "@/lib/api/client";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import { openJournalReportWindow } from "@/lib/reports/open-journal-report-window";
+import { Th } from "@/components/ui/translated-th";
 
 type Field = { key: string; label: string; value: string; strong?: boolean };
 type PartyCard = { linked: boolean; titleKey: string; titleLabel: string; fields: Field[]; noteKey?: string; noteLabel?: string; viaKey?: string; viaLabel?: string; via?: string };
@@ -220,8 +221,8 @@ export function EntryDetailView({ id, module = "Roznamcha", src = "Roznamcha", l
             <table className="w-full min-w-[720px] text-xs">
               <thead className="bg-slate-50 text-[10px] uppercase text-slate-500 dark:bg-slate-950/50">
                 <tr>
-                  <th className="p-2 text-start">#</th>
-                  {d.lines.columns.map((c) => <th key={c.key} className={`p-2 ${c.num ? "text-end" : "text-start"}`}>{tfc(c)}</th>)}
+                  <Th className="p-2 text-start">#</Th>
+                  {d.lines.columns.map((c) => <Th key={c.key} className={`p-2 ${c.num ? "text-end" : "text-start"}`}>{tfc(c)}</Th>)}
                 </tr>
               </thead>
               <tbody>

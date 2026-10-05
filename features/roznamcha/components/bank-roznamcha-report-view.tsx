@@ -51,6 +51,7 @@ import { cn } from "@/lib/utils";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { openJournalReportWindow } from "@/lib/reports/open-journal-report-window";
+import { Th } from "@/components/ui/translated-th";
 
 export type BankTransactionRow = {
   id: string;
@@ -936,27 +937,27 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
           <table className="w-full min-w-[1400px] border-collapse text-xs">
             <thead>
               <tr className="bg-slate-50 text-slate-700 border-b dark:bg-slate-900/60 dark:text-slate-200 font-bold text-[11px]">
-                <th className="py-3 px-2 text-center w-12 border-r">{tt("bankroz.sr", "Sr #")}</th>
-                <th className="py-3 px-2 text-center w-24 border-r">{tt("bankroz.entry_no", "Entry #")}</th>
-                <th className="py-3 px-3 text-start w-32 border-r">{tt("bankroz.date_time", "Date / Time")}</th>
-                <th className="py-3 px-2.5 text-center w-24 border-r">{tt("bankroz.country", "Country")}</th>
-                <th className="py-3 px-2 text-center w-24 border-r">{tt("bankroz.branch_no", "Branch No.")}</th>
-                <th className="py-3 px-3 text-start w-32 border-r">{tt("bankroz.branch_name", "Branch Name")}</th>
-                <th className="py-3 px-3 text-start w-28 border-r bg-blue-50/40 dark:bg-blue-950/20 text-blue-900 dark:text-blue-300">
+                <Th className="py-3 px-2 text-center w-12 border-r">{tt("bankroz.sr", "Sr #")}</Th>
+                <Th className="py-3 px-2 text-center w-24 border-r">{tt("bankroz.entry_no", "Entry #")}</Th>
+                <Th className="py-3 px-3 text-start w-32 border-r">{tt("bankroz.date_time", "Date / Time")}</Th>
+                <Th className="py-3 px-2.5 text-center w-24 border-r">{tt("bankroz.country", "Country")}</Th>
+                <Th className="py-3 px-2 text-center w-24 border-r">{tt("bankroz.branch_no", "Branch No.")}</Th>
+                <Th className="py-3 px-3 text-start w-32 border-r">{tt("bankroz.branch_name", "Branch Name")}</Th>
+                <Th className="py-3 px-3 text-start w-28 border-r bg-blue-50/40 dark:bg-blue-950/20 text-blue-900 dark:text-blue-300">
                   {tt("bankroz.user_name", "User Name")}
-                </th>
-                <th className="py-3 px-3 text-start w-40 border-r">{tt("bankroz.bank_name", "Bank Name")}</th>
-                <th className="py-3 px-2 text-center w-28 border-r font-mono">{tt("bankroz.check_no", "Check #")}</th>
-                <th className="py-3 px-3 text-start min-w-[200px] border-r">{tt("bankroz.details_particulars", "Details / Particulars")}</th>
-                <th className="py-3 px-2.5 text-center w-28 border-r">{tt("bankroz.check_date", "Check Date")}</th>
-                <th className="py-3 px-2.5 text-center w-28 border-r">{tt("bankroz.due_payment_date", "Due / Payment Date")}</th>
-                <th className="py-3 px-3 text-end w-28 border-r text-rose-600">{tt("bankroz.debit", "Debit")} (PKR)</th>
-                <th className="py-3 px-3 text-end w-28 border-r text-emerald-600">{tt("bankroz.credit", "Credit")} (PKR)</th>
-                <th className="py-3 px-3 text-end w-32 border-r font-bold text-slate-900 dark:text-slate-100">
+                </Th>
+                <Th className="py-3 px-3 text-start w-40 border-r">{tt("bankroz.bank_name", "Bank Name")}</Th>
+                <Th className="py-3 px-2 text-center w-28 border-r font-mono">{tt("bankroz.check_no", "Check #")}</Th>
+                <Th className="py-3 px-3 text-start min-w-[200px] border-r">{tt("bankroz.details_particulars", "Details / Particulars")}</Th>
+                <Th className="py-3 px-2.5 text-center w-28 border-r">{tt("bankroz.check_date", "Check Date")}</Th>
+                <Th className="py-3 px-2.5 text-center w-28 border-r">{tt("bankroz.due_payment_date", "Due / Payment Date")}</Th>
+                <Th className="py-3 px-3 text-end w-28 border-r text-rose-600">{tt("bankroz.debit", "Debit")} (PKR)</Th>
+                <Th className="py-3 px-3 text-end w-28 border-r text-emerald-600">{tt("bankroz.credit", "Credit")} (PKR)</Th>
+                <Th className="py-3 px-3 text-end w-32 border-r font-bold text-slate-900 dark:text-slate-100">
                   {tt("bankroz.balance", "Balance")} (PKR)
-                </th>
-                <th className="py-3 px-2.5 text-center w-28 border-r">{tt("bankroz.status", "Status")}</th>
-                <th className="py-3 px-2 text-center w-20">{tt("bankroz.action", "Action")}</th>
+                </Th>
+                <Th className="py-3 px-2.5 text-center w-28 border-r">{tt("bankroz.status", "Status")}</Th>
+                <Th className="py-3 px-2 text-center w-20">{tt("bankroz.action", "Action")}</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

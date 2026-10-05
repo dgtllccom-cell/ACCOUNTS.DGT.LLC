@@ -51,6 +51,7 @@ import { t } from "@/lib/i18n/ui";
 import { downloadCsv } from "@/features/branches/components/branch-report-export";
 import { cn } from "@/lib/utils";
 import { useBranchUserContext, roleLabel } from "@/lib/hooks/use-branch-user-context";
+import { Th } from "@/components/ui/translated-th";
 
 /** Formats a real per-currency breakdown; never collapses mixed currencies into one number. */
 function formatByCurrency(rows: Array<{ currency: string; amount: number }> | undefined | null): string {
@@ -719,29 +720,29 @@ export function SmartCrmControlCenter() {
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-slate-200/80 bg-slate-50/80 text-[11px] font-black uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-400">
-                  <th className="w-10 px-4 py-3 text-center">
+                  <Th className="w-10 px-4 py-3 text-center">
                     <input
                       type="checkbox"
                       checked={registeredItems.length > 0 && Object.keys(selectedIds).length === registeredItems.length}
                       onChange={toggleSelectAll}
                       className="rounded border-slate-300 text-purple-600 focus:ring-purple-500"
                     />
-                  </th>
-                  <th className="w-12 px-3 py-3 text-center">#</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_type", "Type")}</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_reference", "Reference No.")}</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_party_account", "Party / Account")}</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_invoice_bill", "Invoice / Bill No.")}</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_due_date", "Due Date")}</th>
-                  <th className="px-3 py-3 text-right font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_amount", "Amount")}</th>
-                  <th className="px-3 py-3 text-right font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_paid", "Paid")}</th>
-                  <th className="px-3 py-3 text-right font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_remaining", "Remaining")}</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_currency", "Currency")}</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_branch", "Branch")}</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_responsible", "Responsible")}</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_priority", "Priority")}</th>
-                  <th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_status", "Status")}</th>
-                  <th className="w-16 px-3 py-3 text-right font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_action", "Action")}</th>
+                  </Th>
+                  <Th className="w-12 px-3 py-3 text-center">#</Th>
+                  <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_type", "Type")}</Th>
+                  <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_reference", "Reference No.")}</Th>
+                  <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_party_account", "Party / Account")}</Th>
+                  <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_invoice_bill", "Invoice / Bill No.")}</Th>
+                  <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_due_date", "Due Date")}</Th>
+                  <Th className="px-3 py-3 text-right font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_amount", "Amount")}</Th>
+                  <Th className="px-3 py-3 text-right font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_paid", "Paid")}</Th>
+                  <Th className="px-3 py-3 text-right font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_remaining", "Remaining")}</Th>
+                  <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_currency", "Currency")}</Th>
+                  <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_branch", "Branch")}</Th>
+                  <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_responsible", "Responsible")}</Th>
+                  <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_priority", "Priority")}</Th>
+                  <Th className="px-3 py-3 font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_status", "Status")}</Th>
+                  <Th className="w-16 px-3 py-3 text-right font-black text-slate-700 dark:text-slate-200">{t(lang, "crm.th_action", "Action")}</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

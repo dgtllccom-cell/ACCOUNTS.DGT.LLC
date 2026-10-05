@@ -18,6 +18,7 @@
 
 import { useMemo, useState } from "react";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
+import { Th } from "@/components/ui/translated-th";
 
 type Row = { code: string; name: string; branch: "main" | "city" };
 
@@ -64,9 +65,9 @@ export function FiveLanguageReferenceCard({ lang }: { lang?: string }) {
       <table className="mt-4 w-full border-collapse text-xs">
         <thead>
           <tr className="border-b border-border text-muted-foreground">
-            <th className={`py-1.5 ${s.textStart}`}>{s.t("col_code", "Code")}</th>
-            <th className={`py-1.5 ${s.textStart}`}>{s.t("col_name", "Name")}</th>
-            <th className={`py-1.5 ${s.textEnd}`}>{s.t("col_status", "Status")}</th>
+            <Th className={`py-1.5 ${s.textStart}`}>{s.t("col_code", "Code")}</Th>
+            <Th className={`py-1.5 ${s.textStart}`}>{s.t("col_name", "Name")}</Th>
+            <Th className={`py-1.5 ${s.textEnd}`}>{s.t("col_status", "Status")}</Th>
           </tr>
         </thead>
         <tbody>

@@ -4506,12 +4506,12 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                           <table className="w-full text-[10px] text-left">
                             <thead className="bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 font-black border-b border-slate-200 dark:border-slate-800 sticky top-0">
                               <tr>
-                                <th className="py-1.5 px-2 text-center w-10">Select</th>
-                                <th className="py-1.5 px-2">Branch</th>
-                                <th className="py-1.5 px-2">Warehouse / Loc</th>
-                                <th className="py-1.5 px-2">Lot Ref</th>
-                                <th className="py-1.5 px-2 text-right">Available Qty</th>
-                                <th className="py-1.5 px-2 text-right">Net WT</th>
+                                <Th className="py-1.5 px-2 text-center w-10">Select</Th>
+                                <Th className="py-1.5 px-2">Branch</Th>
+                                <Th className="py-1.5 px-2">Warehouse / Loc</Th>
+                                <Th className="py-1.5 px-2">Lot Ref</Th>
+                                <Th className="py-1.5 px-2 text-right">Available Qty</Th>
+                                <Th className="py-1.5 px-2 text-right">Net WT</Th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
