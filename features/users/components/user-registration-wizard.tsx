@@ -1407,7 +1407,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
             {selectedEmployeeId && employeeProfile.fullName ? (
               <div className="space-y-4">
                 {/* Employee Card: Photo, Name, Code, Badges */}
-                <div className="flex items-center justify-between border-b pb-3">
+                <div className="flex max-sm:flex-wrap items-center justify-between max-sm:gap-2 border-b pb-3">
                   <div className="flex items-center gap-3">
                     <div className="h-14 w-14 rounded-xl bg-slate-900 text-slate-100 font-bold flex items-center justify-center border border-slate-800 shadow-inner overflow-hidden shrink-0">
                       {employeeProfile.photoUrl ? (
@@ -1614,9 +1614,9 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
             <CardHeader className="border-b bg-slate-900 text-white px-5 py-3 flex flex-row items-center justify-between">
               <CardTitle className="text-xs font-bold uppercase tracking-wider flex items-center gap-2 text-slate-100">
                 {steps[step - 1].icon}
-                <span>Step {step}: {steps[step - 1].label}</span>
+                <span>{centralT(activeLang, "urw2.step_label" as never, "Step")} {step}: {steps[step - 1].label}</span>
               </CardTitle>
-              <span className="text-xs font-mono font-bold text-emerald-400 bg-slate-800 px-2 py-0.5 rounded border border-slate-700">
+              <span className="shrink-0 whitespace-nowrap text-xs font-mono font-bold text-emerald-400 bg-slate-800 px-2 py-0.5 rounded border border-slate-700">
                 {userCode}
               </span>
             </CardHeader>
@@ -1915,7 +1915,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                   <div className="rounded-xl border border-teal-200 dark:border-teal-900 bg-teal-50/50 dark:bg-teal-950/20 p-3.5 space-y-3">
                     <Label className="text-xs font-bold uppercase tracking-wider text-teal-900 dark:text-teal-300 flex items-center gap-1.5">
                       <Shield className="h-4 w-4 text-teal-600" />
-                      <span>{centralT(activeLang, "urw2.user_type_heading" as never, "2. User Category & Authority Tier (ایڈمن یا عام یوزر)")}</span>
+                      <span>{centralT(activeLang, "urw2.user_type_heading" as never, "2. User Category & Authority Tier")}</span>
                     </Label>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">

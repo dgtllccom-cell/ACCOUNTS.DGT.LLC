@@ -825,7 +825,7 @@ export function SystemAuditAndFormsDirectoryView({ lang: langProp = "en" }: { la
 
           <div className="mt-8 pt-4 border-t border-border flex flex-col sm:flex-row items-center justify-between text-[10px] text-muted-foreground">
             <p>© {new Date().getFullYear()} {brandLine} — {t(lang, "safd.rights_reserved", "All rights reserved.")}</p>
-            <p className="font-mono">{t(lang, "safd.generated_on", "Generated")}: {new Date().toLocaleString(`${lang}-u-ca-gregory-nu-latn`, { calendar: "gregory", numberingSystem: "latn" })}</p>
+            <p className="font-mono" suppressHydrationWarning>{t(lang, "safd.generated_on", "Generated")}: {new Date().toLocaleString(`${lang}-u-ca-gregory-nu-latn`, { calendar: "gregory", numberingSystem: "latn" })}</p>
           </div>
         </div>
       </div>

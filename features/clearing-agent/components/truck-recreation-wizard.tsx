@@ -205,7 +205,9 @@ export function TruckRecreationWizard({
     branch: false,
   });
 
-  const [nowStr] = useState(() => new Date().toLocaleString());
+  // set after mount: a clock string rendered on the server and again in the browser differs by seconds (React hydration error #418)
+  const [nowStr, setNowStr] = useState("");
+  useEffect(() => { setNowStr(new Date().toLocaleString()); }, []);
 
   type TruckOption = { id: string; category: string; code: string; name_en: string; name_ur: string; name_ar: string; name_fa: string; name_ps: string };
   const [truckOptions, setTruckOptions] = useState<TruckOption[]>([]);

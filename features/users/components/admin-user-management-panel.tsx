@@ -801,10 +801,10 @@ export function AdminUserManagementPanel() {
                                   <Th className="px-4 py-2">Role</Th>
                                   <Th className="px-4 py-2">Branch Code</Th>
                                   <Th className="px-4 py-2">Login ID</Th>
+                                  <Th className="px-4 py-2">Status</Th>
                                   <Th className="px-4 py-2">Country</Th>
                                   <Th className="px-4 py-2">City</Th>
                                   <Th className="px-4 py-2">Last Login</Th>
-                                  <Th className="px-4 py-2">Status</Th>
                                   <Th className="px-4 py-2 text-right">Actions</Th>
                                 </tr>
                               </thead>
@@ -886,10 +886,10 @@ export function AdminUserManagementPanel() {
                                             <Th className="px-4 py-2.5">Role</Th>
                                             <Th className="px-4 py-2.5">Branch Code</Th>
                                             <Th className="px-4 py-2.5">Login ID</Th>
+                                            <Th className="px-4 py-2.5">Status</Th>
                                             <Th className="px-4 py-2.5">Country</Th>
                                             <Th className="px-4 py-2.5">City</Th>
                                             <Th className="px-4 py-2.5">Last Login</Th>
-                                            <Th className="px-4 py-2.5">Status</Th>
                                             <Th className="px-4 py-2.5 text-right">Actions</Th>
                                           </tr>
                                         </thead>
@@ -953,10 +953,10 @@ export function AdminUserManagementPanel() {
                                                       <Th className="px-4 py-2">Role</Th>
                                                       <Th className="px-4 py-2">Branch Code</Th>
                                                       <Th className="px-4 py-2">Login ID</Th>
+                                                      <Th className="px-4 py-2">Status</Th>
                                                       <Th className="px-4 py-2">Country</Th>
                                                       <Th className="px-4 py-2">City</Th>
                                                       <Th className="px-4 py-2">Last Login</Th>
-                                                      <Th className="px-4 py-2">Status</Th>
                                                       <Th className="px-4 py-2 text-right">Actions</Th>
                                                     </tr>
                                                   </thead>

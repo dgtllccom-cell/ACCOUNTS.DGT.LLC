@@ -962,7 +962,7 @@ export function EmployeeForm({
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
-                      <div className="text-base font-black text-slate-900 dark:text-slate-100 truncate">
+                      <div className="text-base font-black text-slate-900 dark:text-slate-100 truncate max-sm:whitespace-normal max-sm:break-words pe-1">
                         {fullName || <span className="text-slate-400 font-normal italic">{translateHr("No Person Selected", lang)}</span>}
                       </div>
                       {selectedPersonObj?.person_code && (

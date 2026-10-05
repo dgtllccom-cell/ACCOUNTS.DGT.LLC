@@ -11554,6 +11554,13 @@ export type UiKey =
   | "aump.create_country_main_branch"
   | "aump.no_direct_users"
   | "aump.city_branches_under"
+  | "urw2.user_type_heading"
+  | "cashstyle.label"
+  | "cashstyle.standard"
+  | "cashstyle.titanium"
+  | "cashstyle.swiss"
+  | "cashstyle.executive"
+  | "cashstyle.hint"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -34398,6 +34405,13 @@ const en: Dict = {
   "aump.create_country_main_branch": "Create Country & Main Branch",
   "aump.no_direct_users": "No direct users registered for this main branch yet.",
   "aump.city_branches_under": "City Branches under {name}",
+  "urw2.user_type_heading": "2. User Category & Authority Tier",
+  "cashstyle.label": "Visual style",
+  "cashstyle.standard": "Standard",
+  "cashstyle.titanium": "Titanium Dark FinTech",
+  "cashstyle.swiss": "Swiss Minimalist",
+  "cashstyle.executive": "Executive Split Desk",
+  "cashstyle.hint": "Appearance only — your entries and data are not affected.",
 };
 
 const ur: Dict = {
@@ -57211,6 +57225,13 @@ const ur: Dict = {
   "aump.create_country_main_branch": "ملک اور مین برانچ بنائیں",
   "aump.no_direct_users": "اس مین برانچ کے لیے ابھی کوئی براہِ راست صارف رجسٹر نہیں۔",
   "aump.city_branches_under": "{name} کے تحت سٹی برانچیں",
+  "urw2.user_type_heading": "2. یوزر کیٹیگری اور اختیار کی سطح",
+  "cashstyle.label": "بصری انداز",
+  "cashstyle.standard": "معیاری",
+  "cashstyle.titanium": "ٹائٹینیم ڈارک فِن ٹیک",
+  "cashstyle.swiss": "سوئس مِنیملسٹ",
+  "cashstyle.executive": "ایگزیکٹو اسپلٹ ڈیسک",
+  "cashstyle.hint": "صرف ظاہری انداز — آپ کی اندراجات اور ڈیٹا پر کوئی اثر نہیں۔",
 };
 
 const ar: Dict = {
@@ -80025,6 +80046,13 @@ const ar: Dict = {
   "aump.create_country_main_branch": "إنشاء دولة وفرع رئيسي",
   "aump.no_direct_users": "لا يوجد مستخدمون مسجّلون مباشرةً لهذا الفرع الرئيسي بعد.",
   "aump.city_branches_under": "فروع المدينة التابعة لـ {name}",
+  "urw2.user_type_heading": "2. فئة المستخدم ومستوى الصلاحية",
+  "cashstyle.label": "النمط المرئي",
+  "cashstyle.standard": "قياسي",
+  "cashstyle.titanium": "تيتانيوم داكن للتقنية المالية",
+  "cashstyle.swiss": "سويسري بسيط",
+  "cashstyle.executive": "مكتب تنفيذي مقسّم",
+  "cashstyle.hint": "المظهر فقط — لا تتأثر إدخالاتك وبياناتك.",
 };
 
 const fa: Dict = {
@@ -102838,6 +102866,13 @@ const fa: Dict = {
   "aump.create_country_main_branch": "ایجاد کشور و شعبه اصلی",
   "aump.no_direct_users": "هنوز کاربری مستقیماً برای این شعبه اصلی ثبت نشده است.",
   "aump.city_branches_under": "شعب شهر زیرمجموعه {name}",
+  "urw2.user_type_heading": "2. دسته‌بندی کاربر و سطح اختیار",
+  "cashstyle.label": "سبک بصری",
+  "cashstyle.standard": "استاندارد",
+  "cashstyle.titanium": "فین‌تک تیتانیومی تیره",
+  "cashstyle.swiss": "مینیمال سوئیسی",
+  "cashstyle.executive": "میز اجرایی دوبخشی",
+  "cashstyle.hint": "فقط ظاهر — ورودی‌ها و داده‌های شما تغییر نمی‌کند.",
 };
 
 const ps: Dict = {
@@ -125658,6 +125693,13 @@ const ps: Dict = {
   "aump.create_country_main_branch": "هېواد او اصلي څانګه جوړ کړئ",
   "aump.no_direct_users": "د دې اصلي څانګې لپاره تر اوسه مستقیم کارن نه دی ثبت شوی.",
   "aump.city_branches_under": "د {name} لاندې د ښار څانګې",
+  "urw2.user_type_heading": "2. د کاروونکي کټګورۍ او د واک کچه",
+  "cashstyle.label": "لیدلوری سټایل",
+  "cashstyle.standard": "معیاري",
+  "cashstyle.titanium": "ټایټانیم ډارک فین‌ټیک",
+  "cashstyle.swiss": "سویسي مینیمالیسټ",
+  "cashstyle.executive": "اجرایوي ویشلې میز",
+  "cashstyle.hint": "یوازې بڼه — ستاسو ننوتنې او معلومات نه اغیزمن کیږي.",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

@@ -1091,7 +1091,7 @@ export function ExpensesBillEntryForm({
                 {/* Session Time */}
                 <div className="flex justify-between items-center text-xs pt-1 border-t border-slate-50">
                   <span className="text-slate-500 font-medium">{tt("exp.session_time", "Session Time")}</span>
-                  <span className="font-semibold text-slate-700">{new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}</span>
+                  <span className="font-semibold text-slate-700" suppressHydrationWarning>{new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}</span>
                 </div>
               </CardContent>
             </Card>
@@ -1779,7 +1779,7 @@ export function ExpensesBillEntryForm({
                   <div className="pt-2 border-t border-slate-100 mt-2 bg-slate-50 p-2 rounded">
                     <p className="flex justify-between items-center">
                       <span className="font-semibold text-slate-700">{tt("exp.transferred_on", "Transferred On:")}</span>
-                      <span>{new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}</span>
+                      <span suppressHydrationWarning>{new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}</span>
                     </p>
                     <p className="flex justify-between items-center mt-1.5">
                       <span className="font-semibold text-slate-700">{tt("exp.action_by_user", "Action By User:")}</span>

@@ -64,35 +64,46 @@ const measure = () => {
 
 const browser = await webkit.launch();
 const report = [];
-for (const DEVICE of DEVICES) for (const mode of MODES) for (const theme of THEMES) for (const lang of LANGS) {
+const runCase = async (DEVICE, mode, theme, lang) => {
   const ctx = await browser.newContext({ viewport: { width: DEVICE.w, height: DEVICE.h }, deviceScaleFactor: DEVICE.dpr, isMobile: true, hasTouch: true, userAgent: DEVICE.phone ? UA_PHONE : UA_TABLET });
-  await ctx.addCookies([
-    { name: "erp_session", value: token, domain: "localhost", path: "/" },
-    { name: "erp_lang", value: lang, domain: "localhost", path: "/" },
-    { name: "erp_theme_mode", value: theme, domain: "localhost", path: "/" },
-  ]);
-  await ctx.addInitScript(([t, l]) => { localStorage.setItem("erp_theme_mode", t); localStorage.setItem("erp_lang", l); }, [theme, lang]);
-  const page = await ctx.newPage();
-  await page.goto(BASE + PAGE_PATH, { waitUntil: "networkidle", timeout: 180000 });
-  await page.waitForTimeout(1500);
-  if (mode === "before") await page.evaluate(stripTemplate);
-  const views = [{ name: "default" }, ...TAB_INDEXES.map((i) => ({ name: "tab" + i, tab: i }))];
-  for (const v of views) {
-    if (v.tab !== undefined) { await page.locator(TAB_SELECTOR).nth(v.tab).click({ timeout: 5000 }).catch(() => {}); await page.waitForTimeout(900); }
-    const m = await page.evaluate(measure);
-    const base = `${KEY}-${DEVICE.key}-${mode}-${theme}-${lang}-${v.name}`;
-    // screen-by-screen segments (a full-page capture of a very tall page exceeds WebKit's 32767px limit at 3x)
-    const segs = Math.min(SEGMENTS, Math.ceil(m.pageHeight / DEVICE.h));
-    for (let i = 0; i < segs; i++) {
-      await page.evaluate((y) => window.scrollTo(0, y), i * (DEVICE.h - 120));
-      await page.waitForTimeout(250);
-      await page.screenshot({ path: `${OUT}/${base}-s${i + 1}.png` });
+  try {
+    await ctx.addCookies([
+      { name: "erp_session", value: token, domain: "localhost", path: "/" },
+      { name: "erp_lang", value: lang, domain: "localhost", path: "/" },
+      { name: "erp_theme_mode", value: theme, domain: "localhost", path: "/" },
+    ]);
+    await ctx.addInitScript(([t, l]) => { localStorage.setItem("erp_theme_mode", t); localStorage.setItem("erp_lang", l); }, [theme, lang]);
+    const page = await ctx.newPage();
+    await page.goto(BASE + PAGE_PATH, { waitUntil: "load", timeout: 90000 });
+    await page.waitForLoadState("networkidle", { timeout: 25000 }).catch(() => {});
+    await page.waitForTimeout(2000);
+      if (process.env.WAIT_SELECTOR) await page.waitForSelector(process.env.WAIT_SELECTOR, { state: "attached", timeout: 60000 }); // data must be loaded, else the measurement is vacuous
+      await page.waitForTimeout(800);
+    if (mode === "before") await page.evaluate(stripTemplate);
+    const views = [{ name: "default" }, ...TAB_INDEXES.map((i) => ({ name: "tab" + i, tab: i }))];
+    for (const v of views) {
+      if (v.tab !== undefined) { await page.locator(TAB_SELECTOR).nth(v.tab).click({ timeout: 5000 }).catch(() => {}); await page.waitForTimeout(900); }
+      const m = await page.evaluate(measure);
+      const base = `${KEY}-${DEVICE.key}-${mode}-${theme}-${lang}-${v.name}`;
+      // screen-by-screen segments (a full-page capture of a very tall page exceeds WebKit's 32767px limit at 3x)
+      const segs = Math.min(SEGMENTS, Math.ceil(m.pageHeight / DEVICE.h));
+      for (let i = 0; i < segs; i++) {
+        await page.evaluate((y) => window.scrollTo(0, y), i * (DEVICE.h - 120));
+        await page.waitForTimeout(250);
+        await page.screenshot({ path: `${OUT}/${base}-s${i + 1}.png` });
+      }
+      await page.evaluate(() => window.scrollTo(0, 0));
+      report.push({ device: DEVICE.key, mode, theme, lang, view: v.name, file: base, ...m });
+      console.log(DEVICE.key, mode, theme, lang, v.name, JSON.stringify({ ...m, clippedText: m.clippedText.length ? m.clippedText : 0 }));
     }
-    await page.evaluate(() => window.scrollTo(0, 0));
-    report.push({ device: DEVICE.key, mode, theme, lang, view: v.name, file: base, ...m });
-    console.log(DEVICE.key, mode, theme, lang, v.name, JSON.stringify({ ...m, clippedText: m.clippedText.length ? m.clippedText : 0 }));
+  } finally { await ctx.close().catch(() => {}); }
+};
+const withTimeout = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error("case timeout")), ms))]);
+for (const DEVICE of DEVICES) for (const mode of MODES) for (const theme of THEMES) for (const lang of LANGS) {
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try { await withTimeout(runCase(DEVICE, mode, theme, lang), 150000); break; }
+    catch (e) { console.log("CASE-RETRY", DEVICE.key, theme, lang, attempt, String(e).slice(0, 100)); }
   }
-  await ctx.close();
 }
 await browser.close();
 fs.writeFileSync(`${OUT}/report.json`, JSON.stringify(report, null, 2));

@@ -74,11 +74,44 @@ for (const st of STEPS) {
     else if (st.clickSel) await page.locator(st.clickSel).first().click({ timeout: 8000 });
     else if (st.fill) await page.locator(st.fill[0]).first().fill(st.fill[1], { timeout: 8000 });
     else if (st.select) await page.locator(st.select[0]).first().selectOption(st.select[1], { timeout: 8000 });
+    else if (st.probe) {
+      const out = await page.evaluate((q) => {
+        const el = [...document.querySelectorAll("button, a, td, span, div, p")].filter((e) => e.children.length < 4 && (e.textContent || "").trim().startsWith(q)).sort((a, b) => a.textContent.length - b.textContent.length)[0];
+        if (!el) return "not found";
+        const chain = []; for (let n = el; n && n !== document.body; n = n.parentElement) { const cs = getComputedStyle(n), r = n.getBoundingClientRect(); chain.push(`${n.tagName.toLowerCase()}.${(n.className || "").toString().split(" ").slice(0, 7).join(".")} ox=${cs.overflowX} wrap=${cs.flexWrap} disp=${cs.display} w=${Math.round(r.width)} sw=${n.scrollWidth} l=${Math.round(r.left)} r=${Math.round(r.right)}`); if (chain.length > 9) break; }
+        return chain;
+      }, st.probe);
+      console.log("PROBE", st.probe, JSON.stringify(out, null, 1));
+    }
+    else if (st.autofill) {
+      // DEV-test data only: fill every visible empty field of the current screen and pick the first option of every empty dropdown. Never submits.
+      for (let pass = 0; pass < 3; pass++) {
+        for (const sel of await page.locator("select:visible").all()) {
+          const v = await sel.inputValue().catch(() => "x"); if (v) continue;
+          const opts = await sel.locator("option").evaluateAll((o) => o.filter((x) => x.value && !x.disabled).map((x) => x.value));
+          if (opts.length) await sel.selectOption(opts[0]).catch(() => {});
+        }
+        for (const trg of await page.locator("button[aria-haspopup=dialog][data-state=closed].text-muted-foreground:visible").all()) {
+          try { await trg.click({ timeout: 3000 }); await page.waitForTimeout(700); const it = page.locator("[cmdk-item]:not([data-disabled=true])").first(); if (await it.count()) { await it.click({ timeout: 3000 }); } else await page.keyboard.press("Escape"); await page.waitForTimeout(500); } catch { await page.keyboard.press("Escape").catch(() => {}); }
+        }
+        for (const inp of await page.locator("input:visible, textarea:visible").all()) {
+          try {
+            const t = (await inp.getAttribute("type")) || "text"; if (["hidden", "checkbox", "radio", "file", "password", "button", "submit", "range", "color"].includes(t)) continue;
+            if (await inp.isDisabled() || await inp.getAttribute("readonly") !== null || (await inp.inputValue())) continue;
+            if (await inp.getAttribute("role") === "combobox") continue;
+            if (await inp.evaluate((e) => !!e.closest("header, nav, [data-dgt-connect]"))) continue;
+            const val = t === "number" ? "10" : t === "date" ? new Date().toISOString().slice(0, 10) : t === "email" ? "devtest@dgt.llc" : t === "tel" ? "+971500000000" : "DEVTEST 1";
+            await inp.fill(val, { timeout: 2000 });
+          } catch {}
+        }
+        await page.waitForTimeout(600);
+      }
+    }
     else if (st.wait) await page.waitForTimeout(st.wait);
     else if (st.scroll !== undefined) await page.evaluate((y) => window.scrollTo(0, y), st.scroll);
     await page.waitForTimeout(st.wait || 900);
     await snap(st.shot || st.click || st.clickSel || (st.fill && st.fill[0]) || "step");
-  } catch (e) { console.log("STEP-FAIL", JSON.stringify(st), String(e).split("\n")[0].slice(0, 120)); await snap("after-fail"); }
+  } catch (e) { console.log("STEP-FAIL", JSON.stringify(st), String(e).split("\n").slice(0, 9).join(" | ").slice(0, 900)); await snap("after-fail"); }
 }
 if (errs.length) console.log("PAGE-ERRORS", errs.join(" | "));
 await browser.close();

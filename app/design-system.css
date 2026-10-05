@@ -1,27 +1,28 @@
 /*
- * MOBILE / TABLET TEMPLATE — the owner's Google AI Studio design for phones and tablets (portrait + landscape).
- * PRESENTATION ONLY: sizing, spacing, alignment, responsive layout, and the dark-night palette. No form, field,
- * option, step, formula, validation, permission or language is added, removed, hidden or renamed.
- *   - Desktop computers (mouse, >= 1024px wide): NO rule here applies — the existing desktop design is unchanged.
- *   - Light (Day / White) and Dark (Night) both get the same mobile layout; Dark additionally uses the AI Studio
- *     night palette on phones/tablets. System follows the device (day = white, night = dark).
- *   - Every rule is @media screen: print / PDF output and paper layout are untouched.
+ * DGT DESIGN SYSTEM — one shared presentation layer for the whole ERP (phones, tablets, laptops, desktops).
+ * PRESENTATION ONLY: colour tokens, sizing, spacing, alignment, responsive layout. No form, field, option, step, formula,
+ * validation, permission, record or language is added, removed, hidden or renamed.
+ *   - Light = clean white surfaces on a soft canvas; Dark = near-black surfaces; System follows the device.
+ *   - Every screen inherits it automatically: colour tokens, a dark bridge for legacy hard-coded light classes, a baseline for
+ *     forms / tables / focus (zero specificity), plus the phone / tablet layout layer below.
+ *   - Every rule is @media screen (or a plain token): print / PDF output and paper layout are untouched.
  */
 
-/* System theme in daytime = the white Day theme (applies on every screen size) */
+/* Light theme (Day, and System in daytime): white surfaces on a soft canvas */
+:root[data-erp-theme-mode="day"],
 :root[data-erp-theme-mode="system"]:not(.dark) {
-  --background: 0 0% 100%;
-  --foreground: 222 47% 11%;
+  --background: 220 25% 97.5%;
+  --foreground: 224 36% 11%;
   --card: 0 0% 100%;
-  --card-foreground: 222 47% 11%;
+  --card-foreground: 224 36% 11%;
   --popover: 0 0% 100%;
-  --popover-foreground: 222 47% 11%;
-  --secondary: 210 40% 96.1%;
-  --secondary-foreground: 222.2 47.4% 11.2%;
-  --muted: 210 20% 94%;
-  --muted-foreground: 215.4 16.3% 46.9%;
-  --border: 214 30% 90%;
-  --input: 214 30% 90%;
+  --popover-foreground: 224 36% 11%;
+  --secondary: 220 20% 95%;
+  --secondary-foreground: 224 36% 14%;
+  --muted: 220 18% 94%;
+  --muted-foreground: 220 9% 42%;
+  --border: 220 15% 88%;
+  --input: 220 14% 83%;
 }
 
 @media screen and (max-width: 1023.98px), screen and (pointer: coarse) and (max-width: 1399.98px) {
@@ -30,6 +31,12 @@
   /* a toolbar group of buttons that was kept at its full width (shrink-0) is pushed off-screen and clipped by the content's
      overflow: let it use the available width and wrap its buttons instead, so every action stays reachable */
   [data-erp-content] .flex.shrink-0:has(> button, > a) { max-width: 100%; flex-wrap: wrap; }
+  /* any row of action buttons (Print / Next / Back / Save ...) that is wider than the screen wraps onto a second line instead of
+     pushing its last buttons off-screen; scrollable strips (overflow-x-auto) and stacked columns are left alone */
+  [data-erp-content] .flex:not(.flex-col, .flex-col-reverse, .flex-wrap, .overflow-x-auto, .overflow-auto, .overflow-x-scroll):has(> button, > a[class*="btn"]) { flex-wrap: wrap; max-width: 100%; }
+  /* the floating chat button sits above everything (z 9998): while a dialog / modal sheet is open it would cover that
+     dialog's content and actions, so it steps aside until the dialog closes */
+  :root:has(.fixed.inset-0[class*="z-"]:not(.pointer-events-none), [role="dialog"]) [data-dgt-connect] { display: none; }
   [data-erp-content] input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not([type="hidden"]),
   [data-erp-content] select { min-height: 2.75rem; font-size: 0.875rem; border-radius: 0.75rem; max-width: 100%; }
   [data-erp-content] textarea { font-size: 0.875rem; border-radius: 0.75rem; max-width: 100%; }
@@ -70,26 +77,24 @@
   /* right-to-left languages: table text follows the reading direction instead of a hard-coded left */
   :root[dir="rtl"] [data-erp-content] :is(table.text-left, table .text-left) { text-align: start; }
 
-  /* ================= dark-night palette (AI Studio): Dark / System-at-night, phones + tablets ================= */
+}
+
+@media screen {
+  /* ================= dark palette (near-black): Dark / System-at-night, every screen size ================= */
   :root.dark {
-    --background: 229 84% 5%;          /* slate-950 */
-    --foreground: 210 40% 96%;         /* slate-100 */
-    --card: 222 47% 11%;               /* slate-900 */
-    --card-foreground: 210 40% 96%;
-    --popover: 222 47% 11%;
-    --popover-foreground: 210 40% 96%;
-    --primary: 221 83% 53%;            /* blue-600 */
-    --primary-foreground: 0 0% 100%;
-    --secondary: 217 33% 17%;          /* slate-800 */
-    --secondary-foreground: 210 40% 96%;
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;   /* slate-400 */
-    --accent: 160 84% 39%;             /* emerald-500 */
-    --accent-foreground: 0 0% 100%;
-    --border: 217 33% 17%;             /* slate-800 */
-    --input: 215 25% 27%;              /* slate-700 */
-    --ring: 217 91% 60%;               /* blue-500 */
-    --mobile-label: 213 27% 84%;       /* slate-300 */
+    --background: 225 18% 4.5%;
+    --foreground: 210 20% 96%;
+    --card: 225 14% 8%;
+    --card-foreground: 210 20% 96%;
+    --popover: 225 14% 9%;
+    --popover-foreground: 210 20% 96%;
+    --secondary: 225 12% 13%;
+    --secondary-foreground: 210 20% 96%;
+    --muted: 225 12% 13%;
+    --muted-foreground: 220 10% 64%;
+    --border: 225 11% 17%;
+    --input: 225 10% 23%;
+    --mobile-label: 220 14% 82%;
   }
   :root.dark body { background-color: hsl(var(--background)); color: hsl(var(--foreground)); }
   :root.dark [data-erp-content] label { color: hsl(var(--mobile-label)); }
@@ -202,6 +207,25 @@
     :where(:root.dark) .bg-\[\#dcfce7\], :where(:root.dark) .hover\:bg-\[\#dcfce7\]:hover { background-color: rgb(34 197 94 / 0.16); }
     :where(:root.dark) .bg-\[\#fef3c7\], :where(:root.dark) .hover\:bg-\[\#fef3c7\]:hover { background-color: rgb(245 158 11 / 0.16); }
     :where(:root.dark) .bg-\[\#ccfbf1\], :where(:root.dark) .hover\:bg-\[\#ccfbf1\]:hover { background-color: rgb(20 184 166 / 0.16); }
+
+  /* ===== shared design baseline: zero-specificity :where() rules, so any class a screen sets explicitly still wins ===== */
+  :root { --ds-radius: 0.75rem; --ds-radius-lg: 1rem; --ds-shadow-xs: 0 1px 2px hsl(var(--foreground) / 0.05); --ds-shadow-sm: 0 1px 3px hsl(var(--foreground) / 0.08), 0 1px 2px hsl(var(--foreground) / 0.05); --ds-focus: 0 0 0 3px hsl(var(--ring) / 0.28); }
+  body { font-feature-settings: "kern", "liga", "calt"; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
+  :where([data-erp-content]) :where(h1, h2, h3) { letter-spacing: -0.01em; text-wrap: balance; }
+  :where([data-erp-content]) table { font-variant-numeric: tabular-nums; }
+  /* a native dropdown never grows wider than its own cell (appearance-none selects used to spill over the next column) */
+  :where([data-erp-content], [role="dialog"]) select { max-width: 100%; min-width: 0; text-overflow: ellipsis; }
+  /* ...and the grid / flex cell that holds a dropdown may shrink with its column instead of forcing the next column to overlap */
+  :where([data-erp-content], [role="dialog"]) :is(.grid, .flex) > :has(> select) { min-width: 0; }
+  :where([data-erp-content]) thead th { background-color: hsl(var(--muted) / 0.6); color: hsl(var(--muted-foreground)); font-weight: 700; }
+  /* a hovered table row is tinted without replacing a cell's own colour (status cells keep theirs) */
+  [data-erp-content] tbody tr:hover > td { background-image: linear-gradient(hsl(var(--primary) / 0.05), hsl(var(--primary) / 0.05)); }
+  :where([data-erp-content], [role="dialog"]) :where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not([type="hidden"]), select, textarea) { border-radius: var(--ds-radius); border-color: hsl(var(--input)); transition: border-color 0.15s ease, box-shadow 0.15s ease; }
+  [data-erp-content] :is(input, select, textarea):focus-visible, [role="dialog"] :is(input, select, textarea):focus-visible { outline: none; border-color: hsl(var(--ring)); box-shadow: var(--ds-focus); }
+  [data-erp-content] :is(button, [role="button"], a, summary):focus-visible { outline: none; box-shadow: var(--ds-focus); }
+  :where([data-erp-content]) :is(div, section, article):where(.rounded-xl, .rounded-2xl):where(.border) { box-shadow: var(--ds-shadow-xs); }
+  /* Arabic-script languages: letter-spacing breaks the joined letters, so tracking classes are neutralised in RTL */
+  :root[dir="rtl"] body, :root[dir="rtl"] body * { letter-spacing: normal !important; }
 }
 
 @media screen and (max-width: 1023.98px) {
@@ -226,7 +250,7 @@
   [data-studio-steps] > button > div:first-child { height: 1.75rem; width: 1.75rem; }
   [data-studio-steps] > button > div:last-child > div:first-child { display: none; }
   [data-studio-steps] > button > div:last-child > div:last-child {
-    white-space: normal; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    white-space: normal; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; /* long names (e.g. "Employee & Operational Section") must read in full */
     font-size: 0.625rem; line-height: 0.8rem;
   }
 }

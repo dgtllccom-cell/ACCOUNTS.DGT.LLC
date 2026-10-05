@@ -612,7 +612,7 @@ function DetailRow({ label, value }: { label: string; value: React.ReactNode }) 
   return (
     <div className="grid grid-cols-[110px_1fr] gap-2 items-center text-[11px] leading-tight">
       <span className="text-slate-400 font-semibold">{label}</span>
-      <span className="font-bold text-slate-900 truncate max-w-full" title={typeof value === "string" ? value : ""}>{value}</span>
+      <span className="font-bold text-slate-900 truncate max-sm:whitespace-normal max-sm:break-words max-w-full" title={typeof value === "string" ? value : ""}>{value}</span>
     </div>
   );
 }

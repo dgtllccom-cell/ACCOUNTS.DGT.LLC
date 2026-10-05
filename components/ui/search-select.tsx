@@ -193,7 +193,7 @@ export function SearchSelect({
                       onValueChange("");
                     }
                   }}
-                  className="p-0.5 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 text-muted-foreground hover:text-foreground cursor-pointer transition"
+                  className="inline-flex items-center justify-center !min-h-0 !min-w-0 p-0.5 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 text-muted-foreground hover:text-foreground cursor-pointer transition"
                   title={uiText(language, "common.clear_selection")}
                 >
                   <X className="h-3 w-3" />

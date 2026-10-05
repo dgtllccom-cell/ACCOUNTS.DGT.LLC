@@ -1,5 +1,5 @@
 // DEV-only proof that the mobile/tablet template changes NOTHING on desktop: on a 1440px mouse screen, hash every
-// computed style of the page, delete every rule that comes from app/mobile-template.css, hash again, compare.
+// computed style of the page, delete every rule that comes from app/design-system.css, hash again, compare.
 import fs from "node:fs"; import { chromium } from "playwright";
 const BASE = process.env.BASE || "http://localhost:3230";
 const PATHS = (process.env.PATHS || "/dashboard/new-entry/users/registration").split(",");
