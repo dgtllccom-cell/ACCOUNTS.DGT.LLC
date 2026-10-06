@@ -20,6 +20,7 @@ import type { Route } from "next";
 import { Building2, Link2, Loader2, Plus, Minus, Search, ShieldCheck, Trash2, UserRound, AlertTriangle, FileText, ScanLine } from "lucide-react";
 import { apiGet } from "@/lib/api/client";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
+import { LocationHierarchySelect } from "@/features/locations/components/location-hierarchy-select";
 import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
 import { CompanyDuplicateWarningModal, type CompanyDuplicateCandidate } from "@/components/erp/company-duplicate-warning-modal";
 import {
@@ -138,6 +139,10 @@ export function CompanyIncorporationForm({
   const [countryId, setCountryId] = useState("");
   const [stateName, setStateName] = useState("");
   const [cityName, setCityName] = useState("");
+  // Location Management master ids (Country → State → District → City). Names above are kept for display/back-compat + dedup.
+  const [stateProvinceId, setStateProvinceId] = useState("");
+  const [districtId, setDistrictId] = useState("");
+  const [cityId, setCityId] = useState("");
   const [address, setAddress] = useState("");
   const [zipCode, setZipCode] = useState("");
   // internal company → branches
@@ -300,6 +305,9 @@ export function CompanyIncorporationForm({
         setCountryId(c.country_id || "");
         setStateName(c.state_name || "");
         setCityName(c.city_name || "");
+        setStateProvinceId(c.state_province_id || "");
+        setDistrictId(c.district_id || "");
+        setCityId(c.city_id || "");
         setAddress(c.address || "");
         setZipCode(c.zip_code || "");
         setSavedCode(c.company_code || null);
@@ -410,6 +418,9 @@ export function CompanyIncorporationForm({
       countryName: country?.name ?? null,
       stateName: stateName.trim() || null,
       cityName: cityName.trim() || null,
+      stateProvinceId: stateProvinceId || null,
+      districtId: districtId || null,
+      cityId: cityId || null,
       address: address.trim() || null,
       zipCode: zipCode.trim() || null,
       isBranchOperative: companyType === "internal",
@@ -796,6 +807,12 @@ export function CompanyIncorporationForm({
                 setCountryId(e.target.value);
                 setLinkedMain([]);
                 setLinkedCity([]);
+                // Reset the location cascade so no stale state/district/city carries across countries.
+                setStateProvinceId("");
+                setDistrictId("");
+                setCityId("");
+                setStateName("");
+                setCityName("");
               }}
             >
               <option value="">{s.t("select", "— Select —")}</option>
@@ -804,13 +821,21 @@ export function CompanyIncorporationForm({
               ))}
             </select>
           </div>
-          <div>
-            <label className={label}>{s.t("state", "State / Province")}</label>
-            <input className={field} value={stateName} onChange={(e) => setStateName(e.target.value)} />
-          </div>
-          <div>
-            <label className={label}>{s.t("city", "City")}</label>
-            <input className={field} value={cityName} onChange={(e) => setCityName(e.target.value)} />
+          <div className="sm:col-span-2">
+            {/* Location Management master: State → District → City cascade from the country above, with built-in "+ New" / Manage links. */}
+            <LocationHierarchySelect
+              lang={s.lang}
+              showCountry={false}
+              showDistrict
+              value={{ countryId, stateProvinceId, districtId, cityId }}
+              onChange={(next, meta) => {
+                setStateProvinceId(next.stateProvinceId);
+                setDistrictId(next.districtId);
+                setCityId(next.cityId);
+                setStateName(meta.state?.name || "");
+                setCityName(meta.city?.name || "");
+              }}
+            />
           </div>
           <div>
             <label className={label}>{s.t("zip", "Postal Code")}</label>
