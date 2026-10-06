@@ -17,7 +17,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Route } from "next";
-import { Building2, Link2, Loader2, Plus, Search, ShieldCheck, Trash2, UserRound, AlertTriangle, FileText, ScanLine } from "lucide-react";
+import { Building2, Link2, Loader2, Plus, Minus, Search, ShieldCheck, Trash2, UserRound, AlertTriangle, FileText, ScanLine } from "lucide-react";
 import { apiGet } from "@/lib/api/client";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
@@ -74,6 +74,17 @@ const CONTACT_TYPES = [
   { value: "operations", key: "contact_operations", en: "Operations" },
 ] as const;
 
+// Repeatable tax-registration types (owner spec: NTN / TRN / VAT / GST / Other).
+const TAX_TYPE_OPTIONS: Array<{ value: string; key: string; en: string }> = [
+  { value: "ntn", key: "taxtype_ntn", en: "NTN" },
+  { value: "trn", key: "taxtype_trn", en: "TRN" },
+  { value: "vat", key: "taxtype_vat", en: "VAT" },
+  { value: "gst", key: "taxtype_gst", en: "GST" },
+  { value: "other", key: "taxtype_other", en: "Other" },
+];
+type TaxRegItem = { id: string; type: string; value: string };
+const newTaxRegId = () => `tx-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+
 const field = "h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100";
 const label = "mb-1 block text-xs font-semibold text-slate-700 dark:text-slate-300";
 const card = "rounded-2xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900 sm:p-5";
@@ -116,6 +127,8 @@ export function CompanyIncorporationForm({
   const [registrationType, setRegistrationType] = useState("trade_license");
   const [registrationNumber, setRegistrationNumber] = useState("");
   const [taxNumber, setTaxNumber] = useState("");
+  // Additional repeatable tax registrations (merged into the `registrations` jsonb on save).
+  const [taxRegs, setTaxRegs] = useState<TaxRegItem[]>([]);
   const [incorporationDate, setIncorporationDate] = useState("");
   const [licenseExpiryDate, setLicenseExpiryDate] = useState("");
   const [companyStatus, setCompanyStatus] = useState("active");
@@ -269,6 +282,17 @@ export function CompanyIncorporationForm({
         setRegistrationType(c.registration_type || "trade_license");
         setRegistrationNumber(c.registration_number || "");
         setTaxNumber(c.tax_number || "");
+        // Hydrate extra tax registrations from the stored jsonb, excluding the two primary values already shown above.
+        {
+          const primaryReg = String(c.registration_number || "").trim();
+          const primaryTrn = String(c.tax_number || "").trim();
+          const extra: TaxRegItem[] = Array.isArray(c.registrations)
+            ? c.registrations
+                .filter((r: any) => r && r.value && String(r.value).trim() !== primaryReg && String(r.value).trim() !== primaryTrn)
+                .map((r: any) => ({ id: newTaxRegId(), type: String(r.type || "other").toLowerCase(), value: String(r.value).trim() }))
+            : [];
+          setTaxRegs(extra);
+        }
         setIncorporationDate(c.incorporation_date || "");
         setLicenseExpiryDate(c.license_expiry_date || "");
         setCompanyStatus(c.company_status || "active");
@@ -396,6 +420,9 @@ export function CompanyIncorporationForm({
       registrations: [
         registrationNumber.trim() ? { type: registrationType || "registration", value: registrationNumber.trim() } : null,
         taxNumber.trim() ? { type: "trn", value: taxNumber.trim() } : null,
+        ...taxRegs
+          .filter((r) => r.value.trim())
+          .map((r) => ({ type: (r.type || "other").trim(), value: r.value.trim() })),
       ].filter(Boolean),
       acknowledgeDuplicates,
     };
@@ -665,6 +692,52 @@ export function CompanyIncorporationForm({
           <div>
             <label className={label}>{s.t("tax_number", "TRN / Tax Number")}</label>
             <input data-testid="tax-number" className={field} value={taxNumber} onChange={(e) => setTaxNumber(e.target.value)} />
+          </div>
+          {/* Repeatable additional tax registrations — type dropdown (NTN/TRN/VAT/GST/Other) + number + add/remove */}
+          <div className="sm:col-span-2">
+            <div className="mb-1 flex items-center justify-between gap-2">
+              <label className={label + " mb-0"}>{s.t("tax_registrations", "Tax Registrations")}</label>
+              <button
+                type="button"
+                onClick={() => setTaxRegs((prev) => [...prev, { id: newTaxRegId(), type: "ntn", value: "" }])}
+                className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300"
+              >
+                <Plus className="h-3.5 w-3.5" /> {s.t("add_tax_reg", "Add tax registration")}
+              </button>
+            </div>
+            {taxRegs.length === 0 ? (
+              <p className="text-xs text-slate-400 dark:text-slate-500">{s.t("tax_reg_hint", "Add NTN, TRN, VAT, GST or other tax registrations. Use “Add tax registration” for each one.")}</p>
+            ) : (
+              <div className="space-y-2">
+                {taxRegs.map((r, idx) => (
+                  <div key={r.id} className="grid gap-2 sm:grid-cols-[9rem_1fr_auto]">
+                    <select
+                      className={field}
+                      value={r.type}
+                      onChange={(e) => setTaxRegs((prev) => prev.map((x, i) => (i === idx ? { ...x, type: e.target.value } : x)))}
+                    >
+                      {TAX_TYPE_OPTIONS.map((o) => (
+                        <option key={o.value} value={o.value}>{o.value === "other" ? s.t("taxtype_other", "Other") : o.en}</option>
+                      ))}
+                    </select>
+                    <input
+                      className={field}
+                      value={r.value}
+                      placeholder={s.t("tax_reg_number_ph", "Registration number")}
+                      onChange={(e) => setTaxRegs((prev) => prev.map((x, i) => (i === idx ? { ...x, value: e.target.value } : x)))}
+                    />
+                    <button
+                      type="button"
+                      aria-label={s.t("remove", "Remove")}
+                      onClick={() => setTaxRegs((prev) => prev.filter((_, i) => i !== idx))}
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-300 text-slate-500 hover:bg-rose-50 hover:text-rose-600 dark:border-slate-700 dark:hover:bg-rose-950/40"
+                    >
+                      <Minus className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           <div>
             <label className={label}>{s.t("base_currency", "Base Currency")} *</label>

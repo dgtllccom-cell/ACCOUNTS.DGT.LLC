@@ -11585,6 +11585,11 @@ export type UiKey =
   | "cmf.nature_other"
   | "cmf.nature_other_ph"
   | "voice.permission_denied_ios"
+  | "cmf.tax_registrations"
+  | "cmf.add_tax_reg"
+  | "cmf.tax_reg_hint"
+  | "cmf.tax_reg_number_ph"
+  | "cmf.taxtype_other"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -34460,6 +34465,11 @@ const en: Dict = {
   "cmf.nature_other": "Other (specify)",
   "cmf.nature_other_ph": "Describe the business nature",
   "voice.permission_denied_ios": "Microphone access was denied. On iPhone/iPad, open this page in Safari (tap the compass icon at the bottom if it opened inside another app), then allow the microphone in Settings → Safari → Microphone and turn on Settings → General → Keyboard → Enable Dictation. Then press Retry.",
+  "cmf.tax_registrations": "Tax Registrations",
+  "cmf.add_tax_reg": "Add tax registration",
+  "cmf.tax_reg_hint": "Add NTN, TRN, VAT, GST or other tax registrations. Use “Add tax registration” for each one.",
+  "cmf.tax_reg_number_ph": "Registration number",
+  "cmf.taxtype_other": "Other",
 };
 
 const ur: Dict = {
@@ -57304,6 +57314,11 @@ const ur: Dict = {
   "cmf.nature_other": "دیگر (وضاحت کریں)",
   "cmf.nature_other_ph": "کاروبار کی نوعیت بیان کریں",
   "voice.permission_denied_ios": "مائیکروفون تک رسائی مسترد کر دی گئی۔ آئی فون/آئی پیڈ پر یہ صفحہ Safari میں کھولیں (اگر یہ کسی اور ایپ میں کھلا ہے تو نیچے کمپاس آئیکن پر ٹیپ کریں)، پھر Settings → Safari → Microphone سے مائیکروفون کی اجازت دیں اور Settings → General → Keyboard → Enable Dictation آن کریں۔ پھر Retry دبائیں۔",
+  "cmf.tax_registrations": "ٹیکس رجسٹریشنز",
+  "cmf.add_tax_reg": "ٹیکس رجسٹریشن شامل کریں",
+  "cmf.tax_reg_hint": "NTN، TRN، VAT، GST یا دیگر ٹیکس رجسٹریشنز شامل کریں۔ ہر ایک کے لیے «ٹیکس رجسٹریشن شامل کریں» استعمال کریں۔",
+  "cmf.tax_reg_number_ph": "رجسٹریشن نمبر",
+  "cmf.taxtype_other": "دیگر",
 };
 
 const ar: Dict = {
@@ -80149,6 +80164,11 @@ const ar: Dict = {
   "cmf.nature_other": "أخرى (حدد)",
   "cmf.nature_other_ph": "صف طبيعة العمل",
   "voice.permission_denied_ios": "تم رفض الوصول إلى الميكروفون. على iPhone/iPad، افتح هذه الصفحة في Safari (اضغط رمز البوصلة بالأسفل إذا فُتحت داخل تطبيق آخر)، ثم اسمح بالميكروفون من Settings → Safari → Microphone وفعّل Settings → General → Keyboard → Enable Dictation. ثم اضغط Retry.",
+  "cmf.tax_registrations": "التسجيلات الضريبية",
+  "cmf.add_tax_reg": "إضافة تسجيل ضريبي",
+  "cmf.tax_reg_hint": "أضف NTN أو TRN أو VAT أو GST أو تسجيلات ضريبية أخرى. استخدم «إضافة تسجيل ضريبي» لكل واحد.",
+  "cmf.tax_reg_number_ph": "رقم التسجيل",
+  "cmf.taxtype_other": "أخرى",
 };
 
 const fa: Dict = {
@@ -102993,6 +103013,11 @@ const fa: Dict = {
   "cmf.nature_other": "سایر (مشخص کنید)",
   "cmf.nature_other_ph": "ماهیت کسب‌وکار را شرح دهید",
   "voice.permission_denied_ios": "دسترسی به میکروفون رد شد. روی iPhone/iPad این صفحه را در Safari باز کنید (اگر داخل برنامهٔ دیگری باز شده، روی نماد قطب‌نما در پایین بزنید)، سپس از Settings → Safari → Microphone به میکروفون اجازه دهید و Settings → General → Keyboard → Enable Dictation را روشن کنید. سپس Retry را بزنید.",
+  "cmf.tax_registrations": "ثبت‌نام‌های مالیاتی",
+  "cmf.add_tax_reg": "افزودن ثبت‌نام مالیاتی",
+  "cmf.tax_reg_hint": "NTN، TRN، VAT، GST یا سایر ثبت‌نام‌های مالیاتی را اضافه کنید. برای هر کدام از «افزودن ثبت‌نام مالیاتی» استفاده کنید.",
+  "cmf.tax_reg_number_ph": "شماره ثبت‌نام",
+  "cmf.taxtype_other": "سایر",
 };
 
 const ps: Dict = {
@@ -125844,6 +125869,11 @@ const ps: Dict = {
   "cmf.nature_other": "نور (مشخص کړئ)",
   "cmf.nature_other_ph": "د سوداګرۍ ماهیت بیان کړئ",
   "voice.permission_denied_ios": "مایکروفون ته لاسرسی رد شو. په iPhone/iPad کې دا پاڼه په Safari کې پرانیزئ (که په بله اپلیکیشن کې پرانیستل شوې وي، لاندې د قطب‌نما آیکون کېکاږئ)، بیا د Settings → Safari → Microphone له لارې مایکروفون ته اجازه ورکړئ او Settings → General → Keyboard → Enable Dictation فعال کړئ. بیا Retry کېکاږئ.",
+  "cmf.tax_registrations": "مالیاتي راجستریشنونه",
+  "cmf.add_tax_reg": "مالیاتي راجستریشن اضافه کړئ",
+  "cmf.tax_reg_hint": "NTN، TRN، VAT، GST یا نور مالیاتي راجستریشنونه اضافه کړئ. د هر یو لپاره «مالیاتي راجستریشن اضافه کړئ» وکاروئ.",
+  "cmf.tax_reg_number_ph": "د راجستریشن شمیره",
+  "cmf.taxtype_other": "نور",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
