@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   TrendingUp, Save, RefreshCw, Globe,
   CheckCircle, AlertCircle, Clock, ArrowUpRight, ArrowDownLeft,
-  Search, Printer, User, Building2
+  Search, Printer, User, Building2, ChevronDown, Plus, Minus, Calendar
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -116,6 +116,27 @@ export function DailyExchangeRateManager() {
 
   // Table Filter & Search State
   const [filterCountryId, setFilterCountryId] = useState<string>("all");
+
+  // Rates table is grouped by date: one summary row per date, tap "+" to reveal that day's full rate table (collapsed by default).
+  const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set());
+  const ratesByDate = useMemo(() => {
+    const groups = new Map<string, typeof rates>();
+    for (const r of rates) {
+      const d = r.rate_date || isoToday();
+      if (!groups.has(d)) groups.set(d, []);
+      groups.get(d)!.push(r);
+    }
+    return [...groups.entries()].sort((a, b) => String(b[0]).localeCompare(String(a[0])));
+  }, [rates]);
+  const didInitExpand = useRef(false);
+  useEffect(() => {
+    if (!didInitExpand.current && ratesByDate.length) {
+      setExpandedDates(new Set([ratesByDate[0][0]]));
+      didInitExpand.current = true;
+    }
+  }, [ratesByDate]);
+  const toggleDate = (d: string) =>
+    setExpandedDates((prev) => { const n = new Set(prev); n.has(d) ? n.delete(d) : n.add(d); return n; });
   const [filterBranch, setFilterBranch] = useState<string>("all");
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
@@ -710,84 +731,116 @@ export function DailyExchangeRateManager() {
             </div>
           </div>
 
-          {/* Consolidated Rates Table */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xs">
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-black uppercase text-[9px] border-b border-slate-200 dark:border-slate-700 whitespace-nowrap">
-                    <Th className="py-2.5 px-3 text-center">{th("SR NO")}</Th>
-                    <Th className="py-2.5 px-3">{th("COUNTRY NAME")}</Th>
-                    <Th className="py-2.5 px-3">{th("BRANCH NAME")}</Th>
-                    <Th className="py-2.5 px-3">{th("USER NAME")}</Th>
-                    <Th className="py-2.5 px-3 text-center">{th("CURRENCY")}</Th>
-                    <Th className="py-2.5 px-3">{th("DATE & TIME")}</Th>
-                    <Th className="py-2.5 px-3 text-right text-emerald-600 dark:text-emerald-400">{th("CREDIT RATE (LOCAL/$)")}</Th>
-                    <Th className="py-2.5 px-3 text-right text-blue-600 dark:text-blue-400">{th("DEBIT RATE (LOCAL/$)")}</Th>
-                    <Th className="py-2.5 px-3 text-right">{th("LAST UPDATED")}</Th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-150 dark:divide-slate-800 font-semibold text-slate-800 dark:text-slate-200">
-                  {rates.map((r, idx) => {
-                    const matchedCountry = countries.find((country) => country.id === r.country_id) || null;
-                    const countryName = r.countries?.name ?? matchedCountry?.name ?? "-";
-                    const currencyCode = r.countries?.currency_code ?? matchedCountry?.currency_code ?? "-";
-                    const iso2 = r.countries?.iso2 ?? matchedCountry?.iso2;
-                    const isSelected = r.country_id === selectedCountryId;
+          {/* Rates grouped by date: one summary row per date; tap "+" to reveal that day's complete rate table, tap again to collapse. */}
+          <div className="space-y-2">
+            {ratesByDate.length === 0 ? (
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl py-8 text-center text-slate-400 font-medium shadow-xs">
+                {th("NO EXCHANGE RATES RECORDED MATCHING YOUR SEARCH CRITERIA.")}
+              </div>
+            ) : (
+              ratesByDate.map(([date, dayRates]) => {
+                const open = expandedDates.has(date);
+                const dayCurrencies = [...new Set(dayRates.map((r) => {
+                  const mc = countries.find((c) => c.id === r.country_id) || null;
+                  return r.countries?.currency_code ?? mc?.currency_code;
+                }).filter(Boolean))];
+                return (
+                  <div key={date} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xs">
+                    <button
+                      type="button"
+                      onClick={() => toggleDate(date)}
+                      aria-expanded={open}
+                      className="w-full flex items-center justify-between gap-2 px-3 sm:px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-850 transition-colors"
+                    >
+                      <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+                        <span className={cn("h-6 w-6 shrink-0 rounded-md flex items-center justify-center text-white", open ? "bg-slate-500" : "bg-blue-600")}>
+                          {open ? <Minus className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+                        </span>
+                        <Calendar className="h-4 w-4 text-slate-400 shrink-0" />
+                        <span className="font-black text-xs sm:text-sm text-slate-900 dark:text-slate-100 whitespace-nowrap font-mono">{date}</span>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 whitespace-nowrap">
+                          {dayRates.length} {dayRates.length === 1 ? th("RATE") : th("RATES")}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="hidden sm:inline text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase truncate max-w-[220px]">{dayCurrencies.join(" / ")}</span>
+                        <ChevronDown className={cn("h-4 w-4 text-slate-400 transition-transform", open && "rotate-180")} />
+                      </div>
+                    </button>
+                    {open && (
+                      <div className="overflow-x-auto border-t border-slate-100 dark:border-slate-800">
+                        <table className="w-full text-xs text-left border-collapse">
+                          <thead>
+                            <tr className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-black uppercase text-[9px] border-b border-slate-200 dark:border-slate-700 whitespace-nowrap">
+                              <Th className="py-2.5 px-3 text-center">{th("SR NO")}</Th>
+                              <Th className="py-2.5 px-3">{th("COUNTRY NAME")}</Th>
+                              <Th className="py-2.5 px-3">{th("BRANCH NAME")}</Th>
+                              <Th className="py-2.5 px-3">{th("USER NAME")}</Th>
+                              <Th className="py-2.5 px-3 text-center">{th("CURRENCY")}</Th>
+                              <Th className="py-2.5 px-3">{th("DATE & TIME")}</Th>
+                              <Th className="py-2.5 px-3 text-right text-emerald-600 dark:text-emerald-400">{th("CREDIT RATE (LOCAL/$)")}</Th>
+                              <Th className="py-2.5 px-3 text-right text-blue-600 dark:text-blue-400">{th("DEBIT RATE (LOCAL/$)")}</Th>
+                              <Th className="py-2.5 px-3 text-right">{th("LAST UPDATED")}</Th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-150 dark:divide-slate-800 font-semibold text-slate-800 dark:text-slate-200">
+                            {dayRates.map((r, idx) => {
+                              const matchedCountry = countries.find((country) => country.id === r.country_id) || null;
+                              const countryName = r.countries?.name ?? matchedCountry?.name ?? "-";
+                              const currencyCode = r.countries?.currency_code ?? matchedCountry?.currency_code ?? "-";
+                              const iso2 = r.countries?.iso2 ?? matchedCountry?.iso2;
+                              const isSelected = r.country_id === selectedCountryId;
 
-                    return (
-                      <tr
-                        key={r.id || idx}
-                        onClick={() => handleSelectRow(r)}
-                        className={cn(
-                          "cursor-pointer transition-colors hover:bg-slate-50 dark:hover:bg-slate-850",
-                          isSelected && "bg-blue-50/50 dark:bg-blue-950/30"
-                        )}
-                      >
-                        <td className="py-2.5 px-3 text-center font-mono font-bold text-slate-400 text-[10px]">
-                          {idx + 1}
-                        </td>
-                        <td className="py-2.5 px-3 font-bold flex items-center gap-2 text-[11px]">
-                          <span className="text-base">{getFlag(iso2)}</span>
-                          <span className="uppercase">{countryName}</span>
-                        </td>
-                        <td className="py-2.5 px-3 font-bold text-[10px] text-slate-600 dark:text-slate-300 uppercase">
-                          {r.branch_name || "-"}
-                        </td>
-                        <td className="py-2.5 px-3 font-bold text-[10px] text-blue-700 dark:text-blue-400 uppercase">
-                          {r.user_name || "-"}
-                        </td>
-                        <td className="py-2.5 px-3 text-center">
-                          <span className="font-mono font-black bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-[9px]">
-                            {currencyCode}
-                          </span>
-                        </td>
-                        <td className="py-2.5 px-3 font-mono text-[10px] text-slate-600 dark:text-slate-300">
-                          {r.rate_date || isoToday()} {r.rate_time || "09:00 AM"}
-                        </td>
-                        <td className="py-2.5 px-3 text-right font-mono font-extrabold text-emerald-600 dark:text-emerald-400 text-[11px]">
-                          {money(r.credit_rate || r.selling_rate, 2)} {currencyCode}
-                        </td>
-                        <td className="py-2.5 px-3 text-right font-mono font-extrabold text-blue-600 dark:text-blue-400 text-[11px]">
-                          {money(r.debit_rate || r.buying_rate, 2)} {currencyCode}
-                        </td>
-                        <td className="py-2.5 px-3 text-right text-[9px] text-slate-400 font-mono">
-                          {new Date(r.updated_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </td>
-                      </tr>
-                    );
-                  })}
-
-                  {rates.length === 0 && (
-                    <tr>
-                      <td colSpan={9} className="py-8 text-center text-slate-400 font-medium">
-                        {th("NO EXCHANGE RATES RECORDED MATCHING YOUR SEARCH CRITERIA.")}
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                              return (
+                                <tr
+                                  key={r.id || idx}
+                                  onClick={() => handleSelectRow(r)}
+                                  className={cn(
+                                    "cursor-pointer transition-colors hover:bg-slate-50 dark:hover:bg-slate-850",
+                                    isSelected && "bg-blue-50/50 dark:bg-blue-950/30"
+                                  )}
+                                >
+                                  <td className="py-2.5 px-3 text-center font-mono font-bold text-slate-400 text-[10px]">
+                                    {idx + 1}
+                                  </td>
+                                  <td className="py-2.5 px-3 font-bold flex items-center gap-2 text-[11px]">
+                                    <span className="text-base">{getFlag(iso2)}</span>
+                                    <span className="uppercase">{countryName}</span>
+                                  </td>
+                                  <td className="py-2.5 px-3 font-bold text-[10px] text-slate-600 dark:text-slate-300 uppercase">
+                                    {r.branch_name || "-"}
+                                  </td>
+                                  <td className="py-2.5 px-3 font-bold text-[10px] text-blue-700 dark:text-blue-400 uppercase">
+                                    {r.user_name || "-"}
+                                  </td>
+                                  <td className="py-2.5 px-3 text-center">
+                                    <span className="font-mono font-black bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-[9px]">
+                                      {currencyCode}
+                                    </span>
+                                  </td>
+                                  <td className="py-2.5 px-3 font-mono text-[10px] text-slate-600 dark:text-slate-300">
+                                    {r.rate_date || isoToday()} {r.rate_time || "09:00 AM"}
+                                  </td>
+                                  <td className="py-2.5 px-3 text-right font-mono font-extrabold text-emerald-600 dark:text-emerald-400 text-[11px]">
+                                    {money(r.credit_rate || r.selling_rate, 2)} {currencyCode}
+                                  </td>
+                                  <td className="py-2.5 px-3 text-right font-mono font-extrabold text-blue-600 dark:text-blue-400 text-[11px]">
+                                    {money(r.debit_rate || r.buying_rate, 2)} {currencyCode}
+                                  </td>
+                                  <td className="py-2.5 px-3 text-right text-[9px] text-slate-400 font-mono">
+                                    {new Date(r.updated_at || Date.now()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
           </div>
 
         </div>

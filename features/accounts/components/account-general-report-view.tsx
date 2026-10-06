@@ -1934,7 +1934,7 @@ export function AccountGeneralReportView({
       {/* Note: the actual Filter UI is the single canonical `SimpleModal` below
           (also gated on `filtersOpen`) — a second inline drawer used to render
           here at the same time, which was a real duplicate-UI bug; removed. */}
-      <section className="bg-white border border-slate-200 dark:border-slate-800 dark:bg-slate-950 p-6 rounded-2xl shadow-sm space-y-6">
+      <section className="bg-white border border-slate-200 dark:border-slate-800 dark:bg-slate-950 p-3 sm:p-6 rounded-2xl shadow-sm space-y-4 sm:space-y-6">
         {error ? <div className="rounded border border-red-300 bg-red-50 px-4 py-3 text-xs text-red-900 dark:border-red-900/50 dark:bg-red-950/20 dark:text-red-200">{error}</div> : null}
         
         {highlightCreated && selectedRow ? (
@@ -1949,7 +1949,7 @@ export function AccountGeneralReportView({
           </div>
         ) : null}
 
-        <div className={cn("grid gap-6 items-start", showProfilePanel ? "xl:grid-cols-[minmax(0,1fr)_420px]" : "xl:grid-cols-1")}>
+        <div className={cn("grid gap-4 sm:gap-6 items-start", showProfilePanel ? "xl:grid-cols-[minmax(0,1fr)_420px]" : "xl:grid-cols-1")}>
           <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 shadow-sm">
             {/* Table Header Bar */}
             <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 bg-slate-50/90 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800">
@@ -1984,6 +1984,10 @@ export function AccountGeneralReportView({
               </div>
             </div>
 
+            <div className="lg:hidden flex items-center justify-center gap-1.5 px-4 py-1.5 text-[10px] font-semibold text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800/60">
+              <span aria-hidden>↔</span>
+              <span>{t(lang, "acct.swipe_cols", "Swipe sideways to see all columns")}</span>
+            </div>
             <div className={cn("overflow-auto", expandedView ? "max-h-[85vh]" : "max-h-[calc(100vh-340px)] min-h-[380px]")}>
               <table className="min-w-[1700px] w-full text-xs text-left border-collapse">
                 <thead className="sticky top-0 z-10 border-b border-slate-200 dark:border-slate-800 shadow-xs">
@@ -2237,7 +2241,7 @@ export function AccountGeneralReportView({
 
           {showProfilePanel && (
             <div className="w-full shrink-0 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg flex flex-col h-fit overflow-y-auto xl:sticky xl:top-24 max-h-[calc(100vh-140px)]">
-              <div className="p-5 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 sticky top-0 z-10 shadow-sm">
+              <div className="p-3 sm:p-5 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 sticky top-0 z-10 shadow-sm">
                 <h3 className="text-base font-black text-[#0f2942] dark:text-white uppercase tracking-widest flex items-center gap-2">
                   <FileCheck2 className="h-5 w-5 text-blue-600" />
                   {t(lang, "acct.agrv_account_verification", "Account Verification")}
@@ -2245,7 +2249,7 @@ export function AccountGeneralReportView({
                 <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-wider font-bold">{t(lang, "acct.agrv_review_account_details_sub", "Review account details and balances")}</p>
               </div>
 
-              <div className="p-5 space-y-6 flex-1 bg-slate-50/50 dark:bg-slate-900/20">
+              <div className="p-3 sm:p-5 space-y-4 sm:space-y-6 flex-1 bg-slate-50/50 dark:bg-slate-900/20">
                 {selectedRow ? (
                   <>
                     <div className="space-y-3">

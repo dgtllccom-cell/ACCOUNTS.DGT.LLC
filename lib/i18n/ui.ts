@@ -11561,6 +11561,7 @@ export type UiKey =
   | "cashstyle.swiss"
   | "cashstyle.executive"
   | "cashstyle.hint"
+  | "acct.swipe_cols"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -34412,6 +34413,7 @@ const en: Dict = {
   "cashstyle.swiss": "Swiss Minimalist",
   "cashstyle.executive": "Executive Split Desk",
   "cashstyle.hint": "Appearance only — your entries and data are not affected.",
+  "acct.swipe_cols": "Swipe sideways to see all columns",
 };
 
 const ur: Dict = {
@@ -57232,6 +57234,7 @@ const ur: Dict = {
   "cashstyle.swiss": "سوئس مِنیملسٹ",
   "cashstyle.executive": "ایگزیکٹو اسپلٹ ڈیسک",
   "cashstyle.hint": "صرف ظاہری انداز — آپ کی اندراجات اور ڈیٹا پر کوئی اثر نہیں۔",
+  "acct.swipe_cols": "تمام کالم دیکھنے کے لیے دائیں بائیں سوائپ کریں",
 };
 
 const ar: Dict = {
@@ -80053,6 +80056,7 @@ const ar: Dict = {
   "cashstyle.swiss": "سويسري بسيط",
   "cashstyle.executive": "مكتب تنفيذي مقسّم",
   "cashstyle.hint": "المظهر فقط — لا تتأثر إدخالاتك وبياناتك.",
+  "acct.swipe_cols": "اسحب جانبياً لعرض كل الأعمدة",
 };
 
 const fa: Dict = {
@@ -102873,6 +102877,7 @@ const fa: Dict = {
   "cashstyle.swiss": "مینیمال سوئیسی",
   "cashstyle.executive": "میز اجرایی دوبخشی",
   "cashstyle.hint": "فقط ظاهر — ورودی‌ها و داده‌های شما تغییر نمی‌کند.",
+  "acct.swipe_cols": "برای دیدن همه ستون‌ها به طرفین بکشید",
 };
 
 const ps: Dict = {
@@ -125700,6 +125705,7 @@ const ps: Dict = {
   "cashstyle.swiss": "سویسي مینیمالیسټ",
   "cashstyle.executive": "اجرایوي ویشلې میز",
   "cashstyle.hint": "یوازې بڼه — ستاسو ننوتنې او معلومات نه اغیزمن کیږي.",
+  "acct.swipe_cols": "د ټولو کالمونو لیدو لپاره څنګ ته سوایپ کړئ",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
