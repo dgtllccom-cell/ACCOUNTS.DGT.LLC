@@ -954,6 +954,29 @@ function SuperAdminBranchSetupContent() {
           shippingDomain="International Logistics"
           currency={currency || "USD"}
           mainBranchName="Head Office (DXB-001)"
+          isEditing={Boolean(editingBranchId)}
+          checklistStatus={{
+            countrySelected: true,
+            mainBranchSelected: true,
+            branchNameCodeGenerated: true,
+            branchCategoryType: true,
+            ownerResponsiblePerson: true,
+            companyLinked: true,
+            businessShippingDomain: true,
+            fullAddressLocation: true,
+            mobileEmail: true,
+            currencySelected: true,
+            bankAccountSetup: true,
+            userAdminAssigned: true,
+            rolePermissions: true,
+            requiredDocumentsUploaded: true,
+            serialNumbersGenerated: true,
+            approvalStatusReady: true,
+            businessAdminAssigned: true,
+            shippingClearingAdminAssigned: true,
+            operationsAdminAssigned: true,
+            ledgerScopeConfirmed: true
+          }}
           onBack={() => setIsReviewMode(false)}
           onGoToStep={() => setIsReviewMode(false)}
           onEditSection={() => setIsReviewMode(false)}

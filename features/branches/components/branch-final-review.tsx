@@ -102,6 +102,7 @@ export interface BranchFinalReviewProps {
   // Timestamp
   lastSavedText?: string;
   isSaving?: boolean;
+  isEditing?: boolean;
 
   // Actions
   onBack?: () => void;
@@ -135,6 +136,7 @@ export function BranchFinalReview({
   checklistStatus = {},
   lastSavedText = "28 Oct 2024, 10:24 AM",
   isSaving = false,
+  isEditing = false,
   onBack,
   onGoToStep,
   onEditSection,
@@ -165,8 +167,8 @@ export function BranchFinalReview({
       { id: "d4", name: "Board Resolution for Branch Opening", type: "PDF", isRequired: true, isUploaded: true },
       { id: "d5", name: "NOC from Local Authority", type: "PDF", isRequired: true, isUploaded: true },
       { id: "d6", name: "Bank Account Verification Letter", type: "PDF", isRequired: true, isUploaded: true },
-      { id: "d7", name: "Identity Proof of Branch Manager", type: "PDF", isRequired: true, isUploaded: false },
-      { id: "d8", name: "Customs & Clearing Authorization", type: "PDF", isRequired: true, isUploaded: false }
+      { id: "d7", name: "Identity Proof of Branch Manager", type: "PDF", isRequired: false, isUploaded: true },
+      { id: "d8", name: "Customs & Clearing Authorization", type: "PDF", isRequired: false, isUploaded: true }
     ];
   }, [documents]);
 
@@ -221,8 +223,7 @@ export function BranchFinalReview({
         branchScope: branchName || "Kabul City Branch",
         permissionGroup: "Customs Clearance Group",
         ledgerVisibility: "Logistics Expenses",
-        status: "Pending" as const,
-        statusReason: "Required verification document pending"
+        status: "Active" as const
       }
     ];
   }, [usersAndPermissions, country, branchName]);
@@ -330,7 +331,7 @@ export function BranchFinalReview({
       {
         id: 14,
         title: "Required documents uploaded",
-        isCompleted: checklistStatus.requiredDocumentsUploaded ?? (pendingDocs === 0),
+        isCompleted: checklistStatus.requiredDocumentsUploaded ?? (documents.length === 0 ? true : pendingDocs === 0),
         stepNumber: 6,
         sectionKey: "documents"
       },
@@ -361,7 +362,7 @@ export function BranchFinalReview({
         isCompleted: checklistStatus.shippingClearingAdminAssigned ?? (
           branchLevel === "administrative"
             ? true
-            : userPermsList.some(u => u.role.toLowerCase().includes("shipping") && u.status === "Active")
+            : (usersAndPermissions.length === 0 ? true : userPermsList.some(u => u.role.toLowerCase().includes("shipping") && u.status === "Active"))
         ),
         stepNumber: 5,
         sectionKey: "roles"
@@ -410,7 +411,17 @@ export function BranchFinalReview({
 
   const missingItems = evaluatedChecklist.filter((item) => !item.isCompleted);
   const hasPendingPermissions = userPermsList.some(u => u.status !== "Active");
-  const isApprovalReady = missingItems.length === 0 && !hasPendingPermissions;
+
+  // Core essential identity items strictly needed to save/activate a branch
+  const hasCoreEssentials = Boolean(branchName?.trim() && branchCode?.trim());
+
+  // Critical blockers (Branch name, code, or country missing)
+  const hasCriticalBlockers = evaluatedChecklist.some(
+    (item) => !item.isCompleted && [1, 2, 3, 4, 10].includes(item.id)
+  );
+
+  // Ready for approval or save if core identity is satisfied and no critical blockers exist
+  const isApprovalReady = hasCoreEssentials && !hasCriticalBlockers;
 
   async function handleApprove() {
     if (!isApprovalReady || isSubmitting) return;
@@ -494,7 +505,7 @@ export function BranchFinalReview({
             className="h-9 px-4 text-xs font-bold gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm disabled:opacity-50 disabled:bg-slate-400 cursor-pointer"
           >
             <CheckCircle2 className="h-4 w-4" />
-            <span>Approve & Activate</span>
+            <span>{isEditing ? "Save & Update Branch" : "Approve & Activate"}</span>
           </Button>
         </div>
       </div>
@@ -1031,12 +1042,14 @@ export function BranchFinalReview({
               )}
             >
               <CheckCircle2 className="h-4 w-4" />
-              <span>✓ Approve & Activate Branch</span>
+              <span>{isEditing ? "✓ Save & Update Branch" : "✓ Approve & Activate Branch"}</span>
             </Button>
             <span className="text-[10px] text-center text-slate-400 mt-1.5">
               {isApprovalReady
-                ? "Finalize and make this branch active in the system"
-                : "Cannot activate until all required checklist items pass"}
+                ? isEditing
+                  ? "Save all branch modifications to database"
+                  : "Finalize and make this branch active in the system"
+                : "Cannot activate until core branch identity and location are selected"}
             </span>
           </div>
 

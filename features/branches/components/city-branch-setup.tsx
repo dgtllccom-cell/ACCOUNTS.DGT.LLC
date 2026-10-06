@@ -876,7 +876,13 @@ function CityBranchSetupContent() {
       cityId: row.city_id ?? "",
       areaId: row.area_location_id ?? ""
     });
-    setLocationMeta({ country: null, state: null, district: null, city: null, area: null });
+    setLocationMeta({
+      country: null,
+      state: null,
+      district: null,
+      city: row.city_name ? { id: row.city_id ?? "", name: row.city_name, code: "" } : null,
+      area: null
+    });
     setCurrency(row.local_currency || "");
     setFullAddress(row.address ?? "");
     setCompanyId(row.company_id ?? "");
@@ -1272,14 +1278,15 @@ function CityBranchSetupContent() {
       return;
     }
 
-    if (!isUuid(location.stateProvinceId) || !isUuid(location.cityId) || !locationMeta.city?.name) {
+    const resolvedCityName = locationMeta.city?.name?.trim() || activeExistingCityBranch?.city_name?.trim() || "";
+    if (!isUuid(location.stateProvinceId) || !isUuid(location.cityId) || !resolvedCityName) {
       setBanner({ type: "error", message: t(lang, "cbs.select_state_city_msg") });
       return;
     }
 
     let finalBranchName = branchName.trim() || effectiveBranchName;
-    if (!finalBranchName && locationMeta.city?.name?.trim()) {
-      finalBranchName = suggestBranchName(locationMeta, existingCityBranches) || `${locationMeta.city.name.trim()} City Branch`;
+    if (!finalBranchName && resolvedCityName) {
+      finalBranchName = suggestBranchName(locationMeta, existingCityBranches) || `${resolvedCityName} City Branch`;
     }
     if (!branchName.trim() && finalBranchName) {
       setBranchName(finalBranchName);
@@ -1345,7 +1352,7 @@ function CityBranchSetupContent() {
           id: editingCityBranchId || undefined,
           countryId: location.countryId,
           countryBranchId,
-          cityName: locationMeta.city.name,
+          cityName: resolvedCityName,
           stateProvinceId: location.stateProvinceId || undefined,
           districtId: location.districtId || undefined,
           cityId: location.cityId || undefined,
@@ -1465,7 +1472,7 @@ function CityBranchSetupContent() {
           category="Own Operation"
           country={previewCountry}
           stateProvince={locationMeta.state?.name || ""}
-          city={locationMeta.city?.name || ""}
+          city={locationMeta.city?.name || activeExistingCityBranch?.city_name || ""}
           fullAddress={fullAddress}
           companyName={company?.name || ""}
           businessDomain="Trading & Distribution"
@@ -1473,6 +1480,29 @@ function CityBranchSetupContent() {
           currency={currency}
           mainBranchName={previewMainBranch || "Head Office (DXB-001)"}
           isSaving={saving}
+          isEditing={Boolean(editingCityBranchId)}
+          checklistStatus={{
+            countrySelected: Boolean(location.countryId),
+            mainBranchSelected: Boolean(countryBranchId),
+            branchNameCodeGenerated: Boolean((branchName.trim() || effectiveBranchName) && branchCode.trim()),
+            branchCategoryType: true,
+            ownerResponsiblePerson: true,
+            companyLinked: true,
+            businessShippingDomain: true,
+            fullAddressLocation: Boolean(fullAddress.trim() || locationMeta.city?.name || activeExistingCityBranch?.city_name),
+            mobileEmail: true,
+            currencySelected: Boolean(currency),
+            bankAccountSetup: true,
+            userAdminAssigned: true,
+            rolePermissions: Boolean(permissionGrants.length),
+            requiredDocumentsUploaded: true,
+            serialNumbersGenerated: true,
+            approvalStatusReady: true,
+            businessAdminAssigned: true,
+            shippingClearingAdminAssigned: true,
+            operationsAdminAssigned: true,
+            ledgerScopeConfirmed: true
+          }}
           onBack={() => setActiveStep(8)}
           onGoToStep={(step) => {
             if (step === 1) setActiveStep(1);

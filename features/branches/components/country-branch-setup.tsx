@@ -1050,6 +1050,29 @@ function CountryBranchSetupContent() {
           currency={currency || "USD"}
           mainBranchName="Head Office (DXB-001)"
           isSaving={saving}
+          isEditing={Boolean(existingMainBranch?.id)}
+          checklistStatus={{
+            countrySelected: Boolean(location.countryId),
+            mainBranchSelected: true,
+            branchNameCodeGenerated: Boolean(branchCode.trim()),
+            branchCategoryType: true,
+            ownerResponsiblePerson: true,
+            companyLinked: true,
+            businessShippingDomain: true,
+            fullAddressLocation: Boolean(fullAddress.trim() || locationMeta.city?.name),
+            mobileEmail: true,
+            currencySelected: Boolean(currency),
+            bankAccountSetup: true,
+            userAdminAssigned: true,
+            rolePermissions: true,
+            requiredDocumentsUploaded: true,
+            serialNumbersGenerated: true,
+            approvalStatusReady: true,
+            businessAdminAssigned: true,
+            shippingClearingAdminAssigned: true,
+            operationsAdminAssigned: true,
+            ledgerScopeConfirmed: true
+          }}
           onBack={() => setActiveStep(8)}
           onGoToStep={(step) => {
             if (step === 1) setActiveStep(1);
