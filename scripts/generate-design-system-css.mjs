@@ -154,6 +154,12 @@ const css = `/*
 }
 
 @media screen {
+  /* ================= tables: never clip data on ANY screen size ================= */
+  /* a container that directly wraps a table scrolls horizontally when the table is wider than it (laptops / narrow desktops
+     included) instead of clipping the columns — only shows a scrollbar when it actually overflows, so tables that fit are
+     unchanged. Overrides a hard-coded overflow-hidden on the x-axis only. */
+  ${C} :has(> table) { overflow-x: auto; max-width: 100%; }
+
   /* ================= dark palette (near-black): Dark / System-at-night, every screen size ================= */
   ${D} {
     --background: 225 18% 4.5%;
