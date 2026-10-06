@@ -11572,6 +11572,18 @@ export type UiKey =
   | "ait.insecure_context"
   | "ait.unsupported_voice"
   | "ait.retry"
+  | "cmpinc.nature_label"
+  | "cmpinc.nature_clearing"
+  | "cmpinc.nature_import_export"
+  | "cmpinc.nature_shipping"
+  | "cmpinc.nature_other"
+  | "cmpinc.nature_other_ph"
+  | "cmf.nature_label"
+  | "cmf.nature_clearing"
+  | "cmf.nature_import_export"
+  | "cmf.nature_shipping"
+  | "cmf.nature_other"
+  | "cmf.nature_other_ph"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -34434,6 +34446,18 @@ const en: Dict = {
   "ait.insecure_context": "Voice needs a secure (HTTPS) connection. Please open the ERP through the secure https link instead of the http IP address, then try again.",
   "ait.unsupported_voice": "Voice capture is not supported in this browser. Try Chrome, Edge, or Safari, or switch to Text input.",
   "ait.retry": "Retry",
+  "cmpinc.nature_label": "Company Type / Business Nature",
+  "cmpinc.nature_clearing": "Clearing Agent",
+  "cmpinc.nature_import_export": "Import / Export",
+  "cmpinc.nature_shipping": "Shipping Company",
+  "cmpinc.nature_other": "Other (specify)",
+  "cmpinc.nature_other_ph": "Describe the business nature",
+  "cmf.nature_label": "Company Type / Business Nature",
+  "cmf.nature_clearing": "Clearing Agent",
+  "cmf.nature_import_export": "Import / Export",
+  "cmf.nature_shipping": "Shipping Company",
+  "cmf.nature_other": "Other (specify)",
+  "cmf.nature_other_ph": "Describe the business nature",
 };
 
 const ur: Dict = {
@@ -57265,6 +57289,18 @@ const ur: Dict = {
   "ait.insecure_context": "صوتی ان پٹ کے لیے محفوظ (HTTPS) کنکشن ضروری ہے۔ براہِ کرم http IP ایڈریس کے بجائے محفوظ https لنک سے ERP کھولیں، پھر دوبارہ کوشش کریں۔",
   "ait.unsupported_voice": "اس براؤزر میں صوتی ریکارڈنگ دستیاب نہیں۔ Chrome، Edge یا Safari آزمائیں، یا ٹیکسٹ ان پٹ پر جائیں۔",
   "ait.retry": "دوبارہ کوشش کریں",
+  "cmpinc.nature_label": "کمپنی کی قسم / کاروبار کی نوعیت",
+  "cmpinc.nature_clearing": "کلیئرنگ ایجنٹ",
+  "cmpinc.nature_import_export": "درآمد / برآمد",
+  "cmpinc.nature_shipping": "شپنگ کمپنی",
+  "cmpinc.nature_other": "دیگر (وضاحت کریں)",
+  "cmpinc.nature_other_ph": "کاروبار کی نوعیت بیان کریں",
+  "cmf.nature_label": "کمپنی کی قسم / کاروبار کی نوعیت",
+  "cmf.nature_clearing": "کلیئرنگ ایجنٹ",
+  "cmf.nature_import_export": "درآمد / برآمد",
+  "cmf.nature_shipping": "شپنگ کمپنی",
+  "cmf.nature_other": "دیگر (وضاحت کریں)",
+  "cmf.nature_other_ph": "کاروبار کی نوعیت بیان کریں",
 };
 
 const ar: Dict = {
@@ -80097,6 +80133,18 @@ const ar: Dict = {
   "ait.insecure_context": "يتطلب الإدخال الصوتي اتصالاً آمناً (HTTPS). يرجى فتح النظام عبر رابط https الآمن بدلاً من عنوان http، ثم المحاولة مرة أخرى.",
   "ait.unsupported_voice": "التقاط الصوت غير مدعوم في هذا المتصفح. جرّب Chrome أو Edge أو Safari، أو انتقل إلى الإدخال النصي.",
   "ait.retry": "إعادة المحاولة",
+  "cmpinc.nature_label": "نوع الشركة / طبيعة العمل",
+  "cmpinc.nature_clearing": "وكيل تخليص",
+  "cmpinc.nature_import_export": "استيراد / تصدير",
+  "cmpinc.nature_shipping": "شركة شحن",
+  "cmpinc.nature_other": "أخرى (حدد)",
+  "cmpinc.nature_other_ph": "صف طبيعة العمل",
+  "cmf.nature_label": "نوع الشركة / طبيعة العمل",
+  "cmf.nature_clearing": "وكيل تخليص",
+  "cmf.nature_import_export": "استيراد / تصدير",
+  "cmf.nature_shipping": "شركة شحن",
+  "cmf.nature_other": "أخرى (حدد)",
+  "cmf.nature_other_ph": "صف طبيعة العمل",
 };
 
 const fa: Dict = {
@@ -102928,6 +102976,18 @@ const fa: Dict = {
   "ait.insecure_context": "ورودی صوتی به اتصال امن (HTTPS) نیاز دارد. لطفاً سیستم را به‌جای آدرس http با پیوند امن https باز کنید و سپس دوباره تلاش کنید.",
   "ait.unsupported_voice": "ضبط صدا در این مرورگر پشتیبانی نمی‌شود. از Chrome، Edge یا Safari استفاده کنید یا به ورودی متنی بروید.",
   "ait.retry": "تلاش مجدد",
+  "cmpinc.nature_label": "نوع شرکت / ماهیت کسب‌وکار",
+  "cmpinc.nature_clearing": "کارگزار ترخیص",
+  "cmpinc.nature_import_export": "واردات / صادرات",
+  "cmpinc.nature_shipping": "شرکت کشتیرانی",
+  "cmpinc.nature_other": "سایر (مشخص کنید)",
+  "cmpinc.nature_other_ph": "ماهیت کسب‌وکار را شرح دهید",
+  "cmf.nature_label": "نوع شرکت / ماهیت کسب‌وکار",
+  "cmf.nature_clearing": "کارگزار ترخیص",
+  "cmf.nature_import_export": "واردات / صادرات",
+  "cmf.nature_shipping": "شرکت کشتیرانی",
+  "cmf.nature_other": "سایر (مشخص کنید)",
+  "cmf.nature_other_ph": "ماهیت کسب‌وکار را شرح دهید",
 };
 
 const ps: Dict = {
@@ -125766,6 +125826,18 @@ const ps: Dict = {
   "ait.insecure_context": "غږیزه ننوتنه خوندي (HTTPS) اړیکې ته اړتیا لري. مهرباني وکړئ د http IP پتې پر ځای د خوندي https لینک له لارې ERP پرانیزئ، بیا هڅه وکړئ.",
   "ait.unsupported_voice": "په دې براوزر کې د غږ ثبتول نه ملاتړ کیږي. Chrome، Edge یا Safari وآزمویئ، یا متن ننوتنې ته لاړ شئ.",
   "ait.retry": "بیا هڅه وکړئ",
+  "cmpinc.nature_label": "د شرکت ډول / د سوداګرۍ ماهیت",
+  "cmpinc.nature_clearing": "د پاکولو اجنټ",
+  "cmpinc.nature_import_export": "واردات / صادرات",
+  "cmpinc.nature_shipping": "د بار وړلو شرکت",
+  "cmpinc.nature_other": "نور (مشخص کړئ)",
+  "cmpinc.nature_other_ph": "د سوداګرۍ ماهیت بیان کړئ",
+  "cmf.nature_label": "د شرکت ډول / د سوداګرۍ ماهیت",
+  "cmf.nature_clearing": "د پاکولو اجنټ",
+  "cmf.nature_import_export": "واردات / صادرات",
+  "cmf.nature_shipping": "د بار وړلو شرکت",
+  "cmf.nature_other": "نور (مشخص کړئ)",
+  "cmf.nature_other_ph": "د سوداګرۍ ماهیت بیان کړئ",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

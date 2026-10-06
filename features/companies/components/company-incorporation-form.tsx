@@ -611,8 +611,44 @@ export function CompanyIncorporationForm({
             </select>
           </div>
           <div>
-            <label className={label}>{s.t("nature_of_business", "Nature of Business")}</label>
-            <input className={field} value={natureOfBusiness} onChange={(e) => setNatureOfBusiness(e.target.value)} />
+            <label className={label}>{s.t("nature_label", "Company Type / Business Nature")}</label>
+            {(() => {
+              // Controlled business-nature: the three system-defined types + Other (free text). Arbitrary text does
+              // not change business rules — it is only stored as the descriptive nature. Existing free-text values
+              // that are not one of the three are shown under "Other" so no saved data is lost.
+              const NATURES = [
+                { v: "Clearing Agent", k: "nature_clearing", en: "Clearing Agent" },
+                { v: "Import / Export", k: "nature_import_export", en: "Import / Export" },
+                { v: "Shipping Company", k: "nature_shipping", en: "Shipping Company" },
+              ];
+              const isKnown = NATURES.some((n) => n.v === natureOfBusiness);
+              const selectVal = natureOfBusiness === "" ? "" : isKnown ? natureOfBusiness : "__other__";
+              return (
+                <>
+                  <select
+                    data-testid="nature-of-business"
+                    className={field}
+                    value={selectVal}
+                    onChange={(e) => setNatureOfBusiness(e.target.value === "__other__" ? " " : e.target.value === "" ? "" : e.target.value)}
+                  >
+                    <option value="">{s.t("select", "— Select —")}</option>
+                    {NATURES.map((n) => (
+                      <option key={n.v} value={n.v}>{s.t(n.k, n.en)}</option>
+                    ))}
+                    <option value="__other__">{s.t("nature_other", "Other (specify)")}</option>
+                  </select>
+                  {selectVal === "__other__" && (
+                    <input
+                      className={cn(field, "mt-2")}
+                      placeholder={s.t("nature_other_ph", "Describe the business nature")}
+                      value={natureOfBusiness.trim() === "" ? "" : natureOfBusiness}
+                      onChange={(e) => setNatureOfBusiness(e.target.value)}
+                      autoFocus
+                    />
+                  )}
+                </>
+              );
+            })()}
           </div>
           <div>
             <label className={label}>{s.t("registration_type", "Registration Type")}</label>
