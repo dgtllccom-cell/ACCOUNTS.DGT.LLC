@@ -31,7 +31,7 @@ const res = await fetch(BASE + "/api/erp/auth/login", { method: "POST", headers:
 const token = (res.headers.getSetCookie() || []).map((c) => c.split(";")[0]).find((c) => c.startsWith("erp_session=")).slice(12);
 
 const done = new Set();
-for (const f of fs.readdirSync(OUT).filter((x) => x.startsWith("results-"))) for (const l of fs.readFileSync(`${OUT}/${f}`, "utf8").split("\n")) { try { const r = JSON.parse(l); if (!(r.bad || []).some((b) => b === "loadFailed" || b === "stuckLoading" || b === "stacks")) done.add(r.key); } catch {} }
+for (const f of fs.readdirSync(OUT).filter((x) => x.startsWith("results-"))) for (const l of fs.readFileSync(`${OUT}/${f}`, "utf8").split("\n")) { try { const r = JSON.parse(l); if (!(r.bad || []).some((b) => b === "loadFailed" || b === "stuckLoading" || b === "stacks" || b === "pageError" || b === "errorPage")) done.add(r.key); } catch {} }
 
 const measure = () => {
   const vw = innerWidth, de = document.documentElement;
