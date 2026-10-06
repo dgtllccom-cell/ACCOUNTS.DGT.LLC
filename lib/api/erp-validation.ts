@@ -417,6 +417,16 @@ const companyRegistrationSchema = z.object({
   value: z.string().trim().max(200).optional()
 });
 
+// Repeatable contract details on the company master (migration 20261226) — tracking only.
+const companyContractSchema = z.object({
+  id: z.string().trim().max(80).optional(),
+  type: z.string().trim().max(80).optional(),
+  reference: z.string().trim().max(200).optional(),
+  startDate: z.string().trim().max(40).optional(),
+  endDate: z.string().trim().max(40).optional(),
+  note: z.string().trim().max(500).optional()
+});
+
 export const companyCreateSchema = z.object({
   name: z.string().trim().min(2).max(200),
   legalName: z.string().trim().max(200).nullable().optional(),
@@ -448,6 +458,7 @@ export const companyCreateSchema = z.object({
   address: z.string().trim().max(1000).nullable().optional(),
   contacts: z.array(companyContactSchema).default([]),
   registrations: z.array(companyRegistrationSchema).default([]),
+  contracts: z.array(companyContractSchema).default([]),
   ownerIds: z.array(companyRegistrationSchema).default([]),
   // Legal profile (migration 20261212) — all optional so existing callers keep working.
   companyType: z.enum(["customer", "internal"]).nullable().optional(),

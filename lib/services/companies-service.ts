@@ -1,4 +1,4 @@
-import { companiesRepository, type CompanyContact, type CompanyRegistration, type CompanyLegalProfileInput } from "@/lib/repositories/companies-repository";
+import { companiesRepository, type CompanyContact, type CompanyRegistration, type CompanyContract, type CompanyLegalProfileInput } from "@/lib/repositories/companies-repository";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 import { writeRecordChangeHistory } from "@/lib/api/record-change-history";
@@ -30,6 +30,7 @@ export type CompanyInput = {
   address?: string | null;
   contacts?: CompanyContact[];
   registrations?: CompanyRegistration[];
+  contracts?: CompanyContract[];
   ownerIds?: CompanyRegistration[];
 } & CompanyLegalProfileInput;
 
@@ -85,6 +86,7 @@ export class CompaniesService {
       address: input.address ?? null,
       contacts: input.contacts ?? [],
       registrations: input.registrations ?? [],
+      contracts: input.contracts ?? [],
       ownerIds: input.ownerIds ?? []
     });
     await companiesRepository.updateLegalProfile(companyId, {

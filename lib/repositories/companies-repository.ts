@@ -37,6 +37,15 @@ export type CompanyRegistration = {
   value?: string;
 };
 
+export type CompanyContract = {
+  id?: string;
+  type?: string;
+  reference?: string;
+  startDate?: string;
+  endDate?: string;
+  note?: string;
+};
+
 export type CompanyRow = {
   id: string;
   company_code: string | null;
@@ -64,6 +73,7 @@ export type CompanyRow = {
   address: string | null;
   contacts: CompanyContact[];
   registrations: CompanyRegistration[];
+  contracts: CompanyContract[];
   owner_ids: CompanyRegistration[];
   is_active: boolean;
   created_at: string;
@@ -125,6 +135,7 @@ export type CompanyWriteInput = {
   address?: string | null;
   contacts?: CompanyContact[];
   registrations?: CompanyRegistration[];
+  contracts?: CompanyContract[];
   ownerIds?: CompanyRegistration[];
   isActive?: boolean;
 };
@@ -156,6 +167,7 @@ const COMPANY_SELECT = [
   "address",
   "contacts",
   "registrations",
+  "contracts",
   "owner_ids",
   "is_active",
   "created_at",
@@ -225,6 +237,7 @@ function mapRawRow(r: any): CompanyRow {
     address: r.address ?? null,
     contacts: parseJsonField(r.contacts),
     registrations: parseJsonField(r.registrations),
+    contracts: parseJsonField(r.contracts),
     owner_ids: parseJsonField(r.owner_ids),
     is_active: r.is_active ?? true,
     created_at: String(r.created_at || new Date().toISOString()),
@@ -283,6 +296,7 @@ function toPayload(input: Partial<CompanyWriteInput>) {
   if ("address" in input) payload.address = cleanText(input.address);
   if ("contacts" in input) payload.contacts = cleanJsonArray(input.contacts);
   if ("registrations" in input) payload.registrations = cleanJsonArray(input.registrations);
+  if ("contracts" in input) payload.contracts = cleanJsonArray(input.contracts);
   if ("ownerIds" in input) payload.owner_ids = cleanJsonArray(input.ownerIds);
   if ("isActive" in input) payload.is_active = Boolean(input.isActive);
   return payload;
@@ -411,7 +425,7 @@ export class CompaniesRepository {
             country_id, country_branch_id, city_branch_id, is_branch_operative,
             state_province_id, district_id, city_id, area_location_id,
             country_name, state_name, district_name, city_name, area_name, zip_code, address,
-            contacts, registrations, owner_ids, is_active, created_at, updated_at
+            contacts, registrations, contracts, owner_ids, is_active, created_at, updated_at
           ) VALUES (
             ${(payload.name as string) || ""},
             ${(payload.legal_name as string) || null},
@@ -437,6 +451,7 @@ export class CompaniesRepository {
             ${(payload.address as string) || null},
             ${localSql.json((payload.contacts || []) as any)},
             ${localSql.json((payload.registrations || []) as any)},
+            ${localSql.json((payload.contracts || []) as any)},
             ${localSql.json((payload.owner_ids || []) as any)},
             true, ${now}, ${now}
           )

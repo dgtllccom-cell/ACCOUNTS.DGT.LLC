@@ -148,6 +148,7 @@ export async function POST(request: NextRequest) {
         address: body.address ?? null,
         contacts: body.contacts ?? [],
         registrations: body.registrations ?? [],
+        contracts: body.contracts ?? [],
         ownerIds: body.ownerIds ?? [],
         companyType: body.companyType ?? null,
         tradeName: body.tradeName ?? null,

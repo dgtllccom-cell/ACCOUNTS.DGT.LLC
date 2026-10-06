@@ -11590,6 +11590,24 @@ export type UiKey =
   | "cmf.tax_reg_hint"
   | "cmf.tax_reg_number_ph"
   | "cmf.taxtype_other"
+  | "cmf.sec_contracts"
+  | "cmf.add_contract"
+  | "cmf.contracts_hint"
+  | "cmf.contract_type"
+  | "cmf.contract_ref"
+  | "cmf.contract_start"
+  | "cmf.contract_end"
+  | "cmf.contract_note"
+  | "cmf.ctype_service"
+  | "cmf.ctype_supply"
+  | "cmf.ctype_agency"
+  | "cmf.ctype_lease"
+  | "cmf.ctype_other"
+  | "cmf.live_summary"
+  | "cmf.sum_untitled"
+  | "cmf.sum_registrations"
+  | "cmf.sum_contracts"
+  | "cmf.sum_contacts"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -34470,6 +34488,24 @@ const en: Dict = {
   "cmf.tax_reg_hint": "Add NTN, TRN, VAT, GST or other tax registrations. Use “Add tax registration” for each one.",
   "cmf.tax_reg_number_ph": "Registration number",
   "cmf.taxtype_other": "Other",
+  "cmf.sec_contracts": "Contract Details",
+  "cmf.add_contract": "Add contract",
+  "cmf.contracts_hint": "Optional. Add one or more contracts (service, supply, agency, lease…). Tracking only — no accounting posting.",
+  "cmf.contract_type": "Type",
+  "cmf.contract_ref": "Reference / No.",
+  "cmf.contract_start": "Start Date",
+  "cmf.contract_end": "End Date",
+  "cmf.contract_note": "Note",
+  "cmf.ctype_service": "Service Agreement",
+  "cmf.ctype_supply": "Supply Contract",
+  "cmf.ctype_agency": "Agency Agreement",
+  "cmf.ctype_lease": "Lease / Tenancy",
+  "cmf.ctype_other": "Other",
+  "cmf.live_summary": "Live Summary",
+  "cmf.sum_untitled": "Untitled company",
+  "cmf.sum_registrations": "Tax registrations",
+  "cmf.sum_contracts": "Contracts",
+  "cmf.sum_contacts": "Contacts",
 };
 
 const ur: Dict = {
@@ -57319,6 +57355,24 @@ const ur: Dict = {
   "cmf.tax_reg_hint": "NTN، TRN، VAT، GST یا دیگر ٹیکس رجسٹریشنز شامل کریں۔ ہر ایک کے لیے «ٹیکس رجسٹریشن شامل کریں» استعمال کریں۔",
   "cmf.tax_reg_number_ph": "رجسٹریشن نمبر",
   "cmf.taxtype_other": "دیگر",
+  "cmf.sec_contracts": "معاہدے کی تفصیلات",
+  "cmf.add_contract": "معاہدہ شامل کریں",
+  "cmf.contracts_hint": "اختیاری۔ ایک یا زیادہ معاہدے شامل کریں (سروس، سپلائی، ایجنسی، کرایہ…)۔ صرف ریکارڈ کے لیے — کوئی اکاؤنٹنگ اندراج نہیں۔",
+  "cmf.contract_type": "قسم",
+  "cmf.contract_ref": "حوالہ / نمبر",
+  "cmf.contract_start": "آغاز کی تاریخ",
+  "cmf.contract_end": "اختتام کی تاریخ",
+  "cmf.contract_note": "نوٹ",
+  "cmf.ctype_service": "سروس معاہدہ",
+  "cmf.ctype_supply": "سپلائی معاہدہ",
+  "cmf.ctype_agency": "ایجنسی معاہدہ",
+  "cmf.ctype_lease": "کرایہ / لیز",
+  "cmf.ctype_other": "دیگر",
+  "cmf.live_summary": "فوری خلاصہ",
+  "cmf.sum_untitled": "بلا عنوان کمپنی",
+  "cmf.sum_registrations": "ٹیکس رجسٹریشنز",
+  "cmf.sum_contracts": "معاہدے",
+  "cmf.sum_contacts": "رابطے",
 };
 
 const ar: Dict = {
@@ -80169,6 +80223,24 @@ const ar: Dict = {
   "cmf.tax_reg_hint": "أضف NTN أو TRN أو VAT أو GST أو تسجيلات ضريبية أخرى. استخدم «إضافة تسجيل ضريبي» لكل واحد.",
   "cmf.tax_reg_number_ph": "رقم التسجيل",
   "cmf.taxtype_other": "أخرى",
+  "cmf.sec_contracts": "تفاصيل العقد",
+  "cmf.add_contract": "إضافة عقد",
+  "cmf.contracts_hint": "اختياري. أضف عقدًا واحدًا أو أكثر (خدمة، توريد، وكالة، إيجار…). للتتبع فقط — بدون قيد محاسبي.",
+  "cmf.contract_type": "النوع",
+  "cmf.contract_ref": "المرجع / الرقم",
+  "cmf.contract_start": "تاريخ البدء",
+  "cmf.contract_end": "تاريخ الانتهاء",
+  "cmf.contract_note": "ملاحظة",
+  "cmf.ctype_service": "اتفاقية خدمة",
+  "cmf.ctype_supply": "عقد توريد",
+  "cmf.ctype_agency": "اتفاقية وكالة",
+  "cmf.ctype_lease": "إيجار",
+  "cmf.ctype_other": "أخرى",
+  "cmf.live_summary": "ملخص مباشر",
+  "cmf.sum_untitled": "شركة بدون اسم",
+  "cmf.sum_registrations": "التسجيلات الضريبية",
+  "cmf.sum_contracts": "العقود",
+  "cmf.sum_contacts": "جهات الاتصال",
 };
 
 const fa: Dict = {
@@ -103018,6 +103090,24 @@ const fa: Dict = {
   "cmf.tax_reg_hint": "NTN، TRN، VAT، GST یا سایر ثبت‌نام‌های مالیاتی را اضافه کنید. برای هر کدام از «افزودن ثبت‌نام مالیاتی» استفاده کنید.",
   "cmf.tax_reg_number_ph": "شماره ثبت‌نام",
   "cmf.taxtype_other": "سایر",
+  "cmf.sec_contracts": "جزئیات قرارداد",
+  "cmf.add_contract": "افزودن قرارداد",
+  "cmf.contracts_hint": "اختیاری. یک یا چند قرارداد اضافه کنید (خدمات، تأمین، نمایندگی، اجاره…). فقط برای پیگیری — بدون ثبت حسابداری.",
+  "cmf.contract_type": "نوع",
+  "cmf.contract_ref": "مرجع / شماره",
+  "cmf.contract_start": "تاریخ شروع",
+  "cmf.contract_end": "تاریخ پایان",
+  "cmf.contract_note": "یادداشت",
+  "cmf.ctype_service": "قرارداد خدمات",
+  "cmf.ctype_supply": "قرارداد تأمین",
+  "cmf.ctype_agency": "قرارداد نمایندگی",
+  "cmf.ctype_lease": "اجاره",
+  "cmf.ctype_other": "سایر",
+  "cmf.live_summary": "خلاصه زنده",
+  "cmf.sum_untitled": "شرکت بدون نام",
+  "cmf.sum_registrations": "ثبت‌نام‌های مالیاتی",
+  "cmf.sum_contracts": "قراردادها",
+  "cmf.sum_contacts": "مخاطبین",
 };
 
 const ps: Dict = {
@@ -125874,6 +125964,24 @@ const ps: Dict = {
   "cmf.tax_reg_hint": "NTN، TRN، VAT، GST یا نور مالیاتي راجستریشنونه اضافه کړئ. د هر یو لپاره «مالیاتي راجستریشن اضافه کړئ» وکاروئ.",
   "cmf.tax_reg_number_ph": "د راجستریشن شمیره",
   "cmf.taxtype_other": "نور",
+  "cmf.sec_contracts": "د تړون جزئیات",
+  "cmf.add_contract": "تړون اضافه کړئ",
+  "cmf.contracts_hint": "اختیاري. یو یا ډیر تړونونه اضافه کړئ (خدمت، عرضه، اجنسي، کرایه…). یوازې د تعقیب لپاره — د حساب هیڅ ثبت نشته.",
+  "cmf.contract_type": "ډول",
+  "cmf.contract_ref": "حواله / شمیره",
+  "cmf.contract_start": "د پیل نیټه",
+  "cmf.contract_end": "د پای نیټه",
+  "cmf.contract_note": "یادښت",
+  "cmf.ctype_service": "د خدمت تړون",
+  "cmf.ctype_supply": "د عرضې تړون",
+  "cmf.ctype_agency": "د اجنسۍ تړون",
+  "cmf.ctype_lease": "کرایه / لیز",
+  "cmf.ctype_other": "نور",
+  "cmf.live_summary": "ژوندی لنډیز",
+  "cmf.sum_untitled": "بې نومه شرکت",
+  "cmf.sum_registrations": "مالیاتي راجستریشنونه",
+  "cmf.sum_contracts": "تړونونه",
+  "cmf.sum_contacts": "اړیکې",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

@@ -86,6 +86,17 @@ const TAX_TYPE_OPTIONS: Array<{ value: string; key: string; en: string }> = [
 type TaxRegItem = { id: string; type: string; value: string };
 const newTaxRegId = () => `tx-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
+// Repeatable contract details (migration 20261226 — tracking only, no accounting).
+const CONTRACT_TYPE_OPTIONS: Array<{ value: string; key: string; en: string }> = [
+  { value: "service", key: "ctype_service", en: "Service Agreement" },
+  { value: "supply", key: "ctype_supply", en: "Supply Contract" },
+  { value: "agency", key: "ctype_agency", en: "Agency Agreement" },
+  { value: "lease", key: "ctype_lease", en: "Lease / Tenancy" },
+  { value: "other", key: "ctype_other", en: "Other" },
+];
+type ContractItem = { id: string; type: string; reference: string; startDate: string; endDate: string; note: string };
+const newContractId = () => `ct-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+
 const field = "h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100";
 const label = "mb-1 block text-xs font-semibold text-slate-700 dark:text-slate-300";
 const card = "rounded-2xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900 sm:p-5";
@@ -130,6 +141,10 @@ export function CompanyIncorporationForm({
   const [taxNumber, setTaxNumber] = useState("");
   // Additional repeatable tax registrations (merged into the `registrations` jsonb on save).
   const [taxRegs, setTaxRegs] = useState<TaxRegItem[]>([]);
+  // Repeatable contract details (saved to the companies.contracts jsonb).
+  const [contracts, setContracts] = useState<ContractItem[]>([]);
+  // Live summary card (sticky; collapsible so it stays usable on mobile).
+  const [summaryOpen, setSummaryOpen] = useState(true);
   const [incorporationDate, setIncorporationDate] = useState("");
   const [licenseExpiryDate, setLicenseExpiryDate] = useState("");
   const [companyStatus, setCompanyStatus] = useState("active");
@@ -298,6 +313,18 @@ export function CompanyIncorporationForm({
             : [];
           setTaxRegs(extra);
         }
+        setContracts(
+          Array.isArray(c.contracts)
+            ? c.contracts.map((r: any) => ({
+                id: newContractId(),
+                type: String(r?.type || "service"),
+                reference: String(r?.reference || ""),
+                startDate: String(r?.startDate || r?.start_date || ""),
+                endDate: String(r?.endDate || r?.end_date || ""),
+                note: String(r?.note || ""),
+              }))
+            : [],
+        );
         setIncorporationDate(c.incorporation_date || "");
         setLicenseExpiryDate(c.license_expiry_date || "");
         setCompanyStatus(c.company_status || "active");
@@ -435,6 +462,9 @@ export function CompanyIncorporationForm({
           .filter((r) => r.value.trim())
           .map((r) => ({ type: (r.type || "other").trim(), value: r.value.trim() })),
       ].filter(Boolean),
+      contracts: contracts
+        .filter((r) => r.reference.trim() || r.note.trim())
+        .map((r) => ({ id: r.id, type: r.type, reference: r.reference.trim(), startDate: r.startDate, endDate: r.endDate, note: r.note.trim() })),
       acknowledgeDuplicates,
     };
     if (companyType === "internal") {
@@ -515,6 +545,42 @@ export function CompanyIncorporationForm({
         </div>
         {savedCode && (
           <span data-testid="company-code" className="rounded-lg bg-slate-100 px-2.5 py-1 font-mono text-xs font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-200">{savedCode}</span>
+        )}
+      </div>
+
+      {/* Live Summary — sticky + collapsible so it stays reachable on mobile while the long form scrolls. */}
+      <div className={cn(card, "sticky top-2 z-10 !p-0 overflow-hidden border-blue-200 dark:border-blue-900/50")}>
+        <button
+          type="button"
+          onClick={() => setSummaryOpen((v) => !v)}
+          aria-expanded={summaryOpen}
+          className="flex w-full items-center justify-between gap-2 bg-blue-50/70 px-4 py-2.5 text-left dark:bg-blue-950/30"
+        >
+          <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-blue-700 dark:text-blue-300">
+            <FileText className="h-4 w-4" /> {s.t("live_summary", "Live Summary")}
+          </span>
+          <span className="truncate text-xs font-semibold text-slate-600 dark:text-slate-300">
+            {(legalName || tradeName || s.t("sum_untitled", "Untitled company")).trim()}
+          </span>
+        </button>
+        {summaryOpen && (
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2 px-4 py-3 text-xs sm:grid-cols-3 lg:grid-cols-4">
+            {[
+              [s.t("nature_label", "Company Type / Business Nature"), natureOfBusiness || "—"],
+              [s.t("country", "Country"), countries.find((c) => c.id === countryId)?.name || "—"],
+              [s.t("state", "State / Province"), stateName || "—"],
+              [s.t("city", "City"), cityName || "—"],
+              [s.t("base_currency", "Base Currency"), baseCurrency || "—"],
+              [s.t("sum_registrations", "Tax registrations"), String((registrationNumber.trim() ? 1 : 0) + (taxNumber.trim() ? 1 : 0) + taxRegs.filter((r) => r.value.trim()).length)],
+              [s.t("sum_contracts", "Contracts"), String(contracts.filter((r) => r.reference.trim() || r.note.trim()).length)],
+              [s.t("sum_contacts", "Contacts"), String(contacts.filter((c) => c.name.trim() || c.phone.trim() || c.email.trim()).length)],
+            ].map(([k, v], i) => (
+              <div key={i} className="min-w-0">
+                <div className="truncate text-[10px] font-semibold uppercase text-slate-400 dark:text-slate-500">{k}</div>
+                <div className="truncate font-semibold text-slate-800 dark:text-slate-100">{v}</div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
@@ -881,6 +947,66 @@ export function CompanyIncorporationForm({
                 })}
               </div>
             )}
+          </div>
+        )}
+      </section>
+
+      {/* Contract details — repeatable "+ Add"; tracking only (companies.contracts jsonb). */}
+      <section className={card}>
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white">{s.t("sec_contracts", "Contract Details")}</h3>
+          <button
+            type="button"
+            onClick={() => setContracts((p) => [...p, { id: newContractId(), type: "service", reference: "", startDate: "", endDate: "", note: "" }])}
+            className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300"
+          >
+            <Plus className="h-3.5 w-3.5" /> {s.t("add_contract", "Add contract")}
+          </button>
+        </div>
+        {contracts.length === 0 ? (
+          <p className="text-xs text-slate-400 dark:text-slate-500">{s.t("contracts_hint", "Optional. Add one or more contracts (service, supply, agency, lease…). Tracking only — no accounting posting.")}</p>
+        ) : (
+          <div className="space-y-3">
+            {contracts.map((r, idx) => (
+              <div key={r.id} className="rounded-xl border border-slate-200 p-2.5 dark:border-slate-700">
+                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                  <div>
+                    <label className={label}>{s.t("contract_type", "Type")}</label>
+                    <select className={field} value={r.type} onChange={(e) => setContracts((p) => p.map((x, j) => (j === idx ? { ...x, type: e.target.value } : x)))}>
+                      {CONTRACT_TYPE_OPTIONS.map((o) => (
+                        <option key={o.value} value={o.value}>{s.t(o.key, o.en)}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={label}>{s.t("contract_ref", "Reference / No.")}</label>
+                    <input className={field} value={r.reference} onChange={(e) => setContracts((p) => p.map((x, j) => (j === idx ? { ...x, reference: e.target.value } : x)))} />
+                  </div>
+                  <div>
+                    <label className={label}>{s.t("contract_start", "Start Date")}</label>
+                    <input type="date" className={field} value={r.startDate} onChange={(e) => setContracts((p) => p.map((x, j) => (j === idx ? { ...x, startDate: e.target.value } : x)))} />
+                  </div>
+                  <div>
+                    <label className={label}>{s.t("contract_end", "End Date")}</label>
+                    <input type="date" className={field} value={r.endDate} onChange={(e) => setContracts((p) => p.map((x, j) => (j === idx ? { ...x, endDate: e.target.value } : x)))} />
+                  </div>
+                  <div className="sm:col-span-2 lg:col-span-4">
+                    <label className={label}>{s.t("contract_note", "Note")}</label>
+                    <div className="flex items-center gap-2">
+                      <input className={field} value={r.note} onChange={(e) => setContracts((p) => p.map((x, j) => (j === idx ? { ...x, note: e.target.value } : x)))} />
+                      <button
+                        type="button"
+                        aria-label={s.t("remove", "Remove")}
+                        onClick={() => setContracts((p) => p.filter((_, j) => j !== idx))}
+                        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-300 text-slate-500 hover:bg-rose-50 hover:text-rose-600 dark:border-slate-700 dark:hover:bg-rose-950/40"
+                      >
+                        <Minus className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </section>
