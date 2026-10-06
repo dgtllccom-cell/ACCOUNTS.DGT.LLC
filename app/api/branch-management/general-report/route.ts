@@ -219,26 +219,47 @@ export async function GET() {
 
     const accessibleCountryIds = await resolveAccessibleCountryIds(admin, session);
 
-    const { data: superAdminBranchData } = await admin
-      .from("branches")
-      .select("id, company_id, name, code, currency, address, phone, email, owner_name, contacts, created_at, updated_at, companies(name)")
-      .eq("is_super_admin", true)
-      .is("deleted_at", null);
+    // Super Admin Branch is strictly for Super Admins only
+    let superAdminBranches: any[] = [];
+    if (session.isSuperAdmin) {
+      const { data: superAdminBranchData } = await admin
+        .from("branches")
+        .select("id, company_id, name, code, currency, address, phone, email, owner_name, contacts, created_at, updated_at, companies(name)")
+        .eq("is_super_admin", true)
+        .is("deleted_at", null);
 
-    const superAdminBranches = ((superAdminBranchData ?? []) as SuperAdminBranchRow[]).map((branch) => ({
-      id: branch.id,
-      name: branch.name,
-      code: branch.code,
-      currency: branch.currency || "USD",
-      address: branch.address,
-      phone: branch.phone,
-      email: branch.email,
-      ownerName: branch.owner_name,
-      contacts: branch.contacts,
-      createdAt: branch.created_at,
-      updatedAt: branch.updated_at,
-      companyName: branch.companies?.name || "Global Group"
-    }));
+      superAdminBranches = ((superAdminBranchData ?? []) as SuperAdminBranchRow[]).map((branch) => ({
+        id: branch.id,
+        name: branch.name,
+        code: branch.code,
+        currency: branch.currency || "USD",
+        address: branch.address,
+        phone: branch.phone,
+        email: branch.email,
+        ownerName: branch.owner_name,
+        contacts: branch.contacts,
+        createdAt: branch.created_at,
+        updatedAt: branch.updated_at,
+        companyName: branch.companies?.name || "Global Group"
+      }));
+
+      if (superAdminBranches.length === 0) {
+        superAdminBranches = [{
+          id: "00000000-0000-0000-0000-000000000001",
+          name: "Super Admin Global Headquarters",
+          code: "SA-HQ-001",
+          currency: "USD",
+          address: "Global Executive Center",
+          phone: "+1-800-GLOBAL-HQ",
+          email: "superadmin@accounts.dgt.llc",
+          ownerName: "Executive Governance",
+          contacts: "HQ Operations",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          companyName: "Global Group"
+        }];
+      }
+    }
 
     let countryBranches: CountryBranchRow[] = [];
     let countries: CountryRow[] = [];
@@ -247,12 +268,17 @@ export async function GET() {
 
     // Attempt Supabase fetch first
     try {
-      const countryBranchesQuery = admin
+      let countryBranchesQuery = admin
         .from("country_branches")
         .select("id, country_id, name, code, local_currency, status, is_main, address, company_id, owner_name, contacts, created_at, updated_at, deleted_at")
         .is("deleted_at", null)
         .order("name", { ascending: true });
-      if (accessibleCountryIds && accessibleCountryIds.length > 0) countryBranchesQuery.in("country_id", accessibleCountryIds);
+      if (accessibleCountryIds && accessibleCountryIds.length > 0) {
+        countryBranchesQuery = countryBranchesQuery.in("country_id", accessibleCountryIds);
+      }
+      if (!session.isSuperAdmin && session.countryBranchIds && session.countryBranchIds.length > 0) {
+        countryBranchesQuery = countryBranchesQuery.in("id", session.countryBranchIds);
+      }
       const { data: countryBranchData } = await countryBranchesQuery;
       countryBranches = (countryBranchData ?? []) as CountryBranchRow[];
     } catch {}
@@ -261,10 +287,38 @@ export async function GET() {
     if (!countryBranches.length && process.env.DATABASE_URL) {
       try {
         const sql = postgres(process.env.DATABASE_URL, { ssl: "require", prepare: false, max: 1 });
-        const cbRows = await sql`SELECT id, country_id, name, code, local_currency, status, is_main, address, company_id, owner_name, contacts, created_at, updated_at, deleted_at FROM country_branches WHERE deleted_at IS NULL ORDER BY name ASC`;
-        const cRows = await sql`SELECT id, name, iso2, iso3, currency_code, is_active FROM countries WHERE deleted_at IS NULL ORDER BY name ASC`;
-        const citRows = await sql`SELECT id, country_id, country_branch_id, city_name, name, code, local_currency, status, address, company_id, owner_name, contacts, created_at, updated_at, deleted_at FROM city_branches WHERE deleted_at IS NULL ORDER BY city_name ASC`;
-        const assignRows = await sql`SELECT user_id, role, country_id, country_branch_id, city_branch_id, is_active, created_at, deleted_at FROM user_role_assignments WHERE is_active = true AND deleted_at IS NULL`;
+        const cbRows = await sql`
+          SELECT id, country_id, name, code, local_currency, status, is_main, address, company_id, owner_name, contacts, created_at, updated_at, deleted_at
+          FROM country_branches
+          WHERE deleted_at IS NULL
+            and (${accessibleCountryIds && accessibleCountryIds.length > 0 ? sql`country_id = any(${accessibleCountryIds})` : sql`true`})
+            and (${!session.isSuperAdmin && session.countryBranchIds?.length ? sql`id = any(${session.countryBranchIds})` : sql`true`})
+          ORDER BY name ASC
+        `;
+        const cRows = await sql`
+          SELECT id, name, iso2, iso3, currency_code, is_active
+          FROM countries
+          WHERE deleted_at IS NULL
+            and (${accessibleCountryIds && accessibleCountryIds.length > 0 ? sql`id = any(${accessibleCountryIds})` : sql`true`})
+          ORDER BY name ASC
+        `;
+        const citRows = await sql`
+          SELECT id, country_id, country_branch_id, city_name, name, code, local_currency, status, address, company_id, owner_name, contacts, created_at, updated_at, deleted_at
+          FROM city_branches
+          WHERE deleted_at IS NULL
+            and (${accessibleCountryIds && accessibleCountryIds.length > 0 ? sql`country_id = any(${accessibleCountryIds})` : sql`true`})
+            and (${!session.isSuperAdmin && session.countryBranchIds?.length ? sql`country_branch_id = any(${session.countryBranchIds})` : sql`true`})
+            and (${!session.isSuperAdmin && session.cityBranchIds?.length ? sql`id = any(${session.cityBranchIds})` : sql`true`})
+          ORDER BY city_name ASC
+        `;
+        const assignRows = await sql`
+          SELECT user_id, role, country_id, country_branch_id, city_branch_id, is_active, created_at, deleted_at
+          FROM user_role_assignments
+          WHERE is_active = true AND deleted_at IS NULL
+            and (${accessibleCountryIds && accessibleCountryIds.length > 0 ? sql`(country_id = any(${accessibleCountryIds}) or city_branch_id in (select id from city_branches where country_id = any(${accessibleCountryIds})))` : sql`true`})
+            and (${!session.isSuperAdmin && session.countryBranchIds?.length ? sql`country_branch_id = any(${session.countryBranchIds})` : sql`true`})
+            and (${!session.isSuperAdmin && session.cityBranchIds?.length ? sql`city_branch_id = any(${session.cityBranchIds})` : sql`true`})
+        `;
         await sql.end();
 
         countryBranches = cbRows as any;
@@ -286,19 +340,35 @@ export async function GET() {
       countries = (countryData ?? []) as CountryRow[];
 
       const countryIds = countries.map((country) => country.id);
-      const { data: cityBranchData } = await admin
+      let cityBranchQuery = admin
         .from("city_branches")
         .select("id, country_id, country_branch_id, city_name, name, code, local_currency, status, address, company_id, owner_name, contacts, created_at, updated_at, deleted_at")
         .in("country_id", countryIds)
         .is("deleted_at", null)
         .order("city_name", { ascending: true });
+
+      if (!session.isSuperAdmin && session.countryBranchIds && session.countryBranchIds.length > 0) {
+        cityBranchQuery = cityBranchQuery.in("country_branch_id", session.countryBranchIds);
+      }
+      if (!session.isSuperAdmin && session.cityBranchIds && session.cityBranchIds.length > 0) {
+        cityBranchQuery = cityBranchQuery.in("id", session.cityBranchIds);
+      }
+      const { data: cityBranchData } = await cityBranchQuery;
       cityBranches = (cityBranchData ?? []) as CityBranchRow[];
 
-      const { data: assignmentData } = await admin
+      let assignmentQuery = admin
         .from("user_role_assignments")
         .select("user_id, role, country_id, country_branch_id, city_branch_id, is_active, created_at, deleted_at")
         .eq("is_active", true)
         .is("deleted_at", null);
+
+      if (accessibleCountryIds && accessibleCountryIds.length > 0) {
+        assignmentQuery = assignmentQuery.in("country_id", accessibleCountryIds);
+      }
+      if (!session.isSuperAdmin && session.cityBranchIds && session.cityBranchIds.length > 0) {
+        assignmentQuery = assignmentQuery.in("city_branch_id", session.cityBranchIds);
+      }
+      const { data: assignmentData } = await assignmentQuery;
       assignments = (assignmentData ?? []) as AssignmentRow[];
     }
 
@@ -511,6 +581,16 @@ export async function GET() {
           totalInactiveBranches,
           totalMainAccounts: totalMainAccounts,
           users: allUserDetails
+        },
+        userScope: {
+          isSuperAdmin: Boolean(session.isSuperAdmin),
+          roles: session.roles || [],
+          countryIds: session.countryIds || [],
+          countryBranchIds: session.countryBranchIds || [],
+          cityBranchIds: session.cityBranchIds || [],
+          countryName: countries.length === 1 ? countries[0].name : null,
+          mainBranchName: countryBranches.length === 1 ? countryBranches[0].name : null,
+          cityBranchName: cityBranches.length === 1 ? cityBranches[0].name : null
         },
         superAdminBranches,
         countries: countriesPayload,

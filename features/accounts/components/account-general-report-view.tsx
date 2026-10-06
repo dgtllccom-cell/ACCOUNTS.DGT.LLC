@@ -136,16 +136,40 @@ type AccountGeneralReportResponse = {
   };
   rows: AccountGeneralReportRow[];
   generatedAt: string;
+  userScope?: {
+    isSuperAdmin: boolean;
+    roles: string[];
+    countryIds: string[];
+    countryBranchIds: string[];
+    cityBranchIds: string[];
+    operationalDomains: string[];
+    isShippingDomainOnly: boolean;
+  };
 };
 
 type SessionInfo = {
-  permissions: string[];
+  id?: string;
+  userId?: string;
+  fullName?: string;
+  email?: string;
+  user?: {
+    id?: string;
+    email?: string;
+    fullName?: string;
+    preferredLanguage?: string;
+  };
   roles: string[];
+  permissions: string[];
+  countryName?: string | null;
+  countryBranchName?: string | null;
+  cityBranchName?: string | null;
+  branchDisplayName?: string | null;
   scopes?: {
     countryIds: string[];
     countryBranchIds: string[];
     cityBranchIds: string[];
     isSuperAdmin: boolean;
+    operationalDomains?: string[];
   };
 };
 
@@ -651,7 +675,20 @@ export function AccountGeneralReportView({
   }, [initialAccountId]);
 
   const rows = useMemo(() => data?.rows ?? [], [data]);
-  const isSuperAdmin = session?.scopes?.isSuperAdmin ?? session?.roles.includes("super_admin") ?? false;
+  const userScope = data?.userScope;
+  const isSuperAdmin = userScope?.isSuperAdmin ?? session?.scopes?.isSuperAdmin ?? session?.roles.includes("super_admin") ?? false;
+  const isShippingUser = userScope?.isShippingDomainOnly ?? (
+    (session?.scopes?.operationalDomains?.length ?? 0) > 0 &&
+    session?.scopes?.operationalDomains?.every((d: string) => d === "shipping_line")
+  );
+  const isCountryAdmin = !isSuperAdmin && (
+    (session?.roles.some((r: string) => r.includes("country"))) ||
+    ((session?.scopes?.countryIds?.length ?? 0) > 0 && (session?.scopes?.cityBranchIds?.length ?? 0) === 0)
+  );
+  const isBranchAdmin = !isSuperAdmin && !isCountryAdmin && (
+    (session?.roles.some((r: string) => r.includes("branch"))) ||
+    ((session?.scopes?.cityBranchIds?.length ?? 0) > 0)
+  );
 
   useEffect(() => {
     if (!session) return;
@@ -673,8 +710,21 @@ export function AccountGeneralReportView({
         });
       }
     }
+    if (!isSuperAdmin) {
+      return [...map.values()];
+    }
     return [{ value: "all", label: tr("ALL COUNTRIES"), keywords: "all countries" }, ...map.values()];
-  }, [rows]);
+  }, [rows, isSuperAdmin, tr]);
+
+  // Ensure Country/Branch Admin filter defaults to their authorized country
+  useEffect(() => {
+    if (!isSuperAdmin && countryOptions.length > 0) {
+      if (countryName === "all" || !countryOptions.some((c) => c.value === countryName)) {
+        setCountryName(countryOptions[0].value);
+        setDraftCountryName(countryOptions[0].value);
+      }
+    }
+  }, [isSuperAdmin, countryOptions, countryName]);
 
   const branchOptions = useMemo(() => {
     const map = new Map<string, { value: string; label: string; keywords: string }>();
@@ -870,28 +920,6 @@ export function AccountGeneralReportView({
       }>;
     }> = {};
 
-    const standardHubs = [
-      { name: "United Arab Emirates", code: "AE", currency: "AED" },
-      { name: "Pakistan", code: "PK", currency: "PKR" },
-      { name: "Afghanistan", code: "AF", currency: "AFN" },
-      { name: "India", code: "IN", currency: "INR" },
-      { name: "China", code: "CN", currency: "USD" },
-    ];
-
-    standardHubs.forEach(hub => {
-      groups[hub.name] = {
-        countryName: hub.name,
-        countryCode: hub.code,
-        totalAccounts: 0,
-        activeAccounts: 0,
-        debitTotal: 0,
-        creditTotal: 0,
-        netBalance: 0,
-        currency: hub.currency,
-        branches: {}
-      };
-    });
-
     allFilteredRows.forEach(row => {
       const country = row.countryName || t(lang, "acct.agrv_unknown_country", "Unknown Country");
       const branch = row.branchName || t(lang, "report.scope_main_branch", "Main Branch");
@@ -939,16 +967,8 @@ export function AccountGeneralReportView({
     return Object.values(groups).map(g => ({
       ...g,
       branches: Object.values(g.branches).sort((a, b) => a.branchName.localeCompare(b.branchName))
-    })).sort((a, b) => {
-      const order = ["United Arab Emirates", "Pakistan", "Afghanistan", "India", "China"];
-      const idxA = order.indexOf(a.countryName);
-      const idxB = order.indexOf(b.countryName);
-      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
-      if (idxA !== -1) return -1;
-      if (idxB !== -1) return 1;
-      return a.countryName.localeCompare(b.countryName);
-    });
-  }, [allFilteredRows]);
+    })).sort((a, b) => a.countryName.localeCompare(b.countryName));
+  }, [allFilteredRows, lang]);
 
   useEffect(() => {
     if (!selectedAccountId && sortedRows.length) {
@@ -1583,13 +1603,13 @@ export function AccountGeneralReportView({
             </span>
           </span>
           <span className="text-slate-300 dark:text-slate-700">•</span>
-          <span>{tr("BRANCH SCOPE:")} <strong className="text-blue-600 dark:text-blue-400">{isSuperAdmin ? tr("GLOBAL ADMIN") : tr("BRANCH")}</strong></span>
+          <span>{tr("BRANCH SCOPE:")} <strong className="text-blue-600 dark:text-blue-400">{isSuperAdmin ? tr("GLOBAL ADMIN") : isCountryAdmin ? tr("COUNTRY") : isShippingUser ? tr("SHIPPING LINE") : tr("BRANCH")}</strong></span>
           <span className="text-slate-300 dark:text-slate-700">•</span>
-          <span>{tr("SESSION ROLE:")} <strong className="text-emerald-600 dark:text-emerald-400">{tr(session?.roles?.[0]?.replace(/_/g, " ") || "SUPER ADMIN")}</strong></span>
+          <span>{tr("SESSION ROLE:")} <strong className="text-emerald-600 dark:text-emerald-400">{isSuperAdmin ? "SUPER ADMIN" : isShippingUser ? "SHIPPING LINE USER" : ((session as any)?.roles?.[0]?.replace(/_/g, " ").toUpperCase() || "ADMIN")}</strong></span>
           <span className="text-slate-300 dark:text-slate-700">•</span>
           <span>{tr("TOTAL LEDGERS:")} <strong className="text-slate-800 dark:text-slate-200">{filteredRows.length}</strong></span>
         </div>
-        {selectedCountryForSummary && (
+        {isSuperAdmin && selectedCountryForSummary && (
           <button
             type="button"
             onClick={() => {
@@ -1612,38 +1632,56 @@ export function AccountGeneralReportView({
               <User className="h-3 w-3" />
             </div>
             <h4 className="text-[10.5px] font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">
-              {tr("1. BRANCH & USER DETAILS")}
+              {isSuperAdmin
+                ? tr("1. BRANCH & USER DETAILS")
+                : isCountryAdmin
+                ? `${filteredRows[0]?.countryName?.toUpperCase() || "REGIONAL"} & USER DETAILS`
+                : isShippingUser
+                ? "1. SHIPPING & USER DETAILS"
+                : tr("1. BRANCH & USER DETAILS")}
             </h4>
           </div>
           <div className="p-2.5 flex flex-col gap-1.5 text-[10px] sm:text-[10.5px] font-semibold text-slate-500 dark:text-slate-400 h-full">
             <div className="flex justify-between items-center">
               <span>{tr("COUNTRY:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">
-                {selectedCountryForSummary || (isSuperAdmin ? "All Countries" : (filteredRows[0]?.countryName || "United Arab Emirates"))}
+                {isSuperAdmin
+                  ? (selectedCountryForSummary || "All Countries")
+                  : (filteredRows[0]?.countryName || (session as any)?.countryName || "Authorized Country")}
               </span>
             </div>
             <div className="flex justify-between items-center">
               <span>{tr("BRANCH NAME:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">
-                {branchCode !== "all" ? branchCode : (isSuperAdmin ? "ALL BRANCHES" : (filteredRows[0]?.branchName || "MAIN BRANCH"))}
+                {branchCode !== "all"
+                  ? branchCode
+                  : isSuperAdmin
+                  ? "ALL BRANCHES"
+                  : isCountryAdmin
+                  ? `${filteredRows[0]?.countryName || "REGIONAL"} ALL BRANCHES`
+                  : (filteredRows[0]?.branchName || (session as any)?.branchDisplayName || "MAIN BRANCH")}
               </span>
             </div>
             <div className="flex justify-between items-center">
               <span>{tr("USER ID:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 uppercase text-[9px] font-mono">
-                {(session as any)?.userId || (session as any)?.user?.id || (session as any)?.id || "SUPER-ADMIN-001"}
+                {(session as any)?.user?.id || (session as any)?.userId || (session as any)?.id || "—"}
               </span>
             </div>
             <div className="flex justify-between items-center">
               <span>{tr("USER NAME:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">
-                {(session as any)?.fullName || (session as any)?.user?.fullName || (session as any)?.email || "—"}
+                {(session as any)?.user?.fullName || (session as any)?.fullName || (session as any)?.user?.email || (session as any)?.email || "—"}
               </span>
             </div>
             <div className="flex justify-between items-center">
               <span>{tr("ROLE:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">
-                {isSuperAdmin ? "SUPER ADMIN" : ((session as any)?.roles?.[0]?.replace(/_/g, " ") || "BRANCH ADMIN")}
+                {isSuperAdmin
+                  ? "SUPER ADMIN"
+                  : isShippingUser
+                  ? "SHIPPING LINE USER"
+                  : ((session as any)?.roles?.[0]?.replace(/_/g, " ").toUpperCase() || "BRANCH ADMIN")}
               </span>
             </div>
             <div className="flex justify-between items-center">
@@ -1661,14 +1699,20 @@ export function AccountGeneralReportView({
           </div>
         </div>
 
-        {/* Panel 2: Accounts & Registry Summary (Step 2 - Debit/Credit/Balance completely removed as requested) */}
+        {/* Panel 2: Accounts & Registry Summary */}
         <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-2xs dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
           <div className="flex items-center gap-2 px-3 py-1.5 border-b border-slate-100 dark:border-slate-800 bg-emerald-50/60 dark:bg-emerald-900/15">
             <div className="bg-emerald-600 p-1 rounded-md text-white">
               <Building2 className="h-3 w-3" />
             </div>
             <h4 className="text-[10.5px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400">
-              {tr("2. ACCOUNTS & REGISTRY SUMMARY")}
+              {isSuperAdmin
+                ? tr("2. ACCOUNTS & REGISTRY SUMMARY")
+                : isCountryAdmin
+                ? `${filteredRows[0]?.countryName?.toUpperCase() || "REGIONAL"} ACCOUNTS & REGISTRY`
+                : isShippingUser
+                ? "2. SHIPPING ACCOUNTS & REGISTRY"
+                : "2. BRANCH ACCOUNTS & REGISTRY"}
             </h4>
           </div>
           <div className="p-2.5 flex flex-col gap-1.5 text-[10px] sm:text-[10.5px] font-semibold text-slate-500 dark:text-slate-400 h-full">
@@ -1705,7 +1749,13 @@ export function AccountGeneralReportView({
             <div className="flex justify-between items-center">
               <span>{tr("BASE CURRENCY:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">
-                AED (United Arab Emirates)
+                {isSuperAdmin
+                  ? "AED (Global Multi-Currency Base)"
+                  : (() => {
+                      const firstCur = filteredRows.find((r) => r.currency)?.currency || "AED";
+                      const firstCountry = filteredRows.find((r) => r.countryName)?.countryName;
+                      return firstCountry ? `${firstCur} (${firstCountry})` : firstCur;
+                    })()}
               </span>
             </div>
             <div className="flex justify-between items-center mt-auto pt-1.5 border-t border-slate-100 dark:border-slate-800">
@@ -1724,7 +1774,13 @@ export function AccountGeneralReportView({
               <FileText className="h-3 w-3" />
             </div>
             <h4 className="text-[10.5px] font-black uppercase tracking-wider text-purple-800 dark:text-purple-400">
-              {tr("3. CATEGORIES & LEDGERS")}
+              {isSuperAdmin
+                ? tr("3. CATEGORIES & LEDGERS")
+                : isCountryAdmin
+                ? `${filteredRows[0]?.countryName?.toUpperCase() || "REGIONAL"} CATEGORIES & LEDGERS`
+                : isShippingUser
+                ? "3. SHIPPING CATEGORIES & LEDGERS"
+                : "3. BRANCH CATEGORIES & LEDGERS"}
             </h4>
           </div>
           <div className="p-2.5 flex flex-col gap-1.5 text-[10px] sm:text-[10.5px] font-semibold text-slate-500 dark:text-slate-400 h-full">
@@ -1767,7 +1823,15 @@ export function AccountGeneralReportView({
                 <Globe className="h-3 w-3" />
               </div>
               <h4 className="text-[10.5px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-400">
-                {tr("4. ALL COUNTRIES REPORT")}
+                {isSuperAdmin
+                  ? tr("4. ALL COUNTRIES REPORT")
+                  : isCountryAdmin
+                  ? `${filteredRows[0]?.countryName?.toUpperCase() || "REGIONAL"} BRANCHES & HUBS`
+                  : isShippingUser
+                  ? "4. SHIPPING PORTS & AGENTS"
+                  : isBranchAdmin
+                  ? "4. BRANCH & SUB-OFFICE REGISTRY"
+                  : "4. REGIONAL HUBS"}
               </h4>
             </div>
             <button
@@ -1779,44 +1843,90 @@ export function AccountGeneralReportView({
             </button>
           </div>
           <div className="p-2.5 flex flex-col gap-1.5 text-[10px] sm:text-[10.5px] font-semibold text-slate-500 dark:text-slate-400 h-full">
-            <div className="flex justify-between items-center">
-              <span>{tr("TOTAL COUNTRIES:")}</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200">{countrySummaries.length || 1}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span>{tr("TOTAL BRANCHES:")}</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200">{countrySummaries.reduce((sum, c) => sum + c.branches.length, 0) || 1}</span>
-            </div>
-            
-            {/* Quick Country Pill Selector */}
-            <div className="flex flex-wrap gap-1 py-0.5">
-              {countrySummaries.slice(0, 5).map((c) => {
-                const isSelected = selectedCountryForSummary === c.countryName;
-                return (
-                  <button
-                    key={c.countryName}
-                    type="button"
-                    onClick={() => {
-                      setSelectedCountryForSummary(isSelected ? null : c.countryName);
-                      setCountryName(isSelected ? "all" : c.countryName);
-                    }}
-                    className={cn(
-                      "px-1.5 py-0.5 rounded text-[9.5px] font-bold transition flex items-center gap-1 cursor-pointer",
-                      isSelected
-                        ? "bg-amber-600 text-white shadow-2xs"
-                        : "bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200"
-                    )}
-                  >
-                    <span>{getFlag(c.countryName)}</span>
-                    <span>{c.countryName}</span>
-                  </button>
-                );
-              })}
-            </div>
+            {isSuperAdmin ? (
+              <>
+                <div className="flex justify-between items-center">
+                  <span>{tr("TOTAL COUNTRIES:")}</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200">{countrySummaries.length || 1}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>{tr("TOTAL BRANCHES:")}</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200">{countrySummaries.reduce((sum, c) => sum + c.branches.length, 0) || 1}</span>
+                </div>
+                
+                {/* Quick Country Pill Selector */}
+                <div className="flex flex-wrap gap-1 py-0.5">
+                  {countrySummaries.slice(0, 5).map((c) => {
+                    const isSelected = selectedCountryForSummary === c.countryName;
+                    return (
+                      <button
+                        key={c.countryName}
+                        type="button"
+                        onClick={() => {
+                          setSelectedCountryForSummary(isSelected ? null : c.countryName);
+                          setCountryName(isSelected ? "all" : c.countryName);
+                        }}
+                        className={cn(
+                          "px-1.5 py-0.5 rounded text-[9.5px] font-bold transition flex items-center gap-1 cursor-pointer",
+                          isSelected
+                            ? "bg-amber-600 text-white shadow-2xs"
+                            : "bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200"
+                        )}
+                      >
+                        <span>{getFlag(c.countryName)}</span>
+                        <span>{c.countryName}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex justify-between items-center">
+                  <span>{tr("AUTHORIZED REGION:")}</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200">
+                    {filteredRows[0]?.countryName || (session as any)?.countryName || "Authorized Scope"}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>{tr("ACTIVE BRANCHES:")}</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200">
+                    {countrySummaries[0]?.branches.length || 1}
+                  </span>
+                </div>
+                {/* Quick Branch Pills for Scoped Roles */}
+                <div className="flex flex-wrap gap-1 py-0.5">
+                  {(countrySummaries[0]?.branches || []).slice(0, 5).map((b) => {
+                    const isSelected = branchCode === b.branchCode;
+                    return (
+                      <button
+                        key={b.branchCode}
+                        type="button"
+                        onClick={() => {
+                          setBranchCode(isSelected ? "all" : b.branchCode);
+                        }}
+                        className={cn(
+                          "px-1.5 py-0.5 rounded text-[9.5px] font-bold transition flex items-center gap-1 cursor-pointer uppercase",
+                          isSelected
+                            ? "bg-amber-600 text-white shadow-2xs"
+                            : "bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200"
+                        )}
+                      >
+                        <span>{b.branchName}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
 
             <div className="flex justify-between items-center mt-auto pt-1.5 border-t border-slate-100 dark:border-slate-800">
               <span className="font-bold text-slate-700 dark:text-slate-300">{tr("COVERAGE:")}</span>
-              <span className="font-bold text-blue-600 dark:text-blue-400">{isSuperAdmin ? "GLOBAL NETWORK" : (selectedCountryForSummary || "COUNTRY NETWORK")}</span>
+              <span className="font-bold text-blue-600 dark:text-blue-400">
+                {isSuperAdmin
+                  ? "GLOBAL NETWORK"
+                  : `${filteredRows[0]?.countryName?.toUpperCase() || "REGIONAL"} NETWORK`}
+              </span>
             </div>
           </div>
         </div>
@@ -1828,10 +1938,12 @@ export function AccountGeneralReportView({
           <div className="flex items-center justify-between border-b border-amber-200/60 pb-2 dark:border-amber-900/60">
             <h5 className="text-xs font-black uppercase text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
               <Globe className="h-4 w-4 text-amber-600" />
-              {t(lang, "ledger.orlv_global_breakdown", "GLOBAL BREAKDOWN BY COUNTRY & BRANCH")}
+              {isSuperAdmin
+                ? t(lang, "ledger.orlv_global_breakdown", "GLOBAL BREAKDOWN BY COUNTRY & BRANCH")
+                : `${filteredRows[0]?.countryName?.toUpperCase() || "REGIONAL"} BREAKDOWN BY BRANCH`}
             </h5>
             <div className="flex items-center gap-3">
-              {selectedCountryForSummary && (
+              {isSuperAdmin && selectedCountryForSummary && (
                 <button
                   type="button"
                   onClick={() => setSelectedCountryForSummary(null)}
@@ -1840,7 +1952,9 @@ export function AccountGeneralReportView({
                   Clear Selection (Show All Countries)
                 </button>
               )}
-              <span className="text-[11px] text-slate-500 dark:text-slate-400">{countrySummaries.length} active region(s)</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                {countrySummaries.length} active region(s)
+              </span>
             </div>
           </div>
 

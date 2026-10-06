@@ -880,11 +880,15 @@ export class LedgerReportService {
 
     let siblingLedgerIds: string[] = [];
     if (header.accountId && !shippingOnlySession) {
-      const { data: siblingLedgers } = await supabase
+      let qSib = supabase
         .from("ledgers")
         .select("id")
         .or(`account_id.eq.${header.accountId},enterprise_account_id.eq.${header.accountId}`)
         .is("deleted_at", null);
+      if (!input.session.isSuperAdmin) {
+        qSib = applySessionScopeFilter(qSib, input.session);
+      }
+      const { data: siblingLedgers } = await qSib;
       if (siblingLedgers) {
         siblingLedgerIds = siblingLedgers.map((l: any) => l.id);
       }
@@ -897,50 +901,77 @@ export class LedgerReportService {
       ...siblingLedgerIds
     ].filter(Boolean)) as string[];
 
+    let batchQuery = supabase
+      .from("ledger_posting_lines")
+      .select(
+        "id, batch_id, description, debit, credit, currency, usd_rate, usd_amount, created_at, ledger_posting_batches!inner(entry_date, reference_no, created_by, city_branch_id, country_branch_id)"
+      )
+      .in("ledger_id", targetLedgerIds)
+      .gte("ledger_posting_batches.entry_date", input.fromDate)
+      .lte("ledger_posting_batches.entry_date", input.toDate)
+      .order("created_at", { ascending: true })
+      .limit(limit);
+
+    let rozQuery = supabase
+      .from("roznamcha_lines")
+      .select(
+        "id, roznamcha_entry_id, description, debit, credit, currency, usd_rate, usd_amount, roznamcha_entries!inner(entry_date, voucher_no, created_by, created_at, city_branch_id, country_branch_id, country_id, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number)"
+      )
+      .in("ledger_id", targetLedgerIds)
+      .gte("roznamcha_entries.entry_date", input.fromDate)
+      .lte("roznamcha_entries.entry_date", input.toDate)
+      .is("roznamcha_entries.deleted_at", null)
+      .order("entry_date", { ascending: true, foreignTable: "roznamcha_entries" })
+      .order("created_at", { ascending: true, foreignTable: "roznamcha_entries" })
+      .order("id", { ascending: true })
+      .limit(limit);
+
+    let jlQuery = supabase
+      .from("journal_lines")
+      .select(
+        "id, journal_entry_id, description, debit, credit, journal_entries!inner(entry_no, entry_date, status, posted_at, posted_by)"
+      )
+      .in("account_id", targetLedgerIds)
+      .gte("journal_entries.entry_date", input.fromDate)
+      .lte("journal_entries.entry_date", input.toDate)
+      .limit(limit);
+
+    let priorBatchQuery = supabase
+      .from("ledger_posting_lines")
+      .select("debit, credit, ledger_posting_batches!inner(entry_date, city_branch_id, country_branch_id)")
+      .in("ledger_id", targetLedgerIds)
+      .lt("ledger_posting_batches.entry_date", input.fromDate);
+
+    let priorRozQuery = supabase
+      .from("roznamcha_lines")
+      .select("debit, credit, roznamcha_entries!inner(entry_date, deleted_at, city_branch_id, country_branch_id, country_id)")
+      .in("ledger_id", targetLedgerIds)
+      .lt("roznamcha_entries.entry_date", input.fromDate)
+      .is("roznamcha_entries.deleted_at", null);
+
+    if (!input.session.isSuperAdmin) {
+      if (input.session.cityBranchIds && input.session.cityBranchIds.length > 0) {
+        batchQuery = batchQuery.in("ledger_posting_batches.city_branch_id", input.session.cityBranchIds);
+        priorBatchQuery = priorBatchQuery.in("ledger_posting_batches.city_branch_id", input.session.cityBranchIds);
+        rozQuery = rozQuery.in("roznamcha_entries.city_branch_id", input.session.cityBranchIds);
+        priorRozQuery = priorRozQuery.in("roznamcha_entries.city_branch_id", input.session.cityBranchIds);
+      } else if (input.session.countryBranchIds && input.session.countryBranchIds.length > 0) {
+        batchQuery = batchQuery.in("ledger_posting_batches.country_branch_id", input.session.countryBranchIds);
+        priorBatchQuery = priorBatchQuery.in("ledger_posting_batches.country_branch_id", input.session.countryBranchIds);
+        rozQuery = rozQuery.in("roznamcha_entries.country_branch_id", input.session.countryBranchIds);
+        priorRozQuery = priorRozQuery.in("roznamcha_entries.country_branch_id", input.session.countryBranchIds);
+      } else if (input.session.countryIds && input.session.countryIds.length > 0) {
+        rozQuery = rozQuery.in("roznamcha_entries.country_id", input.session.countryIds);
+        priorRozQuery = priorRozQuery.in("roznamcha_entries.country_id", input.session.countryIds);
+      }
+    }
+
     const [batchRes, rozRes, jlRes, priorBatchRes, priorRozRes] = await Promise.all([
-      supabase
-        .from("ledger_posting_lines")
-        .select(
-          "id, batch_id, description, debit, credit, currency, usd_rate, usd_amount, created_at, ledger_posting_batches!inner(entry_date, reference_no, created_by, city_branch_id, country_branch_id)"
-        )
-        .in("ledger_id", targetLedgerIds)
-        .gte("ledger_posting_batches.entry_date", input.fromDate)
-        .lte("ledger_posting_batches.entry_date", input.toDate)
-        .order("created_at", { ascending: true })
-        .limit(limit),
-      supabase
-        .from("roznamcha_lines")
-        .select(
-          "id, roznamcha_entry_id, description, debit, credit, currency, usd_rate, usd_amount, roznamcha_entries!inner(entry_date, voucher_no, created_by, created_at, city_branch_id, country_branch_id, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number)"
-        )
-        .in("ledger_id", targetLedgerIds)
-        .gte("roznamcha_entries.entry_date", input.fromDate)
-        .lte("roznamcha_entries.entry_date", input.toDate)
-        .is("roznamcha_entries.deleted_at", null)
-        .order("entry_date", { ascending: true, foreignTable: "roznamcha_entries" })
-        .order("created_at", { ascending: true, foreignTable: "roznamcha_entries" })
-        .order("id", { ascending: true })
-        .limit(limit),
-      supabase
-        .from("journal_lines")
-        .select(
-          "id, journal_entry_id, description, debit, credit, journal_entries!inner(entry_no, entry_date, status, posted_at, posted_by)"
-        )
-        .in("account_id", targetLedgerIds)
-        .gte("journal_entries.entry_date", input.fromDate)
-        .lte("journal_entries.entry_date", input.toDate)
-        .limit(limit),
-      supabase
-        .from("ledger_posting_lines")
-        .select("debit, credit, ledger_posting_batches!inner(entry_date)")
-        .in("ledger_id", targetLedgerIds)
-        .lt("ledger_posting_batches.entry_date", input.fromDate),
-      supabase
-        .from("roznamcha_lines")
-        .select("debit, credit, roznamcha_entries!inner(entry_date, deleted_at)")
-        .in("ledger_id", targetLedgerIds)
-        .lt("roznamcha_entries.entry_date", input.fromDate)
-        .is("roznamcha_entries.deleted_at", null)
+      batchQuery,
+      rozQuery,
+      jlQuery,
+      priorBatchQuery,
+      priorRozQuery
     ]);
 
     if (batchRes.error) console.warn("batchRes query notice:", batchRes.error.message);

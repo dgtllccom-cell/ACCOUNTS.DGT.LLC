@@ -50,6 +50,7 @@ import { t } from "@/lib/i18n/ui";
 import { fetchBranding, brandingName } from "@/lib/branding/client";
 import { cn } from "@/lib/utils";
 import { ModulePermissionModal } from "@/components/permissions/module-permission-modal";
+import { openUserHandoverSlipWindow } from "@/lib/reports/open-user-a4-report-window";
 
 interface UserDirectoryItem {
   userId: string;
@@ -1151,6 +1152,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
   const [showModalPassword, setShowModalPassword] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [justGeneratedPassword, setJustGeneratedPassword] = useState<string | null>(null);
 
   // Dynamic context
   const currentTime = "24 Apr 2025, 14:32";
@@ -1537,12 +1539,13 @@ export default function SuperAdminAllUsersDirectoryPage() {
     setNewPasswordInput("");
     setShowModalPassword(false);
     setPasswordError(null);
+    setJustGeneratedPassword(null);
   };
 
-  const handleSavePassword = async () => {
+  const handleSavePassword = async (generateTemporary: boolean = false) => {
     if (!passwordModalUser) return;
     const trimmed = newPasswordInput.trim();
-    if (!trimmed) {
+    if (!generateTemporary && !trimmed) {
       setPasswordError(th("Password cannot be empty"));
       return;
     }
@@ -1556,7 +1559,8 @@ export default function SuperAdminAllUsersDirectoryPage() {
           userId: passwordModalUser.userId,
           userCode: passwordModalUser.userCode,
           email: passwordModalUser.email,
-          newPassword: trimmed
+          newPassword: (!generateTemporary && trimmed) ? trimmed : undefined,
+          generateTemporary: Boolean(generateTemporary || !trimmed)
         })
       });
       const data = await res.json();
@@ -1564,24 +1568,51 @@ export default function SuperAdminAllUsersDirectoryPage() {
         throw new Error(data.error || "Failed to update password");
       }
 
+      const effectivePassword = data.temporaryPassword || trimmed;
+      setJustGeneratedPassword(effectivePassword);
+
       // Update local state for all user lists
       setUsers((prev) =>
         prev.map((u) =>
           u.userId === passwordModalUser.userId || u.userCode.toLowerCase() === passwordModalUser.userCode.toLowerCase()
-            ? { ...u, passwordKey: trimmed }
+            ? { ...u, passwordKey: effectivePassword }
             : u
         )
       );
       if (selectedUser && (selectedUser.userId === passwordModalUser.userId || selectedUser.userCode.toLowerCase() === passwordModalUser.userCode.toLowerCase())) {
-        setSelectedUser((prev) => (prev ? { ...prev, passwordKey: trimmed } : null));
+        setSelectedUser((prev) => (prev ? { ...prev, passwordKey: effectivePassword } : null));
       }
-      showToast(`${th("Password updated successfully for")} ${passwordModalUser.fullName} (${trimmed})`);
-      setPasswordModalUser(null);
+      showToast(`${th("Temporary password generated successfully for")} ${passwordModalUser.fullName}`);
     } catch (err: any) {
       setPasswordError(err?.message || "Failed to update password");
     } finally {
       setSavingPassword(false);
     }
+  };
+
+  const printHandoverSlip = (user: UserDirectoryItem, format: "a4" | "slip" = "a4", tempPassword?: string) => {
+    openUserHandoverSlipWindow({
+      userData: {
+        userId: user.userId,
+        userCode: user.userCode,
+        fullName: user.fullName,
+        username: user.userCode,
+        email: user.email,
+        phone: user.phone,
+        countryName: user.countryName,
+        branchName: user.branchName,
+        branchType: user.businessType || "Staff",
+        role: user.role,
+        operationalDomain: user.businessType?.toLowerCase().includes("shipping") ? "shipping" : "business",
+        registrationDate: user.createdAt,
+        status: user.isActive ? "Active" : "Inactive",
+        temporaryPassword: tempPassword || (user.passwordKey && user.passwordKey !== "Not set in vault" && !user.passwordKey.includes("••••") ? user.passwordKey : undefined),
+        loginPortalUrl: user.loginUrl
+      },
+      lang: lang as any,
+      format,
+      autoPrint: true
+    });
   };
 
   // CSV Export
@@ -2319,11 +2350,19 @@ export default function SuperAdminAllUsersDirectoryPage() {
                                 </button>
                                 <button
                                   type="button"
-                                  onClick={() => { setPrintModalUser(u); setShowBatchPrint(false); setActiveMenuRowId(null); }}
-                                  className="w-full text-left p-2 rounded-lg hover:bg-muted flex items-center gap-2"
+                                  onClick={() => { printHandoverSlip(u, "a4"); setActiveMenuRowId(null); }}
+                                  className="w-full text-left p-2 rounded-lg hover:bg-muted flex items-center gap-2 font-medium"
+                                >
+                                  <Printer className="w-3.5 h-3.5 text-indigo-600" />
+                                  <span>{th("Print A4 Handover Sheet")}</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => { printHandoverSlip(u, "slip"); setActiveMenuRowId(null); }}
+                                  className="w-full text-left p-2 rounded-lg hover:bg-muted flex items-center gap-2 font-medium"
                                 >
                                   <FileText className="w-3.5 h-3.5 text-blue-600" />
-                                  <span>{th("Print A4 Slip")}</span>
+                                  <span>{th("Print Slip (Card)")}</span>
                                 </button>
                                 <button
                                   type="button"
@@ -3071,7 +3110,11 @@ export default function SuperAdminAllUsersDirectoryPage() {
                       </div>
                       <div>
                         <span className="text-[10px] text-slate-500 font-bold uppercase block">{th("INITIAL ACCESS PASSWORD")}</span>
-                        <span className="font-mono font-black text-emerald-700 text-sm bg-white px-2.5 py-1 rounded border border-emerald-300 block mt-1">{printModalUser.passwordKey || th("Not set in vault")}</span>
+                        <span className="font-mono font-black text-emerald-700 text-sm bg-white px-2.5 py-1 rounded border border-emerald-300 block mt-1">
+                          {printModalUser.passwordKey && !printModalUser.passwordKey.includes("••••") && printModalUser.passwordKey !== "Not set in vault"
+                            ? printModalUser.passwordKey
+                            : "•••••••• (Kept Secret / Set at Onboarding)"}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -3208,7 +3251,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
                 </div>
                 <div>
                   <h2 className="text-base font-black flex items-center gap-2">
-                    <span>{th("Change Password")}</span>
+                    <span>{justGeneratedPassword ? th("Temporary Password Generated") : th("Reset Password / Generate Key")}</span>
                   </h2>
                   <p className="text-xs text-indigo-200 mt-0.5">
                     {passwordModalUser.fullName} ({passwordModalUser.userCode})
@@ -3219,7 +3262,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
               <button
                 type="button"
                 disabled={savingPassword}
-                onClick={() => setPasswordModalUser(null)}
+                onClick={() => { setPasswordModalUser(null); setJustGeneratedPassword(null); }}
                 className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors cursor-pointer disabled:opacity-50"
               >
                 <X className="h-4 w-4" />
@@ -3227,105 +3270,231 @@ export default function SuperAdminAllUsersDirectoryPage() {
             </div>
 
             {/* Modal Body */}
-            <div className="p-6 space-y-4 text-xs">
-              {/* User Summary Card */}
-              <div className="bg-muted/40 rounded-2xl p-3.5 border border-border space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground font-medium">{th("User Code")}:</span>
-                  <span className="font-mono font-bold text-foreground bg-background px-2 py-0.5 rounded border border-border">
-                    {passwordModalUser.userCode}
-                  </span>
+            {justGeneratedPassword ? (
+              <div className="p-6 space-y-4 text-xs">
+                <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-4 text-center space-y-2">
+                  <div className="h-10 w-10 mx-auto rounded-full bg-emerald-100 dark:bg-emerald-900/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                    <CheckCircle2 className="h-6 w-6" />
+                  </div>
+                  <h3 className="font-black text-sm text-emerald-950 dark:text-emerald-200">
+                    Temporary Password Active
+                  </h3>
+                  <p className="text-[11px] text-emerald-800 dark:text-emerald-300">
+                    Credentials updated in Supabase Auth and recorded in the audit log.
+                  </p>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground font-medium">{th("Login Email")}:</span>
-                  <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400 truncate max-w-[200px]">
-                    {passwordModalUser.email}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground font-medium">{th("Role & Branch")}:</span>
-                  <span className="font-medium text-slate-700 dark:text-slate-300">
-                    {passwordModalUser.roleLabel} • {passwordModalUser.branchName}
-                  </span>
-                </div>
-              </div>
 
-              {/* Password Input */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-foreground">
-                  {th("New Access Password")}
-                </label>
-                <div className="relative">
-                  <input
-                    type={showModalPassword ? "text" : "password"}
-                    value={newPasswordInput}
-                    onChange={(e) => setNewPasswordInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !savingPassword) {
-                        e.preventDefault();
-                        void handleSavePassword();
-                      }
-                    }}
-                    placeholder={th("Enter a new password")}
-                    disabled={savingPassword}
-                    className="w-full h-10 px-3 pr-10 text-xs font-mono font-bold rounded-xl border border-input bg-background text-foreground shadow-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-                  />
-                  <button
+                <div className="bg-slate-900 text-white rounded-2xl p-4 space-y-2 border border-slate-800">
+                  <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                    New Temporary Password
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-mono text-base font-black tracking-wider text-emerald-400 break-all select-all">
+                      {justGeneratedPassword}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => copyToClipboard(justGeneratedPassword, "temp-modal-key")}
+                      className="shrink-0 h-8 gap-1.5 bg-slate-800 text-white hover:bg-slate-700 border-slate-700"
+                    >
+                      {copiedKey === "temp-modal-key" ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                      <span>{copiedKey === "temp-modal-key" ? "Copied" : "Copy"}</span>
+                    </Button>
+                  </div>
+                  <div className="text-[10px] text-amber-300 flex items-center gap-1.5 pt-1">
+                    <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                    <span>Provide this password to the employee now. For security, it will not be displayed again once closed.</span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 pt-2">
+                  <Button
                     type="button"
-                    onClick={() => setShowModalPassword(!showModalPassword)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground cursor-pointer"
+                    onClick={() => printHandoverSlip(passwordModalUser, "a4", justGeneratedPassword)}
+                    className="h-10 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl flex items-center justify-center gap-1.5 shadow-sm"
                   >
-                    {showModalPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
+                    <Printer className="h-3.5 w-3.5" />
+                    <span>Print A4 Handover Sheet</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => printHandoverSlip(passwordModalUser, "slip", justGeneratedPassword)}
+                    className="h-10 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 border-slate-300 dark:border-slate-700"
+                  >
+                    <FileText className="h-3.5 w-3.5 text-blue-600" />
+                    <span>Print Slip (Card)</span>
+                  </Button>
                 </div>
-                <p className="text-[10px] text-muted-foreground">
-                  {th("This password will be immediately updated in both the ERP credentials vault and the authentication login system.")}
-                </p>
+
+                <div className="pt-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => { setPasswordModalUser(null); setJustGeneratedPassword(null); }}
+                    className="w-full h-9 text-xs font-bold"
+                  >
+                    Done & Close
+                  </Button>
+                </div>
               </div>
-
-              {/* Error Box */}
-              {passwordError && (
-                <div className="p-3 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900 rounded-xl text-rose-700 dark:text-rose-300 text-[11px] flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span>{passwordError}</span>
+            ) : (
+              <div className="p-6 space-y-4 text-xs">
+                {/* User Summary Card */}
+                <div className="bg-muted/40 rounded-2xl p-3.5 border border-border space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground font-medium">{th("User Code")}:</span>
+                    <span className="font-mono font-bold text-foreground bg-background px-2 py-0.5 rounded border border-border">
+                      {passwordModalUser.userCode}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground font-medium">{th("Login Email")}:</span>
+                    <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400 truncate max-w-[200px]">
+                      {passwordModalUser.email}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground font-medium">{th("Role & Branch")}:</span>
+                    <span className="font-medium text-slate-700 dark:text-slate-300">
+                      {passwordModalUser.roleLabel} • {passwordModalUser.branchName}
+                    </span>
+                  </div>
                 </div>
-              )}
-            </div>
 
-            {/* Modal Footer */}
-            <div className="bg-muted/30 px-6 py-4 border-t border-border flex items-center justify-end gap-2.5">
-              <Button
-                type="button"
-                variant="outline"
-                disabled={savingPassword}
-                onClick={() => setPasswordModalUser(null)}
-                className="h-9 px-4 text-xs font-bold rounded-xl cursor-pointer"
-              >
-                {th("Cancel")}
-              </Button>
-              <Button
-                type="button"
-                disabled={savingPassword || !newPasswordInput.trim()}
-                onClick={() => void handleSavePassword()}
-                className="h-9 px-4 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
-              >
-                {savingPassword ? (
-                  <>
-                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    <span>{th("Saving...")}</span>
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-3.5 h-3.5" />
-                    <span>{th("Save Password")}</span>
-                  </>
+                {/* Option 1: Instant Generate Temporary Password */}
+                <div className="p-3.5 bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900 rounded-2xl space-y-2">
+                  <div className="font-bold text-indigo-950 dark:text-indigo-200 flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                    <span>{th("Instant Temporary Password (Recommended)")}</span>
+                  </div>
+                  <p className="text-[11px] text-indigo-800 dark:text-indigo-300">
+                    Generates a cryptographically strong 12-character handover password and logs this reset event in the security audit log.
+                  </p>
+                  <Button
+                    type="button"
+                    disabled={savingPassword}
+                    onClick={() => void handleSavePassword(true)}
+                    className="w-full h-9 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-xs cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    {savingPassword ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        <span>Generating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <KeyRound className="w-3.5 h-3.5" />
+                        <span>Generate & Display Temporary Password</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                <div className="relative flex py-1 items-center">
+                  <div className="grow border-t border-border"></div>
+                  <span className="shrink mx-3 text-[10px] text-muted-foreground uppercase font-bold tracking-wider">or set custom password</span>
+                  <div className="grow border-t border-border"></div>
+                </div>
+
+                {/* Option 2: Custom Password Input */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-foreground">
+                    {th("Custom Access Password")}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showModalPassword ? "text" : "password"}
+                      value={newPasswordInput}
+                      onChange={(e) => setNewPasswordInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !savingPassword) {
+                          e.preventDefault();
+                          void handleSavePassword(false);
+                        }
+                      }}
+                      placeholder={th("Enter a custom password (min 8 characters)")}
+                      disabled={savingPassword}
+                      className="w-full h-10 px-3 pr-10 text-xs font-mono font-bold rounded-xl border border-input bg-background text-foreground shadow-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowModalPassword(!showModalPassword)}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground cursor-pointer"
+                    >
+                      {showModalPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Error Box */}
+                {passwordError && (
+                  <div className="p-3 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900 rounded-xl text-rose-700 dark:text-rose-300 text-[11px] flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>{passwordError}</span>
+                  </div>
                 )}
-              </Button>
-            </div>
+
+                {/* Modal Footer for Custom Password */}
+                <div className="pt-2 flex items-center justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={savingPassword}
+                    onClick={() => setPasswordModalUser(null)}
+                    className="h-9 px-4 text-xs font-bold rounded-xl cursor-pointer"
+                  >
+                    {th("Cancel")}
+                  </Button>
+                  <Button
+                    type="button"
+                    disabled={savingPassword || !newPasswordInput.trim()}
+                    onClick={() => void handleSavePassword(false)}
+                    className="h-9 px-4 text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                  >
+                    {savingPassword ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        <span>{th("Saving...")}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-3.5 h-3.5" />
+                        <span>{th("Apply Custom Password")}</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
 
           </div>
         </div>
       )}
+
+      {/* Print isolation style */}
+      <style jsx global>{`
+        @media print {
+          body * {
+            visibility: hidden !important;
+          }
+          #a4-handover-printable, #a4-handover-printable * {
+            visibility: visible !important;
+          }
+          #a4-handover-printable {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 10mm !important;
+            border: none !important;
+            box-shadow: none !important;
+            background: white !important;
+          }
+        }
+      `}</style>
 
     </div>
   );

@@ -279,7 +279,12 @@ export function UserCredentialsPdfView() {
                     </td>
                     <td className="py-2 px-3 font-semibold text-slate-900 dark:text-slate-100">{u.name}</td>
                     <td className="py-2 px-3 font-mono text-[11px] text-slate-500">{u.email}</td>
-                    <td className="py-2 px-3 font-mono font-bold text-rose-600 dark:text-rose-400 text-xs">Chaman@9090</td>
+                    <td className="py-2 px-3 font-mono text-[11px] text-slate-500">
+                      <span className="inline-flex items-center gap-1 font-semibold text-slate-600 dark:text-slate-300">
+                        <Lock className="h-3 w-3 text-emerald-600" />
+                        <span>•••••••• (Secured)</span>
+                      </span>
+                    </td>
                     <td className="py-2 px-3">
                       <span className="inline-block px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                         {u.role.replace(/_/g, " ").toUpperCase()}

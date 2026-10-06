@@ -123,6 +123,16 @@ type BranchGeneralReportResponse = {
     totalMainAccounts: number;
     users?: BranchUserDetail[];
   };
+  userScope?: {
+    isSuperAdmin: boolean;
+    roles: string[];
+    countryIds: string[];
+    countryBranchIds: string[];
+    cityBranchIds: string[];
+    countryName?: string | null;
+    mainBranchName?: string | null;
+    cityBranchName?: string | null;
+  };
   superAdminBranches: SuperAdminBranchNode[];
   countries: CountryNode[];
   generatedAt: string;
@@ -683,6 +693,15 @@ export function BranchGeneralReportView({
   const [data, setData] = useState<BranchGeneralReportResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const isSuperAdmin = Boolean(data?.userScope?.isSuperAdmin || (data?.superAdminBranches && data.superAdminBranches.length > 0));
+  const isCountryAdmin = !isSuperAdmin && Boolean(data?.userScope?.roles?.some(r => r.includes("country")) || (data?.countries?.length === 1 && !data?.userScope?.cityBranchIds?.length));
+  const isMainBranchAdmin = !isSuperAdmin && Boolean(data?.userScope?.roles?.some(r => r.includes("main_branch")) || (data?.userScope?.countryBranchIds?.length && !data?.userScope?.cityBranchIds?.length));
+  const isCityBranchAdmin = !isSuperAdmin && Boolean(data?.userScope?.roles?.some(r => r.includes("city_branch")) || data?.userScope?.cityBranchIds?.length);
+
+  const scopeCountryName = data?.userScope?.countryName || data?.countries?.[0]?.name || "Assigned Country";
+  const scopeMainBranchName = data?.userScope?.mainBranchName || data?.countries?.[0]?.mainBranches?.[0]?.name || "Main Branch";
+  const scopeCityBranchName = data?.userScope?.cityBranchName || data?.countries?.[0]?.mainBranches?.[0]?.cityBranches?.[0]?.name || "City Branch";
+
   const [searchQuery, setSearchQuery] = useState("");
   const [searchType, setSearchType] = useState(""); // "", "branch", "country", "city"
   const [expandedCountries, setExpandedCountries] = useState<Record<string, boolean>>({});
@@ -1105,7 +1124,13 @@ export function BranchGeneralReportView({
       {titleSlot && createPortal(
         <div className="min-w-[120px]">
           <div className="text-[8px] font-black uppercase tracking-wider text-slate-400 leading-none">
-            {tt("bgr.super_admin", "Super Admin")}
+            {isSuperAdmin
+              ? tt("bgr.super_admin", "Super Admin")
+              : isCountryAdmin
+              ? `${scopeCountryName} • Country Admin`
+              : isMainBranchAdmin
+              ? `${scopeMainBranchName} • Main Branch Admin`
+              : `${scopeCityBranchName} • Branch Admin`}
           </div>
           <h1 className="text-xs font-black tracking-tight text-slate-900 dark:text-slate-100 leading-none mt-0.5">
             {title}
@@ -1429,10 +1454,47 @@ export function BranchGeneralReportView({
       <div className="rounded-2xl border border-slate-200/80 bg-white/95 p-3 shadow-[0_18px_45px_-32px_rgba(15,23,42,0.5)] ring-1 ring-slate-100">
         <div className="flex flex-wrap items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">
           <span className="rounded-full bg-indigo-600 px-3 py-1 text-white shadow-sm ring-1 ring-indigo-200">{tt("bgr.hierarchy_label", "Hierarchy")}</span>
-          <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
-          <span className="rounded-full bg-emerald-50 px-3 py-1 text-emerald-700 ring-1 ring-emerald-100">{tt("bgr.total_main_branches", "Main Branch")}</span>
-          <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
-          <span className="rounded-full bg-sky-50 px-3 py-1 text-sky-700 ring-1 ring-sky-100">{tt("bgr.city_branches_section", "City Branch")}</span>
+          
+          {isSuperAdmin && (
+            <>
+              <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700 ring-1 ring-slate-200">{tt("bgr.super_admin", "Super Admin")}</span>
+              <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
+              <span className="rounded-full bg-indigo-50 px-3 py-1 text-indigo-700 ring-1 ring-indigo-100">{tt("bgr.countries_btn", "Countries")}</span>
+              <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
+              <span className="rounded-full bg-emerald-50 px-3 py-1 text-emerald-700 ring-1 ring-emerald-100">{tt("bgr.total_main_branches", "Main Branch")}</span>
+              <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
+              <span className="rounded-full bg-sky-50 px-3 py-1 text-sky-700 ring-1 ring-sky-100">{tt("bgr.city_branches_section", "City Branch")}</span>
+            </>
+          )}
+
+          {!isSuperAdmin && isCountryAdmin && (
+            <>
+              <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
+              <span className="rounded-full bg-indigo-50 px-3 py-1 text-indigo-700 ring-1 ring-indigo-100">{scopeCountryName}</span>
+              <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
+              <span className="rounded-full bg-emerald-50 px-3 py-1 text-emerald-700 ring-1 ring-emerald-100">{tt("bgr.total_main_branches", "Main Branch(es)")}</span>
+              <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
+              <span className="rounded-full bg-sky-50 px-3 py-1 text-sky-700 ring-1 ring-sky-100">{tt("bgr.city_branches_section", "City Branches")}</span>
+            </>
+          )}
+
+          {!isSuperAdmin && isMainBranchAdmin && (
+            <>
+              <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
+              <span className="rounded-full bg-emerald-50 px-3 py-1 text-emerald-700 ring-1 ring-emerald-100">{scopeMainBranchName}</span>
+              <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
+              <span className="rounded-full bg-sky-50 px-3 py-1 text-sky-700 ring-1 ring-sky-100">{tt("bgr.city_branches_section", "Child Branches")}</span>
+            </>
+          )}
+
+          {!isSuperAdmin && isCityBranchAdmin && (
+            <>
+              <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
+              <span className="rounded-full bg-sky-50 px-3 py-1 text-sky-700 ring-1 ring-sky-100">{scopeCityBranchName}</span>
+            </>
+          )}
+
           <span className="ml-auto rounded-full bg-slate-50 px-3 py-1 text-[10px] font-bold normal-case tracking-normal text-slate-500 ring-1 ring-slate-100">{tt("bgr.hint", "Use user count or Actions for details")}</span>
         </div>
       </div>
@@ -1440,143 +1502,145 @@ export function BranchGeneralReportView({
       <div className="rounded-3xl border border-slate-200/80 bg-white overflow-hidden shadow-[0_24px_60px_-40px_rgba(15,23,42,0.55)] ring-1 ring-slate-100">
         
         {/* Table 1: Super Admin Row */}
-        <div className="p-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 via-white to-indigo-50/50">
-          <h3 className="text-xs font-black text-slate-950 mb-3 uppercase tracking-[0.16em] flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-indigo-600" />
-            {tt("bgr.super_admin_branch", "Super Admin Branch")}
-          </h3>
-          <div className="overflow-x-auto rounded-2xl border border-slate-200/80 bg-white shadow-sm ring-1 ring-slate-100">
-            <table className="w-full min-w-[980px] border-separate border-spacing-0 text-left bg-white">
-              <thead>
-                <tr className="sticky top-0 z-10 bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700 font-black text-[10px] tracking-[0.14em] text-center uppercase shadow-sm">
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-left">Super Code</Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">Main Branch</Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">Company</Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">Owner</Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">Countries</Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">Curr</Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">Main Acc</Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">Code</Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">City</Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">User</Th>
-                  <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">Contacts</Th>
-                  <Th className="p-2.5">Action</Th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td colSpan={12} className="p-6 text-center text-slate-400">{tt("bgr.loading", "Loading hierarchy...")}</td>
+        {isSuperAdmin && (
+          <div className="p-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 via-white to-indigo-50/50">
+            <h3 className="text-xs font-black text-slate-950 mb-3 uppercase tracking-[0.16em] flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-indigo-600" />
+              {tt("bgr.super_admin_branch", "Super Admin Branch")}
+            </h3>
+            <div className="overflow-x-auto rounded-2xl border border-slate-200/80 bg-white shadow-sm ring-1 ring-slate-100">
+              <table className="w-full min-w-[980px] border-separate border-spacing-0 text-left bg-white">
+                <thead>
+                  <tr className="sticky top-0 z-10 bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700 font-black text-[10px] tracking-[0.14em] text-center uppercase shadow-sm">
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700 text-left">Super Code</Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">Main Branch</Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">Company</Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">Owner</Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">Countries</Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">Curr</Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">Main Acc</Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">Code</Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">City</Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">User</Th>
+                    <Th className="p-2.5 border-r border-slate-200 dark:border-slate-700">Contacts</Th>
+                    <Th className="p-2.5">Action</Th>
                   </tr>
-                ) : filteredSuperAdminBranches.length ? (
-                  filteredSuperAdminBranches.map((branch) => {
-                    const phoneContact = findContactValue(branch.contacts, "phone") || branch.phone;
-                    const emailContact = findContactValue(branch.contacts, "email") || branch.email;
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr>
+                      <td colSpan={12} className="p-6 text-center text-slate-400">{tt("bgr.loading", "Loading hierarchy...")}</td>
+                    </tr>
+                  ) : filteredSuperAdminBranches.length ? (
+                    filteredSuperAdminBranches.map((branch) => {
+                      const phoneContact = findContactValue(branch.contacts, "phone") || branch.phone;
+                      const emailContact = findContactValue(branch.contacts, "email") || branch.email;
 
-                    const scopeId = `super-admin-users-${branch.id}`;
-                    const users = data?.summary?.users ?? [];
+                      const scopeId = `super-admin-users-${branch.id}`;
+                      const users = data?.summary?.users ?? [];
 
-                    return (
-                      <Fragment key={branch.id}>
-                      <tr className="border-b border-slate-100 text-[10px] text-center text-slate-700 odd:bg-white even:bg-slate-50/60 hover:bg-indigo-50/70 transition-colors">
-                        <td className="p-2.5 border-r border-slate-200 font-bold text-slate-900 text-left">{branch.code}</td>
-                        <td className="p-2.5 border-r border-slate-200 font-semibold text-slate-800">{branch.name}</td>
-                        <td className="p-2.5 border-r border-slate-200">{branch.companyName}</td>
-                        <td className="p-2.5 border-r border-slate-200 font-medium">{branch.ownerName || "-"}</td>
-                        <td className="p-2.5 border-r border-slate-200">{data?.summary?.totalCountries || 0} Country</td>
-                        <td className="p-2.5 border-r border-slate-200 font-semibold">{branch.currency}</td>
-                        <td className="p-2.5 border-r border-slate-200 font-semibold text-slate-500">SA-1000</td>
-                        <td className="p-2.5 border-r border-slate-200 tabular-nums">{data?.summary?.totalCountries || 0}</td>
-                        <td className="p-2.5 border-r border-slate-200 tabular-nums">{data?.summary?.totalCityBranches || 0}</td>
-                        <td className="p-2.5 border-r border-slate-200 tabular-nums">
-                          <UserCountButton
-                            count={users.length || data?.summary?.totalActiveUsers || 0}
-                            expanded={expandedUserScope === scopeId}
-                            onClick={() => toggleUserScope(scopeId)}
-                            title={tt("bgr.show_all_erp_users_super_admin", "Show all ERP users under Super Admin")}
-                          />
-                        </td>
-                        <td className="p-2.5 border-r border-slate-200">
-                          <div className="flex items-center justify-center gap-1.5">
-                            {phoneContact ? (
-                              <div className="relative popup-trigger">
-                                <button
-                                  onClick={() => setActiveContactPopup(activeContactPopup?.id === branch.id && activeContactPopup.type === "phone" ? null : { id: branch.id, type: "phone" })}
-                                  className="w-5 h-5 rounded-full flex items-center justify-center bg-indigo-50 border border-indigo-100 text-indigo-600 hover:bg-indigo-100 transition-colors"
-                                >
-                                  <PhoneCall className="h-2.5 w-2.5" />
-                                </button>
-                                {activeContactPopup?.id === branch.id && activeContactPopup.type === "phone" && (
-                                  <div className="absolute top-6 left-0 z-50 bg-slate-900 text-white border border-slate-800 rounded-md p-1.5 text-[9px] shadow-lg whitespace-nowrap popup-content font-semibold">
-                                    {phoneContact}
-                                  </div>
-                                )}
-                              </div>
-                            ) : null}
-                            {emailContact ? (
-                              <div className="relative popup-trigger">
-                                <button
-                                  onClick={() => setActiveContactPopup(activeContactPopup?.id === branch.id && activeContactPopup.type === "email" ? null : { id: branch.id, type: "email" })}
-                                  className="w-5 h-5 rounded-full flex items-center justify-center bg-indigo-50 border border-indigo-100 text-indigo-600 hover:bg-indigo-100 transition-colors"
-                                >
-                                  <Mail className="h-2.5 w-2.5" />
-                                </button>
-                                {activeContactPopup?.id === branch.id && activeContactPopup.type === "email" && (
-                                  <div className="absolute top-6 left-0 z-50 bg-slate-900 text-white border border-slate-800 rounded-md p-1.5 text-[9px] shadow-lg whitespace-nowrap popup-content font-semibold">
-                                    {emailContact}
-                                  </div>
-                                )}
-                              </div>
-                            ) : null}
-                          </div>
-                        </td>
-                        <td className="p-2.5">
-                          <button
-                            onClick={() => openSuperAdminBranchEdit(branch.id)}
-                            className="rounded border border-indigo-200 bg-white px-2 py-0.5 text-[9px] font-bold text-indigo-600 hover:bg-indigo-50 hover:border-indigo-300 shadow-sm transition-all"
-                          >
-                            {tt("bgr.edit", "Edit")}
-                          </button>
-                        </td>
-                      </tr>
-                      {expandedUserScope === scopeId ? (
-                        <tr className="border-b bg-indigo-50/20">
-                          <td colSpan={12} className="p-3">
-                            <BranchUsersPanel
-                              title={tt("bgr.super_admin_user_directory", "Super Admin User Directory")}
-                              hierarchy={[tt("bgr.super_admin", "Super Admin"), tt("bgr.all_countries", "All Countries"), tt("bgr.all_branches", "All Branches"), tt("bgr.users", "Users")]}
-                              users={users}
-                              onClose={() => setExpandedUserScope(null)}
+                      return (
+                        <Fragment key={branch.id}>
+                        <tr className="border-b border-slate-100 text-[10px] text-center text-slate-700 odd:bg-white even:bg-slate-50/60 hover:bg-indigo-50/70 transition-colors">
+                          <td className="p-2.5 border-r border-slate-200 font-bold text-slate-900 text-left">{branch.code}</td>
+                          <td className="p-2.5 border-r border-slate-200 font-semibold text-slate-800">{branch.name}</td>
+                          <td className="p-2.5 border-r border-slate-200">{branch.companyName}</td>
+                          <td className="p-2.5 border-r border-slate-200 font-medium">{branch.ownerName || "-"}</td>
+                          <td className="p-2.5 border-r border-slate-200">{data?.summary?.totalCountries || 0} Country</td>
+                          <td className="p-2.5 border-r border-slate-200 font-semibold">{branch.currency}</td>
+                          <td className="p-2.5 border-r border-slate-200 font-semibold text-slate-500">SA-1000</td>
+                          <td className="p-2.5 border-r border-slate-200 tabular-nums">{data?.summary?.totalCountries || 0}</td>
+                          <td className="p-2.5 border-r border-slate-200 tabular-nums">{data?.summary?.totalCityBranches || 0}</td>
+                          <td className="p-2.5 border-r border-slate-200 tabular-nums">
+                            <UserCountButton
+                              count={users.length || data?.summary?.totalActiveUsers || 0}
+                              expanded={expandedUserScope === scopeId}
+                              onClick={() => toggleUserScope(scopeId)}
+                              title={tt("bgr.show_all_erp_users_super_admin", "Show all ERP users under Super Admin")}
                             />
                           </td>
+                          <td className="p-2.5 border-r border-slate-200">
+                            <div className="flex items-center justify-center gap-1.5">
+                              {phoneContact ? (
+                                <div className="relative popup-trigger">
+                                  <button
+                                    onClick={() => setActiveContactPopup(activeContactPopup?.id === branch.id && activeContactPopup.type === "phone" ? null : { id: branch.id, type: "phone" })}
+                                    className="w-5 h-5 rounded-full flex items-center justify-center bg-indigo-50 border border-indigo-100 text-indigo-600 hover:bg-indigo-100 transition-colors"
+                                  >
+                                    <PhoneCall className="h-2.5 w-2.5" />
+                                  </button>
+                                  {activeContactPopup?.id === branch.id && activeContactPopup.type === "phone" && (
+                                    <div className="absolute top-6 left-0 z-50 bg-slate-900 text-white border border-slate-800 rounded-md p-1.5 text-[9px] shadow-lg whitespace-nowrap popup-content font-semibold">
+                                      {phoneContact}
+                                    </div>
+                                  )}
+                                </div>
+                              ) : null}
+                              {emailContact ? (
+                                <div className="relative popup-trigger">
+                                  <button
+                                    onClick={() => setActiveContactPopup(activeContactPopup?.id === branch.id && activeContactPopup.type === "email" ? null : { id: branch.id, type: "email" })}
+                                    className="w-5 h-5 rounded-full flex items-center justify-center bg-indigo-50 border border-indigo-100 text-indigo-600 hover:bg-indigo-100 transition-colors"
+                                  >
+                                    <Mail className="h-2.5 w-2.5" />
+                                  </button>
+                                  {activeContactPopup?.id === branch.id && activeContactPopup.type === "email" && (
+                                    <div className="absolute top-6 left-0 z-50 bg-slate-900 text-white border border-slate-800 rounded-md p-1.5 text-[9px] shadow-lg whitespace-nowrap popup-content font-semibold">
+                                      {emailContact}
+                                    </div>
+                                  )}
+                                </div>
+                              ) : null}
+                            </div>
+                          </td>
+                          <td className="p-2.5">
+                            <button
+                              onClick={() => openSuperAdminBranchEdit(branch.id)}
+                              className="rounded border border-indigo-200 bg-white px-2 py-0.5 text-[9px] font-bold text-indigo-600 hover:bg-indigo-50 hover:border-indigo-300 shadow-sm transition-all"
+                            >
+                              {tt("bgr.edit", "Edit")}
+                            </button>
+                          </td>
                         </tr>
-                      ) : null}
-                      </Fragment>
-                    );
-                  })
-                ) : (
-                  // No dedicated Super Admin branch row in the dataset — show the real
-                  // enterprise-wide totals (same source as the KPI cards) instead of a
-                  // fabricated "SA-001 / 95+ users / 4 Country" placeholder.
-                  <tr className="border-b border-slate-100 text-[10px] text-center text-slate-700 odd:bg-white even:bg-slate-50/60 hover:bg-indigo-50/70 transition-colors">
-                    <td className="p-2.5 border-r border-slate-200 font-bold text-slate-900 text-left">{tt("bgr.enterprise_wide", "Enterprise-wide")}</td>
-                    <td className="p-2.5 border-r border-slate-200 font-semibold text-slate-800">{t(lang, "role.super_admin", "Super Admin")}</td>
-                    <td className="p-2.5 border-r border-slate-200">—</td>
-                    <td className="p-2.5 border-r border-slate-200 font-medium">—</td>
-                    <td className="p-2.5 border-r border-slate-200 tabular-nums">{visibleSummary.totalCountries} {tt("bgr.filter_country", "Country")}</td>
-                    <td className="p-2.5 border-r border-slate-200 font-semibold">{visibleSummary.totalCurrencies > 1 ? `${visibleSummary.totalCurrencies} ${tt("bgr.currencies", "Currencies")}` : "USD"}</td>
-                    <td className="p-2.5 border-r border-slate-200 font-semibold text-slate-500 tabular-nums">{visibleSummary.totalMainAccounts}</td>
-                    <td className="p-2.5 border-r border-slate-200 tabular-nums">{visibleSummary.totalMainBranches}</td>
-                    <td className="p-2.5 border-r border-slate-200 tabular-nums">{visibleSummary.totalCityBranches}</td>
-                    <td className="p-2.5 border-r border-slate-200 tabular-nums font-bold">{visibleSummary.totalUsers}</td>
-                    <td className="p-2.5 border-r border-slate-200">—</td>
-                    <td className="p-2.5">—</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                        {expandedUserScope === scopeId ? (
+                          <tr className="border-b bg-indigo-50/20">
+                            <td colSpan={12} className="p-3">
+                              <BranchUsersPanel
+                                title={tt("bgr.super_admin_user_directory", "Super Admin User Directory")}
+                                hierarchy={[tt("bgr.super_admin", "Super Admin"), tt("bgr.all_countries", "All Countries"), tt("bgr.all_branches", "All Branches"), tt("bgr.users", "Users")]}
+                                users={users}
+                                onClose={() => setExpandedUserScope(null)}
+                              />
+                            </td>
+                          </tr>
+                        ) : null}
+                        </Fragment>
+                      );
+                    })
+                  ) : (
+                    // No dedicated Super Admin branch row in the dataset — show the real
+                    // enterprise-wide totals (same source as the KPI cards) instead of a
+                    // fabricated "SA-001 / 95+ users / 4 Country" placeholder.
+                    <tr className="border-b border-slate-100 text-[10px] text-center text-slate-700 odd:bg-white even:bg-slate-50/60 hover:bg-indigo-50/70 transition-colors">
+                      <td className="p-2.5 border-r border-slate-200 font-bold text-slate-900 text-left">{tt("bgr.enterprise_wide", "Enterprise-wide")}</td>
+                      <td className="p-2.5 border-r border-slate-200 font-semibold text-slate-800">{t(lang, "role.super_admin", "Super Admin")}</td>
+                      <td className="p-2.5 border-r border-slate-200">—</td>
+                      <td className="p-2.5 border-r border-slate-200 font-medium">—</td>
+                      <td className="p-2.5 border-r border-slate-200 tabular-nums">{visibleSummary.totalCountries} {tt("bgr.filter_country", "Country")}</td>
+                      <td className="p-2.5 border-r border-slate-200 font-semibold">{visibleSummary.totalCurrencies > 1 ? `${visibleSummary.totalCurrencies} ${tt("bgr.currencies", "Currencies")}` : "USD"}</td>
+                      <td className="p-2.5 border-r border-slate-200 font-semibold text-slate-500 tabular-nums">{visibleSummary.totalMainAccounts}</td>
+                      <td className="p-2.5 border-r border-slate-200 tabular-nums">{visibleSummary.totalMainBranches}</td>
+                      <td className="p-2.5 border-r border-slate-200 tabular-nums">{visibleSummary.totalCityBranches}</td>
+                      <td className="p-2.5 border-r border-slate-200 tabular-nums font-bold">{visibleSummary.totalUsers}</td>
+                      <td className="p-2.5 border-r border-slate-200">—</td>
+                      <td className="p-2.5">—</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Table 2: Country / Collapsible Reports */}
         <div className="p-4 bg-white">

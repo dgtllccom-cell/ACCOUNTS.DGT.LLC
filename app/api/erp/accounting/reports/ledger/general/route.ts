@@ -316,8 +316,9 @@ export async function GET(request: NextRequest) {
       const amt = toNumber(usdAmount);
       if (amt > 0) return amt;
       const rate = toNumber(usdRate);
-      if (rate > 0) return localValue * rate;
-      return 0;
+      if (rate >= 1) return Math.round((localValue / rate) * 10000) / 10000;
+      if (rate > 0) return Math.round((localValue * rate) * 10000) / 10000;
+      return localValue;
     }
 
     // Daily totals for the single day `dailyDate` — same historical per-line rate.

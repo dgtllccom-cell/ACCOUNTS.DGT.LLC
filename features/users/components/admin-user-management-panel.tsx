@@ -26,7 +26,10 @@ import {
   Check,
   Radio,
   FileText,
+  KeyRound,
+  Copy,
 } from "lucide-react";
+import { openUserHandoverSlipWindow } from "@/lib/reports/open-user-a4-report-window";
 import { Button } from "@/components/ui/button";
 import { useBranchUserContext } from "@/lib/hooks/use-branch-user-context";
 import { Input } from "@/components/ui/input";
@@ -124,6 +127,8 @@ export function AdminUserManagementPanel() {
 
   // Live report modal view state
   const [selectedReportUser, setSelectedReportUser] = useState<BranchUser | null>(null);
+  const [tempPasswordModal, setTempPasswordModal] = useState<{ user: BranchUser; tempPassword: string; countryName: string; branchCode: string } | null>(null);
+  const [copiedTempPw, setCopiedTempPw] = useState(false);
 
   const fetchHierarchyData = async () => {
     try {
@@ -285,17 +290,31 @@ export function AdminUserManagementPanel() {
     return successLabel;
   };
 
-  const resetUserPassword = async (user: BranchUser) => {
-    const temporaryPassword = `DEV-${crypto.getRandomValues(new Uint32Array(1))[0].toString(16).toUpperCase()}!Aa1`;
-    const ok = window.confirm(`Generate and apply a new temporary password for ${user.name}?`);
+  const resetUserPassword = async (user: BranchUser, countryNameStr = "", branchCodeStr = "") => {
+    const ok = window.confirm(`Generate and apply a new temporary password for ${user.name} (${user.username})?`);
     if (!ok) return;
     try {
-      // Never put the generated password into the audit/reason trail — it is shown
-      // to the operator once here and then only lives (hashed) in Supabase Auth.
-      await triggerUserPatch(user.id, { password: temporaryPassword }, `Temporary password reset for ${user.username}`);
-      window.alert(`Temporary password set once for ${user.username}:\n${temporaryPassword}\n\nShare it securely — it will not be shown again.`);
+      const res = await fetch("/api/erp/users/password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          targetUserId: user.id,
+          generateTemporary: true,
+          reason: `Admin temporary password generated for ${user.username}`,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.error || data?.message || "Failed to reset password");
+      }
+      setTempPasswordModal({
+        user,
+        tempPassword: data.temporaryPassword,
+        countryName: countryNameStr || user.countryName || "",
+        branchCode: branchCodeStr || user.branchCode || "",
+      });
     } catch (err) {
-      window.alert(`Failed to reset password for ${user.username}: ${err instanceof Error ? err.message : String(err)}`);
+      window.alert(`Failed to reset password: ${err instanceof Error ? err.message : String(err)}`);
     }
   };
 
@@ -418,11 +437,70 @@ export function AdminUserManagementPanel() {
             <Button
               size="sm"
               variant="outline"
-              className="h-8 px-2.5 text-xs gap-1 hover:bg-slate-100 dark:hover:bg-slate-800"
-              onClick={() => resetUserPassword(u)}
+              className="h-8 px-2.5 text-xs gap-1 hover:bg-slate-100 dark:hover:bg-slate-800 text-amber-700 dark:text-amber-400"
+              title="Reset Password / Generate Temporary Key"
+              onClick={() => resetUserPassword(u, countryNameStr, branchCodeStr)}
             >
-              <ShieldCheck className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+              <KeyRound className="h-3.5 w-3.5" />
               <span>{tt("email_acct.reset_password", "Reset Password")}</span>
+            </Button>
+
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 px-2 text-xs gap-1 hover:bg-slate-100 dark:hover:bg-slate-800 text-blue-700 dark:text-blue-400"
+              title="Print A4 Handover Sheet"
+              onClick={() => {
+                openUserHandoverSlipWindow({
+                  userData: {
+                    fullName: u.name,
+                    username: u.username,
+                    role: u.role,
+                    countryName: countryNameStr,
+                    branchName: u.branchName || branchCodeStr,
+                    branchCode: branchCodeStr,
+                    cityName: u.cityName,
+                    phone: u.mobile,
+                    email: u.email,
+                    department: u.department,
+                    status: u.status,
+                    operationalDomain: (u as any).operationalDomain || (u as any).domain,
+                  },
+                  format: "a4",
+                });
+              }}
+            >
+              <Printer className="h-3.5 w-3.5" />
+              <span>A4</span>
+            </Button>
+
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 px-2 text-xs gap-1 hover:bg-slate-100 dark:hover:bg-slate-800 text-indigo-700 dark:text-indigo-400"
+              title="Print Compact Slip / Card"
+              onClick={() => {
+                openUserHandoverSlipWindow({
+                  userData: {
+                    fullName: u.name,
+                    username: u.username,
+                    role: u.role,
+                    countryName: countryNameStr,
+                    branchName: u.branchName || branchCodeStr,
+                    branchCode: branchCodeStr,
+                    cityName: u.cityName,
+                    phone: u.mobile,
+                    email: u.email,
+                    department: u.department,
+                    status: u.status,
+                    operationalDomain: (u as any).operationalDomain || (u as any).domain,
+                  },
+                  format: "slip",
+                });
+              }}
+            >
+              <FileText className="h-3.5 w-3.5" />
+              <span>Slip</span>
             </Button>
 
             <Button
@@ -988,6 +1066,144 @@ export function AdminUserManagementPanel() {
               );
             })
           )}
+        </div>
+      )}
+      {/* Temporary Password Modal */}
+      {tempPasswordModal && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400">
+                  <KeyRound className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                    Temporary Password Generated
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    One-time authorized credential handover
+                  </p>
+                </div>
+              </div>
+              <Badge variant="outline" className="border-amber-300 bg-amber-50 text-amber-800 text-[11px]">
+                Single View
+              </Badge>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 p-3 space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span className="text-slate-500">Employee / User:</span>
+                <span className="font-semibold text-slate-900 dark:text-slate-100">{tempPasswordModal.user.name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Username / Login ID:</span>
+                <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{tempPasswordModal.user.username}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Role & Scope:</span>
+                <span className="font-medium text-slate-700 dark:text-slate-300">
+                  {tempPasswordModal.user.role} &bull; {tempPasswordModal.countryName || tempPasswordModal.branchCode || "Global"}
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                Temporary Password (Auth Hash Synced)
+              </label>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 font-mono text-base font-black px-4 py-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 border-2 border-dashed border-amber-300 dark:border-amber-700 tracking-wider text-center select-all">
+                  {tempPasswordModal.tempPassword}
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-11 px-3 text-xs gap-1.5"
+                  onClick={() => {
+                    navigator.clipboard.writeText(tempPasswordModal.tempPassword);
+                    setCopiedTempPw(true);
+                    setTimeout(() => setCopiedTempPw(false), 2500);
+                  }}
+                >
+                  {copiedTempPw ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+                  <span>{copiedTempPw ? "Copied" : "Copy"}</span>
+                </Button>
+              </div>
+              <p className="text-[11px] text-slate-500 italic">
+                * This password is NOT stored in plaintext. It will not be shown again once you close this window.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 pt-2">
+              <Button
+                variant="outline"
+                className="h-9 text-xs gap-1.5 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800"
+                onClick={() => {
+                  openUserHandoverSlipWindow({
+                    userData: {
+                      fullName: tempPasswordModal.user.name,
+                      username: tempPasswordModal.user.username,
+                      role: tempPasswordModal.user.role,
+                      countryName: tempPasswordModal.countryName,
+                      branchName: tempPasswordModal.user.branchName || tempPasswordModal.branchCode,
+                      branchCode: tempPasswordModal.branchCode,
+                      cityName: tempPasswordModal.user.cityName,
+                      phone: tempPasswordModal.user.mobile,
+                      email: tempPasswordModal.user.email,
+                      department: tempPasswordModal.user.department,
+                      status: tempPasswordModal.user.status,
+                      temporaryPassword: tempPasswordModal.tempPassword,
+                      operationalDomain: (tempPasswordModal.user as any).operationalDomain,
+                    },
+                    format: "a4",
+                  });
+                }}
+              >
+                <Printer className="h-4 w-4" />
+                <span>Print A4 Handover</span>
+              </Button>
+
+              <Button
+                variant="outline"
+                className="h-9 text-xs gap-1.5 text-indigo-700 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800"
+                onClick={() => {
+                  openUserHandoverSlipWindow({
+                    userData: {
+                      fullName: tempPasswordModal.user.name,
+                      username: tempPasswordModal.user.username,
+                      role: tempPasswordModal.user.role,
+                      countryName: tempPasswordModal.countryName,
+                      branchName: tempPasswordModal.user.branchName || tempPasswordModal.branchCode,
+                      branchCode: tempPasswordModal.branchCode,
+                      cityName: tempPasswordModal.user.cityName,
+                      phone: tempPasswordModal.user.mobile,
+                      email: tempPasswordModal.user.email,
+                      department: tempPasswordModal.user.department,
+                      status: tempPasswordModal.user.status,
+                      temporaryPassword: tempPasswordModal.tempPassword,
+                      operationalDomain: (tempPasswordModal.user as any).operationalDomain,
+                    },
+                    format: "slip",
+                  });
+                }}
+              >
+                <FileText className="h-4 w-4" />
+                <span>Print Slip (Card)</span>
+              </Button>
+            </div>
+
+            <div className="flex justify-end pt-2 border-t border-slate-200 dark:border-slate-800">
+              <Button
+                variant="default"
+                size="sm"
+                className="px-6"
+                onClick={() => setTempPasswordModal(null)}
+              >
+                Done / Close
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </div>

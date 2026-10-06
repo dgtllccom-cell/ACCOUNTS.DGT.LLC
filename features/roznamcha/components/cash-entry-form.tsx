@@ -40,7 +40,8 @@ import {
   CheckCircle2,
   Pencil,
   Mic,
-  Calendar
+  Calendar,
+  AlertCircle
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -61,7 +62,7 @@ import { t } from "@/lib/i18n/ui";
 import { cn } from "@/lib/utils";
 import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { BankPicker } from "@/features/banks/components/bank-picker";
-import { getBankById } from "@/features/banks/bank-api";
+import { getBankById, type BankRecord } from "@/features/banks/bank-api";
 import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
 import { LocationBackdrop } from "@/components/location-backdrop";
 import { VoiceFormFill } from "@/components/voice-form-fill";
@@ -422,6 +423,39 @@ export function CashEntryForm({
 
   // Payment-type details (clean initial state)
   const [typeDetails, setTypeDetails] = useState<Record<string, string>>({});
+  const [selectedBankRecord, setSelectedBankRecord] = useState<BankRecord | null>(null);
+
+  // Financial snapshot state for Selected Account (live statement query)
+  const [accountSnapshot, setAccountSnapshot] = useState<{
+    loading: boolean;
+    oldBalance: number;
+    totalCredit: number;
+    totalDebit: number;
+    currentBalance: number;
+    lastTransactionDate: string | null;
+    transactionCount: number;
+  }>({
+    loading: false,
+    oldBalance: 0,
+    totalCredit: 0,
+    totalDebit: 0,
+    currentBalance: 0,
+    lastTransactionDate: null,
+    transactionCount: 0,
+  });
+
+  // Drilldown dialog state for Daily Cash Position
+  const [drilldownBranch, setDrilldownBranch] = useState<{
+    branchName: string;
+    branchCode: string;
+    currency: string;
+    totalCredit: number;
+    totalDebit: number;
+    balance: number;
+    balanceType: string;
+    entryCount: number;
+    transactions: any[];
+  } | null>(null);
 
   // Currency calculation panel
   const [calcAmount, setCalcAmount] = useState("");
@@ -624,19 +658,9 @@ export function CashEntryForm({
 
 
 
-  // Serial Numbers & Country Rates states
+  // Serial Numbers states
   const [serialRoleFilter, setSerialRoleFilter] = useState("Super Admin");
   const [showSerialsDropdown, setShowSerialsDropdown] = useState(false);
-  const [countryRatesList, setCountryRatesList] = useState<any[]>([
-    { country: "PK", date: "25/09/2026 10:00", drRate: "279.80", crRate: "279.20" },
-    { country: "AF", date: "25/09/2026 09:30", drRate: "69.00", crRate: "68.40" },
-    { country: "IN", date: "25/09/2026 10:15", drRate: "83.70", crRate: "83.30" },
-    { country: "AE", date: "25/09/2026 11:20", drRate: "3.6725", crRate: "3.6700" },
-    { country: "IR", date: "25/09/2026 09:45", drRate: "42000", crRate: "41800" },
-  ]);
-  const [editingRateCountry, setEditingRateCountry] = useState<string | null>(null);
-  const [editDrRateVal, setEditDrRateVal] = useState("");
-  const [editCrRateVal, setEditCrRateVal] = useState("");
 
   // Small independent Roznamcha Bank / Payment Master (Parts 9 & 10)
   const DEFAULT_ROZNAMCHA_BANKS: Record<string, string[]> = {
@@ -696,28 +720,7 @@ export function CashEntryForm({
 
 
 
-  const handleStartEditRate = (r: any) => {
-    setEditingRateCountry(r.country);
-    setEditDrRateVal(String(r.drRate));
-    setEditCrRateVal(String(r.crRate));
-  };
 
-  const handleSaveRate = () => {
-    if (!editingRateCountry) return;
-    setCountryRatesList((prev) =>
-      prev.map((item) =>
-        item.country === editingRateCountry
-          ? {
-              ...item,
-              drRate: editDrRateVal,
-              crRate: editCrRateVal,
-              date: `${todayIso().split("-").reverse().join("/")} ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
-            }
-          : item
-      )
-    );
-    setEditingRateCountry(null);
-  };
 
 
 
@@ -914,23 +917,54 @@ export function CashEntryForm({
   const fetchDailyRate = async () => {
     if (!countryId) {
       setDailyRate(null);
+      setDailyUsdRates(null);
       return;
     }
     try {
       setLoadingDailyRate(true);
       const params = new URLSearchParams({ countryId });
       if (countryBranchId) params.set("countryBranchId", countryBranchId);
-      const effectiveDate = tableDateMode === "day" ? (tableDate || entryDate) : entryDate;
+      const effectiveDate = entryDate || todayIso();
       if (effectiveDate) params.set("date", effectiveDate);
       const res = await apiGet<DailyRate>(`/api/erp/currency/daily-rate?${params.toString()}`);
       setDailyRate(res);
+      if (res && res.found) {
+        setDailyUsdRates({
+          buyingRate: res.buyingRate ?? undefined,
+          sellingRate: res.sellingRate ?? undefined,
+          creditRate: res.creditRate ?? undefined,
+          debitRate: res.debitRate ?? undefined,
+        });
+      } else {
+        setDailyUsdRates(null);
+      }
     } catch (err) {
       console.error("Failed to fetch daily rate", err);
       setDailyRate(null);
+      setDailyUsdRates(null);
     } finally {
       setLoadingDailyRate(false);
     }
   };
+
+  useEffect(() => {
+    if (normalizedCurrency === "USD") {
+      setExchangeRate("1");
+      return;
+    }
+    if (dailyRate && dailyRate.found) {
+      const activeRate = paymentMode === "DEBIT"
+        ? (dailyRate.debitRate || dailyRate.buyingRate)
+        : (dailyRate.creditRate || dailyRate.sellingRate);
+      if (activeRate && activeRate > 0) {
+        setExchangeRate(String(activeRate));
+      } else {
+        setExchangeRate("");
+      }
+    } else {
+      setExchangeRate("");
+    }
+  }, [dailyRate, paymentMode, normalizedCurrency]);
 
   useEffect(() => {
     fetchRecentEntries();
@@ -1092,6 +1126,68 @@ export function CashEntryForm({
     if (ledgerRowsWithAccount.some((row) => row.ledgerId === cashLedgerId)) return;
     setCashLedgerId("");
   }, [ledgerRowsWithAccount, cashLedgerId, selectedCounterLedger?.ledgerId]);
+
+  useEffect(() => {
+    const lId = selectedCounterLedger?.ledgerId;
+    if (!lId) {
+      setAccountSnapshot({
+        loading: false,
+        oldBalance: 0,
+        totalCredit: 0,
+        totalDebit: 0,
+        currentBalance: 0,
+        lastTransactionDate: null,
+        transactionCount: 0,
+      });
+      return;
+    }
+    let cancelled = false;
+    setAccountSnapshot((prev) => ({ ...prev, loading: true }));
+    (async () => {
+      try {
+        const res = await apiGet<any>(`/api/erp/accounting/reports/ledger/statement?ledgerId=${lId}`);
+        if (cancelled) return;
+        if (res && res.found) {
+          const lines = Array.isArray(res.lines) ? res.lines : [];
+          const lastLine = lines.length > 0 ? lines[lines.length - 1] : null;
+          setAccountSnapshot({
+            loading: false,
+            oldBalance: Number(res.openingBalance || 0),
+            totalCredit: Number(res.totals?.credit || 0),
+            totalDebit: Number(res.totals?.debit || 0),
+            currentBalance: Number(res.totals?.balance ?? res.openingBalance ?? 0),
+            lastTransactionDate: lastLine?.entryDate || (lines.length > 0 ? lines[0]?.entryDate : null),
+            transactionCount: lines.length,
+          });
+        } else {
+          setAccountSnapshot({
+            loading: false,
+            oldBalance: 0,
+            totalCredit: 0,
+            totalDebit: 0,
+            currentBalance: 0,
+            lastTransactionDate: null,
+            transactionCount: 0,
+          });
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setAccountSnapshot({
+            loading: false,
+            oldBalance: 0,
+            totalCredit: 0,
+            totalDebit: 0,
+            currentBalance: 0,
+            lastTransactionDate: null,
+            transactionCount: 0,
+          });
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedCounterLedger?.ledgerId]);
 
   const computedDetails = useMemo(() => {
     if (!paymentType) return "";
@@ -1514,6 +1610,9 @@ export function CashEntryForm({
     if (next && next.length === 3) setCurrency(next.toUpperCase());
   }, [selectedCashLedger, selectedCounterLedger]);
 
+  const isForeignCurrency = (currency || "").trim().toUpperCase() !== "USD";
+  const isRatePending = isForeignCurrency && (!dailyRate || !dailyRate.found || Number(exchangeRate) <= 0);
+
   const canSave =
     Boolean(countryId && countryBranchId) &&
     Boolean(selectedCounterLedger?.ledgerId) &&
@@ -1521,6 +1620,7 @@ export function CashEntryForm({
     Boolean(paymentType) &&
     Boolean(amount && amount > 0) &&
     currency.trim().length === 3 &&
+    !isRatePending &&
     Number(exchangeRate) > 0 &&
     !saving;
 
@@ -2410,45 +2510,10 @@ export function CashEntryForm({
      
   }, [allowedCurrencies, normalizedCurrency]);
 
+  // Authoritative daily rate is managed by fetchDailyRate() via /api/erp/currency/daily-rate
   useEffect(() => {
     if (!normalizedCurrency || !allowedCurrencies.has(normalizedCurrency)) return;
     if (!countryId) return;
-
-    let cancelled = false;
-    (async () => {
-      try {
-        const params = new URLSearchParams({
-          countryId,
-          currency: normalizedCurrency,
-          branchCurrency
-        });
-        if (countryBranchId) params.set("countryBranchId", countryBranchId);
-        const res = await apiGet<LatestRateResponse>(`/api/erp/currency/latest-rate?${params.toString()}`);
-        if (!cancelled) {
-          setExchangeRate(isLocalCurrency ? "1" : String(res.rate || 1));
-          setExchangeRateSource(isLocalCurrency ? "local_currency" : (res.source || "default"));
-          setExchangeRateEffectiveAt(isLocalCurrency ? null : (res.effectiveDate ?? null));
-          setDailyUsdRates({
-            buyingRate: res.buyRate,
-            sellingRate: res.sellRate,
-            creditRate: res.creditRate,
-            debitRate: res.debitRate
-          });
-        }
-      } catch {
-        if (!cancelled) {
-          setExchangeRate(isLocalCurrency ? "1" : exchangeRate || "1");
-          setExchangeRateSource(isLocalCurrency ? "local_currency" : "manual_or_default");
-          setExchangeRateEffectiveAt(null);
-          setDailyUsdRates(null);
-        }
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [branchCurrency, countryBranchId, countryId, isLocalCurrency, normalizedCurrency]);
 
   const branchFullName = [
@@ -2829,85 +2894,51 @@ export function CashEntryForm({
                 </div>
               )}
 
-              {/* Country Rates Table */}
-              <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 text-[10px] font-black uppercase tracking-wider text-slate-500">
-                      <th className="py-2 px-3">Country</th>
-                      <th className="py-2 px-2.5">Date/Time</th>
-                      <th className="py-2 px-2.5">DR Rate</th>
-                      <th className="py-2 px-2.5">CR Rate</th>
-                      <th className="py-2 px-2 text-center">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
-                    {countryRatesList.map((r) => (
-                      <tr key={r.country} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
-                        <td className="py-2 px-3 font-bold text-slate-900 dark:text-slate-100">
-                          {r.country}
-                        </td>
-                        <td className="py-2 px-2.5 text-slate-600 dark:text-slate-400 font-mono text-[11px]">
-                          {r.date}
-                        </td>
-                        <td className="py-2 px-2.5 font-mono font-bold text-rose-600 dark:text-rose-400">
-                          {r.drRate}
-                        </td>
-                        <td className="py-2 px-2.5 font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                          {r.crRate}
-                        </td>
-                        <td className="py-2 px-2 text-center">
-                          <button
-                            type="button"
-                            onClick={() => handleStartEditRate(r)}
-                            className="inline-flex h-6 w-6 items-center justify-center rounded text-rose-500 hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950/40 transition cursor-pointer"
-                            title="Edit Rate"
-                          >
-                            <Pencil className="h-3 w-3" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Edit Rate Inline Modal/Form */}
-              {editingRateCountry && (
-                <div className="mt-2 p-2.5 rounded-lg border border-rose-200 bg-rose-50/40 dark:border-rose-900 dark:bg-rose-950/20 text-xs flex flex-wrap items-center gap-2">
-                  <span className="font-bold text-slate-800 dark:text-slate-200">
-                    Edit {editingRateCountry} Rate:
-                  </span>
-                  <input
-                    type="text"
-                    value={editDrRateVal}
-                    onChange={(e) => setEditDrRateVal(e.target.value)}
-                    placeholder="DR Rate"
-                    className="w-20 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1 text-xs font-mono"
-                  />
-                  <input
-                    type="text"
-                    value={editCrRateVal}
-                    onChange={(e) => setEditCrRateVal(e.target.value)}
-                    placeholder="CR Rate"
-                    className="w-20 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1 text-xs font-mono"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleSaveRate}
-                    className="px-2.5 py-1 rounded bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs"
-                  >
-                    Save
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setEditingRateCountry(null)}
-                    className="px-2 py-1 rounded border border-slate-300 text-slate-600 text-xs"
-                  >
-                    Cancel
-                  </button>
+              {/* Authoritative Country Daily Exchange Rate */}
+              <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3.5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-black text-slate-900 dark:text-white">
+                      {selectedCountry?.name || activeCountryIso} ({selectedCountry?.currency_code || branchCurrency})
+                    </span>
+                    <span className="text-[10px] text-slate-500 font-mono">
+                      {entryDate}
+                    </span>
+                  </div>
+                  {dailyRate?.found ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                      APPROVED / ACTIVE
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300 dark:border-rose-800 animate-pulse">
+                      <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+                      PENDING / MISSING
+                    </span>
+                  )}
                 </div>
-              )}
+
+                <div className="grid grid-cols-2 gap-2 text-center">
+                  <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+                    <div className="text-[10px] uppercase font-bold text-slate-500">DR Rate (Buying)</div>
+                    <div className="font-mono text-sm font-black text-rose-600 dark:text-rose-400">
+                      {dailyRate?.found ? (dailyRate.debitRate ?? dailyRate.buyingRate ?? "—") : "—"}
+                    </div>
+                  </div>
+                  <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+                    <div className="text-[10px] uppercase font-bold text-slate-500">CR Rate (Selling)</div>
+                    <div className="font-mono text-sm font-black text-emerald-600 dark:text-emerald-400">
+                      {dailyRate?.found ? (dailyRate.creditRate ?? dailyRate.sellingRate ?? "—") : "—"}
+                    </div>
+                  </div>
+                </div>
+
+                {!dailyRate?.found && (
+                  <div className="p-2 rounded-lg bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900 text-[11px] text-rose-700 dark:text-rose-300">
+                    Today's rate is pending. The Country Admin must enter today's rate in the Daily Exchange Rate module to enable financial postings.
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Dark Voice Banner (matching reference design) */}
@@ -2937,103 +2968,253 @@ export function CashEntryForm({
 
         {/* ════════ COLUMN 3: DAILY CASH POSITION (xl:col-span-4) ════════ */}
         <div className="xl:col-span-4 flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-emerald-50/50 dark:bg-emerald-900/10">
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-emerald-600 inline-block" />
-              <h4 className="text-xs font-black uppercase tracking-wider text-emerald-900 dark:text-emerald-300">
-                DAILY CASH POSITION
-              </h4>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <select
-                value={cashPositionRoleFilter}
-                onChange={(e) => setCashPositionRoleFilter(e.target.value)}
-                className="bg-transparent border border-slate-200 dark:border-slate-700 rounded px-1.5 py-0.5 text-[11px] font-semibold text-slate-800 dark:text-slate-200 outline-none cursor-pointer"
-              >
-                <option value="Super Admin">Super Admin</option>
-                <option value="Country Admin">Country Admin</option>
-                <option value="Branch Admin">Branch Admin</option>
-              </select>
-              <select
-                value={cashPositionCountryFilter}
-                onChange={(e) => setCashPositionCountryFilter(e.target.value)}
-                className="bg-transparent border border-slate-200 dark:border-slate-700 rounded px-1.5 py-0.5 text-[11px] font-semibold text-slate-800 dark:text-slate-200 outline-none cursor-pointer"
-              >
-                <option value="all">All Countries</option>
-                <option value="PK">PK</option>
-                <option value="AF">AF</option>
-                <option value="IN">IN</option>
-                <option value="AE">AE</option>
-                <option value="IR">IR</option>
-              </select>
-            </div>
-          </div>
+          {(() => {
+            const isSuper = Boolean(summaryOverview?.isSuperAdmin);
+            const userCountry = summaryOverview?.countries?.[0] || null;
+            const countryList = summaryOverview?.countries || [];
 
-          <div className="p-3.5 space-y-3">
-            {/* 4 Summary Stats Blocks */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              <div className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40">
-                <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">TOTAL CREDIT (USD)</span>
-                <span className="text-xs font-black text-emerald-700 dark:text-emerald-400 font-mono">
-                  $60,505.74
-                </span>
-              </div>
-              <div className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40">
-                <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">TOTAL DEBIT (USD)</span>
-                <span className="text-xs font-black text-rose-700 dark:text-rose-400 font-mono">
-                  $41,095.82
-                </span>
-              </div>
-              <div className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40">
-                <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">SCOPE</span>
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                  {cashPositionCountryFilter === "all" ? "All Countries" : cashPositionCountryFilter}
-                </span>
-              </div>
-              <div className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40">
-                <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">ENTRIES</span>
-                <span className="text-xs font-black text-slate-800 dark:text-slate-200 font-mono">
-                  27
-                </span>
-              </div>
-            </div>
+            // For Super Admin: allow filtering by country
+            const activeCountryData = isSuper
+              ? (cashPositionCountryFilter === "all" ? null : countryList.find(c => c.iso2?.toLowerCase() === cashPositionCountryFilter.toLowerCase() || c.countryId === cashPositionCountryFilter))
+              : userCountry;
 
-            {/* Multi-Country Breakdown Table */}
-            <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800">
-              <table className="w-full text-left text-xs border-collapse">
-                <thead>
-                  <tr className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 text-[10px] font-black uppercase tracking-wider text-slate-500">
-                    <th className="py-2 px-3">Country</th>
-                    <th className="py-2 px-2.5">Credit Local</th>
-                    <th className="py-2 px-2.5">Debit Local</th>
-                    <th className="py-2 px-2.5 text-right">Credit USD</th>
-                    <th className="py-2 px-2.5 text-right">Debit USD</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
-                  {filteredCashPositions.map((pos) => (
-                    <tr key={pos.country} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
-                      <td className="py-2 px-3 font-bold text-slate-900 dark:text-slate-100">
-                        {pos.country}
-                      </td>
-                      <td className="py-2 px-2.5 font-mono text-[11px] text-emerald-700 dark:text-emerald-400">
-                        {pos.creditLocal}
-                      </td>
-                      <td className="py-2 px-2.5 font-mono text-[11px] text-rose-700 dark:text-rose-400">
-                        {pos.debitLocal}
-                      </td>
-                      <td className="py-2 px-2.5 font-mono text-[11px] font-bold text-emerald-700 dark:text-emerald-400 text-right">
-                        {pos.creditUsd}
-                      </td>
-                      <td className="py-2 px-2.5 font-mono text-[11px] font-bold text-rose-700 dark:text-rose-400 text-right">
-                        {pos.debitUsd}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+            // Compute totals
+            const totalCreditVal = isSuper && !activeCountryData
+              ? countryList.reduce((sum, c) => sum + (c.totalCredit || 0), 0)
+              : (activeCountryData?.totalCredit || 0);
+
+            const totalDebitVal = isSuper && !activeCountryData
+              ? countryList.reduce((sum, c) => sum + (c.totalDebit || 0), 0)
+              : (activeCountryData?.totalDebit || 0);
+
+            const netBalVal = totalCreditVal - totalDebitVal;
+            const balanceText = `${fmtAmount(Math.abs(netBalVal))} ${netBalVal > 0 ? "Cr" : netBalVal < 0 ? "Dr" : "-"}`;
+
+            const totalEntriesVal = isSuper && !activeCountryData
+              ? countryList.reduce((sum, c) => sum + (c.entryCount || 0), 0)
+              : (activeCountryData?.entryCount || 0);
+
+            const displayCurrency = activeCountryData?.currencyCode || (isSuper ? "USD" : branchCurrency);
+
+            return (
+              <>
+                <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-emerald-50/50 dark:bg-emerald-900/10">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-emerald-600 inline-block" />
+                    <h4 className="text-xs font-black uppercase tracking-wider text-emerald-900 dark:text-emerald-300">
+                      {isSuper ? "DAILY CASH POSITION" : `DAILY CASH POSITION — ${userCountry?.countryName?.toUpperCase() || activeCountryIso}`}
+                    </h4>
+                  </div>
+                  {isSuper ? (
+                    <div className="flex items-center gap-1.5">
+                      <select
+                        value={cashPositionCountryFilter}
+                        onChange={(e) => setCashPositionCountryFilter(e.target.value)}
+                        className="bg-transparent border border-slate-200 dark:border-slate-700 rounded px-1.5 py-0.5 text-[11px] font-semibold text-slate-800 dark:text-slate-200 outline-none cursor-pointer"
+                      >
+                        <option value="all">All Countries</option>
+                        {countryList.map((c) => (
+                          <option key={c.countryId} value={c.iso2}>
+                            {c.iso2} — {c.countryName}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : (
+                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200">
+                      {userCountry?.countryName || "Authorized Scope"}
+                    </span>
+                  )}
+                </div>
+
+                <div className="p-3.5 space-y-3">
+                  {/* 4 Summary Stats Blocks — Click to view drill-down */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <div
+                      onClick={() => {
+                        if (userCountry?.branches?.[0]) {
+                          setDrilldownBranch({
+                            branchName: userCountry.branches[0].branchName,
+                            branchCode: userCountry.branches[0].branchCode,
+                            currency: userCountry.currencyCode,
+                            totalCredit: userCountry.branches[0].totalCredit,
+                            totalDebit: userCountry.branches[0].totalDebit,
+                            balance: userCountry.branches[0].balance,
+                            balanceType: userCountry.branches[0].balanceType,
+                            entryCount: userCountry.branches[0].entryCount,
+                            transactions: userCountry.branches[0].transactions || []
+                          });
+                        }
+                      }}
+                      className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 cursor-pointer hover:border-emerald-300 transition-colors"
+                      title="Click for branch drill-down"
+                    >
+                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">TOTAL CREDIT</span>
+                      <span className="text-xs font-black text-emerald-700 dark:text-emerald-400 font-mono">
+                        {fmtAmount(totalCreditVal)} {displayCurrency}
+                      </span>
+                    </div>
+
+                    <div
+                      onClick={() => {
+                        if (userCountry?.branches?.[0]) {
+                          setDrilldownBranch({
+                            branchName: userCountry.branches[0].branchName,
+                            branchCode: userCountry.branches[0].branchCode,
+                            currency: userCountry.currencyCode,
+                            totalCredit: userCountry.branches[0].totalCredit,
+                            totalDebit: userCountry.branches[0].totalDebit,
+                            balance: userCountry.branches[0].balance,
+                            balanceType: userCountry.branches[0].balanceType,
+                            entryCount: userCountry.branches[0].entryCount,
+                            transactions: userCountry.branches[0].transactions || []
+                          });
+                        }
+                      }}
+                      className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 cursor-pointer hover:border-rose-300 transition-colors"
+                      title="Click for branch drill-down"
+                    >
+                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">TOTAL DEBIT</span>
+                      <span className="text-xs font-black text-rose-700 dark:text-rose-400 font-mono">
+                        {fmtAmount(totalDebitVal)} {displayCurrency}
+                      </span>
+                    </div>
+
+                    <div className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40">
+                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">NET BALANCE</span>
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200 font-mono">
+                        {balanceText}
+                      </span>
+                    </div>
+
+                    <div className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40">
+                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">ENTRIES</span>
+                      <span className="text-xs font-black text-slate-800 dark:text-slate-200 font-mono">
+                        {totalEntriesVal}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Scoped Table: Authorized Branches for Country Admin / Countries for Super Admin */}
+                  <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800">
+                    {!isSuper ? (
+                      <table className="w-full text-left text-xs border-collapse">
+                        <thead>
+                          <tr className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 text-[10px] font-black uppercase tracking-wider text-slate-500">
+                            <th className="py-2 px-3">Authorized Branch</th>
+                            <th className="py-2 px-2 text-right">Credit ({userCountry?.currencyCode || "Curr"})</th>
+                            <th className="py-2 px-2 text-right">Debit ({userCountry?.currencyCode || "Curr"})</th>
+                            <th className="py-2 px-2 text-right">Net Bal</th>
+                            <th className="py-2 px-2.5 text-center">Entries</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
+                          {userCountry?.branches && userCountry.branches.length > 0 ? (
+                            userCountry.branches.map((b) => (
+                              <tr
+                                key={b.branchId}
+                                onClick={() =>
+                                  setDrilldownBranch({
+                                    branchName: b.branchName,
+                                    branchCode: b.branchCode,
+                                    currency: b.localCurrency,
+                                    totalCredit: b.totalCredit,
+                                    totalDebit: b.totalDebit,
+                                    balance: b.balance,
+                                    balanceType: b.balanceType,
+                                    entryCount: b.entryCount,
+                                    transactions: b.transactions || []
+                                  })
+                                }
+                                className="hover:bg-indigo-50/70 dark:hover:bg-slate-800/40 cursor-pointer transition-colors"
+                                title="Click to view transactions"
+                              >
+                                <td className="py-2 px-3">
+                                  <div className="font-bold text-slate-900 dark:text-slate-100">{b.branchName}</div>
+                                  <div className="font-mono text-[10px] text-slate-400">{b.branchCode}</div>
+                                </td>
+                                <td className="py-2 px-2 text-right font-mono text-[11px] text-emerald-700 dark:text-emerald-400">
+                                  {fmtAmount(b.totalCredit)}
+                                </td>
+                                <td className="py-2 px-2 text-right font-mono text-[11px] text-rose-700 dark:text-rose-400">
+                                  {fmtAmount(b.totalDebit)}
+                                </td>
+                                <td className="py-2 px-2 text-right font-mono text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                                  {fmtAmount(b.balance)} {b.balanceType}
+                                </td>
+                                <td className="py-2 px-2.5 text-center font-mono text-[11px] font-bold text-blue-600">
+                                  <span className="inline-block px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 border border-blue-200">
+                                    {b.entryCount}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan={5} className="py-6 text-center text-slate-400 text-xs">
+                                No authorized branch entries found for today.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    ) : (
+                      <table className="w-full text-left text-xs border-collapse">
+                        <thead>
+                          <tr className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 text-[10px] font-black uppercase tracking-wider text-slate-500">
+                            <th className="py-2 px-3">Country</th>
+                            <th className="py-2 px-2.5">Credit</th>
+                            <th className="py-2 px-2.5">Debit</th>
+                            <th className="py-2 px-2.5 text-right">Net Balance</th>
+                            <th className="py-2 px-2.5 text-center">Entries</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
+                          {(cashPositionCountryFilter === "all" ? countryList : countryList.filter(c => c.iso2?.toLowerCase() === cashPositionCountryFilter.toLowerCase())).map((pos) => (
+                            <tr
+                              key={pos.countryId}
+                              onClick={() => {
+                                if (pos.branches?.[0]) {
+                                  setDrilldownBranch({
+                                    branchName: `${pos.countryName} - ${pos.branches[0].branchName}`,
+                                    branchCode: pos.branches[0].branchCode,
+                                    currency: pos.currencyCode,
+                                    totalCredit: pos.branches[0].totalCredit,
+                                    totalDebit: pos.branches[0].totalDebit,
+                                    balance: pos.branches[0].balance,
+                                    balanceType: pos.branches[0].balanceType,
+                                    entryCount: pos.branches[0].entryCount,
+                                    transactions: pos.branches[0].transactions || []
+                                  });
+                                }
+                              }}
+                              className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 cursor-pointer"
+                            >
+                              <td className="py-2 px-3 font-bold text-slate-900 dark:text-slate-100">
+                                {pos.countryName} ({pos.iso2})
+                              </td>
+                              <td className="py-2 px-2.5 font-mono text-[11px] text-emerald-700 dark:text-emerald-400">
+                                {fmtAmount(pos.totalCredit)} {pos.currencyCode}
+                              </td>
+                              <td className="py-2 px-2.5 font-mono text-[11px] text-rose-700 dark:text-rose-400">
+                                {fmtAmount(pos.totalDebit)} {pos.currencyCode}
+                              </td>
+                              <td className="py-2 px-2.5 font-mono text-[11px] font-bold text-slate-800 dark:text-slate-200 text-right">
+                                {fmtAmount(pos.balance)} {pos.balanceType}
+                              </td>
+                              <td className="py-2 px-2.5 font-mono text-[11px] font-bold text-center text-blue-600">
+                                {pos.entryCount}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
+                </div>
+              </>
+            );
+          })()}
         </div>
 
       </div>
@@ -3471,49 +3652,31 @@ export function CashEntryForm({
 
                       {paymentType === "bank" ? (
                         <div className="space-y-2.5">
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                             <div className="space-y-1">
-                              <div className="flex items-center justify-between">
-                                <Label className="text-[10px] font-bold text-slate-500 uppercase">
-                                  Bank ({activeCountryIso || "Bank"}) <span className="text-red-500">*</span>
-                                </Label>
-                                <button
-                                  type="button"
-                                  onClick={() => setShowNewBankModal(true)}
-                                  className="text-[10px] font-black text-blue-600 hover:text-blue-800 dark:text-blue-400 hover:underline cursor-pointer flex items-center gap-0.5"
-                                >
-                                  <Plus className="h-2.5 w-2.5" /> New Bank
-                                </button>
-                              </div>
-                              <select
-                                value={typeDetails.bankName || ""}
-                                onChange={(e) => {
-                                  const val = e.target.value;
-                                  if (val === "__ADD_NEW__") {
-                                    setShowNewBankModal(true);
-                                  } else {
-                                    setTypeDetails((p) => ({ ...p, bankName: val }));
+                              <BankPicker
+                                label={`Bank (${activeCountryIso || "Bank"})`}
+                                value={typeDetails.bankId || ""}
+                                countryId={selectedCountry?.id || session?.scopes?.countryIds?.[0] || undefined}
+                                onValueChange={async (bankId) => {
+                                  if (!bankId) {
+                                    setTypeDetails((p) => ({ ...p, bankId: "", bankName: "", bankAccount: "" }));
+                                    setSelectedBankRecord(null);
+                                    return;
+                                  }
+                                  try {
+                                    const b = await getBankById(bankId);
+                                    setSelectedBankRecord(b || null);
+                                    setTypeDetails((p) => ({
+                                      ...p,
+                                      bankId,
+                                      bankName: b?.bank_name || p.bankName || "",
+                                      bankAccount: b?.account_number || b?.iban_number || p.bankAccount || ""
+                                    }));
+                                  } catch (e) {
+                                    setTypeDetails((p) => ({ ...p, bankId }));
                                   }
                                 }}
-                                className="h-8.5 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-2 text-[11px] font-bold text-slate-800 dark:text-slate-200 outline-none"
-                              >
-                                <option value="">Select Bank / Channel</option>
-                                {availableRoznamchaBanks.map((b) => (
-                                  <option key={b} value={b}>
-                                    {b}
-                                  </option>
-                                ))}
-                                <option value="__ADD_NEW__">+ New Bank...</option>
-                              </select>
-                            </div>
-
-                            <div className="space-y-1">
-                              <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "cef.bank_account_iban", "Bank Account / IBAN (Optional)")}</Label>
-                              <Input
-                                value={typeDetails.bankAccount || ""}
-                                onChange={(e) => setTypeDetails((p) => ({ ...p, bankAccount: e.target.value }))}
-                                placeholder="Optional (e.g. PK36... / AE07...)"
-                                className="h-8.5 text-xs font-mono font-bold bg-white dark:bg-slate-950"
                               />
                             </div>
 
@@ -3534,6 +3697,54 @@ export function CashEntryForm({
                               </select>
                             </div>
                           </div>
+
+                          {/* Bank Master Coordinate Information (Replaces manual IBAN/Account field) */}
+                          {selectedBankRecord ? (
+                            <div className="p-3 rounded-xl border border-blue-200/80 bg-blue-50/50 dark:border-blue-900/60 dark:bg-blue-950/20 text-xs">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="font-extrabold text-blue-900 dark:text-blue-200 flex items-center gap-1.5">
+                                  <Building2 className="h-3.5 w-3.5 text-blue-600" />
+                                  <span>{selectedBankRecord.bank_name}</span>
+                                  {selectedBankRecord.branch_name && (
+                                    <span className="text-[11px] font-normal text-slate-500">({selectedBankRecord.branch_name})</span>
+                                  )}
+                                </span>
+                                <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300">
+                                  Bank Master Verified ✓
+                                </span>
+                              </div>
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+                                <div>
+                                  <span className="text-[9px] uppercase font-bold text-slate-400 block">Account Title</span>
+                                  <span className="font-bold text-slate-800 dark:text-slate-200 truncate block">
+                                    {selectedBankRecord.account_title || "—"}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-[9px] uppercase font-bold text-slate-400 block">Account Number</span>
+                                  <span className="font-mono font-bold text-slate-800 dark:text-slate-200 truncate block">
+                                    {selectedBankRecord.account_number || "—"}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-[9px] uppercase font-bold text-slate-400 block">IBAN Number</span>
+                                  <span className="font-mono font-bold text-slate-800 dark:text-slate-200 truncate block" title={selectedBankRecord.iban_number || ""}>
+                                    {selectedBankRecord.iban_number || "—"}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-[9px] uppercase font-bold text-slate-400 block">Currency</span>
+                                  <span className="font-bold text-emerald-700 dark:text-emerald-400 block">
+                                    {selectedBankRecord.currency || currency || "AED"}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="p-2.5 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 text-[11px] text-slate-400 text-center">
+                              Select a bank above to automatically load account title, account number, and IBAN from Bank Master.
+                            </div>
+                          )}
 
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                             <div className="space-y-1">
@@ -3562,40 +3773,6 @@ export function CashEntryForm({
                               </label>
                             </div>
                           </div>
-
-                          {/* Inline + New Bank modal */}
-                          {showNewBankModal && (
-                            <div className="p-3 rounded-xl border border-blue-200 bg-blue-50/80 dark:border-blue-900 dark:bg-blue-950/30 flex flex-wrap items-center gap-2 animate-in fade-in">
-                              <span className="text-xs font-bold text-blue-900 dark:text-blue-200">
-                                + Add New Bank ({activeCountryIso}):
-                              </span>
-                              <input
-                                type="text"
-                                value={newBankNameInput}
-                                onChange={(e) => setNewBankNameInput(e.target.value)}
-                                placeholder="Enter Bank Name (e.g. Dubai Islamic Bank)"
-                                className="flex-1 min-w-[200px] h-8 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 text-xs font-bold outline-none"
-                              />
-                              <Button
-                                type="button"
-                                size="sm"
-                                onClick={() => handleAddCustomBank(newBankNameInput)}
-                                disabled={!newBankNameInput.trim()}
-                                className="h-8 bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs px-3"
-                              >
-                                Save Bank
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setShowNewBankModal(false)}
-                                className="h-8 text-xs text-slate-600"
-                              >
-                                Cancel
-                              </Button>
-                            </div>
-                          )}
                         </div>
                       ) : paymentType === "business" || paymentType === "invoice" ? (
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
@@ -3855,12 +4032,12 @@ export function CashEntryForm({
                             onClick={() => {
                               setPaymentMode("DEBIT");
                               setRoznamchaBookType("branch_payment_voucher");
-                              if (!isLocalCurrency) {
-                                const match = countryRatesList.find((c) => c.country === activeCountryIso || c.country === (selectedCountry as any)?.iso2);
-                                if (match?.drRate && Number(match.drRate) > 0) {
-                                  setExchangeRate(String(match.drRate));
-                                } else if (dailyUsdRates?.debitRate && Number(dailyUsdRates.debitRate) > 0) {
-                                  setExchangeRate(String(dailyUsdRates.debitRate));
+                              if (normalizedCurrency !== "USD") {
+                                const targetRate = dailyRate?.debitRate ?? dailyRate?.buyingRate;
+                                if (targetRate && Number(targetRate) > 0) {
+                                  setExchangeRate(String(targetRate));
+                                } else {
+                                  setExchangeRate("");
                                 }
                               }
                             }}
@@ -3880,12 +4057,12 @@ export function CashEntryForm({
                             onClick={() => {
                               setPaymentMode("CREDIT");
                               setRoznamchaBookType("branch_payment_voucher");
-                              if (!isLocalCurrency) {
-                                const match = countryRatesList.find((c) => c.country === activeCountryIso || c.country === (selectedCountry as any)?.iso2);
-                                if (match?.crRate && Number(match.crRate) > 0) {
-                                  setExchangeRate(String(match.crRate));
-                                } else if (dailyUsdRates?.creditRate && Number(dailyUsdRates.creditRate) > 0) {
-                                  setExchangeRate(String(dailyUsdRates.creditRate));
+                              if (normalizedCurrency !== "USD") {
+                                const targetRate = dailyRate?.creditRate ?? dailyRate?.sellingRate;
+                                if (targetRate && Number(targetRate) > 0) {
+                                  setExchangeRate(String(targetRate));
+                                } else {
+                                  setExchangeRate("");
                                 }
                               }
                             }}
@@ -3939,14 +4116,34 @@ export function CashEntryForm({
                           <span>{t(lang, "common.reset", "Reset")}</span>
                         </Button>
 
+                        {isRatePending && (
+                          <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs font-semibold">
+                            <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 animate-pulse" />
+                            <div className="flex-1">
+                              <span className="font-bold">TODAY'S EXCHANGE RATE PENDING / MISSING:</span> No approved exchange rate for {currency || branchCurrency} on {entryDate}. Country Admin must enter today's rate in Daily Exchange Rate module before financial postings can be saved.
+                            </div>
+                          </div>
+                        )}
+
                         <Button
                           type="button"
-                          disabled={saving}
+                          disabled={saving || !canSave}
                           onClick={save}
-                          className="h-9 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-black gap-2 shadow-xs cursor-pointer"
+                          className={cn(
+                            "h-9 px-6 rounded-xl text-xs font-black gap-2 shadow-xs cursor-pointer",
+                            isRatePending
+                              ? "bg-amber-600 hover:bg-amber-700 text-white cursor-not-allowed opacity-80"
+                              : "bg-blue-600 hover:bg-blue-700 text-white"
+                          )}
                         >
                           <Send className="h-3.5 w-3.5" />
-                          <span>{saving ? "Posting..." : "Post Entry"}</span>
+                          <span>
+                            {saving
+                              ? "Posting..."
+                              : isRatePending
+                              ? "Today's Exchange Rate Pending / Missing"
+                              : "Post Entry"}
+                          </span>
                         </Button>
                       </div>
                     </div>
@@ -3982,17 +4179,19 @@ export function CashEntryForm({
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2 flex-wrap">
                               <h4 className="text-xs font-black text-slate-900 dark:text-white truncate">
-                                {selectedCounterLedger?.accountName || selectedCounterLedger?.ledgerName || "Rex Trading LLC"}
+                                {selectedCounterLedger?.accountName || selectedCounterLedger?.ledgerName || "—"}
                               </h4>
-                              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200">
-                                Customer
-                              </span>
+                              {selectedCounterLedger?.accountKind && (
+                                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200">
+                                  {localizeTerm(selectedCounterLedger.accountKind, lang)}
+                                </span>
+                              )}
                               <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200">
-                                Active
+                                {selectedCounterLedger?.status === "archived" ? "Archived" : "Active"}
                               </span>
                             </div>
                             <p className="text-[11px] font-mono text-slate-500 font-bold mt-0.5">
-                              Account No. {selectedCounterLedger?.accountCode || selectedCounterLedger?.ledgerCode || "UAE-DET-AC-0003"}
+                              Account No. {selectedCounterLedger?.accountCode || selectedCounterLedger?.ledgerCode || "—"}
                             </p>
                           </div>
                         </div>
@@ -4008,63 +4207,63 @@ export function CashEntryForm({
                             <div className="grid grid-cols-[110px_1fr] py-1 border-b border-slate-100 dark:border-slate-800">
                               <span className="text-slate-500 font-semibold">Account Name</span>
                               <span className="font-bold text-slate-900 dark:text-white">
-                                {selectedCounterLedger?.accountName || "Rex Trading LLC"}
+                                {selectedCounterLedger?.accountName || selectedCounterLedger?.ledgerName || "—"}
                               </span>
                             </div>
 
                             <div className="grid grid-cols-[110px_1fr] py-1 border-b border-slate-100 dark:border-slate-800">
                               <span className="text-slate-500 font-semibold">Account No.</span>
                               <span className="font-mono font-bold text-slate-900 dark:text-white">
-                                {selectedCounterLedger?.accountCode || "UAE-DET-AC-0003"}
+                                {selectedCounterLedger?.accountCode || selectedCounterLedger?.ledgerCode || "—"}
                               </span>
                             </div>
 
                             <div className="grid grid-cols-[110px_1fr] py-1 border-b border-slate-100 dark:border-slate-800">
                               <span className="text-slate-500 font-semibold">Country</span>
                               <span className="font-bold text-slate-800 dark:text-slate-200">
-                                {selectedCounterLedger?.countryName || selectedCountry?.name || "United Arab Emirates"}
+                                {selectedCounterLedger?.countryName || selectedCountry?.name || "—"}
                               </span>
                             </div>
 
                             <div className="grid grid-cols-[110px_1fr] py-1 border-b border-slate-100 dark:border-slate-800">
                               <span className="text-slate-500 font-semibold">State / Province</span>
                               <span className="font-bold text-slate-800 dark:text-slate-200">
-                                {selectedCounterLedger?.stateName || "Dubai"}
+                                {selectedCounterLedger?.stateName || selectedCounterLedger?.cityName || "—"}
                               </span>
                             </div>
 
                             <div className="grid grid-cols-[110px_1fr] py-1 border-b border-slate-100 dark:border-slate-800">
                               <span className="text-slate-500 font-semibold">City</span>
                               <span className="font-bold text-slate-800 dark:text-slate-200">
-                                {selectedCounterLedger?.cityName || "Deira"}
+                                {selectedCounterLedger?.cityName || "—"}
                               </span>
                             </div>
 
                             <div className="grid grid-cols-[110px_1fr] py-1 border-b border-slate-100 dark:border-slate-800">
                               <span className="text-slate-500 font-semibold">Permanent Address</span>
                               <span className="font-medium text-slate-700 dark:text-slate-300 text-[11px] leading-snug">
-                                {selectedCounterLedger?.address || "Office City Branch, Al Maktoum Street, Deira, Dubai, UAE"}
+                                {selectedCounterLedger?.address || "—"}
                               </span>
                             </div>
 
                             <div className="grid grid-cols-[110px_1fr] py-1 border-b border-slate-100 dark:border-slate-800">
                               <span className="text-slate-500 font-semibold">Branch Name</span>
                               <span className="font-bold text-slate-800 dark:text-slate-200">
-                                {selectedMainBranch?.name || "Deira City Branch"}
+                                {selectedCounterLedger?.branchName || selectedCityBranch?.name || selectedMainBranch?.name || "—"}
                               </span>
                             </div>
 
                             <div className="grid grid-cols-[110px_1fr] py-1 border-b border-slate-100 dark:border-slate-800">
                               <span className="text-slate-500 font-semibold">Branch Code</span>
                               <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                                {selectedMainBranch?.code || "DCB-001"}
+                                {selectedCounterLedger?.branchCode || selectedCityBranch?.code || selectedMainBranch?.code || "—"}
                               </span>
                             </div>
 
                             <div className="grid grid-cols-[110px_1fr] py-1 border-b border-slate-100 dark:border-slate-800">
                               <span className="text-slate-500 font-semibold">Created Date</span>
                               <span className="font-bold text-slate-800 dark:text-slate-200">
-                                15 Jan 2023
+                                {selectedCounterLedger?.createdAt ? new Date(selectedCounterLedger.createdAt).toLocaleDateString() : "—"}
                               </span>
                             </div>
 
@@ -4089,6 +4288,9 @@ export function CashEntryForm({
                           <CardTitle className="text-xs font-black text-slate-900 dark:text-white">
                             Financial Snapshot
                           </CardTitle>
+                          {accountSnapshot.loading && (
+                            <span className="text-[10px] text-blue-500 animate-pulse ml-auto">Updating...</span>
+                          )}
                         </div>
                       </CardHeader>
 
@@ -4096,39 +4298,128 @@ export function CashEntryForm({
                         <div className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-slate-800">
                           <span className="text-slate-500 font-semibold">Old Balance</span>
                           <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                            120,000.00
+                            {accountSnapshot.loading ? "..." : fmtAmount(accountSnapshot.oldBalance)}
                           </span>
                         </div>
 
                         <div className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-slate-800">
                           <span className="text-slate-500 font-semibold">Total Credit</span>
                           <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                            542,520.90
+                            {accountSnapshot.loading ? "..." : fmtAmount(accountSnapshot.totalCredit)}
                           </span>
                         </div>
 
                         <div className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-slate-800">
                           <span className="text-slate-500 font-semibold">Total Debit</span>
                           <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                            420,100.00
+                            {accountSnapshot.loading ? "..." : fmtAmount(accountSnapshot.totalDebit)}
                           </span>
                         </div>
 
                         <div className="flex items-center justify-between py-1.5 border-b border-slate-100 dark:border-slate-800">
                           <span className="text-slate-800 dark:text-slate-200 font-black text-xs">Current Balance</span>
-                          <span className="font-mono font-black text-base text-emerald-600 dark:text-emerald-400">
-                            240,430.90
+                          <span className={cn(
+                            "font-mono font-black text-base",
+                            accountSnapshot.currentBalance >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
+                          )}>
+                            {accountSnapshot.loading ? "..." : fmtAmount(accountSnapshot.currentBalance)}
                           </span>
                         </div>
 
                         <div className="flex items-center justify-between py-1">
                           <span className="text-slate-500 font-semibold">Last Transaction Date</span>
                           <span className="font-bold text-slate-800 dark:text-slate-200">
-                            10 Sep 2026
+                            {accountSnapshot.loading
+                              ? "..."
+                              : accountSnapshot.lastTransactionDate
+                              ? new Date(accountSnapshot.lastTransactionDate).toLocaleDateString()
+                              : "—"}
                           </span>
                         </div>
                       </CardContent>
                     </Card>
+
+                    {/* Drill-down Modal for Daily Cash Position */}
+                    <SimpleModal
+                      open={Boolean(drilldownBranch)}
+                      onOpenChange={(open) => {
+                        if (!open) setDrilldownBranch(null);
+                      }}
+                      title={`Branch Cash Position Drill-Down — ${drilldownBranch?.branchName || ""} (${drilldownBranch?.branchCode || ""})`}
+                    >
+                      <div className="space-y-4 text-xs">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                          <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase block">Credit</span>
+                            <span className="text-xs font-black text-emerald-600 font-mono">
+                              {drilldownBranch?.currency} {fmtAmount(drilldownBranch?.totalCredit || 0)}
+                            </span>
+                          </div>
+                          <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase block">Debit</span>
+                            <span className="text-xs font-black text-rose-600 font-mono">
+                              {drilldownBranch?.currency} {fmtAmount(drilldownBranch?.totalDebit || 0)}
+                            </span>
+                          </div>
+                          <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase block">Net Balance</span>
+                            <span className="text-xs font-black text-slate-900 dark:text-white font-mono">
+                              {drilldownBranch?.currency} {fmtAmount(drilldownBranch?.balance || 0)} ({drilldownBranch?.balanceType || "—"})
+                            </span>
+                          </div>
+                          <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase block">Total Entries</span>
+                            <span className="text-xs font-black text-blue-600 font-mono">
+                              {drilldownBranch?.entryCount || 0}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                          <div className="px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 font-black text-[10px] uppercase text-slate-600 dark:text-slate-300">
+                            Relevant Scoped Transactions
+                          </div>
+                          <div className="max-h-64 overflow-y-auto">
+                            <table className="w-full text-left text-xs">
+                              <thead>
+                                <tr className="bg-slate-100 dark:bg-slate-800 text-[10px] font-bold uppercase text-slate-500 border-b border-slate-200 dark:border-slate-700">
+                                  <th className="py-2 px-2.5">Voucher</th>
+                                  <th className="py-2 px-2.5">Time</th>
+                                  <th className="py-2 px-2.5">Party / Account</th>
+                                  <th className="py-2 px-2.5">Narration</th>
+                                  <th className="py-2 px-2.5 text-right">Debit</th>
+                                  <th className="py-2 px-2.5 text-right">Credit</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                                {drilldownBranch?.transactions && drilldownBranch.transactions.length > 0 ? (
+                                  drilldownBranch.transactions.map((tx: any) => (
+                                    <tr key={tx.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
+                                      <td className="py-1.5 px-2.5 font-mono font-bold text-blue-600">{tx.voucherNo}</td>
+                                      <td className="py-1.5 px-2.5 text-slate-400 font-mono text-[10px]">{tx.time}</td>
+                                      <td className="py-1.5 px-2.5 font-bold text-slate-800 dark:text-slate-200">{tx.partyName}</td>
+                                      <td className="py-1.5 px-2.5 text-slate-500 text-[11px] truncate max-w-[150px]" title={tx.narration}>{tx.narration}</td>
+                                      <td className="py-1.5 px-2.5 text-right font-mono text-rose-600 font-bold">
+                                        {tx.debit > 0 ? fmtAmount(tx.debit) : "—"}
+                                      </td>
+                                      <td className="py-1.5 px-2.5 text-right font-mono text-emerald-600 font-bold">
+                                        {tx.credit > 0 ? fmtAmount(tx.credit) : "—"}
+                                      </td>
+                                    </tr>
+                                  ))
+                                ) : (
+                                  <tr>
+                                    <td colSpan={6} className="py-6 text-center text-slate-400 font-medium">
+                                      No transactions recorded for this branch today.
+                                    </td>
+                                  </tr>
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                    </SimpleModal>
 
                   </div>
                 </div>

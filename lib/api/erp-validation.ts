@@ -238,6 +238,42 @@ export const userCreateSchema = scopeSchema.extend({
   ...assignmentAccessFields
 });
 
+export const userUpdateSchema = z.object({
+  userId: z.string().trim(),
+  userCode: z.string().trim().nullable().optional(),
+  isActive: z.boolean().optional(),
+  password: z.string().min(8).max(128).optional(),
+  fullName: z.string().trim().min(2).max(200).optional(),
+  companyId: optionalUuidSchema,
+  role: z.string().trim().max(64).optional(),
+  countryId: optionalUuidSchema,
+  countryBranchId: optionalUuidSchema,
+  cityBranchId: optionalUuidSchema,
+  mobileProfile: z.enum(["standard", "mobile_cash_ledger", "mobile_field"]).optional(),
+  permissions: z.array(z.string()).optional(),
+  email: z.preprocess((v) => (v === "" || v === null ? undefined : v), z.string().trim().email().optional()),
+  phone: z.string().trim().max(50).nullable().optional(),
+  designation: z.string().trim().max(120).nullable().optional(),
+  department: z.string().trim().max(120).nullable().optional(),
+  cnicPassportNo: z.string().trim().max(120).nullable().optional(),
+  idExpiryDate: z.string().trim().max(50).nullable().optional(),
+  kycStatus: z.string().trim().max(50).nullable().optional(),
+  residentialAddress: z.string().trim().max(500).nullable().optional(),
+  employeeId: optionalUuidSchema,
+  personMasterId: optionalUuidSchema,
+  firstName: z.string().trim().max(100).nullable().optional(),
+  middleName: z.string().trim().max(100).nullable().optional(),
+  lastName: z.string().trim().max(100).nullable().optional(),
+  photoUrl: z.string().trim().max(10_000_000).nullable().optional(),
+  purpose: z.string().trim().max(500).nullable().optional(),
+  username: z.string().trim().max(100).nullable().optional(),
+  operationalDomain: z.enum(["business", "shipping", "both"]).optional(),
+  clearingAgentId: optionalUuidSchema,
+  ledgerVisibility: z.enum(["scoped", "shipping_only", "full"]).optional(),
+  preferredLanguage: supportedLanguageSchema.optional(),
+  ...assignmentAccessFields
+});
+
 export const accountCreateSchema = scopeSchema.extend({
   companyId: uuidSchema,
   branchId: optionalUuidSchema,

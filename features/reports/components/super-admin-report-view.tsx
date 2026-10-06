@@ -13,9 +13,11 @@ import {
   Printer,
   Columns3,
   Calendar,
-  ArrowUpRight,
-  Filter,
-  BarChart3
+  RotateCw,
+  ClipboardList,
+  Check,
+  BarChart3,
+  ArrowUpRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,6 +53,41 @@ interface SuperAdminReportViewProps {
   viewerRole?: string;
 }
 
+interface OverviewApiRecord {
+  id: string;
+  name: string;
+  iso2?: string;
+  currencyCode?: string;
+  totalBranches?: number;
+  activeBranches?: number;
+  totalUsers?: number;
+  status?: string;
+}
+
+interface OverviewApiResponse {
+  data?: OverviewApiRecord[];
+}
+
+interface LedgerApiResponse {
+  summary?: {
+    records?: number;
+    totalCredit?: number;
+    totalDebit?: number;
+    posted?: number;
+    pending?: number;
+  };
+}
+
+function getCountryFlag(iso2?: string): string {
+  if (!iso2 || iso2.length !== 2) return "🌐";
+  const upper = iso2.toUpperCase();
+  // Standard Unicode regional indicator symbols for country flags
+  const codePoints = upper
+    .split("")
+    .map((char) => 127397 + char.charCodeAt(0));
+  return String.fromCodePoint(...codePoints);
+}
+
 export function SuperAdminReportView({
   viewerName = "SUPER ADMIN",
   viewerId = "00000000-0000-0000-0000-000000000001",
@@ -69,8 +106,10 @@ export function SuperAdminReportView({
   const [selectedCountryId, setSelectedCountryId] = useState("all");
   const [selectedBranchId, setSelectedBranchId] = useState("all");
   const [selectedCurrency, setSelectedCurrency] = useState("USD");
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
+  const [reportDropdownOpen, setReportDropdownOpen] = useState(false);
+  const [dateDropdownOpen, setDateDropdownOpen] = useState(false);
   const [columnsModalOpen, setColumnsModalOpen] = useState(false);
 
   // Data states
@@ -82,7 +121,6 @@ export function SuperAdminReportView({
 
   // Visible columns
   const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({
-    index: true,
     country: true,
     totalBranches: true,
     activeBranches: true,
@@ -110,7 +148,7 @@ export function SuperAdminReportView({
     return () => clearInterval(timer);
   }, []);
 
-  // Fetch real data - no fabricated/hardcoded numbers.
+  // Fetch real data
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
@@ -130,13 +168,15 @@ export function SuperAdminReportView({
         lang
       });
 
+
+
       const [overviewRes, ledgerRes] = await Promise.all([
-        apiGet<any>(`/api/erp/reports/super-admin?${overviewQp.toString()}`).catch(() => null),
-        apiGet<any>(`/api/erp/reports/super-admin?${ledgerQp.toString()}`).catch(() => null)
+        apiGet<OverviewApiResponse>(`/api/erp/reports/super-admin?${overviewQp.toString()}`).catch(() => null),
+        apiGet<LedgerApiResponse>(`/api/erp/reports/super-admin?${ledgerQp.toString()}`).catch(() => null)
       ]);
 
       const rows: CountryPerformanceRow[] = Array.isArray(overviewRes?.data)
-        ? overviewRes.data.map((r: any) => ({
+        ? overviewRes.data.map((r: OverviewApiRecord) => ({
             id: r.id,
             name: r.name,
             iso2: r.iso2 || "GL",
@@ -171,23 +211,33 @@ export function SuperAdminReportView({
     fetchData();
   }, [fetchData]);
 
-  // Filtered country performance
+  // Filtered country rows
   const filteredCountryRows = useMemo(() => {
     if (!searchQuery.trim()) return countryRows;
     const q = searchQuery.toLowerCase().trim();
     return countryRows.filter(
-      r =>
+      (r) =>
         r.name.toLowerCase().includes(q) ||
         r.currencyCode.toLowerCase().includes(q) ||
         r.iso2.toLowerCase().includes(q)
     );
   }, [countryRows, searchQuery]);
 
-  // Real totals (from the country-overview endpoint; no fabricated fallbacks)
+  // Aggregated totals
   const totals = useMemo(() => {
     const totalBranches = filteredCountryRows.reduce((sum, r) => sum + r.totalBranches, 0);
-    const activeCountries = filteredCountryRows.filter(r => r.status === "ACTIVE").length;
-    return { totalBranches, activeCountries, totalRecords: filteredCountryRows.length };
+    const totalUsers = filteredCountryRows.reduce((sum, r) => sum + r.totalUsers, 0);
+    const activeBranches = filteredCountryRows.reduce((sum, r) => sum + r.activeBranches, 0);
+    const activeCountries = filteredCountryRows.filter((r) => r.status === "ACTIVE").length;
+    const inactiveCountries = filteredCountryRows.filter((r) => r.status === "INACTIVE").length;
+    return {
+      totalBranches,
+      totalUsers,
+      activeBranches,
+      activeCountries,
+      inactiveCountries,
+      totalRecords: filteredCountryRows.length
+    };
   }, [filteredCountryRows]);
 
   const netBalance = (ledgerSummary?.totalCredit ?? 0) - (ledgerSummary?.totalDebit ?? 0);
@@ -210,8 +260,8 @@ export function SuperAdminReportView({
       r.totalUsers,
       r.status
     ]);
-    const csvContent = [headers.join(","), ...csvRows.map(e => e.join(","))].join("\n");
-    const blob = new Blob(["﻿" + csvContent], { type: "text/csv;charset=utf-8;" });
+    const csvContent = [headers.join(","), ...csvRows.map((e) => e.join(","))].join("\n");
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -226,166 +276,171 @@ export function SuperAdminReportView({
     setActionsOpen(false);
   };
 
+  const reportNames: Record<string, string> = {
+    "super-admin-reports": tt("sarh.opt_super_admin_reports", "Super Admin Reports"),
+    "ledger": tt("sarh.opt_general_ledger", "General Ledger Report"),
+    "bills": tt("sarh.opt_bill_entries", "Bill Entries Report"),
+    "payments": tt("sarh.opt_cash_payments", "Cash & Payments"),
+    "sales": tt("sarh.opt_sales_journal", "Sales Journal"),
+    "purchase": tt("sarh.opt_purchase_orders", "Purchase Orders")
+  };
+
+  const dateRangeNames: Record<string, string> = {
+    all: tt("sarh.date_all", "All Dates"),
+    today: tt("sarh.date_today", "Today"),
+    yesterday: tt("sarh.date_yesterday", "Yesterday"),
+    month: tt("sarh.date_this_month", "This Month")
+  };
+
   return (
-    <div dir={isRtl ? "rtl" : "ltr"} className="min-h-screen w-full bg-[#f4f7fb] dark:bg-slate-950 font-sans text-slate-850 dark:text-slate-100 flex flex-col">
-      {/* Top Main Content Container */}
+    <div
+      dir={isRtl ? "rtl" : "ltr"}
+      className="min-h-screen w-full bg-[#f4f6fa] dark:bg-slate-950 font-sans text-slate-800 dark:text-slate-100 flex flex-col"
+    >
       <div className="flex-1 w-full max-w-[1600px] mx-auto p-3 sm:p-5 lg:p-6 space-y-4">
-
-        {/* 1. Hero Banner */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#071329] via-[#0c1f42] to-[#08152e] border border-blue-900/40 shadow-xl text-white p-6 sm:p-8">
-          <div className="absolute right-0 top-0 bottom-0 w-full md:w-[65%] pointer-events-none opacity-40 md:opacity-85 mix-blend-screen overflow-hidden flex items-center justify-end">
-            <svg viewBox="0 0 800 500" className="w-full h-full object-cover">
-              <defs>
-                <radialGradient id="globeGlow" cx="60%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.6" />
-                  <stop offset="40%" stopColor="#0284c7" stopOpacity="0.3" />
-                  <stop offset="80%" stopColor="#0369a1" stopOpacity="0.08" />
-                  <stop offset="100%" stopColor="#000" stopOpacity="0" />
-                </radialGradient>
-                <linearGradient id="netGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.8" />
-                  <stop offset="100%" stopColor="#818cf8" stopOpacity="0.2" />
-                </linearGradient>
-              </defs>
-              <circle cx="520" cy="240" r="190" fill="url(#globeGlow)" />
-              <ellipse cx="520" cy="240" rx="190" ry="190" fill="none" stroke="#38bdf8" strokeWidth="1.2" strokeOpacity="0.4" />
-              <ellipse cx="520" cy="240" rx="140" ry="190" fill="none" stroke="#38bdf8" strokeWidth="1" strokeOpacity="0.3" strokeDasharray="4 4" />
-              <ellipse cx="520" cy="240" rx="90" ry="190" fill="none" stroke="#38bdf8" strokeWidth="1" strokeOpacity="0.3" />
-              <ellipse cx="520" cy="240" rx="40" ry="190" fill="none" stroke="#38bdf8" strokeWidth="1" strokeOpacity="0.3" strokeDasharray="3 3" />
-              <ellipse cx="520" cy="240" rx="190" ry="60" fill="none" stroke="#38bdf8" strokeWidth="1" strokeOpacity="0.3" />
-              <ellipse cx="520" cy="240" rx="190" ry="120" fill="none" stroke="#38bdf8" strokeWidth="1" strokeOpacity="0.25" strokeDasharray="4 4" />
-              <circle cx="480" cy="180" r="4" fill="#38bdf8" className="animate-ping" />
-              <circle cx="480" cy="180" r="3" fill="#ffffff" />
-              <circle cx="560" cy="220" r="3.5" fill="#34d399" />
-              <circle cx="420" cy="270" r="4" fill="#fbbf24" />
-              <circle cx="610" cy="290" r="3" fill="#60a5fa" />
-              <path d="M 480 180 Q 520 200 560 220" stroke="url(#netGrad)" strokeWidth="1.5" fill="none" />
-              <path d="M 480 180 Q 450 225 420 270" stroke="url(#netGrad)" strokeWidth="1.5" fill="none" />
-              <path d="M 560 220 Q 585 255 610 290" stroke="url(#netGrad)" strokeWidth="1.5" fill="none" />
-            </svg>
+        {/* ============================================================== */}
+        {/* 1. Frosted Icy-Blue Header Banner with Integrated Controls & Globe */}
+        {/* ============================================================== */}
+        <div className="relative overflow-hidden rounded-2xl border border-sky-300/60 dark:border-blue-900/50 bg-gradient-to-r from-[#d3e3f5] via-[#e2edfa] to-[#d4e6f6] dark:from-slate-900 dark:via-blue-950/70 dark:to-slate-900 p-5 sm:p-6 shadow-sm">
+          {/* Globe Graphic on Right */}
+          <div className="absolute -right-4 -top-8 -bottom-8 w-72 sm:w-96 pointer-events-none opacity-85 overflow-hidden flex items-center justify-end select-none">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/images/reports/header_globe.jpg"
+              alt="Global Operations"
+              className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-screen drop-shadow-sm"
+              style={{
+                maskImage: "radial-gradient(circle at 50% 50%, black 48%, transparent 72%)",
+                WebkitMaskImage: "radial-gradient(circle at 50% 50%, black 48%, transparent 72%)"
+              }}
+            />
           </div>
 
-          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div className="space-y-2 max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-400/20 text-blue-300 text-[10.5px] font-extrabold uppercase tracking-widest">
-                <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                <span>{tt("sarh.badge", "Reports & Analytics")}</span>
-              </div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white flex items-center gap-3">
-                <span>{tt("sarh.title", "Super Admin Reports")}</span>
-              </h1>
-              <p className="text-sm sm:text-base font-bold text-cyan-300">
-                {tt("sarh.tagline", "Global visibility. Complete control.")}
-              </p>
-              <p className="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed max-w-xl">
-                {tt("sarh.subtitle", "Monitor branches, users, financials and billing activities across all countries from a single, powerful view.")}
-              </p>
-            </div>
+          {/* User Welcome Header */}
+          <div className="relative z-10">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+              Welcome, {viewerName || "[User Name]"}
+            </h1>
+            <p className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 mt-0.5">
+              Super Admin
+            </p>
+          </div>
 
-            <div className="lg:self-center">
-              <div className="relative rounded-xl border border-blue-400/30 bg-blue-950/40 backdrop-blur-md px-5 py-4 shadow-lg max-w-[260px]">
-                <div className="text-blue-400 mb-1 text-lg font-serif">"</div>
-                <div className="text-xs font-black tracking-wide text-slate-100 space-y-0.5">
-                  <p>{tt("sarh.quote_one_world", "One World")}</p>
-                  <p>{tt("sarh.quote_one_erp", "One ERP")}</p>
-                  <p className="text-cyan-300">{tt("sarh.quote_infinite", "Infinite Possibilities")}</p>
+          {/* Primary Controls Row: Report Selector, Search, Date Range, Refresh, Actions */}
+          <div className="relative z-10 mt-3.5 flex flex-wrap items-center gap-2.5">
+            {/* Select Report Pill Dropdown */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setReportDropdownOpen(!reportDropdownOpen)}
+                className="h-9 px-3.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xs text-xs font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition"
+              >
+                <ClipboardList className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                <span>{reportNames[selectedReport] || "Super Admin Reports"}</span>
+                <ChevronDown className="h-3 w-3 text-slate-400" />
+              </button>
+
+              {reportDropdownOpen && (
+                <div
+                  className="absolute start-0 top-full mt-1.5 w-56 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900 z-50 animate-in fade-in zoom-in-95"
+                  onMouseLeave={() => setReportDropdownOpen(false)}
+                >
+                  {Object.entries(reportNames).map(([key, name]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => {
+                        setSelectedReport(key);
+                        setReportDropdownOpen(false);
+                      }}
+                      className={cn(
+                        "w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-semibold text-start transition",
+                        selectedReport === key
+                          ? "bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 font-bold"
+                          : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                      )}
+                    >
+                      <span>{name}</span>
+                      {selectedReport === key && <Check className="h-3 w-3 text-blue-600" />}
+                    </button>
+                  ))}
                 </div>
-              </div>
+              )}
             </div>
-          </div>
-        </div>
 
-        {/* 2. Primary Filter Bar Card */}
-        <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-xs dark:border-slate-800 dark:bg-slate-900 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
-            <div className="flex flex-col">
-              <span className="text-[9.5px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">{tt("sarh.select_report_label", "Select Report")}</span>
-              <div className="relative">
-                <select
-                  value={selectedReport}
-                  onChange={(e) => setSelectedReport(e.target.value)}
-                  className="h-8.5 ps-8 pe-7 rounded-lg border border-slate-200 bg-slate-50 text-xs font-bold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 outline-none cursor-pointer hover:bg-slate-100 transition appearance-none"
+            {/* Search Input Bar */}
+            <div className="relative flex-1 min-w-[240px] max-w-xl">
+              <Search className="h-3.5 w-3.5 absolute start-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={tt("sarh.search_placeholder", "Search & filter reports, countries, branches, users...")}
+                className="w-full h-9 ps-9 pe-4 rounded-full bg-white dark:bg-slate-900 border-slate-200/90 dark:border-slate-800 text-xs font-medium text-slate-800 dark:text-slate-200 placeholder-slate-400 shadow-2xs focus-visible:ring-1 focus-visible:ring-blue-400"
+              />
+            </div>
+
+            {/* All Dates Pill Dropdown */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setDateDropdownOpen(!dateDropdownOpen)}
+                className="h-9 px-3.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xs text-xs font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition"
+              >
+                <Calendar className="h-3.5 w-3.5 text-slate-500" />
+                <span>{dateRangeNames[dateRange] || "All Dates"}</span>
+                <ChevronDown className="h-3 w-3 text-slate-400" />
+              </button>
+
+              {dateDropdownOpen && (
+                <div
+                  className="absolute end-0 top-full mt-1.5 w-44 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900 z-50 animate-in fade-in zoom-in-95"
+                  onMouseLeave={() => setDateDropdownOpen(false)}
                 >
-                  <option value="super-admin-reports">{tt("sarh.opt_super_admin_reports", "Super Admin Reports")}</option>
-                  <option value="ledger">{tt("sarh.opt_general_ledger", "General Ledger Report")}</option>
-                  <option value="bills">{tt("sarh.opt_bill_entries", "Bill Entries Report")}</option>
-                  <option value="payments">{tt("sarh.opt_cash_payments", "Cash & Payments")}</option>
-                  <option value="sales">{tt("sarh.opt_sales_journal", "Sales Journal")}</option>
-                  <option value="purchase">{tt("sarh.opt_purchase_orders", "Purchase Orders")}</option>
-                </select>
-                <FileText className="h-3.5 w-3.5 absolute start-2.5 top-1/2 -translate-y-1/2 text-blue-600 dark:text-blue-400 pointer-events-none" />
-                <ChevronDown className="h-3 w-3 absolute end-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-              </div>
+                  {Object.entries(dateRangeNames).map(([key, label]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => {
+                        setDateRange(key);
+                        setDateDropdownOpen(false);
+                      }}
+                      className={cn(
+                        "w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-semibold text-start transition",
+                        dateRange === key
+                          ? "bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 font-bold"
+                          : "text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                      )}
+                    >
+                      <span>{label}</span>
+                      {dateRange === key && <Check className="h-3 w-3 text-blue-600" />}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
-            <div className="flex-1 min-w-[220px] self-end">
-              <div className="relative">
-                <Search className="h-3.5 w-3.5 absolute start-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <Input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={tt("sarh.search_placeholder", "Search & filter reports, countries, branches, users...")}
-                  className="h-8.5 ps-9 pe-3 rounded-lg text-xs font-medium border-slate-200 bg-slate-50/70 focus:bg-white dark:border-slate-700 dark:bg-slate-800/80"
-                />
-              </div>
-            </div>
-
-            <div className="self-end">
-              <div className="relative">
-                <select
-                  value={dateRange}
-                  onChange={(e) => setDateRange(e.target.value)}
-                  className="h-8.5 ps-8 pe-7 rounded-lg border border-slate-200 bg-slate-50 text-xs font-bold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 outline-none cursor-pointer hover:bg-slate-100 transition appearance-none"
-                >
-                  <option value="all">{tt("sarh.date_all", "All Dates")}</option>
-                  <option value="today">{tt("sarh.date_today", "Today")}</option>
-                  <option value="yesterday">{tt("sarh.date_yesterday", "Yesterday")}</option>
-                  <option value="month">{tt("sarh.date_this_month", "This Month")}</option>
-                </select>
-                <Calendar className="h-3.5 w-3.5 absolute start-2.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
-                <ChevronDown className="h-3 w-3 absolute end-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 self-end">
-            <Button
+            {/* Refresh Button */}
+            <button
               type="button"
-              variant={filtersOpen ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFiltersOpen(!filtersOpen)}
-              className="h-8.5 px-3 rounded-lg text-xs font-bold gap-1.5"
-            >
-              <Filter className="h-3.5 w-3.5 text-blue-500" />
-              <span>{t(lang, "common.filters", "Filters")}</span>
-              <span className="ms-0.5 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-[10px] font-black px-1.5 py-0.2">
-                2
-              </span>
-            </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
               onClick={fetchData}
               disabled={loading}
-              className="h-8.5 px-3 rounded-lg text-xs font-bold gap-1.5 text-slate-700 hover:text-slate-900 dark:text-slate-300"
+              className="h-9 px-3.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xs text-xs font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition"
             >
-              <BarChart3 className={cn("h-3.5 w-3.5", loading && "animate-pulse text-blue-600")} />
+              <RotateCw className={cn("h-3.5 w-3.5 text-slate-600 dark:text-slate-400", loading && "animate-spin text-blue-600")} />
               <span>{t(lang, "common.refresh", "Refresh")}</span>
-            </Button>
+            </button>
 
+            {/* Actions Dropdown */}
             <div className="relative">
-              <Button
+              <button
                 type="button"
-                size="sm"
                 onClick={() => setActionsOpen(!actionsOpen)}
-                className="h-8.5 px-3.5 rounded-lg text-xs font-black bg-blue-600 hover:bg-blue-700 text-white gap-1.5 shadow-xs"
+                className="h-9 px-4 rounded-full bg-white/95 hover:bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 border border-blue-200/90 dark:border-blue-900 shadow-2xs text-xs font-semibold flex items-center gap-1.5 transition"
               >
                 <span>{t(lang, "common.actions", "Actions")}</span>
-                <ChevronDown className="h-3.5 w-3.5" />
-              </Button>
+                <ChevronDown className="h-3.5 w-3.5 text-blue-600" />
+              </button>
 
               {actionsOpen && (
                 <div
@@ -412,18 +467,20 @@ export function SuperAdminReportView({
               )}
             </div>
           </div>
-        </div>
 
-        {/* 3. Secondary Scope Bar */}
-        <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-2xs dark:border-slate-800 dark:bg-slate-900 flex flex-wrap items-center justify-between gap-3 text-xs">
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700">
+          {/* Secondary Filter Row: Roles, Countries, Branches, Currencies & Real-time Badge */}
+          <div className="relative z-10 mt-3 flex flex-wrap items-center gap-2.5 text-xs">
+            {/* ROLE Filter */}
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/95 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
               <Users className="h-3.5 w-3.5 text-blue-600" />
-              <span className="text-[10px] font-bold text-slate-400 uppercase">{tt("sarh.role_label", "Role")}:</span>
+              <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase">
+                {tt("sarh.role_label", "ROLE")}:
+              </span>
               <select
                 value={selectedRole}
                 onChange={(e) => setSelectedRole(e.target.value)}
-                className="bg-transparent font-bold text-xs text-slate-800 dark:text-slate-200 outline-none cursor-pointer"
+                aria-label={tt("sarh.role_label", "Role")}
+                className="bg-transparent font-medium text-xs text-slate-800 dark:text-slate-200 outline-none cursor-pointer pe-1"
               >
                 <option value="all">{tt("sarh.all_roles", "All Roles")}</option>
                 <option value="super_admin">{tt("sarh.opt_super_admin", "Super Admin")}</option>
@@ -432,13 +489,17 @@ export function SuperAdminReportView({
               </select>
             </div>
 
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700">
+            {/* COUNTRY Filter */}
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/95 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
               <Globe className="h-3.5 w-3.5 text-cyan-600" />
-              <span className="text-[10px] font-bold text-slate-400 uppercase">{tt("sarh.country_label", "Country")}:</span>
+              <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase">
+                {tt("sarh.country_label", "COUNTRY")}:
+              </span>
               <select
                 value={selectedCountryId}
                 onChange={(e) => setSelectedCountryId(e.target.value)}
-                className="bg-transparent font-bold text-xs text-slate-800 dark:text-slate-200 outline-none cursor-pointer max-w-[150px] truncate"
+                aria-label={tt("sarh.country_label", "Country")}
+                className="bg-transparent font-medium text-xs text-slate-800 dark:text-slate-200 outline-none cursor-pointer max-w-[160px] truncate pe-1"
               >
                 <option value="all">{tt("sarh.all_countries_global", "All Countries (Global)")}</option>
                 {countries.map((c) => (
@@ -449,25 +510,33 @@ export function SuperAdminReportView({
               </select>
             </div>
 
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700">
-              <Building2 className="h-3.5 w-3.5 text-indigo-600" />
-              <span className="text-[10px] font-bold text-slate-400 uppercase">{tt("sarh.branch_label", "Branch")}:</span>
+            {/* BRANCH Filter */}
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/95 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
+              <Building2 className="h-3.5 w-3.5 text-purple-600" />
+              <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase">
+                {tt("sarh.branch_label", "BRANCH")}:
+              </span>
               <select
                 value={selectedBranchId}
                 onChange={(e) => setSelectedBranchId(e.target.value)}
-                className="bg-transparent font-bold text-xs text-slate-800 dark:text-slate-200 outline-none cursor-pointer"
+                aria-label={tt("sarh.branch_label", "Branch")}
+                className="bg-transparent font-medium text-xs text-slate-800 dark:text-slate-200 outline-none cursor-pointer pe-1"
               >
                 <option value="all">{tt("sarh.all_branches", "All Branches")}</option>
               </select>
             </div>
 
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700">
+            {/* CURRENCY Filter */}
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/95 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
               <DollarSign className="h-3.5 w-3.5 text-emerald-600" />
-              <span className="text-[10px] font-bold text-slate-400 uppercase">{tt("sarh.currency_label", "Currency")}:</span>
+              <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase">
+                {tt("sarh.currency_label", "CURRENCY")}:
+              </span>
               <select
                 value={selectedCurrency}
                 onChange={(e) => setSelectedCurrency(e.target.value)}
-                className="bg-transparent font-bold text-xs text-slate-800 dark:text-slate-200 outline-none cursor-pointer font-mono"
+                aria-label={tt("sarh.currency_label", "Currency")}
+                className="bg-transparent font-medium text-xs text-slate-800 dark:text-slate-200 outline-none cursor-pointer font-mono pe-1"
               >
                 <option value="USD">USD</option>
                 <option value="AED">AED</option>
@@ -475,373 +544,380 @@ export function SuperAdminReportView({
                 <option value="EUR">EUR</option>
               </select>
             </div>
-          </div>
 
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[11px] font-bold shadow-2xs">
+            {/* Real-time sync note */}
+            <span className="text-[11px] text-slate-600 dark:text-slate-400 font-medium ms-1">
+              All Dates syncs in real-time
+            </span>
+
+            {/* Report Scope Badge */}
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100/90 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300/70 dark:border-emerald-800 text-xs font-semibold">
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
               <span>{tt("sarh.report_scope_global", "Report Scope: Global")}</span>
             </div>
-            <span className="hidden sm:inline-block text-[11px] font-medium text-slate-400">
-              {tt("sarh.data_synced", "Data synced in real-time")}
+
+            {/* Date Synced note */}
+            <span className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">
+              {tt("sarh.data_synced", "Date synced in real-time")}
             </span>
           </div>
         </div>
 
-        {/* 4. Four KPI Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Card 1: Branch & User Details */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center gap-2.5 mb-1">
-                <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-300 flex items-center justify-center font-bold">
-                  <Users className="h-4 w-4" />
-                </div>
-                <div>
-                  <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
-                    {tt("sarh.card1_title", "1. Branch & User Details")}
-                  </h3>
-                  <p className="text-[10px] text-slate-400 font-medium">
-                    {tt("sarh.card1_sub", "Global user and branch information")}
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-3.5 space-y-1.5 text-xs font-semibold">
-                <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-400 font-bold uppercase text-[10px]">{tt("sarh.country_colon", "Country:")}</span>
-                  <span className="font-extrabold text-slate-850 dark:text-slate-100">{tt("sarh.all_countries_global", "All Countries (Global)")}</span>
-                </div>
-                <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-400 font-bold uppercase text-[10px]">{tt("sarh.branch_name_colon", "Branch Name:")}</span>
-                  <span className="font-extrabold text-slate-850 dark:text-slate-100">{tt("sarh.all_branches", "All Branches")}</span>
-                </div>
-                <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-400 font-bold uppercase text-[10px]">{tt("sarh.user_id_colon", "User ID:")}</span>
-                  <span className="font-mono text-[10px] font-bold text-slate-600 dark:text-slate-300">{viewerId.slice(0, 16)}…</span>
-                </div>
-                <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-400 font-bold uppercase text-[10px]">{tt("sarh.user_name_colon", "User Name:")}</span>
-                  <span className="font-black text-slate-900 dark:text-slate-100 uppercase">{viewerName}</span>
-                </div>
-                <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-400 font-bold uppercase text-[10px]">{tt("sarh.role_colon", "Role:")}</span>
-                  <span className="font-bold text-blue-600 uppercase">{viewerRole}</span>
-                </div>
-                <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-400 font-bold uppercase text-[10px]">{tt("sarh.date_time_colon", "Date & Time:")}</span>
-                  <span className="font-bold text-slate-700 dark:text-slate-300 text-[10.5px]">{currentDateTime}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-4 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
-              <span className="text-[10px] font-bold text-slate-400 uppercase">{tt("sarh.status_colon", "Status:")}</span>
-              <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-[10px] font-extrabold tracking-wider">
-                {t(lang, "common.active", "Active").toUpperCase()}
-              </span>
-            </div>
-          </div>
-
-          {/* Card 2: Global Financial Summary */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center gap-2.5 mb-1">
-                <div className="h-8 w-8 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 dark:text-emerald-300 flex items-center justify-center font-bold">
-                  <BarChart3 className="h-4 w-4" />
-                </div>
-                <div>
-                  <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
-                    {tt("sarh.card2_title", "2. Global Financial Summary")}
-                  </h3>
-                  <p className="text-[10px] text-slate-400 font-medium">
-                    {tt("sarh.card2_sub", "Financial overview across all countries")}
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-3.5 space-y-2 text-xs font-semibold">
-                <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-500 font-medium">{tt("sarh.total_records_colon", "Total Records:")}</span>
-                  <span className="font-mono font-black text-slate-850 dark:text-slate-100">{ledgerSummary?.totalRecords ?? 0}</span>
-                </div>
-                <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-500 font-medium">{tt("sarh.total_credit_colon", "Total Credit (USD):")}</span>
-                  <span className="font-mono font-black text-emerald-600">{(ledgerSummary?.totalCredit ?? 0).toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-500 font-medium">{tt("sarh.total_debit_colon", "Total Debit (USD):")}</span>
-                  <span className="font-mono font-black text-rose-600">{(ledgerSummary?.totalDebit ?? 0).toFixed(2)}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-4 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
-              <span className="text-xs font-black text-slate-700 dark:text-slate-300">{tt("sarh.net_balance_colon", "Net Balance (USD):")}</span>
-              <span className="font-mono font-black text-blue-600 text-sm">
-                {netBalance.toFixed(2)}
-              </span>
-            </div>
-          </div>
-
-          {/* Card 3: Bill Entries Summary */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center gap-2.5 mb-1">
-                <div className="h-8 w-8 rounded-full bg-purple-100 dark:bg-purple-900/60 text-purple-600 dark:text-purple-300 flex items-center justify-center font-bold">
-                  <FileText className="h-4 w-4" />
-                </div>
-                <div>
-                  <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
-                    {tt("sarh.card3_title", "3. Bill Entries Summary")}
-                  </h3>
-                  <p className="text-[10px] text-slate-400 font-medium">
-                    {tt("sarh.card3_sub", "Status of bill entries worldwide")}
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-3.5 space-y-2 text-xs font-semibold">
-                <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-500 font-medium uppercase text-[10px]">{tt("sarh.total_bill_entries_colon", "Total Bill Entries:")}</span>
-                  <span className="font-mono font-black text-slate-850 dark:text-slate-100">{ledgerSummary?.totalRecords ?? 0}</span>
-                </div>
-                <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-500 font-medium uppercase text-[10px]">{tt("sarh.cleared_entries_colon", "Cleared Entries:")}</span>
-                  <span className="font-mono font-black text-emerald-600">{ledgerSummary?.posted ?? 0}</span>
-                </div>
-                <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-500 font-medium uppercase text-[10px]">{tt("sarh.remaining_entries_colon", "Remaining Entries:")}</span>
-                  <span className="font-mono font-black text-rose-600">{ledgerSummary?.pending ?? 0}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-4 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
-              <span className="text-[10px] font-bold text-slate-400 uppercase">{tt("sarh.system_status_colon", "System Status:")}</span>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 text-[10px] font-bold">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                <span>{tt("sarh.online_synced", "Online & Synced")}</span>
-              </span>
-            </div>
-          </div>
-
-          {/* Card 4: All Countries Report */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between relative overflow-hidden">
-            <div>
-              <div className="flex items-center gap-2.5 mb-1">
-                <div className="h-8 w-8 rounded-full bg-orange-100 dark:bg-orange-900/60 text-orange-600 dark:text-orange-300 flex items-center justify-center font-bold">
-                  <Globe className="h-4 w-4" />
-                </div>
-                <div>
-                  <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
-                    {tt("sarh.card4_title", "4. All Countries Report")}
-                  </h3>
-                  <p className="text-[10px] text-slate-400 font-medium">
-                    {tt("sarh.card4_sub", "Coverage across global operations")}
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-3.5 space-y-1.5 text-xs font-semibold">
-                <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-500 font-medium uppercase text-[10px]">{tt("sarh.active_countries_colon", "Active Countries:")}</span>
-                  <span className="font-mono font-black text-orange-600 text-sm">{totals.activeCountries}</span>
-                </div>
-                <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-500 font-medium">{tt("sarh.total_branches_colon", "Total Branches:")}</span>
-                  <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{totals.totalBranches}</span>
-                </div>
-              </div>
-
-              <div className="mt-2 h-10 w-full opacity-30 flex items-center justify-center pointer-events-none">
-                <svg viewBox="0 0 300 120" className="w-full h-full stroke-orange-500 fill-orange-500/10">
-                  <path d="M30 40 Q 50 30 70 45 T 110 50 T 150 40 T 190 60 T 230 45 T 270 55" strokeWidth="1.5" fill="none" strokeDasharray="3 3" />
-                  <circle cx="60" cy="40" r="3" fill="#f97316" />
-                  <circle cx="120" cy="50" r="3" fill="#f97316" />
-                  <circle cx="180" cy="55" r="3" fill="#f97316" />
-                  <circle cx="240" cy="45" r="3" fill="#f97316" />
-                </svg>
-              </div>
-            </div>
-
-            <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
+        {/* ============================================================== */}
+        {/* 2. Main Content Grid: Active Countries Table (Left) + Stats (Right) */}
+        {/* ============================================================== */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+          {/* Active Countries Table Card (9 columns) */}
+          <div className="lg:col-span-9 rounded-2xl border border-slate-200/90 bg-white dark:border-slate-800 dark:bg-slate-900 shadow-2xs overflow-hidden flex flex-col">
+            {/* Card Header with Show Details Toggle */}
+            <div className="px-5 py-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <h2 className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100">
+                {tt("sarh.active_countries_colon", "Active Countries:").replace(/:\s*$/, "")}
+              </h2>
               <button
                 type="button"
-                onClick={() => setColumnsModalOpen(true)}
-                className="text-[10.5px] font-extrabold text-orange-600 hover:text-orange-700 flex items-center gap-1 hover:underline"
+                onClick={() => setShowDetails(!showDetails)}
+                className="text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 flex items-center gap-1 transition"
               >
-                <span>{tt("sarh.show_details", "Show Details").toUpperCase()}</span>
-                <span>{isRtl ? "←" : "→"}</span>
-              </button>
-              <button
-                type="button"
-                onClick={handlePrint}
-                className="px-2 py-0.5 rounded border border-orange-200 text-orange-700 hover:bg-orange-50 dark:border-orange-800 dark:text-orange-300 text-[10px] font-bold flex items-center gap-1"
-              >
-                <span>{tt("sarh.explore", "Explore").toUpperCase()}</span>
-                <ArrowUpRight className="h-3 w-3" />
+                <span>{tt("sarh.show_details", "Show Details")}</span>
+                <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", showDetails && "rotate-180")} />
               </button>
             </div>
-          </div>
-        </div>
 
-        {/* 5. Country Performance Table Card */}
-        <div className="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
-          <div className="border-b border-slate-200 bg-slate-50/70 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/80 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5">
-              <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-300 flex items-center justify-center font-bold">
-                <FileText className="h-3.5 w-3.5" />
-              </div>
-              <div>
-                <h2 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
-                  {tt("sarh.country_performance_title", "Country Performance")}
-                </h2>
-                <p className="text-[10px] text-slate-400 font-medium">
-                  {tt("sarh.country_performance_sub", "Country-wise branch and user coverage")}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 text-[10px] font-extrabold">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                <span>{tt("sarh.records_loaded", "Records Loaded")}</span>
-              </div>
-
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setColumnsModalOpen(!columnsModalOpen)}
-                className="h-8 px-2.5 text-xs font-bold text-slate-700 dark:text-slate-300 gap-1.5"
-              >
-                <Columns3 className="h-3.5 w-3.5 text-slate-500" />
-                <span>Columns</span>
-              </Button>
-
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleExportCsv}
-                className="h-8 px-2.5 text-xs font-bold text-slate-700 dark:text-slate-300 gap-1.5"
-              >
-                <Download className="h-3.5 w-3.5 text-slate-500" />
-                <span>{t(lang, "common.export", "Export")}</span>
-                <ChevronDown className="h-3 w-3 text-slate-400" />
-              </Button>
-            </div>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-start text-xs">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-100/60 dark:border-slate-800 dark:bg-slate-900/90 text-[10px] font-black uppercase tracking-wider text-slate-500">
-                  {visibleColumns.index && <th className="py-2.5 px-3 w-10 text-center">#</th>}
-                  {visibleColumns.country && <th className="py-2.5 px-4 text-start">{tt("sarh.col_country", "Country")}</th>}
-                  {visibleColumns.totalBranches && <th className="py-2.5 px-3 text-center">{tt("sarh.col_total_branches", "Total Branches")}</th>}
-                  {visibleColumns.activeBranches && <th className="py-2.5 px-3 text-center">{tt("sarh.col_active_branches", "Active Branches")}</th>}
-                  {visibleColumns.totalUsers && <th className="py-2.5 px-3 text-center">{tt("sarh.col_total_users", "Total Users")}</th>}
-                  {visibleColumns.status && <th className="py-2.5 px-3 text-center">{t(lang, "common.status", "Status")}</th>}
-                  {visibleColumns.actions && <th className="py-2.5 px-3 text-center">{t(lang, "common.actions", "Actions")}</th>}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
-                {loading ? (
-                  <tr>
-                    <td colSpan={7} className="py-16 text-center text-xs text-slate-400">
-                      {t(lang, "common.loading", "Loading...")}
-                    </td>
+            {/* Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs text-start">
+                <thead>
+                  <tr className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/90">
+                    <th className="py-3 px-4 text-start">{tt("sarh.col_country", "Country")}</th>
+                    <th className="py-3 px-3 text-center">{tt("sarh.col_total_branches", "Total Branches")}</th>
+                    <th className="py-3 px-3 text-center">{tt("sarh.col_active_branches", "Active Branches")}</th>
+                    <th className="py-3 px-3 text-center">{tt("sarh.col_total_users", "Total Users")}</th>
+                    <th className="py-3 px-3 text-center">{t(lang, "common.status", "Status")}</th>
+                    <th className="py-3 px-4 text-end"></th>
                   </tr>
-                ) : filteredCountryRows.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="py-16 text-center">
-                      <div className="flex flex-col items-center justify-center gap-2">
-                        <div className="h-12 w-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 mb-1">
-                          <svg className="w-6 h-6 stroke-slate-400 fill-none" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                          </svg>
-                        </div>
-                        <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                          {tt("sarh.no_data_found", "No data found")}
-                        </p>
-                        <p className="text-[11px] text-slate-400">
-                          {tt("sarh.try_adjusting", "Try adjusting your filters or select a different time period.")}
-                        </p>
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  filteredCountryRows.map((row, index) => (
-                    <tr
-                      key={row.id}
-                      className="hover:bg-blue-50/40 dark:hover:bg-blue-950/20 transition-colors"
-                    >
-                      {visibleColumns.index && (
-                        <td className="py-2.5 px-3 text-center text-slate-400 font-mono text-[11px]">
-                          {index + 1}
-                        </td>
-                      )}
-                      {visibleColumns.country && (
-                        <td className="py-2.5 px-4 font-bold text-slate-850 dark:text-slate-100 flex items-center gap-2">
-                          <span className="font-mono text-xs px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                            {row.iso2}
-                          </span>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
+                  {loading ? (
+                    <tr>
+                      <td colSpan={6} className="py-12 text-center text-xs text-slate-400">
+                        {t(lang, "common.loading", "Loading...")}
+                      </td>
+                    </tr>
+                  ) : filteredCountryRows.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-12 text-center text-xs text-slate-400">
+                        {tt("sarh.no_data_found", "No data found")}
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredCountryRows.map((row) => (
+                      <tr
+                        key={row.id}
+                        className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors"
+                      >
+                        <td className="py-3 px-4 font-semibold text-slate-850 dark:text-slate-100 flex items-center gap-2.5">
+                          {row.iso2 && row.iso2.length === 2 ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={`https://flagcdn.com/w40/${row.iso2.toLowerCase()}.png`}
+                              alt={row.name}
+                              className="w-5 h-3.5 object-cover rounded-xs shadow-2xs border border-slate-200/60 shrink-0"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLElement).style.display = "none";
+                              }}
+                            />
+                          ) : (
+                            <span className="text-base leading-none" title={row.iso2}>
+                              {getCountryFlag(row.iso2)}
+                            </span>
+                          )}
                           <span>{row.name}</span>
                         </td>
-                      )}
-                      {visibleColumns.totalBranches && (
-                        <td className="py-2.5 px-3 text-center font-mono font-bold">
+                        <td className="py-3 px-3 text-center font-medium text-slate-700 dark:text-slate-300">
                           {row.totalBranches}
                         </td>
-                      )}
-                      {visibleColumns.activeBranches && (
-                        <td className="py-2.5 px-3 text-center font-mono font-bold text-emerald-600">
+                        <td className="py-3 px-3 text-center font-medium text-slate-700 dark:text-slate-300">
                           {row.activeBranches}
                         </td>
-                      )}
-                      {visibleColumns.totalUsers && (
-                        <td className="py-2.5 px-3 text-center font-mono text-slate-600 dark:text-slate-300">
+                        <td className="py-3 px-3 text-center font-medium text-slate-700 dark:text-slate-300">
                           {row.totalUsers}
                         </td>
-                      )}
-                      {visibleColumns.status && (
-                        <td className="py-2.5 px-3 text-center">
-                          <span className={cn(
-                            "px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border",
-                            row.status === "ACTIVE"
-                              ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300"
-                              : "bg-slate-50 text-slate-500 border-slate-200"
-                          )}>
-                            {row.status === "ACTIVE" ? t(lang, "common.active", "Active").toUpperCase() : t(lang, "common.inactive", "Inactive").toUpperCase()}
+                        <td className="py-3 px-3 text-center">
+                          <span
+                            className={cn(
+                              "px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase border",
+                              row.status === "ACTIVE"
+                                ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800"
+                                : "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800"
+                            )}
+                          >
+                            {row.status}
                           </span>
                         </td>
-                      )}
-                      {visibleColumns.actions && (
-                        <td className="py-2.5 px-3 text-center">
+                        <td className="py-3 px-4 text-end">
                           <button
                             type="button"
                             onClick={() => {
                               setSelectedCountryId(row.id);
                               window.scrollTo({ top: 0, behavior: "smooth" });
                             }}
-                            className="px-2 py-1 rounded text-[10px] font-bold bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-950/50 dark:text-blue-300 transition"
+                            className="inline-flex items-center gap-1 px-3 py-1 rounded-md border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/80 shadow-2xs transition"
                           >
-                            {t(lang, "common.view", "View")}
+                            <span>{t(lang, "common.view", "View")}</span>
+                            <ChevronDown className="h-3 w-3 text-slate-400" />
                           </button>
                         </td>
-                      )}
-                    </tr>
-                  ))
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Right Summary Widgets Panel (3 columns) */}
+          <div className="lg:col-span-3 space-y-3.5">
+            {/* Total Branches Widget */}
+            <div className="rounded-2xl border border-slate-200/90 bg-white dark:border-slate-800 dark:bg-slate-900 p-4 shadow-2xs">
+              <div className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                {tt("sarh.col_total_branches", "Total Branches")}
+              </div>
+              <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1 tracking-tight">
+                {totals.totalBranches}
+              </div>
+            </div>
+
+            {/* Users Widget */}
+            <div className="rounded-2xl border border-slate-200/90 bg-white dark:border-slate-800 dark:bg-slate-900 p-4 shadow-2xs">
+              <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
+                <Building2 className="h-4 w-4 text-blue-600" />
+                <span>Users</span>
+              </div>
+              <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1 tracking-tight">
+                {totals.totalUsers}
+              </div>
+            </div>
+
+            {/* Status Details Widget */}
+            <div className="rounded-2xl border border-slate-200/90 bg-white dark:border-slate-800 dark:bg-slate-900 p-4 shadow-2xs flex items-center justify-between">
+              <div className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                {tt("sarh.status_colon", "Status:").replace(/:\s*$/, "") + " " + (tt("sarh.show_details", "Details").split(" ").pop() || "Details")}
+              </div>
+              <span
+                className={cn(
+                  "px-3 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase border",
+                  totals.inactiveCountries > 0
+                    ? "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800"
+                    : "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800"
                 )}
-              </tbody>
-            </table>
+              >
+                {totals.inactiveCountries > 0 ? "INACTIVE" : "ACTIVE"}
+              </span>
+            </div>
           </div>
         </div>
+
+        {/* ============================================================== */}
+        {/* 3. Expandable Detailed Analytics (toggled by "Show Details ⌵") */}
+        {/* ============================================================== */}
+        {showDetails && (
+          <div className="space-y-4 pt-2 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Card 1: Branch & User Details */}
+              <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-2.5 mb-1">
+                    <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-300 flex items-center justify-center font-bold">
+                      <Users className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
+                        {tt("sarh.card1_title", "1. Branch & User Details")}
+                      </h3>
+                      <p className="text-[10px] text-slate-400 font-medium">
+                        {tt("sarh.card1_sub", "Global user and branch information")}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-3.5 space-y-1.5 text-xs font-semibold">
+                    <div className="flex justify-between items-center text-[11px]">
+                      <span className="text-slate-400 font-bold uppercase text-[10px]">{tt("sarh.country_colon", "Country:")}</span>
+                      <span className="font-extrabold text-slate-850 dark:text-slate-100">{tt("sarh.all_countries_global", "All Countries (Global)")}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-[11px]">
+                      <span className="text-slate-400 font-bold uppercase text-[10px]">{tt("sarh.branch_name_colon", "Branch Name:")}</span>
+                      <span className="font-extrabold text-slate-850 dark:text-slate-100">{tt("sarh.all_branches", "All Branches")}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-[11px]">
+                      <span className="text-slate-400 font-bold uppercase text-[10px]">{tt("sarh.user_id_colon", "User ID:")}</span>
+                      <span className="font-mono text-[10px] font-bold text-slate-600 dark:text-slate-300">{viewerId.slice(0, 16)}…</span>
+                    </div>
+                    <div className="flex justify-between items-center text-[11px]">
+                      <span className="text-slate-400 font-bold uppercase text-[10px]">{tt("sarh.user_name_colon", "User Name:")}</span>
+                      <span className="font-black text-slate-900 dark:text-slate-100 uppercase">{viewerName}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-[11px]">
+                      <span className="text-slate-400 font-bold uppercase text-[10px]">{tt("sarh.role_colon", "Role:")}</span>
+                      <span className="font-bold text-blue-600 uppercase">{viewerRole}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-[11px]">
+                      <span className="text-slate-400 font-bold uppercase text-[10px]">{tt("sarh.date_time_colon", "Date & Time:")}</span>
+                      <span className="font-bold text-slate-700 dark:text-slate-300 text-[10.5px]">{currentDateTime}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase">{tt("sarh.status_colon", "Status:")}</span>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-[10px] font-extrabold tracking-wider">
+                    {t(lang, "common.active", "Active").toUpperCase()}
+                  </span>
+                </div>
+              </div>
+
+              {/* Card 2: Global Financial Summary */}
+              <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-2.5 mb-1">
+                    <div className="h-8 w-8 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 dark:text-emerald-300 flex items-center justify-center font-bold">
+                      <BarChart3 className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
+                        {tt("sarh.card2_title", "2. Global Financial Summary")}
+                      </h3>
+                      <p className="text-[10px] text-slate-400 font-medium">
+                        {tt("sarh.card2_sub", "Financial overview across all countries")}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-3.5 space-y-2 text-xs font-semibold">
+                    <div className="flex justify-between items-center text-[11px]">
+                      <span className="text-slate-500 font-medium">{tt("sarh.total_records_colon", "Total Records:")}</span>
+                      <span className="font-mono font-black text-slate-850 dark:text-slate-100">{ledgerSummary?.totalRecords ?? 0}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-[11px]">
+                      <span className="text-slate-500 font-medium">{tt("sarh.total_credit_colon", "Total Credit (USD):")}</span>
+                      <span className="font-mono font-black text-emerald-600">{(ledgerSummary?.totalCredit ?? 0).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-[11px]">
+                      <span className="text-slate-500 font-medium">{tt("sarh.total_debit_colon", "Total Debit (USD):")}</span>
+                      <span className="font-mono font-black text-rose-600">{(ledgerSummary?.totalDebit ?? 0).toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                  <span className="text-xs font-black text-slate-700 dark:text-slate-300">{tt("sarh.net_balance_colon", "Net Balance (USD):")}</span>
+                  <span className="font-mono font-black text-blue-600 text-sm">
+                    {netBalance.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Card 3: Bill Entries Summary */}
+              <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-2.5 mb-1">
+                    <div className="h-8 w-8 rounded-full bg-purple-100 dark:bg-purple-900/60 text-purple-600 dark:text-purple-300 flex items-center justify-center font-bold">
+                      <FileText className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
+                        {tt("sarh.card3_title", "3. Bill Entries Summary")}
+                      </h3>
+                      <p className="text-[10px] text-slate-400 font-medium">
+                        {tt("sarh.card3_sub", "Status of bill entries worldwide")}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-3.5 space-y-2 text-xs font-semibold">
+                    <div className="flex justify-between items-center text-[11px]">
+                      <span className="text-slate-500 font-medium uppercase text-[10px]">{tt("sarh.total_bill_entries_colon", "Total Bill Entries:")}</span>
+                      <span className="font-mono font-black text-slate-850 dark:text-slate-100">{ledgerSummary?.totalRecords ?? 0}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-[11px]">
+                      <span className="text-slate-500 font-medium uppercase text-[10px]">{tt("sarh.cleared_entries_colon", "Cleared Entries:")}</span>
+                      <span className="font-mono font-black text-emerald-600">{ledgerSummary?.posted ?? 0}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-[11px]">
+                      <span className="text-slate-500 font-medium uppercase text-[10px]">{tt("sarh.remaining_entries_colon", "Remaining Entries:")}</span>
+                      <span className="font-mono font-black text-rose-600">{ledgerSummary?.pending ?? 0}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase">{tt("sarh.system_status_colon", "System Status:")}</span>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 text-[10px] font-bold">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    <span>{tt("sarh.online_synced", "Online & Synced")}</span>
+                  </span>
+                </div>
+              </div>
+
+              {/* Card 4: All Countries Report */}
+              <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-2.5 mb-1">
+                    <div className="h-8 w-8 rounded-full bg-orange-100 dark:bg-orange-900/60 text-orange-600 dark:text-orange-300 flex items-center justify-center font-bold">
+                      <Globe className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
+                        {tt("sarh.card4_title", "4. All Countries Report")}
+                      </h3>
+                      <p className="text-[10px] text-slate-400 font-medium">
+                        {tt("sarh.card4_sub", "Coverage across global operations")}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-3.5 space-y-1.5 text-xs font-semibold">
+                    <div className="flex justify-between items-center text-[11px]">
+                      <span className="text-slate-500 font-medium uppercase text-[10px]">{tt("sarh.active_countries_colon", "Active Countries:")}</span>
+                      <span className="font-mono font-black text-orange-600 text-sm">{totals.activeCountries}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-[11px]">
+                      <span className="text-slate-500 font-medium">{tt("sarh.total_branches_colon", "Total Branches:")}</span>
+                      <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{totals.totalBranches}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-[11px]">
+                      <span className="text-slate-500 font-medium">{tt("sarh.col_total_users", "Total Users")}:</span>
+                      <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{totals.totalUsers}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                  <button
+                    type="button"
+                    onClick={() => setColumnsModalOpen(true)}
+                    className="text-[10.5px] font-extrabold text-orange-600 hover:text-orange-700 flex items-center gap-1 hover:underline"
+                  >
+                    <Columns3 className="h-3 w-3" />
+                    <span>{tt("sarh.visible_columns", "Columns")}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleExportCsv}
+                    className="px-2 py-0.5 rounded border border-orange-200 text-orange-700 hover:bg-orange-50 dark:border-orange-800 dark:text-orange-300 text-[10px] font-bold flex items-center gap-1"
+                  >
+                    <span>{t(lang, "common.export", "Export")}</span>
+                    <ArrowUpRight className="h-3 w-3" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* 6. Columns Manager Modal */}
+      {/* Columns Manager Modal */}
       {columnsModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 animate-in fade-in">
           <div className="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-4 shadow-xl dark:border-slate-800 dark:bg-slate-900">
@@ -859,7 +935,10 @@ export function SuperAdminReportView({
             </div>
             <div className="space-y-2 max-h-72 overflow-y-auto pe-1">
               {Object.keys(visibleColumns).map((col) => (
-                <label key={col} className="flex items-center justify-between px-2 py-1.5 rounded hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer text-xs">
+                <label
+                  key={col}
+                  className="flex items-center justify-between px-2 py-1.5 rounded hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer text-xs"
+                >
                   <span className="capitalize font-semibold text-slate-700 dark:text-slate-200">
                     {col.replace(/([A-Z])/g, " $1")}
                   </span>
@@ -888,8 +967,8 @@ export function SuperAdminReportView({
         </div>
       )}
 
-      {/* 7. Footer */}
-      <footer className="w-full border-t border-slate-200 bg-white/90 py-3 px-6 dark:border-slate-800 dark:bg-slate-900/90 text-[11px] text-slate-400 flex flex-wrap items-center justify-between gap-3 mt-8">
+      {/* Clean ERP Global Footer */}
+      <footer className="w-full border-t border-slate-200/80 bg-white/80 dark:border-slate-800 dark:bg-slate-900/80 py-3 px-6 text-[11px] text-slate-400 flex flex-wrap items-center justify-between gap-3 mt-8">
         <div>
           <span>© {new Date().getFullYear()} ERP Global. {tt("sarh.footer_rights", "All rights reserved.")}</span>
         </div>

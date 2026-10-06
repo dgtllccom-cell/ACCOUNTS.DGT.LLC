@@ -131,10 +131,14 @@ async function resolveUsdAmount(admin: any, input: {
       p_date: input.entryDate,
     });
     const row = Array.isArray(data) ? data[0] : data;
-    if (!error && row) {
+    if (!error && row && (row.credit_rate || row.selling_rate || row.debit_rate || row.buying_rate)) {
       usdRate = input.isDebit
         ? toNumber(row.debit_rate || row.buying_rate || row.selling_rate || 1)
         : toNumber(row.credit_rate || row.selling_rate || row.buying_rate || 1);
+    } else {
+      throw new Error(
+        `TODAY'S EXCHANGE RATE PENDING / MISSING: No approved exchange rate found for ${countryCurrency || "local currency"} on ${input.entryDate}. Financial posting is blocked until the Country Admin enters the daily exchange rate.`
+      );
     }
   }
 
@@ -479,10 +483,14 @@ async function resolveUsdAmountPg(sql: any, input: {
       from get_daily_rate(${input.countryId}::uuid, ${input.countryBranchId || null}::uuid, ${input.entryDate}::text)
     `;
     const row = rows[0];
-    if (row) {
+    if (row && (row.credit_rate || row.selling_rate || row.debit_rate || row.buying_rate)) {
       usdRate = input.isDebit
         ? toNumber(row.debit_rate || row.buying_rate || row.selling_rate || 1)
         : toNumber(row.credit_rate || row.selling_rate || row.buying_rate || 1);
+    } else {
+      throw new Error(
+        `TODAY'S EXCHANGE RATE PENDING / MISSING: No approved exchange rate found for ${countryCurrency || "local currency"} on ${input.entryDate}. Financial posting is blocked until the Country Admin enters the daily exchange rate.`
+      );
     }
   }
 

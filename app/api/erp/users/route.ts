@@ -4,7 +4,7 @@ import { z } from "zod";
 import { apiCreated, apiOk, handleApiError, ApiClientError } from "@/lib/api/response";
 import { auditApiAction } from "@/lib/api/audit";
 import { requireErpSession } from "@/lib/auth/session";
-import { assignmentAccessFields, userCreateSchema, uuidSchema } from "@/lib/api/erp-validation";
+import { assignmentAccessFields, userCreateSchema, uuidSchema, optionalUuidSchema } from "@/lib/api/erp-validation";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { EnterpriseRole, StoredEnterpriseRole, AccessProfile } from "@/lib/permissions/enterprise-roles";
 import { enterpriseRolePermissions, enterpriseRoles, deriveEffectiveRole } from "@/lib/permissions/enterprise-roles";
@@ -595,28 +595,32 @@ export async function PATCH(request: NextRequest) {
       isActive: z.boolean().optional(),
       password: z.string().min(8).max(128).optional(),
       fullName: z.string().trim().min(2).max(200).optional(),
-      companyId: uuidSchema.nullable().optional(),
+      companyId: optionalUuidSchema,
       role: z.string().trim().max(64).optional(),
-      countryId: uuidSchema.nullable().optional(),
-      countryBranchId: uuidSchema.nullable().optional(),
-      cityBranchId: uuidSchema.nullable().optional(),
+      countryId: optionalUuidSchema,
+      countryBranchId: optionalUuidSchema,
+      cityBranchId: optionalUuidSchema,
       mobileProfile: z.enum(["standard", "mobile_cash_ledger", "mobile_field"]).optional(),
       permissions: z.array(z.string()).optional(),
-      email: z.string().trim().email().optional(),
-      phone: z.string().trim().optional(),
-      designation: z.string().trim().optional(),
-      department: z.string().trim().optional(),
-      cnicPassportNo: z.string().trim().optional(),
-      idExpiryDate: z.string().trim().optional(),
-      kycStatus: z.string().trim().optional(),
-      residentialAddress: z.string().trim().optional(),
-      employeeId: uuidSchema.nullable().optional(),
-      personMasterId: uuidSchema.nullable().optional(),
-      firstName: z.string().trim().optional(),
-      middleName: z.string().trim().optional(),
-      lastName: z.string().trim().optional(),
-      photoUrl: z.string().trim().optional(),
-      purpose: z.string().trim().optional(),
+      email: z.preprocess((v) => (v === "" || v === null ? undefined : v), z.string().trim().email().optional()),
+      phone: z.string().trim().nullable().optional(),
+      designation: z.string().trim().nullable().optional(),
+      department: z.string().trim().nullable().optional(),
+      cnicPassportNo: z.string().trim().nullable().optional(),
+      idExpiryDate: z.string().trim().nullable().optional(),
+      kycStatus: z.string().trim().nullable().optional(),
+      residentialAddress: z.string().trim().nullable().optional(),
+      employeeId: optionalUuidSchema,
+      personMasterId: optionalUuidSchema,
+      firstName: z.string().trim().nullable().optional(),
+      middleName: z.string().trim().nullable().optional(),
+      lastName: z.string().trim().nullable().optional(),
+      photoUrl: z.string().trim().nullable().optional(),
+      purpose: z.string().trim().nullable().optional(),
+      username: z.string().trim().nullable().optional(),
+      operationalDomain: z.enum(["business", "shipping", "both"]).optional(),
+      clearingAgentId: optionalUuidSchema,
+      ledgerVisibility: z.enum(["scoped", "shipping_only", "full"]).optional(),
       ...assignmentAccessFields
     }).parse(await request.json());
 
@@ -796,7 +800,13 @@ export async function PATCH(request: NextRequest) {
       body.cnicPassportNo !== undefined ||
       body.idExpiryDate !== undefined ||
       body.kycStatus !== undefined ||
-      body.residentialAddress !== undefined
+      body.residentialAddress !== undefined ||
+      body.firstName !== undefined ||
+      body.middleName !== undefined ||
+      body.lastName !== undefined ||
+      body.photoUrl !== undefined ||
+      body.employeeId !== undefined ||
+      body.personMasterId !== undefined
     ) {
       const userMetadata: any = {};
       const updates: any = {};
@@ -817,6 +827,12 @@ export async function PATCH(request: NextRequest) {
       if (body.idExpiryDate !== undefined) userMetadata.id_expiry_date = body.idExpiryDate;
       if (body.kycStatus !== undefined) userMetadata.kyc_status = body.kycStatus;
       if (body.residentialAddress !== undefined) userMetadata.residential_address = body.residentialAddress;
+      if (body.firstName !== undefined) userMetadata.first_name = body.firstName;
+      if (body.middleName !== undefined) userMetadata.middle_name = body.middleName;
+      if (body.lastName !== undefined) userMetadata.last_name = body.lastName;
+      if (body.photoUrl !== undefined) userMetadata.photo_url = body.photoUrl;
+      if (body.employeeId !== undefined) userMetadata.employee_id = body.employeeId;
+      if (body.personMasterId !== undefined) userMetadata.person_master_id = body.personMasterId;
       
       try {
         const { data: currentAuth } = await admin.auth.admin.getUserById(body.userId);
@@ -841,6 +857,8 @@ export async function PATCH(request: NextRequest) {
       body.countryBranchId !== undefined ||
       body.cityBranchId !== undefined ||
       body.mobileProfile !== undefined ||
+      body.operationalDomain !== undefined ||
+      body.clearingAgentId !== undefined ||
       accessChanged
     ) {
       // Fetch latest assignment row
@@ -869,13 +887,17 @@ export async function PATCH(request: NextRequest) {
         if (body.warehouseIds !== undefined) assignmentUpdates.warehouse_ids = body.warehouseIds?.length ? body.warehouseIds : null;
         if (body.effectiveFrom !== undefined) assignmentUpdates.effective_from = body.effectiveFrom;
         if (body.effectiveTo !== undefined) assignmentUpdates.effective_to = body.effectiveTo;
+        if (body.operationalDomain !== undefined) assignmentUpdates.operational_domain = body.operationalDomain;
+        if (body.clearingAgentId !== undefined) assignmentUpdates.clearing_agent_id = body.clearingAgentId;
 
         let { error: assignmentError } = await admin
           .from("user_role_assignments")
           .update(assignmentUpdates)
           .eq("id", currentAssign.id);
-        if (assignmentError && /mobile_profile/.test(assignmentError.message)) {
-          delete assignmentUpdates.mobile_profile;
+        if (assignmentError && /mobile_profile|operational_domain|clearing_agent_id/.test(assignmentError.message)) {
+          if (/mobile_profile/.test(assignmentError.message)) delete assignmentUpdates.mobile_profile;
+          if (/operational_domain/.test(assignmentError.message)) delete assignmentUpdates.operational_domain;
+          if (/clearing_agent_id/.test(assignmentError.message)) delete assignmentUpdates.clearing_agent_id;
           ({ error: assignmentError } = await admin
             .from("user_role_assignments")
             .update(assignmentUpdates)
