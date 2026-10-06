@@ -5,6 +5,7 @@ import { DashboardFrame } from "@/components/layout/dashboard-frame";
 import { InstallAppBanner } from "@/components/layout/install-app-banner";
 import { DgtConnectWidget } from "@/features/dgt-connect/dgt-connect-widget";
 import { NativeAppShell } from "@/components/layout/native-app-shell";
+import { TableTokenGuard } from "@/components/layout/table-token-guard";
 
 export function DashboardShell({
   children,
@@ -57,6 +58,7 @@ export function DashboardShell({
       </DashboardFrame>
       {!isDemoMode && currentUserId ? <DgtConnectWidget currentUserId={currentUserId} /> : null}
       <NativeAppShell />
+      <TableTokenGuard />
     </div>
   );
 }

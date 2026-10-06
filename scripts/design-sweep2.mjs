@@ -31,7 +31,7 @@ const res = await fetch(BASE + "/api/erp/auth/login", { method: "POST", headers:
 const token = (res.headers.getSetCookie() || []).map((c) => c.split(";")[0]).find((c) => c.startsWith("erp_session=")).slice(12);
 
 const done = new Set();
-for (const f of fs.readdirSync(OUT).filter((x) => x.startsWith("results-"))) for (const l of fs.readFileSync(`${OUT}/${f}`, "utf8").split("\n")) { try { const r = JSON.parse(l); if (!(r.bad || []).some((b) => b === "loadFailed" || b === "stuckLoading")) done.add(r.key); } catch {} }
+for (const f of fs.readdirSync(OUT).filter((x) => x.startsWith("results-"))) for (const l of fs.readFileSync(`${OUT}/${f}`, "utf8").split("\n")) { try { const r = JSON.parse(l); if (!(r.bad || []).some((b) => b === "loadFailed" || b === "stuckLoading" || b === "stacks")) done.add(r.key); } catch {} }
 
 const measure = () => {
   const vw = innerWidth, de = document.documentElement;
@@ -42,7 +42,7 @@ const measure = () => {
     .slice(0, 6).map((el) => `${el.tagName.toLowerCase()}:${(el.textContent || el.placeholder || el.name || "").trim().slice(0, 24)}`);
   // a single word / code broken across lines (letter-by-letter wrapping) — wrapping BETWEEN words is normal and not flagged
   const stacks = [...document.querySelectorAll("[data-erp-content] *")]
-    .filter((el) => { if (el.children.length) return false; const t = (el.textContent || "").trim(); if (t.length < 6 || t.length > 60 || /\s/.test(t) || !vis(el)) return false; const lh = parseFloat(getComputedStyle(el).lineHeight) || 16; return el.getBoundingClientRect().height > lh * 2.2; })
+    .filter((el) => { if (el.children.length) return false; const t = (el.textContent || "").trim(); if (t.length < 6 || t.length > 60 || /\s/.test(t) || !vis(el)) return false; const cs = getComputedStyle(el); const pad = (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0) + (parseFloat(cs.borderTopWidth) || 0) + (parseFloat(cs.borderBottomWidth) || 0); const lh = parseFloat(cs.lineHeight) || (parseFloat(cs.fontSize) || 14) * 1.25; return el.getBoundingClientRect().height - pad > lh * 2.2; })
     .map((el) => el.textContent.trim().slice(0, 24)).slice(0, 5);
   const tables = [...document.querySelectorAll("table")].filter(vis);
   const nav = document.querySelector("nav.fixed.bottom-0"), fab = document.querySelector("[data-dgt-connect] button");
