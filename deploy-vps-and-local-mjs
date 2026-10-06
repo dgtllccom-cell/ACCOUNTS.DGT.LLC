@@ -1,2 +1,0 @@
-// Alias so "node deploy-vps-and-local-mjs" works seamlessly even if typed with a dash instead of a dot
-import './deploy-vps-and-local.mjs';
