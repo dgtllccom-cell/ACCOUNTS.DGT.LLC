@@ -1,0 +1,85 @@
+{
+  "totalFiles": 718,
+  "issues": [
+    {
+      "file": "app\\api\\branch-management\\city-branches\\route.ts",
+      "type": "Nil UUID Fallback Detected"
+    },
+    {
+      "file": "app\\api\\branch-management\\countries\\route.ts",
+      "type": "Nil UUID Fallback Detected"
+    },
+    {
+      "file": "app\\api\\branch-management\\country-branches\\route.ts",
+      "type": "Nil UUID Fallback Detected"
+    },
+    {
+      "file": "app\\api\\erp\\accounting\\ledgers\\route.ts",
+      "type": "Nil UUID Fallback Detected"
+    },
+    {
+      "file": "app\\api\\erp\\accounting\\reports\\ledger\\balances\\route.ts",
+      "type": "Nil UUID Fallback Detected"
+    },
+    {
+      "file": "app\\api\\erp\\accounting\\reports\\ledger\\outstanding\\route.ts",
+      "type": "Nil UUID Fallback Detected"
+    },
+    {
+      "file": "app\\api\\erp\\currency\\monitoring\\route.ts",
+      "type": "Nil UUID Fallback Detected"
+    },
+    {
+      "file": "app\\api\\erp\\data\\table\\route.ts",
+      "type": "Nil UUID Fallback Detected"
+    },
+    {
+      "file": "app\\api\\erp\\locations\\branches\\city\\route.ts",
+      "type": "Nil UUID Fallback Detected"
+    },
+    {
+      "file": "app\\api\\erp\\locations\\branches\\main\\route.ts",
+      "type": "Nil UUID Fallback Detected"
+    },
+    {
+      "file": "app\\api\\erp\\multilingual\\events\\route.ts",
+      "type": "Nil UUID Fallback Detected"
+    },
+    {
+      "file": "app\\api\\erp\\purchases\\booking-journal-report\\route.ts",
+      "type": "Nil UUID Fallback Detected"
+    },
+    {
+      "file": "app\\api\\erp\\purchases\\journal-booking-stock\\route.ts",
+      "type": "Nil UUID Fallback Detected"
+    },
+    {
+      "file": "app\\api\\erp\\purchases\\orders\\route.ts",
+      "type": "Nil UUID Fallback Detected"
+    },
+    {
+      "file": "app\\api\\erp\\roznamcha\\reports\\route.ts",
+      "type": "Nil UUID Fallback Detected"
+    },
+    {
+      "file": "app\\api\\erp\\roznamcha\\route.ts",
+      "type": "Nil UUID Fallback Detected"
+    },
+    {
+      "file": "app\\api\\erp\\sales\\orders\\route.ts",
+      "type": "Nil UUID Fallback Detected"
+    },
+    {
+      "file": "app\\api\\erp\\shipping\\bl-records\\route.ts",
+      "type": "Nil UUID Fallback Detected"
+    },
+    {
+      "file": "app\\api\\erp\\shipping\\line-records\\route.ts",
+      "type": "Nil UUID Fallback Detected"
+    },
+    {
+      "file": "app\\api\\erp\\shipping\\transfers\\route.ts",
+      "type": "Nil UUID Fallback Detected"
+    }
+  ]
+}

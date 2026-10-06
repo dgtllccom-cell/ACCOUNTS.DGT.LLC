@@ -1,0 +1,216 @@
+=== Lines 3406 to 3480 in purchase-order-wizard.jsx ===
+3406:   return (
+3407:     <div className="space-y-2 text-foreground bg-background mt-[-10px] max-w-[1500px] mx-auto">
+3408:       {isSuperAdmin && (!form.countryId || !form.countryBranchId || !scopeConfirmed) && (
+3409:         <SimpleModal
+3410:           isOpen={true}
+3411:           onClose={() => {}} // Cannot close without selecting
+3412:           title="Super Admin: Select Working Scope"
+3413:           width="md"
+3414:         >
+3415:           <div className="space-y-4 p-2">
+3416:             <p className="text-xs text-slate-600 dark:text-slate-400">
+3417:               Please select the Country, Branch, and City Branch you want to work in for Purchase Orders.
+3418:             </p>
+3419:             <div className="space-y-3">
+3420:               <div>
+3421:                 <label className="text-xs font-black">Country</label>
+3422:                 <select
+3423:                   value={form.countryId}
+3424:                   onChange={(e) => {
+3425:                     const country = countries.find(c => c.id === e.target.value);
+3426:                     setForm(p => ({
+3427:                       ...p,
+3428:                       countryId: e.target.value,
+3429:                       countryBranchId: "",
+3430:                       cityBranchId: "",
+3431:                       currencyType: "USD",
+3432:                       purchaseCurrency: country ? country.currency_code : p.purchaseCurrency,
+3433:                       secondaryCurrency: country ? country.currency_code : p.secondaryCurrency,
+3434:                       paymentCurrency: country ? country.currency_code : p.paymentCurrency
+3435:                     }));
+3436:                   }}
+3437:                   className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-xs font-semibold outline-none"
+3438:                 >
+3439:                   <option value="">Select Country...</option>
+3440:                   {countries.map((c) => (
+3441:                     <option key={c.id} value={c.id}>{c.name} ({c.currency_code})</option>
+3442:                   ))}
+3443:                 </select>
+3444:               </div>
+3445:               <div>
+3446:                 <label className="text-xs font-black">Branch</label>
+3447:                 <select
+3448:                   value={form.countryBranchId}
+3449:                   onChange={(e) => setForm(p => ({ ...p, countryBranchId: e.target.value, cityBranchId: "" }))}
+3450:                   disabled={!form.countryId}
+3451:                   className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-xs font-semibold outline-none"
+3452:                 >
+3453:                   <option value="">Select Branch...</option>
+3454:                   {mainBranches.map((b) => (
+3455:                     <option key={b.id} value={b.id}>{b.name} ({b.code})</option>
+3456:                   ))}
+3457:                 </select>
+3458:               </div>
+3459:               <div>
+3460:                 <label className="text-xs font-black">City Branch</label>
+3461:                 <select
+3462:                   value={form.cityBranchId || ""}
+3463:                   onChange={(e) => setForm(p => ({ ...p, cityBranchId: e.target.value }))}
+3464:                   disabled={!form.countryBranchId}
+3465:                   className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-xs font-semibold outline-none"
+3466:                 >
+3467:                   <option value="">Select City Branch...</option>
+3468:                   {cityBranches.map((b) => (
+3469:                     <option key={b.id} value={b.id}>{b.city_name || b.name} ({b.code || b.branch_code})</option>
+3470:                   ))}
+3471:                 </select>
+3472:               </div>
+3473:             </div>
+3474: 
+3475:             <div className="pt-4 flex justify-end">
+3476:               <Button
+3477:                 onClick={() => setScopeConfirmed(true)}
+3478:                 disabled={!form.countryId || !form.countryBranchId}
+3479:                 className="bg-primary text-primary-foreground font-bold h-8 text-xs px-6"
+3480:               >
+
+=== Looking for returns in baseline sales-order-wizard.jsx ===
+117:   return payload.data?.found ? payload.data.account : null;
+140:   return payload.data?.reports?.[0] ?? null;
+354:   return {
+371:   return currency || "";
+379:     return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+381:     return dateStr;
+390:     return d.toISOString().slice(0, 10);
+392:     return dateStr;
+398:   return Number(num).toLocaleString("en-US", { maximumFractionDigits: 2 });
+402:   return (
+424:   return (
+445:   return (
+477:     return {
+490:     return SALE_SOURCE_OPTIONS.find((option) => option.value === (form.saleSource || "booking")) || SALE_SOURCE_OPTIONS[0];
+494:     return MOCK_SALE_LOTS.filter((lot) => lot.source === (form.saleSource || "booking"));
+500:     return availableSaleLots.filter((lot) => [lot.lotNo, lot.goodsName, lot.location, lot.stockRef, lot.status].join(" ").toLowerCase().includes(needle));
+504:     return MOCK_SALE_LOTS.find((lot) => lot.lotNo === form.stockLotNo) || null;
+551:     return goodsEntries.map((g, index) => {
+561:       return {
+581:     return goodsEntries.length > 0
+643:     return () => {
+788:     return (
+883:                               return (
+944:                               return (
+998:                               return (
+1080:                               return (
+1156:                               return (
+1311:                         return (
+1533:                               return (
+1543:                             return null;
+1574:                                 return;
+1595:                             return brands.map(b => ({ label: b, value: b }));
+1610:                                 return;
+1631:                             return sizes.map(s => ({ label: s, value: s }));
+3167:                 return (
+
+=== Lines 1000 to 1100 in baseline sales-order-wizard.jsx ===
+1000:                                   key={acc.accountCode}
+1001:                                   type="button"
+1002:                                   onClick={() => { applyAccountMaster("sales", acc); setSalesDropdownOpen(false); setSalesSearch(""); }}
+1003:                                   className="w-full text-left p-2.5 rounded-xl border border-border/60 hover:border-primary/50 hover:bg-primary/5 transition duration-150 group bg-background/60"
+1004:                                 >
+1005:                                   <div className="flex justify-between items-start gap-2 mb-1">
+1006:                                     <span className="font-bold text-xs text-foreground group-hover:text-primary">{formatAccountDisplayLabel(acc.accountName, acc.accountCode, acc.manualReferenceNumber)}</span>
+1007:                                     <span className="font-mono text-[9.5px] font-black bg-primary/10 text-primary px-1.5 py-0.5 rounded shrink-0">System: {acc.accountCode}</span>
+1008:                                   </div>
+1009:                                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 text-[9px] text-muted-foreground">
+1010:                                     <div><span className="font-semibold text-foreground/80">Branch:</span> {acc.cityBranchName || "Main Branch"}</div>
+1011:                                     <div>
+1012:                                       {acc.manualReferenceNumber && (<div className="mb-0.5"><span className="font-semibold text-foreground/80">Manual A/C:</span> <span className="font-bold">{acc.manualReferenceNumber}</span></div>)}
+1013:                                       <div><span className="font-semibold text-foreground/80">Curr:</span> <span className="font-bold text-emerald-600 dark:text-emerald-400">{acc.ledgerCurrency || "PKR"}</span></div>
+1014:                                     </div>
+1015:                                     <div><span className="font-semibold text-foreground/80">Company:</span> <span className="truncate inline-block max-w-[120px] align-bottom">{compName}</span></div>
+1016:                                   </div>
+1017:                                 </button>
+1018:                               );
+1019:                             })}
+1020:                             {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, salesSearch)).length === 0 && (
+1021:                               <div className="p-4 text-center text-muted-foreground text-xs italic">No matching accounts found.</div>
+1022:                             )}
+1023:                           </div>
+1024:                         </div>
+1025:                       )}
+1026:                     </div>
+1027:                   </div>
+1028:                 </fieldset>
+1029:               )}
+1030: 
+1031: 
+1032:             <main className="space-y-3 flex flex-col order-1 lg:order-1 mt-0">
+1033: 
+1034:               {activeTab === "booking" && (
+1035:                 <fieldset disabled={isTransferred && !session?.scopes?.isSuperAdmin} className="space-y-3 order-2 w-full mt-0 rounded-2xl border border-border bg-card p-4 shadow-sm">
+1036:                   <div className="border-b border-border pb-2">
+1037:                     <h3 className="text-xs font-black uppercase tracking-wider text-foreground">Sales Booking / Bill Info</h3>
+1038:                   </div>
+1039: 
+1040:                   <div className="grid grid-cols-1 gap-4">
+1041:                     <div className="relative" ref={customerDropdownRef}>
+1042:                       <label className="block text-[10px] font-bold text-foreground mb-1">Customer Account (DR)*</label>
+1043:                       <div className="relative flex items-center">
+1044:                         <input
+1045:                           type="text"
+1046:                           placeholder={form.customerAccountName ? formatAccountDisplayLabel(form.customerAccountName, form.customerAccountNo, form.customerAccountManualReferenceNumber) : "Search Code, Name, Branch, Manual A/C..."}
+1047:                           value={customerDropdownOpen ? customerSearch : (form.customerAccountName ? formatAccountDisplayLabel(form.customerAccountName, form.customerAccountNo, form.customerAccountManualReferenceNumber) : form.customerAccountNo || "")}
+1048:                           onChange={(e) => handleTextChange("purchase", e.target.value)}
+1049:                           onFocus={() => {
+1050:                             setPurchaseDropdownOpen(true);
+1051:                             setPurchasePinDropdownOpen(false);
+1052:                             setPurchaseSearch("");
+1053:                           }}
+1054:                           className="w-full bg-background border border-input rounded pl-2.5 pr-8 py-1.5 text-foreground font-semibold outline-none focus:border-primary text-xs h-9"
+1055:                         />
+1056:                         <button
+1057:                           type="button"
+1058:                           disabled={!form.customerId}
+1059:                           onClick={() => {
+1060:                             setPurchasePinDropdownOpen(prev => !prev);
+1061:                             setPurchaseDropdownOpen(false);
+1062:                           }}
+1063:                           className="absolute right-2 text-muted-foreground hover:text-primary transition-colors disabled:opacity-30"
+1064:                         >
+1065:                           <Pin className={`h-3.5 w-3.5 ${customerPinDropdownOpen ? "text-primary rotate-45" : ""}`} />
+1066:                         </button>
+1067:                       </div>
+1068: 
+1069:                       {customerDropdownOpen && (
+1070:                         <div className="absolute left-0 mt-1.5 w-full min-w-[290px] sm:min-w-[440px] md:min-w-[520px] rounded-2xl bg-card border-2 border-primary/40 shadow-2xl z-[80] p-2 overflow-hidden backdrop-blur-md">
+1071:                           <div className="flex justify-between items-center px-2.5 py-1.5 bg-primary/5 rounded-lg mb-1.5 border border-primary/10">
+1072:                             <span className="text-[10px] font-black uppercase text-primary tracking-wider">Select Customer Account (DR)</span>
+1073:                             <span className="text-[9px] font-mono font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+1074:                               {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, customerSearch)).length} found
+1075:                             </span>
+1076:                           </div>
+1077:                           <div className="max-h-64 overflow-y-auto space-y-1.5 pr-0.5">
+1078:                             {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, customerSearch)).map((acc) => {
+1079:                               const compName = acc.companyName || acc.company_name || (acc.companyId && dbCompanies.find(c => c.id === acc.companyId)?.name) || dbCompanies[0]?.name || "None";
+1080:                               return (
+1081:                                 <button
+1082:                                   key={acc.accountCode}
+1083:                                   type="button"
+1084:                                   onClick={() => {
+1085:                                     applyAccountMaster("purchase", acc);
+1086:                                     setPurchaseDropdownOpen(false);
+1087:                                     setPurchaseSearch("");
+1088:                                   }}
+1089:                                   className="w-full text-left p-2.5 rounded-xl border border-border/60 hover:border-primary/50 hover:bg-primary/5 transition duration-150 group bg-background/60"
+1090:                                 >
+1091:                                   <div className="flex justify-between items-start gap-2 mb-1">
+1092:                                     <span className="font-bold text-xs text-foreground group-hover:text-primary transition-colors">{formatAccountDisplayLabel(acc.accountName, acc.accountCode, acc.manualReferenceNumber)}</span>
+1093:                                     <span className="font-mono text-[9.5px] font-black bg-primary/10 text-primary px-1.5 py-0.5 rounded shrink-0">System: {acc.accountCode}</span>
+1094:                                   </div>
+1095:                                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 text-[9px] text-muted-foreground">
+1096:                                     <div><span className="font-semibold text-foreground/80">Branch:</span> {acc.cityBranchName || "Main Branch"}</div>
+1097:                                     <div>
+1098:                                       {acc.manualReferenceNumber && (
+1099:                                         <div className="mb-0.5"><span className="font-semibold text-foreground/80">Manual A/C:</span> <span className="font-bold text-slate-700 dark:text-slate-300">{acc.manualReferenceNumber}</span></div>
+1100:                                       )}

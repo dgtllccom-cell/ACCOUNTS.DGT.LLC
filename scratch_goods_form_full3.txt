@@ -1,0 +1,130 @@
+                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.divide_weight_value", "Divide Weight / Value")}</label>
+                        <input
+                          type="number"
+                          value={form.divideWeight || 1}
+                          onChange={(e) => {
+                            setValue("divideWeight", Number(e.target.value));
+                            setValue("manualTotalAmount", "");
+                            setValue("manualFinalAmount", "");
+                          }}
+                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.price_type", "Price Type")}</label>
+                        <select
+                          value={form.priceType || "P/KGs"}
+                          onChange={(e) => setValue("priceType", e.target.value)}
+                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
+                        >
+                          <option value="P/KGs">P/KGs</option>
+                          <option value="P/LBs">P/LBs</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.price_rate_c1", "Price Rate (C1)")}</label>
+                        <input
+                          type="number"
+                          value={form.coursePrice || ""}
+                          onChange={(e) => {
+                            setValue("coursePrice", Number(e.target.value));
+                            setValue("manualTotalAmount", "");
+                            setValue("manualFinalAmount", "");
+                          }}
+                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.quality_report_reference", "Quality Report Reference")}</label>
+                      <input
+                        type="text"
+                        value={form.qualityReport || ""}
+                        onChange={(e) => setValue("qualityReport", e.target.value)}
+                        className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
+                        placeholder={t(lang, "purchase.quality_passed_placeholder", "Passed")}
+                      />
+                    </div>
+
+                    {editingGoodsIndex !== null && (
+                      <div className="bg-amber-500/10 border border-amber-500/30 p-2.5 rounded-lg flex items-center justify-between text-xs text-amber-700 dark:text-amber-300">
+                        <span className="font-bold flex items-center gap-1.5">
+                          <Edit3 className="h-3.5 w-3.5 text-amber-600" /> Editing Item #{editingGoodsIndex + 1}: {goodsEntries[editingGoodsIndex]?.goodsName || "Cargo Item"}
+                        </span>
+                        <button type="button" onClick={handleCancelEditGoodsEntry} className="text-[10px] font-bold text-amber-700 hover:text-amber-900 underline">
+                          ✕ Cancel Edit
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="bg-emerald-50/50 dark:bg-emerald-950/20 p-3 rounded-lg border border-emerald-100 dark:border-emerald-900 mt-2">
+                      <h4 className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400 mb-2">{t(lang, "purchase.purchase_currency_conversion", "Purchase Currency & Conversion")}</h4>
+                      <div className="grid grid-cols-2 gap-3 mb-2">
+                        <div>
+                          <label className="block text-[9px] text-emerald-700 dark:text-emerald-500 mb-1 font-bold">{t(lang, "purchase.pricing_currency", "Pricing Currency")}</label>
+                          <select
+                            value={form.currencyType || "USD"}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setForm(prev => ({ ...prev, currencyType: val, purchaseCurrency: val }));
+                            }}
+                            className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
+                          >
+                            {CURRENCY_OPTIONS.map(c => <option key={c} value={c}>{c} {c === "USD" ? "($)" : c === "AED" ? "(Dirham)" : ""}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[9px] text-emerald-700 dark:text-emerald-500 mb-1 font-bold">{t(lang, "purchase.exchange_rate_to", "Exchange Rate to")} {form.secondaryCurrency || "AED"}</label>
+                          <div className="flex gap-1.5">
+                            <input
+                              type="number"
+                              step="any"
+                              value={form.exchangeRate !== undefined ? form.exchangeRate : 1}
+                              onChange={(e) => {
+                                setValue("exchangeRate", Number(e.target.value));
+                                setValue("manualFinalAmount", "");
+                              }}
+                              className="flex-1 min-w-0 bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] font-mono h-8"
+                            />
+                            <select
+                              value={form.operator || "*"}
+                              onChange={(e) => {
+                                setValue("operator", e.target.value);
+                                setValue("manualFinalAmount", "");
+                              }}
+                              className="w-12 bg-background border border-input rounded text-center text-xs font-bold text-foreground outline-none focus:border-primary h-8"
+                            >
+                              <option value="*">*</option>
+                              <option value="/">/</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 mt-2">
+                        <div>
+                          <label className="block text-[9px] text-emerald-700 dark:text-emerald-500 mb-1 font-bold">{t(lang, "purchase.th_amount", "Amount")} ({form.currencyType || "USD"})</label>
+                          <input
+                            type="number"
+                            value={form.manualTotalAmount !== undefined && form.manualTotalAmount !== "" ? form.manualTotalAmount : currentItemTotals.totalAmount}
+                            onChange={(e) => setValue("manualTotalAmount", e.target.value === "" ? "" : Number(e.target.value))}
+                            placeholder={(Number(currentItemTotals?.totalAmount) || 0).toFixed(2)}
+                            className="w-full bg-background border border-emerald-200 dark:border-emerald-800 rounded px-2.5 py-1.5 text-foreground outline-none focus:border-emerald-500 text-[10px] font-mono font-bold"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] text-emerald-700 dark:text-emerald-500 mb-1 font-bold">{t(lang, "purchase.th_final", "Final")} ({form.secondaryCurrency || "AED"})</label>
+                          <input
+                            type="number"
+                            value={form.manualFinalAmount !== undefined && form.manualFinalAmount !== "" ? form.manualFinalAmount : currentItemTotals.finalAmount}
+                            onChange={(e) => setValue("manualFinalAmount", e.target.value === "" ? "" : Number(e.target.value))}
+                            placeholder={(Number(currentItemTotals?.finalAmount) || 0).toFixed(2)}
+                            className="w-full bg-background border border-emerald-200 dark:border-emerald-800 rounded px-2.5 py-1.5 text-foreground outline-none focus:border-emerald-500 text-[10px] font-mono font-black text-emerald-600 dark:text-emerald-400"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>

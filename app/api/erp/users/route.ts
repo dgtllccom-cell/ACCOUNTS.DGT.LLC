@@ -1,0 +1,1091 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { NextRequest } from "next/server";
+import { z } from "zod";
+import { apiCreated, apiOk, handleApiError, ApiClientError } from "@/lib/api/response";
+import { auditApiAction } from "@/lib/api/audit";
+import { requireErpSession } from "@/lib/auth/session";
+import { assignmentAccessFields, userCreateSchema, uuidSchema, optionalUuidSchema } from "@/lib/api/erp-validation";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import type { EnterpriseRole, StoredEnterpriseRole, AccessProfile } from "@/lib/permissions/enterprise-roles";
+import { enterpriseRolePermissions, enterpriseRoles, deriveEffectiveRole } from "@/lib/permissions/enterprise-roles";
+import { resolveEffectiveAccessForUser } from "@/lib/auth/session";
+import { expandPermissionGroups } from "@/lib/permissions/catalog";
+import { MOBILE_PROFILE_ALLOWED, capPermissionsToProfile, normalizeMobileProfile } from "@/lib/permissions/mobile-profiles";
+import { issueNextUserCode, normalizeUserCode } from "@/lib/services/user-identity-service";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordFields } from "@/lib/i18n/localize-records";
+import { SUPER_ADMIN_ONLY_ROLES, domainManagerTargetError, isUserManager, userInManagerScope } from "@/lib/permissions/user-management-scope";
+import { domainSuperAdminDomain } from "@/lib/permissions/enterprise-roles";
+
+function isUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
+function toAppRole(role: EnterpriseRole) {
+  // Database enum uses legacy 'staff' while app uses 'staff_user'.
+  if (role === "staff_user") return "staff";
+  return role;
+}
+
+function assertScopeForRole(role: EnterpriseRole, scope: { countryId: string | null; countryBranchId: string | null; cityBranchId: string | null }) {
+  if (role === "super_admin") {
+    if (scope.countryId || scope.countryBranchId || scope.cityBranchId) {
+      throw new Error("Super Admin user must not be assigned to a country/branch scope.");
+    }
+    return;
+  }
+
+  if (!scope.countryId) {
+    throw new Error("countryId is required for this role.");
+  }
+
+  if (role === "country_admin" || role === "country_user") {
+    if (scope.countryBranchId || scope.cityBranchId) {
+      throw new Error(`${role === "country_admin" ? "Country Admin" : "Country User"} must not be assigned to a branch scope.`);
+    }
+    return;
+  }
+
+  if (role === "main_branch_admin") {
+    if (!scope.countryBranchId || scope.cityBranchId) {
+      throw new Error("Main Branch Admin requires countryBranchId and must not include cityBranchId.");
+    }
+    return;
+  }
+
+  if (role === "auditor_viewer") {
+    // Auditor can be country-level or branch-level.
+    return;
+  }
+
+  // Branch-scoped roles (accountant, cashier, staff_user, agent_user, city_branch_admin).
+  if (!scope.countryBranchId && !scope.cityBranchId) {
+    throw new Error("A branch assignment (Main Branch or City Branch) is required for this role.");
+  }
+}
+
+
+/**
+ * Field-level financial permission → permission tokens. "deny" always wins at session time (deriveCanViewFinancials);
+ * "allow" is only issued by a creator who can see financial amounts themself.
+ */
+function applyFinancialAccess(permissions: string[], mode: "role_default" | "deny" | "allow" | undefined, creatorCanViewFinancials: boolean) {
+  const base = permissions.filter((p) => p !== "finance_amounts:deny" && p !== "finance_amounts:read");
+  if (mode === "deny") return [...base, "finance_amounts:deny"];
+  if (mode === "allow") {
+    if (!creatorCanViewFinancials) throw new ApiClientError("You cannot grant financial access you do not hold.", { status: 403 });
+    return [...base, "finance_amounts:read"];
+  }
+  if (mode === "role_default") return base;
+  return permissions;
+}
+
+/** Validates the access-profile combination and the shipping line binding. */
+function assertAccessProfile(storedRole: string, input: { accessProfile?: string | null; shippingLineId?: string | null; effectiveFrom?: string | null; effectiveTo?: string | null }) {
+  if (input.accessProfile === "shipping_line" && !input.shippingLineId) {
+    throw new ApiClientError("A Shipping Line login must be bound to a shipping line.", { status: 400 });
+  }
+  if (input.accessProfile !== "shipping_line" && input.shippingLineId) {
+    throw new ApiClientError("A shipping line can only be assigned with the Shipping Line access profile.", { status: 400 });
+  }
+  if (input.accessProfile && storedRole === "super_admin_reports") {
+    throw new ApiClientError("The Reports auditor role cannot carry an operational access profile.", { status: 400 });
+  }
+  if (input.effectiveFrom && input.effectiveTo && input.effectiveTo < input.effectiveFrom) {
+    throw new ApiClientError("Effective-to date must be on or after the effective-from date.", { status: 400 });
+  }
+}
+
+/**
+ * How a saved permission set is stamped. "role_default" sets are recomputed live from the role template by the session
+ * builder, so a set that the creator's own authority NARROWED (a Business Super Admin issuing a staff template without its
+ * shipping tokens, a Country Admin without a token it lacks) must not be stamped role_default — the narrowing would be lost.
+ */
+function permissionSetSource(requested: string[], issued: string[], template: string[]): string {
+  if (requested.length) return "manual";
+  const strip = (l: string[]) => [...new Set(l.filter((p) => p !== "finance_amounts:deny" && p !== "finance_amounts:read"))].sort().join("|");
+  return strip(issued) === strip(template) ? "role_default" : "creator_limited";
+}
+
+const ACCESS_COLUMNS =/access_profile|shipping_line_id|warehouse_ids|effective_from|effective_to/;
+
+function normalizePermissions(input: unknown) {
+  return Array.isArray(input)
+    ? [...new Set(input.map((permission) => String(permission).trim()).filter(Boolean))]
+    : [];
+}
+
+function isPermissionAllowed(permission: string, allowed: Set<string>) {
+  if (allowed.has("*:*") || allowed.has(permission)) return true;
+  if (permission.startsWith("route:")) return true;
+  const [resource] = permission.split(":");
+  return allowed.has(`${resource}:*`);
+}
+
+function constrainPermissions(requested: string[], allowedPermissions: string[]) {
+  const allowed = new Set(allowedPermissions);
+  return requested.filter((permission) => isPermissionAllowed(permission, allowed));
+}
+
+async function loadScopePermissionLimit(
+  admin: any,
+  scope: { countryBranchId?: string | null; cityBranchId?: string | null }
+) {
+  if (scope.cityBranchId && isUuid(scope.cityBranchId)) {
+    const { data } = await admin
+      .from("city_branches")
+      .select("permission_grants")
+      .eq("id", scope.cityBranchId)
+      .is("deleted_at", null)
+      .maybeSingle();
+    if (Array.isArray(data?.permission_grants) && data.permission_grants.length) {
+      return expandPermissionGroups(data.permission_grants);
+    }
+  }
+
+  if (scope.countryBranchId && isUuid(scope.countryBranchId)) {
+    const { data } = await admin
+      .from("country_branches")
+      .select("permission_grants")
+      .eq("id", scope.countryBranchId)
+      .is("deleted_at", null)
+      .maybeSingle();
+    if (Array.isArray(data?.permission_grants) && data.permission_grants.length) {
+      return expandPermissionGroups(data.permission_grants);
+    }
+  }
+
+  return null;
+}
+
+
+export async function POST(request: NextRequest) {
+  try {
+    const session = await requireErpSession();
+    const body = userCreateSchema.parse(await request.json());
+
+    // Authorization:
+    // - Super Admin can create all users.
+    // - Country/Main branch admins can create non-admin users within their own country.
+    // - Business / Shipping Super Admins create branch users of their own domain, in their domain's branches only.
+    const managerDomain = session.isSuperAdmin ? null : domainSuperAdminDomain(session.roles);
+    // Omitted domain: a Super Admin is the Global Super Admin ("both"); everyone else is Business.
+    const requestedDomain = body.operationalDomain ?? (body.role === "super_admin" ? "both" : "business");
+    if (!session.isSuperAdmin) {
+      if (!isUserManager(session)) throw new ApiClientError("Not authorized to create users.", { status: 403 });
+      const domainError = domainManagerTargetError(session, {
+        role: body.role, operationalDomain: requestedDomain, countryBranchId: body.countryBranchId ?? null,
+        cityBranchId: body.cityBranchId ?? null, accessProfile: body.accessProfile ?? null,
+      });
+      if (domainError) throw new ApiClientError(domainError, { status: 403 });
+      if (SUPER_ADMIN_ONLY_ROLES.has(body.role)) {
+        throw new ApiClientError("Only Super Admin can create Super Admin, Reports Auditor or Country Admin users.", { status: 403 });
+      }
+      // A Main Branch Admin creates users only inside its OWN branch tree, never in a sibling branch of the same country.
+      const isCountryAdmin = session.roles.includes("country_admin");
+      if (!isCountryAdmin && !managerDomain) {
+        if (!body.countryBranchId || !session.countryBranchIds.includes(body.countryBranchId)) {
+          throw new ApiClientError("Branch scope is not allowed.", { status: 403 });
+        }
+        if (body.cityBranchId && !session.cityBranchIds.includes(body.cityBranchId)) {
+          throw new ApiClientError("City branch scope is not allowed.", { status: 403 });
+        }
+      }
+      if (!body.countryId || !session.countryIds.includes(body.countryId)) {
+        throw new Error("Country scope is not allowed.");
+      }
+    }
+
+    assertScopeForRole(body.role, {
+      countryId: body.countryId ?? null,
+      countryBranchId: body.countryBranchId ?? null,
+      cityBranchId: body.cityBranchId ?? null
+    });
+    assertAccessProfile(body.role, body);
+    const accessProfile = (body.accessProfile ?? null) as AccessProfile | null;
+    const domain = requestedDomain;
+    const effectiveRole = deriveEffectiveRole(body.role as StoredEnterpriseRole, accessProfile, domain);
+
+    // ── Operational domain consistency ──────────────────────────────────────
+    // A creator can only create users in a domain they themselves belong to
+    // (unless super admin). Shipping users must be bound to a clearing agent;
+    // ledger visibility defaults to the domain norm.
+    if (!session.isSuperAdmin) {
+      if (domain === "both" && !(session.assignments ?? []).some((a: any) => a.operationalDomain === "both")) {
+        throw new ApiClientError("Only a manager in both operational domains can create a user for both domains.", { status: 403 });
+      }
+      const creatorDomains = new Set(
+        (session.assignments ?? []).map((a: any) => a.operationalDomain ?? "business")
+      );
+      const creatorHasBoth = creatorDomains.has("both");
+      if (!creatorHasBoth && !creatorDomains.has(domain) && domain !== "both") {
+        throw new Error(`You cannot create a ${domain === "shipping" ? "Clearing Agent / Shipping" : "Business"} user — it is outside your operational domain.`);
+      }
+    }
+    if (domain === "shipping" && body.role === "agent_user" && !body.clearingAgentId) {
+      throw new Error("An external Clearing Agent user must be bound to a clearing agent record.");
+    }
+    if (domain === "business" && body.clearingAgentId) {
+      throw new Error("A Business-domain user cannot be bound to a clearing agent.");
+    }
+    const ledgerVisibility =
+      body.ledgerVisibility ?? (domain === "shipping" ? "shipping_only" : "scoped");
+
+    const admin = createSupabaseAdminClient() as any;
+
+    const issuedUserCode = normalizeUserCode(
+      body.userCode ?? (await issueNextUserCode(admin, { role: body.role, countryId: body.countryId ?? null }))
+    );
+
+    const mobileProfile = normalizeMobileProfile(body.mobileProfile);
+
+    const requestedPermissions = normalizePermissions(body.permissions);
+    // The template of the EFFECTIVE role: an Operations / Shipping Line login starts from its narrow template, never the
+    // stored admin role's full template.
+    const defaultRolePermissions = [...new Set(enterpriseRolePermissions[effectiveRole] ?? [])];
+    // A simplified mobile profile has a FIXED small permission surface — start
+    // from that, not from the (larger) role template, so the profile really is
+    // limited. It is still capped by the creator's own authority below.
+    const profileBaseline =
+      mobileProfile === "standard"
+        ? (requestedPermissions.length ? requestedPermissions : defaultRolePermissions)
+        : [...MOBILE_PROFILE_ALLOWED[mobileProfile]];
+    const requestedOrDefault = profileBaseline;
+    const scopePermissionLimit = session.isSuperAdmin
+      ? null
+      : await loadScopePermissionLimit(admin, {
+          countryBranchId: body.countryBranchId ?? null,
+          cityBranchId: body.cityBranchId ?? null
+        });
+    const creatorLimit = session.isSuperAdmin ? ["*:*"] : session.permissions;
+    const parentLimit = scopePermissionLimit ?? creatorLimit;
+    let issuedPermissions = session.isSuperAdmin
+      ? requestedOrDefault
+      : constrainPermissions(constrainPermissions(requestedOrDefault, creatorLimit), parentLimit);
+    // Hard cap: even a super admin's mobile user cannot exceed the profile surface.
+    issuedPermissions = capPermissionsToProfile(mobileProfile, issuedPermissions);
+    issuedPermissions = applyFinancialAccess(issuedPermissions, body.financialAccess, session.canViewFinancials);
+
+    if (!issuedPermissions.length) {
+      throw new Error("No assignable permissions remain after applying parent scope limits.");
+    }
+
+    let targetEmail = body.email;
+    let createdUser: any = null;
+
+    let { data: created, error: createError } = await admin.auth.admin.createUser({
+      email: targetEmail,
+      password: body.password,
+      email_confirm: true,
+      user_metadata: {
+        user_code: issuedUserCode,
+        username: body.username ?? null,
+        phone: body.phone ?? null,
+        company_id: body.companyId ?? null,
+        id_type: body.idType ?? null,
+        id_value: body.idValue ?? null,
+        designation: body.designation ?? null,
+        department: body.department ?? null,
+        cnic_passport_no: body.cnicPassportNo ?? null,
+        id_expiry_date: body.idExpiryDate ?? null,
+        kyc_status: body.kycStatus ?? "VERIFIED",
+        residential_address: body.residentialAddress ?? null
+      }
+    });
+
+    if (createError) {
+      const errMsg = createError.message || String(createError);
+      if (errMsg.includes("already been registered") || errMsg.includes("already exists")) {
+        const cleanCode = issuedUserCode.toLowerCase().replace(/[^a-z0-9]/g, "");
+        const parts = targetEmail.split("@");
+        targetEmail = `${parts[0]}.${cleanCode}@${parts[1] || "dgt.llc"}`;
+
+        const retryRes = await admin.auth.admin.createUser({
+          email: targetEmail,
+          password: body.password,
+          email_confirm: true,
+          user_metadata: {
+            user_code: issuedUserCode,
+            username: body.username ?? null,
+            phone: body.phone ?? null,
+            company_id: body.companyId ?? null,
+            id_type: body.idType ?? null,
+            id_value: body.idValue ?? null,
+          }
+        });
+
+        if (retryRes.error) {
+          targetEmail = `${cleanCode}@dgt.llc`;
+          const retry2Res = await admin.auth.admin.createUser({
+            email: targetEmail,
+            password: body.password,
+            email_confirm: true,
+            user_metadata: {
+              user_code: issuedUserCode,
+              username: body.username ?? null,
+              phone: body.phone ?? null,
+              company_id: body.companyId ?? null,
+              id_type: body.idType ?? null,
+              id_value: body.idValue ?? null,
+            }
+          });
+
+          if (retry2Res.error) throw new Error(retry2Res.error.message);
+          createdUser = retry2Res.data;
+        } else {
+          createdUser = retryRes.data;
+        }
+      } else {
+        throw new Error(errMsg);
+      }
+    } else {
+      createdUser = created;
+    }
+
+    const newUserId = createdUser?.user?.id as string | undefined;
+    if (!newUserId) throw new Error("Failed to create user account.");
+
+    // Ensure profile exists.
+    const profilePayload: any = {
+      id: newUserId,
+      full_name: body.fullName,
+      user_code: issuedUserCode,
+      preferred_language_code: body.preferredLanguage,
+      default_company_id: body.companyId ?? null,
+      employee_id: body.employeeId ?? null,
+      person_master_id: body.personMasterId ?? null,
+      first_name: body.firstName ?? null,
+      middle_name: body.middleName ?? null,
+      last_name: body.lastName ?? null,
+      photo_url: body.photoUrl ?? null,
+      updated_at: new Date().toISOString()
+    };
+
+    // Schema-drift tolerant: some deployments' `profiles` table is missing an
+    // optional column this API writes (employee_id, person_master_id, …). Strip
+    // the offending column and retry, up to a few times, then fall to core-only.
+    let profileError: { message: string } | null = null;
+    for (let attempt = 0; attempt < 8; attempt++) {
+      ({ error: profileError } = await admin.from("profiles").upsert(profilePayload, { onConflict: "id" }));
+      if (!profileError) break;
+      const col = profileError.message.match(/'([a-z_]+)' column|column ["']?([a-z_]+)["']? of 'profiles'/i);
+      const name = col?.[1] || col?.[2];
+      if (name && name in profilePayload && name !== "id") {
+        delete profilePayload[name];
+        continue;
+      }
+      break;
+    }
+    if (profileError) throw new Error(profileError.message);
+
+    // Store effective permissions for this user (role defaults + optional overrides from UI).
+    // This enables stable permission snapshots and future customization.
+    const { error: permError } = await admin
+      .from("user_permission_sets")
+      .upsert(
+        {
+          user_id: newUserId,
+          permissions: issuedPermissions,
+          source: permissionSetSource(requestedPermissions, issuedPermissions, defaultRolePermissions),
+          updated_at: new Date().toISOString()
+        },
+        { onConflict: "user_id" }
+      );
+    if (permError) throw new Error(permError.message);
+
+    const assignmentPayload: Record<string, unknown> = {
+      user_id: newUserId,
+      role: toAppRole(body.role),
+      country_id: body.countryId ?? null,
+      country_branch_id: body.countryBranchId ?? null,
+      city_branch_id: body.cityBranchId ?? null,
+      is_active: true,
+      operational_domain: domain,
+      clearing_agent_id: body.clearingAgentId ?? null,
+      ledger_visibility: ledgerVisibility,
+      mobile_profile: mobileProfile,
+      access_profile: accessProfile,
+      shipping_line_id: body.shippingLineId ?? null,
+      warehouse_ids: body.warehouseIds?.length ? body.warehouseIds : null,
+      effective_from: body.effectiveFrom ?? null,
+      effective_to: body.effectiveTo ?? null,
+      created_by: isUuid(session.userId) ? session.userId : null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    let { error: assignmentError } = await admin.from("user_role_assignments").insert(assignmentPayload);
+    if (assignmentError && ACCESS_COLUMNS.test(assignmentError.message)) {
+      // DB predates RBAC v2. Dropping a REQUESTED profile would silently turn an Operations / Shipping Line login into the
+      // full stored role — refuse instead.
+      if (accessProfile || body.shippingLineId || body.warehouseIds?.length || body.effectiveFrom || body.effectiveTo) {
+        throw new ApiClientError("This database does not yet support access profiles (migration 20261004_rbac_access_profiles).", { status: 409 });
+      }
+      for (const c of ["access_profile", "shipping_line_id", "warehouse_ids", "effective_from", "effective_to"]) delete assignmentPayload[c];
+      ({ error: assignmentError } = await admin.from("user_role_assignments").insert(assignmentPayload));
+    }
+    if (assignmentError && /mobile_profile/.test(assignmentError.message)) {
+      delete assignmentPayload.mobile_profile;
+      ({ error: assignmentError } = await admin.from("user_role_assignments").insert(assignmentPayload));
+    }
+    if (assignmentError && /operational_domain|clearing_agent_id|ledger_visibility/.test(assignmentError.message)) {
+      // DB predates the shipping/clearing RBAC columns — insert the core row.
+      delete assignmentPayload.operational_domain;
+      delete assignmentPayload.clearing_agent_id;
+      delete assignmentPayload.ledger_visibility;
+      delete assignmentPayload.mobile_profile;
+      ({ error: assignmentError } = await admin.from("user_role_assignments").insert(assignmentPayload));
+    }
+    if (assignmentError) throw new Error(assignmentError.message);
+
+    await auditApiAction(request, {
+      action: "users.create.api",
+      entityTable: "profiles",
+      entityId: newUserId,
+      after: {
+        email: body.email,
+        fullName: body.fullName,
+        role: body.role,
+        userCode: issuedUserCode,
+        countryId: body.countryId ?? null,
+        countryBranchId: body.countryBranchId ?? null,
+        cityBranchId: body.cityBranchId ?? null,
+        companyId: body.companyId ?? null,
+        operationalDomain: domain,
+        clearingAgentId: body.clearingAgentId ?? null,
+        ledgerVisibility,
+        mobileProfile,
+        accessProfile,
+        effectiveRole,
+        shippingLineId: body.shippingLineId ?? null,
+        warehouseIds: body.warehouseIds ?? null,
+        effectiveFrom: body.effectiveFrom ?? null,
+        effectiveTo: body.effectiveTo ?? null,
+        financialAccess: body.financialAccess ?? "role_default",
+        permissions: issuedPermissions
+      }
+    });
+
+    return apiCreated({ userId: newUserId, userCode: issuedUserCode, operationalDomain: domain, mobileProfile, email: targetEmail });
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const session = await requireErpSession();
+    const userId = request.nextUrl.searchParams.get("userId");
+    if (!userId) {
+      throw new ApiClientError("userId is required.");
+    }
+
+    if (!isUserManager(session)) {
+      throw new ApiClientError("Not authorized to view user details.", { status: 403 });
+    }
+
+    const admin = createSupabaseAdminClient() as any;
+
+    const [profileRes, assignmentRes, permissionsRes, authUserRes] = await Promise.all([
+      admin.from("profiles").select("*").eq("id", userId).maybeSingle(),
+      admin.from("user_role_assignments").select("*").eq("user_id", userId).is("deleted_at", null).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+      admin.from("user_permission_sets").select("permissions").eq("user_id", userId).maybeSingle(),
+      admin.auth.admin.getUserById(userId)
+    ]);
+
+    if (profileRes.error) throw new Error(profileRes.error.message);
+    const profile = profileRes.data;
+    if (!profile) {
+      throw new Error("User profile not found.");
+    }
+
+    const assignment = assignmentRes.data;
+    // Fail closed: a non-super-admin may only open a user whose assignment is INSIDE their own scope — a user with no
+    // country (a Super Admin) or in a sibling branch is out of scope, not "unscoped therefore visible".
+    if (!session.isSuperAdmin && !userInManagerScope(session, assignment)) {
+      throw new ApiClientError("Not authorized to view users outside of your scope.", { status: 403 });
+    }
+    const { data: allAssignments } = await admin.from("user_role_assignments").select("*").eq("user_id", userId).is("deleted_at", null).order("created_at", { ascending: true });
+
+    const permissions = permissionsRes.data?.permissions ?? [];
+    const authUser = authUserRes.data?.user;
+    const effective = await resolveEffectiveAccessForUser(userId, authUser?.email ?? null);
+
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
+    let localizedFullName = profile.full_name;
+    try {
+      const [localizedProfile] = await localizeRecordFields<any>([{ id: userId, full_name: profile.full_name }], "profiles", ["full_name"], lang);
+      localizedFullName = localizedProfile.full_name;
+    } catch {
+      // keep original full name
+    }
+
+    return apiOk({
+      userId,
+      userCode: profile.user_code,
+      fullName: localizedFullName,
+      defaultCompanyId: profile.default_company_id ?? null,
+      isActive: assignment?.is_active ?? false,
+      role: assignment?.role ?? "city_branch_admin",
+      countryId: assignment?.country_id ?? null,
+      countryBranchId: assignment?.country_branch_id ?? null,
+      cityBranchId: assignment?.city_branch_id ?? null,
+      mobileProfile: normalizeMobileProfile(assignment?.mobile_profile),
+      operationalDomain: assignment?.operational_domain ?? "business",
+      clearingAgentId: assignment?.clearing_agent_id ?? null,
+      accessProfile: assignment?.access_profile ?? null,
+      shippingLineId: assignment?.shipping_line_id ?? null,
+      warehouseIds: assignment?.warehouse_ids ?? [],
+      effectiveFrom: assignment?.effective_from ?? null,
+      effectiveTo: assignment?.effective_to ?? null,
+      financialAccess: permissions.includes("finance_amounts:deny") ? "deny" : permissions.includes("finance_amounts:read") ? "allow" : "role_default",
+      assignments: (allAssignments ?? []).map((a: any) => ({
+        id: a.id, role: a.role, isActive: a.is_active, countryId: a.country_id, countryBranchId: a.country_branch_id, cityBranchId: a.city_branch_id,
+        accessProfile: a.access_profile ?? null, effectiveRole: deriveEffectiveRole(a.role === "staff" ? "staff_user" : a.role, a.access_profile ?? null, a.operational_domain ?? null),
+        shippingLineId: a.shipping_line_id ?? null, clearingAgentId: a.clearing_agent_id ?? null, operationalDomain: a.operational_domain ?? "business",
+        warehouseIds: a.warehouse_ids ?? [], effectiveFrom: a.effective_from ?? null, effectiveTo: a.effective_to ?? null,
+      })),
+      // What the user will ACTUALLY get on their next request (same resolver as login).
+      effectiveAccess: effective ? {
+        roles: effective.roles,
+        isSuperAdmin: effective.isSuperAdmin,
+        isGlobalScope: effective.isGlobalScope,
+        countryIds: effective.countryIds,
+        countryBranchIds: effective.countryBranchIds,
+        cityBranchIds: effective.cityBranchIds,
+        shippingLineIds: effective.shippingLineIds,
+        clearingAgentIds: effective.clearingAgentIds ?? [],
+        isShippingScoped: Boolean(effective.isShippingScoped),
+        operationalDomains: effective.operationalDomains ?? [],
+        canViewFinancials: effective.canViewFinancials,
+        permissions: effective.permissions,
+        combinedAssignments: (effective.assignmentGrants ?? []).length,
+      } : null,
+      permissions,
+      email: authUser?.email ?? "",
+      phone: authUser?.user_metadata?.phone ?? "",
+      designation: authUser?.user_metadata?.designation ?? "",
+      department: authUser?.user_metadata?.department ?? "",
+      cnicPassportNo: authUser?.user_metadata?.cnic_passport_no ?? "",
+      idExpiryDate: authUser?.user_metadata?.id_expiry_date ?? "",
+      kycStatus: authUser?.user_metadata?.kyc_status ?? "VERIFIED",
+      residentialAddress: authUser?.user_metadata?.residential_address ?? "",
+      employeeId: profile.employee_id ?? authUser?.user_metadata?.employee_id ?? null,
+      personMasterId: profile.person_master_id ?? authUser?.user_metadata?.person_master_id ?? null,
+      firstName: profile.first_name ?? authUser?.user_metadata?.first_name ?? "",
+      middleName: profile.middle_name ?? authUser?.user_metadata?.middle_name ?? "",
+      lastName: profile.last_name ?? authUser?.user_metadata?.last_name ?? "",
+      photoUrl: profile.photo_url ?? authUser?.user_metadata?.photo_url ?? "",
+      passwordVaultRef: `VAULT-DGT-${profile.user_code || "USR"}`,
+      createdAt: assignment?.created_at ?? profile.created_at ?? new Date().toISOString(),
+      updatedAt: assignment?.updated_at ?? profile.updated_at ?? new Date().toISOString(),
+      purpose: authUser?.user_metadata?.purpose ?? ""
+    });
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const session = await requireErpSession();
+    const body = z.object({
+      userId: z.string().trim(),
+      userCode: z.string().trim().optional(),
+      isActive: z.boolean().optional(),
+      password: z.string().min(8).max(128).optional(),
+      fullName: z.string().trim().min(2).max(200).optional(),
+      companyId: optionalUuidSchema,
+      role: z.string().trim().max(64).optional(),
+      countryId: optionalUuidSchema,
+      countryBranchId: optionalUuidSchema,
+      cityBranchId: optionalUuidSchema,
+      mobileProfile: z.enum(["standard", "mobile_cash_ledger", "mobile_field"]).optional(),
+      permissions: z.array(z.string()).optional(),
+      email: z.preprocess((v) => (v === "" || v === null ? undefined : v), z.string().trim().email().optional()),
+      phone: z.string().trim().nullable().optional(),
+      designation: z.string().trim().nullable().optional(),
+      department: z.string().trim().nullable().optional(),
+      cnicPassportNo: z.string().trim().nullable().optional(),
+      idExpiryDate: z.string().trim().nullable().optional(),
+      kycStatus: z.string().trim().nullable().optional(),
+      residentialAddress: z.string().trim().nullable().optional(),
+      employeeId: optionalUuidSchema,
+      personMasterId: optionalUuidSchema,
+      firstName: z.string().trim().nullable().optional(),
+      middleName: z.string().trim().nullable().optional(),
+      lastName: z.string().trim().nullable().optional(),
+      photoUrl: z.string().trim().nullable().optional(),
+      purpose: z.string().trim().nullable().optional(),
+      username: z.string().trim().nullable().optional(),
+      operationalDomain: z.enum(["business", "shipping", "both"]).optional(),
+      clearingAgentId: optionalUuidSchema,
+      ledgerVisibility: z.enum(["scoped", "shipping_only", "full"]).optional(),
+      ...assignmentAccessFields
+    }).parse(await request.json());
+
+    if (body.mobileProfile === "mobile_field") {
+      throw new ApiClientError(
+        "Mobile Field / Munshi User is not yet available for assignment. Use Standard ERP Access or Mobile Cash & Ledger.",
+        { status: 400 },
+      );
+    }
+
+    // Authorization check:
+    // Super Admin can edit any user.
+    // Country Admin and Main Branch Admin can edit users in their country.
+    if (!session.isSuperAdmin) {
+      if (!isUserManager(session)) throw new ApiClientError("Not authorized to update users.", { status: 403 });
+      // If updating scope, ensure it matches current session country.
+      if (body.countryId && !session.countryIds.includes(body.countryId as string)) {
+        throw new ApiClientError("Country scope is not allowed.", { status: 403 });
+      }
+      // Privilege escalation guard: a manager can never promote a user to a role it may not create.
+      if (body.role && SUPER_ADMIN_ONLY_ROLES.has(body.role)) {
+        throw new ApiClientError("Only Super Admin can assign Super Admin, Reports Auditor or Country Admin roles.", { status: 403 });
+      }
+      if (body.countryBranchId && !session.countryBranchIds.includes(body.countryBranchId)) {
+        throw new ApiClientError("Branch scope is not allowed.", { status: 403 });
+      }
+      if (body.cityBranchId && !session.cityBranchIds.includes(body.cityBranchId)) {
+        throw new ApiClientError("City branch scope is not allowed.", { status: 403 });
+      }
+    }
+    if (body.role !== undefined && !(enterpriseRoles as readonly string[]).includes(body.role)) {
+      throw new ApiClientError("Unknown role.", { status: 400 });
+    }
+
+    const admin = createSupabaseAdminClient() as any;
+
+    // Resolve target userId if non-UUID reference ID was provided
+    let targetUserId = body.userId;
+    if (!isUuid(targetUserId)) {
+      const code = (body.userCode || "").trim();
+      const emailPrefix = (body.email || "").split("@")[0].trim();
+      const searchTerms = [code, emailPrefix, body.fullName].filter(Boolean);
+      
+      let matchedProfile: any = null;
+      for (const term of searchTerms) {
+        // Try exact user_code match
+        const { data: m1 } = await admin
+          .from("profiles")
+          .select("id")
+          .ilike("user_code", term)
+          .maybeSingle();
+        if (m1?.id) { matchedProfile = m1; break; }
+
+        // Try prefix match e.g. QUETTA.BRANCH or PAKISTAN.ADMIN
+        const { data: m2 } = await admin
+          .from("profiles")
+          .select("id")
+          .ilike("user_code", `${term}.%`)
+          .maybeSingle();
+        if (m2?.id) { matchedProfile = m2; break; }
+
+        // Try full_name contains
+        const { data: m3 } = await admin
+          .from("profiles")
+          .select("id")
+          .ilike("full_name", `%${term}%`)
+          .maybeSingle();
+        if (m3?.id) { matchedProfile = m3; break; }
+      }
+
+      if (matchedProfile?.id) {
+        targetUserId = matchedProfile.id;
+      } else if (!session.isSuperAdmin) {
+        throw new ApiClientError("User not found.", { status: 404 });
+      } else {
+        // Auto-provision profile with a valid UUID so FK constraints succeed
+        const newId = crypto.randomUUID();
+        const newCode = (code || emailPrefix || "USER").toUpperCase();
+        const { error: insErr } = await admin.from("profiles").insert({
+          id: newId,
+          user_code: newCode,
+          full_name: body.fullName || newCode,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+        if (!insErr) {
+          targetUserId = newId;
+        }
+      }
+    }
+    body.userId = targetUserId;
+
+    // Fetch the target user's current assignment to check their current country scope
+    // The full current assignment row — it is both the authorization subject and the audit "before" image.
+    let { data: targetAssignment } = await admin
+      .from("user_role_assignments")
+      .select("*")
+      .eq("user_id", targetUserId)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const { data: beforePermissionSet } = await admin.from("user_permission_sets").select("permissions").eq("user_id", targetUserId).maybeSingle();
+
+    if (!session.isSuperAdmin) {
+      if (!targetAssignment || !userInManagerScope(session, targetAssignment)) {
+        throw new ApiClientError("Not authorized to update users outside of your scope.", { status: 403 });
+      }
+      if (SUPER_ADMIN_ONLY_ROLES.has(targetAssignment.role)) {
+        throw new ApiClientError("Only Super Admin can update Super Admin, Reports Auditor or Country Admin users.", { status: 403 });
+      }
+      // a domain super admin's edit must leave the user inside its own domain and branches
+      const domainError = domainManagerTargetError(session, {
+        role: body.role ?? (targetAssignment.role === "staff" ? "staff_user" : targetAssignment.role),
+        operationalDomain: targetAssignment.operational_domain ?? "business",
+        countryBranchId: body.countryBranchId !== undefined ? body.countryBranchId : targetAssignment.country_branch_id,
+        cityBranchId: body.cityBranchId !== undefined ? body.cityBranchId : targetAssignment.city_branch_id,
+        accessProfile: body.accessProfile !== undefined ? body.accessProfile : targetAssignment.access_profile,
+      });
+      if (domainError) throw new ApiClientError(domainError, { status: 403 });
+    }
+    const nextStoredRole = (body.role ?? (targetAssignment?.role === "staff" ? "staff_user" : targetAssignment?.role) ?? "city_branch_admin") as StoredEnterpriseRole;
+    const nextAccessProfile = (body.accessProfile !== undefined ? body.accessProfile : (targetAssignment?.access_profile ?? null)) as AccessProfile | null;
+    const nextShippingLine = body.shippingLineId !== undefined ? body.shippingLineId : (targetAssignment?.shipping_line_id ?? null);
+    assertAccessProfile(nextStoredRole, {
+      accessProfile: nextAccessProfile,
+      shippingLineId: nextAccessProfile === "shipping_line" ? nextShippingLine : (body.shippingLineId ?? null),
+      effectiveFrom: body.effectiveFrom !== undefined ? body.effectiveFrom : (targetAssignment?.effective_from ?? null),
+      effectiveTo: body.effectiveTo !== undefined ? body.effectiveTo : (targetAssignment?.effective_to ?? null),
+    });
+    const accessChanged = [body.accessProfile, body.shippingLineId, body.warehouseIds, body.effectiveFrom, body.effectiveTo].some((v) => v !== undefined);
+
+    // 1. Update profiles table if profile fields are provided
+    if (
+      body.fullName !== undefined ||
+      body.companyId !== undefined ||
+      body.employeeId !== undefined ||
+      body.personMasterId !== undefined ||
+      body.firstName !== undefined ||
+      body.middleName !== undefined ||
+      body.lastName !== undefined ||
+      body.photoUrl !== undefined
+    ) {
+      const profileUpdates: any = {
+        updated_at: new Date().toISOString()
+      };
+      if (body.fullName !== undefined) profileUpdates.full_name = body.fullName;
+      // SECURITY: password changes go only to Supabase Auth (hashed) in step 2 below.
+      if (body.companyId !== undefined) profileUpdates.default_company_id = body.companyId;
+      if (body.employeeId !== undefined) profileUpdates.employee_id = body.employeeId;
+      if (body.personMasterId !== undefined) profileUpdates.person_master_id = body.personMasterId;
+      if (body.firstName !== undefined) profileUpdates.first_name = body.firstName;
+      if (body.middleName !== undefined) profileUpdates.middle_name = body.middleName;
+      if (body.lastName !== undefined) profileUpdates.last_name = body.lastName;
+      if (body.photoUrl !== undefined) profileUpdates.photo_url = body.photoUrl;
+
+      let profileError: { message: string } | null = null;
+      for (let attempt = 0; attempt < 8; attempt++) {
+        ({ error: profileError } = await admin.from("profiles").update(profileUpdates).eq("id", body.userId));
+        if (!profileError) break;
+        const col = profileError.message.match(/'([a-z_]+)' column|column ["']?([a-z_]+)["']? of 'profiles'/i);
+        const name = col?.[1] || col?.[2];
+        if (name && name in profileUpdates) { delete profileUpdates[name]; continue; }
+        break;
+      }
+      if (profileError) throw new Error(profileError.message);
+    }
+
+    // 2. Update Supabase Auth if password, email, phone, or metadata is provided
+    if (
+      body.password !== undefined ||
+      body.email !== undefined ||
+      body.phone !== undefined ||
+      body.purpose !== undefined ||
+      body.designation !== undefined ||
+      body.department !== undefined ||
+      body.cnicPassportNo !== undefined ||
+      body.idExpiryDate !== undefined ||
+      body.kycStatus !== undefined ||
+      body.residentialAddress !== undefined ||
+      body.firstName !== undefined ||
+      body.middleName !== undefined ||
+      body.lastName !== undefined ||
+      body.photoUrl !== undefined ||
+      body.employeeId !== undefined ||
+      body.personMasterId !== undefined
+    ) {
+      const userMetadata: any = {};
+      const updates: any = {};
+      if (body.password !== undefined) {
+        // SECURITY: the password lives only in Supabase Auth (hashed). Never store or echo a readable copy;
+        // also clear any legacy readable copy left on the profile row by earlier versions.
+        updates.password = body.password;
+        try {
+          await admin.from("profiles").update({ raw_password: null, updated_at: new Date().toISOString() }).eq("id", body.userId);
+        } catch { /* column may not exist */ }
+      }
+      if (body.email !== undefined) updates.email = body.email;
+      if (body.phone !== undefined) userMetadata.phone = body.phone;
+      if (body.purpose !== undefined) userMetadata.purpose = body.purpose;
+      if (body.designation !== undefined) userMetadata.designation = body.designation;
+      if (body.department !== undefined) userMetadata.department = body.department;
+      if (body.cnicPassportNo !== undefined) userMetadata.cnic_passport_no = body.cnicPassportNo;
+      if (body.idExpiryDate !== undefined) userMetadata.id_expiry_date = body.idExpiryDate;
+      if (body.kycStatus !== undefined) userMetadata.kyc_status = body.kycStatus;
+      if (body.residentialAddress !== undefined) userMetadata.residential_address = body.residentialAddress;
+      if (body.firstName !== undefined) userMetadata.first_name = body.firstName;
+      if (body.middleName !== undefined) userMetadata.middle_name = body.middleName;
+      if (body.lastName !== undefined) userMetadata.last_name = body.lastName;
+      if (body.photoUrl !== undefined) userMetadata.photo_url = body.photoUrl;
+      if (body.employeeId !== undefined) userMetadata.employee_id = body.employeeId;
+      if (body.personMasterId !== undefined) userMetadata.person_master_id = body.personMasterId;
+      
+      try {
+        const { data: currentAuth } = await admin.auth.admin.getUserById(body.userId);
+        updates.user_metadata = {
+          ...(currentAuth?.user?.user_metadata ?? {}),
+          ...userMetadata
+        };
+        delete (updates.user_metadata as any).raw_password;
+        delete (updates.user_metadata as any).password;
+        
+        await admin.auth.admin.updateUserById(body.userId, updates);
+      } catch {
+        // Continue gracefully if auth user is not yet created
+      }
+    }
+
+    // 3. Update active status, roles, or branch scopes in user_role_assignments
+    if (
+      body.isActive !== undefined ||
+      body.role !== undefined ||
+      body.countryId !== undefined ||
+      body.countryBranchId !== undefined ||
+      body.cityBranchId !== undefined ||
+      body.mobileProfile !== undefined ||
+      body.operationalDomain !== undefined ||
+      body.clearingAgentId !== undefined ||
+      accessChanged
+    ) {
+      // Fetch latest assignment row
+      const { data: currentAssign } = await admin
+        .from("user_role_assignments")
+        .select("id, role, country_id, country_branch_id, city_branch_id, is_active")
+        .eq("user_id", body.userId)
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (currentAssign) {
+        const assignmentUpdates: any = {
+          updated_at: new Date().toISOString()
+        };
+        if (body.isActive !== undefined) assignmentUpdates.is_active = body.isActive;
+        if (body.role !== undefined) assignmentUpdates.role = toAppRole(body.role as EnterpriseRole);
+        if (body.countryId !== undefined) assignmentUpdates.country_id = body.countryId;
+        if (body.countryBranchId !== undefined) assignmentUpdates.country_branch_id = body.countryBranchId;
+        if (body.cityBranchId !== undefined) assignmentUpdates.city_branch_id = body.cityBranchId;
+        if (body.mobileProfile !== undefined) assignmentUpdates.mobile_profile = body.mobileProfile;
+        if (body.accessProfile !== undefined) assignmentUpdates.access_profile = body.accessProfile;
+        if (body.accessProfile !== undefined && body.accessProfile !== "shipping_line") assignmentUpdates.shipping_line_id = null;
+        if (body.shippingLineId !== undefined) assignmentUpdates.shipping_line_id = body.shippingLineId;
+        if (body.warehouseIds !== undefined) assignmentUpdates.warehouse_ids = body.warehouseIds?.length ? body.warehouseIds : null;
+        if (body.effectiveFrom !== undefined) assignmentUpdates.effective_from = body.effectiveFrom;
+        if (body.effectiveTo !== undefined) assignmentUpdates.effective_to = body.effectiveTo;
+        if (body.operationalDomain !== undefined) assignmentUpdates.operational_domain = body.operationalDomain;
+        if (body.clearingAgentId !== undefined) assignmentUpdates.clearing_agent_id = body.clearingAgentId;
+
+        let { error: assignmentError } = await admin
+          .from("user_role_assignments")
+          .update(assignmentUpdates)
+          .eq("id", currentAssign.id);
+        if (assignmentError && /mobile_profile|operational_domain|clearing_agent_id/.test(assignmentError.message)) {
+          if (/mobile_profile/.test(assignmentError.message)) delete assignmentUpdates.mobile_profile;
+          if (/operational_domain/.test(assignmentError.message)) delete assignmentUpdates.operational_domain;
+          if (/clearing_agent_id/.test(assignmentError.message)) delete assignmentUpdates.clearing_agent_id;
+          ({ error: assignmentError } = await admin
+            .from("user_role_assignments")
+            .update(assignmentUpdates)
+            .eq("id", currentAssign.id));
+        }
+
+        if (assignmentError && ACCESS_COLUMNS.test(assignmentError.message)) {
+          throw new ApiClientError("This database does not yet support access profiles (migration 20261004_rbac_access_profiles).", { status: 409 });
+        }
+        if (assignmentError) throw new Error(assignmentError.message);
+      }
+    }
+
+    // 4. Update user_permission_sets when permissions OR the mobile profile change.
+    // Switching a user onto a simplified mobile profile must immediately re-cap
+    // what they can do — not wait for a separate permissions edit.
+    if (body.permissions !== undefined || body.mobileProfile !== undefined || body.financialAccess !== undefined || body.accessProfile !== undefined || body.role !== undefined) {
+      const effectiveMobileProfile = normalizeMobileProfile(
+        body.mobileProfile ?? (targetAssignment as any)?.mobile_profile
+      );
+      // An explicit list wins; otherwise a role / profile change re-issues the NEW effective role's template (never keeps the
+      // old, wider set), and a financial-only change keeps the current list and just flips the token.
+      const keepCurrent = body.permissions === undefined && body.role === undefined && body.accessProfile === undefined && body.mobileProfile === undefined;
+      const requestedPermissions = keepCurrent ? normalizePermissions(beforePermissionSet?.permissions) : normalizePermissions(body.permissions);
+      const targetRole = deriveEffectiveRole(nextStoredRole, nextAccessProfile, targetAssignment?.operational_domain ?? null) as EnterpriseRole;
+      const defaultRolePermissions = [...new Set(enterpriseRolePermissions[targetRole] ?? [])];
+      const baseline =
+        effectiveMobileProfile === "standard"
+          ? (requestedPermissions.length ? requestedPermissions : defaultRolePermissions)
+          : [...MOBILE_PROFILE_ALLOWED[effectiveMobileProfile]];
+
+      const scopePermissionLimit = session.isSuperAdmin
+        ? null
+        : await loadScopePermissionLimit(admin, {
+            countryBranchId: body.countryBranchId !== undefined ? body.countryBranchId : (targetAssignment?.country_branch_id ?? null),
+            cityBranchId: body.cityBranchId !== undefined ? body.cityBranchId : (targetAssignment?.city_branch_id ?? null)
+          });
+      const creatorLimit = session.isSuperAdmin ? ["*:*"] : session.permissions;
+      const parentLimit = scopePermissionLimit ?? creatorLimit;
+      let issuedPermissions = session.isSuperAdmin
+        ? baseline
+        : constrainPermissions(constrainPermissions(baseline, creatorLimit), parentLimit);
+      issuedPermissions = capPermissionsToProfile(effectiveMobileProfile, issuedPermissions);
+      issuedPermissions = applyFinancialAccess(issuedPermissions, body.financialAccess, session.canViewFinancials);
+
+      const { error: permError } = await admin
+        .from("user_permission_sets")
+        .upsert(
+          {
+            user_id: body.userId,
+            permissions: issuedPermissions,
+            source: effectiveMobileProfile !== "standard" ? "mobile_profile" : permissionSetSource(requestedPermissions, issuedPermissions, defaultRolePermissions),
+            updated_at: new Date().toISOString()
+          },
+          { onConflict: "user_id" }
+        );
+      if (permError) throw new Error(permError.message);
+    }
+
+    await auditApiAction(request, {
+      action: "users.update.api",
+      entityTable: "profiles",
+      entityId: body.userId as string,
+      // before/after of everything that decides access — role, scope, profile, bindings, dates and the permission list
+      before: targetAssignment ? {
+        role: targetAssignment.role, isActive: targetAssignment.is_active, countryId: targetAssignment.country_id,
+        countryBranchId: targetAssignment.country_branch_id, cityBranchId: targetAssignment.city_branch_id,
+        mobileProfile: targetAssignment.mobile_profile ?? null, accessProfile: targetAssignment.access_profile ?? null,
+        shippingLineId: targetAssignment.shipping_line_id ?? null, warehouseIds: targetAssignment.warehouse_ids ?? null,
+        effectiveFrom: targetAssignment.effective_from ?? null, effectiveTo: targetAssignment.effective_to ?? null,
+        permissions: beforePermissionSet?.permissions ?? null,
+      } : null,
+      after: {
+        userId: body.userId,
+        isActive: body.isActive,
+        fullName: body.fullName,
+        role: body.role,
+        countryId: body.countryId,
+        countryBranchId: body.countryBranchId,
+        cityBranchId: body.cityBranchId,
+        mobileProfile: body.mobileProfile,
+        accessProfile: body.accessProfile,
+        effectiveRole: deriveEffectiveRole(nextStoredRole, nextAccessProfile, targetAssignment?.operational_domain ?? null),
+        shippingLineId: body.shippingLineId,
+        warehouseIds: body.warehouseIds,
+        effectiveFrom: body.effectiveFrom,
+        effectiveTo: body.effectiveTo,
+        financialAccess: body.financialAccess,
+        permissions: (await admin.from("user_permission_sets").select("permissions").eq("user_id", body.userId).maybeSingle()).data?.permissions ?? null,
+      }
+    });
+
+    return apiOk({ success: true });
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const session = await requireErpSession();
+    const userId = request.nextUrl.searchParams.get("userId");
+    if (!userId) {
+      throw new ApiClientError("userId is required.");
+    }
+
+    if (!isUserManager(session)) {
+      throw new ApiClientError("Not authorized to delete users.", { status: 403 });
+    }
+
+    const admin = createSupabaseAdminClient() as any;
+
+    const { data: targetAssignment } = await admin
+      .from("user_role_assignments")
+      .select("country_id, country_branch_id, city_branch_id, operational_domain, role")
+      .eq("user_id", userId)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!session.isSuperAdmin) {
+      // fail closed: an unassigned user (no scope) is outside every manager's scope
+      if (!targetAssignment) throw new ApiClientError("Not authorized to delete users outside of your scope.", { status: 403 });
+      if (SUPER_ADMIN_ONLY_ROLES.has(targetAssignment.role)) {
+        throw new ApiClientError("Only Super Admin can delete Super Admin, Reports Auditor or Country Admin users.", { status: 403 });
+      }
+      if (!userInManagerScope(session, targetAssignment)) {
+        throw new ApiClientError("Not authorized to delete users outside of your scope.", { status: 403 });
+      }
+    }
+
+    const { data: authUserRes, error: getAuthError } = await admin.auth.admin.getUserById(userId);
+    if (getAuthError || !authUserRes?.user) {
+      throw new Error(getAuthError?.message ?? "Auth user not found.");
+    }
+
+    const originalEmail = authUserRes.user.email;
+    const dummyEmail = `deleted_${Date.now()}_${originalEmail}`;
+
+    const { error: authError } = await admin.auth.admin.updateUserById(userId, {
+      email: dummyEmail,
+      user_metadata: {
+        ...(authUserRes.user.user_metadata ?? {}),
+        original_email: originalEmail,
+        deleted_at: new Date().toISOString()
+      }
+    });
+    if (authError) throw new Error(authError.message);
+
+    const now = new Date().toISOString();
+
+    const { error: profileError } = await admin
+      .from("profiles")
+      .update({ deleted_at: now, updated_at: now })
+      .eq("id", userId);
+    if (profileError) throw new Error(profileError.message);
+
+    const { error: assignmentError } = await admin
+      .from("user_role_assignments")
+      .update({ deleted_at: now, updated_at: now, is_active: false })
+      .eq("user_id", userId);
+    if (assignmentError) throw new Error(assignmentError.message);
+
+    try {
+      await admin
+        .from("user_permission_sets")
+        .update({ deleted_at: now, updated_at: now })
+        .eq("user_id", userId);
+    } catch (e) {
+      // ignore
+    }
+
+    await auditApiAction(request, {
+      action: "users.delete.api",
+      entityTable: "profiles",
+      entityId: userId,
+      before: {
+        email: originalEmail
+      }
+    });
+
+    return apiOk({ success: true });
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
+
+
+
+

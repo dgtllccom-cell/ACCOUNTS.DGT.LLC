@@ -1,8 +1,12 @@
 {
   "compilerOptions": {
-    "target": "es5",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
+    "target": "ES2017",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": false,
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
@@ -13,10 +17,38 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]
+      "@/*": [
+        "./*"
+      ]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "next-env.d.ts",
+    "..\\..\\..\\AppData\\Local\\Temp\\dgt-nextjs\\.next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    ".sdfghj",
+    "android",
+    "ios",
+    "scripts",
+    "scratch",
+    ".tmp",
+    "tmp",
+    "backups",
+    ".codex-worktree-merge-backup",
+    "fix-broken-transfers.ts",
+    "check-superadmins.ts",
+    "check_roznamcha.ts"
+  ]
 }

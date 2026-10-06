@@ -1,0 +1,3830 @@
+"use client";
+
+import { useEffect, useMemo, useState, useRef } from "react";
+import { createPortal } from "react-dom";
+import Link from "next/link";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
+import { cn } from "@/lib/utils";
+import {
+  ArrowRight,
+  ArrowLeft,
+  BookOpen,
+  CheckCircle2,
+  ClipboardList,
+  Save,
+  Printer,
+  FileText,
+  FileSpreadsheet,
+  Mail,
+  MessageCircle,
+  Loader2,
+  Phone,
+  X,
+  Plus,
+  Pencil,
+  Globe2,
+  Ship,
+  UserCheck,
+  CheckSquare,
+  Square,
+  ChevronDown,
+  ChevronUp,
+  Globe,
+  MapPin,
+  Briefcase,
+  Tag,
+  Settings,
+  User,
+  Mic,
+  Calendar,
+  Sparkles,
+  Building2,
+  Landmark,
+  Warehouse,
+  ShieldCheck,
+  Layers,
+  HelpCircle
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { VoiceFormFill } from "@/components/voice-form-fill";
+import { listCountries, type LocationCountry } from "@/features/locations/location-api";
+import { apiPost, apiPatch } from "@/lib/api/client";
+import { CustomerPicker } from "@/features/customers/components/customer-picker";
+import { CompanyPicker } from "@/features/companies/components/company-picker";
+import { BankPicker } from "@/features/banks/components/bank-picker";
+import { WarehousePicker } from "@/features/warehouses/components/warehouse-picker";
+import { fetchWarehouses } from "@/features/warehouses/warehouse-api";
+import { rtlLanguages, type SupportedLanguage } from "@/lib/i18n/languages";
+import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
+import { localizeTerm } from "@/lib/i18n/transliteration";
+import { getLabel } from "./translations";
+import { AccountLiveReportPanel } from "./account-live-report-panel";
+import { openAccountA4ReportWindow } from "@/lib/reports/open-account-a4-report-window";
+import { useErpScope } from "@/lib/hooks/use-erp-scope";
+import { LoginScopeBanner } from "@/components/layout/login-scope-banner";
+import { fetchBranding } from "@/lib/branding/client";
+
+/**
+ * Normalizes reference numbers to support English letters (ABC) and numbers (0-9)
+ * regardless of the active UI language (Urdu, Pashto, Arabic, Persian, or English):
+ * 1. Converts Eastern Arabic (٠-٩) and Persian/Urdu (۰-۹) digits to standard 0-9
+ * 2. Maps Arabic/Urdu/Pashto keyboard keys to uppercase Latin characters if typed in RTL keyboard layout
+ * 3. Keeps uppercase English letters (A-Z), numbers (0-9), hyphens (-), slashes (/), dots (.), and underscores (_)
+ */
+export function normalizeManualReference(raw: string): string {
+  if (!raw) return "";
+
+  // 1. Convert Eastern Arabic numerals (٠-٩) and Persian/Urdu numerals (۰-۹) to standard 0-9
+  let s = raw
+    .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 1632))
+    .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 1776));
+
+  // 2. Phonetic / keyboard mapping for Arabic/Urdu/Pashto keys if user typed while in RTL keyboard
+  const rtlCharMap: Record<string, string> = {
+    "ا": "A", "آ": "A", "أ": "A", "إ": "A", "ب": "B", "پ": "P", "ت": "T", "ٹ": "T", "ث": "S",
+    "ج": "J", "چ": "C", "ح": "H", "خ": "KH", "د": "D", "ڈ": "D", "ذ": "Z", "ر": "R", "ڑ": "R",
+    "ز": "Z", "ژ": "Z", "س": "S", "ش": "SH", "ص": "S", "ض": "Z", "ط": "T", "ظ": "Z", "ع": "A",
+    "غ": "G", "ف": "F", "ق": "Q", "ک": "K", "ك": "K", "گ": "G", "ل": "L", "م": "M", "ن": "N",
+    "ں": "N", "و": "W", "ؤ": "W", "ہ": "H", "ھ": "H", "ة": "H", "ء": "", "ی": "Y", "ي": "Y", "ے": "E"
+  };
+
+  s = s.replace(/[\u0600-\u06FF]/g, (ch) => (rtlCharMap[ch] !== undefined ? rtlCharMap[ch] : ""));
+
+  // 3. Keep English letters, digits, and allowed reference symbols (-, _, /, ., space)
+  return s.replace(/[^A-Za-z0-9_\-/. ]/g, "").toUpperCase();
+}
+
+type BranchType = "Main" | "City";
+
+type AccountGeneralReportRow = {
+  accountId: string;
+  accountCode: string;
+  rawAccountCode?: string;
+  customerNumber?: string;
+  countrySerialNumber?: string;
+  branchSerialNumber?: string;
+  manualReferenceNumber?: string | null;
+  accountName: string;
+  journalCode: string;
+  ledgerId: string | null;
+  ledgerName: string | null;
+  ledgerStatus: string;
+  ledgerCurrency: string;
+  branchType: string;
+  branchName: string;
+  mainBranchName?: string;
+  cityBranchName?: string;
+  branchCode: string;
+  countryId: string | null;
+  countryName: string;
+  countryCode: string;
+  stateName: string;
+  stateCode: string;
+  cityId: string | null;
+  cityName: string;
+  cityCode: string;
+  currency: string;
+  accountCategory: string;
+  subType: string;
+  status: string;
+  createdAt: string;
+  openingBalance: number;
+  debitTotal: number;
+  creditTotal: number;
+  currentBalance: number;
+  linkedLedgerCount: number;
+  journalActivityCount: number;
+  latestJournalNo: string | null;
+  latestActivityAt: string | null;
+  companyName: string;
+  companyCode: string;
+  companyOwner: string;
+  recentActivityLabel: string | null;
+  recentActivityAt: string | null;
+  accountSerialNumber?: number;
+  branchAccountSequence?: number;
+};
+
+type AccountTitle = "Customer" | "Company" | "Bank" | "Employee" | "Personal" | "Expenses Account";
+
+type BranchInfo = {
+  company: string;
+  code: string;
+  city: string;
+  address: string;
+  phone: string;
+  email: string;
+  manager: string;
+  opening: string;
+  currency: string;
+};
+
+type SavedEntry = {
+  id: string;
+  journalCode: string;
+  accountCode: string;
+  manualReferenceNumber?: string | null;
+  customerNumber?: string;
+  accountName: string;
+  branchName: string;
+  branchCode: string;
+  savedAt: string;
+};
+
+type CountryBranchRow = {
+  id: string;
+  country_id: string;
+  name: string;
+  code: string;
+  local_currency: string;
+  is_main: boolean;
+};
+
+type CityBranchRow = {
+  id: string;
+  country_id: string;
+  country_branch_id: string;
+  city_name: string;
+  name: string;
+  code: string;
+  local_currency: string;
+};
+
+type AccountCreateResponse = {
+  accountId: string;
+  ledgerId: string;
+  accountCode: string;
+  accountNumber: string;
+  customerNumber: string;
+  accountSerialNumber: number;
+  countrySerialNumber: string;
+  branchSerialNumber: string;
+  manualReferenceNumber?: string | null;
+  branchCode: string;
+  branchAccountSequence: number;
+  approvalRequestId?: string | null;
+  status?: "active" | "archived" | "pending_approval" | string;
+};
+
+const subTypes: Record<AccountTitle, string[]> = {
+  Customer: ["Business Account", "Personal Account", "Inter-Country Trading Account", "Overseas Customer"],
+  Company: [
+    "Trading Company",
+    "Supplier Company",
+    "Service Provider",
+    "Logistics Company",
+    "Shipping Line Company",
+    "Clearing Agent Agency",
+    "Overseas Clearing Partner"
+  ],
+  Bank: ["Personal Bank", "Company Bank", "Inter-Country Central Holding Bank", "Exchange & Remittance Company"],
+  Employee: ["Employee Position: Manager", "Employee Position: Cashier", "Employee Position: Clerk", "Field / Munshi Operator", "Port Operations Officer"],
+  Personal: [],
+  "Expenses Account": [
+    "Office Expenses",
+    "Operational Expenses",
+    "Utility & Bills",
+    "Rent & Lease",
+    "Salaries & Wages",
+    "Travel & Transport",
+    "Marketing & Advertising",
+    "Legal & Professional",
+    "Maintenance & Repairs",
+    "Miscellaneous Expenses",
+    "Ocean & Air Freight",
+    "Customs Clearance & Duties",
+    "Port & Terminal Handling (THC)",
+    "Container Demurrage & Detention",
+    "Cross-Border Transit Charges"
+  ]
+};
+
+const categories = ["P/S", "B/C", "B/P", "EX", "S"];
+
+function nextNumber(current: number) {
+  return String(current + 1).padStart(3, "0");
+}
+
+function selectClass() {
+  return "flex h-10 w-full rounded-lg border border-input bg-background px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
+}
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+// E.164-ish: optional +, 7–15 digits, allow spaces/dashes/parens for readability
+const PHONE_RE = /^\+?[0-9][0-9\s()\-]{6,20}[0-9]$/;
+
+/** Convert Arabic/Urdu numerals to Western 0-9 digits and sanitize Latin email input */
+function normalizeContactInput(type: string, rawVal: string): string {
+  const westernDigits = rawVal
+    .replace(/[٠۰]/g, "0")
+    .replace(/[١۱]/g, "1")
+    .replace(/[٢۲]/g, "2")
+    .replace(/[٣۳]/g, "3")
+    .replace(/[٤۴]/g, "4")
+    .replace(/[٥۵]/g, "5")
+    .replace(/[٦۶]/g, "6")
+    .replace(/[٧۷]/g, "7")
+    .replace(/[٨۸]/g, "8")
+    .replace(/[٩۹]/g, "9");
+
+  if (type === "Email") {
+    // English/ASCII Latin characters only for email
+    return westernDigits.replace(/[^\x20-\x7E]/g, "").trim();
+  }
+  return westernDigits;
+}
+
+/** Validate a single contact entry. Returns an error key or null. */
+function contactErrorKey(type: string, value: string): string | null {
+  const v = (value || "").trim();
+  if (!v) return null; // empty rows are ignored, not errors
+  if (type === "Email") return EMAIL_RE.test(v) ? null : "invalidEmail";
+  if (type === "Mobile" || type === "WhatsApp" || type === "Landline" || type === "Office") {
+    return PHONE_RE.test(v) ? null : "invalidPhone";
+  }
+  return null;
+}
+
+function selectedBranchName(rows: CountryBranchRow[], id: string) {
+  const row = rows.find((item) => item.id === id);
+  return row ? `${row.name} (${row.code})` : "-";
+}
+
+function selectedCityBranchName(rows: CityBranchRow[], id: string) {
+  const row = rows.find((item) => item.id === id);
+  return row ? `${row.city_name} - ${row.name} (${row.code})` : "-";
+}
+
+function fmtDate(value: string | null | undefined) {
+  if (!value) return new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" }).format(new Date());
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return value;
+  return new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" }).format(d);
+}
+
+function localizedOption(value: string, lang: SupportedLanguage) {
+  if (!value) return "";
+  const key = value
+    .replace(/[^a-zA-Z0-9]+(.)/g, (_, chr: string) => chr.toUpperCase())
+    .replace(/^[A-Z]/, (chr) => chr.toLowerCase());
+  const label = getLabel(key, lang);
+  if (label !== key) return label;
+  const res = autoTranslate5Languages(value);
+  return res[lang] || value;
+}
+export function NewAccountSetup({
+  lang: propLang,
+  initialAccountId,
+  initialCountryId,
+  initialBranchType,
+  initialBranchId,
+}: {
+  lang?: SupportedLanguage;
+  initialAccountId?: string;
+  initialCountryId?: string;
+  initialBranchType?: "Main" | "City";
+  initialBranchId?: string;
+}) {
+  const router = useRouter();
+
+  // Reactive language: prefer the live client-selected language (localStorage-backed store,
+  // the same source <Th> uses) over the server-rendered propLang hint, so BOTH static labels
+  // AND database-backed master-data values (re-fetched with ?lang=) switch when the user
+  // changes language. propLang is only the SSR fallback for the very first paint.
+  const activeLang = useActiveLanguage();
+  const lang = (activeLang || propLang || "en") as SupportedLanguage;
+
+  const isRtl = useMemo(() => rtlLanguages.includes(lang), [lang]);
+
+  // Live report states
+  const [reportRows, setReportRows] = useState<AccountGeneralReportRow[]>([]);
+  const [reportLoading, setReportLoading] = useState(false);
+  const [selectedReportAccountId, setSelectedReportAccountId] = useState("current");
+
+  // Sidebar filter states
+  const [sidebarFilter, setSidebarFilter] = useState("");
+  const filteredSidebarRows = useMemo(() => {
+    return reportRows.filter((r) => {
+      const q = sidebarFilter.toLowerCase().trim();
+      if (!q) return true;
+      return (
+        (r.accountCode ?? "").toLowerCase().includes(q) ||
+        (r.accountName ?? "").toLowerCase().includes(q) ||
+        (r.accountCategory ?? "").toLowerCase().includes(q) ||
+        (r.currency ?? "").toLowerCase().includes(q)
+      );
+    });
+  }, [reportRows, sidebarFilter]);
+
+  // Step state (Dynamic steps matching canonical design)
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4 | 5 | 6>(1);
+
+  // Branch / Account form state (Step 1)
+  const [countries, setCountries] = useState<LocationCountry[]>([]);
+  const [mainBranches, setMainBranches] = useState<CountryBranchRow[]>([]);
+  const [cityBranches, setCityBranches] = useState<CityBranchRow[]>([]);
+  const [country, setCountry] = useState("");
+  const [operationalDomain, setOperationalDomain] = useState<"business" | "shipping">("business");
+  const [ownershipLevel, setOwnershipLevel] = useState<"country" | "main_branch" | "city_branch">("city_branch");
+  const [branchType, setBranchType] = useState<BranchType | "">("City");
+  const [branch, setBranch] = useState("");
+  type PrimaryAccountCategory = "customers_trade" | "others_country" | "employee" | "expenses" | "investment";
+  const [primaryType, setPrimaryType] = useState<PrimaryAccountCategory>("customers_trade");
+  const [tradeKind, setTradeKind] = useState<"customer" | "company" | "bank" | "shipping_line" | "trade" | "personal">("customer");
+  const [employeeRole, setEmployeeRole] = useState("Clerk");
+  const [employeeSalary, setEmployeeSalary] = useState("");
+  const [accountTitle, setAccountTitle] = useState<AccountTitle | "">("Customer");
+  const [subType, setSubType] = useState("Business Account");
+  const [category, setCategory] = useState("S");
+
+  function handlePrimaryTypeChange(val: PrimaryAccountCategory) {
+    setPrimaryType(val);
+    setMessage("");
+    if (val === "customers_trade") {
+      setAccountTitle("Customer");
+      setTradeKind("customer");
+      setSubType("Business Account");
+      setOperationalDomain("business");
+      setOwnershipLevel("city_branch");
+      setBranchType("City");
+      setCategory("S");
+      setLinkedCountries([]);
+      setIsLinkedCountriesOpen(false);
+    } else if (val === "others_country") {
+      setAccountTitle("Company");
+      setTradeKind("company");
+      setSubType("Inter-Country Central Settlement Account");
+      setOperationalDomain("business");
+      setOwnershipLevel("country");
+      setBranchType("Main");
+      setCategory("INTER_TRANSFER");
+      setLinkedCountries(countries.map((c) => c.id));
+      setIsLinkedCountriesOpen(true);
+    } else if (val === "employee") {
+      setAccountTitle("Employee");
+      setSubType(`Employee Position: ${employeeRole}`);
+      setOperationalDomain("business");
+      setOwnershipLevel("city_branch");
+      setBranchType("City");
+      setCategory("EX");
+      setLinkedCountries([]);
+      setIsLinkedCountriesOpen(false);
+    } else if (val === "expenses") {
+      setAccountTitle("Expenses Account");
+      setSubType("Office Expenses");
+      setOperationalDomain("business");
+      setOwnershipLevel("city_branch");
+      setBranchType("City");
+      setCategory("EX");
+      setLinkedCountries([]);
+      setIsLinkedCountriesOpen(false);
+    } else if (val === "investment") {
+      setAccountTitle("Company");
+      setTradeKind("company");
+      setSubType("Branch Capital & Investment Funding");
+      setOperationalDomain("business");
+      setOwnershipLevel("city_branch");
+      setBranchType("City");
+      setCategory("CAP");
+      setLinkedCountries([]);
+      setIsLinkedCountriesOpen(false);
+    }
+  }
+
+  function handleTradeKindChange(val: "customer" | "company" | "bank" | "shipping_line" | "trade" | "personal") {
+    setTradeKind(val);
+    if (val === "customer") {
+      setAccountTitle("Customer");
+      setSubType("Business Account");
+      setOperationalDomain("business");
+    } else if (val === "company") {
+      setAccountTitle("Company");
+      setSubType("Trading Company");
+      setOperationalDomain("business");
+    } else if (val === "bank") {
+      setAccountTitle("Bank");
+      setSubType("Company Bank");
+      setOperationalDomain("business");
+      setCategory("B/C");
+    } else if (val === "shipping_line") {
+      setAccountTitle("Company");
+      setSubType("Shipping Line Company");
+      setOperationalDomain("shipping");
+      if (linkedCountries.length === 0) {
+        setLinkedCountries(countries.map((c) => c.id));
+      }
+    } else if (val === "trade") {
+      setAccountTitle("Customer");
+      setSubType("Inter-Country Trading Account");
+      setOperationalDomain("business");
+      setCategory("P/S");
+    } else if (val === "personal") {
+      setAccountTitle("Personal");
+      setSubType("");
+      setOperationalDomain("business");
+    }
+  }
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
+  const [dbCategories, setDbCategories] = useState<Array<{
+    id: string;
+    name: string;
+    code: string;
+    description?: string | null;
+    operationalDomain?: string;
+    isSystem?: boolean;
+  }>>([]);
+  const [customCategories, setCustomCategories] = useState<string[]>([]);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [categoryModalMode, setCategoryModalMode] = useState<"add" | "edit">("add");
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [catFormName, setCatFormName] = useState("");
+  const [catFormCode, setCatFormCode] = useState("");
+  const [catFormDesc, setCatFormDesc] = useState("");
+  const [catSaving, setCatSaving] = useState(false);
+  const [catError, setCatError] = useState("");
+  const [accountCode, setAccountCode] = useState("");
+  const [manualReferenceNumber, setManualReferenceNumber] = useState("");
+  const [accountName, setAccountName] = useState("");
+  const [contacts, setContacts] = useState<Array<{ type: string; value: string }>>([{ type: "Mobile", value: "" }]);
+  const [journalCounter, setJournalCounter] = useState(0);
+  const [lastBranchCode, setLastBranchCode] = useState("");
+
+  // Authenticated, server-resolved scope — the single source of truth for which
+  // country / branch this user may create accounts in. The create API enforces
+  // the same scope server-side (authorizeApiScope); this only pre-selects and
+  // locks the UI so the two can never disagree.
+  const erpScope = useErpScope();
+  const [scopePrefilled, setScopePrefilled] = useState(false);
+  const [brandCompanyName, setBrandCompanyName] = useState<string | null>(null);
+
+  // Lock levels the user's scope fixes (edit mode keeps the loaded record's values).
+  const countryLocked = !initialAccountId && !erpScope.isSuperAdmin && Boolean(erpScope.lockedCountryId);
+  const branchLocked = !initialAccountId && !erpScope.isSuperAdmin && erpScope.mode === "city_branch" && Boolean(erpScope.lockedCityBranchId);
+  const [savedEntries, setSavedEntries] = useState<SavedEntry[]>([]);
+  const [message, setMessage] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [lastCreated, setLastCreated] = useState<AccountCreateResponse | null>(null);
+  const [loadingAccount, setLoadingAccount] = useState(false);
+  const [actionsPortal, setActionsPortal] = useState<HTMLElement | null>(null);
+
+  // Requirements toggles for dynamic adaptive workflow
+  const [companyRequired, setCompanyRequired] = useState(true);
+  const [bankRequired, setBankRequired] = useState(false);
+  const [warehouseRequired, setWarehouseRequired] = useState(false);
+  const [linkedMastersMenuOpen, setLinkedMastersMenuOpen] = useState(false);
+  const linkedMastersRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (linkedMastersRef.current && !linkedMastersRef.current.contains(event.target as Node)) {
+        setLinkedMastersMenuOpen(false);
+      }
+    }
+    if (linkedMastersMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [linkedMastersMenuOpen]);
+
+  // Dynamic active steps list based on accountTitle, category and subType + requirements
+  const activeStepDefs = useMemo(() => {
+    const list: Array<{ id: 1 | 2 | 3 | 4 | 5 | 6; key: string; title: string; subtitle: string }> = [
+      { id: 1, key: "basic", title: getLabel("step1Label", lang), subtitle: lang === "ur" ? "بنیادی اکاؤنٹ سیٹ اپ" : "Basic account setup" }
+    ];
+
+    const isExpense = category === "EX" || accountTitle === "Expenses Account";
+    const isPersonal = accountTitle === "Personal" || accountTitle === "Employee";
+
+    if (!isExpense && !isPersonal) {
+      // Step 2: Customer Information
+      if (accountTitle === "Customer" || primaryType === "customers_trade") {
+        list.push({ id: 2, key: "customer", title: getLabel("step2Label", lang), subtitle: lang === "ur" ? "کسٹمر کی معلومات" : "Customer information" });
+      }
+
+      // Step 3: Company Information (if required or company entity)
+      if (companyRequired || accountTitle === "Company") {
+        list.push({ id: 3, key: "company", title: getLabel("step3Label", lang), subtitle: lang === "ur" ? "کاروباری ادارے کی تفصیلات" : "Business entity details" });
+      }
+
+      // Step 4: Bank Information (if required or bank entity)
+      if (bankRequired || accountTitle === "Bank") {
+        list.push({ id: 4, key: "bank", title: getLabel("step4Label", lang), subtitle: lang === "ur" ? "بینکنگ کی معلومات" : "Banking information" });
+      }
+
+      // Step 5: Dedicated Warehouse Allocation (if required)
+      if (warehouseRequired) {
+        list.push({ id: 5, key: "warehouse", title: getLabel("step5Label", lang), subtitle: lang === "ur" ? "گودام کی تخصیص" : "Warehouse allocation" });
+      }
+    }
+
+    // Step 6: Verify and complete
+    list.push({ id: 6, key: "review", title: getLabel("step6Label", lang), subtitle: lang === "ur" ? "تصدیق اور تکمیل" : "Verify and complete" });
+
+    return list;
+  }, [category, accountTitle, primaryType, companyRequired, bankRequired, warehouseRequired, lang]);
+
+  const activeSteps = useMemo(() => activeStepDefs.map((s) => s.id), [activeStepDefs]);
+
+  const prevStep = useMemo(() => {
+    const idx = activeSteps.indexOf(currentStep);
+    return idx > 0 ? (activeSteps[idx - 1] as 1 | 2 | 3 | 4 | 5 | 6) : (activeSteps[0] as 1 | 2 | 3 | 4 | 5 | 6);
+  }, [activeSteps, currentStep]);
+
+  const nextStep = useMemo(() => {
+    const idx = activeSteps.indexOf(currentStep);
+    return idx !== -1 && idx < activeSteps.length - 1 ? (activeSteps[idx + 1] as 1 | 2 | 3 | 4 | 5 | 6) : (activeSteps[activeSteps.length - 1] as 1 | 2 | 3 | 4 | 5 | 6);
+  }, [activeSteps, currentStep]);
+
+  // If currentStep becomes inactive because of dropdown change or toggles, reset to 1
+  useEffect(() => {
+    if (!activeSteps.includes(currentStep)) {
+      setCurrentStep(activeSteps[0] as 1 | 2 | 3 | 4 | 5 | 6);
+    }
+  }, [activeSteps, currentStep]);
+
+
+  useEffect(() => {
+    setActionsPortal(document.getElementById("erp-page-actions-slot"));
+  }, []);
+
+  // Load account details for editing if initialAccountId is provided
+  useEffect(() => {
+    if (!initialAccountId) return;
+    let cancelled = false;
+
+    async function loadAccountDetails() {
+      setLoadingAccount(true);
+      setMessage("");
+      try {
+        const res = await fetch(`/api/erp/accounting/accounts/${initialAccountId}?language=${encodeURIComponent(lang)}`).then((r) => r.json());
+        if (cancelled) return;
+        if (res && res.ok && res.data) {
+          const acc = res.data.account;
+          if (acc) {
+            setCountry(acc.country_id || "");
+            if (acc.operational_domain === "shipping") {
+              setOperationalDomain("shipping");
+            } else {
+              setOperationalDomain("business");
+            }
+            if (acc.scope === "country") {
+              setOwnershipLevel("country");
+              setBranchType("Main");
+              setBranch("");
+            } else if (acc.scope === "main_branch") {
+              setOwnershipLevel("main_branch");
+              setBranchType("Main");
+              setBranch(acc.country_branch_id || "");
+            } else {
+              setOwnershipLevel("city_branch");
+              setBranchType("City");
+              setBranch(acc.city_branch_id || "");
+            }
+            
+            // Determine accountTitle and linked master records
+            if (acc.customer_id) {
+              setAccountTitle("Customer");
+              setLinkedCustomerId(acc.customer_id);
+              fetch(`/api/erp/customers/${acc.customer_id}?lang=${lang}`)
+                .then((r) => r.json())
+                .then((json) => {
+                  const name = json?.customer?.customer_name ?? json?.data?.customer_name ?? "";
+                  if (!cancelled) setLinkedCustomerName(name);
+                })
+            } else if (acc.company_id) {
+              setAccountTitle("Company");
+            } else if (acc.bank_id) {
+              setAccountTitle("Bank");
+            } else {
+              setAccountTitle("Personal");
+            }
+
+            // Populate multi-company linkages
+            if (Array.isArray(acc.companies) && acc.companies.length > 0) {
+              setLinkedCompanies(acc.companies.map((c: any) => ({
+                id: c.id,
+                name: c.name || "Company",
+                code: c.code,
+                country: c.country,
+                isPrimary: Boolean(c.isPrimary)
+              })));
+              setCompanyRequired(true);
+              const prim = acc.companies.find((c: any) => c.isPrimary) || acc.companies[0];
+              if (prim) {
+                setLinkedCompanyId(prim.id);
+                setLinkedCompanyName(prim.name);
+              }
+            } else if (Array.isArray(acc.linked_companies) && acc.linked_companies.length > 0) {
+              setLinkedCompanies(acc.linked_companies.map((c: any) => ({
+                id: c.id,
+                name: c.name || "Company",
+                code: c.code,
+                country: c.country,
+                isPrimary: Boolean(c.isPrimary)
+              })));
+              setCompanyRequired(true);
+              const prim = acc.linked_companies.find((c: any) => c.isPrimary) || acc.linked_companies[0];
+              if (prim) {
+                setLinkedCompanyId(prim.id);
+                setLinkedCompanyName(prim.name || "");
+              }
+            } else if (acc.company_id) {
+              setLinkedCompanyId(acc.company_id);
+              setCompanyRequired(true);
+              fetch(`/api/erp/companies/${acc.company_id}?lang=${lang}`)
+                .then((r) => r.json())
+                .then((json) => {
+                  const name = json?.company?.name ?? json?.company?.legal_name ?? "";
+                  if (!cancelled) {
+                    setLinkedCompanyName(name);
+                    setLinkedCompanies([{ id: acc.company_id, name, isPrimary: true }]);
+                  }
+                })
+                .catch(() => null);
+            }
+
+            // Populate multi-bank linkages
+            if (Array.isArray(acc.banks) && acc.banks.length > 0) {
+              setLinkedBanks(acc.banks.map((b: any) => ({
+                id: b.id,
+                name: b.name || "Bank",
+                branchName: b.branchName,
+                accountNumber: b.accountNumber,
+                currency: b.currency,
+                isPrimary: Boolean(b.isPrimary)
+              })));
+              setBankRequired(true);
+              const prim = acc.banks.find((b: any) => b.isPrimary) || acc.banks[0];
+              if (prim) {
+                setLinkedBankId(prim.id);
+                setLinkedBankName(prim.name);
+              }
+            } else if (Array.isArray(acc.linked_banks) && acc.linked_banks.length > 0) {
+              setLinkedBanks(acc.linked_banks.map((b: any) => ({
+                id: b.id,
+                name: b.name || "Bank",
+                branchName: b.branchName,
+                accountNumber: b.accountNumber,
+                currency: b.currency,
+                isPrimary: Boolean(b.isPrimary)
+              })));
+              setBankRequired(true);
+              const prim = acc.linked_banks.find((b: any) => b.isPrimary) || acc.linked_banks[0];
+              if (prim) {
+                setLinkedBankId(prim.id);
+                setLinkedBankName(prim.name || "");
+              }
+            } else if (acc.bank_id) {
+              setLinkedBankId(acc.bank_id);
+              setBankRequired(true);
+              fetch(`/api/erp/banks/${acc.bank_id}?lang=${lang}`)
+                .then((r) => r.json())
+                .then((json) => {
+                  const name = json?.data?.bank?.bank_name ?? json?.bank?.bank_name ?? json?.bank_name ?? "";
+                  if (!cancelled) {
+                    setLinkedBankName(name);
+                    setLinkedBanks([{ id: acc.bank_id, name, isPrimary: true }]);
+                  }
+                })
+                .catch(() => null);
+            }
+
+            // Determine category
+            if (acc.category_id) {
+              setSelectedCategoryId(acc.category_id);
+            }
+            if (acc.category) {
+              setCategory(acc.category);
+            } else if (acc.is_control_account) {
+              setCategory("B/C");
+            } else if (acc.kind === "expense") {
+              setCategory("EX");
+            } else if (acc.kind === "income") {
+              setCategory("P/S");
+            } else {
+              setCategory("S");
+            }
+
+            setSubType(acc.is_control_account ? "Control Account" : "Normal Account");
+            setAccountCode(acc.account_number || acc.code || "");
+            setManualReferenceNumber(acc.manual_reference_number || "");
+            setAccountName(acc.name || "");
+            setContacts(Array.isArray(acc.contacts) && acc.contacts.length > 0 ? acc.contacts : [{ type: "Mobile", value: "" }]);
+
+            if (acc.shipping_line_id) {
+              setLinkedShippingLineId(acc.shipping_line_id);
+              fetch(`/api/erp/shipping-lines/${acc.shipping_line_id}?lang=${lang}`)
+                .then((r) => r.json())
+                .then((json) => {
+                  const shl = json?.data?.shippingLine || json?.shippingLine;
+                  if (!cancelled && shl) {
+                    setShippingLineDetail(shl);
+                    setLinkedShippingLineName(shl.name || "");
+                  }
+                })
+                .catch(() => null);
+            }
+            if (Array.isArray(acc.linked_countries) && acc.linked_countries.length > 0) {
+              setLinkedCountries(acc.linked_countries);
+            }
+
+            if (Array.isArray(acc.warehouses) && acc.warehouses.length > 0) {
+              setLinkedWarehouses(acc.warehouses.map((w: any) => ({
+                id: w.id,
+                name: w.name || "Warehouse",
+                code: w.code,
+                address: w.address,
+                isPrimary: Boolean(w.is_primary)
+              })));
+              setWarehouseRequired(true);
+              const primaryWh = acc.warehouses.find((w: any) => w.is_primary) || acc.warehouses[0];
+              if (primaryWh) {
+                setLinkedWarehouseId(primaryWh.id);
+              }
+            } else if (acc.warehouse_id) {
+              setLinkedWarehouseId(acc.warehouse_id);
+              setWarehouseRequired(true);
+              setLinkedWarehouses([{
+                id: acc.warehouse_id,
+                name: "Primary Warehouse",
+                isPrimary: true
+              }]);
+            }
+
+            if (acc.company_id) {
+              setCompanyRequired(true);
+            }
+            if (acc.bank_id) {
+              setBankRequired(true);
+            }
+
+            if (typeof window !== "undefined") {
+              const storedWhKey = localStorage.getItem(`account_warehouse_${acc.id}`) || localStorage.getItem(`account_warehouse_${acc.account_number || acc.code}`);
+              if (storedWhKey) {
+                try {
+                  const parsedWh = JSON.parse(storedWhKey);
+                  if (parsedWh?.id) {
+                    setLinkedWarehouseId(parsedWh.id);
+                    if (parsedWh.detail) setWarehouseDetail(parsedWh.detail);
+                  }
+                  if (Array.isArray(parsedWh?.warehouses) && parsedWh.warehouses.length > 0) {
+                    setLinkedWarehouses(parsedWh.warehouses);
+                    setWarehouseRequired(true);
+                  }
+                } catch (e) {}
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load account details:", err);
+        setMessage(getLabel("failedLoadAccount", lang));
+      } finally {
+        if (!cancelled) setLoadingAccount(false);
+      }
+    }
+
+    loadAccountDetails();
+    return () => {
+      cancelled = true;
+    };
+  }, [initialAccountId, lang]);
+
+  // Master record links — IDs come from Master Form pickers
+  const [linkedCustomerId, setLinkedCustomerId] = useState<string | null>(null);
+  const [linkedCustomerName, setLinkedCustomerName] = useState("");
+  const [linkedCompanyId, setLinkedCompanyId] = useState<string | null>(null);
+  const [linkedCompanyName, setLinkedCompanyName] = useState("");
+  const [linkedCompanies, setLinkedCompanies] = useState<Array<{
+    id: string;
+    name: string;
+    code?: string;
+    country?: string;
+    isPrimary?: boolean;
+  }>>([]);
+  const [pickerCompanyId, setPickerCompanyId] = useState("");
+  const [pickerCompanyRecord, setPickerCompanyRecord] = useState<any>(null);
+
+  const [linkedBankId, setLinkedBankId] = useState<string | null>(null);
+  const [linkedBankName, setLinkedBankName] = useState("");
+  const [linkedBanks, setLinkedBanks] = useState<Array<{
+    id: string;
+    name: string;
+    branchName?: string;
+    accountNumber?: string;
+    currency?: string;
+    isPrimary?: boolean;
+  }>>([]);
+  const [pickerBankId, setPickerBankId] = useState("");
+  const [pickerBankRecord, setPickerBankRecord] = useState<any>(null);
+
+  const [linkedWarehouseId, setLinkedWarehouseId] = useState<string | null>(null);
+  const [linkedWarehouses, setLinkedWarehouses] = useState<Array<{
+    id: string;
+    name: string;
+    code?: string;
+    address?: string;
+    isPrimary?: boolean;
+  }>>([]);
+  const [pickerWarehouseId, setPickerWarehouseId] = useState("");
+  const [pickerWarehouseRecord, setPickerWarehouseRecord] = useState<any>(null);
+  const [linkedShippingLineId, setLinkedShippingLineId] = useState<string | null>(null);
+  const [linkedShippingLineName, setLinkedShippingLineName] = useState("");
+  const [shippingLinesList, setShippingLinesList] = useState<Array<{ id: string; name: string; shipping_line_code?: string; linked_countries?: string[] }>>([]);
+  const [linkedCountries, setLinkedCountries] = useState<string[]>([]);
+  const [isLinkedCountriesOpen, setIsLinkedCountriesOpen] = useState(false);
+
+  const [customerDetail, setCustomerDetail] = useState<any>(null);
+  const [companyDetail, setCompanyDetail] = useState<any>(null);
+  const [bankDetail, setBankDetail] = useState<any>(null);
+  const [warehouseDetail, setWarehouseDetail] = useState<any>(null);
+  const [shippingLineDetail, setShippingLineDetail] = useState<any>(null);
+
+  // Fetch full customer details when linkedCustomerId changes
+  useEffect(() => {
+    if (!linkedCustomerId) { setCustomerDetail(null); return; }
+    let cancelled = false;
+    fetch(`/api/erp/customers/${linkedCustomerId}?lang=${lang}`)
+      .then((r) => r.json())
+      .then((json) => {
+        if (!cancelled && json?.ok && (json?.data || json?.customer)) setCustomerDetail(json.data ?? json.customer);
+      })
+      .catch(() => null);
+    return () => { cancelled = true; };
+  }, [linkedCustomerId, lang]);
+
+  // Fetch company details when linkedCompanyId changes
+  useEffect(() => {
+    if (!linkedCompanyId) { setCompanyDetail(null); return; }
+    let cancelled = false;
+    fetch(`/api/erp/companies/${linkedCompanyId}?lang=${lang}`)
+      .then((r) => r.json())
+      .then((json) => {
+        if (cancelled) return;
+        let comp = json?.data?.company || json?.company || {};
+        if (typeof window !== "undefined") {
+          const stored = localStorage.getItem("incorporated_companies");
+          if (stored) {
+            try {
+              const list = JSON.parse(stored);
+              const found = list.find((c: any) => c.id === linkedCompanyId);
+              if (found) comp = { ...comp, ...found };
+            } catch (e) {}
+          }
+        }
+        if (json?.ok && (json?.data?.company || json?.company)) {
+          setCompanyDetail(comp);
+        } else if (comp.id) {
+          setCompanyDetail(comp);
+        }
+      })
+      .catch(() => {
+        if (typeof window !== "undefined") {
+          const stored = localStorage.getItem("incorporated_companies");
+          if (stored) {
+            try {
+              const list = JSON.parse(stored);
+              const found = list.find((c: any) => c.id === linkedCompanyId);
+              if (found && !cancelled) setCompanyDetail(found);
+            } catch (e) {}
+          }
+        }
+      });
+    return () => { cancelled = true; };
+  }, [linkedCompanyId, lang]);
+
+  // Fetch bank details when linkedBankId changes
+  useEffect(() => {
+    if (!linkedBankId) { setBankDetail(null); return; }
+    let cancelled = false;
+    fetch(`/api/erp/banks/${linkedBankId}?lang=${lang}`)
+      .then((r) => r.json())
+      .then((json) => {
+        if (!cancelled && json?.ok && (json?.data?.bank || json?.bank)) setBankDetail(json.data?.bank ?? json.bank);
+      })
+      .catch(() => null);
+    return () => { cancelled = true; };
+  }, [linkedBankId, lang]);
+
+  // Fetch warehouse details when linkedWarehouseId changes
+  useEffect(() => {
+    if (!linkedWarehouseId) { setWarehouseDetail(null); return; }
+    let cancelled = false;
+    fetchWarehouses().then((list) => {
+      if (cancelled) return;
+      let found = list.find((w) => w.id === linkedWarehouseId);
+      if (!found && typeof window !== "undefined") {
+        try {
+          const stored = localStorage.getItem("erp_warehouses");
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed)) found = parsed.find((w: any) => w.id === linkedWarehouseId);
+          }
+        } catch (e) {}
+      }
+      if (found) setWarehouseDetail(found);
+    }).catch(() => null);
+    return () => { cancelled = true; };
+  }, [linkedWarehouseId]);
+
+  // Fetch report records
+  async function fetchReport() {
+    setReportLoading(true);
+    try {
+      const res = await fetch("/api/erp/accounting/reports/accounts/general?limit=500").then((r) => r.json());
+      if (res && res.ok && res.data && Array.isArray(res.data.rows)) setReportRows(res.data.rows);
+    } catch (err) {
+      console.error("Failed to load account report:", err);
+    } finally {
+      setReportLoading(false);
+    }
+  }
+
+  useEffect(() => { fetchReport(); }, []);
+
+  // Load countries (restricted strictly to countries with operating branches)
+  useEffect(() => {
+    let cancelled = false;
+    listCountries({ withBranchesOnly: true })
+      .then((rows) => {
+        if (!cancelled) {
+          setCountries(rows);
+        }
+      })
+      .catch(() => { if (!cancelled) setMessage(getLabel("couldNotLoadCountries", lang)); });
+    return () => { cancelled = true; };
+  }, []);
+
+  // Fetch shipping lines list for master carrier linkage
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/erp/shipping-lines?limit=200&lang=${lang}`)
+      .then((r) => r.json())
+      .then((json) => {
+        if (!cancelled && json?.ok && Array.isArray(json?.data?.shippingLines)) {
+          setShippingLinesList(json.data.shippingLines);
+        }
+      })
+      .catch(() => null);
+    return () => { cancelled = true; };
+  }, [lang]);
+
+  // Fetch shipping line details when linkedShippingLineId changes
+  useEffect(() => {
+    if (!linkedShippingLineId) {
+      setShippingLineDetail(null);
+      return;
+    }
+    let cancelled = false;
+    fetch(`/api/erp/shipping-lines/${linkedShippingLineId}?lang=${lang}`)
+      .then((r) => r.json())
+      .then((json) => {
+        if (cancelled) return;
+        const shl = json?.data?.shippingLine || json?.shippingLine;
+        if (shl) {
+          setShippingLineDetail(shl);
+          setLinkedShippingLineName(shl.name || "");
+          if (Array.isArray(shl.linked_countries) && shl.linked_countries.length > 0) {
+            setLinkedCountries(shl.linked_countries);
+          }
+        }
+      })
+      .catch(() => null);
+    return () => { cancelled = true; };
+  }, [linkedShippingLineId, lang]);
+
+  // Pre-select + lock country / branch from the authenticated scope or passed initial props (create mode only).
+  useEffect(() => {
+    if (initialAccountId || erpScope.loading || scopePrefilled) return;
+    if (!erpScope.isSuperAdmin) {
+      if (erpScope.lockedCountryId) setCountry(erpScope.lockedCountryId);
+      else if (initialCountryId) setCountry(initialCountryId);
+
+      if (erpScope.mode === "city_branch" && erpScope.lockedCityBranchId) {
+        setBranchType("City");
+        setBranch(erpScope.lockedCityBranchId);
+      } else if (erpScope.mode === "main_branch" && erpScope.lockedCountryBranchId) {
+        setBranchType("Main");
+        setBranch(erpScope.lockedCountryBranchId);
+      } else {
+        if (initialBranchType) setBranchType(initialBranchType);
+        if (initialBranchId) setBranch(initialBranchId);
+      }
+      // A single-domain (non-"both") assignment locks Business vs Shipping the
+      // same way a single-option country/branch already locks geography.
+      if (erpScope.domainLocked && erpScope.lockedDomain) {
+        setOperationalDomain(erpScope.lockedDomain);
+      }
+    } else {
+      if (initialCountryId) setCountry(initialCountryId);
+      if (initialBranchType) setBranchType(initialBranchType);
+      if (initialBranchId) setBranch(initialBranchId);
+    }
+    setScopePrefilled(true);
+  }, [initialAccountId, erpScope.loading, erpScope.isSuperAdmin, erpScope.mode, erpScope.lockedCountryId, erpScope.lockedCountryBranchId, erpScope.lockedCityBranchId, erpScope.domainLocked, erpScope.lockedDomain, scopePrefilled, initialCountryId, initialBranchType, initialBranchId]);
+
+  // Resolve the operating company for the selected country from the branding
+  // master (country_company_profiles) — never a hard-coded "Damaan …".
+  useEffect(() => {
+    if (!country) { setBrandCompanyName(null); return; }
+    let cancelled = false;
+    fetchBranding(country)
+      .then((b) => { if (!cancelled) setBrandCompanyName(b?.companyName || b?.legalName || null); })
+      .catch(() => { if (!cancelled) setBrandCompanyName(null); });
+    return () => { cancelled = true; };
+  }, [country]);
+
+  // Load Main Branches
+  useEffect(() => {
+    if (!country) { setMainBranches([]); return; }
+    let cancelled = false;
+    fetch(`/api/erp/locations/branches/main?countryId=${encodeURIComponent(country)}&operationalDomain=${operationalDomain}`)
+      .then((res) => res.json())
+      .then((json) => {
+        if (!cancelled) {
+          const list = json?.data?.branches || json?.branches || json?.countryBranches || [];
+          setMainBranches(Array.isArray(list) ? list : []);
+          if (list.length > 0 && (ownershipLevel === "main_branch" || branchType === "Main") && !branch) {
+            const picked = initialBranchId && list.some((b: any) => b.id === initialBranchId) ? initialBranchId : list[0].id;
+            setBranch(picked);
+          }
+        }
+      })
+      .catch(() => { if (!cancelled) setMessage(getLabel("couldNotLoadMainBranches", lang)); });
+    return () => { cancelled = true; };
+  }, [country, branchType, ownershipLevel, branch, operationalDomain, initialBranchId]);
+
+  // Load City Branches
+  useEffect(() => {
+    if (!country) { setCityBranches([]); return; }
+    let cancelled = false;
+    const params = new URLSearchParams({ countryId: country, operationalDomain });
+    fetch(`/api/erp/locations/branches/city?${params.toString()}`)
+      .then((res) => res.json())
+      .then((json) => {
+        if (!cancelled) {
+          const list = json?.data?.cityBranches || json?.data?.branches || json?.cityBranches || [];
+          setCityBranches(Array.isArray(list) ? list : []);
+          if (list.length > 0 && (ownershipLevel === "city_branch" || branchType === "City") && !branch) {
+            const picked = initialBranchId && list.some((b: any) => b.id === initialBranchId) ? initialBranchId : list[0].id;
+            setBranch(picked);
+          }
+        }
+      })
+      .catch(() => { if (!cancelled) setMessage(getLabel("couldNotLoadCityBranches", lang)); });
+    return () => { cancelled = true; };
+  }, [country, branchType, ownershipLevel, branch, operationalDomain, initialBranchId]);
+
+  // Load Categories from database
+  async function loadCategories(domain = operationalDomain) {
+    try {
+      const res = await fetch(`/api/erp/account-categories?domain=${domain}&language=${encodeURIComponent(lang)}`).then((r) => r.json());
+      if (res && res.ok && Array.isArray(res.categories)) {
+        setDbCategories(res.categories);
+      }
+    } catch (err) {
+      console.error("Failed to load account categories:", err);
+    }
+  }
+
+  useEffect(() => {
+    loadCategories(operationalDomain);
+  }, [operationalDomain, lang]);
+
+  function handleOpenAddCategory() {
+    setCategoryModalMode("add");
+    setEditingCategoryId(null);
+    setCatFormName("");
+    setCatFormCode("");
+    setCatFormDesc("");
+    setCatError("");
+    setShowCategoryModal(true);
+  }
+
+  function handleOpenEditCategory() {
+    const item = dbCategories.find((c) => c.name === category || c.id === selectedCategoryId);
+    if (!item) return;
+    setCategoryModalMode("edit");
+    setEditingCategoryId(item.id);
+    setCatFormName(item.name);
+    setCatFormCode(item.code);
+    setCatFormDesc(item.description || "");
+    setCatError("");
+    setShowCategoryModal(true);
+  }
+
+  async function handleSaveCategory() {
+    if (!catFormName.trim() || !catFormCode.trim()) {
+      setCatError("Category name and code are required.");
+      return;
+    }
+    setCatSaving(true);
+    setCatError("");
+    try {
+      if (categoryModalMode === "add") {
+        const res = await fetch("/api/erp/account-categories", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: catFormName.trim(),
+            code: catFormCode.trim().toUpperCase(),
+            description: catFormDesc.trim() || null,
+            operationalDomain
+          })
+        }).then((r) => r.json());
+        if (!res.ok) throw new Error(res.error?.message || "Failed to create category");
+        await loadCategories(operationalDomain);
+        setCategory(res.category.name);
+        setSelectedCategoryId(res.category.id);
+        setShowCategoryModal(false);
+      } else if (editingCategoryId) {
+        const res = await fetch(`/api/erp/account-categories/${editingCategoryId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: catFormName.trim(),
+            code: catFormCode.trim().toUpperCase(),
+            description: catFormDesc.trim() || null,
+            operationalDomain
+          })
+        }).then((r) => r.json());
+        if (!res.ok) throw new Error(res.error?.message || "Failed to update category");
+        await loadCategories(operationalDomain);
+        setCategory(res.category.name);
+        setSelectedCategoryId(res.category.id);
+        setShowCategoryModal(false);
+      }
+    } catch (err: any) {
+      setCatError(err.message || "Failed to save category");
+    } finally {
+      setCatSaving(false);
+    }
+  }
+
+  const selectedCountry = useMemo(() => countries.find((item) => item.id === country) ?? null, [countries, country]);
+  const canonicalCountryId = selectedCountry?.id ?? "";
+  const branchOptionsRaw =
+    ownershipLevel === "country"
+      ? []
+      : ownershipLevel === "main_branch" || branchType === "Main"
+      ? mainBranches
+      : cityBranches;
+
+  // Filter branch options to the user's authorized branches (super admin = all).
+  const branchOptions = useMemo(() => {
+    if (erpScope.isSuperAdmin || initialAccountId) return branchOptionsRaw;
+    if (branchType === "City" && erpScope.cityBranchIds.length > 0) {
+      return branchOptionsRaw.filter((b) => erpScope.cityBranchIds.includes(b.id));
+    }
+    if (branchType === "Main" && erpScope.countryBranchIds.length > 0) {
+      return branchOptionsRaw.filter((b) => erpScope.countryBranchIds.includes(b.id));
+    }
+    return branchOptionsRaw;
+  }, [branchOptionsRaw, branchType, erpScope.isSuperAdmin, erpScope.cityBranchIds, erpScope.countryBranchIds, initialAccountId]);
+
+  const branchInfo = useMemo<BranchInfo | null>(() => {
+    if (!selectedCountry) return null;
+    const company = brandCompanyName || selectedCountry.name;
+    const fallbackCurrency = selectedCountry.currency_code || "USD";
+
+    if (ownershipLevel === "country") {
+      return {
+        company,
+        code: selectedCountry.iso2 || selectedCountry.iso3 || "CTR",
+        city: selectedCountry.name,
+        address: "-",
+        phone: "-",
+        email: "-",
+        manager: "-",
+        opening: "-",
+        currency: fallbackCurrency
+      };
+    }
+
+    if (!branch) return null;
+
+    if (ownershipLevel === "main_branch" || branchType === "Main") {
+      const row = mainBranches.find((item) => item.id === branch);
+      // The branch list may still be loading or scope-filtered — when the id is
+      // the user's own locked main branch, resolve from the session so the
+      // Review screen is never blank.
+      if (!row && branchLocked === false && erpScope.lockedCountryBranchId === branch) {
+        return { company, code: "", city: erpScope.countryBranchName || selectedCountry.name, address: "-", phone: "-", email: "-", manager: "-", opening: "-", currency: fallbackCurrency };
+      }
+      if (!row) return null;
+      return { company, code: row.code, city: selectedCountry.name, address: "-", phone: "-", email: "-", manager: "-", opening: "-", currency: row.local_currency || fallbackCurrency };
+    }
+
+    const row = cityBranches.find((item) => item.id === branch);
+    if (!row && erpScope.lockedCityBranchId === branch) {
+      return { company, code: "", city: erpScope.cityBranchName || selectedCountry.name, address: "-", phone: "-", email: "-", manager: "-", opening: "-", currency: fallbackCurrency };
+    }
+    if (!row) return null;
+    return { company, code: row.code, city: row.city_name, address: "-", phone: "-", email: "-", manager: "-", opening: "-", currency: row.local_currency || fallbackCurrency };
+  }, [branch, branchType, ownershipLevel, cityBranches, mainBranches, selectedCountry, brandCompanyName, branchLocked, erpScope.lockedCountryBranchId, erpScope.lockedCityBranchId, erpScope.countryBranchName, erpScope.cityBranchName]);
+
+  const branchCode = branchInfo?.code ?? "";
+  const isEditMode = Boolean(initialAccountId);
+  
+  const generatedPreviewCode = useMemo(() => {
+    if (accountCode) return accountCode;
+    const cCode = selectedCountry?.iso2 || (selectedCountry?.name?.slice(0, 2).toUpperCase()) || "GL";
+    const bCode = branchInfo?.code ? branchInfo.code.replace(/[^A-Z0-9]/gi, "").slice(-4) : "001";
+    const catCode = category ? (category.includes("P/S") ? "PS" : category.replace(/[^A-Z0-9]/gi, "").slice(0, 3).toUpperCase()) : "ACC";
+    return `${cCode}-${bCode}-${catCode}`;
+  }, [accountCode, selectedCountry, branchInfo, category]);
+
+  const accountPreview = lastCreated?.accountNumber || accountCode || (branchCode ? generatedPreviewCode : "AUTO");
+  const readyToSave = Boolean(
+    country &&
+    (ownershipLevel === "country" || branch) &&
+    accountTitle &&
+    subType &&
+    category &&
+    accountName
+  );
+  const saved = message?.startsWith("Saved") ?? false;
+
+  useEffect(() => {
+    if (!branchCode || branchCode === lastBranchCode) return;
+    setLastBranchCode(branchCode);
+    // In edit mode, do NOT reset the loaded account code when branch info resolves
+    if (!initialAccountId) {
+      setAccountCode("");
+    }
+  }, [branchCode, lastBranchCode, initialAccountId]);
+
+  function handleCountryChange(value: string) {
+    setCountry(value); setBranch(""); setLastBranchCode(""); setAccountCode(""); setLastCreated(null); setMessage("");
+  }
+
+  function handleBranchTypeChange(value: BranchType) {
+    setBranchType(value); setBranch(""); setLastBranchCode(""); setAccountCode(""); setLastCreated(null); setMessage("");
+  }
+
+  // Create and save account on Step 6
+  async function saveEntry() {
+    if (saving) return; // guard against double-submit
+    // Name the missing field instead of a generic "incomplete" — the mandate
+    // explicitly forbids hiding the real problem behind "please review steps".
+    const missing: string[] = [];
+    if (!country) missing.push(getLabel("country", lang));
+    if (ownershipLevel !== "country" && !branch) missing.push(getLabel("selectBranch", lang));
+    if (!accountTitle) missing.push(getLabel("accountTitle", lang));
+    const typeHasSubtypes = accountTitle && accountTitle !== "Personal" && (subTypes[accountTitle]?.length ?? 0) > 0;
+    if ((typeHasSubtypes || accountTitle === "Personal") && !subType) missing.push(getLabel("subType", lang));
+    if (!category) missing.push(getLabel("category", lang));
+    if (!accountName.trim()) missing.push(getLabel("accountName", lang));
+    if (missing.length > 0) {
+      setMessage(`${getLabel("missingFieldsPrefix", lang)}: ${missing.join(", ")}`);
+      return;
+    }
+    if (!branchInfo) {
+      setMessage(getLabel("branchDataNotResolved", lang));
+      return;
+    }
+    // Validate contacts (Mobile / WhatsApp / Email) before saving.
+    const badContact = contacts
+      .map((c) => ({ c, err: contactErrorKey(c.type, c.value) }))
+      .find((x) => x.err);
+    if (badContact) {
+      setMessage(`${getLabel(badContact.err!, lang)} (${badContact.c.type})`);
+      return;
+    }
+    const prefix = erpScope.isSuperAdmin ? "SUPER" : (selectedCountry?.iso2 || "CTR");
+    const issuedJournal = `${prefix}-${nextNumber(journalCounter)}`;
+    const scope = ownershipLevel === "country" ? "country" : ownershipLevel === "main_branch" ? "main_branch" : "city_branch";
+    const countryBranchId =
+      ownershipLevel === "country"
+        ? null
+        : ownershipLevel === "main_branch"
+        ? branch
+        : cityBranches.find((item) => item.id === branch)?.country_branch_id ?? mainBranches[0]?.id ?? null;
+    const cityBranchId = ownershipLevel === "city_branch" ? branch : null;
+    setSaving(true); setMessage(""); setLastCreated(null);
+    try {
+      if (initialAccountId) {
+        // Edit mode!
+        const effectiveWhId = linkedWarehouses.find((w) => w.isPrimary)?.id || linkedWarehouses[0]?.id || linkedWarehouseId || null;
+        const effectiveCompanyId = linkedCompanies.find((c) => c.isPrimary)?.id || linkedCompanies[0]?.id || linkedCompanyId || null;
+        const effectiveBankId = linkedBanks.find((b) => b.isPrimary)?.id || linkedBanks[0]?.id || linkedBankId || null;
+        await apiPatch<any>(`/api/erp/accounting/accounts/${initialAccountId}`, {
+          scope,
+          operationalDomain,
+          countryId: country,
+          countryBranchId,
+          cityBranchId,
+          parentId: null,
+          customerId: linkedCustomerId,
+          companyId: effectiveCompanyId,
+          companyIds: linkedCompanies.map((c) => c.id),
+          linkedCompanies,
+          bankId: effectiveBankId,
+          bankIds: linkedBanks.map((b) => b.id),
+          linkedBanks,
+          warehouseId: effectiveWhId,
+          warehouseIds: linkedWarehouses.map((w) => w.id),
+          requirements: {
+            companyRequired,
+            bankRequired,
+            warehouseRequired
+          },
+          shippingLineId: linkedShippingLineId || null,
+          linkedCountries:
+            primaryType === "others_country" ||
+            ownershipLevel === "country" ||
+            operationalDomain === "shipping" ||
+            tradeKind === "shipping_line" ||
+            Boolean(linkedShippingLineId)
+              ? linkedCountries
+              : [],
+          code: accountCode || undefined,  // omit code if empty so PATCH doesn't fail min(2) validation
+          manualReferenceNumber: manualReferenceNumber.trim() || null,
+          name: accountName.trim(),
+          kind: accountTitle === "Expenses Account" || category === "EX" ? "expense" : category === "P/S" ? "income" : "asset",
+          currency: branchInfo.currency || selectedCountry?.currency_code || "USD",
+          isControlAccount: accountTitle === "Bank",
+          category,
+          categoryId: selectedCategoryId || null,
+          contacts
+        });
+        if (typeof window !== "undefined" && (effectiveWhId || linkedWarehouses.length > 0)) {
+          try {
+            const whData = JSON.stringify({ id: effectiveWhId, warehouses: linkedWarehouses, detail: warehouseDetail });
+            if (initialAccountId) localStorage.setItem(`account_warehouse_${initialAccountId}`, whData);
+            if (accountCode) localStorage.setItem(`account_warehouse_${accountCode}`, whData);
+          } catch (e) {}
+        }
+        setMessage(getLabel("updatedAccountSuccess", lang));
+        void fetchReport();
+        setTimeout(() => {
+          router.push(`/dashboard/accounts?accountId=${initialAccountId}`);
+        }, 1500);
+      } else {
+        // Create mode!
+        const effectiveWhId = linkedWarehouses.find((w) => w.isPrimary)?.id || linkedWarehouses[0]?.id || linkedWarehouseId || null;
+        const effectiveCompanyId = linkedCompanies.find((c) => c.isPrimary)?.id || linkedCompanies[0]?.id || linkedCompanyId || null;
+        const effectiveBankId = linkedBanks.find((b) => b.isPrimary)?.id || linkedBanks[0]?.id || linkedBankId || null;
+        const response = await apiPost<AccountCreateResponse>("/api/erp/accounting/accounts", {
+          scope,
+          operationalDomain,
+          countryId: country,
+          countryBranchId,
+          cityBranchId,
+          parentId: null,
+          customerId: linkedCustomerId,
+          companyId: effectiveCompanyId,
+          companyIds: linkedCompanies.map((c) => c.id),
+          linkedCompanies,
+          bankId: effectiveBankId,
+          bankIds: linkedBanks.map((b) => b.id),
+          linkedBanks,
+          warehouseId: effectiveWhId,
+          warehouseIds: linkedWarehouses.map((w) => w.id),
+          requirements: {
+            companyRequired,
+            bankRequired,
+            warehouseRequired
+          },
+          shippingLineId: linkedShippingLineId || null,
+          linkedCountries:
+            primaryType === "others_country" ||
+            ownershipLevel === "country" ||
+            operationalDomain === "shipping" ||
+            tradeKind === "shipping_line" ||
+            Boolean(linkedShippingLineId)
+              ? linkedCountries
+              : [],
+          code: "AUTO",
+          manualReferenceNumber: manualReferenceNumber.trim() || null,
+          name: accountName.trim(),
+          kind: accountTitle === "Expenses Account" || category === "EX" ? "expense" : category === "P/S" ? "income" : "asset",
+          currency: branchInfo.currency || selectedCountry?.currency_code || "USD",
+          openingBalance: 0,
+          isControlAccount: accountTitle === "Bank",
+          category,
+          categoryId: selectedCategoryId || null,
+          contacts
+        });
+        setLastCreated(response);
+        setJournalCounter((current) => current + 1);
+        setSavedEntries((current) => [
+          {
+            id: response.accountId,
+            journalCode: issuedJournal,
+            accountCode: response.accountNumber,
+            manualReferenceNumber: response.manualReferenceNumber ?? null,
+            customerNumber: response.customerNumber,
+            accountName,
+            branchName:
+              ownershipLevel === "country"
+                ? `${selectedCountry?.name || "Country"} (${getLabel("countryLevel", lang)})`
+                : ownershipLevel === "main_branch" || branchType === "Main"
+                ? selectedBranchName(mainBranches, branch)
+                : selectedCityBranchName(cityBranches, branch),
+            branchCode: response.branchCode,
+            savedAt: new Date().toLocaleTimeString()
+          },
+          ...current
+        ]);
+        setAccountCode(response.accountNumber);
+        if (typeof window !== "undefined" && (effectiveWhId || linkedWarehouses.length > 0)) {
+          try {
+            const whData = JSON.stringify({ id: effectiveWhId, warehouses: linkedWarehouses, detail: warehouseDetail });
+            localStorage.setItem(`account_warehouse_${response.accountId}`, whData);
+            localStorage.setItem(`account_warehouse_${response.accountNumber}`, whData);
+          } catch (e) {}
+        }
+        setMessage(
+          response.status === "pending_approval"
+            ? `${getLabel("savedAccountPrefix", lang)} ${response.accountNumber} — ${t(lang, "comv.approval_pending", "Pending Approval")}`
+            : `${getLabel("savedAccountPrefix", lang)} ${response.accountNumber}`
+        );
+        void fetchReport();
+        setTimeout(() => {
+          router.push(`/dashboard/accounts?accountId=${response.accountId}&created=1`);
+        }, 1500);
+      }
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Account save failed.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function openReport(autoPrint: boolean) {
+    openAccountA4ReportWindow({
+      title: t(lang, "acct.report_title", "Account Profile Report"),
+      subtitle: t(lang, "acct.report_subtitle", "Account Profile Summary"),
+      autoPrint,
+      lang,
+      accountData: {
+        accountName,
+        accountCode: accountPreview,
+        accountTitle,
+        subType,
+        category,
+        manualReferenceNumber,
+        currency: branchInfo?.currency || selectedCountry?.currency_code || "AED",
+        status: saved ? "Active" : "In Progress",
+        customerDetail,
+        companyDetail,
+        bankDetail,
+        shippingLineName: shippingLineDetail?.name || linkedShippingLineName || undefined,
+        linkedCountriesNames: linkedCountries.map((id) => countries.find((c) => c.id === id)?.name || id),
+        selectedCountryName: selectedCountry?.name,
+        selectedCountryCode: (selectedCountry?.iso2 || selectedCountry?.iso3 || undefined),
+        selectedBranchName: branchType === "Main" ? selectedBranchName(mainBranches, branch) : selectedCityBranchName(cityBranches, branch),
+        selectedBranchCode: branchInfo?.code,
+        createdBy: ""
+      }
+    });
+  }
+
+  return (
+    <div className="space-y-6" dir={isRtl ? "rtl" : "ltr"}>
+      {/* ── Breadcrumb & Page Header ────────────────────────────────── */}
+      <div className="space-y-3 border-b border-slate-200 dark:border-slate-800 pb-4">
+        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+          <Link href="/dashboard" className="hover:text-blue-600 transition">Home</Link>
+          <span>/</span>
+          <Link href="/dashboard/accounts" className="hover:text-blue-600 transition">Accounts</Link>
+          <span>/</span>
+          <span className="font-semibold text-slate-800 dark:text-slate-200">
+            {initialAccountId ? getLabel("editAccountSetup", lang) : getLabel("newAccountReport", lang)}
+          </span>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/90 bg-white/95 px-4 py-3 shadow-xs dark:border-slate-800 dark:bg-slate-900/95">
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-sm font-black text-slate-900 dark:text-white tracking-tight">
+                {initialAccountId ? getLabel("editAccountSetup", lang) : getLabel("newAccountReport", lang)}
+              </h1>
+              <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[9px] font-black uppercase text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300">
+                ● {getLabel("draft", lang)}
+              </span>
+            </div>
+            <p className="text-[10.5px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
+              {getLabel("headerSubtitle", lang)}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className="hidden sm:flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10.5px] font-semibold text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+              <Calendar className="h-3 w-3 text-slate-400" />
+              <span suppressHydrationWarning>{fmtDate(new Date().toISOString())}</span>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push("/dashboard/accounts")}
+              className="h-8 rounded-xl border-slate-200 px-3 text-[11px] font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+            >
+              <ArrowLeft className="h-3.5 w-3.5 mr-1.5" />
+              {getLabel("backToAccounts", lang) || "Back to Accounts"}
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Mandatory Logged-in Scope banner (server-resolved, not frontend-selected) ── */}
+      {!initialAccountId && <LoginScopeBanner scope={erpScope} />}
+
+      {/* ── AI Assistant Soundwave Guidance Banner (Matching Image 1) ── */}
+      <div className="rounded-2xl bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 border border-slate-800 p-4 text-white shadow-md flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="h-10 w-10 rounded-full bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-400 shrink-0 shadow-inner">
+            <Sparkles className="h-5 w-5" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              {getLabel("askAiAssistant", lang)}
+              <span className="inline-flex items-center rounded-full bg-blue-500/20 border border-blue-400/30 px-2 py-0.5 text-[10px] font-medium text-blue-300">
+                5 Languages
+              </span>
+            </h3>
+            <p className="text-xs text-slate-300 mt-0.5">
+              {getLabel("aiAssistantSubtitle", lang)}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 shrink-0">
+          {/* Sound wave equalizer animation */}
+          <div className="flex items-end gap-0.5 h-6 px-2 py-1 bg-slate-800/80 rounded-lg border border-slate-700/50">
+            <span className="w-1 bg-blue-400 rounded-full animate-[pulse_1s_ease-in-out_infinite] h-3" />
+            <span className="w-1 bg-blue-400 rounded-full animate-[pulse_1.2s_ease-in-out_infinite] h-5" />
+            <span className="w-1 bg-blue-400 rounded-full animate-[pulse_0.8s_ease-in-out_infinite] h-2" />
+            <span className="w-1 bg-blue-400 rounded-full animate-[pulse_1.4s_ease-in-out_infinite] h-4" />
+            <span className="w-1 bg-blue-400 rounded-full animate-[pulse_1s_ease-in-out_infinite] h-3" />
+          </div>
+          {!initialAccountId && (
+            <VoiceFormFill
+              context="accounts"
+              lang={lang}
+              compact
+              fieldLabels={{
+                accountName: getLabel("accountName", lang),
+                category: getLabel("category", lang),
+                accountCode: getLabel("manualReference", lang),
+              }}
+              onApply={(f) => {
+                if (f.accountName && !accountName) setAccountName(String(f.accountName));
+                if (f.category && !category) {
+                  const c = String(f.category).toLowerCase();
+                  if (c.includes("expense") || c.includes("cost")) setCategory("EX");
+                  else if (c.includes("income") || c.includes("revenue") || c.includes("sales")) setCategory("P/S");
+                }
+              }}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* ── Dynamic Adaptive Stepper Wizard ────────────────── */}
+      <div className={cn(
+        "grid gap-2.5",
+        activeStepDefs.length === 6 ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-6" :
+        activeStepDefs.length === 5 ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-5" :
+        activeStepDefs.length === 4 ? "grid-cols-2 sm:grid-cols-4" :
+        activeStepDefs.length === 3 ? "grid-cols-1 sm:grid-cols-3" :
+        "grid-cols-1 sm:grid-cols-2"
+      )}>
+        {activeStepDefs.map((s, stepIndex) => {
+          const active = currentStep === s.id;
+          const completed = currentStep > s.id;
+          const displayStepNumber = stepIndex + 1;
+          return (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => {
+                if (s.id === 1 || (s.id > 1 && country && branchType && branch)) {
+                  setCurrentStep(s.id);
+                }
+              }}
+              className={cn(
+                "rounded-xl border p-3 text-left transition-all duration-200 flex items-center gap-3 relative",
+                active
+                  ? "bg-white dark:bg-slate-900 border-blue-600 shadow-xs ring-2 ring-blue-500/10"
+                  : completed
+                  ? "bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800 text-slate-700 dark:text-slate-300"
+                  : "bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
+              )}
+            >
+              <span
+                className={cn(
+                  "h-7 w-7 rounded-full flex items-center justify-center text-xs font-black shrink-0 transition-colors",
+                  active
+                    ? "bg-blue-600 text-white shadow-xs"
+                    : completed
+                    ? "bg-emerald-600 text-white"
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
+                )}
+              >
+                {completed ? "✓" : displayStepNumber}
+              </span>
+              <div className="flex flex-col min-w-0">
+                <span className={cn("text-xs font-bold truncate", active ? "text-blue-600 dark:text-blue-400" : "text-slate-900 dark:text-white")}>
+                  {s.title}
+                </span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 truncate">
+                  {s.subtitle}
+                </span>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* â”€â”€ Left Column Form + Right Column Preview â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      <div className="grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] gap-5 items-start" dir="ltr">
+        {/* Left Side: Step View */}
+        <div className="space-y-6" dir={isRtl ? "rtl" : "ltr"}>
+          {loadingAccount ? (
+            <div className="rounded-xl border border-slate-100 bg-white p-10 shadow-sm flex flex-col items-center justify-center space-y-3">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="text-sm font-semibold text-slate-500">{getLabel("loadingAccountDetails", lang)}</p>
+            </div>
+          ) : (
+            <>
+          {/* Step 1: Account Info */}
+          {currentStep === 1 && (
+            <div className="rounded-xl border border-slate-100 bg-white p-5 shadow-sm space-y-5">
+              <div className="flex items-center gap-2.5 border-b pb-3">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-blue-600">1</span>
+                <h2 className="text-sm font-bold text-slate-900">{getLabel("step1Label", lang)}</h2>
+              </div>
+
+              {/* ── Setup 1A, 1B & 1C: Primary Account Category, Operational Domain, Ownership Level ── */}
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-3 rounded-xl bg-slate-50/70 dark:bg-slate-900/40 p-4 border border-slate-200/60 dark:border-slate-800">
+                {/* 1A: Primary Account Category (بنیادی کھاتہ کی قسم) */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="primaryType" className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                    {getLabel("primaryTypeLabel", lang)} *
+                  </Label>
+                  <select
+                    id="primaryType"
+                    value={primaryType}
+                    onChange={(e) => handlePrimaryTypeChange(e.target.value as PrimaryAccountCategory)}
+                    className={selectClass()}
+                  >
+                    <option value="customers_trade">{getLabel("customersTradeOption", lang)}</option>
+                    <option value="others_country">{getLabel("othersCountryOption", lang)}</option>
+                    <option value="employee">{getLabel("employeeMulazimOption", lang)}</option>
+                    <option value="expenses">{getLabel("expensesOption", lang)}</option>
+                    <option value="investment">{getLabel("investmentCapitalOption", lang)}</option>
+                  </select>
+                </div>
+
+                {/* 1B: Owning Operational Section (کاروباری شعبہ / ڈومین) */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="operationalDomain" className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                    {getLabel("questionOperationalDomain", lang)} *
+                  </Label>
+                  <select
+                    id="operationalDomain"
+                    value={primaryType === "others_country" ? "inter_country" : operationalDomain}
+                    disabled={erpScope.domainLocked}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === "inter_country") {
+                        handlePrimaryTypeChange("others_country");
+                      } else {
+                        const dom = val as "business" | "shipping";
+                        setOperationalDomain(dom);
+                        if (dom === "shipping") {
+                          if (linkedCountries.length === 0) setLinkedCountries(countries.map((c) => c.id));
+                        }
+                        setBranch("");
+                        void loadCategories(dom);
+                      }
+                    }}
+                    className={selectClass()}
+                  >
+                    <option value="business">{getLabel("businessDomain", lang)}</option>
+                    <option value="shipping">{getLabel("shippingDomain", lang)}</option>
+                    {!erpScope.domainLocked && <option value="inter_country">{getLabel("interCountryDomain", lang)}</option>}
+                  </select>
+                  {erpScope.domainLocked && (
+                    <p className="text-[10px] font-semibold text-slate-500">{getLabel("scopeLockedDomain", lang)}</p>
+                  )}
+                </div>
+
+                {/* 1C: Ownership Level (کھاتہ یا لیجر کی سطح) */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="ownershipLevel" className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                    {getLabel("questionOwnershipLevel", lang)} *
+                  </Label>
+                  <select
+                    id="ownershipLevel"
+                    value={ownershipLevel}
+                    onChange={(e) => {
+                      const val = e.target.value as "country" | "main_branch" | "city_branch";
+                      setOwnershipLevel(val);
+                      if (val === "country" || val === "main_branch") {
+                        setBranchType("Main");
+                      } else {
+                        setBranchType("City");
+                      }
+                      setBranch("");
+                      if (val === "country") {
+                        setLinkedCountries(countries.map((c) => c.id));
+                      } else if (primaryType !== "others_country" && operationalDomain !== "shipping") {
+                        setLinkedCountries([]);
+                        setIsLinkedCountriesOpen(false);
+                      }
+                    }}
+                    className={selectClass()}
+                  >
+                    <option value="city_branch">{getLabel("cityBranchLevel", lang)}</option>
+                    <option value="main_branch">{getLabel("mainBranchLevel", lang)}</option>
+                    {(erpScope.isSuperAdmin || erpScope.mode === "country" || primaryType === "others_country") && (
+                      <option value="country">{getLabel("countryLevel", lang)}</option>
+                    )}
+                  </select>
+                </div>
+              </div>
+
+              {/* Secondary Entity Selector when 1A is Customers & Trade Account */}
+              {primaryType === "customers_trade" && (
+                <div className="rounded-xl bg-blue-50/50 dark:bg-blue-950/30 p-3 border border-blue-200/60 dark:border-blue-800/60 flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white shrink-0">ℹ</span>
+                    <div>
+                      <Label htmlFor="tradeKind" className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                        {getLabel("entityTypeLabel", lang)} *
+                      </Label>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        Select whether this trade account belongs to a Customer, Company, Bank, Shipping Line, or Trade Ledger
+                      </p>
+                    </div>
+                  </div>
+                  <div className="w-full sm:w-80">
+                    <select
+                      id="tradeKind"
+                      value={tradeKind}
+                      onChange={(e) => handleTradeKindChange(e.target.value as any)}
+                      className={selectClass()}
+                    >
+                      <option value="customer">{getLabel("customerAccount", lang)} (Party / Buyer)</option>
+                      <option value="company">{getLabel("company", lang)} (Corporate / Supplier)</option>
+                      <option value="bank">{getLabel("bankAccount", lang)} (Bank Ledger)</option>
+                      <option value="shipping_line">{getLabel("shippingDomain", lang)}</option>
+                      <option value="trade">{getLabel("tradeAccount", lang)}</option>
+                      <option value="personal">{getLabel("personal", lang)}</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {/* ── Setup Requirements & Linked Masters Toggles ─────────────────── */}
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40 p-4 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/80 dark:border-slate-800 pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <Layers className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                        {getLabel("accountRequirementsTitle", lang)}
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">
+                          {[companyRequired, bankRequired, warehouseRequired].filter(Boolean).length} / 3 {getLabel("linkedMastersActive", lang)}
+                        </span>
+                      </h4>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        {getLabel("tickToIncludeStep", lang)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* ── Interactive Linked Masters Dropdown ── */}
+                  <div className="relative" ref={linkedMastersRef}>
+                    <button
+                      type="button"
+                      onClick={() => setLinkedMastersMenuOpen((v) => !v)}
+                      className={cn(
+                        "w-full sm:w-auto inline-flex items-center justify-between gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg border shadow-xs transition-colors",
+                        linkedMastersMenuOpen
+                          ? "bg-blue-600 text-white border-blue-600 ring-2 ring-blue-500/20"
+                          : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/60"
+                      )}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <Layers className="h-3.5 w-3.5 text-blue-500" />
+                        <span>{getLabel("selectLinkedMastersDropdown", lang)}</span>
+                        <span className="ml-1 px-1.5 py-0.2 text-[10px] font-bold rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-200">
+                          {[companyRequired, bankRequired, warehouseRequired].filter(Boolean).length}
+                        </span>
+                      </div>
+                      {linkedMastersMenuOpen ? (
+                        <ChevronUp className="h-3.5 w-3.5" />
+                      ) : (
+                        <ChevronDown className="h-3.5 w-3.5" />
+                      )}
+                    </button>
+
+                    {linkedMastersMenuOpen && (
+                      <div className="absolute right-0 ltr:right-0 rtl:left-0 rtl:right-auto mt-2 w-80 sm:w-88 z-30 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl p-2.5 space-y-2 animate-in fade-in-50 zoom-in-95">
+                        <div className="flex items-center justify-between px-2 py-1 border-b border-slate-100 dark:border-slate-800">
+                          <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                            {getLabel("selectLinkedMastersDropdown", lang)}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setCompanyRequired(true);
+                                setBankRequired(true);
+                                setWarehouseRequired(true);
+                              }}
+                              className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline font-semibold"
+                            >
+                              {getLabel("selectAll", lang)}
+                            </button>
+                            <span className="text-slate-300 dark:text-slate-700">|</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setCompanyRequired(false);
+                                setBankRequired(false);
+                                setWarehouseRequired(false);
+                              }}
+                              className="text-[10px] text-slate-500 hover:underline font-semibold"
+                            >
+                              {getLabel("clearAll", lang)}
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Dropdown Item 1: Company */}
+                        <div
+                          className={cn(
+                            "group flex items-start justify-between p-2 rounded-lg cursor-pointer transition-colors border",
+                            companyRequired
+                              ? "bg-blue-50/70 dark:bg-blue-950/30 border-blue-200 dark:border-blue-900"
+                              : "hover:bg-slate-50 dark:hover:bg-slate-800/60 border-transparent"
+                          )}
+                          onClick={() => setCompanyRequired((v) => !v)}
+                        >
+                          <div className="flex items-start gap-2.5">
+                            <div className="mt-0.5">
+                              {companyRequired ? (
+                                <CheckSquare className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                              ) : (
+                                <Square className="h-4 w-4 text-slate-400" />
+                              )}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-1.5">
+                                <Building2 className={cn("h-3.5 w-3.5", companyRequired ? "text-blue-600" : "text-slate-400")} />
+                                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                                  {getLabel("companyRequiredLabel", lang)}
+                                </span>
+                                <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-semibold">
+                                  Step 3
+                                </span>
+                              </div>
+                              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 leading-tight">
+                                {getLabel("companyRequiredDesc", lang)}
+                              </p>
+                            </div>
+                          </div>
+                          {companyRequired && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setLinkedMastersMenuOpen(false);
+                                setCurrentStep(3);
+                              }}
+                              className="shrink-0 text-[10px] font-semibold text-blue-600 dark:text-blue-400 hover:underline px-1.5 py-0.5 bg-blue-100/70 dark:bg-blue-900/50 rounded"
+                            >
+                              {getLabel("openStepDirectly", lang)} →
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Dropdown Item 2: Bank */}
+                        <div
+                          className={cn(
+                            "group flex items-start justify-between p-2 rounded-lg cursor-pointer transition-colors border",
+                            bankRequired
+                              ? "bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900"
+                              : "hover:bg-slate-50 dark:hover:bg-slate-800/60 border-transparent"
+                          )}
+                          onClick={() => setBankRequired((v) => !v)}
+                        >
+                          <div className="flex items-start gap-2.5">
+                            <div className="mt-0.5">
+                              {bankRequired ? (
+                                <CheckSquare className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                              ) : (
+                                <Square className="h-4 w-4 text-slate-400" />
+                              )}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-1.5">
+                                <Landmark className={cn("h-3.5 w-3.5", bankRequired ? "text-emerald-600" : "text-slate-400")} />
+                                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                                  {getLabel("bankRequiredLabel", lang)}
+                                </span>
+                                <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-semibold">
+                                  Step 4
+                                </span>
+                              </div>
+                              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 leading-tight">
+                                {getLabel("bankRequiredDesc", lang)}
+                              </p>
+                            </div>
+                          </div>
+                          {bankRequired && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setLinkedMastersMenuOpen(false);
+                                setCurrentStep(4);
+                              }}
+                              className="shrink-0 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 hover:underline px-1.5 py-0.5 bg-emerald-100/70 dark:bg-emerald-900/50 rounded"
+                            >
+                              {getLabel("openStepDirectly", lang)} →
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Dropdown Item 3: Warehouse */}
+                        <div
+                          className={cn(
+                            "group flex items-start justify-between p-2 rounded-lg cursor-pointer transition-colors border",
+                            warehouseRequired
+                              ? "bg-purple-50/70 dark:bg-purple-950/30 border-purple-200 dark:border-purple-900"
+                              : "hover:bg-slate-50 dark:hover:bg-slate-800/60 border-transparent"
+                          )}
+                          onClick={() => setWarehouseRequired((v) => !v)}
+                        >
+                          <div className="flex items-start gap-2.5">
+                            <div className="mt-0.5">
+                              {warehouseRequired ? (
+                                <CheckSquare className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                              ) : (
+                                <Square className="h-4 w-4 text-slate-400" />
+                              )}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-1.5">
+                                <Warehouse className={cn("h-3.5 w-3.5", warehouseRequired ? "text-purple-600" : "text-slate-400")} />
+                                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                                  {getLabel("warehouseRequiredLabel", lang)}
+                                </span>
+                                <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-semibold">
+                                  Step 5
+                                </span>
+                              </div>
+                              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 leading-tight">
+                                {getLabel("warehouseRequiredDesc", lang)}
+                              </p>
+                            </div>
+                          </div>
+                          {warehouseRequired && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setLinkedMastersMenuOpen(false);
+                                setCurrentStep(5);
+                              }}
+                              className="shrink-0 text-[10px] font-semibold text-purple-600 dark:text-purple-400 hover:underline px-1.5 py-0.5 bg-purple-100/70 dark:bg-purple-900/50 rounded"
+                            >
+                              {getLabel("openStepDirectly", lang)} →
+                            </button>
+                          )}
+                        </div>
+
+                        <div className="pt-1.5 px-2 border-t border-slate-100 dark:border-slate-800 text-[10px] text-slate-500 dark:text-slate-400 flex items-center justify-between">
+                          <span>{activeStepDefs.length} {lang === "ur" ? "مراحل شامل" : "total steps active"}</span>
+                          <button
+                            type="button"
+                            onClick={() => setLinkedMastersMenuOpen(false)}
+                            className="font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                          >
+                            {lang === "ur" ? "مکمل" : "Done"}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* ── Country & Branch Pickers ───────────────────────────────── */}
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="country">{getLabel("country", lang)} *</Label>
+                  <select
+                    id="country"
+                    value={country}
+                    onChange={(event) => handleCountryChange(event.target.value)}
+                    disabled={countryLocked}
+                    className={selectClass()}
+                  >
+                    <option value="">{getLabel("selectCountry", lang)}</option>
+                    {countries
+                      .filter((item) => erpScope.isSuperAdmin || erpScope.countryIds.length === 0 || erpScope.countryIds.includes(item.id))
+                      .map((item) => (
+                        <option key={item.id} value={item.id}>{localizeTerm(item.name, lang)} ({item.iso2 ?? "-"})</option>
+                      ))}
+                  </select>
+                  {countryLocked && (
+                    <p className="text-[10px] font-semibold text-slate-500">{getLabel("scopeLockedCountry", lang)}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  {ownershipLevel === "country" ? (
+                    <div className="h-full flex flex-col justify-end">
+                      <div className="rounded-xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 p-3 text-xs space-y-1.5 shadow-xs">
+                        <div className="flex items-center gap-2">
+                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white shrink-0">
+                            {operationalDomain === "shipping" ? "⚓" : "🌐"}
+                          </span>
+                          <span className="font-bold text-blue-900 dark:text-blue-200">
+                            {operationalDomain === "shipping"
+                              ? `${selectedCountry?.name || getLabel("country", lang)} — ${getLabel("interCountryShippingDesc", lang)}`
+                              : `${selectedCountry?.name || getLabel("country", lang)} — ${getLabel("interCountryTradeDesc", lang)}`}
+                          </span>
+                        </div>
+                        <p className="text-[11px] leading-relaxed text-blue-700 dark:text-blue-300">
+                          {operationalDomain === "shipping"
+                            ? getLabel("countryLevelShippingHint", lang)
+                            : getLabel("countryLevelBusinessHint", lang)}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <Label htmlFor="branch">
+                        {ownershipLevel === "main_branch"
+                          ? `${getLabel("mainBranch", lang)} *`
+                          : `${getLabel("cityBranch", lang)} *`}
+                      </Label>
+                      <select
+                        id="branch"
+                        value={branch}
+                        onChange={(event) => { setBranch(event.target.value); setMessage(""); }}
+                        disabled={!country || branchLocked}
+                        className={selectClass()}
+                      >
+                        <option value="">{getLabel("selectBranch", lang)}</option>
+                        {branchOptions.map((item) => {
+                          const mainName = (item as CountryBranchRow).name;
+                          const cityName = (item as CityBranchRow).city_name;
+                          const branchName = (item as CityBranchRow).name;
+                          const code = item.code;
+                          return (
+                            <option key={item.id} value={item.id}>
+                              {ownershipLevel === "main_branch" || branchType === "Main"
+                                ? `${localizeTerm(mainName, lang)} (${code})`
+                                : `${localizeTerm(cityName, lang)} - ${localizeTerm(branchName, lang)} (${code})`}
+                            </option>
+                          );
+                        })}
+                      </select>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* ── Employee / Mulazim Dedicated Profile Card (ملازمین کا کھاتہ) ── */}
+              {primaryType === "employee" && (
+                <div className="space-y-3 rounded-xl bg-purple-50/60 dark:bg-purple-950/30 p-4 border border-purple-200/70 dark:border-purple-800">
+                  <div className="flex items-center gap-2">
+                    <UserCheck className="h-4 w-4 text-purple-600 dark:text-purple-400 shrink-0" />
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                        {getLabel("employeeMulazimOption", lang)}
+                      </h4>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        {lang === "ur"
+                          ? "ملازم کا کھاتہ جو برانچ عملہ، تنخواہ اور اخراجات کے انتظام سے منسلک ہے"
+                          : "Staff employee account linked directly to monthly salary & office expenses"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="empName" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                        {getLabel("employeeNameLabel", lang)} *
+                      </Label>
+                      <Input
+                        id="empName"
+                        value={accountName}
+                        onChange={(e) => setAccountName(e.target.value)}
+                        placeholder="e.g. Muhammad Ali"
+                        className="h-10 text-xs"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label htmlFor="empRole" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                        {getLabel("employeeDesignation", lang)}
+                      </Label>
+                      <select
+                        id="empRole"
+                        value={employeeRole}
+                        onChange={(e) => {
+                          const role = e.target.value;
+                          setEmployeeRole(role);
+                          setSubType(`Employee Position: ${role}`);
+                        }}
+                        className={selectClass()}
+                      >
+                        <option value="Manager">{getLabel("managerRole", lang)}</option>
+                        <option value="Cashier">{getLabel("cashierRole", lang)}</option>
+                        <option value="Accountant">{getLabel("accountantRole", lang)}</option>
+                        <option value="Clerk">{getLabel("clerkRole", lang)}</option>
+                        <option value="Field / Munshi Operator">{getLabel("fieldOperatorRole", lang)}</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label htmlFor="empSalary" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                        {getLabel("employeeSalary", lang)}
+                      </Label>
+                      <Input
+                        id="empSalary"
+                        type="number"
+                        value={employeeSalary}
+                        onChange={(e) => setEmployeeSalary(e.target.value)}
+                        placeholder="e.g. 3500"
+                        className="h-10 text-xs"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ── Shipping Line Carrier Master Linkage (شپنگ لائن ماسٹر لنک) ── */}
+              {(operationalDomain === "shipping" || tradeKind === "shipping_line" || subType === "Shipping Line Company") && (
+                <div className="space-y-3 rounded-xl bg-blue-50/60 dark:bg-blue-950/30 p-4 border border-blue-200/70 dark:border-blue-800">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Ship className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                      <div>
+                        <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                          {getLabel("shippingLineCarrier", lang)}
+                        </h4>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                          {getLabel("shippingCarrierDesc", lang)}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => router.push("/dashboard/new-entry/shipping-line")}
+                      className="h-6 text-[10px] px-2 text-blue-700 hover:bg-blue-50 border-blue-300 dark:border-blue-700 dark:text-blue-300"
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      {getLabel("newShippingLine", lang)}
+                    </Button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="shippingLinePicker" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                        {getLabel("selectShippingLine", lang)}
+                      </Label>
+                      <select
+                        id="shippingLinePicker"
+                        value={linkedShippingLineId || ""}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setLinkedShippingLineId(val || null);
+                          if (val) {
+                            const matched = shippingLinesList.find((s) => s.id === val);
+                            if (matched) {
+                              setLinkedShippingLineName(matched.name);
+                              if (!accountName || accountName.toLowerCase().includes("shipping")) {
+                                setAccountName(`${matched.name} (Shipping Line)`);
+                              }
+                              if (Array.isArray(matched.linked_countries) && matched.linked_countries.length > 0) {
+                                setLinkedCountries(matched.linked_countries);
+                              }
+                            }
+                          }
+                        }}
+                        className={selectClass()}
+                      >
+                        <option value="">-- {getLabel("selectShippingLine", lang)} --</option>
+                        {shippingLinesList.map((s) => (
+                          <option key={s.id} value={s.id}>
+                            {s.name} {s.shipping_line_code ? `(${s.shipping_line_code})` : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {shippingLineDetail && (
+                      <div className="rounded-lg bg-white dark:bg-slate-900 p-2.5 border border-blue-100 dark:border-blue-900 text-xs space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-slate-900 dark:text-slate-100">{shippingLineDetail.name}</span>
+                          {shippingLineDetail.shipping_line_code && (
+                            <span className="font-mono text-[10px] px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded font-semibold">
+                              {shippingLineDetail.shipping_line_code}
+                            </span>
+                          )}
+                        </div>
+                        {shippingLineDetail.contact_person && (
+                          <p className="text-[11px] text-slate-600 dark:text-slate-300">
+                            <span className="text-slate-400">Contact:</span> {shippingLineDetail.contact_person}
+                          </p>
+                        )}
+                        {(shippingLineDetail.phone || shippingLineDetail.email) && (
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                            {shippingLineDetail.phone} {shippingLineDetail.email ? `• ${shippingLineDetail.email}` : ""}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* ── Inter-Country Trading & Transactions Linkage (بین الملکی لین دین - چاروں ممالک کے ساتھ) ── */}
+              {(primaryType === "others_country" ||
+                ownershipLevel === "country" ||
+                operationalDomain === "shipping" ||
+                tradeKind === "shipping_line" ||
+                subType === "Shipping Line Company" ||
+                Boolean(linkedShippingLineId)) && (
+                <div className="space-y-2 rounded-xl bg-slate-50/70 dark:bg-slate-900/40 p-3.5 border border-slate-200/70 dark:border-slate-800">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Globe2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                        {primaryType === "others_country"
+                          ? (lang === "ur" ? "دیگر ممالک ترسیلات و لین دین والے ممالک" : getLabel("linkedCountriesTitle", lang))
+                          : (lang === "ur" ? "شپنگ لائن و بحری روٹس والے ممالک" : getLabel("linkedCountriesTitle", lang))}
+                      </h4>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        {lang === "ur"
+                          ? "وہ تمام ممالک منتخب کریں جن کے ساتھ یہ کھاتہ رقوم کی ترسیل، سامان کی منتقلی، یا کسٹم کلیئرنگ کرتا ہے۔"
+                          : getLabel("linkedCountriesSubtitle", lang)}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="inline-flex items-center rounded-full bg-emerald-100 dark:bg-emerald-950 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800 dark:text-emerald-200">
+                    {linkedCountries.length} / {countries.length} {getLabel("countriesLinked", lang)}
+                  </span>
+                </div>
+
+                {/* Dropdown Selector Trigger */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsLinkedCountriesOpen((prev) => !prev)}
+                    className="w-full flex items-center justify-between gap-2 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-xs"
+                  >
+                    <div className="flex items-center gap-2 truncate">
+                      <Globe2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                      <span className="truncate">
+                        {linkedCountries.length === 0
+                          ? "-- Select Operating Countries (لین دین) --"
+                          : `${linkedCountries.length} ${getLabel("countriesLinked", lang)}: ${countries
+                              .filter((c) => linkedCountries.includes(c.id))
+                              .map((c) => localizeTerm(c.name, lang))
+                              .join(", ")}`}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0 text-slate-400">
+                      {isLinkedCountriesOpen ? (
+                        <ChevronUp className="h-4 w-4 text-slate-600 dark:text-slate-300" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4 text-slate-600 dark:text-slate-300" />
+                      )}
+                    </div>
+                  </button>
+
+                  {/* Dropdown Menu with Tick Marks */}
+                  {isLinkedCountriesOpen && (
+                    <div className="absolute z-30 mt-1.5 w-full rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl p-3 space-y-2.5">
+                      <div className="flex items-center justify-between border-b pb-2 text-xs">
+                        <span className="font-semibold text-slate-700 dark:text-slate-300">
+                          Active Branch Countries ({countries.length})
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setLinkedCountries(countries.map((c) => c.id))}
+                            className="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 hover:underline px-1.5 py-0.5 rounded"
+                          >
+                            ✓ {getLabel("selectAll", lang)}
+                          </button>
+                          <span className="text-slate-300">|</span>
+                          <button
+                            type="button"
+                            onClick={() => setLinkedCountries([])}
+                            className="text-[10px] font-bold text-slate-500 hover:text-slate-700 dark:text-slate-400 hover:underline px-1.5 py-0.5 rounded"
+                          >
+                            ✕ {getLabel("clearAll", lang)}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 max-h-56 overflow-y-auto pr-1">
+                        {countries.map((c) => {
+                          const isSelected = linkedCountries.includes(c.id);
+                          return (
+                            <button
+                              key={c.id}
+                              type="button"
+                              onClick={() => {
+                                setLinkedCountries((prev) =>
+                                  prev.includes(c.id) ? prev.filter((id) => id !== c.id) : [...prev, c.id]
+                                );
+                              }}
+                              className={`flex items-center justify-between gap-2 p-2 rounded-lg border text-left transition-all ${
+                                isSelected
+                                  ? "bg-emerald-50/90 dark:bg-emerald-950/50 border-emerald-400 text-emerald-900 dark:text-emerald-100 shadow-xs ring-1 ring-emerald-400/30"
+                                  : "bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50"
+                              }`}
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                {isSelected ? (
+                                  <CheckSquare className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                ) : (
+                                  <Square className="h-4 w-4 text-slate-300 dark:text-slate-600 shrink-0" />
+                                )}
+                                <div className="truncate">
+                                  <span className="block text-xs font-bold truncate">
+                                    {localizeTerm(c.name, lang)}
+                                  </span>
+                                  <span className="text-[10px] text-slate-500 font-mono">
+                                    {c.iso2 || "-"} {c.currency_code ? `• ${c.currency_code}` : ""}
+                                  </span>
+                                </div>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Selected Country Badges / Chips */}
+                {linkedCountries.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                    {countries
+                      .filter((c) => linkedCountries.includes(c.id))
+                      .map((c) => (
+                        <span
+                          key={c.id}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-[11px] font-medium text-emerald-800 dark:text-emerald-200"
+                        >
+                          <span className="font-bold">{c.iso2 ?? ""}</span>
+                          <span>{localizeTerm(c.name, lang)}</span>
+                          <button
+                            type="button"
+                            onClick={() => setLinkedCountries((prev) => prev.filter((id) => id !== c.id))}
+                            className="ml-0.5 text-emerald-600 hover:text-emerald-900 dark:text-emerald-400 text-xs font-bold"
+                            title="Remove"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+              {/* ── Sub-Type & Category (Database-backed & Editable) ───────── */}
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="subType">{getLabel("subType", lang)} *</Label>
+                  {accountTitle === "Personal" ? (
+                    <Input
+                      id="subType"
+                      value={subType}
+                      onChange={(event) => setSubType(event.target.value)}
+                      placeholder={getLabel("whoDoesThisBelongTo", lang)}
+                    />
+                  ) : (
+                    <select id="subType" value={subType} onChange={(event) => setSubType(event.target.value)} disabled={!accountTitle} className={selectClass()}>
+                      <option value="">{getLabel("selectSubType", lang)}</option>
+                      {accountTitle ? subTypes[accountTitle].map((item) => (<option key={item} value={item}>{localizedOption(item, lang)}</option>)) : null}
+                    </select>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="category">{getLabel("category", lang)} *</Label>
+                    <div className="flex items-center gap-2">
+                      {category && dbCategories.some((c) => c.name === category || c.id === selectedCategoryId) && (
+                        <button
+                          type="button"
+                          onClick={handleOpenEditCategory}
+                          className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
+                        >
+                          <Pencil className="h-2.5 w-2.5" />
+                          {getLabel("editCategory", lang)}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={handleOpenAddCategory}
+                        className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:underline"
+                      >
+                        <Plus className="h-3 w-3" />
+                        {getLabel("addCategory", lang)}
+                      </button>
+                    </div>
+                  </div>
+                  <select
+                    id="category"
+                    value={category}
+                    onChange={(event) => {
+                      const val = event.target.value;
+                      if (val === "__ADD_NEW_CATEGORY__") {
+                        handleOpenAddCategory();
+                      } else {
+                        setCategory(val);
+                        const matched = dbCategories.find((c) => c.name === val || c.id === val);
+                        if (matched) {
+                          setSelectedCategoryId(matched.id);
+                        } else {
+                          setSelectedCategoryId("");
+                        }
+                      }
+                    }}
+                    className={selectClass()}
+                  >
+                    <option value="">{getLabel("selectCategory", lang)}</option>
+                    {dbCategories.length > 0
+                      ? dbCategories.map((item) => (
+                          <option key={item.id} value={item.name}>
+                            {item.name} ({item.code})
+                          </option>
+                        ))
+                      : categories.map((item) => (
+                          <option key={item} value={item}>
+                            {localizedOption(item, lang)}
+                          </option>
+                        ))}
+                    <option value="__ADD_NEW_CATEGORY__">
+                      + {t(lang, "acct.add_new_category_ellipsis", "Add New Category...")}
+                    </option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="accountCode">{getLabel("accountCodeAuto", lang)}</Label>
+                    {branchInfo?.code ? (
+                      <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400">
+                        {branchInfo.code}
+                      </span>
+                    ) : null}
+                  </div>
+                  <Input
+                    id="accountCode"
+                    value={accountCode || (branchInfo || selectedCountry ? generatedPreviewCode : getLabel("generatedOnSave", lang))}
+                    readOnly
+                    className="bg-blue-50/50 dark:bg-blue-950/30 font-mono text-xs font-bold text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 shadow-inner"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="manualReferenceNumber" className="font-semibold text-slate-800 dark:text-slate-200">
+                      {getLabel("manualReference", lang)}
+                    </Label>
+                    <span
+                      dir="ltr"
+                      className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800"
+                    >
+                      {getLabel("manualReferenceBadge", lang)}
+                    </span>
+                  </div>
+                  <Input
+                    id="manualReferenceNumber"
+                    dir="ltr"
+                    value={manualReferenceNumber}
+                    onChange={(event) => setManualReferenceNumber(normalizeManualReference(event.target.value))}
+                    placeholder={getLabel("manualReferencePlaceholder", lang)}
+                    className="font-mono text-left tracking-wider font-bold text-slate-900 dark:text-slate-100 placeholder:text-slate-400 placeholder:font-mono"
+                  />
+                  <p className="text-[10.5px] text-slate-500 dark:text-slate-400">
+                    {getLabel("manualReferenceHint", lang)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="accountName">{getLabel("accountName", lang)} *</Label>
+                <Input id="accountName" value={accountName} onChange={(event) => setAccountName(event.target.value)} placeholder={getLabel("accountNamePlaceholder", lang)} />
+              </div>
+
+              {/* Contacts List */}
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center justify-between border-b pb-2">
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4.5 w-4.5 text-blue-600" />
+                    <h3 className="font-semibold text-slate-800 text-sm">{getLabel("contacts", lang)}</h3>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setContacts([...contacts, { type: "Mobile", value: "" }])}
+                    className="h-7 text-xs border-blue-200 text-blue-700 hover:bg-blue-50 px-2.5 rounded-md font-semibold"
+                  >
+                    {getLabel("addContact", lang)}
+                  </Button>
+                </div>
+                <div className="space-y-3">
+                  {contacts.map((contact, idx) => {
+                    const isCustom = !["Mobile", "WhatsApp", "Email", "Landline", "Office"].includes(contact.type);
+                    return (
+                      <div key={idx} className="flex gap-2 items-end">
+                        <div className="w-1/3 space-y-1">
+                          <Label className="text-[10px] font-semibold text-slate-500">{getLabel("type", lang)}</Label>
+                          <select
+                            value={isCustom ? "Custom" : contact.type}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              const updated = [...contacts];
+                              updated[idx].type = val === "Custom" ? "Custom: " : val;
+                              setContacts(updated);
+                            }}
+                            className={selectClass() + " h-9 text-xs px-2"}
+                          >
+                            <option value="Mobile">{getLabel("mobile", lang)}</option>
+                            <option value="WhatsApp">{getLabel("whatsApp", lang)}</option>
+                            <option value="Email">{getLabel("email", lang)}</option>
+                            <option value="Landline">{getLabel("landline", lang)}</option>
+                            <option value="Office">{getLabel("office", lang)}</option>
+                            <option value="Custom">{getLabel("customType", lang)}</option>
+                          </select>
+                        </div>
+                        <div className="flex-1 space-y-1">
+                          <Label className="text-[10px] font-semibold text-slate-500">{getLabel("contactValue", lang)}</Label>
+                          <Input
+                            dir="ltr"
+                            value={contact.value}
+                            onChange={(e) => {
+                              const updated = [...contacts];
+                              updated[idx].value = normalizeContactInput(contact.type, e.target.value);
+                              setContacts(updated);
+                            }}
+                            placeholder={
+                              contact.type === "Email"
+                                ? "email@example.com"
+                                : contact.type === "WhatsApp"
+                                ? "+00 000 0000000"
+                                : getLabel("contactNumber", lang)
+                            }
+                            className={`h-9 text-xs font-mono text-left ${contactErrorKey(contact.type, contact.value) ? "border-rose-400 focus-visible:ring-rose-400" : ""}`}
+                          />
+                          {contactErrorKey(contact.type, contact.value) && (
+                            <p className="text-[10px] font-semibold text-rose-500">{getLabel(contactErrorKey(contact.type, contact.value)!, lang)}</p>
+                          )}
+                        </div>
+                        {contacts.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              const updated = contacts.filter((_, i) => i !== idx);
+                              setContacts(updated);
+                            }}
+                            className="h-9 w-9 text-rose-600 hover:bg-rose-50 rounded-lg flex items-center justify-center shrink-0"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    try {
+                      const draftPayload = {
+                        primaryType,
+                        operationalDomain,
+                        ownershipLevel,
+                        country,
+                        branchType,
+                        branch,
+                        tradeKind,
+                        accountTitle,
+                        subType,
+                        category,
+                        accountCode,
+                        manualReferenceNumber,
+                        accountName,
+                        contacts,
+                        savedAt: new Date().toISOString()
+                      };
+                      localStorage.setItem("new_account_setup_draft", JSON.stringify(draftPayload));
+                      setMessage(lang === "ur" ? "ڈرافٹ کامیابی کے ساتھ محفوظ ہو گیا!" : "Account draft saved successfully!");
+                    } catch (e) {
+                      setMessage("Draft saved locally.");
+                    }
+                  }}
+                  className="font-bold text-xs h-10 px-4 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl cursor-pointer"
+                >
+                  <Save className="h-3.5 w-3.5 mr-1.5 text-slate-500" />
+                  {getLabel("saveAsDraft", lang) || "Save as Draft"}
+                </Button>
+
+                <Button
+                  type="button"
+                  onClick={() => {
+                    // Step 1 requires real selections — no silent auto-fill of
+                    // Company / Trading Company / Sundry Debtors defaults.
+                    const step1Missing: string[] = [];
+                    if (!country) step1Missing.push(getLabel("country", lang));
+                    if (!branchType) step1Missing.push(getLabel("branchType", lang));
+                    if (!branch) step1Missing.push(getLabel("selectBranch", lang));
+                    if (!accountTitle) step1Missing.push(getLabel("accountTitle", lang));
+                    const needsSub = accountTitle && (accountTitle === "Personal" || (subTypes[accountTitle]?.length ?? 0) > 0);
+                    if (needsSub && !subType) step1Missing.push(getLabel("subType", lang));
+                    if (!category) step1Missing.push(getLabel("category", lang));
+                    // Name is only required here for types that don't link a master
+                    // record later (Personal / Expenses); the others inherit it from
+                    // the linked customer/company/bank on the next step.
+                    const linksMaster = ["Customer", "Company", "Bank", "Employee"].includes(accountTitle as string);
+                    if (!linksMaster && !accountName.trim()) step1Missing.push(getLabel("accountName", lang));
+                    if (step1Missing.length > 0) {
+                      setMessage(`${getLabel("missingFieldsPrefix", lang)}: ${step1Missing.join(", ")}`);
+                      return;
+                    }
+                    setMessage("");
+                    setCurrentStep(nextStep);
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs h-10 px-6 shadow-sm rounded-xl flex items-center gap-2 border border-blue-700/20 cursor-pointer disabled:opacity-50"
+                >
+                  <span>{getLabel("saveNext", lang) || "Save & Next"}</span>
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 2: Customer Details — Master Form Picker */}
+          {currentStep === 2 && (
+            <div className="rounded-xl border border-slate-100 bg-white p-5 shadow-sm space-y-5">
+              <div className="flex items-center gap-2.5 border-b pb-3">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-blue-600">2</span>
+                <h2 className="text-sm font-bold text-slate-900">{getLabel("step", lang)} 2: {getLabel("step2Label", lang)}</h2>
+              </div>
+
+              <p className="text-xs text-muted-foreground">
+                {getLabel("customerPickerHelp", lang)}
+              </p>
+
+              {/* Master Form Picker — single source of truth */}
+              <CustomerPicker
+                label={getLabel("customerMaster", lang)}
+                value={linkedCustomerId ?? ""}
+                countryId={canonicalCountryId || null}
+                countryName={selectedCountry?.name || null}
+                defaultFilterByCountry={false}
+                showCountryFilter={Boolean(canonicalCountryId)}
+                onValueChange={(id) => {
+                  setLinkedCustomerId(id || null);
+                  if (!id) { setLinkedCustomerName(""); return; }
+                  // Populate account name from customer selection if not already set
+                  fetch(`/api/erp/customers/${id}?lang=${lang}`)
+                    .then((r) => r.json())
+                    .then((json) => {
+                      const name = json?.customer?.customer_name ?? json?.data?.customer_name ?? "";
+                      setLinkedCustomerName(name);
+                      if (!accountName && name) setAccountName(name);
+                    })
+                    .catch(() => null);
+                }}
+                placeholder={getLabel("searchExistingCustomers", lang)}
+              />
+
+              {linkedCustomerId && (
+                <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50/40 px-3 py-2 text-xs">
+                  <span className="text-emerald-700 font-semibold">{getLabel("linked", lang)}:</span>
+                  <span className="text-emerald-800">{linkedCustomerName || linkedCustomerId}</span>
+                  <button
+                    type="button"
+                    className="ml-auto text-rose-600 hover:underline"
+                    onClick={() => { setLinkedCustomerId(null); setLinkedCustomerName(""); }}
+                  >
+                    {getLabel("disconnect", lang)}
+                  </button>
+                </div>
+              )}
+
+              <div className="flex justify-between items-center pt-4 border-t border-slate-100 dark:border-slate-800">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentStep(prevStep)}
+                  className="font-bold text-xs h-10 px-4 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl cursor-pointer"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-1" />
+                  {getLabel("back", lang)}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => setCurrentStep(nextStep)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs h-10 px-6 shadow-sm rounded-xl flex items-center gap-2 border border-blue-700/20 cursor-pointer"
+                >
+                  <span>{linkedCustomerId ? getLabel("saveNext", lang) : getLabel("skipNext", lang)}</span>
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Company Details — Canonical Multi-Company */}
+          {currentStep === 3 && (
+            <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 sm:p-6 shadow-xs space-y-6">
+              <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-3.5">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-xs font-black text-white shadow-xs">3</span>
+                <div>
+                  <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                    {getLabel("step", lang)} 3: {getLabel("step3Label", lang)}
+                  </h2>
+                  <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                    {lang === "ur"
+                      ? "اکاؤنٹ کے ساتھ متعدد کمپنیاں منسلک کریں (بغیر ڈپلیکیٹ اکاؤنٹ)"
+                      : "Attach multiple companies to this single account identity without creating duplicate accounts"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Company Picker & Add to Account Action */}
+              <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 p-4 space-y-3">
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200">
+                  <Building2 className="h-4 w-4 text-blue-600" />
+                  <span>{getLabel("companyMaster", lang)}</span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {getLabel("companyPickerHelp", lang)}
+                </p>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-3">
+                  <div className="flex-1">
+                    <CompanyPicker
+                      label={getLabel("companyMaster", lang)}
+                      value={pickerCompanyId}
+                      onValueChange={(val) => {
+                        setPickerCompanyId(val || "");
+                        if (!val) {
+                          setPickerCompanyRecord(null);
+                          return;
+                        }
+                        fetch(`/api/erp/companies/${val}?lang=${lang}`)
+                          .then((r) => r.json())
+                          .then((json) => {
+                            const comp = json?.company || json?.data || null;
+                            setPickerCompanyRecord(comp);
+                          })
+                          .catch(() => null);
+                      }}
+                      placeholder={getLabel("searchExistingCompanies", lang)}
+                      createButtonPlacement="both"
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      if (!pickerCompanyId) return;
+                      if (linkedCompanies.some((c) => c.id === pickerCompanyId)) {
+                        setMessage(lang === "ur" ? "یہ کمپنی پہلے ہی شامل ہے!" : "Company already linked!");
+                        return;
+                      }
+                      const name = pickerCompanyRecord?.name || pickerCompanyRecord?.legal_name || "Company";
+                      const isFirst = linkedCompanies.length === 0;
+                      const nextItem = {
+                        id: pickerCompanyId,
+                        name,
+                        code: pickerCompanyRecord?.code,
+                        country: pickerCompanyRecord?.countries?.name || pickerCompanyRecord?.country || "",
+                        isPrimary: isFirst,
+                      };
+                      setLinkedCompanies((prev) => [...prev, nextItem]);
+                      if (isFirst) {
+                        setLinkedCompanyId(pickerCompanyId);
+                        setLinkedCompanyName(name);
+                        if (pickerCompanyRecord) setCompanyDetail(pickerCompanyRecord);
+                        if (!accountName) setAccountName(name);
+                      }
+                      setPickerCompanyId("");
+                      setPickerCompanyRecord(null);
+                      setMessage("");
+                    }}
+                    disabled={!pickerCompanyId}
+                    className="h-10 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs shrink-0 cursor-pointer disabled:opacity-50"
+                  >
+                    <Plus className="h-4 w-4 mr-1.5" />
+                    {getLabel("addCompanyToAccount", lang)}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Linked Companies Table / Compact Rows */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-blue-600" />
+                    {getLabel("linkedCompaniesTitle", lang)} ({linkedCompanies.length})
+                  </h3>
+                  {linkedCompanies.length > 0 && (
+                    <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                      ✓ {lang === "ur" ? "مربوط" : "Connected"}
+                    </span>
+                  )}
+                </div>
+
+                {linkedCompanies.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-slate-200 dark:border-slate-800 p-6 text-center text-xs text-slate-400">
+                    <Building2 className="h-8 w-8 mx-auto mb-2 opacity-40 text-blue-600" />
+                    <p>{getLabel("noCompaniesLinked", lang)}</p>
+                  </div>
+                ) : (
+                  <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 font-semibold border-b border-slate-200 dark:border-slate-800">
+                        <tr>
+                          <th className="p-3">{getLabel("company", lang) || "Company Name"}</th>
+                          <th className="p-3">{getLabel("country", lang)}</th>
+                          <th className="p-3">{getLabel("primary", lang) || "Primary"}</th>
+                          <th className="p-3 text-right">{getLabel("actions", lang) || "Actions"}</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                        {linkedCompanies.map((comp) => (
+                          <tr key={comp.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
+                            <td className="p-3 font-semibold text-slate-900 dark:text-white">
+                              <div className="flex items-center gap-2">
+                                <Building2 className="h-4 w-4 text-blue-600 shrink-0" />
+                                <div>
+                                  <span>{comp.name}</span>
+                                  {comp.code && <span className="ml-2 text-[10px] font-mono text-slate-400 font-normal">({comp.code})</span>}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="p-3 text-slate-600 dark:text-slate-300">{comp.country || "-"}</td>
+                            <td className="p-3">
+                              {comp.isPrimary ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 font-bold text-[10px]">
+                                  ★ {getLabel("primaryCompany", lang)}
+                                </span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setLinkedCompanies((prev) =>
+                                      prev.map((item) => ({ ...item, isPrimary: item.id === comp.id }))
+                                    );
+                                    setLinkedCompanyId(comp.id);
+                                    setLinkedCompanyName(comp.name);
+                                    fetch(`/api/erp/companies/${comp.id}?lang=${lang}`)
+                                      .then((r) => r.json())
+                                      .then((json) => {
+                                        const c = json?.data?.company || json?.company;
+                                        if (c) setCompanyDetail(c);
+                                      })
+                                      .catch(() => null);
+                                  }}
+                                  className="text-[10px] font-bold text-slate-500 hover:text-blue-600 hover:underline cursor-pointer"
+                                >
+                                  {getLabel("setAsPrimary", lang)}
+                                </button>
+                              )}
+                            </td>
+                            <td className="p-3 text-right">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setLinkedCompanies((prev) => {
+                                    const next = prev.filter((item) => item.id !== comp.id);
+                                    if (comp.isPrimary && next.length > 0) {
+                                      next[0].isPrimary = true;
+                                      setLinkedCompanyId(next[0].id);
+                                      setLinkedCompanyName(next[0].name);
+                                      fetch(`/api/erp/companies/${next[0].id}?lang=${lang}`)
+                                        .then((r) => r.json())
+                                        .then((json) => {
+                                          const c = json?.data?.company || json?.company;
+                                          if (c) setCompanyDetail(c);
+                                        })
+                                        .catch(() => null);
+                                    } else if (next.length === 0) {
+                                      setLinkedCompanyId(null);
+                                      setLinkedCompanyName("");
+                                      setCompanyDetail(null);
+                                    }
+                                    return next;
+                                  });
+                                }}
+                                className="h-7 text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 px-2 rounded-lg cursor-pointer"
+                              >
+                                <X className="h-3.5 w-3.5 mr-1" />
+                                {getLabel("remove", lang) || "Remove"}
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              {/* Helper single account identity callout */}
+              <div className="rounded-xl border border-blue-100 dark:border-blue-900/40 bg-blue-50/50 dark:bg-blue-950/20 p-3 text-[11px] text-blue-700 dark:text-blue-300 flex items-start gap-2">
+                <ShieldCheck className="h-4 w-4 shrink-0 text-blue-600 mt-0.5" />
+                <span>{getLabel("singleAccountIdentityNote", lang)}</span>
+              </div>
+
+              <div className="flex justify-between items-center pt-4 border-t border-slate-100 dark:border-slate-800">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentStep(prevStep)}
+                  className="font-bold text-xs h-10 px-4 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl cursor-pointer"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-1" />
+                  {getLabel("back", lang)}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => setCurrentStep(nextStep)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs h-10 px-6 shadow-sm rounded-xl flex items-center gap-2 border border-blue-700/20 cursor-pointer"
+                >
+                  <span>{linkedCompanies.length > 0 ? getLabel("saveNext", lang) : getLabel("skipNext", lang)}</span>
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 4: Bank Details — Canonical Multi-Bank */}
+          {currentStep === 4 && (
+            <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 sm:p-6 shadow-xs space-y-6">
+              <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-3.5">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-600 text-xs font-black text-white shadow-xs">4</span>
+                <div>
+                  <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                    {getLabel("step", lang)} 4: {getLabel("step4Label", lang)}
+                  </h2>
+                  <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                    {lang === "ur"
+                      ? "اکاؤنٹ کے ساتھ متعدد بینک منسلک کریں (بغیر ڈپلیکیٹ اکاؤنٹ)"
+                      : "Attach multiple banks to this single account identity without creating duplicate accounts"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Bank Picker & Add to Account Action */}
+              <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 p-4 space-y-3">
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200">
+                  <Landmark className="h-4 w-4 text-emerald-600" />
+                  <span>{getLabel("bankMaster", lang)}</span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {getLabel("bankPickerHelp", lang)}
+                </p>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-3">
+                  <div className="flex-1">
+                    <BankPicker
+                      label={getLabel("bankMaster", lang)}
+                      value={pickerBankId}
+                      onValueChange={(val) => {
+                        setPickerBankId(val || "");
+                        if (!val) {
+                          setPickerBankRecord(null);
+                          return;
+                        }
+                        fetch(`/api/erp/banks/${val}?lang=${lang}`)
+                          .then((r) => r.json())
+                          .then((json) => {
+                            const b = json?.data?.bank || json?.bank || null;
+                            setPickerBankRecord(b);
+                          })
+                          .catch(() => null);
+                      }}
+                      placeholder={getLabel("searchExistingBanks", lang)}
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      if (!pickerBankId) return;
+                      if (linkedBanks.some((b) => b.id === pickerBankId)) {
+                        setMessage(lang === "ur" ? "یہ بینک پہلے ہی شامل ہے!" : "Bank already linked!");
+                        return;
+                      }
+                      const name = pickerBankRecord?.bank_name || pickerBankRecord?.name || "Bank";
+                      const isFirst = linkedBanks.length === 0;
+                      const nextItem = {
+                        id: pickerBankId,
+                        name,
+                        branchName: pickerBankRecord?.branch_name || "",
+                        accountNumber: pickerBankRecord?.account_number || "",
+                        currency: pickerBankRecord?.currency || "",
+                        isPrimary: isFirst,
+                      };
+                      setLinkedBanks((prev) => [...prev, nextItem]);
+                      if (isFirst) {
+                        setLinkedBankId(pickerBankId);
+                        setLinkedBankName(name);
+                        if (pickerBankRecord) setBankDetail(pickerBankRecord);
+                        if (!accountName) setAccountName(name);
+                      }
+                      setPickerBankId("");
+                      setPickerBankRecord(null);
+                      setMessage("");
+                    }}
+                    disabled={!pickerBankId}
+                    className="h-10 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs shrink-0 cursor-pointer disabled:opacity-50"
+                  >
+                    <Plus className="h-4 w-4 mr-1.5" />
+                    {getLabel("addBankToAccount", lang)}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Linked Banks Table / Compact Rows */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                    <Landmark className="h-4 w-4 text-emerald-600" />
+                    {getLabel("linkedBanksTitle", lang)} ({linkedBanks.length})
+                  </h3>
+                  {linkedBanks.length > 0 && (
+                    <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                      ✓ {lang === "ur" ? "مربوط" : "Connected"}
+                    </span>
+                  )}
+                </div>
+
+                {linkedBanks.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-slate-200 dark:border-slate-800 p-6 text-center text-xs text-slate-400">
+                    <Landmark className="h-8 w-8 mx-auto mb-2 opacity-40 text-emerald-600" />
+                    <p>{getLabel("noBanksLinked", lang)}</p>
+                  </div>
+                ) : (
+                  <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 font-semibold border-b border-slate-200 dark:border-slate-800">
+                        <tr>
+                          <th className="p-3">{getLabel("bank", lang) || "Bank Name"}</th>
+                          <th className="p-3">{getLabel("branch", lang) || "Branch"}</th>
+                          <th className="p-3">{getLabel("accountReference", lang) || "Account / Reference"}</th>
+                          <th className="p-3">{getLabel("primary", lang) || "Primary"}</th>
+                          <th className="p-3 text-right">{getLabel("actions", lang) || "Actions"}</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                        {linkedBanks.map((bank) => (
+                          <tr key={bank.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
+                            <td className="p-3 font-semibold text-slate-900 dark:text-white">
+                              <div className="flex items-center gap-2">
+                                <Landmark className="h-4 w-4 text-emerald-600 shrink-0" />
+                                <span>{bank.name}</span>
+                              </div>
+                            </td>
+                            <td className="p-3 text-slate-600 dark:text-slate-300">{bank.branchName || "-"}</td>
+                            <td className="p-3 font-mono text-[11px] text-slate-500">
+                              {bank.accountNumber ? `${bank.accountNumber}${bank.currency ? ` (${bank.currency})` : ""}` : "-"}
+                            </td>
+                            <td className="p-3">
+                              {bank.isPrimary ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold text-[10px]">
+                                  ★ {getLabel("primaryBank", lang)}
+                                </span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setLinkedBanks((prev) =>
+                                      prev.map((item) => ({ ...item, isPrimary: item.id === bank.id }))
+                                    );
+                                    setLinkedBankId(bank.id);
+                                    setLinkedBankName(bank.name);
+                                    fetch(`/api/erp/banks/${bank.id}?lang=${lang}`)
+                                      .then((r) => r.json())
+                                      .then((json) => {
+                                        const b = json?.data?.bank || json?.bank;
+                                        if (b) setBankDetail(b);
+                                      })
+                                      .catch(() => null);
+                                  }}
+                                  className="text-[10px] font-bold text-slate-500 hover:text-emerald-600 hover:underline cursor-pointer"
+                                >
+                                  {getLabel("setAsPrimary", lang)}
+                                </button>
+                              )}
+                            </td>
+                            <td className="p-3 text-right">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setLinkedBanks((prev) => {
+                                    const next = prev.filter((item) => item.id !== bank.id);
+                                    if (bank.isPrimary && next.length > 0) {
+                                      next[0].isPrimary = true;
+                                      setLinkedBankId(next[0].id);
+                                      setLinkedBankName(next[0].name);
+                                      fetch(`/api/erp/banks/${next[0].id}?lang=${lang}`)
+                                        .then((r) => r.json())
+                                        .then((json) => {
+                                          const b = json?.data?.bank || json?.bank;
+                                          if (b) setBankDetail(b);
+                                        })
+                                        .catch(() => null);
+                                    } else if (next.length === 0) {
+                                      setLinkedBankId(null);
+                                      setLinkedBankName("");
+                                      setBankDetail(null);
+                                    }
+                                    return next;
+                                  });
+                                }}
+                                className="h-7 text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 px-2 rounded-lg cursor-pointer"
+                              >
+                                <X className="h-3.5 w-3.5 mr-1" />
+                                {getLabel("remove", lang) || "Remove"}
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              {/* Helper single account identity callout */}
+              <div className="rounded-xl border border-emerald-100 dark:border-emerald-900/40 bg-emerald-50/50 dark:bg-emerald-950/20 p-3 text-[11px] text-emerald-800 dark:text-emerald-300 flex items-start gap-2">
+                <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-600 mt-0.5" />
+                <span>{getLabel("singleAccountIdentityNote", lang)}</span>
+              </div>
+
+              <div className="flex justify-between items-center pt-4 border-t border-slate-100 dark:border-slate-800">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentStep(prevStep)}
+                  className="font-bold text-xs h-10 px-4 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl cursor-pointer"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-1" />
+                  {getLabel("back", lang)}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => setCurrentStep(nextStep)}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-10 px-6 shadow-sm rounded-xl flex items-center gap-2 border border-emerald-700/20 cursor-pointer"
+                >
+                  <span>{linkedBanks.length > 0 ? getLabel("saveNext", lang) : getLabel("skipNext", lang)}</span>
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 5: Warehouse Allocation (Canonical Multi-Warehouse) */}
+          {currentStep === 5 && (
+            <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 sm:p-6 shadow-xs space-y-6">
+              <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-3.5">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-purple-600 text-xs font-black text-white shadow-xs">5</span>
+                <div>
+                  <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                    {getLabel("step", lang)} 5: {getLabel("step5Label", lang)}
+                  </h2>
+                  <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                    {lang === "ur"
+                      ? "گودام کی تخصیص اور کثیر گودام ربط (بغیر ڈپلیکیٹ کسٹمر)"
+                      : "Canonical multi-warehouse allocation without duplicate customer accounts"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Warehouse Picker & Add to Account Action */}
+              <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 p-4 space-y-3">
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200">
+                  <Warehouse className="h-4 w-4 text-purple-600" />
+                  <span>{getLabel("warehouseMaster", lang)}</span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {getLabel("warehousePickerHelp", lang)}
+                </p>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-3">
+                  <div className="flex-1">
+                    <WarehousePicker
+                      label={getLabel("warehouse", lang)}
+                      value={pickerWarehouseId}
+                      onValueChange={(val) => setPickerWarehouseId(val || "")}
+                      onSelectRecord={(rec) => setPickerWarehouseRecord(rec)}
+                      placeholder={getLabel("searchExistingWarehouses", lang)}
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      if (!pickerWarehouseId) return;
+                      if (linkedWarehouses.some((w) => w.id === pickerWarehouseId)) {
+                        setMessage(lang === "ur" ? "یہ گودام پہلے ہی شامل ہے!" : "Warehouse already linked!");
+                        return;
+                      }
+                      const name = pickerWarehouseRecord?.name || "Warehouse";
+                      const isFirst = linkedWarehouses.length === 0;
+                      const nextItem = {
+                        id: pickerWarehouseId,
+                        name,
+                        code: pickerWarehouseRecord?.code,
+                        address: pickerWarehouseRecord?.address,
+                        isPrimary: isFirst,
+                      };
+                      setLinkedWarehouses((prev) => [...prev, nextItem]);
+                      if (isFirst) {
+                        setLinkedWarehouseId(pickerWarehouseId);
+                        setWarehouseDetail(pickerWarehouseRecord);
+                      }
+                      setPickerWarehouseId("");
+                      setPickerWarehouseRecord(null);
+                      setMessage("");
+                    }}
+                    disabled={!pickerWarehouseId}
+                    className="h-10 px-4 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow-xs shrink-0 cursor-pointer disabled:opacity-50"
+                  >
+                    <Plus className="h-4 w-4 mr-1.5" />
+                    {getLabel("addWarehouseToAccount", lang)}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Linked Warehouses Table / Card List */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-purple-600" />
+                    {getLabel("linkedWarehousesTitle", lang)} ({linkedWarehouses.length})
+                  </h3>
+                  {linkedWarehouses.length > 0 && (
+                    <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                      ✓ {lang === "ur" ? "مربوط" : "Connected"}
+                    </span>
+                  )}
+                </div>
+
+                {linkedWarehouses.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-slate-200 dark:border-slate-800 p-6 text-center text-xs text-slate-400">
+                    <Warehouse className="h-8 w-8 mx-auto mb-2 opacity-40 text-purple-600" />
+                    <p>{getLabel("noWarehousesLinked", lang)}</p>
+                  </div>
+                ) : (
+                  <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 font-semibold border-b border-slate-200 dark:border-slate-800">
+                        <tr>
+                          <th className="p-3">{getLabel("warehouse", lang)}</th>
+                          <th className="p-3">{getLabel("branchCode", lang)}</th>
+                          <th className="p-3">{getLabel("status", lang)}</th>
+                          <th className="p-3 text-right">{getLabel("actions", lang) || "Actions"}</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                        {linkedWarehouses.map((wh) => (
+                          <tr key={wh.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
+                            <td className="p-3 font-semibold text-slate-900 dark:text-white">
+                              <div className="flex items-center gap-2">
+                                <Warehouse className="h-4 w-4 text-purple-600 shrink-0" />
+                                <div>
+                                  <span>{wh.name}</span>
+                                  {wh.address && <p className="text-[10px] text-slate-400 font-normal truncate max-w-xs">{wh.address}</p>}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="p-3 font-mono text-[11px] text-slate-500">{wh.code || "-"}</td>
+                            <td className="p-3">
+                              {wh.isPrimary ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 font-bold text-[10px]">
+                                  ★ {getLabel("primaryWarehouse", lang)}
+                                </span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setLinkedWarehouses((prev) =>
+                                      prev.map((item) => ({ ...item, isPrimary: item.id === wh.id }))
+                                    );
+                                    setLinkedWarehouseId(wh.id);
+                                  }}
+                                  className="text-[10px] font-bold text-slate-500 hover:text-purple-600 hover:underline"
+                                >
+                                  {getLabel("setAsPrimary", lang)}
+                                </button>
+                              )}
+                            </td>
+                            <td className="p-3 text-right">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setLinkedWarehouses((prev) => {
+                                    const next = prev.filter((item) => item.id !== wh.id);
+                                    if (wh.isPrimary && next.length > 0) {
+                                      next[0].isPrimary = true;
+                                      setLinkedWarehouseId(next[0].id);
+                                    } else if (next.length === 0) {
+                                      setLinkedWarehouseId(null);
+                                    }
+                                    return next;
+                                  });
+                                }}
+                                className="h-7 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-xs px-2 rounded-lg cursor-pointer"
+                              >
+                                <X className="h-3.5 w-3.5 mr-1" />
+                                {getLabel("disconnect", lang)}
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              {/* Canonical Multi-Warehouse Guarantee Notice */}
+              <div className="rounded-xl bg-purple-50/60 dark:bg-purple-950/30 border border-purple-200/60 dark:border-purple-800/60 p-3 flex items-start gap-2.5 text-xs text-purple-900 dark:text-purple-200">
+                <ShieldCheck className="h-4 w-4 text-purple-600 shrink-0 mt-0.5" />
+                <p className="text-[11px] leading-relaxed">
+                  {getLabel("multiWarehouseCanonicalNote", lang)}
+                </p>
+              </div>
+
+              <div className="flex justify-between items-center pt-4 border-t border-slate-100 dark:border-slate-800">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentStep(prevStep)}
+                  className="font-bold text-xs h-10 px-4 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl cursor-pointer"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-1" />
+                  {getLabel("back", lang)}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => setCurrentStep(nextStep)}
+                  className="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs h-10 px-6 shadow-sm rounded-xl flex items-center gap-2 border border-purple-700/20 cursor-pointer"
+                >
+                  <span>{linkedWarehouses.length > 0 ? getLabel("saveNext", lang) : getLabel("skipNext", lang)}</span>
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 6: Review & Save (Includes Full Verification & Save) */}
+          {currentStep === 6 && (
+            <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 sm:p-6 shadow-xs space-y-6">
+              <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-3.5">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-xs font-black text-white shadow-xs">
+                  {activeStepDefs.length}
+                </span>
+                <div>
+                  <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                    {getLabel("step", lang)} {activeStepDefs.length}: {getLabel("step6Label", lang)}
+                  </h2>
+                  <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                    {lang === "ur" ? "اکاؤنٹ تفصیلات کا حتمی جائزہ اور توثیق" : "Final account review, master verification and ledger activation"}
+                  </p>
+                </div>
+              </div>
+
+              {/* 2-Column Summary Cards */}
+              <div className="grid gap-4 md:grid-cols-2 text-xs">
+                <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40 p-4 space-y-2">
+                  <h3 className="font-bold text-slate-800 dark:text-slate-200 border-b border-slate-200/60 dark:border-slate-800 pb-1.5 flex items-center gap-1.5">
+                    <MapPin className="h-3.5 w-3.5 text-emerald-600" />
+                    {getLabel("branchDetails", lang)}
+                  </h3>
+                  <div><b>{getLabel("company", lang)}:</b> {branchInfo?.company || "-"}</div>
+                  <div><b>{getLabel("branchName", lang)}:</b> {ownershipLevel === "country" ? `${selectedCountry?.name || "Country"} (${getLabel("countryLevel", lang)})` : branchType === "Main" ? selectedBranchName(mainBranches, branch) : selectedCityBranchName(cityBranches, branch)}</div>
+                  <div><b>{getLabel("branchCode", lang)}:</b> {branchInfo?.code || "-"}</div>
+                  <div><b>{getLabel("country", lang)}:</b> {selectedCountry?.name || "-"}</div>
+                  <div><b>{getLabel("branchType", lang)}:</b> {branchType || "-"}</div>
+                  <div><b>{getLabel("currency", lang)}:</b> {branchInfo?.currency || selectedCountry?.currency_code || "AED"}</div>
+                </div>
+
+                <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40 p-4 space-y-2">
+                  <h3 className="font-bold text-slate-800 dark:text-slate-200 border-b border-slate-200/60 dark:border-slate-800 pb-1.5 flex items-center gap-1.5">
+                    <Briefcase className="h-3.5 w-3.5 text-blue-600" />
+                    {getLabel("accountInfo", lang)}
+                  </h3>
+                  <div><b>{getLabel("accountTitle", lang)}:</b> {accountTitle || "-"}</div>
+                  <div><b>{getLabel("subType", lang)}:</b> {subType || "-"}</div>
+                  <div><b>{getLabel("category", lang)}:</b> {category || "-"}</div>
+                  <div><b>{getLabel("accountCodeAuto", lang)}:</b> {accountCode || "AUTO"}</div>
+                  <div><b>{getLabel("accountName", lang)}:</b> {accountName || "-"}</div>
+                  <div><b>{getLabel("manualReference", lang)}:</b> <span dir="ltr" className="font-mono font-medium">{manualReferenceNumber || "-"}</span></div>
+                </div>
+              </div>
+
+              {/* Linked Masters & Inter-Country Summary */}
+              {(linkedCustomerId || linkedCompanies.length > 0 || linkedCompanyId || linkedBanks.length > 0 || linkedBankId || linkedShippingLineId || linkedCountries.length > 0) && (
+                <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40 p-4 text-xs space-y-3">
+                  <h3 className="font-bold text-slate-800 dark:text-slate-200 border-b border-slate-200/60 dark:border-slate-800 pb-1.5 flex items-center gap-1.5">
+                    <Building2 className="h-3.5 w-3.5 text-blue-600" />
+                    {getLabel("linkedMasterRecords", lang)}
+                  </h3>
+                  {linkedCustomerId && <div><b>{getLabel("linkedCustomer", lang)}:</b> {linkedCustomerName} <span className="text-slate-400 font-mono">({linkedCustomerId})</span></div>}
+                  
+                  {/* Linked Companies */}
+                  {linkedCompanies.length > 0 ? (
+                    <div>
+                      <b>{getLabel("linkedCompaniesTitle", lang)} ({linkedCompanies.length}):</b>
+                      <div className="flex flex-wrap gap-1.5 mt-1">
+                        {linkedCompanies.map((c) => (
+                          <span key={c.id} className="inline-flex items-center gap-1 rounded-lg bg-blue-50 dark:bg-blue-950 px-2 py-0.5 text-[11px] font-semibold text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800">
+                            {c.isPrimary && <span className="text-blue-600 font-bold">★</span>}
+                            <span>{c.name}</span>
+                            {c.country && <span className="text-[10px] text-blue-500 font-normal">({c.country})</span>}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ) : linkedCompanyId ? (
+                    <div><b>{getLabel("linkedCompany", lang)}:</b> {linkedCompanyName} <span className="text-slate-400 font-mono">({linkedCompanyId})</span></div>
+                  ) : null}
+
+                  {/* Linked Banks */}
+                  {linkedBanks.length > 0 ? (
+                    <div>
+                      <b>{getLabel("linkedBanksTitle", lang)} ({linkedBanks.length}):</b>
+                      <div className="flex flex-wrap gap-1.5 mt-1">
+                        {linkedBanks.map((b) => (
+                          <span key={b.id} className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 text-[11px] font-semibold text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800">
+                            {b.isPrimary && <span className="text-emerald-600 font-bold">★</span>}
+                            <span>{b.name}</span>
+                            {b.branchName && <span className="text-[10px] text-emerald-600 font-normal">• {b.branchName}</span>}
+                            {b.accountNumber && <span className="text-[10px] font-mono text-emerald-600 font-normal">• {b.accountNumber}</span>}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ) : linkedBankId ? (
+                    <div><b>{getLabel("linkedBank", lang)}:</b> {linkedBankName} <span className="text-slate-400 font-mono">({linkedBankId})</span></div>
+                  ) : null}
+
+                  {linkedShippingLineId && (
+                    <div>
+                      <b>{getLabel("shippingLineCarrier", lang)}:</b> {shippingLineDetail?.name || linkedShippingLineName}
+                      {shippingLineDetail?.shipping_line_code && (
+                        <span className="text-slate-400 font-mono ml-1">({shippingLineDetail.shipping_line_code})</span>
+                      )}
+                    </div>
+                  )}
+                  {linkedCountries.length > 0 && (
+                    <div className="pt-1">
+                      <b className="block mb-1">{getLabel("linkedCountriesTitle", lang)}:</b>
+                      <div className="flex flex-wrap gap-1">
+                        {linkedCountries.map((cId) => {
+                          const matched = countries.find((c) => c.id === cId);
+                          return (
+                            <span key={cId} className="inline-flex items-center gap-1 rounded bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 text-[11px] font-semibold text-emerald-800 dark:text-emerald-200">
+                              {localizeTerm(matched?.name || cId, lang)} ({matched?.iso2 || "-"})
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Linked Warehouses Summary (Canonical Multi-Warehouse) */}
+              {(linkedWarehouses.length > 0 || linkedWarehouseId) && (
+                <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40 p-4 text-xs space-y-2">
+                  <h3 className="font-bold text-slate-800 dark:text-slate-200 border-b border-slate-200/60 dark:border-slate-800 pb-1.5 flex items-center gap-1.5">
+                    <Warehouse className="h-3.5 w-3.5 text-purple-600" />
+                    {getLabel("linkedWarehousesTitle", lang)} ({linkedWarehouses.length || 1})
+                  </h3>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {linkedWarehouses.length > 0 ? (
+                      linkedWarehouses.map((wh) => (
+                        <span
+                          key={wh.id}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800 text-purple-800 dark:text-purple-200 text-xs font-medium"
+                        >
+                          {wh.isPrimary && <span className="text-purple-600 font-bold">★</span>}
+                          <span>{wh.name}</span>
+                          {wh.code && <span className="font-mono text-[10px] text-purple-500">({wh.code})</span>}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800 text-purple-800 dark:text-purple-200 text-xs font-medium">
+                        ★ {warehouseDetail?.name || "Warehouse"}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {message && (
+                <div className={saved
+                  ? "rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-xs font-semibold text-emerald-800"
+                  : "rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-xs font-semibold text-amber-800"
+                }>
+                  {message}
+                </div>
+              )}
+
+              <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentStep(prevStep)}
+                  className="font-bold text-xs h-10 px-4 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl cursor-pointer"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-1.5" />
+                  {getLabel("back", lang)}
+                </Button>
+
+                <Button
+                  type="button"
+                  size="default"
+                  onClick={saveEntry}
+                  disabled={!readyToSave || saving}
+                  className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-6 h-10 font-bold tracking-wide rounded-xl shadow-xs flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>{getLabel("saving", lang)}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4" />
+                      <span>{initialAccountId ? getLabel("updateAccount", lang) : getLabel("createSaveAccount", lang)}</span>
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+            </>
+          )}
+        </div>
+
+        {/* Right Side: High-fidelity Live Report Preview */}
+        <div className="h-fit lg:sticky lg:top-24 space-y-4" dir={isRtl ? "rtl" : "ltr"}>
+          <AccountLiveReportPanel
+            accountName={accountName}
+            lang={lang}
+            accountCode={accountPreview}
+            accountTitle={accountTitle}
+            subType={subType}
+            category={category}
+            manualReferenceNumber={manualReferenceNumber}
+            currency={branchInfo?.currency || selectedCountry?.currency_code || "AED"}
+            status={saved ? "Active" : "In Progress"}
+            contacts={contacts}
+            customerDetail={customerDetail}
+            companyDetail={companyDetail}
+            bankDetail={bankDetail}
+            warehouseDetail={warehouseDetail}
+            linkedCompanies={linkedCompanies}
+            linkedBanks={linkedBanks}
+            linkedWarehouses={linkedWarehouses}
+            companyRequired={companyRequired}
+            bankRequired={bankRequired}
+            warehouseRequired={warehouseRequired}
+            shippingLineDetail={shippingLineDetail}
+            linkedCountries={linkedCountries}
+            countriesList={countries}
+            selectedCountryName={selectedCountry?.name}
+            selectedCountryCode={selectedCountry?.iso2 || selectedCountry?.iso3 || undefined}
+            selectedBranchName={ownershipLevel === "country" ? `${selectedCountry?.name || "Country"} (${getLabel("countryLevel", lang)})` : branchType === "Main" ? selectedBranchName(mainBranches, branch) : selectedCityBranchName(cityBranches, branch)}
+            selectedBranchCode={branchInfo?.code}
+            onBack={() => router.push("/dashboard/accounts")}
+            onPrint={() => openReport(true)}
+            onPdf={() => openReport(false)}
+            onExcel={() => {
+              const rows = [
+                ["Field", "Value"],
+                ["Account Name", accountName || "-"],
+                ["Account Code", accountPreview || "-"],
+                ["Account Type", subType || category || "Expense"],
+                ["Currency", branchInfo?.currency || selectedCountry?.currency_code || "AED"],
+                ["Status", saved ? "Active" : "In Progress"]
+              ];
+              const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + rows.map(e => e.join(",")).join("\n");
+              const encodedUri = encodeURI(csvContent);
+              const link = document.createElement("a");
+              link.setAttribute("href", encodedUri);
+              link.setAttribute("download", `account_${accountPreview || "draft"}.csv`);
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            }}
+            onEmail={() => {
+              const subject = encodeURIComponent("Account Profile Report");
+              const body = encodeURIComponent(`Account Profile Report\nAccount Name: ${accountName}\nAccount Code: ${accountPreview}`);
+              window.location.href = `mailto:?subject=${subject}&body=${body}`;
+            }}
+            onWhatsApp={() => {
+              const text = encodeURIComponent(`Account Profile: ${accountName} (${accountPreview})`);
+              window.open(`https://wa.me/?text=${text}`, "_blank");
+            }}
+            onEditStep={(step) => {
+              setCurrentStep(step as any);
+            }}
+          />
+          {currentStep === activeSteps[activeSteps.length - 1] && (
+            <div className="bg-white rounded-xl border border-slate-200 shadow p-5 mt-4 flex items-center justify-between sticky bottom-4 z-10 dark:bg-slate-900 dark:border-slate-800">
+              <div className="flex flex-col gap-1 text-[11px] font-semibold text-slate-500">
+                <span>{getLabel("country", lang)}: <b className="text-slate-800 dark:text-slate-200">{selectedCountry?.name || "-"}</b></span>
+                <span>{getLabel("branchName", lang)}: <b className="text-slate-800 dark:text-slate-200">{ownershipLevel === "country" ? getLabel("countryLevel", lang) : branchInfo?.city || (branchType === "Main" ? selectedBranchName(mainBranches, branch) : selectedCityBranchName(cityBranches, branch))}</b></span>
+              </div>
+              <Button type="button" size="default" onClick={saveEntry} disabled={!readyToSave || saving} className="bg-primary hover:bg-primary/90 text-white text-sm px-10 h-12 font-bold tracking-wider rounded-lg shadow-sm">
+                {saving ? getLabel("saving", lang) : initialAccountId ? getLabel("updateAccount", lang) : getLabel("createSaveAccount", lang)}
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Persistent Category Modal (Add / Edit with 5-language translation sync) ── */}
+      {showCategoryModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4" dir={isRtl ? "rtl" : "ltr"}>
+          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden p-6 space-y-4">
+            <div className="flex items-center justify-between border-b pb-3">
+              <h3 className="font-bold text-base text-slate-900 dark:text-slate-100">
+                {categoryModalMode === "add" ? getLabel("addCategory", lang) : getLabel("editCategory", lang)}
+              </h3>
+              <button
+                type="button"
+                onClick={() => { setShowCategoryModal(false); setCatError(""); }}
+                className="rounded-lg p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {catError && (
+              <div className="rounded-lg bg-rose-50 border border-rose-200 p-2.5 text-xs text-rose-700 font-medium">
+                {catError}
+              </div>
+            )}
+
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <Label htmlFor="catName">{getLabel("categoryName", lang)} *</Label>
+                <Input
+                  id="catName"
+                  value={catFormName}
+                  onChange={(e) => setCatFormName(e.target.value)}
+                  placeholder="e.g. Office Rent / Clearance Charges"
+                  className="h-9 text-sm"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="catCode">{getLabel("categoryCode", lang)} *</Label>
+                <Input
+                  id="catCode"
+                  value={catFormCode}
+                  onChange={(e) => setCatFormCode(e.target.value.toUpperCase())}
+                  placeholder="e.g. RENT / CLR"
+                  className="h-9 text-sm font-mono"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="catDesc">{getLabel("categoryDescription", lang)}</Label>
+                <Input
+                  id="catDesc"
+                  value={catFormDesc}
+                  onChange={(e) => setCatFormDesc(e.target.value)}
+                  placeholder="Optional description"
+                  className="h-9 text-sm"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs text-slate-500">{getLabel("questionOperationalDomain", lang)}</Label>
+                <div className="rounded-lg bg-slate-50 dark:bg-slate-800 p-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  {operationalDomain === "shipping" ? getLabel("shippingDomain", lang) : getLabel("businessDomain", lang)}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => { setShowCategoryModal(false); setCatError(""); }}
+                disabled={catSaving}
+              >
+                {getLabel("cancel", lang) || "Cancel"}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={handleSaveCategory}
+                disabled={catSaving}
+                className="gap-1.5"
+              >
+                {catSaving && <Loader2 className="h-4 w-4 animate-spin" />}
+                {getLabel("saveCategory", lang)}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Master Form modals are handled inline by CustomerPicker / CompanyPicker / BankPicker */}
+    </div>
+  );
+}
+
+
+
+
+
+

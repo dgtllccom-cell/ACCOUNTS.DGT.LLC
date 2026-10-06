@@ -1,0 +1,3141 @@
+{
+  "total": 777,
+  "categories": {
+    "coreSystem": [
+      {
+        "name": "app_settings",
+        "rows": 0
+      },
+      {
+        "name": "module_settings",
+        "rows": 0
+      }
+    ],
+    "financialAndJournals": [
+      {
+        "name": "bank_cheque_transactions",
+        "rows": 12
+      },
+      {
+        "name": "bank_cheque_transactions_ar",
+        "rows": 0
+      },
+      {
+        "name": "bank_cheque_transactions_en",
+        "rows": 0
+      },
+      {
+        "name": "bank_cheque_transactions_fa",
+        "rows": 0
+      },
+      {
+        "name": "bank_cheque_transactions_ps",
+        "rows": 0
+      },
+      {
+        "name": "bank_cheque_transactions_ur",
+        "rows": 0
+      },
+      {
+        "name": "banks",
+        "rows": 150
+      },
+      {
+        "name": "banks_ar",
+        "rows": 0
+      },
+      {
+        "name": "banks_ar_ar",
+        "rows": 0
+      },
+      {
+        "name": "banks_ar_en",
+        "rows": 0
+      },
+      {
+        "name": "banks_ar_fa",
+        "rows": 0
+      },
+      {
+        "name": "banks_ar_ps",
+        "rows": 0
+      },
+      {
+        "name": "banks_ar_ur",
+        "rows": 0
+      },
+      {
+        "name": "banks_en",
+        "rows": 0
+      },
+      {
+        "name": "banks_en_ar",
+        "rows": 0
+      },
+      {
+        "name": "banks_en_en",
+        "rows": 0
+      },
+      {
+        "name": "banks_en_fa",
+        "rows": 0
+      },
+      {
+        "name": "banks_en_ps",
+        "rows": 0
+      },
+      {
+        "name": "banks_en_ur",
+        "rows": 0
+      },
+      {
+        "name": "banks_fa",
+        "rows": 0
+      },
+      {
+        "name": "banks_fa_ar",
+        "rows": 0
+      },
+      {
+        "name": "banks_fa_en",
+        "rows": 0
+      },
+      {
+        "name": "banks_fa_fa",
+        "rows": 0
+      },
+      {
+        "name": "banks_fa_ps",
+        "rows": 0
+      },
+      {
+        "name": "banks_fa_ur",
+        "rows": 0
+      },
+      {
+        "name": "banks_ps",
+        "rows": 0
+      },
+      {
+        "name": "banks_ur",
+        "rows": 0
+      },
+      {
+        "name": "currency_rates",
+        "rows": 0
+      },
+      {
+        "name": "financial_periods",
+        "rows": 0
+      },
+      {
+        "name": "financial_periods_ar",
+        "rows": 0
+      },
+      {
+        "name": "financial_periods_en",
+        "rows": 0
+      },
+      {
+        "name": "financial_periods_fa",
+        "rows": 0
+      },
+      {
+        "name": "financial_periods_ps",
+        "rows": 0
+      },
+      {
+        "name": "financial_periods_ur",
+        "rows": 0
+      },
+      {
+        "name": "payment_methods",
+        "rows": 0
+      },
+      {
+        "name": "payment_methods_ar",
+        "rows": 0
+      },
+      {
+        "name": "payment_methods_en",
+        "rows": 0
+      },
+      {
+        "name": "payment_methods_fa",
+        "rows": 0
+      },
+      {
+        "name": "payment_methods_ps",
+        "rows": 0
+      },
+      {
+        "name": "payment_methods_ur",
+        "rows": 0
+      },
+      {
+        "name": "transaction_serial_sequences",
+        "rows": 70
+      },
+      {
+        "name": "transactions",
+        "rows": 0
+      },
+      {
+        "name": "transactions_ar",
+        "rows": 0
+      },
+      {
+        "name": "transactions_en",
+        "rows": 0
+      },
+      {
+        "name": "transactions_fa",
+        "rows": 0
+      },
+      {
+        "name": "transactions_ps",
+        "rows": 0
+      },
+      {
+        "name": "transactions_ur",
+        "rows": 0
+      },
+      {
+        "name": "voucher_sequences",
+        "rows": 0
+      }
+    ],
+    "purchasesAndSupplyChain": [
+      {
+        "name": "local_purchases",
+        "rows": 0
+      },
+      {
+        "name": "local_purchases_ar",
+        "rows": 0
+      },
+      {
+        "name": "local_purchases_en",
+        "rows": 0
+      },
+      {
+        "name": "local_purchases_fa",
+        "rows": 0
+      },
+      {
+        "name": "local_purchases_ps",
+        "rows": 0
+      },
+      {
+        "name": "local_purchases_ur",
+        "rows": 0
+      },
+      {
+        "name": "purchase_loading_records",
+        "rows": 153
+      },
+      {
+        "name": "purchase_loading_records_ar",
+        "rows": 0
+      },
+      {
+        "name": "purchase_loading_records_en",
+        "rows": 0
+      },
+      {
+        "name": "purchase_loading_records_fa",
+        "rows": 0
+      },
+      {
+        "name": "purchase_loading_records_ps",
+        "rows": 0
+      },
+      {
+        "name": "purchase_loading_records_ur",
+        "rows": 0
+      },
+      {
+        "name": "purchase_order_expenses",
+        "rows": 0
+      },
+      {
+        "name": "purchase_order_expenses_ar",
+        "rows": 0
+      },
+      {
+        "name": "purchase_order_expenses_en",
+        "rows": 0
+      },
+      {
+        "name": "purchase_order_expenses_fa",
+        "rows": 0
+      },
+      {
+        "name": "purchase_order_expenses_ps",
+        "rows": 0
+      },
+      {
+        "name": "purchase_order_expenses_ur",
+        "rows": 0
+      },
+      {
+        "name": "purchase_order_items",
+        "rows": 391
+      },
+      {
+        "name": "purchase_order_items_ar",
+        "rows": 0
+      },
+      {
+        "name": "purchase_order_items_en",
+        "rows": 0
+      },
+      {
+        "name": "purchase_order_items_fa",
+        "rows": 0
+      },
+      {
+        "name": "purchase_order_items_ps",
+        "rows": 0
+      },
+      {
+        "name": "purchase_order_items_ur",
+        "rows": 0
+      },
+      {
+        "name": "purchase_order_payments",
+        "rows": 235
+      },
+      {
+        "name": "purchase_order_payments_ar",
+        "rows": 0
+      },
+      {
+        "name": "purchase_order_payments_en",
+        "rows": 0
+      },
+      {
+        "name": "purchase_order_payments_fa",
+        "rows": 0
+      },
+      {
+        "name": "purchase_order_payments_ps",
+        "rows": 0
+      },
+      {
+        "name": "purchase_order_payments_ur",
+        "rows": 0
+      },
+      {
+        "name": "purchase_orders",
+        "rows": 200
+      },
+      {
+        "name": "usd_purchase_sales",
+        "rows": 0
+      }
+    ],
+    "salesAndDistribution": [
+      {
+        "name": "sales_order_payments",
+        "rows": 0
+      },
+      {
+        "name": "sales_order_payments_ar",
+        "rows": 0
+      },
+      {
+        "name": "sales_order_payments_en",
+        "rows": 0
+      },
+      {
+        "name": "sales_order_payments_fa",
+        "rows": 0
+      },
+      {
+        "name": "sales_order_payments_ps",
+        "rows": 0
+      },
+      {
+        "name": "sales_order_payments_ur",
+        "rows": 0
+      },
+      {
+        "name": "sales_orders",
+        "rows": 4
+      },
+      {
+        "name": "sales_orders_ar",
+        "rows": 0
+      },
+      {
+        "name": "sales_orders_en",
+        "rows": 0
+      },
+      {
+        "name": "sales_orders_fa",
+        "rows": 0
+      },
+      {
+        "name": "sales_orders_ps",
+        "rows": 0
+      },
+      {
+        "name": "sales_orders_ur",
+        "rows": 0
+      }
+    ],
+    "roznamchaAndCashBook": [
+      {
+        "name": "roznamcha_entries",
+        "rows": 589
+      },
+      {
+        "name": "roznamcha_entries_ar",
+        "rows": 0
+      },
+      {
+        "name": "roznamcha_entries_en",
+        "rows": 0
+      },
+      {
+        "name": "roznamcha_entries_fa",
+        "rows": 0
+      },
+      {
+        "name": "roznamcha_entries_ps",
+        "rows": 0
+      },
+      {
+        "name": "roznamcha_entries_ur",
+        "rows": 0
+      },
+      {
+        "name": "roznamcha_lines",
+        "rows": 1176
+      },
+      {
+        "name": "roznamcha_lines_ar",
+        "rows": 0
+      },
+      {
+        "name": "roznamcha_lines_en",
+        "rows": 0
+      },
+      {
+        "name": "roznamcha_lines_fa",
+        "rows": 0
+      },
+      {
+        "name": "roznamcha_lines_ps",
+        "rows": 0
+      },
+      {
+        "name": "roznamcha_lines_ur",
+        "rows": 0
+      },
+      {
+        "name": "roznamcha_reversals",
+        "rows": 0
+      }
+    ],
+    "ledgersAndAccounts": [
+      {
+        "name": "account_banks",
+        "rows": 4
+      },
+      {
+        "name": "account_companies",
+        "rows": 7
+      },
+      {
+        "name": "account_customer_owners",
+        "rows": 4
+      },
+      {
+        "name": "account_groups",
+        "rows": 0
+      },
+      {
+        "name": "account_groups_ar",
+        "rows": 0
+      },
+      {
+        "name": "account_groups_ar_ar",
+        "rows": 0
+      },
+      {
+        "name": "account_groups_ar_en",
+        "rows": 0
+      },
+      {
+        "name": "account_groups_ar_fa",
+        "rows": 0
+      },
+      {
+        "name": "account_groups_ar_ps",
+        "rows": 0
+      },
+      {
+        "name": "account_groups_ar_ur",
+        "rows": 0
+      },
+      {
+        "name": "account_groups_en",
+        "rows": 0
+      },
+      {
+        "name": "account_groups_en_ar",
+        "rows": 0
+      },
+      {
+        "name": "account_groups_en_en",
+        "rows": 0
+      },
+      {
+        "name": "account_groups_en_fa",
+        "rows": 0
+      },
+      {
+        "name": "account_groups_en_ps",
+        "rows": 0
+      },
+      {
+        "name": "account_groups_en_ur",
+        "rows": 0
+      },
+      {
+        "name": "account_groups_fa",
+        "rows": 0
+      },
+      {
+        "name": "account_groups_fa_ar",
+        "rows": 0
+      },
+      {
+        "name": "account_groups_fa_en",
+        "rows": 0
+      },
+      {
+        "name": "account_groups_fa_fa",
+        "rows": 0
+      },
+      {
+        "name": "account_groups_fa_ps",
+        "rows": 0
+      },
+      {
+        "name": "account_groups_fa_ur",
+        "rows": 0
+      },
+      {
+        "name": "account_groups_ps",
+        "rows": 0
+      },
+      {
+        "name": "account_groups_ps_ar",
+        "rows": 0
+      },
+      {
+        "name": "account_groups_ps_en",
+        "rows": 0
+      },
+      {
+        "name": "account_groups_ps_fa",
+        "rows": 0
+      },
+      {
+        "name": "account_groups_ps_ps",
+        "rows": 0
+      },
+      {
+        "name": "account_groups_ps_ur",
+        "rows": 0
+      },
+      {
+        "name": "account_groups_ur",
+        "rows": 0
+      },
+      {
+        "name": "account_groups_ur_ar",
+        "rows": 0
+      },
+      {
+        "name": "account_groups_ur_en",
+        "rows": 0
+      },
+      {
+        "name": "account_groups_ur_fa",
+        "rows": 0
+      },
+      {
+        "name": "account_groups_ur_ps",
+        "rows": 0
+      },
+      {
+        "name": "account_groups_ur_ur",
+        "rows": 0
+      },
+      {
+        "name": "account_types",
+        "rows": 9
+      },
+      {
+        "name": "account_types_ar",
+        "rows": 0
+      },
+      {
+        "name": "account_types_ar_ar",
+        "rows": 0
+      },
+      {
+        "name": "account_types_ar_en",
+        "rows": 0
+      },
+      {
+        "name": "account_types_ar_fa",
+        "rows": 0
+      },
+      {
+        "name": "account_types_ar_ps",
+        "rows": 0
+      },
+      {
+        "name": "account_types_ar_ur",
+        "rows": 0
+      },
+      {
+        "name": "account_types_en",
+        "rows": 0
+      },
+      {
+        "name": "account_types_en_ar",
+        "rows": 0
+      },
+      {
+        "name": "account_types_en_en",
+        "rows": 0
+      },
+      {
+        "name": "account_types_en_fa",
+        "rows": 0
+      },
+      {
+        "name": "account_types_en_ps",
+        "rows": 0
+      },
+      {
+        "name": "account_types_en_ur",
+        "rows": 0
+      },
+      {
+        "name": "account_types_fa",
+        "rows": 0
+      },
+      {
+        "name": "account_types_fa_ar",
+        "rows": 0
+      },
+      {
+        "name": "account_types_fa_en",
+        "rows": 0
+      },
+      {
+        "name": "account_types_fa_fa",
+        "rows": 0
+      },
+      {
+        "name": "account_types_fa_ps",
+        "rows": 0
+      },
+      {
+        "name": "account_types_fa_ur",
+        "rows": 0
+      },
+      {
+        "name": "account_types_ps",
+        "rows": 0
+      },
+      {
+        "name": "account_types_ps_ar",
+        "rows": 0
+      },
+      {
+        "name": "account_types_ps_en",
+        "rows": 0
+      },
+      {
+        "name": "account_types_ps_fa",
+        "rows": 0
+      },
+      {
+        "name": "account_types_ps_ps",
+        "rows": 0
+      },
+      {
+        "name": "account_types_ps_ur",
+        "rows": 0
+      },
+      {
+        "name": "account_types_ur",
+        "rows": 0
+      },
+      {
+        "name": "account_types_ur_ar",
+        "rows": 0
+      },
+      {
+        "name": "account_types_ur_en",
+        "rows": 0
+      },
+      {
+        "name": "account_types_ur_fa",
+        "rows": 0
+      },
+      {
+        "name": "account_types_ur_ps",
+        "rows": 0
+      },
+      {
+        "name": "account_types_ur_ur",
+        "rows": 0
+      },
+      {
+        "name": "account_warehouses",
+        "rows": 4
+      },
+      {
+        "name": "accounts",
+        "rows": 4
+      },
+      {
+        "name": "accounts_ar",
+        "rows": 0
+      },
+      {
+        "name": "accounts_ar_ar",
+        "rows": 0
+      },
+      {
+        "name": "accounts_ar_en",
+        "rows": 0
+      },
+      {
+        "name": "accounts_ar_fa",
+        "rows": 0
+      },
+      {
+        "name": "accounts_ar_ps",
+        "rows": 0
+      },
+      {
+        "name": "accounts_ar_ur",
+        "rows": 0
+      },
+      {
+        "name": "accounts_en",
+        "rows": 0
+      },
+      {
+        "name": "accounts_en_ar",
+        "rows": 0
+      },
+      {
+        "name": "accounts_en_en",
+        "rows": 0
+      },
+      {
+        "name": "accounts_en_fa",
+        "rows": 0
+      },
+      {
+        "name": "accounts_en_ps",
+        "rows": 0
+      },
+      {
+        "name": "accounts_en_ur",
+        "rows": 0
+      },
+      {
+        "name": "accounts_fa",
+        "rows": 0
+      },
+      {
+        "name": "accounts_fa_ar",
+        "rows": 0
+      },
+      {
+        "name": "accounts_fa_en",
+        "rows": 0
+      },
+      {
+        "name": "accounts_fa_fa",
+        "rows": 0
+      },
+      {
+        "name": "accounts_fa_ps",
+        "rows": 0
+      },
+      {
+        "name": "accounts_fa_ur",
+        "rows": 0
+      },
+      {
+        "name": "accounts_ps",
+        "rows": 0
+      },
+      {
+        "name": "accounts_ps_ar",
+        "rows": 0
+      },
+      {
+        "name": "accounts_ps_en",
+        "rows": 0
+      },
+      {
+        "name": "accounts_ps_fa",
+        "rows": 0
+      },
+      {
+        "name": "accounts_ps_ps",
+        "rows": 0
+      },
+      {
+        "name": "accounts_ps_ur",
+        "rows": 0
+      },
+      {
+        "name": "accounts_ur",
+        "rows": 0
+      },
+      {
+        "name": "accounts_ur_ar",
+        "rows": 0
+      },
+      {
+        "name": "accounts_ur_en",
+        "rows": 0
+      },
+      {
+        "name": "accounts_ur_fa",
+        "rows": 0
+      },
+      {
+        "name": "accounts_ur_ps",
+        "rows": 0
+      },
+      {
+        "name": "accounts_ur_ur",
+        "rows": 0
+      },
+      {
+        "name": "enterprise_account_history",
+        "rows": 3
+      },
+      {
+        "name": "enterprise_accounts",
+        "rows": 133
+      },
+      {
+        "name": "enterprise_accounts_ar",
+        "rows": 0
+      },
+      {
+        "name": "enterprise_accounts_en",
+        "rows": 0
+      },
+      {
+        "name": "enterprise_accounts_fa",
+        "rows": 0
+      },
+      {
+        "name": "enterprise_accounts_ps",
+        "rows": 0
+      },
+      {
+        "name": "enterprise_accounts_ur",
+        "rows": 0
+      },
+      {
+        "name": "enterprise_ledger_reversals",
+        "rows": 0
+      },
+      {
+        "name": "erp_email_accounts",
+        "rows": 0
+      },
+      {
+        "name": "erp_email_accounts_ar",
+        "rows": 0
+      },
+      {
+        "name": "erp_email_accounts_en",
+        "rows": 0
+      },
+      {
+        "name": "erp_email_accounts_fa",
+        "rows": 0
+      },
+      {
+        "name": "erp_email_accounts_ps",
+        "rows": 0
+      },
+      {
+        "name": "erp_email_accounts_ur",
+        "rows": 0
+      },
+      {
+        "name": "inter_branch_ledger_transfers",
+        "rows": 0
+      },
+      {
+        "name": "inter_branch_ledger_transfers_ar",
+        "rows": 0
+      },
+      {
+        "name": "inter_branch_ledger_transfers_en",
+        "rows": 0
+      },
+      {
+        "name": "inter_branch_ledger_transfers_fa",
+        "rows": 0
+      },
+      {
+        "name": "inter_branch_ledger_transfers_ps",
+        "rows": 0
+      },
+      {
+        "name": "inter_branch_ledger_transfers_ur",
+        "rows": 0
+      },
+      {
+        "name": "journal_entries",
+        "rows": 0
+      },
+      {
+        "name": "journal_entries_ar",
+        "rows": 0
+      },
+      {
+        "name": "journal_entries_en",
+        "rows": 0
+      },
+      {
+        "name": "journal_entries_fa",
+        "rows": 0
+      },
+      {
+        "name": "journal_entries_ps",
+        "rows": 0
+      },
+      {
+        "name": "journal_entries_ur",
+        "rows": 0
+      },
+      {
+        "name": "journal_lines",
+        "rows": 0
+      },
+      {
+        "name": "journal_lines_ar",
+        "rows": 0
+      },
+      {
+        "name": "journal_lines_en",
+        "rows": 0
+      },
+      {
+        "name": "journal_lines_fa",
+        "rows": 0
+      },
+      {
+        "name": "journal_lines_ps",
+        "rows": 0
+      },
+      {
+        "name": "journal_lines_ur",
+        "rows": 0
+      },
+      {
+        "name": "journal_reversals",
+        "rows": 0
+      },
+      {
+        "name": "ledger_balances",
+        "rows": 326
+      },
+      {
+        "name": "ledger_entries",
+        "rows": 0
+      },
+      {
+        "name": "ledger_opening_balances",
+        "rows": 0
+      },
+      {
+        "name": "ledger_posting_batches",
+        "rows": 0
+      },
+      {
+        "name": "ledger_posting_batches_ar",
+        "rows": 0
+      },
+      {
+        "name": "ledger_posting_batches_en",
+        "rows": 0
+      },
+      {
+        "name": "ledger_posting_batches_fa",
+        "rows": 0
+      },
+      {
+        "name": "ledger_posting_batches_ps",
+        "rows": 0
+      },
+      {
+        "name": "ledger_posting_batches_ur",
+        "rows": 0
+      },
+      {
+        "name": "ledger_posting_lines",
+        "rows": 0
+      },
+      {
+        "name": "ledger_posting_lines_ar",
+        "rows": 0
+      },
+      {
+        "name": "ledger_posting_lines_en",
+        "rows": 0
+      },
+      {
+        "name": "ledger_posting_lines_fa",
+        "rows": 0
+      },
+      {
+        "name": "ledger_posting_lines_ps",
+        "rows": 0
+      },
+      {
+        "name": "ledger_posting_lines_ur",
+        "rows": 0
+      },
+      {
+        "name": "ledger_transaction_audit_trail",
+        "rows": 0
+      },
+      {
+        "name": "ledgers",
+        "rows": 28
+      },
+      {
+        "name": "ledgers_ar",
+        "rows": 0
+      },
+      {
+        "name": "ledgers_en",
+        "rows": 0
+      },
+      {
+        "name": "ledgers_fa",
+        "rows": 0
+      },
+      {
+        "name": "ledgers_ps",
+        "rows": 0
+      },
+      {
+        "name": "ledgers_ur",
+        "rows": 0
+      },
+      {
+        "name": "product_inventory_balances",
+        "rows": 1
+      },
+      {
+        "name": "whatsapp_accounts",
+        "rows": 0
+      },
+      {
+        "name": "whatsapp_accounts_ar",
+        "rows": 0
+      },
+      {
+        "name": "whatsapp_accounts_en",
+        "rows": 0
+      },
+      {
+        "name": "whatsapp_accounts_fa",
+        "rows": 0
+      },
+      {
+        "name": "whatsapp_accounts_ps",
+        "rows": 0
+      },
+      {
+        "name": "whatsapp_accounts_ur",
+        "rows": 0
+      }
+    ],
+    "userSecurityAndAuth": [
+      {
+        "name": "erp_role_template_permissions",
+        "rows": 0
+      },
+      {
+        "name": "erp_role_templates",
+        "rows": 0
+      },
+      {
+        "name": "erp_role_templates_ar",
+        "rows": 0
+      },
+      {
+        "name": "erp_role_templates_en",
+        "rows": 0
+      },
+      {
+        "name": "erp_role_templates_fa",
+        "rows": 0
+      },
+      {
+        "name": "erp_role_templates_ps",
+        "rows": 0
+      },
+      {
+        "name": "erp_role_templates_ur",
+        "rows": 0
+      },
+      {
+        "name": "permissions",
+        "rows": 105
+      },
+      {
+        "name": "permissions_ar",
+        "rows": 0
+      },
+      {
+        "name": "permissions_en",
+        "rows": 0
+      },
+      {
+        "name": "permissions_fa",
+        "rows": 0
+      },
+      {
+        "name": "permissions_ps",
+        "rows": 0
+      },
+      {
+        "name": "permissions_ur",
+        "rows": 0
+      },
+      {
+        "name": "role_permissions",
+        "rows": 0
+      },
+      {
+        "name": "roles",
+        "rows": 0
+      },
+      {
+        "name": "roles_ar",
+        "rows": 0
+      },
+      {
+        "name": "roles_en",
+        "rows": 0
+      },
+      {
+        "name": "roles_fa",
+        "rows": 0
+      },
+      {
+        "name": "roles_ps",
+        "rows": 0
+      },
+      {
+        "name": "roles_ur",
+        "rows": 0
+      },
+      {
+        "name": "user_permission_sets",
+        "rows": 0
+      },
+      {
+        "name": "user_role_assignments",
+        "rows": 20
+      }
+    ],
+    "countryBranchAndEnterprise": [
+      {
+        "name": "branches",
+        "rows": 0
+      },
+      {
+        "name": "branches_ar",
+        "rows": 0
+      },
+      {
+        "name": "branches_en",
+        "rows": 0
+      },
+      {
+        "name": "branches_fa",
+        "rows": 0
+      },
+      {
+        "name": "branches_ps",
+        "rows": 0
+      },
+      {
+        "name": "branches_ur",
+        "rows": 0
+      },
+      {
+        "name": "city_branches",
+        "rows": 14
+      },
+      {
+        "name": "city_branches_ar",
+        "rows": 0
+      },
+      {
+        "name": "city_branches_en",
+        "rows": 0
+      },
+      {
+        "name": "city_branches_fa",
+        "rows": 0
+      },
+      {
+        "name": "city_branches_ps",
+        "rows": 0
+      },
+      {
+        "name": "city_branches_ur",
+        "rows": 0
+      },
+      {
+        "name": "clearing_agent_branches",
+        "rows": 0
+      },
+      {
+        "name": "clearing_agent_branches_ar",
+        "rows": 0
+      },
+      {
+        "name": "clearing_agent_branches_en",
+        "rows": 0
+      },
+      {
+        "name": "clearing_agent_branches_fa",
+        "rows": 0
+      },
+      {
+        "name": "clearing_agent_branches_ps",
+        "rows": 0
+      },
+      {
+        "name": "clearing_agent_branches_ur",
+        "rows": 0
+      },
+      {
+        "name": "company_registration_types",
+        "rows": 8
+      },
+      {
+        "name": "company_registration_types_ar",
+        "rows": 0
+      },
+      {
+        "name": "company_registration_types_en",
+        "rows": 0
+      },
+      {
+        "name": "company_registration_types_fa",
+        "rows": 0
+      },
+      {
+        "name": "company_registration_types_ps",
+        "rows": 0
+      },
+      {
+        "name": "company_registration_types_ur",
+        "rows": 0
+      },
+      {
+        "name": "country_branches",
+        "rows": 4
+      },
+      {
+        "name": "country_branches_ar",
+        "rows": 0
+      },
+      {
+        "name": "country_branches_en",
+        "rows": 0
+      },
+      {
+        "name": "country_branches_fa",
+        "rows": 0
+      },
+      {
+        "name": "country_branches_ps",
+        "rows": 0
+      },
+      {
+        "name": "country_branches_ur",
+        "rows": 0
+      },
+      {
+        "name": "country_company_profiles",
+        "rows": 0
+      },
+      {
+        "name": "country_company_profiles_ar",
+        "rows": 0
+      },
+      {
+        "name": "country_company_profiles_en",
+        "rows": 0
+      },
+      {
+        "name": "country_company_profiles_fa",
+        "rows": 0
+      },
+      {
+        "name": "country_company_profiles_ps",
+        "rows": 0
+      },
+      {
+        "name": "country_company_profiles_ur",
+        "rows": 0
+      },
+      {
+        "name": "country_contact_type_rules",
+        "rows": 0
+      },
+      {
+        "name": "product_branch_mapping",
+        "rows": 0
+      },
+      {
+        "name": "product_country_mapping",
+        "rows": 1
+      }
+    ],
+    "translationAndLanguage": [
+      {
+        "name": "languages",
+        "rows": 5
+      },
+      {
+        "name": "product_translations",
+        "rows": 0
+      },
+      {
+        "name": "record_translations_legacy",
+        "rows": 0
+      },
+      {
+        "name": "translation_audit_logs",
+        "rows": 0
+      },
+      {
+        "name": "translation_field_registry",
+        "rows": 228
+      },
+      {
+        "name": "translation_generation_jobs",
+        "rows": 0
+      },
+      {
+        "name": "translation_keys",
+        "rows": 0
+      },
+      {
+        "name": "translation_values",
+        "rows": 0
+      },
+      {
+        "name": "translations_arabic",
+        "rows": 10710
+      },
+      {
+        "name": "translations_english",
+        "rows": 10710
+      },
+      {
+        "name": "translations_pashto",
+        "rows": 10710
+      },
+      {
+        "name": "translations_persian",
+        "rows": 10710
+      },
+      {
+        "name": "translations_urdu",
+        "rows": 10710
+      },
+      {
+        "name": "user_language_preferences",
+        "rows": 0
+      }
+    ],
+    "printAndReporting": [
+      {
+        "name": "erp_report_exports",
+        "rows": 0
+      },
+      {
+        "name": "erp_report_templates",
+        "rows": 0
+      },
+      {
+        "name": "erp_report_templates_ar",
+        "rows": 0
+      },
+      {
+        "name": "erp_report_templates_en",
+        "rows": 0
+      },
+      {
+        "name": "erp_report_templates_fa",
+        "rows": 0
+      },
+      {
+        "name": "erp_report_templates_ps",
+        "rows": 0
+      },
+      {
+        "name": "erp_report_templates_ur",
+        "rows": 0
+      },
+      {
+        "name": "report_auto_email_configs",
+        "rows": 1
+      },
+      {
+        "name": "report_definitions",
+        "rows": 0
+      },
+      {
+        "name": "report_definitions_ar",
+        "rows": 0
+      },
+      {
+        "name": "report_definitions_en",
+        "rows": 0
+      },
+      {
+        "name": "report_definitions_fa",
+        "rows": 0
+      },
+      {
+        "name": "report_definitions_ps",
+        "rows": 0
+      },
+      {
+        "name": "report_definitions_ur",
+        "rows": 0
+      },
+      {
+        "name": "report_exports",
+        "rows": 0
+      },
+      {
+        "name": "report_runs",
+        "rows": 0
+      },
+      {
+        "name": "report_snapshots",
+        "rows": 0
+      },
+      {
+        "name": "reports",
+        "rows": 0
+      },
+      {
+        "name": "saved_reports",
+        "rows": 1
+      },
+      {
+        "name": "saved_reports_ar",
+        "rows": 0
+      },
+      {
+        "name": "saved_reports_en",
+        "rows": 0
+      },
+      {
+        "name": "saved_reports_fa",
+        "rows": 0
+      },
+      {
+        "name": "saved_reports_ps",
+        "rows": 0
+      },
+      {
+        "name": "saved_reports_ur",
+        "rows": 0
+      }
+    ],
+    "auditAndSecurityLogs": [
+      {
+        "name": "audit_logs",
+        "rows": 588
+      },
+      {
+        "name": "communication_audit_logs",
+        "rows": 0
+      },
+      {
+        "name": "module_audit_rules",
+        "rows": 0
+      },
+      {
+        "name": "soft_delete_logs",
+        "rows": 0
+      },
+      {
+        "name": "whatsapp_activity_log",
+        "rows": 0
+      }
+    ],
+    "geoAndLocationReference": [
+      {
+        "name": "districts",
+        "rows": 1841
+      },
+      {
+        "name": "districts_ar",
+        "rows": 0
+      },
+      {
+        "name": "districts_en",
+        "rows": 0
+      },
+      {
+        "name": "districts_fa",
+        "rows": 0
+      },
+      {
+        "name": "districts_ps",
+        "rows": 0
+      },
+      {
+        "name": "districts_ur",
+        "rows": 0
+      },
+      {
+        "name": "import_truck_loadings",
+        "rows": 0
+      },
+      {
+        "name": "import_truck_loadings_ar",
+        "rows": 0
+      },
+      {
+        "name": "import_truck_loadings_en",
+        "rows": 0
+      },
+      {
+        "name": "import_truck_loadings_fa",
+        "rows": 0
+      },
+      {
+        "name": "import_truck_loadings_ps",
+        "rows": 0
+      },
+      {
+        "name": "import_truck_loadings_ur",
+        "rows": 0
+      },
+      {
+        "name": "loading_ports_ar",
+        "rows": 0
+      },
+      {
+        "name": "loading_ports_en",
+        "rows": 0
+      },
+      {
+        "name": "loading_ports_fa",
+        "rows": 0
+      },
+      {
+        "name": "loading_ports_ps",
+        "rows": 0
+      },
+      {
+        "name": "loading_ports_ur",
+        "rows": 0
+      },
+      {
+        "name": "ports",
+        "rows": 9
+      },
+      {
+        "name": "ports_ar",
+        "rows": 0
+      },
+      {
+        "name": "ports_en",
+        "rows": 0
+      },
+      {
+        "name": "ports_fa",
+        "rows": 0
+      },
+      {
+        "name": "ports_ps",
+        "rows": 0
+      },
+      {
+        "name": "ports_ur",
+        "rows": 0
+      },
+      {
+        "name": "product_city_mapping",
+        "rows": 0
+      },
+      {
+        "name": "received_ports_ar",
+        "rows": 0
+      },
+      {
+        "name": "received_ports_en",
+        "rows": 0
+      },
+      {
+        "name": "received_ports_fa",
+        "rows": 0
+      },
+      {
+        "name": "received_ports_ps",
+        "rows": 0
+      },
+      {
+        "name": "received_ports_ur",
+        "rows": 0
+      },
+      {
+        "name": "states_provinces",
+        "rows": 177
+      },
+      {
+        "name": "states_provinces_ar",
+        "rows": 0
+      },
+      {
+        "name": "states_provinces_en",
+        "rows": 0
+      },
+      {
+        "name": "states_provinces_fa",
+        "rows": 0
+      },
+      {
+        "name": "states_provinces_ps",
+        "rows": 0
+      },
+      {
+        "name": "states_provinces_ur",
+        "rows": 0
+      }
+    ],
+    "backupAndObsolete": [
+      {
+        "name": "zz_bak2_20260801_banks",
+        "rows": 65
+      },
+      {
+        "name": "zz_bak2_20260801_companies",
+        "rows": 115
+      },
+      {
+        "name": "zz_bak2_20260801_customers",
+        "rows": 65
+      },
+      {
+        "name": "zz_bak_20260801_areas_locations",
+        "rows": 0
+      },
+      {
+        "name": "zz_bak_20260801_cities",
+        "rows": 9
+      },
+      {
+        "name": "zz_bak_20260801_countries",
+        "rows": 4
+      },
+      {
+        "name": "zz_bak_20260801_districts",
+        "rows": 4
+      },
+      {
+        "name": "zz_bak_20260801_states_provinces",
+        "rows": 7
+      }
+    ],
+    "otherMasterAndOperational": [
+      {
+        "name": "_applied_schema_migrations",
+        "rows": 15
+      },
+      {
+        "name": "approval_request_items",
+        "rows": 0
+      },
+      {
+        "name": "approval_requests",
+        "rows": 0
+      },
+      {
+        "name": "approval_status_history",
+        "rows": 0
+      },
+      {
+        "name": "approval_status_history_ar",
+        "rows": 0
+      },
+      {
+        "name": "approval_status_history_ar_ar",
+        "rows": 0
+      },
+      {
+        "name": "approval_status_history_ar_en",
+        "rows": 0
+      },
+      {
+        "name": "approval_status_history_ar_fa",
+        "rows": 0
+      },
+      {
+        "name": "approval_status_history_ar_ps",
+        "rows": 0
+      },
+      {
+        "name": "approval_status_history_ar_ur",
+        "rows": 0
+      },
+      {
+        "name": "approval_status_history_en",
+        "rows": 0
+      },
+      {
+        "name": "approval_status_history_en_ar",
+        "rows": 0
+      },
+      {
+        "name": "approval_status_history_en_en",
+        "rows": 0
+      },
+      {
+        "name": "approval_status_history_en_fa",
+        "rows": 0
+      },
+      {
+        "name": "approval_status_history_en_ps",
+        "rows": 0
+      },
+      {
+        "name": "approval_status_history_en_ur",
+        "rows": 0
+      },
+      {
+        "name": "approval_status_history_fa",
+        "rows": 0
+      },
+      {
+        "name": "approval_status_history_fa_ar",
+        "rows": 0
+      },
+      {
+        "name": "approval_status_history_fa_en",
+        "rows": 0
+      },
+      {
+        "name": "approval_status_history_fa_fa",
+        "rows": 0
+      },
+      {
+        "name": "approval_status_history_fa_ps",
+        "rows": 0
+      },
+      {
+        "name": "approval_status_history_fa_ur",
+        "rows": 0
+      },
+      {
+        "name": "approval_status_history_ps",
+        "rows": 0
+      },
+      {
+        "name": "approval_status_history_ps_ar",
+        "rows": 0
+      },
+      {
+        "name": "approval_status_history_ps_en",
+        "rows": 0
+      },
+      {
+        "name": "approval_status_history_ps_fa",
+        "rows": 0
+      },
+      {
+        "name": "approval_status_history_ps_ps",
+        "rows": 0
+      },
+      {
+        "name": "approval_status_history_ps_ur",
+        "rows": 0
+      },
+      {
+        "name": "approval_status_history_ur",
+        "rows": 0
+      },
+      {
+        "name": "approval_status_history_ur_ar",
+        "rows": 0
+      },
+      {
+        "name": "approval_status_history_ur_en",
+        "rows": 0
+      },
+      {
+        "name": "approval_status_history_ur_fa",
+        "rows": 0
+      },
+      {
+        "name": "approval_status_history_ur_ps",
+        "rows": 0
+      },
+      {
+        "name": "approval_status_history_ur_ur",
+        "rows": 0
+      },
+      {
+        "name": "areas_locations",
+        "rows": 20
+      },
+      {
+        "name": "areas_locations_ar",
+        "rows": 0
+      },
+      {
+        "name": "areas_locations_ar_ar",
+        "rows": 0
+      },
+      {
+        "name": "areas_locations_ar_en",
+        "rows": 0
+      },
+      {
+        "name": "areas_locations_ar_fa",
+        "rows": 0
+      },
+      {
+        "name": "areas_locations_ar_ps",
+        "rows": 0
+      },
+      {
+        "name": "areas_locations_ar_ur",
+        "rows": 0
+      },
+      {
+        "name": "areas_locations_en",
+        "rows": 0
+      },
+      {
+        "name": "areas_locations_en_ar",
+        "rows": 0
+      },
+      {
+        "name": "areas_locations_en_en",
+        "rows": 0
+      },
+      {
+        "name": "areas_locations_en_fa",
+        "rows": 0
+      },
+      {
+        "name": "areas_locations_en_ps",
+        "rows": 0
+      },
+      {
+        "name": "areas_locations_en_ur",
+        "rows": 0
+      },
+      {
+        "name": "areas_locations_fa",
+        "rows": 0
+      },
+      {
+        "name": "areas_locations_fa_ar",
+        "rows": 0
+      },
+      {
+        "name": "areas_locations_fa_en",
+        "rows": 0
+      },
+      {
+        "name": "areas_locations_fa_fa",
+        "rows": 0
+      },
+      {
+        "name": "areas_locations_fa_ps",
+        "rows": 0
+      },
+      {
+        "name": "areas_locations_fa_ur",
+        "rows": 0
+      },
+      {
+        "name": "areas_locations_ps",
+        "rows": 0
+      },
+      {
+        "name": "areas_locations_ps_ar",
+        "rows": 0
+      },
+      {
+        "name": "areas_locations_ps_en",
+        "rows": 0
+      },
+      {
+        "name": "areas_locations_ps_fa",
+        "rows": 0
+      },
+      {
+        "name": "areas_locations_ps_ps",
+        "rows": 0
+      },
+      {
+        "name": "areas_locations_ps_ur",
+        "rows": 0
+      },
+      {
+        "name": "areas_locations_ur",
+        "rows": 0
+      },
+      {
+        "name": "areas_locations_ur_ar",
+        "rows": 0
+      },
+      {
+        "name": "areas_locations_ur_en",
+        "rows": 0
+      },
+      {
+        "name": "areas_locations_ur_fa",
+        "rows": 0
+      },
+      {
+        "name": "areas_locations_ur_ps",
+        "rows": 0
+      },
+      {
+        "name": "areas_locations_ur_ur",
+        "rows": 0
+      },
+      {
+        "name": "attachments",
+        "rows": 0
+      },
+      {
+        "name": "cities",
+        "rows": 664494
+      },
+      {
+        "name": "cities_ar",
+        "rows": 0
+      },
+      {
+        "name": "cities_en",
+        "rows": 0
+      },
+      {
+        "name": "cities_fa",
+        "rows": 0
+      },
+      {
+        "name": "cities_ps",
+        "rows": 0
+      },
+      {
+        "name": "cities_ur",
+        "rows": 0
+      },
+      {
+        "name": "clearing_agents",
+        "rows": 2
+      },
+      {
+        "name": "clearing_agents_ar",
+        "rows": 0
+      },
+      {
+        "name": "clearing_agents_en",
+        "rows": 0
+      },
+      {
+        "name": "clearing_agents_fa",
+        "rows": 0
+      },
+      {
+        "name": "clearing_agents_ps",
+        "rows": 0
+      },
+      {
+        "name": "clearing_agents_ur",
+        "rows": 0
+      },
+      {
+        "name": "clearing_customer_order_parties",
+        "rows": 5
+      },
+      {
+        "name": "clearing_customer_order_parties_ar",
+        "rows": 0
+      },
+      {
+        "name": "clearing_customer_order_parties_en",
+        "rows": 0
+      },
+      {
+        "name": "clearing_customer_order_parties_fa",
+        "rows": 0
+      },
+      {
+        "name": "clearing_customer_order_parties_ps",
+        "rows": 0
+      },
+      {
+        "name": "clearing_customer_order_parties_ur",
+        "rows": 0
+      },
+      {
+        "name": "clearing_customer_orders",
+        "rows": 1
+      },
+      {
+        "name": "clearing_customer_orders_ar",
+        "rows": 0
+      },
+      {
+        "name": "clearing_customer_orders_en",
+        "rows": 0
+      },
+      {
+        "name": "clearing_customer_orders_fa",
+        "rows": 0
+      },
+      {
+        "name": "clearing_customer_orders_ps",
+        "rows": 0
+      },
+      {
+        "name": "clearing_customer_orders_ur",
+        "rows": 0
+      },
+      {
+        "name": "communication_attachments",
+        "rows": 0
+      },
+      {
+        "name": "communication_center_campaigns",
+        "rows": 0
+      },
+      {
+        "name": "communication_center_campaigns_ar",
+        "rows": 0
+      },
+      {
+        "name": "communication_center_campaigns_en",
+        "rows": 0
+      },
+      {
+        "name": "communication_center_campaigns_fa",
+        "rows": 0
+      },
+      {
+        "name": "communication_center_campaigns_ps",
+        "rows": 0
+      },
+      {
+        "name": "communication_center_campaigns_ur",
+        "rows": 0
+      },
+      {
+        "name": "communication_center_followups",
+        "rows": 0
+      },
+      {
+        "name": "communication_center_followups_ar",
+        "rows": 0
+      },
+      {
+        "name": "communication_center_followups_en",
+        "rows": 0
+      },
+      {
+        "name": "communication_center_followups_fa",
+        "rows": 0
+      },
+      {
+        "name": "communication_center_followups_ps",
+        "rows": 0
+      },
+      {
+        "name": "communication_center_followups_ur",
+        "rows": 0
+      },
+      {
+        "name": "communication_center_leads",
+        "rows": 0
+      },
+      {
+        "name": "communication_center_leads_ar",
+        "rows": 0
+      },
+      {
+        "name": "communication_center_leads_en",
+        "rows": 0
+      },
+      {
+        "name": "communication_center_leads_fa",
+        "rows": 0
+      },
+      {
+        "name": "communication_center_leads_ps",
+        "rows": 0
+      },
+      {
+        "name": "communication_center_leads_ur",
+        "rows": 0
+      },
+      {
+        "name": "communication_center_messages",
+        "rows": 0
+      },
+      {
+        "name": "communication_center_profiles",
+        "rows": 5
+      },
+      {
+        "name": "communication_center_profiles_ar",
+        "rows": 0
+      },
+      {
+        "name": "communication_center_profiles_en",
+        "rows": 0
+      },
+      {
+        "name": "communication_center_profiles_fa",
+        "rows": 0
+      },
+      {
+        "name": "communication_center_profiles_ps",
+        "rows": 0
+      },
+      {
+        "name": "communication_center_profiles_ur",
+        "rows": 0
+      },
+      {
+        "name": "communication_contact_preferences",
+        "rows": 0
+      },
+      {
+        "name": "communication_conversations",
+        "rows": 0
+      },
+      {
+        "name": "communication_messages",
+        "rows": 0
+      },
+      {
+        "name": "communication_reminder_rules",
+        "rows": 0
+      },
+      {
+        "name": "communication_reminder_rules_ar",
+        "rows": 0
+      },
+      {
+        "name": "communication_reminder_rules_en",
+        "rows": 0
+      },
+      {
+        "name": "communication_reminder_rules_fa",
+        "rows": 0
+      },
+      {
+        "name": "communication_reminder_rules_ps",
+        "rows": 0
+      },
+      {
+        "name": "communication_reminder_rules_ur",
+        "rows": 0
+      },
+      {
+        "name": "communication_templates",
+        "rows": 0
+      },
+      {
+        "name": "communication_templates_ar",
+        "rows": 0
+      },
+      {
+        "name": "communication_templates_en",
+        "rows": 0
+      },
+      {
+        "name": "communication_templates_fa",
+        "rows": 0
+      },
+      {
+        "name": "communication_templates_ps",
+        "rows": 0
+      },
+      {
+        "name": "communication_templates_ur",
+        "rows": 0
+      },
+      {
+        "name": "companies",
+        "rows": 203
+      },
+      {
+        "name": "companies_ar",
+        "rows": 0
+      },
+      {
+        "name": "companies_en",
+        "rows": 0
+      },
+      {
+        "name": "companies_fa",
+        "rows": 0
+      },
+      {
+        "name": "companies_ps",
+        "rows": 0
+      },
+      {
+        "name": "companies_ur",
+        "rows": 0
+      },
+      {
+        "name": "contact_types",
+        "rows": 3
+      },
+      {
+        "name": "contact_types_ar",
+        "rows": 0
+      },
+      {
+        "name": "contact_types_en",
+        "rows": 0
+      },
+      {
+        "name": "contact_types_fa",
+        "rows": 0
+      },
+      {
+        "name": "contact_types_ps",
+        "rows": 0
+      },
+      {
+        "name": "contact_types_ur",
+        "rows": 0
+      },
+      {
+        "name": "countries",
+        "rows": 8
+      },
+      {
+        "name": "countries_ar",
+        "rows": 0
+      },
+      {
+        "name": "countries_en",
+        "rows": 0
+      },
+      {
+        "name": "countries_fa",
+        "rows": 0
+      },
+      {
+        "name": "countries_ps",
+        "rows": 0
+      },
+      {
+        "name": "countries_ur",
+        "rows": 0
+      },
+      {
+        "name": "customer_contacts",
+        "rows": 120
+      },
+      {
+        "name": "customer_registrations",
+        "rows": 80
+      },
+      {
+        "name": "customers",
+        "rows": 208
+      },
+      {
+        "name": "customers_ar",
+        "rows": 0
+      },
+      {
+        "name": "customers_en",
+        "rows": 0
+      },
+      {
+        "name": "customers_fa",
+        "rows": 0
+      },
+      {
+        "name": "customers_ps",
+        "rows": 0
+      },
+      {
+        "name": "customers_ur",
+        "rows": 0
+      },
+      {
+        "name": "daily_usd_rates",
+        "rows": 64
+      },
+      {
+        "name": "document_types",
+        "rows": 8
+      },
+      {
+        "name": "document_types_ar",
+        "rows": 0
+      },
+      {
+        "name": "document_types_en",
+        "rows": 0
+      },
+      {
+        "name": "document_types_fa",
+        "rows": 0
+      },
+      {
+        "name": "document_types_ps",
+        "rows": 0
+      },
+      {
+        "name": "document_types_ur",
+        "rows": 0
+      },
+      {
+        "name": "employee_advances_loans",
+        "rows": 0
+      },
+      {
+        "name": "employee_salaries_due",
+        "rows": 0
+      },
+      {
+        "name": "employees",
+        "rows": 54
+      },
+      {
+        "name": "employees_ar",
+        "rows": 0
+      },
+      {
+        "name": "employees_en",
+        "rows": 0
+      },
+      {
+        "name": "employees_fa",
+        "rows": 0
+      },
+      {
+        "name": "employees_ps",
+        "rows": 0
+      },
+      {
+        "name": "employees_ur",
+        "rows": 0
+      },
+      {
+        "name": "erp_activity_events",
+        "rows": 0
+      },
+      {
+        "name": "erp_assignments",
+        "rows": 0
+      },
+      {
+        "name": "erp_assignments_ar",
+        "rows": 0
+      },
+      {
+        "name": "erp_assignments_en",
+        "rows": 0
+      },
+      {
+        "name": "erp_assignments_fa",
+        "rows": 0
+      },
+      {
+        "name": "erp_assignments_ps",
+        "rows": 0
+      },
+      {
+        "name": "erp_assignments_ur",
+        "rows": 0
+      },
+      {
+        "name": "erp_email_messages",
+        "rows": 0
+      },
+      {
+        "name": "erp_email_providers",
+        "rows": 0
+      },
+      {
+        "name": "erp_email_providers_ar",
+        "rows": 0
+      },
+      {
+        "name": "erp_email_providers_en",
+        "rows": 0
+      },
+      {
+        "name": "erp_email_providers_fa",
+        "rows": 0
+      },
+      {
+        "name": "erp_email_providers_ps",
+        "rows": 0
+      },
+      {
+        "name": "erp_email_providers_ur",
+        "rows": 0
+      },
+      {
+        "name": "erp_modules",
+        "rows": 0
+      },
+      {
+        "name": "erp_modules_ar",
+        "rows": 0
+      },
+      {
+        "name": "erp_modules_en",
+        "rows": 0
+      },
+      {
+        "name": "erp_modules_fa",
+        "rows": 0
+      },
+      {
+        "name": "erp_modules_ps",
+        "rows": 0
+      },
+      {
+        "name": "erp_modules_ur",
+        "rows": 0
+      },
+      {
+        "name": "erp_multilingual_events",
+        "rows": 0
+      },
+      {
+        "name": "erp_page_database_bindings",
+        "rows": 0
+      },
+      {
+        "name": "erp_pdf_email_jobs",
+        "rows": 0
+      },
+      {
+        "name": "erp_pdf_email_jobs_ar",
+        "rows": 0
+      },
+      {
+        "name": "erp_pdf_email_jobs_en",
+        "rows": 0
+      },
+      {
+        "name": "erp_pdf_email_jobs_fa",
+        "rows": 0
+      },
+      {
+        "name": "erp_pdf_email_jobs_ps",
+        "rows": 0
+      },
+      {
+        "name": "erp_pdf_email_jobs_ur",
+        "rows": 0
+      },
+      {
+        "name": "erp_record_transfers",
+        "rows": 0
+      },
+      {
+        "name": "erp_schema_migrations",
+        "rows": 24
+      },
+      {
+        "name": "exchange_rate_history",
+        "rows": 0
+      },
+      {
+        "name": "expenses_bill_lines",
+        "rows": 0
+      },
+      {
+        "name": "expenses_bills",
+        "rows": 0
+      },
+      {
+        "name": "expenses_bills_ar",
+        "rows": 0
+      },
+      {
+        "name": "expenses_bills_en",
+        "rows": 0
+      },
+      {
+        "name": "expenses_bills_fa",
+        "rows": 0
+      },
+      {
+        "name": "expenses_bills_ps",
+        "rows": 0
+      },
+      {
+        "name": "expenses_bills_ur",
+        "rows": 0
+      },
+      {
+        "name": "goods",
+        "rows": 14
+      },
+      {
+        "name": "goods_ar",
+        "rows": 0
+      },
+      {
+        "name": "goods_en",
+        "rows": 0
+      },
+      {
+        "name": "goods_fa",
+        "rows": 0
+      },
+      {
+        "name": "goods_ps",
+        "rows": 0
+      },
+      {
+        "name": "goods_ur",
+        "rows": 0
+      },
+      {
+        "name": "goods_variations",
+        "rows": 0
+      },
+      {
+        "name": "goods_variations_ar",
+        "rows": 0
+      },
+      {
+        "name": "goods_variations_en",
+        "rows": 0
+      },
+      {
+        "name": "goods_variations_fa",
+        "rows": 0
+      },
+      {
+        "name": "goods_variations_ps",
+        "rows": 0
+      },
+      {
+        "name": "goods_variations_ur",
+        "rows": 0
+      },
+      {
+        "name": "local_applied_migrations",
+        "rows": 48
+      },
+      {
+        "name": "management_categories",
+        "rows": 0
+      },
+      {
+        "name": "management_categories_ar",
+        "rows": 0
+      },
+      {
+        "name": "management_categories_en",
+        "rows": 0
+      },
+      {
+        "name": "management_categories_fa",
+        "rows": 0
+      },
+      {
+        "name": "management_categories_ps",
+        "rows": 0
+      },
+      {
+        "name": "management_categories_ur",
+        "rows": 0
+      },
+      {
+        "name": "management_parameter_values",
+        "rows": 0
+      },
+      {
+        "name": "management_parameters",
+        "rows": 0
+      },
+      {
+        "name": "management_parameters_ar",
+        "rows": 0
+      },
+      {
+        "name": "management_parameters_en",
+        "rows": 0
+      },
+      {
+        "name": "management_parameters_fa",
+        "rows": 0
+      },
+      {
+        "name": "management_parameters_ps",
+        "rows": 0
+      },
+      {
+        "name": "management_parameters_ur",
+        "rows": 0
+      },
+      {
+        "name": "memberships",
+        "rows": 0
+      },
+      {
+        "name": "module_dependencies",
+        "rows": 0
+      },
+      {
+        "name": "module_number_sequences",
+        "rows": 0
+      },
+      {
+        "name": "money_exchange_entries",
+        "rows": 0
+      },
+      {
+        "name": "money_exchange_entries_ar",
+        "rows": 0
+      },
+      {
+        "name": "money_exchange_entries_en",
+        "rows": 0
+      },
+      {
+        "name": "money_exchange_entries_fa",
+        "rows": 0
+      },
+      {
+        "name": "money_exchange_entries_ps",
+        "rows": 0
+      },
+      {
+        "name": "money_exchange_entries_ur",
+        "rows": 0
+      },
+      {
+        "name": "nex.js",
+        "rows": 0
+      },
+      {
+        "name": "office_assets",
+        "rows": 0
+      },
+      {
+        "name": "office_attendance",
+        "rows": 1
+      },
+      {
+        "name": "office_documents",
+        "rows": 1
+      },
+      {
+        "name": "office_documents_ar",
+        "rows": 0
+      },
+      {
+        "name": "office_documents_en",
+        "rows": 0
+      },
+      {
+        "name": "office_documents_fa",
+        "rows": 0
+      },
+      {
+        "name": "office_documents_ps",
+        "rows": 0
+      },
+      {
+        "name": "office_documents_ur",
+        "rows": 0
+      },
+      {
+        "name": "office_leave_requests",
+        "rows": 0
+      },
+      {
+        "name": "parent_business_groups",
+        "rows": 0
+      },
+      {
+        "name": "parent_business_groups_ar",
+        "rows": 0
+      },
+      {
+        "name": "parent_business_groups_en",
+        "rows": 0
+      },
+      {
+        "name": "parent_business_groups_fa",
+        "rows": 0
+      },
+      {
+        "name": "parent_business_groups_ps",
+        "rows": 0
+      },
+      {
+        "name": "parent_business_groups_ur",
+        "rows": 0
+      },
+      {
+        "name": "postal_codes",
+        "rows": 0
+      },
+      {
+        "name": "postal_codes_ar",
+        "rows": 0
+      },
+      {
+        "name": "postal_codes_en",
+        "rows": 0
+      },
+      {
+        "name": "postal_codes_fa",
+        "rows": 0
+      },
+      {
+        "name": "postal_codes_ps",
+        "rows": 0
+      },
+      {
+        "name": "postal_codes_ur",
+        "rows": 0
+      },
+      {
+        "name": "product_brands",
+        "rows": 3
+      },
+      {
+        "name": "product_brands_ar",
+        "rows": 0
+      },
+      {
+        "name": "product_brands_en",
+        "rows": 0
+      },
+      {
+        "name": "product_brands_fa",
+        "rows": 0
+      },
+      {
+        "name": "product_brands_ps",
+        "rows": 0
+      },
+      {
+        "name": "product_brands_ur",
+        "rows": 0
+      },
+      {
+        "name": "product_categories",
+        "rows": 3
+      },
+      {
+        "name": "product_categories_ar",
+        "rows": 0
+      },
+      {
+        "name": "product_categories_en",
+        "rows": 0
+      },
+      {
+        "name": "product_categories_fa",
+        "rows": 0
+      },
+      {
+        "name": "product_categories_ps",
+        "rows": 0
+      },
+      {
+        "name": "product_categories_ur",
+        "rows": 0
+      },
+      {
+        "name": "product_units",
+        "rows": 9
+      },
+      {
+        "name": "product_units_ar",
+        "rows": 0
+      },
+      {
+        "name": "product_units_en",
+        "rows": 0
+      },
+      {
+        "name": "product_units_fa",
+        "rows": 0
+      },
+      {
+        "name": "product_units_ps",
+        "rows": 0
+      },
+      {
+        "name": "product_units_ur",
+        "rows": 0
+      },
+      {
+        "name": "product_warehouse_mapping",
+        "rows": 0
+      },
+      {
+        "name": "products",
+        "rows": 1
+      },
+      {
+        "name": "products_ar",
+        "rows": 0
+      },
+      {
+        "name": "products_en",
+        "rows": 0
+      },
+      {
+        "name": "products_fa",
+        "rows": 0
+      },
+      {
+        "name": "products_ps",
+        "rows": 0
+      },
+      {
+        "name": "products_ur",
+        "rows": 0
+      },
+      {
+        "name": "profiles",
+        "rows": 18
+      },
+      {
+        "name": "profiles_ar",
+        "rows": 0
+      },
+      {
+        "name": "profiles_en",
+        "rows": 0
+      },
+      {
+        "name": "profiles_fa",
+        "rows": 0
+      },
+      {
+        "name": "profiles_ps",
+        "rows": 0
+      },
+      {
+        "name": "profiles_ur",
+        "rows": 0
+      },
+      {
+        "name": "record_change_history",
+        "rows": 4
+      },
+      {
+        "name": "record_locks",
+        "rows": 0
+      },
+      {
+        "name": "shipment_documents",
+        "rows": 0
+      },
+      {
+        "name": "shipment_documents_ar",
+        "rows": 0
+      },
+      {
+        "name": "shipment_documents_en",
+        "rows": 0
+      },
+      {
+        "name": "shipment_documents_fa",
+        "rows": 0
+      },
+      {
+        "name": "shipment_documents_ps",
+        "rows": 0
+      },
+      {
+        "name": "shipment_documents_ur",
+        "rows": 0
+      },
+      {
+        "name": "shipping_bl_records",
+        "rows": 0
+      },
+      {
+        "name": "shipping_bl_records_ar",
+        "rows": 0
+      },
+      {
+        "name": "shipping_bl_records_en",
+        "rows": 0
+      },
+      {
+        "name": "shipping_bl_records_fa",
+        "rows": 0
+      },
+      {
+        "name": "shipping_bl_records_ps",
+        "rows": 0
+      },
+      {
+        "name": "shipping_bl_records_ur",
+        "rows": 0
+      },
+      {
+        "name": "shipping_expense_transfers",
+        "rows": 1
+      },
+      {
+        "name": "shipping_line_records",
+        "rows": 4
+      },
+      {
+        "name": "shipping_line_records_ar",
+        "rows": 0
+      },
+      {
+        "name": "shipping_line_records_en",
+        "rows": 0
+      },
+      {
+        "name": "shipping_line_records_fa",
+        "rows": 0
+      },
+      {
+        "name": "shipping_line_records_ps",
+        "rows": 0
+      },
+      {
+        "name": "shipping_line_records_ur",
+        "rows": 0
+      },
+      {
+        "name": "stock_movements",
+        "rows": 6
+      },
+      {
+        "name": "tax_codes",
+        "rows": 3
+      },
+      {
+        "name": "tax_codes_ar",
+        "rows": 0
+      },
+      {
+        "name": "tax_codes_en",
+        "rows": 0
+      },
+      {
+        "name": "tax_codes_fa",
+        "rows": 0
+      },
+      {
+        "name": "tax_codes_ps",
+        "rows": 0
+      },
+      {
+        "name": "tax_codes_ur",
+        "rows": 0
+      },
+      {
+        "name": "transit_truck_loadings",
+        "rows": 0
+      },
+      {
+        "name": "transit_truck_loadings_ar",
+        "rows": 0
+      },
+      {
+        "name": "transit_truck_loadings_en",
+        "rows": 0
+      },
+      {
+        "name": "transit_truck_loadings_fa",
+        "rows": 0
+      },
+      {
+        "name": "transit_truck_loadings_ps",
+        "rows": 0
+      },
+      {
+        "name": "transit_truck_loadings_ur",
+        "rows": 0
+      },
+      {
+        "name": "truck_loadings",
+        "rows": 0
+      },
+      {
+        "name": "truck_loadings_ar",
+        "rows": 0
+      },
+      {
+        "name": "truck_loadings_en",
+        "rows": 0
+      },
+      {
+        "name": "truck_loadings_fa",
+        "rows": 0
+      },
+      {
+        "name": "truck_loadings_ps",
+        "rows": 0
+      },
+      {
+        "name": "truck_loadings_ur",
+        "rows": 0
+      },
+      {
+        "name": "trucks",
+        "rows": 0
+      },
+      {
+        "name": "trucks_ar",
+        "rows": 0
+      },
+      {
+        "name": "trucks_en",
+        "rows": 0
+      },
+      {
+        "name": "trucks_fa",
+        "rows": 0
+      },
+      {
+        "name": "trucks_ps",
+        "rows": 0
+      },
+      {
+        "name": "trucks_ur",
+        "rows": 0
+      },
+      {
+        "name": "warehouses",
+        "rows": 169
+      },
+      {
+        "name": "warehouses_ar",
+        "rows": 0
+      },
+      {
+        "name": "warehouses_en",
+        "rows": 0
+      },
+      {
+        "name": "warehouses_fa",
+        "rows": 0
+      },
+      {
+        "name": "warehouses_ps",
+        "rows": 0
+      },
+      {
+        "name": "warehouses_ur",
+        "rows": 0
+      },
+      {
+        "name": "whatsapp_contacts",
+        "rows": 0
+      },
+      {
+        "name": "whatsapp_contacts_ar",
+        "rows": 0
+      },
+      {
+        "name": "whatsapp_contacts_en",
+        "rows": 0
+      },
+      {
+        "name": "whatsapp_contacts_fa",
+        "rows": 0
+      },
+      {
+        "name": "whatsapp_contacts_ps",
+        "rows": 0
+      },
+      {
+        "name": "whatsapp_contacts_ur",
+        "rows": 0
+      },
+      {
+        "name": "whatsapp_conversations",
+        "rows": 0
+      },
+      {
+        "name": "whatsapp_message_media",
+        "rows": 0
+      },
+      {
+        "name": "whatsapp_messages",
+        "rows": 0
+      },
+      {
+        "name": "whatsapp_messages_ar",
+        "rows": 0
+      },
+      {
+        "name": "whatsapp_messages_en",
+        "rows": 0
+      },
+      {
+        "name": "whatsapp_messages_fa",
+        "rows": 0
+      },
+      {
+        "name": "whatsapp_messages_ps",
+        "rows": 0
+      },
+      {
+        "name": "whatsapp_messages_ur",
+        "rows": 0
+      }
+    ]
+  }
+}

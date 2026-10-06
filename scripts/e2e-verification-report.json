@@ -1,0 +1,139 @@
+{
+  "purchaseOrders": [
+    {
+      "orderNo": "AE-001-0007",
+      "orderId": "281e379f-5165-4f7f-9033-002bf3f41c96",
+      "orderCountryId": "935dd0b9-8228-43b3-b53d-c06e9ae2882f",
+      "orderCityBranchId": "79b31aba-45f1-4aba-9068-fb3eb2102a81",
+      "debitLedger": {
+        "id": "61ab54d8-9e6a-4e2f-9604-9922a9598d53",
+        "name": "DEV TEST AE Accounts Payable Ledger [LOCAL-LOADTEST-AUG2026-R01]",
+        "isUuid": true
+      },
+      "creditLedger": {
+        "id": "6b24ea23-9514-4311-aba3-94ba99a993f8",
+        "name": "DEV TEST AE Bank Ledger [LOCAL-LOADTEST-AUG2026-R01]",
+        "isUuid": true
+      },
+      "orderTotal": "120000.0000",
+      "remainingDue": "120000.0000",
+      "paymentStatus": "pending",
+      "result": "PASS"
+    },
+    {
+      "orderNo": "AE-001-0006",
+      "orderId": "42d5027c-3fdd-40e3-901a-ad416b6e7f6f",
+      "orderCountryId": "935dd0b9-8228-43b3-b53d-c06e9ae2882f",
+      "orderCityBranchId": "79b31aba-45f1-4aba-9068-fb3eb2102a81",
+      "debitLedger": {
+        "id": "61ab54d8-9e6a-4e2f-9604-9922a9598d53",
+        "name": "DEV TEST AE Accounts Payable Ledger [LOCAL-LOADTEST-AUG2026-R01]",
+        "isUuid": true
+      },
+      "creditLedger": {
+        "id": "6b24ea23-9514-4311-aba3-94ba99a993f8",
+        "name": "DEV TEST AE Bank Ledger [LOCAL-LOADTEST-AUG2026-R01]",
+        "isUuid": true
+      },
+      "orderTotal": "100000.0000",
+      "remainingDue": "100000.0000",
+      "paymentStatus": "pending",
+      "result": "PASS"
+    },
+    {
+      "orderNo": "AE-001-0005",
+      "orderId": "0decf7f0-c111-4c09-9916-b1fdf83a3bd9",
+      "orderCountryId": "935dd0b9-8228-43b3-b53d-c06e9ae2882f",
+      "orderCityBranchId": "79b31aba-45f1-4aba-9068-fb3eb2102a81",
+      "debitLedger": {
+        "id": "fd7a5f86-d45c-4c55-8685-e0c08b1b0909",
+        "name": "asmatu",
+        "isUuid": true
+      },
+      "creditLedger": {
+        "id": "6b24ea23-9514-4311-aba3-94ba99a993f8",
+        "name": "DEV TEST AE Bank Ledger [LOCAL-LOADTEST-AUG2026-R01]",
+        "isUuid": true
+      },
+      "orderTotal": "120000.0000",
+      "remainingDue": "120000.0000",
+      "paymentStatus": "partially_paid",
+      "result": "PASS"
+    }
+  ],
+  "salesOrders": [
+    {
+      "orderNo": "SO-DEV-LANG-TEST-01",
+      "orderId": "57b9365c-96a3-4ac0-a1ab-6955fb738894",
+      "orderCountryId": "8366fa0e-dcf6-4acd-8602-2819f103dd63",
+      "orderCityBranchId": "All Branches",
+      "debitLedger": {
+        "id": "71bd2e88-6397-4e3a-a208-6f3d8d0ee1ff",
+        "name": "DEV TEST AF Bank Ledger [LOCAL-LOADTEST-AUG2026-R01]",
+        "isUuid": true
+      },
+      "creditLedger": {
+        "id": "dd208540-aa42-4ddf-adaf-aeefa28f000e",
+        "name": "DEV TEST AF Accounts Receivable Ledger [LOCAL-LOADTEST-AUG2026-R01]",
+        "isUuid": true
+      },
+      "orderTotal": "1000.00",
+      "paymentStatus": "pending",
+      "result": "PASS"
+    },
+    {
+      "orderNo": "SO-DEV-0003",
+      "orderId": "9e349308-b5da-4f5c-8081-8a95dd713735",
+      "orderCountryId": "8366fa0e-dcf6-4acd-8602-2819f103dd63",
+      "orderCityBranchId": "All Branches",
+      "debitLedger": {
+        "id": "71bd2e88-6397-4e3a-a208-6f3d8d0ee1ff",
+        "name": "DEV TEST AF Bank Ledger [LOCAL-LOADTEST-AUG2026-R01]",
+        "isUuid": true
+      },
+      "creditLedger": {
+        "id": "dd208540-aa42-4ddf-adaf-aeefa28f000e",
+        "name": "DEV TEST AF Accounts Receivable Ledger [LOCAL-LOADTEST-AUG2026-R01]",
+        "isUuid": true
+      },
+      "orderTotal": "9000.00",
+      "paymentStatus": "Pending",
+      "result": "PASS"
+    },
+    {
+      "orderNo": "SO-DEV-0002",
+      "orderId": "ee3239bb-c40f-4bec-a140-de6584c462f9",
+      "orderCountryId": "8366fa0e-dcf6-4acd-8602-2819f103dd63",
+      "orderCityBranchId": "All Branches",
+      "debitLedger": {
+        "id": "71bd2e88-6397-4e3a-a208-6f3d8d0ee1ff",
+        "name": "DEV TEST AF Bank Ledger [LOCAL-LOADTEST-AUG2026-R01]",
+        "isUuid": true
+      },
+      "creditLedger": {
+        "id": "dd208540-aa42-4ddf-adaf-aeefa28f000e",
+        "name": "DEV TEST AF Accounts Receivable Ledger [LOCAL-LOADTEST-AUG2026-R01]",
+        "isUuid": true
+      },
+      "orderTotal": "2500.00",
+      "paymentStatus": "Paid",
+      "result": "PASS"
+    }
+  ],
+  "securityRejectionTests": [
+    {
+      "test": "Cross-Country Scope Isolation Guard",
+      "orderId": "281e379f-5165-4f7f-9033-002bf3f41c96",
+      "orderCountryId": "935dd0b9-8228-43b3-b53d-c06e9ae2882f",
+      "foreignLedgerId": "ab53ea0e-c9a6-4f20-92c8-f2a56950a68a",
+      "foreignLedgerCountryId": "8366fa0e-dcf6-4acd-8602-2819f103dd63",
+      "isBlockedByBackend": true,
+      "status": "PASS"
+    }
+  ],
+  "summary": {
+    "total": 7,
+    "passed": 7,
+    "failed": 0
+  }
+}

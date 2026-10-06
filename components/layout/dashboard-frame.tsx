@@ -1,0 +1,1092 @@
+"use client";
+
+import { useEffect, useMemo, useState, useRef } from "react";
+import Link from "next/link";
+import { 
+  ArrowLeftRight,
+  BadgePercent,
+  BookOpen,
+  Briefcase,
+  Building,
+  Building2,
+  Calendar,
+  Check,
+  CheckCircle2,
+  ChevronDown,
+  Coins,
+  Compass,
+  CreditCard,
+  FileSpreadsheet,
+  Globe,
+  History,
+  LayoutDashboard,
+  MapPin,
+  Menu,
+  PlusCircle,
+  Receipt,
+  Repeat,
+  Search,
+  Shield,
+  ShieldCheck,
+  ShieldAlert,
+  Home,
+  Truck,
+  UserCheck,
+  UserPlus,
+  Users,
+  Settings,
+  X
+} from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import type { SidebarMenuVisibilityMap, SidebarNode } from "@/lib/navigation/sidebar";
+import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { t } from "@/lib/i18n/ui";
+import { GlobalCalculator } from "@/components/layout/global-calculator";
+import { AiBusinessAssistant } from "@/components/layout/ai-business-assistant";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { filterSidebarTree } from "@/lib/navigation/sidebar";
+import { enterpriseRoles, virtualRoles, type EnterpriseRole } from "@/lib/permissions/enterprise-roles";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
+import { PremiumSidebarNav } from "@/components/layout/premium-sidebar-nav";
+import { DigitalDockPremiumSidebar } from "@/components/layout/digital-dock-premium-sidebar";
+import { evaluateRouteAccess } from "@/lib/navigation/route-policy";
+import { PreferencesControls } from "@/components/layout/preferences-controls";
+import { ErpPageActions } from "@/components/layout/erp-page-actions";
+import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { fetchBranding, brandingName } from "@/lib/branding/client";
+import { ActiveRecordProvider } from "@/lib/support/active-record-context";
+
+export function DashboardFrame({
+  children,
+  nodes,
+  lang: langProp,
+  roles,
+  permissions,
+  isShippingScoped,
+  operationalDomains,
+  ledgerVisibility,
+  canViewFinancials,
+  userEmail,
+  userName
+}: {
+  children: React.ReactNode;
+  nodes: SidebarNode[];
+  lang: SupportedLanguage;
+  roles: EnterpriseRole[] | null;
+  permissions?: string[] | null;
+  isShippingScoped?: boolean;
+  operationalDomains?: ("business" | "shipping" | "both")[];
+  ledgerVisibility?: "scoped" | "shipping_only" | "full";
+  canViewFinancials?: boolean;
+  userEmail: string;
+  userName?: string | null;
+}) {
+  const router = useRouter();
+  // The server threads `lang` from the erp_lang cookie, but the client language switcher is the live
+  // source of truth (localStorage erp_lang, read reactively by useActiveLanguage). If the two ever
+  // diverge (e.g. login set localStorage but not the cookie, or a stale/absent cookie), the sidebar
+  // and every label below would render in the server's stale language while the page body follows the
+  // client — the "half-English, half-Urdu" screen. Reconcile: once mounted, prefer the client's active
+  // language; fall back to the server prop during SSR/first render (useActiveLanguage returns "en" on
+  // the server, matching SSR, so this introduces no hydration mismatch).
+  const activeLang = useActiveLanguage();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  const lang: SupportedLanguage = mounted ? activeLang : (langProp || activeLang || "en");
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const pathname = usePathname();
+  const isWizardPath = useMemo(() => {
+    return pathname === "/dashboard/purchase/new-purchase-booking-order" ||
+           pathname === "/dashboard/purchase/purchase-confirm";
+  }, [pathname]);
+
+  const isRouteBlocked = useMemo(() => {
+    if (roles?.includes("super_admin") || permissions?.includes("*:*")) return false;
+
+    // Defense-in-depth: Shipping-only users must never access business/purchase/new-account routes
+    const isShippingOnly =
+      isShippingScoped ||
+      (operationalDomains?.includes("shipping") && !operationalDomains?.includes("business") && !operationalDomains?.includes("both")) ||
+      roles?.includes("agent_user");
+
+    if (isShippingOnly) {
+      const cleanPath = pathname.split("?")[0];
+      const BLOCKED_FOR_SHIPPING = [
+        "/dashboard/purchase",
+        "/dashboard/sales",
+        "/dashboard/new-entry/accounts",
+        "/dashboard/new-entry/users",
+        "/dashboard/new-entry/branch-entry",
+        "/dashboard/new-entry/branches",
+        "/dashboard/accounts",
+        "/dashboard/business-edit-invoice",
+        "/dashboard/super-admin"
+      ];
+      if (BLOCKED_FOR_SHIPPING.some(prefix => cleanPath.startsWith(prefix))) {
+        return true;
+      }
+    }
+
+    // Everything else (business-only domain block, permission map, strict default-deny for operations / shipping-line
+    // logins) is decided by the SAME pure policy the server layout uses — one rule set, no drift between client and server.
+    if (!permissions || permissions.length === 0) return false;
+    return !evaluateRouteAccess({ pathname, permissions, roles, operationalDomains, canViewFinancials }).allowed;
+  }, [permissions, roles, pathname, operationalDomains, isShippingScoped, canViewFinancials]);
+
+  // Expose the signed-in user's display name so client-side print/report engines
+  // can stamp "Printed / Generated by" with the real user instead of "ERP User".
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      (window as unknown as { __ERP_USER_NAME__?: string }).__ERP_USER_NAME__ = userName || "";
+    }
+  }, [userName]);
+
+  useEffect(() => {
+    setDrawerOpen(false);
+    setMobileOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && (drawerOpen || mobileOpen)) {
+        setDrawerOpen(false);
+        setMobileOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [drawerOpen, mobileOpen]);
+
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategoryTab, setSelectedCategoryTab] = useState<string>("All");
+  const [dbResults, setDbResults] = useState<any[]>([]);
+  const [searchingDb, setSearchingDb] = useState(false);
+
+  // Date Filter Dropdown State
+  const [dateMenuOpen, setDateMenuOpen] = useState(false);
+  const [selectedDateFilter, setSelectedDateFilter] = useState("all");
+  const [customDateFrom, setCustomDateFrom] = useState("");
+  const [customDateTo, setCustomDateTo] = useState("");
+  const dateMenuRef = useRef<HTMLDivElement>(null);
+
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  // Dynamic entity branding for the sidebar header — resolved from the signed-in
+  // scope's country_company_profiles via the shared /api/erp/branding resolver.
+  // Never a hard-coded company name.
+  const [brandCompany, setBrandCompany] = useState<string | null>(null);
+  const [brandScopeLine, setBrandScopeLine] = useState<string | null>(null);
+  useEffect(() => {
+    let alive = true;
+    fetchBranding(null)
+      .then((b) => {
+        const resolved = brandingName(b, lang);
+        setBrandCompany(resolved ? resolved.replace(/Daman Business Group/gi, "Damaan Business Group") : null);
+        const scope = [b?.countryName].filter(Boolean).join(" · ");
+        setBrandScopeLine(scope || null);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [lang]);
+  const notificationsRef = useRef<HTMLDivElement>(null);
+  const [sidebarMenuVisibility, setSidebarMenuVisibility] = useState<SidebarMenuVisibilityMap | null>(null);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
+  const sidebarDefaultVisibility: SidebarMenuVisibilityMap = {
+    menu_purchase_stock_section: false
+  };
+
+  function resolveMenuRoleScope(): "super_admin" | "country_admin" | "branch_admin" | "agent_user" | null {
+    if (!roles || roles.length === 0) return null;
+    if (roles.includes("super_admin")) return "super_admin";
+    if (roles.includes("country_admin") || roles.includes("country_user")) return "country_admin";
+    if (roles.includes("main_branch_admin") || roles.includes("city_branch_admin") || roles.includes("accountant") || roles.includes("cashier")) {
+      return "branch_admin";
+    }
+    if (roles.includes("agent_user")) return "agent_user";
+    return "branch_admin";
+  }
+
+  useEffect(() => {
+    function handleChunkError(event: PromiseRejectionEvent | ErrorEvent) {
+      const reason = "reason" in event ? event.reason : (event as ErrorEvent).error;
+      const msg = String(reason?.message || reason || "");
+      const isChunkError =
+        reason?.name === "ChunkLoadError" ||
+        msg.includes("Loading chunk") ||
+        msg.includes("ChunkLoadError") ||
+        msg.includes("failed to fetch") ||
+        msg.includes("Failed to fetch dynamically imported module");
+
+      if (isChunkError) {
+        const countKey = "erp_auto_chunk_cnt";
+        const tsKey = "erp_auto_chunk_ts";
+        const now = Date.now();
+        const lastTs = parseInt(sessionStorage.getItem(tsKey) || "0", 10);
+        let count = parseInt(sessionStorage.getItem(countKey) || "0", 10);
+
+        if (now - lastTs > 15000) count = 0;
+
+        if (count < 3) {
+          sessionStorage.setItem(countKey, String(count + 1));
+          sessionStorage.setItem(tsKey, String(now));
+          if (window.isSecureContext && "serviceWorker" in navigator) {
+            navigator.serviceWorker.getRegistrations().then((regs) => regs.forEach((r) => r.unregister())).catch(() => {});
+          }
+          if ("caches" in window) {
+            caches.keys().then((keys) => keys.forEach((k) => caches.delete(k))).catch(() => {});
+          }
+          let targetRoute: string | null = null;
+          try {
+            const match = msg.match(/_next\/static\/chunks\/app(\/[^.\?]+?)(?:\/page|\/layout|\/route|-[a-f0-9]+|\.js)/i);
+            if (match && match[1]) targetRoute = match[1];
+          } catch (e) {}
+          const dest = targetRoute || window.location.pathname;
+          window.location.replace(dest + (dest.includes("?") ? "&" : "?") + "_v=" + now);
+        }
+      }
+    }
+
+    window.addEventListener("unhandledrejection", handleChunkError);
+    window.addEventListener("error", handleChunkError);
+
+    const resetTimer = setTimeout(() => {
+      try {
+        sessionStorage.removeItem("erp_auto_chunk_cnt");
+        sessionStorage.removeItem("erp_auto_chunk_ts");
+      } catch {}
+    }, 3000);
+
+    return () => {
+      clearTimeout(resetTimer);
+      window.removeEventListener("unhandledrejection", handleChunkError);
+      window.removeEventListener("error", handleChunkError);
+    };
+  }, [lang]);
+
+  useEffect(() => {
+    const scopeKey = resolveMenuRoleScope();
+    if (!scopeKey) {
+      setSidebarMenuVisibility(null);
+      return;
+    }
+
+    let cancelled = false;
+    async function loadMenuVisibility() {
+      let allotments: any = null;
+
+      try {
+        const res = await fetch("/api/erp/admin/dashboard-settings", { cache: "no-store" });
+        const json = await res.json().catch(() => ({}));
+        allotments = json?.data?.allotments ?? null;
+      } catch {
+        allotments = null;
+      }
+
+      if (!allotments && typeof window !== "undefined") {
+        try {
+          const raw = localStorage.getItem("erp_dashboard_allotments_v2");
+          allotments = raw ? JSON.parse(raw) : null;
+        } catch {
+          allotments = null;
+        }
+      }
+
+      const visibility = {
+        ...sidebarDefaultVisibility,
+        ...(scopeKey && allotments?.[scopeKey] ? allotments[scopeKey] : {})
+      };
+      if (!cancelled) setSidebarMenuVisibility(visibility);
+    }
+
+    void loadMenuVisibility();
+    return () => {
+      cancelled = true;
+    };
+  }, [roles]);
+
+  useEffect(() => {
+    const query = searchQuery.trim();
+    if (query.length < 2) {
+      setDbResults([]);
+      return;
+    }
+
+    setSearchingDb(true);
+    const delayDebounceFn = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/erp/search?q=${encodeURIComponent(query)}`);
+        const payload = await res.json();
+        if (payload?.ok && payload?.data?.results) {
+          setDbResults(payload.data.results);
+        } else {
+          setDbResults([]);
+        }
+      } catch (err) {
+        console.error("Global search error:", err);
+        setDbResults([]);
+      } finally {
+        setSearchingDb(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
+        setProfileMenuOpen(false);
+      }
+      if (notificationsRef.current && !notificationsRef.current.contains(event.target as Node)) {
+        setNotificationsOpen(false);
+      }
+      if (dateMenuRef.current && !dateMenuRef.current.contains(event.target as Node)) {
+        setDateMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filteredNodes = useMemo(
+    () => filterSidebarTree(nodes, roles, permissions ?? null, sidebarMenuVisibility),
+    [nodes, roles, permissions, sidebarMenuVisibility]
+  );
+  const roleLabel = useMemo(() => {
+    if (!roles || roles.length === 0) return null;
+
+    const labels: Partial<Record<EnterpriseRole, string>> = {
+      super_admin: t(lang, "role.super_admin", "Super Admin"),
+      super_admin_reports: t(lang, "role.super_admin_reports", "Super Admin Reports Auditor"),
+      country_admin: t(lang, "role.country_admin", "Country Admin"),
+      country_user: t(lang, "role.country_user", "Country User"),
+      main_branch_admin: t(lang, "role.main_branch_admin", "Main Branch Admin"),
+      city_branch_admin: t(lang, "role.city_branch_admin", "City Branch Admin"),
+      accountant: t(lang, "role.accountant", "Accountant"),
+      cashier: t(lang, "role.cashier", "Cashier"),
+      agent_user: t(lang, "role.agent_user", "Agent User"),
+      staff_user: t(lang, "role.staff_user", "Staff User"),
+      auditor_viewer: t(lang, "role.auditor_viewer", "Auditor / Viewer"),
+      global_operations_admin: t(lang, "role.global_operations_admin", "Global Operations Admin"),
+      country_operations_admin: t(lang, "role.country_operations_admin", "Country Operations Admin"),
+      city_operations_admin: t(lang, "role.city_operations_admin", "City Branch Operations Admin"),
+      shipping_line_admin: t(lang, "role.shipping_line_admin", "Shipping Line Admin"),
+      shipping_line_user: t(lang, "role.shipping_line_user", "Shipping Line User"),
+      business_super_admin: t(lang, "role.business_super_admin", "Business Super Admin"),
+      shipping_super_admin: t(lang, "role.shipping_super_admin", "Shipping Line Super Admin")
+    };
+
+    // virtual (profile-derived) roles first: an operations login must not be labelled with the business role that shares its scope
+    for (const role of [...virtualRoles, ...enterpriseRoles] as EnterpriseRole[]) {
+      if (roles.includes(role) && labels[role]) return labels[role];
+    }
+
+    return (roles[0] && labels[roles[0] as EnterpriseRole]) ?? null;
+  }, [roles, lang]);
+
+  const searchItems = useMemo(() => {
+    return [
+      { title: t(lang, "cmd.dashboard_overview" as any, "Dashboard Overview"), titleKey: "cmd.dashboard_overview", category: "Navigation" as const, href: "/dashboard", keywords: "home main landing dashboard overview", icon: LayoutDashboard, tone: "indigo" as const },
+      { title: t(lang, "cmd.super_admin_dashboard" as any, "Super Admin Dashboard"), titleKey: "cmd.super_admin_dashboard", category: "Navigation" as const, href: "/dashboard/super-admin", keywords: "super admin dashboard summary stats", icon: ShieldCheck, tone: "emerald" as const },
+      { title: t(lang, "cmd.country_admin_dashboard" as any, "Country Admin Dashboard"), titleKey: "cmd.country_admin_dashboard", category: "Navigation" as const, href: "/dashboard/country", keywords: "country admin dashboard summary stats", icon: Globe, tone: "sky" as const },
+      { title: t(lang, "cmd.city_branch_dashboard" as any, "City Branch Dashboard"), titleKey: "cmd.city_branch_dashboard", category: "Navigation" as const, href: "/dashboard/city", keywords: "city branch dashboard summary stats", icon: Building2, tone: "amber" as const },
+      { title: t(lang, "cmd.customers_directory" as any, "Customers Directory List"), titleKey: "cmd.customers_directory", category: "Modules" as const, href: "/dashboard/settings/customers", keywords: "customers directory clients list accounts", icon: Users, tone: "blue" as const },
+      { title: t(lang, "cmd.add_customer" as any, "Add New Customer Profile"), titleKey: "cmd.add_customer", category: "Actions" as const, href: "/dashboard/settings/customers/setup", keywords: "create add new customer account client profile", icon: UserPlus, tone: "emerald" as const },
+      { title: t(lang, "cmd.country_branch_setup" as any, "Country Branch Setup"), titleKey: "cmd.country_branch_setup", category: "Modules" as const, href: "/dashboard/new-entry/branch-entry/country-branch", keywords: "country branch office setup creation edit", icon: MapPin, tone: "sky" as const },
+      { title: t(lang, "cmd.city_branch_setup" as any, "City Branch Setup"), titleKey: "cmd.city_branch_setup", category: "Modules" as const, href: "/dashboard/new-entry/branch-entry/city-branch", keywords: "city branch office setup creation edit", icon: Building, tone: "violet" as const },
+      { title: t(lang, "cmd.super_admin_branch_registry" as any, "Super Admin Branch Registry"), titleKey: "cmd.super_admin_branch_registry", category: "Modules" as const, href: "/dashboard/new-entry/branches/super-admin", keywords: "super admin branch registry setup", icon: Shield, tone: "indigo" as const },
+      { title: t(lang, "cmd.user_registration" as any, "User Registration / Management"), titleKey: "cmd.user_registration", category: "Modules" as const, href: "/dashboard/new-entry/users/registration", keywords: "register user employee create edit staff role assignment", icon: UserCheck, tone: "purple" as const },
+      { title: t(lang, "cmd.user_journal_log" as any, "User Journal Log Report"), titleKey: "cmd.user_journal_log", category: "Modules" as const, href: "/dashboard/new-entry/users/journal-report", keywords: "user journal log activity report auditing", icon: History, tone: "slate" as const },
+      { title: t(lang, "cmd.daily_exchange_rate" as any, "Daily Exchange Rate Manager"), titleKey: "cmd.daily_exchange_rate", category: "Modules" as const, href: "/dashboard/reports/exchange-rate", keywords: "daily exchange rate usd foreign currency update converter settings", icon: Coins, tone: "amber" as const },
+      { title: t(lang, "cmd.cash_entry" as any, "Credit & Debit Entries (Cash Entry)"), titleKey: "cmd.cash_entry", category: "Modules" as const, href: "/dashboard/roznamcha/cash-entry", keywords: "cash entry debit credit roznamcha entries post transaction", icon: ArrowLeftRight, tone: "emerald" as const },
+      { title: t(lang, "cmd.expenses_bill" as any, "Expenses Bill (Bill Entry)"), titleKey: "cmd.expenses_bill", category: "Modules" as const, href: "/dashboard/roznamcha/expenses-bill", keywords: "expenses bill entry roznamcha tax invoice", icon: Receipt, tone: "rose" as const },
+      { title: t(lang, "cmd.money_changer" as any, "Money Changer (Currency Exchange)"), titleKey: "cmd.money_changer", category: "Modules" as const, href: "/dashboard/roznamcha/money-exchange", keywords: "money changer currency exchange buy sell profit loss roznamcha", icon: Repeat, tone: "cyan" as const },
+      { title: t(lang, "cmd.roznamcha_all" as any, "Roznamcha All Report Ledger"), titleKey: "cmd.roznamcha_all", category: "Modules" as const, href: "/dashboard/roznamcha/all", keywords: "roznamcha all report transaction logs ledger postings", icon: BookOpen, tone: "indigo" as const },
+      { title: t(lang, "cmd.accounts_master" as any, "Accounts Master General Report"), titleKey: "cmd.accounts_master", category: "Modules" as const, href: "/dashboard/accounts", keywords: "accounts master general report setup balance", icon: CreditCard, tone: "blue" as const },
+      { title: t(lang, "cmd.create_account" as any, "Create New Account Item"), titleKey: "cmd.create_account", category: "Actions" as const, href: "/dashboard/accounts/setup", keywords: "create add account category chart of accounts asset liability equity", icon: PlusCircle, tone: "emerald" as const },
+      { title: t(lang, "cmd.ledger_statement" as any, "Ledger Statement General Report"), titleKey: "cmd.ledger_statement", category: "Modules" as const, href: "/dashboard/ledger/general-report", keywords: "ledger general statement report balance credit debit logs", icon: FileSpreadsheet, tone: "sky" as const },
+      { title: t(lang, "cmd.forms_directory" as any, "Master Forms Directory & Audit Report"), titleKey: "cmd.forms_directory" as any, category: "Modules" as const, href: "/dashboard/reports/system-forms-directory", keywords: "forms directory all forms menu catalog report audit timeline pdf download", icon: BookOpen, tone: "indigo" as const },
+      { title: t(lang, "cmd.transit_entry" as any, "Transit Entry & Public Report"), titleKey: "cmd.transit_entry", category: "Modules" as const, href: "/dashboard/clearing-agent/transit-entry", keywords: "transit entry public report cargo customs border serial invoice python", icon: Truck, tone: "blue" as const },
+      { title: t(lang, "cmd.po_advance_payment" as any, "Purchase Order Advance Payment"), titleKey: "cmd.po_advance_payment", category: "Modules" as const, href: "/dashboard/journal/purchase-order-payment/advance", keywords: "purchase order advance payment entries history", icon: BadgePercent, tone: "amber" as const },
+      { title: t(lang, "cmd.po_remaining_payment" as any, "Purchase Order Remaining Payment"), titleKey: "cmd.po_remaining_payment", category: "Modules" as const, href: "/dashboard/journal/purchase-order-payment/remaining", keywords: "purchase order remaining payment balance entries history", icon: CheckCircle2, tone: "emerald" as const },
+      { title: t(lang, "cmd.settings_location" as any, "Settings - Location Nodes Setup"), titleKey: "cmd.settings_location", category: "Settings" as const, href: "/dashboard/settings/location", keywords: "settings location setup country state city area", icon: Compass, tone: "slate" as const },
+      { title: t(lang, "cmd.settings_company" as any, "Settings - Enterprise Company Profile"), titleKey: "cmd.settings_company", category: "Settings" as const, href: "/dashboard/settings/company", keywords: "settings company setup legal profile tax registry", icon: Briefcase, tone: "slate" as const }
+    ];
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  const filteredSearchItems = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return searchItems;
+    return searchItems.filter(
+      (item) =>
+        item.title.toLowerCase().includes(q) ||
+        item.category.toLowerCase().includes(q) ||
+        item.keywords.toLowerCase().includes(q)
+    );
+  }, [searchQuery, searchItems]);
+
+  const categories = ["All", "Navigation", "Modules", "Actions", "Settings"] as const;
+
+  const navigationItems = useMemo(() => filteredSearchItems.filter(i => i.category === "Navigation"), [filteredSearchItems]);
+  const moduleItems = useMemo(() => filteredSearchItems.filter(i => i.category === "Modules"), [filteredSearchItems]);
+  const actionItems = useMemo(() => filteredSearchItems.filter(i => i.category === "Actions"), [filteredSearchItems]);
+  const settingItems = useMemo(() => filteredSearchItems.filter(i => i.category === "Settings"), [filteredSearchItems]);
+
+  const onSelectLink = (href: string) => {
+    setSearchOpen(false);
+    setSearchQuery("");
+    setDbResults([]);
+    router.push(href);
+  };
+
+  function getDateFilterLabel(filter: string): string {
+    const currentYear = new Date().getFullYear();
+    switch (filter) {
+      case "today":
+        return t(lang, "ledger.preset_today", "Today");
+      case "week":
+        return t(lang, "ledger.preset_this_week", "This Week");
+      case "month":
+        return t(lang, "ledger.preset_this_month", "This Month");
+      case "year":
+        return `${t(lang, "dashboard.this_year", "This Year")} (${currentYear})`;
+      case "custom":
+        return t(lang, "ledger.preset_custom", "Custom Date Range");
+      case "all":
+      default:
+        return `${t(lang, "nav.all_dates", "All Dates")} (${currentYear})`;
+    }
+  }
+
+  return (
+    <ActiveRecordProvider>
+    <div className="min-h-screen bg-background text-foreground flex">
+      {/* Desktop Persistent Sidebar (Collapsible via << Collapse Menu or Menu button) */}
+      {!sidebarCollapsed && (
+        <aside className="hidden lg:flex h-screen w-[275px] shrink-0 border-e border-slate-200/80 bg-white sticky top-0 z-30 flex-col shadow-xs">
+          <DigitalDockPremiumSidebar
+            roles={roles ?? null}
+            permissions={permissions ?? null}
+            isShippingScoped={isShippingScoped}
+            operationalDomains={operationalDomains}
+            ledgerVisibility={ledgerVisibility}
+            canViewFinancials={canViewFinancials}
+            brandTitle={brandCompany || "Damaan Business Group"}
+            onToggleCollapse={() => setSidebarCollapsed(true)}
+          />
+        </aside>
+      )}
+
+      {/* Mobile / Tablet Drawer */}
+      {(drawerOpen || mobileOpen) && (
+        <div className="fixed inset-0 z-50 flex lg:hidden">
+          <button
+            type="button"
+            className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity duration-300 animate-in fade-in cursor-pointer border-none p-0 outline-none"
+            aria-label={t(lang, "nav.close_navigation", "Close navigation")}
+            onClick={() => {
+              setDrawerOpen(false);
+              setMobileOpen(false);
+            }}
+          />
+          <aside className="relative z-50 h-full w-[275px] max-w-[85vw] border-e border-border bg-white shadow-2xl flex flex-col animate-in slide-in-from-left duration-250">
+            <button
+              type="button"
+              onClick={() => { setDrawerOpen(false); setMobileOpen(false); }}
+              className="absolute end-3 top-4 z-10 rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 cursor-pointer"
+              aria-label={t(lang, "nav.close_navigation", "Close navigation")}
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <DigitalDockPremiumSidebar
+              roles={roles ?? null}
+              permissions={permissions ?? null}
+              isShippingScoped={isShippingScoped}
+              operationalDomains={operationalDomains}
+              ledgerVisibility={ledgerVisibility}
+              canViewFinancials={canViewFinancials}
+              brandTitle={brandCompany || "Damaan Business Group"}
+              onNavigate={() => {
+                setDrawerOpen(false);
+                setMobileOpen(false);
+              }}
+              onToggleCollapse={() => {
+                setDrawerOpen(false);
+                setMobileOpen(false);
+              }}
+            />
+          </aside>
+        </div>
+      )}
+
+      <div className="transition-all duration-300 min-h-screen flex flex-col flex-1 min-w-0">
+        <header className="erp-topbar sticky top-0 z-40 border-b border-border/80 bg-background/80 backdrop-blur-md">
+          <div className={cn("flex items-center gap-2 sm:gap-4 px-3 sm:px-4 lg:px-6 transition-all duration-200 justify-between", isWizardPath ? "h-16" : "h-14")}>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 rounded-lg border-border hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer"
+                onClick={() => {
+                  if (typeof window !== "undefined" && window.innerWidth >= 1024) {
+                    setSidebarCollapsed((prev) => !prev);
+                  } else {
+                    setDrawerOpen((prev) => !prev);
+                  }
+                }}
+                aria-label={t(lang, "nav.open_navigation", "Open navigation")}
+              >
+                <Menu className="h-4 w-4" aria-hidden />
+              </Button>
+
+              <h2 className="text-base font-bold text-foreground hidden sm:block">{t(lang, "nav.dashboard", "Dashboard")}</h2>
+            </div>
+
+            <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
+              <button
+                type="button"
+                onClick={() => setSearchOpen(true)}
+                className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-2 sm:px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted/80 transition-colors cursor-pointer"
+                aria-label={t(lang, "nav.search", "Search")}
+              >
+                <Search className="h-3.5 w-3.5 shrink-0" />
+                <span className="erp-search-label font-semibold text-foreground/80 hidden sm:inline">{t(lang, "nav.search_and_filter", "Search & Filter")}</span>
+                <kbd className="erp-search-kbd pointer-events-none hidden h-5 select-none items-center gap-1 rounded border border-border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100 md:flex">
+                  <span className="text-xs">⌘</span>K
+                </kbd>
+              </button>
+
+              <div className="relative hidden lg:block" ref={dateMenuRef}>
+                <button
+                  type="button"
+                  onClick={() => setDateMenuOpen(!dateMenuOpen)}
+                  className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs text-foreground/80 hover:bg-muted/80 transition-colors cursor-pointer"
+                  title={t(lang, "nav.filter_by_date_range", "Filter by date range")}
+                >
+                  <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                  <span className="font-semibold">{getDateFilterLabel(selectedDateFilter)}</span>
+                  <ChevronDown className={cn("h-3 w-3 text-slate-500 transition-transform duration-200", dateMenuOpen ? "rotate-180" : "")} />
+                </button>
+
+                {dateMenuOpen && (
+                  <div className="absolute top-full left-0 mt-2 w-64 rounded-xl border border-border bg-popover text-popover-foreground shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 z-50 p-1.5 font-sans">
+                    <div className="px-2.5 py-1.5 text-[9px] font-black uppercase tracking-wider text-muted-foreground border-b border-border/80 mb-1 flex items-center justify-between">
+                      <span>{t(lang, "nav.filter_by_date_range", "Filter by date range")}</span>
+                      <span className="font-mono text-[9px] text-primary">{new Date().getFullYear()}</span>
+                    </div>
+
+                    {[
+                      { id: "all", label: `${t(lang, "nav.all_dates", "All Dates")} (${new Date().getFullYear()})` },
+                      { id: "today", label: t(lang, "ledger.preset_today", "Today") },
+                      { id: "week", label: t(lang, "ledger.preset_this_week", "This Week") },
+                      { id: "month", label: t(lang, "ledger.preset_this_month", "This Month") },
+                      { id: "year", label: `${t(lang, "dashboard.this_year", "This Year")} (${new Date().getFullYear()})` },
+                      { id: "custom", label: t(lang, "ledger.preset_custom", "Custom Date Range") }
+                    ].map((opt) => (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedDateFilter(opt.id);
+                          if (opt.id !== "custom") {
+                            setDateMenuOpen(false);
+                          }
+                        }}
+                        className={cn(
+                          "flex w-full items-center justify-between px-2.5 py-2 text-xs font-semibold rounded-lg transition-colors text-left cursor-pointer",
+                          selectedDateFilter === opt.id
+                            ? "bg-primary/10 text-primary font-bold"
+                            : "hover:bg-muted text-foreground/80"
+                        )}
+                      >
+                        <span className="flex items-center gap-2">
+                          <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                          {opt.label}
+                        </span>
+                        {selectedDateFilter === opt.id && (
+                          <Check className="h-3.5 w-3.5 text-primary" />
+                        )}
+                      </button>
+                    ))}
+
+                    {selectedDateFilter === "custom" && (
+                      <div className="mt-2 pt-2 border-t border-border/80 px-2 pb-1">
+                        <ErpDatePicker
+                          mode="range"
+                          lang={lang}
+                          size="sm"
+                          presets={false}
+                          value={{ from: customDateFrom || null, to: customDateTo || null }}
+                          onApply={(v) => {
+                            setCustomDateFrom(v.from ?? "");
+                            setCustomDateTo(v.to ?? "");
+                            setDateMenuOpen(false);
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <GlobalCalculator />
+              <AiBusinessAssistant />
+
+              <div className="relative" ref={notificationsRef}>
+                <button
+                  type="button"
+                  onClick={() => setNotificationsOpen(!notificationsOpen)}
+                  aria-label={t(lang, "dashboard.view_notifications", "View notifications")}
+                  className="relative p-1.5 rounded-full hover:bg-muted text-muted-foreground transition-colors focus:outline-none focus:ring-1 focus:ring-primary"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                  <span className="absolute top-1.5 end-1.5 flex h-2 w-2 rounded-full bg-rose-500 ring-2 ring-background" />
+                </button>
+
+                {notificationsOpen && (
+                  <div className="absolute top-full end-0 mt-2 w-80 rounded-xl border border-border bg-popover text-popover-foreground shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 z-50">
+                    <div className="p-3 border-b border-border flex items-center justify-between bg-muted/40">
+                      <span className="font-bold text-xs">{t(lang, "dashboard.system_notifications", "System Notifications")}</span>
+                      <span className="text-[10px] bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-full">{t(lang, "dashboard.live", "Live")}</span>
+                    </div>
+                    <div className="divide-y divide-border/60 max-h-64 overflow-y-auto text-xs">
+                      <div className="p-3 hover:bg-muted/50 transition-colors cursor-pointer">
+                        <div className="font-semibold text-foreground flex items-center justify-between">
+                           <span>{t(lang, "dashboard.roznamcha_cash_active", "Roznamcha Cash Active")}</span>
+                           <span className="text-[10px] text-muted-foreground">{t(lang, "dashboard.just_now", "Just now")}</span>
+                        </div>
+                         <p className="text-[11px] text-muted-foreground mt-0.5">{t(lang, "dashboard.real_time_balances_and_ledger_sync_operational", "Real-time balances and ledger sync operational.")}</p>
+                      </div>
+                      <div className="p-3 hover:bg-muted/50 transition-colors cursor-pointer">
+                        <div className="font-semibold text-foreground flex items-center justify-between">
+                           <span>{t(lang, "dashboard.exchange_rates_synced", "Exchange Rates Synced")}</span>
+                           <span className="text-[10px] text-muted-foreground">{t(lang, "dashboard.today", "Today")}</span>
+                        </div>
+                         <p className="text-[11px] text-muted-foreground mt-0.5">{t(lang, "dashboard.intra_day_multi_currency_exchange_tables_updated", "Intra-day multi-currency exchange tables updated.")}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="h-8 w-px bg-border hidden sm:block" />
+
+              <div className="flex items-center gap-3 relative" ref={profileMenuRef}>
+                <PreferencesControls />
+                <button
+                  type="button"
+                  onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+                  className={cn("hidden text-start text-xs sm:flex items-center gap-2.5 hover:bg-muted/50 p-1.5 rounded-lg transition-colors cursor-pointer focus:outline-none")}
+                >
+                  <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-xs shadow-sm">
+                    {userName ? userName.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() : "SA"}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-bold text-foreground leading-none">{userName || t(lang, "role.super_admin", "Super Admin")}</p>
+                    <p className="text-[10px] text-muted-foreground font-medium mt-0.5">{roleLabel || t(lang, "nav.administrator", "Administrator")}</p>
+                  </div>
+                </button>
+
+              {profileMenuOpen && (
+                <div className="absolute top-full end-0 mt-2 w-72 rounded-xl border border-border bg-popover text-popover-foreground shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 z-50">
+                  <div className="p-4 border-b border-border bg-muted/30">
+                    <p className="font-bold text-sm text-foreground">{userName || t(lang, "common.user", "User")}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{userEmail}</p>
+                  </div>
+
+                  <div className="p-4 border-b border-border">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2.5">{t(lang, "nav.assigned_permissions", "Assigned Permissions")}</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {roles?.map((r, i) => (
+                        <span key={i} className="inline-flex items-center rounded bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/50">
+                          {t(lang, `role.${r}` as const, r.replace(/_/g, ' '))}
+                        </span>
+                      ))}
+                      {(!roles || roles.length === 0) && (
+                        <span className="text-xs text-slate-500 italic">{t(lang, "nav.no_role_assigned", "No specific role assigned")}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="p-2 flex flex-col gap-1">
+                    {[
+                      ["/dashboard/settings/profile", t(lang, "nav.my_profile", "My Profile"), "bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400"],
+                      ["/dashboard/settings/profile?mode=edit", t(lang, "nav.edit_profile", "Edit Profile"), "bg-cyan-50 text-cyan-600 dark:bg-cyan-950/30 dark:text-cyan-400"],
+                      ["/dashboard/settings/profile?panel=password", t(lang, "nav.change_password", "Change Password"), "bg-amber-50 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400"],
+                      ["/dashboard/settings/profile?panel=email", t(lang, "nav.change_email", "Change Email"), "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400"],
+                    ].map(([href, label, tone], i) => (
+                      <Link
+                        key={i}
+                        href={href as any}
+                        onClick={() => setProfileMenuOpen(false)}
+                        className="px-3 py-2 text-xs font-semibold rounded-lg hover:bg-muted text-foreground flex items-center justify-between transition-colors"
+                      >
+                        <span>{label}</span>
+                          <span className={cn("text-[9px] font-bold px-1.5 py-0.5 rounded", tone)}>{t(lang, "dashboard.access", "Access")}</span>
+                      </Link>
+                    ))}
+                  </div>
+
+                  <div className="p-2 border-t border-border bg-muted/10">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setProfileMenuOpen(false);
+                        // sessionStorage survives a same-tab navigation, so a live
+                        // Support Allow-Once grant would otherwise still read as
+                        // "active" for whoever signs into this tab next.
+                        try {
+                          sessionStorage.removeItem("erp_support_allow_once");
+                        } catch {
+                          // sessionStorage unavailable — nothing to clear
+                        }
+                        fetch("/api/erp/auth/logout", { method: "POST" }).then(() => {
+                          window.location.href = "/";
+                        });
+                      }}
+                      className="w-full text-left px-3 py-2 text-xs font-semibold rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-red-600 dark:text-red-400 flex items-center gap-3 transition-colors"
+                    >
+                      {t(lang, "nav.log_out", "Log Out")}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          </div>
+        </header>
+
+        <main data-erp-content className="w-full min-w-0 flex-1 overflow-x-hidden p-3 sm:p-4 lg:p-6 pb-24 lg:pb-6 bg-background">
+          <ErpPageActions />
+          {isRouteBlocked ? (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6 bg-card rounded-2xl border border-border shadow-xs my-4 animate-in fade-in zoom-in-95 duration-150">
+              <div className="h-16 w-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-4 shadow-inner">
+                <ShieldAlert className="w-8 h-8" />
+              </div>
+              <h2 className="text-xl font-black text-foreground tracking-tight mb-2">
+                {t(lang, "rules.access_restricted_title", "Form Access Restricted / رسائی محدود ہے")}
+              </h2>
+              <p className="text-sm text-muted-foreground max-w-md mb-6 leading-relaxed">
+                {t(lang, "rules.access_restricted_desc", "This form has not been allotted to your account by the administrator. Only allotted modules are accessible.")}
+              </p>
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-bold text-xs shadow-md hover:bg-primary/90 transition-all cursor-pointer"
+              >
+                <Home className="w-4 h-4" />
+                {t(lang, "rules.return_to_dashboard", "Return to Dashboard / ڈیش بورڈ پر واپس جائیں")}
+              </Link>
+            </div>
+          ) : (
+            children
+          )}
+        </main>
+
+        {/* Mobile Bottom Navigation Bar matching Mobile Mockup */}
+        <nav className="fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-border/80 px-4 py-2 flex items-center justify-around lg:hidden shadow-lg">
+          <Link
+            href="/dashboard/super-admin"
+            className={cn(
+              "flex flex-col items-center gap-1 text-[10px] font-bold transition-colors",
+              pathname === "/dashboard/super-admin" || pathname === "/dashboard"
+                ? "text-blue-600 dark:text-blue-400"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Home className="h-5 w-5" />
+            <span>{t(lang, "nav.dashboard", "Dashboard")}</span>
+          </Link>
+
+          <Link
+            href="/dashboard/users"
+            className={cn(
+              "flex flex-col items-center gap-1 text-[10px] font-bold transition-colors",
+              pathname.startsWith("/dashboard/users")
+                ? "text-blue-600 dark:text-blue-400"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Users className="h-5 w-5" />
+            <span>{t(lang, "nav.users", "Users")}</span>
+          </Link>
+
+          <Link
+            href="/dashboard/ledgers"
+            className={cn(
+              "flex flex-col items-center gap-1 text-[10px] font-bold transition-colors",
+              pathname.startsWith("/dashboard/ledgers")
+                ? "text-blue-600 dark:text-blue-400"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <FileSpreadsheet className="h-5 w-5" />
+            <span>{t(lang, "nav.ledgers", "Ledgers")}</span>
+          </Link>
+
+          <Link
+            href="/dashboard/settings/profile"
+            className={cn(
+              "flex flex-col items-center gap-1 text-[10px] font-bold transition-colors",
+              pathname.startsWith("/dashboard/settings")
+                ? "text-blue-600 dark:text-blue-400"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Settings className="h-5 w-5" />
+            <span>{t(lang, "nav.settings", "Settings")}</span>
+          </Link>
+        </nav>
+      </div>
+
+      <CommandDialog open={searchOpen} onOpenChange={setSearchOpen}>
+        <CommandInput
+          placeholder={t(lang, "nav.type_to_search", "Type to search modules, reports or actions...")}
+          value={searchQuery}
+          onValueChange={setSearchQuery}
+        />
+        
+        <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/70 bg-slate-100/50 dark:bg-slate-900/50 overflow-x-auto text-xs">
+          {categories.map((cat) => {
+            const count =
+              cat === "All"
+                ? filteredSearchItems.length + dbResults.length
+                : cat === "Navigation"
+                ? navigationItems.length
+                : cat === "Modules"
+                ? moduleItems.length
+                : cat === "Actions"
+                ? actionItems.length
+                : settingItems.length;
+
+            return (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setSelectedCategoryTab(cat)}
+                className={cn(
+                  "px-3 py-1.5 rounded-xl font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer shadow-2xs",
+                  selectedCategoryTab === cat
+                    ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
+                    : "bg-white dark:bg-slate-800/80 text-foreground/75 hover:bg-slate-200/80 dark:hover:bg-slate-700 hover:text-foreground border border-slate-200 dark:border-slate-700"
+                )}
+              >
+                <span>{cat === "All" ? t(lang, "common.all_categories", "All Categories") : t(lang, `cmd.cat_${cat.toLowerCase()}` as any, cat)}</span>
+                <span className={cn(
+                  "px-1.5 py-0.2 rounded-full text-[10px] font-mono",
+                  selectedCategoryTab === cat ? "bg-white/20 text-white" : "bg-slate-100 dark:bg-slate-900 text-muted-foreground"
+                )}>
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        <CommandList className="max-h-[460px] overflow-y-auto p-2">
+          {searchingDb ? (
+            <div className="flex items-center justify-center py-12 text-sm text-muted-foreground font-medium">
+              <div className="h-5 w-5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mr-3 shrink-0" />
+              {t(lang, "nav.searching_database", "Searching database...")}
+            </div>
+          ) : (
+            <CommandEmpty className="py-12 text-center text-sm text-muted-foreground font-medium">
+              {t(lang, "nav.no_matching_results", "No matching modules, actions or records found.")}
+            </CommandEmpty>
+          )}
+
+          {!searchingDb && (selectedCategoryTab === "All" || selectedCategoryTab === "Navigation") && navigationItems.length > 0 && (
+            <CommandGroup heading={t(lang, "cmd.cat_navigation", "Navigation")} className="pt-1">
+              {navigationItems.map((item, idx) => (
+                <CommandItem
+                  key={`nav-${idx}`}
+                  value={item.title + " " + item.keywords}
+                  onSelect={() => onSelectLink(item.href)}
+                  className="flex items-center justify-between py-3 px-3.5 cursor-pointer rounded-xl hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 mb-1 transition-all"
+                >
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <span className={cn(
+                      "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border text-sm shadow-xs",
+                      item.tone === "indigo" && "bg-indigo-50 border-indigo-200 text-indigo-600 dark:bg-indigo-950/60 dark:border-indigo-800 dark:text-indigo-400",
+                      item.tone === "emerald" && "bg-emerald-50 border-emerald-200 text-emerald-600 dark:bg-emerald-950/60 dark:border-emerald-800 dark:text-emerald-400",
+                      item.tone === "sky" && "bg-sky-50 border-sky-200 text-sky-600 dark:bg-sky-950/60 dark:border-sky-800 dark:text-sky-400",
+                      item.tone === "amber" && "bg-amber-50 border-amber-200 text-amber-600 dark:bg-amber-950/60 dark:border-amber-800 dark:text-amber-400"
+                    )}>
+                      <item.icon className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold truncate text-slate-900 dark:text-slate-100">{t(lang, item.titleKey as any, item.title)}</p>
+                      <p className="text-xs text-muted-foreground font-mono truncate">{item.href}</p>
+                    </div>
+                  </div>
+                  <span className="shrink-0 ms-3 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 px-2 py-0.5 text-[10px] font-extrabold uppercase text-indigo-700 dark:text-indigo-300 ring-1 ring-indigo-200 dark:ring-indigo-800">
+                    {t(lang, "dashboard.navigation", "Navigation")}
+                  </span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+
+          {!searchingDb && (selectedCategoryTab === "All" || selectedCategoryTab === "Modules") && moduleItems.length > 0 && (
+            <CommandGroup heading={t(lang, "cmd.cat_modules", "Modules & Reports")} className="pt-1">
+              {moduleItems.map((item, idx) => (
+                <CommandItem
+                  key={`mod-${idx}`}
+                  value={item.title + " " + item.keywords}
+                  onSelect={() => onSelectLink(item.href)}
+                  className="flex items-center justify-between py-3 px-3.5 cursor-pointer rounded-xl hover:bg-sky-50/50 dark:hover:bg-sky-950/20 mb-1 transition-all"
+                >
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <span className={cn(
+                      "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border text-sm shadow-xs",
+                      item.tone === "blue" && "bg-blue-50 border-blue-200 text-blue-600 dark:bg-blue-950/60 dark:border-blue-800 dark:text-blue-400",
+                      item.tone === "sky" && "bg-sky-50 border-sky-200 text-sky-600 dark:bg-sky-950/60 dark:border-sky-800 dark:text-sky-400",
+                      item.tone === "violet" && "bg-violet-50 border-violet-200 text-violet-600 dark:bg-violet-950/60 dark:border-violet-800 dark:text-violet-400",
+                      item.tone === "indigo" && "bg-indigo-50 border-indigo-200 text-indigo-600 dark:bg-indigo-950/60 dark:border-indigo-800 dark:text-indigo-400",
+                      item.tone === "purple" && "bg-purple-50 border-purple-200 text-purple-600 dark:bg-purple-950/60 dark:border-purple-800 dark:text-purple-400",
+                      item.tone === "slate" && "bg-slate-100 border-slate-200 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300",
+                      item.tone === "amber" && "bg-amber-50 border-amber-200 text-amber-600 dark:bg-amber-950/60 dark:border-amber-800 dark:text-amber-400",
+                      item.tone === "emerald" && "bg-emerald-50 border-emerald-200 text-emerald-600 dark:bg-emerald-950/60 dark:border-emerald-800 dark:text-emerald-400",
+                      item.tone === "rose" && "bg-rose-50 border-rose-200 text-rose-600 dark:bg-rose-950/60 dark:border-rose-800 dark:text-rose-400",
+                      item.tone === "cyan" && "bg-cyan-50 border-cyan-200 text-cyan-600 dark:bg-cyan-950/60 dark:border-cyan-800 dark:text-cyan-400"
+                    )}>
+                      <item.icon className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold truncate text-slate-900 dark:text-slate-100">{t(lang, item.titleKey as any, item.title)}</p>
+                      <p className="text-xs text-muted-foreground font-mono truncate">{item.href}</p>
+                    </div>
+                  </div>
+                  <span className="shrink-0 ms-3 rounded-lg bg-sky-50 dark:bg-sky-950/50 px-2 py-0.5 text-[10px] font-extrabold uppercase text-sky-700 dark:text-sky-300 ring-1 ring-sky-200 dark:ring-sky-800">
+                     {t(lang, "dashboard.module", "Module")}
+                  </span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+
+          {!searchingDb && (selectedCategoryTab === "All" || selectedCategoryTab === "Actions") && actionItems.length > 0 && (
+            <CommandGroup heading={t(lang, "cmd.cat_actions", "Quick Actions")} className="pt-1">
+              {actionItems.map((item, idx) => (
+                <CommandItem
+                  key={`act-${idx}`}
+                  value={item.title + " " + item.keywords}
+                  onSelect={() => onSelectLink(item.href)}
+                  className="flex items-center justify-between py-3 px-3.5 cursor-pointer rounded-xl hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 mb-1 transition-all"
+                >
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border text-sm shadow-xs bg-emerald-50 border-emerald-200 text-emerald-600 dark:bg-emerald-950/60 dark:border-emerald-800 dark:text-emerald-400">
+                      <item.icon className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold truncate text-slate-900 dark:text-slate-100">{t(lang, item.titleKey as any, item.title)}</p>
+                      <p className="text-xs text-muted-foreground font-mono truncate">{item.href}</p>
+                    </div>
+                  </div>
+                  <span className="shrink-0 ms-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 text-[10px] font-extrabold uppercase text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-200 dark:ring-emerald-800">
+                     {t(lang, "dashboard.action", "Action")}
+                  </span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+
+          {!searchingDb && (selectedCategoryTab === "All" || selectedCategoryTab === "Settings") && settingItems.length > 0 && (
+            <CommandGroup heading={t(lang, "cmd.cat_settings", "Settings & Configuration")} className="pt-1">
+              {settingItems.map((item, idx) => (
+                <CommandItem
+                  key={`set-${idx}`}
+                  value={item.title + " " + item.keywords}
+                  onSelect={() => onSelectLink(item.href)}
+                  className="flex items-center justify-between py-3 px-3.5 cursor-pointer rounded-xl hover:bg-slate-100 dark:hover:bg-slate-900 mb-1 transition-all"
+                >
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border text-sm shadow-xs bg-slate-100 border-slate-200 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300">
+                      <item.icon className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold truncate text-slate-900 dark:text-slate-100">{t(lang, item.titleKey as any, item.title)}</p>
+                      <p className="text-xs text-muted-foreground font-mono truncate">{item.href}</p>
+                    </div>
+                  </div>
+                  <span className="shrink-0 ms-3 rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10px] font-extrabold uppercase text-slate-700 dark:text-slate-300 ring-1 ring-slate-200 dark:ring-slate-700">
+                     {t(lang, "dashboard.settings", "Settings")}
+                  </span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+
+          {!searchingDb && dbResults.length > 0 && (
+            <CommandGroup heading={t(lang, "nav.database_records", "Database Records")} className="pt-1">
+              {dbResults.map((item, idx) => (
+                <CommandItem
+                  key={`db-${idx}`}
+                  value={item.title + " " + item.subtitle}
+                  onSelect={() => onSelectLink(item.link)}
+                  className="flex items-center justify-between py-3 px-3.5 cursor-pointer rounded-xl hover:bg-blue-50/50 dark:hover:bg-blue-950/20 mb-1 transition-all"
+                >
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border text-xs font-black bg-blue-50 border-blue-200 text-blue-600 dark:bg-blue-950/60 dark:border-blue-800 dark:text-blue-400 uppercase">
+                      {item.entityType.substring(0, 3)}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold truncate text-slate-900 dark:text-slate-100">{item.title}</p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {item.subtitle} {item.matchedField ? `(Matched: ${item.matchedField})` : ""}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="shrink-0 ms-3 rounded-lg bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 text-[10px] font-extrabold uppercase text-blue-700 dark:text-blue-300 ring-1 ring-blue-200 dark:ring-blue-800">
+                    {item.entityType}
+                  </span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+        </CommandList>
+
+        {/* Global Spotlight Footer */}
+        <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 border-t border-border/80 bg-slate-50/90 dark:bg-slate-900/90 text-[11px] font-medium text-muted-foreground">
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[10px] shadow-2xs">↑</kbd>
+              <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[10px] shadow-2xs">↓</kbd>
+              <span>{t(lang, "common.navigate", "Navigate")}</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[10px] shadow-2xs">↵</kbd>
+              <span>{t(lang, "common.select", "Select")}</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[10px] shadow-2xs">ESC</kbd>
+              <span>{t(lang, "common.close", "Close")}</span>
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold">
+            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>{t(lang, "nav.erp_spotlight", "ERP Enterprise Spotlight Search")}</span>
+          </div>
+        </div>
+      </CommandDialog>
+    </div>
+    </ActiveRecordProvider>
+  );
+}

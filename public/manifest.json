@@ -1,0 +1,18 @@
+{
+  "short_name": "AI Mobile ERP",
+  "name": "AI Mobile – Return WhatsApp Reply",
+  "description": "Digital Dock ERP Mobile Extension for WhatsApp & Email AI Communication Center",
+  "icons": [
+    {
+      "src": "/icons/digital-dock-icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192 512x512"
+    }
+  ],
+  "start_url": "/mobile",
+  "background_color": "#0f3ea8",
+  "theme_color": "#0f3ea8",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/mobile"
+}

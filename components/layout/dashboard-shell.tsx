@@ -1,0 +1,62 @@
+import type { EnterpriseRole } from "@/lib/permissions/enterprise-roles";
+import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { sidebarTree } from "@/lib/navigation/sidebar";
+import { DashboardFrame } from "@/components/layout/dashboard-frame";
+import { InstallAppBanner } from "@/components/layout/install-app-banner";
+import { DgtConnectWidget } from "@/features/dgt-connect/dgt-connect-widget";
+import { NativeAppShell } from "@/components/layout/native-app-shell";
+
+export function DashboardShell({
+  children,
+  userEmail,
+  userName,
+  currentUserId,
+  roles,
+  permissions,
+  isShippingScoped,
+  operationalDomains,
+  ledgerVisibility,
+  canViewFinancials,
+  lang
+}: {
+  children: React.ReactNode;
+  userEmail: string;
+  userName?: string | null;
+  currentUserId?: string | null;
+  roles: EnterpriseRole[] | null;
+  permissions?: string[] | null;
+  isShippingScoped?: boolean;
+  operationalDomains?: ("business" | "shipping" | "both")[];
+  ledgerVisibility?: "scoped" | "shipping_only" | "full";
+  canViewFinancials?: boolean;
+  lang: SupportedLanguage;
+}) {
+  const isDemoMode = userEmail === "Demo mode" || userEmail === "Template preview";
+
+  return (
+    <div className="flex flex-col min-h-screen">
+      <InstallAppBanner />
+      <DashboardFrame
+        nodes={sidebarTree}
+        roles={roles}
+        permissions={permissions ?? null}
+        isShippingScoped={isShippingScoped}
+        operationalDomains={operationalDomains}
+        ledgerVisibility={ledgerVisibility}
+        canViewFinancials={canViewFinancials}
+        lang={lang}
+        userEmail={userEmail}
+        userName={userName}
+      >
+        {isDemoMode ? (
+          <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            Supabase is not configured (or you are in preview), so this is a local UI preview.
+          </div>
+        ) : null}
+        {children}
+      </DashboardFrame>
+      {!isDemoMode && currentUserId ? <DgtConnectWidget currentUserId={currentUserId} /> : null}
+      <NativeAppShell />
+    </div>
+  );
+}

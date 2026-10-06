@@ -1,0 +1,6505 @@
+"use client";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  CreditCard,
+  Download,
+  Eye,
+  FileText,
+  Package,
+  Printer,
+  Search,
+  Ship,
+  Trash2,
+  Lock,
+  Building2,
+  CheckCircle2,
+  User,
+  ArrowDownLeft,
+  ArrowUpRight,
+  MoreVertical,
+  Mail,
+  MessageCircle,
+  CheckSquare,
+  FileSignature,
+  Receipt,
+  PenLine,
+  Pin,
+  Save,
+  X,
+  Globe2,
+  BarChart3,
+  Edit3,
+  Settings,
+  ListChecks,
+  Truck,
+  MessageSquare,
+  Loader2,
+  Users,
+  Send,
+  Repeat2,
+  CheckCheck
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { TaskHandoverModal } from "@/features/transfer-center/components/task-handover-modal";
+import { SearchableSelect } from "@/components/ui/searchable-select";
+import { SimpleModal } from "@/components/ui/simple-modal";
+import { TradeDocumentCenter } from "@/features/reports/components/trade-document-center";
+import { openSalesA4ReportWindow } from "@/lib/reports/open-sales-a4-report-window";
+import { resolveSalesBookingPaymentRoute } from "@/lib/services/sales-booking-routing";
+import { SalesBookingJournalReportView } from "./sales-booking-journal-report-view";
+import { Th } from "@/components/ui/translated-th";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { translateOptionLabel } from "@/lib/i18n/option-labels";
+import { VoiceFormFill } from "@/components/voice-form-fill";
+import { t } from "@/lib/i18n/ui";
+import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
+import { cn } from "@/lib/utils";
+
+// --- Non-location constants (static values, not from master forms) ---
+const CURRENCY_OPTIONS = ["USD", "AED", "EUR", "GBP", "PKR", "AFN", "INR", "CNY", "SAR"];
+const PAYMENT_TYPES = ["Advance Payment", "Invoice", "Final Payment", "Credit"];
+const LOADING_TYPES = ["By Sea", "By Road", "By Air"];
+const CONTAINER_TYPES = ["20 FT", "40 FT", "20 FT Reefer", "40 FT Reefer", "Reefer Container", "Non Reefer", "Open Top", "Flat Rack", "LCL / Bulk"];
+const QTY_TYPE_OPTIONS = ["BAGS", "CARTONS", "Loose", "KGS", "Ton", "PCS", "Dozen", "Box", "Pallet"];
+
+const SALE_SOURCE_OPTIONS = [
+  { value: "booking", label: "Booking Sale", description: "Create a fresh sales booking from this order.", icon: FileText },
+  { value: "in_transit", label: "In-Transit Lot", description: "Sell goods already loaded or on the route.", icon: Truck },
+  { value: "local", label: "Local Purchase", description: "Sell goods purchased locally in this branch.", icon: Package },
+  { value: "warehouse", label: "Warehouse Stock", description: "Sell stock currently available in warehouse.", icon: Building2 },
+  { value: "endorse", label: "Endorse Stock", description: "Sell endorsed stock with traceable stock journal.", icon: ListChecks }
+];
+
+// Sellable stock (lots) + prior-sales deduction history now come from the real database via
+// GET /api/erp/sales/available-lots (lib/sales/available-lots.ts) — see saleLots / lotDeductions
+// state in the component. The former hard-coded MOCK_SALE_LOTS / MOCK_LOT_DEDUCTIONS were removed.
+// NOTE: COUNTRY_OPTIONS and ORIGIN_OPTIONS removed — countries now come from Location Master.
+
+// API Helpers
+async function lookupAccountMaster(query, countryId, countryBranchId, cityBranchId, isSuperAdmin) {
+  const needle = String(query || "").trim();
+  if (!needle) return null;
+
+  const params = new URLSearchParams();
+  params.set("q", needle);
+  params.set("limit", "500");
+  if (countryId) params.set("countryId", countryId);
+  if (countryBranchId) params.set("countryBranchId", countryBranchId);
+  if (cityBranchId) params.set("cityBranchId", cityBranchId);
+
+  const response = await fetch(`/api/erp/accounting/accounts/lookup?${params.toString()}`, {
+    credentials: "same-origin"
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok || !payload.ok) {
+    throw new Error(payload?.error?.message || payload?.error || t(lang, "purchase.wiz_err_account_lookup", "Account lookup failed."));
+  }
+  return payload.data?.found ? payload.data.account : null;
+}
+
+async function lookupSalesBookingReport(query, countryId, countryBranchId, cityBranchId, isSuperAdmin) {
+  const needle = String(query || "").trim();
+  if (!needle) return null;
+
+  const params = new URLSearchParams();
+  params.set("salesOrderNo", needle);
+  params.set("limit", "1");
+  if (!isSuperAdmin) {
+    if (countryId) params.set("countryId", countryId);
+    if (countryBranchId) params.set("countryBranchId", countryBranchId);
+    if (cityBranchId) params.set("cityBranchId", cityBranchId);
+  }
+
+  const response = await fetch(`/api/erp/sales/booking-journal-report?${params.toString()}`, {
+    credentials: "same-origin"
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok || !payload.ok) {
+    throw new Error(payload?.error?.message || payload?.error || t(lang, "sales.err_sales_booking_lookup", "Sales Booking lookup failed."));
+  }
+  return payload.data?.reports?.[0] ?? null;
+}
+
+const DEFAULT_FORM = {
+  countryId: "",
+  countryBranchId: "",
+  cityBranchId: "",
+  customerAccountNo: "",
+  customerAccountName: "",
+  customerAccountBranch: "",
+  customerAccountCurrency: "",
+  customerAccountKind: "",
+  customerAccountIsControl: false,
+  customerAccountCurrentBalance: 0,
+  customerAccountOpeningBalance: 0,
+  customerAccountStatus: "active",
+  customerAccountSerialNumber: "",
+  customerAccountCountrySerialNumber: "",
+  customerAccountBranchSerialNumber: "",
+  customerAccountManualReferenceNumber: "",
+  customerAccountMobile: "",
+  customerAccountWhatsapp: "",
+  salesAccountNo: "",
+  salesAccountName: "",
+  salesAccountBranch: "",
+  salesAccountCurrency: "",
+  salesAccountKind: "",
+  salesAccountIsControl: false,
+  salesAccountCurrentBalance: 0,
+  salesAccountOpeningBalance: 0,
+  salesAccountStatus: "active",
+  salesAccountSerialNumber: "",
+  salesAccountCountrySerialNumber: "",
+  salesAccountBranchSerialNumber: "",
+  salesAccountManualReferenceNumber: "",
+  salesAccountMobile: "",
+  salesAccountWhatsapp: "",
+  salesOrderNo: "",
+  salesContractNo: "",
+  salesOrderNo: "",
+  billNo: "",
+  salesDate: new Date().toISOString().slice(0, 10),
+  currencyType: "USD",
+  salesCurrency: "USD",
+  exchangeRate: 1,
+  branchName: "",
+  branchCode: "",
+  branchCity: "",
+  branchCountry: "",
+  userName: "",
+  userId: "",
+  paymentType: "",
+  shipmentType: "",
+  shippingMode: "",
+  customerId: "",
+  customerName: "",
+  salesStatus: "Draft",
+  remarks: "",
+  paymentReport: "",
+  loadingReport: "",
+  orderReportRemarks: "",
+  salesReportRemarks: "",
+  salesInvoiceRemarks: "",
+  showRemarksOnA4: true,
+
+  // Tab 3 details
+  advancePercent: 10,
+  advancePaymentDate: new Date().toISOString().slice(0, 10),
+  paymentDate: new Date().toISOString().slice(0, 10),
+  paymentDaysAndMethodDetails: "",
+  loadingCountry: "",
+  loadingPort: "",
+  loadingDate: "",
+  receivedCountry: "",
+  receivedPort: "",
+  receivedDate: "",
+  loadingBorder: "",
+  receivedBorder: "",
+  airportName: "",
+  receivedPortName: "",
+  transportAgent: "",
+  airlineName: "",
+  receivedAgentName: "",
+  containerCount: 1,
+  containerSize: "40 FT",
+  containerNumbers: "",
+  vesselName: "",
+  sealNumber: "",
+
+  // Step 2 Active Item inputs
+  saleType: "stock", // "stock" | "endorse"
+  saleSource: "stock",
+  stockLotNo: "",
+  selectedLotId: "",
+  warehouseId: "",
+  warehouseName: "",
+  branchName: "",
+  isEndorseSale: false,
+  endorseQtyPurchased: 0,
+  endorseQtyAllocated: 0,
+  endorseLinkedLotNo: "",
+  goodsName: "",
+  size: "",
+  brand: "",
+  origin: "",
+  hsCode: "",
+  allotName: "",
+  qtyName: "BAGS",
+  qtyNo: 100,
+  qtyKgs: 50.00,
+  emptyKgs: 0.10,
+  netWeight: 4990.00,
+  divideType: "D/KGs",
+  divideWeight: 1.0,
+  priceType: "P/KGs",
+  coursePrice: 12.50,
+  secondaryCurrency: "PKR",
+  rate2: 280.00,
+  operator: "*",
+  qualityReport: "Passed"
+};
+
+// Seeded rows matching user's mock screenshots
+
+function calculateItemTotals(form) {
+  const qtyNo = Number(form.qtyNo || 0);
+  const qtyKgs = Number(form.qtyKgs || 0);
+  const emptyKgs = Number(form.emptyKgs || 0);
+  const coursePrice = Number(form.coursePrice || 0);
+  const divideWeight = Number(form.divideWeight || 1);
+  const exchangeRate = Number(form.exchangeRate || 1);
+  const operator = form.operator || "*";
+
+  const grossWeight = qtyNo * qtyKgs;
+  const totalEmptyDeduct = qtyNo * emptyKgs;
+  const netWeight = form.netWeight !== undefined && form.netWeight !== "" && form.netWeight !== 0
+    ? Number(form.netWeight)
+    : Math.max(0, grossWeight - totalEmptyDeduct);
+
+  // Amount in Purchase Currency (Original Amount)
+  const originalAmount = (netWeight / divideWeight) * coursePrice;
+
+  // Amount in Local Country Currency
+  let localAmount = 0;
+  if (operator === "/") {
+    localAmount = exchangeRate !== 0 ? originalAmount / exchangeRate : 0;
+  } else {
+    localAmount = originalAmount * exchangeRate;
+  }
+
+  return {
+    grossWeight,
+    netWeight,
+    totalAmount: originalAmount, // Total in Purchase Currency
+    finalAmount: localAmount,    // Total in Local Currency
+    baseAmount: originalAmount,
+    localAmount: localAmount
+  };
+}
+
+function currencySymbol(currency) {
+  const c = String(currency || "").toUpperCase();
+  if (c.includes("USD")) return "$";
+  if (c.includes("AED")) return "DH";
+  if (c.includes("PKR")) return "₨";
+  if (c.includes("AFN")) return "؋";
+  if (c.includes("INR")) return "₹";
+  return currency || "";
+}
+
+function formatShortDate(dateStr) {
+  if (!dateStr) return "-";
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  } catch {
+    return dateStr;
+  }
+}
+
+function formatIsoDate(dateStr) {
+  if (!dateStr) return "-";
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toISOString().slice(0, 10);
+  } catch {
+    return dateStr;
+  }
+}
+
+function formatNumber(num) {
+  if (num === null || num === undefined) return "-";
+  return Number(num).toLocaleString("en-US", { maximumFractionDigits: 2 });
+}
+
+function LightTable({ headers, children }) {
+  return (
+    <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+      <table className="min-w-full border-collapse text-xs text-slate-800">
+        <thead className="bg-slate-50 text-[10px] uppercase font-bold tracking-wide text-slate-650 border-b border-slate-200">
+          <tr>
+            {headers.map((header, idx) => (
+              <Th
+                key={idx}
+                className="whitespace-nowrap border-r border-slate-200 px-3 py-3 text-left font-black last:border-r-0"
+              >
+                {header}
+              </Th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-slate-200 bg-white text-slate-800">{children}</tbody>
+      </table>
+    </div>
+  );
+}
+
+function LightTd({ children, className = "", center = false, right = false }) {
+  return (
+    <td
+      className={`whitespace-nowrap border-r border-slate-200 px-3 py-2.5 last:border-r-0 ${
+        center ? "text-center" : ""
+      } ${right ? "text-right" : ""} ${className}`}
+    >
+      {children}
+    </td>
+  );
+}
+
+function LightStatusBadge({ status }) {
+  const s = String(status || "Open").toLowerCase();
+  let badgeClass = "bg-slate-100 text-slate-700 border-slate-205";
+  if (s.includes("confirm")) {
+    badgeClass = "bg-emerald-50 text-emerald-700 border-emerald-250";
+  } else if (s.includes("cancel")) {
+    badgeClass = "bg-rose-50 text-rose-700 border-rose-250";
+  } else if (s.includes("open") || s.includes("draft")) {
+    badgeClass = "bg-blue-50 text-blue-700 border-blue-200";
+  }
+  return (
+    <span className={`inline-flex items-center rounded border px-2 py-0.5 text-[9px] font-black uppercase ${badgeClass}`}>
+      {status || "Open"}
+    </span>
+  );
+}
+
+export function SalesOrderWizard({ session }) {
+  const lang = useActiveLanguage();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState("booking"); // "booking" | "goods" | "others" | "reports"
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+    if (typeof window !== "undefined" && window.location.pathname.includes("new-")) {
+      setIsFormOpen(true);
+    }
+  }, []);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [reportSaved, setReportSaved] = useState(false);
+  const [isTransferred, setIsTransferred] = useState(false);
+  const [transferredData, setTransferredData] = useState(null);
+  const [viewDropdownOpen, setViewDropdownOpen] = useState(false);
+  const [verifyDropdownOpen, setVerifyDropdownOpen] = useState(false);
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [transferConfirmModal, setTransferConfirmModal] = useState(false);
+  const [showTransferScreen, setShowTransferScreen] = useState(false);
+  const [isVerificationSidebarOpen, setIsVerificationSidebarOpen] = useState(false);
+  const [previewType, setPreviewType] = useState("booking_report"); // "booking_report" | "contract" | "invoice"
+  // Serial numbers (SO / Contract / Bill) are assigned by the server on save via
+  // nextTransactionSerial — never a random client value. Form starts blank.
+  const [form, setForm] = useState(() => ({ ...DEFAULT_FORM }));
+  const [goodsEntries, setGoodsEntries] = useState([]);
+
+  // ── AI Document Intake draft (Scan / Upload Document → reviewed draft) ──
+  const intake = useIntakeDraft("sales_orders");
+  const [lotPanelOpen, setLotPanelOpen] = useState(false);
+  const [lotSearch, setLotSearch] = useState("");
+  const [checkedLotNo, setCheckedLotNo] = useState(null);
+
+  // Real sellable stock — loaded from /api/erp/sales/available-lots per source (was MOCK_SALE_LOTS).
+  const [saleLots, setSaleLots] = useState([]);
+  const [saleLotsLoading, setSaleLotsLoading] = useState(false);
+  const [lotDeductions, setLotDeductions] = useState({}); // { [lotNo]: LotDeduction[] }
+
+  const selectedSaleSource = useMemo(() => {
+    return SALE_SOURCE_OPTIONS.find((option) => option.value === (form.saleSource || "booking")) || SALE_SOURCE_OPTIONS[0];
+  }, [form.saleSource]);
+
+  // Local Sales (saleSource === "local") reuses this one wizard — see
+  // app/dashboard/sales/local-sales/page.tsx. This flag only swaps card/header
+  // color tokens to match the approved Local Purchase prototype's gold
+  // GRADIENT header strip on an otherwise plain card (not a full-card wash);
+  // it changes no calculation, field, validation, or save behavior.
+  const isLocalSale = form.saleSource === "local";
+  const sectionPanelCls = "rounded-2xl border border-border bg-card p-4 shadow-sm";
+  const sectionPanelHeaderCls = isLocalSale
+    ? "flex items-center justify-between rounded-xl bg-gradient-to-r from-amber-100 to-amber-200 dark:from-amber-950/40 dark:to-amber-900/30 border border-amber-300 dark:border-amber-800 px-3 py-2 mb-3"
+    : "flex items-center justify-between border-b border-border pb-2";
+  const miniCardCls = "bg-white border border-slate-200 p-4 rounded-xl shadow-sm text-[10px] dark:bg-slate-950 dark:border-slate-800";
+  // Local Purchase's exact 4-color numbered-badge sequence (blue/emerald/purple/amber),
+  // cycled for however many numbered mini-cards a given section has.
+  const localBadgeColors = ["bg-blue-600", "bg-emerald-600", "bg-purple-600", "bg-amber-500"];
+  const localBadgeCls = (n) => (isLocalSale ? localBadgeColors[(n - 1) % localBadgeColors.length] : "bg-blue-600");
+
+  useEffect(() => {
+    let cancelled = false;
+    setSaleLotsLoading(true);
+    const goodsParam = form.goodsName ? `&goodsName=${encodeURIComponent(form.goodsName)}` : "";
+    fetch(`/api/erp/sales/available-lots?source=stock&lang=${lang}${goodsParam}`, { credentials: "same-origin" })
+      .then((r) => r.json())
+      .then((j) => {
+        if (cancelled) return;
+        setSaleLots(Array.isArray(j?.data?.lots) ? j.data.lots : []);
+      })
+      .catch(() => {
+        if (!cancelled) setSaleLots([]);
+      })
+      .finally(() => {
+        if (!cancelled) setSaleLotsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [form.goodsName, lang]);
+
+  const availableLotsForProduct = useMemo(() => {
+    if (!form.goodsName) return saleLots;
+    const target = form.goodsName.trim().toLowerCase();
+    const filtered = saleLots.filter((lot) => {
+      const gName = (lot.goodsName || "").trim().toLowerCase();
+      const matchName = gName === target || gName.includes(target) || target.includes(gName);
+      const matchId = form.goodsId && lot.goodsId && lot.goodsId === form.goodsId;
+      return matchName || matchId;
+    });
+    return filtered.length > 0 ? filtered : saleLots;
+  }, [saleLots, form.goodsName, form.goodsId]);
+
+  const filteredSaleLots = useMemo(() => {
+    const needle = lotSearch.trim().toLowerCase();
+    if (!needle) return availableLotsForProduct;
+    return availableLotsForProduct.filter((lot) => [lot.lotNo, lot.goodsName, lot.location, lot.branchName, lot.warehouseName, lot.stockRef, lot.status].join(" ").toLowerCase().includes(needle));
+  }, [availableLotsForProduct, lotSearch]);
+
+  const selectedSaleLot = useMemo(() => {
+    return saleLots.find((lot) => lot.lotNo === form.stockLotNo || (form.selectedLotId && lot.id === form.selectedLotId)) || null;
+  }, [saleLots, form.stockLotNo, form.selectedLotId]);
+
+  // Real prior-sales deduction history for a lot (was MOCK_LOT_DEDUCTIONS) — fetched on demand.
+  const loadLotDeductions = useCallback((lot) => {
+    const ref = lot?.stockRef || lot?.lotNo;
+    if (!ref || lotDeductions[lot.lotNo]) return;
+    fetch(`/api/erp/sales/available-lots?deductionsFor=${encodeURIComponent(ref)}`, { credentials: "same-origin" })
+      .then((r) => r.json())
+      .then((j) => {
+        setLotDeductions((prev) => ({ ...prev, [lot.lotNo]: Array.isArray(j?.data?.deductions) ? j.data.deductions : [] }));
+      })
+      .catch(() => setLotDeductions((prev) => ({ ...prev, [lot.lotNo]: [] })));
+  }, [lotDeductions]);
+
+  const openSaleSource = (sourceValue) => {
+    setForm((prev) => ({ ...prev, saleSource: sourceValue, stockLotNo: "" }));
+    setLotSearch("");
+    setLotPanelOpen(true);
+  };
+
+  const applySaleLot = (lot) => {
+    setForm((prev) => ({
+      ...prev,
+      saleType: "stock",
+      saleSource: lot.source || "stock",
+      stockLotNo: lot.lotNo,
+      allotName: lot.lotNo,
+      selectedLotId: lot.id || "",
+      warehouseId: lot.warehouseId || "",
+      warehouseName: lot.warehouseName || "",
+      branchName: lot.branchName || "",
+      sourceStockRef: lot.stockRef || lot.lotNo,
+      goodsName: lot.goodsName || prev.goodsName,
+      brand: lot.brand || prev.brand,
+      size: lot.size || prev.size,
+      origin: lot.origin || prev.origin,
+      hsCode: lot.hsCode || prev.hsCode,
+      qtyName: lot.qtyName || prev.qtyName || "BAGS",
+      qtyNo: prev.qtyNo > 0 ? prev.qtyNo : Math.min(100, lot.availableQty || 100),
+      qtyKgs: lot.qtyKgs || prev.qtyKgs,
+      emptyKgs: lot.emptyKgs || prev.emptyKgs,
+      netWeight: lot.netWeight || prev.netWeight,
+      currencyType: lot.currencyType || prev.currencyType,
+      salesCurrency: lot.currencyType || prev.salesCurrency,
+      exchangeRate: lot.exchangeRate || prev.exchangeRate,
+      coursePrice: lot.coursePrice || prev.coursePrice,
+      manualTotalAmount: "",
+      manualFinalAmount: ""
+    }));
+    setLotPanelOpen(false);
+  };
+  const [selectedLotId, setSelectedLotId] = useState("");
+  const [isLotModalOpen, setIsLotModalOpen] = useState(false);
+  const [editingRemarksType, setEditingRemarksType] = useState(null);
+  const [tempRemarksText, setTempRemarksText] = useState("");
+  const [reportType, setReportType] = useState("branch"); // "branch" | "totaling" | "payment"
+  const [previewRemarks, setPreviewRemarks] = useState(false);
+  const [branchPinOpen, setBranchPinOpen] = useState(false);
+  // Dynamic Reports System
+  const [reportsList, setReportsList] = useState([]);
+  const [selectedReportId, setSelectedReportId] = useState("");
+  const [isNewReportModalOpen, setIsNewReportModalOpen] = useState(false);
+  const [newReportForm, setNewReportForm] = useState({ name: "", description: "", notes: "" });
+
+  const previewItems = useMemo(() => {
+    return goodsEntries.map((g, index) => {
+      const qtyNo = Number(g.qtyNo || 0);
+      const qtyKgs = Number(g.qtyKgs || 0);
+      const emptyKgs = Number(g.emptyKgs || 0);
+      const grossWt = qtyNo * qtyKgs;
+      const netWt = qtyNo * (qtyKgs - emptyKgs);
+      const rateKg = Number(g.coursePrice || 0);
+      const rateTon = rateKg * 1000;
+      const amountUsd = Number(g.totalAmount || 0);
+      const finalAmountPkr = Number(g.finalAmount || 0);
+      return {
+        srNo: index + 1,
+        goodsName: g.goodsName || "N/A",
+        allotName: g.allotName || "N/A",
+        grade: g.size || "N/A",
+        origin: g.origin || "N/A",
+        quantity: `${qtyNo.toLocaleString()} ${translateOptionLabel(lang, g.qtyName || "BAGS")}`,
+        packing: `${qtyKgs} KG / ${emptyKgs} KG`,
+        grossWt,
+        netWt,
+        rateKg,
+        rateTon,
+        amountUsd,
+        exRate: g.exchangeRate || 1.00,
+        finalAmountPkr
+      };
+    });
+  }, [goodsEntries, lang]);
+
+  const avgRateKg = useMemo(() => {
+    return goodsEntries.length > 0
+      ? goodsEntries.reduce((sum, item) => sum + (Number(item.coursePrice) || 0), 0) / goodsEntries.length
+      : 0;
+  }, [goodsEntries]);
+
+  const avgRateTon = useMemo(() => avgRateKg * 1000, [avgRateKg]);
+
+
+  const [titlePortal, setTitlePortal] = useState(null);
+  const [actionsPortal, setActionsPortal] = useState(null);
+
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      setTitlePortal(document.getElementById("erp-page-title-slot"));
+      setActionsPortal(document.getElementById("erp-page-actions-slot"));
+    }
+  }, []);
+
+  const [savingOrder, setSavingOrder] = useState(false);
+  const [saveMessage, setSaveMessage] = useState("");
+  const [savedOrderId, setSavedOrderId] = useState("");
+  const [tradeDocsOpen, setTradeDocsOpen] = useState(false);
+  const [savedOrderNo, setSavedOrderNo] = useState("");
+  const [registerRefreshKey, setRegisterRefreshKey] = useState(0);
+  const [accountLookupMessage, setAccountLookupMessage] = useState("");
+  const [accountLookupLoading, setAccountLookupLoading] = useState(null);
+  const [handoverModalOpen, setHandoverModalOpen] = useState(false);
+  const [activeHandover, setActiveHandover] = useState(null);
+  const [activeHandoverLoading, setActiveHandoverLoading] = useState(false);
+
+  // "Local Sales" (sidebar) deep-links here with ?source=local to pre-select the
+  // existing "Local Purchase" sale-source option instead of landing on a
+  // context-less generic booking form. Only applies to a brand-new order — an
+  // existing order being edited/resumed (id/salesOrderNo/transferId present)
+  // keeps its own saved saleSource.
+  const sourceParam = searchParams.get("source");
+  useEffect(() => {
+    if (sourceParam !== "local") return;
+    if (searchParams.get("id") || searchParams.get("salesOrderNo") || searchParams.get("transferId")) return;
+    setForm((prev) => (prev.saleSource === "local" ? prev : { ...prev, saleSource: "local" }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sourceParam]);
+
+  const transferIdParam = searchParams.get("transferId");
+  useEffect(() => {
+    if (!transferIdParam) return;
+    async function loadTransfer() {
+      setActiveHandoverLoading(true);
+      try {
+        const res = await fetch("/api/erp/transfer-center", { credentials: "include" });
+        const json = await res.json();
+        if (json.ok && json.data?.items) {
+          const found = json.data.items.find((item) => item.id === transferIdParam);
+          if (found) {
+            setActiveHandover(found);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load active handover:", err);
+      } finally {
+        setActiveHandoverLoading(false);
+      }
+    }
+    loadTransfer();
+  }, [transferIdParam]);
+
+  async function runHandoverAction(transferId, action) {
+    try {
+      await fetch(`/api/erp/transfer-center/${transferId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ action })
+      });
+      setActiveHandover((prev) => prev ? { ...prev, status: action === "accept" ? "accepted" : "completed" } : null);
+    } catch (err) {
+      console.error("Handover action failed:", err);
+    }
+  }
+
+  const dropdownRef = React.useRef(null);
+  const customerDropdownRef = React.useRef(null);
+  const salesDropdownRef = React.useRef(null);
+  const verifyDropdownRef = React.useRef(null);
+  const companyDropdownRef = React.useRef(null);
+  const salesCompanyDropdownRef = React.useRef(null);
+
+  const [customerDropdownOpen, setPurchaseDropdownOpen] = useState(false);
+  const [salesDropdownOpen, setSalesDropdownOpen] = useState(false);
+  const [customerSearch, setPurchaseSearch] = useState("");
+  const [salesSearch, setSalesSearch] = useState("");
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setViewDropdownOpen(false);
+      }
+      if (customerDropdownRef.current && !customerDropdownRef.current.contains(event.target)) {
+        setPurchaseDropdownOpen(false);
+        setPurchasePinDropdownOpen(false);
+      }
+      if (salesDropdownRef.current && !salesDropdownRef.current.contains(event.target)) {
+        setSalesDropdownOpen(false);
+        setSalesPinDropdownOpen(false);
+      }
+      if (verifyDropdownRef.current && !verifyDropdownRef.current.contains(event.target)) {
+        setVerifyDropdownOpen(false);
+      }
+      if (companyDropdownRef.current && !companyDropdownRef.current.contains(event.target)) {
+        setPurchaseCompanySelectOpen(false);
+      }
+      if (salesCompanyDropdownRef.current && !salesCompanyDropdownRef.current.contains(event.target)) {
+        setSalesCompanySelectOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // Scoping States
+  const [localSession, setLocalSession] = useState(session || null);
+  const activeSession = session || localSession;
+  const isSuperAdmin = activeSession?.isSuperAdmin || activeSession?.scopes?.isSuperAdmin || false;
+  const isCountryAdmin = activeSession?.roles?.includes("country_admin") || activeSession?.scopes?.isCountryAdmin || (activeSession?.countryIds?.length > 0) || (activeSession?.scopes?.countryIds?.length > 0) || false;
+  const [countries, setCountries] = useState([]);
+  const [allCountries, setAllCountries] = useState([]); // unscoped — for transit pickers
+  const [dbGoods, setDbGoods] = useState([]); // goods from master DB
+  const [dbLoadingPorts, setDbLoadingPorts] = useState([]);
+  const [dbReceivedPorts, setDbReceivedPorts] = useState([]);
+  const [mainBranches, setMainBranches] = useState([]);
+  const [cityBranches, setCityBranches] = useState([]);
+  // Country-to-Country Sale: destination-scope branch lists, mirroring mainBranches/cityBranches
+  // but keyed off form.destCountryId/destCountryBranchId instead of the source (selling) scope.
+  const [destMainBranches, setDestMainBranches] = useState([]);
+  const [destCityBranches, setDestCityBranches] = useState([]);
+  const [scopeConfirmed, setScopeConfirmed] = useState(!isSuperAdmin);
+  const [showScopeModal, setShowScopeModal] = useState(false);
+  const [dbAccounts, setDbAccounts] = useState([]);
+  const [dbAccountsLoading, setDbAccountsLoading] = useState(true);
+  const [customQtyNames, setCustomQtyNames] = useState([]);
+
+  // Load Countries
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/erp/locations/countries?lang=${lang}`)
+      .then((r) => r.json())
+      .then((res) => {
+        if (cancelled) return;
+        const list = res?.countries || res?.data?.countries || [];
+        setCountries(list);
+        setAllCountries(list);
+        if (list.length > 0 && !form.countryId) {
+          // Super Admin has no home country/branch — silently defaulting to
+          // list[0] (Afghanistan, alphabetically first) wrongly scoped every
+          // subsequent account search/lookup to that one country, hiding real
+          // customers registered elsewhere. Prompt for an explicit working
+          // scope instead, exactly like the Purchase wizard already does.
+          if (isSuperAdmin) {
+            setShowScopeModal(true);
+            setScopeConfirmed(false);
+          } else {
+            const first = list[0];
+            setForm((p) => ({
+              ...p,
+              countryId: first.id,
+              salesCurrency: first.currency_code || first.currencyCode || "USD",
+              secondaryCurrency: first.currency_code || first.currencyCode || "USD",
+              paymentCurrency: first.currency_code || first.currencyCode || "USD"
+            }));
+          }
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
+  // Load Main Branches when Country changes
+  useEffect(() => {
+    if (!form.countryId) {
+      setMainBranches([]);
+      return;
+    }
+    let cancelled = false;
+    fetch(`/api/erp/locations/branches/main?countryId=${encodeURIComponent(form.countryId)}&lang=${lang}`)
+      .then((r) => r.json())
+      .then((res) => {
+        if (cancelled) return;
+        const list = res?.data?.branches || res?.branches || [];
+        setMainBranches(list);
+        if (list.length === 1 && !form.countryBranchId) {
+          setForm((p) => ({ ...p, countryBranchId: list[0].id }));
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [form.countryId]);
+
+  // Load City Branches when Country or Main Branch changes
+  useEffect(() => {
+    if (!form.countryId) {
+      setCityBranches([]);
+      return;
+    }
+    let cancelled = false;
+    const qp = new URLSearchParams({ countryId: form.countryId });
+    if (form.countryBranchId) qp.set("countryBranchId", form.countryBranchId);
+    fetch(`/api/erp/locations/branches/city?${qp.toString()}&lang=${lang}`)
+      .then((r) => r.json())
+      .then((res) => {
+        if (cancelled) return;
+        const list = res?.data?.cityBranches || res?.data?.branches || res?.cityBranches || [];
+        setCityBranches(list);
+        if (list.length === 1 && !form.cityBranchId) {
+          setForm((p) => ({ ...p, cityBranchId: list[0].id }));
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [form.countryId, form.countryBranchId]);
+
+  // Country-to-Country Sale: load destination Main Branches when destCountryId changes.
+  useEffect(() => {
+    let cancelled = false;
+    const destCountryId = form.destCountryId;
+    if (!destCountryId) {
+      setDestMainBranches([]);
+      return;
+    }
+    async function loadDestCountryBranches() {
+      try {
+        const res = await fetch(`/api/erp/locations/branches/main?countryId=${encodeURIComponent(destCountryId)}&lang=${lang}`).then(r => r.json());
+        const list = res?.data?.branches || res?.branches || [];
+        if (!cancelled) setDestMainBranches(list);
+      } catch (err) {
+        console.error("Failed to load destination country branches:", err);
+      }
+    }
+    loadDestCountryBranches();
+    return () => { cancelled = true; };
+  }, [form.destCountryId]);
+
+  // Country-to-Country Sale: load destination City Branches when destCountryId/destCountryBranchId changes.
+  useEffect(() => {
+    let cancelled = false;
+    const destCountryId = form.destCountryId;
+    if (!destCountryId) {
+      setDestCityBranches([]);
+      return;
+    }
+    async function loadDestCityBranches() {
+      try {
+        const queryParams = new URLSearchParams({ countryId: destCountryId });
+        if (form.destCountryBranchId) queryParams.append("countryBranchId", form.destCountryBranchId);
+        const res = await fetch(`/api/erp/locations/branches/city?${queryParams.toString()}&lang=${lang}`).then(r => r.json());
+        const list = res?.data?.cityBranches || res?.data?.branches || res?.cityBranches || [];
+        if (!cancelled) setDestCityBranches(list);
+      } catch (err) {
+        console.error("Failed to load destination city branches:", err);
+      }
+    }
+    loadDestCityBranches();
+    return () => { cancelled = true; };
+  }, [form.destCountryId, form.destCountryBranchId]);
+
+  const mapEnterpriseAccount = (acc) => ({
+    id: acc.id || null,
+    accountCode: acc.code || acc.account_number || "",
+    accountName: acc.name || "",
+    cityBranchName: acc.branch_code || acc.branch_name || "",
+    ledgerCurrency: acc.currency || "USD",
+    customerId: acc.customer_id || acc.customerId || acc.id || null,
+    companyId: acc.company_id || acc.companyId || null,
+    companyName: acc.company_name || acc.companyName || acc.company?.name || "",
+    mobile: acc.customers?.mobile || acc.mobile || "",
+    whatsapp: acc.customers?.whatsapp || acc.whatsapp || "",
+    kind: acc.kind || "",
+    isControlAccount: acc.is_control_account || false,
+    currentBalance: acc.current_balance || 0,
+    openingBalance: acc.opening_balance || 0,
+    status: acc.status || "active",
+    accountSerialNumber: acc.account_serial_number || "",
+    countrySerialNumber: acc.country_serial_number || "",
+    branchSerialNumber: acc.branch_serial_number || "",
+    manualReferenceNumber: acc.manual_reference_number || "",
+    customerNumber: acc.customer_number || "",
+    countryId: acc.country_id || null,
+    countryBranchId: acc.country_branch_id || null,
+    cityBranchId: acc.city_branch_id || null
+  });
+
+  const [sellerDetail, setSellerDetail] = useState(null);
+  const [customerDetail, setCustomerDetail] = useState(null);
+
+  const setValue = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
+  const isSubmittingRef = React.useRef(false);
+  const currentItemTotals = useMemo(() => calculateItemTotals(form), [form]);
+
+  const masterCountryOptions = useMemo(() => {
+    const list = allCountries.length > 0 ? allCountries : countries;
+    return [...list].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+  }, [allCountries, countries]);
+
+  const transitCountryOptions = masterCountryOptions;
+
+  // Fully dynamic, database-driven dependent dropdown logic for Loading Ports
+  const currentLoadingPorts = useMemo(() => {
+    let ports = dbLoadingPorts;
+    if (form.loadingCountry) {
+      const targetCountry = (form.loadingCountry || "").trim().toLowerCase();
+      ports = ports.filter(p => (p.country?.name || "").trim().toLowerCase() === targetCountry || (p.country_name || "").trim().toLowerCase() === targetCountry);
+    }
+    const mode = form.shippingMode || "By Sea";
+    if (mode === "By Road") {
+      return ports.filter(p => p.transport_type === "road");
+    } else if (mode === "By Air") {
+      return ports.filter(p => p.transport_type === "air");
+    } else if (mode === "By Sea") {
+      return ports.filter(p => p.transport_type === "sea");
+    }
+    return ports;
+  }, [dbLoadingPorts, form.loadingCountry, form.shippingMode]);
+
+  // Fully dynamic, database-driven dependent dropdown logic for Receiving Ports
+  const currentReceivedPorts = useMemo(() => {
+    let ports = dbReceivedPorts;
+    const recCountry = form.receivingCountry || form.receivedCountry || form.destinationCountry || "";
+    if (recCountry) {
+      const targetCountry = recCountry.trim().toLowerCase();
+      ports = ports.filter(p => (p.country?.name || "").trim().toLowerCase() === targetCountry || (p.country_name || "").trim().toLowerCase() === targetCountry);
+    }
+    const mode = form.shippingMode || "By Sea";
+    if (mode === "By Road") {
+      return ports.filter(p => p.transport_type === "road");
+    } else if (mode === "By Air") {
+      return ports.filter(p => p.transport_type === "air");
+    } else if (mode === "By Sea") {
+      return ports.filter(p => p.transport_type === "sea");
+    }
+    return ports;
+  }, [dbReceivedPorts, form.receivingCountry, form.receivedCountry, form.destinationCountry, form.shippingMode]);
+
+  const reportTotals = useMemo(() => {
+    const totalGross = goodsEntries.reduce((sum, item) => sum + Number(item.grossWeight || 0), 0);
+    const totalNet = goodsEntries.reduce((sum, item) => sum + Number(item.netWeight || 0), 0);
+    const grandFinal = goodsEntries.reduce((sum, item) => sum + Number(item.finalAmount || 0), 0);
+    const grandPrimaryFinal = goodsEntries.reduce((sum, item) => sum + Number(item.totalAmount || 0), 0);
+    const totalQty = goodsEntries.reduce((sum, item) => sum + Number(item.qtyNo || 0), 0);
+    const totalDeductions = goodsEntries.reduce((sum, item) => sum + Number((item.qtyNo * item.emptyKgs) || 0), 0);
+    return {
+      totalGross,
+      totalNet,
+      grandFinal,
+      grandPrimaryFinal,
+      totalQty,
+      totalDeductions
+    };
+  }, [goodsEntries]);
+
+  const accountMatchesSearch = (acc, term) => {
+    const q = String(term || "").trim().toLowerCase();
+    if (!q) return true;
+    return [
+      acc.accountCode,
+      acc.accountName,
+      acc.cityBranchName,
+      acc.ledgerCurrency,
+      acc.manualReferenceNumber,
+      acc.customerNumber,
+      acc.mobile,
+      acc.whatsapp
+    ].some(v => String(v || "").toLowerCase().includes(q));
+  };
+
+  const accountMatchesScope = (acc) => {
+    if (isSuperAdmin) {
+      if (form.cityBranchId) return acc.cityBranchId === form.cityBranchId;
+      if (form.countryBranchId) return acc.countryBranchId === form.countryBranchId;
+      if (form.countryId) return acc.countryId === form.countryId;
+      return true;
+    }
+    const allowedCountries = activeSession?.countryIds || activeSession?.scopes?.countryIds || [];
+    const allowedBranches = activeSession?.countryBranchIds || activeSession?.scopes?.countryBranchIds || [];
+    const allowedCities = activeSession?.cityBranchIds || activeSession?.scopes?.cityBranchIds || [];
+
+    if (allowedCities.length > 0) return allowedCities.includes(acc.cityBranchId);
+    if (allowedBranches.length > 0) return allowedBranches.includes(acc.countryBranchId);
+    if (allowedCountries.length > 0) return allowedCountries.includes(acc.countryId);
+    return true;
+  };
+
+  const formatAccountDisplayLabel = (name, code, manualRef) => {
+    if (manualRef) return `${name} (Manual A/C: ${manualRef})`;
+    if (code) return `${name} (${code})`;
+    return name;
+  };
+
+  const applyAccountMaster = (type, account) => {
+    if (!account) return;
+    const accountNo = account.accountCode || account.rawAccountCode || account.ledgerCode || account.code || "";
+
+    const richAccount = dbAccounts.find(
+      (a) => (a.accountCode || "").trim().toLowerCase() === accountNo.trim().toLowerCase()
+    ) || account;
+
+    const accountName = richAccount.accountName || richAccount.ledgerName || richAccount.name || "";
+    const branchName = richAccount.cityBranchName || richAccount.countryBranchName || richAccount.branch_code || "";
+    const currency = (richAccount.ledgerCurrency || richAccount.currency || "").toUpperCase();
+    const companyId = richAccount.companyId || richAccount.company_id || null;
+
+    let matchedComp = null;
+    if (companyId && dbCompanies.length > 0) {
+      matchedComp = dbCompanies.find(c => c.id === companyId);
+    }
+    let cName = matchedComp?.name || richAccount.companyName || richAccount.company_name || "";
+    if (!cName && dbCompanies.length > 0) {
+      cName = dbCompanies[0]?.name || "";
+    }
+    const cCode = cName ? "COM-" + cName.slice(0, 3).toUpperCase() : "";
+    const resolvedCompId = matchedComp?.id || companyId || (dbCompanies.length > 0 ? dbCompanies[0].id : null);
+    const entityId = richAccount.customerId || richAccount.customer_id || richAccount.id || accountNo;
+    // enterprise_accounts.id specifically — sales_orders.customer_account_id FKs to
+    // enterprise_accounts, not ledgers, so entityId (customerId, which falls back to
+    // this same account's own id when there's no real linked customer) cannot be
+    // reused here. Mirrors purchase-order-wizard.jsx's resolvedAccountId.
+    const resolvedAccountId = richAccount.id || richAccount.accountId || null;
+    // customer_ledger_id FKs to ledgers(id) — a genuinely different table/id-space
+    // from enterprise_accounts. The bulk accounts list (dbAccounts) never carries a
+    // ledger id at all; only the background/type-ahead lookup's richer account
+    // object (lookupAccountMaster -> /api/erp/accounting/accounts/lookup) does. When
+    // it's absent (the normal click-to-select path), leave it null rather than
+    // reusing an enterprise_accounts id here — that mismatch previously failed the
+    // save with FK_VIOLATION on every Sales booking.
+    const resolvedLedgerId = richAccount.ledgerId || null;
+
+    setForm((prev) => ({
+      ...prev,
+      ...(type === "purchase"
+        ? {
+            customerAccountNo: accountNo,
+            customerAccountName: accountName,
+            customerAccountBranch: branchName,
+            customerAccountCurrency: currency || prev.customerAccountCurrency || prev.salesCurrency || prev.secondaryCurrency || "PKR",
+            salesCurrency: currency || prev.salesCurrency || prev.secondaryCurrency || "PKR",
+            customerId: entityId,
+            customerAccountId: resolvedAccountId,
+            customerAccountLedgerId: resolvedLedgerId,
+            customerName: accountName || prev.customerName,
+            salesCompanyId: resolvedCompId,
+            salesCompanyName: cName,
+            salesCompanyCode: cCode,
+            customerAccountKind: richAccount.kind || richAccount.accountKind || "",
+            customerAccountIsControl: richAccount.isControlAccount ?? richAccount.is_control_account ?? false,
+            customerAccountCurrentBalance: richAccount.currentBalance ?? richAccount.current_balance ?? 0,
+            customerAccountOpeningBalance: richAccount.openingBalance ?? richAccount.opening_balance ?? 0,
+            customerAccountStatus: richAccount.status || "active",
+            customerAccountSerialNumber: richAccount.accountSerialNumber ?? richAccount.account_serial_number ?? "",
+            customerAccountCountrySerialNumber: richAccount.countrySerialNumber ?? richAccount.country_serial_number ?? "",
+            customerAccountBranchSerialNumber: richAccount.branchSerialNumber ?? richAccount.branch_serial_number ?? "",
+            customerAccountManualReferenceNumber: richAccount.manualReferenceNumber ?? richAccount.manual_reference_number ?? "",
+            customerAccountMobile: richAccount.mobile ?? richAccount.customers?.mobile ?? "",
+            customerAccountWhatsapp: richAccount.whatsapp ?? richAccount.customers?.whatsapp ?? "",
+          }
+        : {
+            salesAccountNo: accountNo,
+            salesAccountName: accountName,
+            salesAccountBranch: branchName,
+            salesAccountCurrency: currency || prev.salesAccountCurrency || prev.salesCurrency || prev.secondaryCurrency || "PKR",
+            salesAccountLedgerId: entityId,
+            salesCompanyId: resolvedCompId,
+            salesCompanyName: cName,
+            salesCompanyCode: cCode,
+            salesAccountKind: richAccount.kind || richAccount.accountKind || "",
+            salesAccountIsControl: richAccount.isControlAccount ?? richAccount.is_control_account ?? false,
+            salesAccountCurrentBalance: richAccount.currentBalance ?? richAccount.current_balance ?? 0,
+            salesAccountOpeningBalance: richAccount.openingBalance ?? richAccount.opening_balance ?? 0,
+            salesAccountStatus: richAccount.status || "active",
+            salesAccountSerialNumber: richAccount.accountSerialNumber ?? richAccount.account_serial_number ?? "",
+            salesAccountCountrySerialNumber: richAccount.countrySerialNumber ?? richAccount.country_serial_number ?? "",
+            salesAccountBranchSerialNumber: richAccount.branchSerialNumber ?? richAccount.branch_serial_number ?? "",
+            salesAccountManualReferenceNumber: richAccount.manualReferenceNumber ?? richAccount.manual_reference_number ?? "",
+            salesAccountMobile: richAccount.mobile ?? richAccount.customers?.mobile ?? "",
+            salesAccountWhatsapp: richAccount.whatsapp ?? richAccount.customers?.whatsapp ?? "",
+          })
+    }));
+
+    if (type === "purchase") {
+      setPurchaseSearch("");
+    } else {
+      setSalesSearch("");
+    }
+  };
+
+  const lookupTimers = React.useRef({ purchase: null, sales: null });
+
+  const triggerBackgroundLookup = async (type, query) => {
+    if (!query || query.trim().length < 2) return;
+    try {
+      const account = await lookupAccountMaster(query, form.countryId, form.countryBranchId, form.cityBranchId, isSuperAdmin);
+      if (account) {
+        applyAccountMaster(type, account);
+      }
+    } catch (err) {
+      console.error("Background lookup failed:", err);
+    }
+  };
+
+  const handleTextChange = (type, val) => {
+    if (type === "purchase") {
+      setPurchaseSearch(val);
+      setPurchaseDropdownOpen(true);
+      if (!val.trim()) {
+        setForm((prev) => ({
+          ...prev,
+          customerAccountNo: "",
+          customerAccountName: "",
+          customerAccountBranch: "",
+          customerAccountCurrency: "",
+          customerAccountKind: "",
+          customerAccountIsControl: false,
+          customerAccountCurrentBalance: 0,
+          customerAccountOpeningBalance: 0,
+          customerAccountStatus: "active",
+          customerAccountSerialNumber: "",
+          customerAccountCountrySerialNumber: "",
+          customerAccountBranchSerialNumber: "",
+          customerAccountManualReferenceNumber: "",
+          customerAccountMobile: "",
+          customerAccountWhatsapp: "",
+        }));
+      }
+    } else if (type === "sales") {
+      setSalesSearch(val);
+      setSalesDropdownOpen(true);
+      if (!val.trim()) {
+        setForm((prev) => ({
+          ...prev,
+          salesAccountNo: "",
+          salesAccountName: "",
+          salesAccountBranch: "",
+          salesAccountCurrency: "",
+          salesAccountKind: "",
+          salesAccountIsControl: false,
+          salesAccountCurrentBalance: 0,
+          salesAccountOpeningBalance: 0,
+          salesAccountStatus: "active",
+          salesAccountSerialNumber: "",
+          salesAccountCountrySerialNumber: "",
+          salesAccountBranchSerialNumber: "",
+          salesAccountManualReferenceNumber: "",
+          salesAccountMobile: "",
+          salesAccountWhatsapp: "",
+        }));
+      }
+    } else {
+      setValue(type, val);
+    }
+
+    const matched = dbAccounts.find(acc =>
+      accountMatchesScope(acc) && (
+        (acc.accountCode || "").trim().toLowerCase() === val.trim().toLowerCase() ||
+        (acc.manualReferenceNumber || "").trim().toLowerCase() === val.trim().toLowerCase() ||
+        (acc.customerNumber || "").trim().toLowerCase() === val.trim().toLowerCase() ||
+        (acc.accountName || "").trim().toLowerCase() === val.trim().toLowerCase()
+      )
+    );
+
+    if (matched) {
+      applyAccountMaster(type, matched);
+    } else {
+      if (lookupTimers.current[type]) {
+        clearTimeout(lookupTimers.current[type]);
+      }
+      lookupTimers.current[type] = setTimeout(() => {
+        triggerBackgroundLookup(type, val);
+      }, 500);
+    }
+  };
+
+  const handleAccountLookup = async (type) => {
+    const query = type === "purchase"
+      ? (customerSearch || form.customerAccountNo)
+      : (salesSearch || form.salesAccountNo);
+    setAccountLookupLoading(type);
+    setAccountLookupMessage("");
+    try {
+      const account = await lookupAccountMaster(query, form.countryId, form.countryBranchId, form.cityBranchId, isSuperAdmin);
+      if (!account) {
+        setAccountLookupMessage(t(lang, "purchase.wiz_account_not_found", "Account not found: {0}.").replace("{0}", query));
+        return;
+      }
+      applyAccountMaster(type, account);
+      setAccountLookupMessage(
+        t(lang, "purchase.wiz_account_loaded", "{0} account loaded: {1}")
+          .replace("{0}", type === "purchase" ? t(lang, "sales.wiz_type_customer", "Customer") : t(lang, "purchase.wiz_type_sales", "Sales"))
+          .replace("{1}", account.accountName)
+      );
+    } catch (error) {
+      setAccountLookupMessage(error instanceof Error ? error.message : t(lang, "purchase.wiz_err_account_lookup", "Account lookup failed."));
+    } finally {
+      setAccountLookupLoading(null);
+    }
+  };
+
+  // Fetch session & countries on load
+  useEffect(() => {
+    let cancelled = false;
+    async function initSession() {
+      if (session) return; // Use prop session if available
+      try {
+        const response = await fetch("/api/erp/auth/session");
+        const payload = await response.json();
+        const sessionRes = payload?.data || payload;
+        if (!cancelled && sessionRes) {
+          setLocalSession(sessionRes);
+          const sScopes = sessionRes.scopes || sessionRes || {};
+          const isSup = sScopes.isSuperAdmin;
+          const userCountryId = (!isSup && sScopes.countryIds?.[0]) ? sScopes.countryIds[0] : null;
+          const userCountryBranchId = (!isSup && sScopes.countryBranchIds?.[0]) ? sScopes.countryBranchIds[0] : null;
+          const userCityBranchId = (!isSup && sScopes.cityBranchIds?.[0]) ? sScopes.cityBranchIds[0] : null;
+
+          setForm((prev) => ({
+            ...prev,
+            userName: sessionRes.user?.fullName || sessionRes.fullName || sessionRes.user?.email || prev.userName || "",
+            userId: sessionRes.user?.id || sessionRes.userId || prev.userId || "",
+            countryId: userCountryId || prev.countryId,
+            countryBranchId: userCountryBranchId || prev.countryBranchId,
+            cityBranchId: userCityBranchId || prev.cityBranchId
+          }));
+        }
+      } catch (err) {
+        console.error("Failed to load session:", err);
+      }
+    }
+    async function initCountries() {
+      try {
+        const response = await fetch(`/api/erp/locations/countries?lang=${lang}`);
+        const res = await response.json();
+        const countriesData = res?.data?.countries || res?.countries;
+        if (!cancelled && countriesData) {
+          setCountries(countriesData);
+          if (countriesData.length === 1) {
+            setForm(prev => ({ ...prev, countryId: prev.countryId || countriesData[0].id }));
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load countries:", err);
+      }
+    }
+    async function initAllCountries() {
+      try {
+        const response = await fetch(`/api/erp/locations/countries?all=true&limit=500&lang=${lang}`);
+        const res = await response.json();
+        const countriesData = res?.data?.countries || res?.countries;
+        if (!cancelled && countriesData) {
+          setAllCountries(countriesData);
+        }
+      } catch (err) {
+        console.error("Failed to load all countries:", err);
+      }
+    }
+    async function initGoods() {
+      try {
+        const response = await fetch(`/api/erp/goods?limit=500&lang=${lang}`);
+        const res = await response.json();
+        const goodsData = res?.data?.goods || res?.goods;
+        if (!cancelled && goodsData) {
+          setDbGoods(goodsData);
+        }
+      } catch (err) {
+        console.error("Failed to load goods master:", err);
+      }
+    }
+    async function initCompanies() {
+      try {
+        const response = await fetch("/api/erp/companies?limit=100");
+        const res = await response.json();
+        const companiesData = res?.data?.companies || res?.companies;
+        if (!cancelled && companiesData) {
+          setDbCompanies(companiesData);
+        }
+      } catch (err) {
+        console.error("Failed to load companies:", err);
+      }
+    }
+    async function initAccounts() {
+      try {
+        const response = await fetch("/api/erp/accounting/accounts?limit=1000");
+        const res = await response.json();
+        if (!cancelled && res?.data?.accounts) {
+          setDbAccounts(res.data.accounts.map(mapEnterpriseAccount));
+        }
+      } catch (err) {
+        console.error("Failed to load accounts:", err);
+      } finally {
+        if (!cancelled) setDbAccountsLoading(false);
+      }
+    }
+    async function initPorts() {
+      try {
+        const [loadRes, recRes] = await Promise.all([
+          fetch("/api/erp/ports/loading?all=true&limit=500"),
+          fetch("/api/erp/ports/received?all=true&limit=500")
+        ]);
+        const loadJson = await loadRes.json();
+        const recJson = await recRes.json();
+        const loadPorts = loadJson?.data?.ports || loadJson?.ports;
+        const recPorts = recJson?.data?.ports || recJson?.ports;
+        if (!cancelled && loadPorts) {
+          setDbLoadingPorts(loadPorts);
+        }
+        if (!cancelled && recPorts) {
+          setDbReceivedPorts(recPorts);
+        }
+      } catch (err) {
+        console.error("Failed to load ports master data:", err);
+      }
+    }
+    initSession();
+    initCountries();
+    initAllCountries();
+    initGoods();
+    initAccounts();
+    initPorts();
+    initCompanies();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadScopedAccounts() {
+      try {
+        const params = new URLSearchParams({ limit: "500" });
+        if (form.countryId) params.set("countryId", form.countryId);
+        if (form.countryBranchId) params.set("countryBranchId", form.countryBranchId);
+        if (form.cityBranchId) params.set("cityBranchId", form.cityBranchId);
+        params.set("limit", "1000");
+        const response = await fetch(`/api/erp/accounting/accounts?${params.toString()}`, { cache: "no-store" });
+        const res = await response.json();
+        if (!cancelled && res?.data?.accounts) {
+          setDbAccounts(res.data.accounts.map(mapEnterpriseAccount));
+        }
+      } catch (err) {
+        console.error("Failed to load scoped accounts:", err);
+      }
+    }
+    loadScopedAccounts();
+    return () => { cancelled = true; };
+  }, [form.countryId, form.countryBranchId, form.cityBranchId, isSuperAdmin]);
+
+  // Load Main Branches (Country Branches) when countryId changes
+  useEffect(() => {
+    let cancelled = false;
+    const countryId = form.countryId;
+    if (!countryId) {
+      setMainBranches([]);
+      return;
+    }
+    async function loadCountryBranches() {
+      try {
+        const res = await fetch(`/api/branch-management/country-branches?countryId=${encodeURIComponent(countryId)}`).then(r => r.json());
+        const list = Array.isArray(res?.countryBranches) ? res.countryBranches : [];
+        if (!cancelled) {
+          setMainBranches(list);
+          if (list.length === 1 && !form.countryBranchId) {
+            setForm(prev => ({ ...prev, countryBranchId: list[0].id }));
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load country branches:", err);
+      }
+    }
+    loadCountryBranches();
+    return () => {
+      cancelled = true;
+    };
+  }, [form.countryId]);
+
+  // Load City Branches when countryId or countryBranchId changes
+  useEffect(() => {
+    let cancelled = false;
+    const countryId = form.countryId;
+    const countryBranchId = form.countryBranchId;
+    if (!countryId) {
+      setCityBranches([]);
+      return;
+    }
+    async function loadCityBranches() {
+      try {
+        const queryParams = new URLSearchParams({ countryId });
+        if (countryBranchId) queryParams.append("countryBranchId", countryBranchId);
+        const res = await fetch(`/api/branch-management/city-branches?${queryParams.toString()}`).then(r => r.json());
+        const list = Array.isArray(res?.cityBranches) ? res.cityBranches : [];
+        if (!cancelled) {
+          setCityBranches(list);
+          if (list.length === 1 && !form.cityBranchId) {
+            setForm(prev => ({ ...prev, cityBranchId: list[0].id }));
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load city branches:", err);
+      }
+    }
+    loadCityBranches();
+    return () => {
+      cancelled = true;
+    };
+  }, [form.countryId, form.countryBranchId]);
+
+  // Sync Branch Code and Name for Branch Serial display and generate formatted Bill No
+  useEffect(() => {
+    let selectedBranch = null;
+    if (form.cityBranchId && cityBranches.length > 0) {
+      selectedBranch = cityBranches.find(cb => cb.id === form.cityBranchId);
+    } else if (form.countryBranchId && mainBranches.length > 0) {
+      selectedBranch = mainBranches.find(b => b.id === form.countryBranchId);
+    }
+
+    if (selectedBranch) {
+      const codeBase = selectedBranch.code || "BR";
+      const suffix = form.salesOrderNo ? form.salesOrderNo.split("-").pop() : "0000";
+
+      const parts = codeBase.split("-");
+      let serialPrefix = codeBase;
+      let cityCode = "CITY";
+      if (parts.length >= 3) {
+        serialPrefix = parts.slice(0, 2).join("-");
+        cityCode = parts[1];
+      } else if (parts.length === 2) {
+        cityCode = parts[1];
+      }
+
+      const country = transitCountryOptions.find(c => String(c.id) === String(form.countryId));
+      const countryPrefix = country ? (country.iso2 || country.name.substring(0, 2).toUpperCase()) : "CT";
+
+      setForm(prev => {
+        const newCode = `${serialPrefix}-${suffix}`;
+        const newName = selectedBranch.name || selectedBranch.city_name || prev.branchName;
+        const branchNameWord = newName ? newName.split(" ")[0].toUpperCase() : cityCode;
+        const newBillNo = `${branchNameWord}-${suffix}`;
+
+        if (prev.branchCode === newCode && prev.branchName === newName && prev.billNo === newBillNo && prev.branchCountry === (country?.name || "")) return prev;
+        return {
+          ...prev,
+          branchName: newName,
+          branchCode: newCode,
+          billNo: newBillNo,
+          branchCountry: country ? country.name : ""
+        };
+      });
+    }
+  }, [form.countryId, form.countryBranchId, form.cityBranchId, mainBranches, cityBranches, form.salesOrderNo, transitCountryOptions]);
+
+  // Set initial scope fields for scoped users
+  useEffect(() => {
+    if (!activeSession) return;
+    if (activeSession.isSuperAdmin || activeSession.scopes?.isSuperAdmin) return;
+
+    const cid = activeSession.countryIds?.[0] || activeSession.scopes?.countryIds?.[0] || "";
+    const bid = activeSession.countryBranchIds?.[0] || activeSession.scopes?.countryBranchIds?.[0] || "";
+    const cbid = activeSession.cityBranchIds?.[0] || activeSession.scopes?.cityBranchIds?.[0] || "";
+
+    setForm(prev => {
+      const next = {
+        ...prev,
+        countryId: prev.countryId || cid,
+        countryBranchId: prev.countryBranchId || bid,
+        cityBranchId: prev.cityBranchId || cbid
+      };
+      return next.countryId === prev.countryId && next.countryBranchId === prev.countryBranchId && next.cityBranchId === prev.cityBranchId ? prev : next;
+    });
+  }, [activeSession?.id, activeSession?.userId, activeSession?.countryIds?.[0], activeSession?.countryBranchIds?.[0], activeSession?.cityBranchIds?.[0], activeSession?.scopes?.countryIds?.[0], activeSession?.scopes?.countryBranchIds?.[0], activeSession?.scopes?.cityBranchIds?.[0], activeSession?.isSuperAdmin, activeSession?.scopes?.isSuperAdmin]);
+
+  // Overlay AI-extracted values from the reviewed document-intake draft. Runs after
+  // any existing-order load below so the reviewed AI values are what the user edits.
+  // Serial numbers (SO No / Bill No) are always assigned by the server — never
+  // overwritten from the draft here.
+  useEffect(() => {
+    if (!intake.draft) return;
+    const p = intake.payload || {};
+    setForm((prev) => {
+      const next = { ...prev };
+      const contractRef = p.salesContractNo ?? p.invoiceNo ?? p.salesOrderNo;
+      if (contractRef) next.salesContractNo = String(contractRef);
+      if (p.orderDate) next.salesDate = String(p.orderDate);
+      if (p.currencyCode) {
+        const cur = String(p.currencyCode).toUpperCase().slice(0, 3);
+        next.currencyType = cur;
+        next.salesCurrency = cur;
+      }
+      if (p.exchangeRate !== undefined && p.exchangeRate !== null && p.exchangeRate !== "") {
+        const rate = Number(p.exchangeRate);
+        if (!Number.isNaN(rate)) next.exchangeRate = rate;
+      }
+      if (p.customerName) {
+        next.customerName = String(p.customerName);
+        // The visible "Customer Account (DR)" search field reads
+        // customerAccountName, not customerName — the field above only feeds
+        // the save payload's customer_name text column. Without this, the
+        // extracted customer never actually appeared on screen (confirmed
+        // live: AI Document Intake -> Sales draft handoff showed "N/A").
+        // Name-only, matching this effect's own "best-effort, human still
+        // reviews and selects the real linked account" comment above — it is
+        // not a customerAccountId/customerAccountLedgerId link.
+        next.customerAccountName = String(p.customerName);
+      }
+      // Accounts the reviewer picked in Document Intake are REAL enterprise_accounts ids — carry the id and
+      // the display fields the account picker would have set, so the form shows (and saves) that account.
+      if (p.customerAccountId) {
+        next.customerAccountId = String(p.customerAccountId);
+        if (p.customerAccountNo) next.customerAccountNo = String(p.customerAccountNo);
+        if (p.customerAccountName) next.customerAccountName = String(p.customerAccountName);
+        if (p.customerAccountCurrency) next.customerAccountCurrency = String(p.customerAccountCurrency);
+        if (p.customerAccountKind) next.customerAccountKind = String(p.customerAccountKind);
+        if (p.customerId) next.customerId = String(p.customerId);
+      }
+      if (p.salesAccountId) next.salesAccountId = String(p.salesAccountId);
+      if (p.goodsName && "goodsName" in prev) next.goodsName = String(p.goodsName);
+      if (p.hsCode && "hsCode" in prev) next.hsCode = String(p.hsCode);
+      if (p.paymentDueDate) next.paymentDate = String(p.paymentDueDate);
+      if (p.deliveryTerms) next.deliveryTerm = String(p.deliveryTerms);
+      if (p.paymentTerms) {
+        next.paymentDaysAndMethodDetails = String(p.paymentTerms);
+        // The visible "Invoice / Payment Select" dropdown reads form.paymentType
+        // (options: Advance Payment/Invoice/Final Payment/Credit) — same class of
+        // bug as customerAccountName above. Only apply when the extracted value is
+        // one of the real option strings; otherwise leave the field for the human
+        // to choose rather than silently setting an invalid/blank selection.
+        const validPaymentTypes = ["Advance Payment", "Invoice", "Final Payment", "Credit"];
+        const matchedType = validPaymentTypes.find((v) => v.toLowerCase() === String(p.paymentTerms).trim().toLowerCase());
+        if (matchedType) next.paymentType = matchedType;
+      }
+      return next;
+    });
+  }, [intake.draft]);
+
+  // Load existing sales order if salesOrderNo or id is in URL query parameters
+  // (or the human chose "append to / update an existing sales order" during the
+  // AI Document Intake review — intake.linkedSourceId reuses this same load path).
+  useEffect(() => {
+    if (!activeSession) return;
+    const soNo = searchParams.get("salesOrderNo");
+    const orderId = searchParams.get("id") || searchParams.get("salesOrderId") || searchParams.get("salesId") || searchParams.get("orderId") || intake.linkedSourceId || undefined;
+    if (!soNo && !orderId) return;
+    setIsFormOpen(true);
+
+    let cancelled = false;
+
+    async function loadSO() {
+      setSavingOrder(true);
+      setSaveMessage(t(lang, "sales.loading_order_details", "Loading sales order details..."));
+      try {
+        let soData = null;
+        if (orderId) {
+          const res = await fetch(`/api/erp/sales/orders/${encodeURIComponent(orderId)}`, {
+            credentials: "same-origin"
+          });
+          const payload = await res.json().catch(() => ({}));
+          if (res.ok && payload.ok) {
+            soData = payload.data?.order ?? payload.order ?? null;
+          } else {
+            throw new Error(payload?.error?.message || payload?.error || t(lang, "sales.err_load_sales_order_by_id", "Failed to load sales order by ID."));
+          }
+        } else if (soNo) {
+          soData = await lookupSalesBookingReport(
+            soNo,
+            activeSession.countryIds?.[0] || activeSession.scopes?.countryIds?.[0] || null,
+            activeSession.countryBranchIds?.[0] || activeSession.scopes?.countryBranchIds?.[0] || null,
+            activeSession.cityBranchIds?.[0] || activeSession.scopes?.cityBranchIds?.[0] || null,
+            isSuperAdmin
+          );
+        }
+
+        if (cancelled) return;
+
+        if (soData) {
+          const rawFormData = soData.form_data || {};
+          const loadedForm = rawFormData.form || {};
+          const loadedGoods = rawFormData.goodsEntries || [];
+
+          const soNumber = soData.sales_order_no || soData.salesBookingOrderNumber || loadedForm.salesOrderNo || soNo || "";
+          const contractNumber = soData.sales_contract_no || soData.salesContractNo || loadedForm.salesContractNo || "";
+
+          setSavedOrderId(soData.id || orderId || "");
+          setSavedOrderNo(soNumber);
+
+          const mergedCountryId = loadedForm.countryId || soData.country_id || soData.countryId || "";
+          const mergedCountryBranchId = loadedForm.countryBranchId || soData.country_branch_id || soData.countryBranchId || soData.branch_id || soData.branchId || "";
+          const mergedCityBranchId = loadedForm.cityBranchId || soData.city_branch_id || soData.cityBranchId || "";
+
+          setForm((prev) => ({
+            ...prev,
+            ...loadedForm,
+            countryId: mergedCountryId,
+            countryBranchId: mergedCountryBranchId,
+            cityBranchId: mergedCityBranchId,
+            salesOrderNo: soNumber,
+            salesContractNo: contractNumber,
+          }));
+          setScopeConfirmed(true);
+
+          if (loadedForm.customerAccountName || loadedForm.customerAccountNo) {
+            setPurchaseSearch(loadedForm.customerAccountName || loadedForm.customerAccountNo || "");
+          }
+          if (loadedForm.salesAccountName || loadedForm.salesAccountNo) {
+            setSalesSearch(loadedForm.salesAccountName || loadedForm.salesAccountNo || "");
+          }
+
+          if (Array.isArray(loadedGoods) && loadedGoods.length) {
+            setGoodsEntries(loadedGoods);
+          }
+
+          setIsTransferred(false);
+          setTransferredData(null);
+          setActiveTab("booking");
+          setSaveMessage(t(lang, "sales.order_loaded_success", "Sales order loaded successfully."));
+        } else {
+          setSaveMessage(`Sales order not found.`);
+        }
+      } catch (err) {
+        if (cancelled) return;
+        setSaveMessage(err instanceof Error ? err.message : "Error loading sales order.");
+      } finally {
+        if (!cancelled) setSavingOrder(false);
+      }
+    }
+
+    loadSO();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    searchParams.get("salesOrderNo"),
+    searchParams.get("id"),
+    searchParams.get("salesOrderId"),
+    searchParams.get("salesId"),
+    searchParams.get("orderId"),
+    intake.linkedSourceId,
+    !!activeSession
+  ]);
+
+  const validateStep1Ownership = () => {
+    if (!form.countryId) {
+      alert(t(lang, "purchase.wiz_err_country_req", "Please select a Country before proceeding."));
+      return false;
+    }
+    if (!form.countryBranchId && !form.branchCode && !form.branchName) {
+      alert(t(lang, "purchase.wiz_err_branch_req", "Please select a Branch before proceeding."));
+      return false;
+    }
+    if (!form.customerAccountNo && !form.customerAccountId) {
+      alert(t(lang, "sales.wiz_err_customer_acct_req", "Please select a Customer Account (DR) before proceeding."));
+      return false;
+    }
+    if (!form.salesAccountNo && !form.salesAccountId) {
+      alert(t(lang, "sales.wiz_err_sales_acct_req", "Please select a Sales Account (CR) before proceeding."));
+      return false;
+    }
+    return true;
+  };
+
+  const buildSalesOrderPayload = (salesStatus = "Draft", customOrderNo = null) => {
+    const usdRate = Number(form.exchangeRate || 1);
+
+    const customerAccount = dbAccounts.find(acc => acc.accountCode === form.customerAccountNo);
+    const salesAccount = dbAccounts.find(acc => acc.accountCode === form.salesAccountNo);
+
+    return {
+      originalLanguage: ["en", "ur", "ar", "fa", "ps"].includes(document.documentElement.lang)
+        ? document.documentElement.lang
+        : "en",
+      countryId: form.countryId || null,
+      countryBranchId: form.countryBranchId || null,
+      cityBranchId: form.cityBranchId || null,
+      // customer_account_id FKs to enterprise_accounts(id); form.salesAccountLedgerId
+      // is the OTHER party's (Sales/CR account) id and form.customerAccountLedgerId is
+      // a ledgers.id — neither belongs here. This previously sent the wrong party's id
+      // into an enterprise_accounts FK, failing with FK_VIOLATION on save.
+      customerAccountId: form.customerAccountId || null,
+      customerLedgerId: form.customerAccountLedgerId || null,
+      // undefined ⇒ server assigns the real sequence (nextTransactionSerial); never a random client value
+      salesOrderNo: (customOrderNo || form.salesOrderNo || undefined),
+      salesContractNo: form.salesContractNo || undefined,
+      orderDate: form.salesDate || new Date().toISOString().slice(0, 10),
+      customerName: form.customerAccountName || null,
+      accountNumber: form.customerAccountNo || null,
+      manualReferenceNumber: form.customerAccountManualReferenceNumber || null,
+      customerNumber: customerAccount?.customerNumber || null,
+      quantity: reportTotals.totalQty || 0,
+      totalWeight: reportTotals.totalNet || 0,
+      currencyCode: form.salesCurrency || "USD",
+      exchangeRate: usdRate,
+      orderTotal: reportTotals.grandFinal || reportTotals.grandPrimaryFinal || 0,
+      // Mirrors purchase-order-wizard.jsx: orderTotal above is already converted to the
+      // local/base currency; these three fields separately record the true
+      // original-currency total (and its local-currency counterpart) so the transfer
+      // route always has an unambiguous source for the amount to hand to the posting
+      // engine, instead of re-deriving it from an already-converted figure.
+      totalGoodsOriginal: reportTotals.grandPrimaryFinal || 0,
+      totalGoodsLocal: reportTotals.grandFinal || 0,
+      totalGoodsUsd: reportTotals.grandPrimaryFinal || 0,
+      paidAmount: isTransferred ? (reportTotals.grandFinal || reportTotals.grandPrimaryFinal || 0) : 0,
+      remainingAmount: isTransferred ? 0 : (reportTotals.grandFinal || reportTotals.grandPrimaryFinal || 0),
+      salesStatus: salesStatus.toLowerCase(),
+      paymentStatus: isTransferred ? "completed" : "pending",
+      deliveryStatus: "pending",
+      formData: {
+        form,
+        totals: reportTotals,
+        goodsEntries: goodsEntries,
+        reports: reportsList,
+        workflow: {
+          currentStep: isTransferred ? "sales_transfer_payment" : "booking_sales_order",
+          nextStep: isTransferred ? "Post Payment" : "Booking Confirm",
+          bookingStatus: "Saved",
+          confirmationStatus: isTransferred ? "Confirmed" : "Pending",
+          journalStatus: isTransferred ? "Posted" : "Pending",
+          paymentStatus: isTransferred ? "completed" : "Pending",
+          savedAt: new Date().toISOString(),
+        },
+        savedAt: new Date().toISOString()
+      }
+    };
+  };
+
+  const handleSaveSalesOrder = async (shouldClose = false) => {
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
+    setSavingOrder(true);
+    setSaveMessage("");
+    try {
+      const nextOrderNo = savedOrderId ? String(form.salesOrderNo || "").trim() : "";
+      const response = await fetch(savedOrderId ? `/api/erp/sales/orders/${savedOrderId}` : "/api/erp/sales/orders", {
+        method: savedOrderId ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(buildSalesOrderPayload("Draft", nextOrderNo))
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.ok) {
+        const errDetails = payload?.error?.details ? JSON.stringify(payload.error.details) : "";
+        throw new Error(`${payload?.error?.message || payload?.error || t(lang, "sales.err_sales_order_save", "Sales order failed to save.")} ${errDetails}`);
+      }
+      const returnedOrderId = payload.data?.salesOrderId || savedOrderId || payload.data?.id;
+      const returnedOrderNo = payload.data?.salesOrderNo || savedOrderNo || form.salesOrderNo;
+      setSavedOrderId(returnedOrderId || "");
+      setSavedOrderNo(returnedOrderNo);
+      if (returnedOrderId && intake.draft) await intake.consume(String(returnedOrderId));
+      setSaveMessage(`Successfully saved Sales Order: ${returnedOrderNo}.`);
+      setRegisterRefreshKey((key) => key + 1);
+
+      if (shouldClose) {
+        setIsFormOpen(false);
+        handleReset();
+        if (searchParams.get("id") || searchParams.get("salesOrderNo")) {
+          router.push("/dashboard/sales/sales-booking-journal-report");
+        }
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Error saving order.";
+      setSaveMessage(msg);
+      alert(msg);
+    } finally {
+      setSavingOrder(false);
+      isSubmittingRef.current = false;
+    }
+  };
+
+  const handleTransfer = async () => {
+    setSavingOrder(true);
+    setSaveMessage("");
+    try {
+      const nextOrderNo = savedOrderId ? String(form.salesOrderNo || "").trim() : "";
+      const paymentRoute = resolveSalesBookingPaymentRoute(form.paymentType || "Advance Payment");
+      const transferPayload = buildSalesOrderPayload("Pending", nextOrderNo);
+      const response = await fetch(savedOrderId ? `/api/erp/sales/orders/${savedOrderId}` : "/api/erp/sales/orders", {
+        method: savedOrderId ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(transferPayload)
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.ok) {
+        const errDetails = payload?.error?.details ? JSON.stringify(payload.error.details) : "";
+        throw new Error(`${payload?.error?.message || payload?.error || t(lang, "sales.err_sales_order_save", "Sales order failed to save.")} ${errDetails}`);
+      }
+      const returnedOrderId = payload.data?.salesOrderId || savedOrderId || payload.data?.id;
+      const returnedOrderNo = payload.data?.salesOrderNo || savedOrderNo || form.salesOrderNo;
+
+      if (returnedOrderId) {
+        const transferResponse = await fetch(`/api/erp/sales/orders/${returnedOrderId}/transfer`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            paymentKind: paymentRoute.paymentKind,
+            paymentType: form.paymentType || paymentRoute.paymentLabel
+          })
+        });
+        const transferPayloadData = await transferResponse.json().catch(() => ({}));
+        if (!transferResponse.ok || !transferPayloadData.ok) {
+          throw new Error(transferPayloadData?.error?.message || transferPayloadData?.error || t(lang, "purchase.wiz_err_roznamcha_transfer", "Roznamcha/Ledger Transfer failed."));
+        }
+      }
+
+      setSavedOrderId(returnedOrderId || "");
+      setSavedOrderNo(returnedOrderNo);
+      if (returnedOrderId && intake.draft) await intake.consume(String(returnedOrderId));
+      setSaveMessage(`Transferred Sales Order ${returnedOrderNo} to Journal / Payment and ledger posting.`);
+      setTransferredData(payload.data || { salesOrderNo: returnedOrderNo });
+      setIsTransferred(true);
+      setRegisterRefreshKey((key) => key + 1);
+
+      window.location.href = `${paymentRoute.path}?salesOrderNo=${encodeURIComponent(returnedOrderNo)}`;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Error saving order.";
+      setSaveMessage(msg);
+      alert(msg);
+    } finally {
+      setSavingOrder(false);
+    }
+  };
+
+  const handleOpenA4Report = (autoPrint = false) => {
+    const firstGoodName = goodsEntries[0]?.goodsName || "Cargo";
+    const firstQtyUnit = translateOptionLabel(lang, goodsEntries[0]?.qtyName || "BAGS");
+    const rawRemarks = form.remarks || form.orderReportRemarks || "";
+
+    const reportData = {
+      id: savedOrderId || "new-temp",
+      salesBookingOrderNumber: form.salesOrderNo,
+      salesDate: form.salesDate,
+      bookingDate: form.salesDate,
+      salesAccountName: form.salesAccountName,
+      salesAccountNumber: form.salesAccountNo,
+      purchaseAccountName: form.customerAccountName,
+      purchaseAccountNumber: form.customerAccountNo,
+      supplierName: form.salesAccountName || "N/A",
+      customerName: form.customerAccountName || "N/A",
+      productName: firstGoodName,
+      goodsDescription: rawRemarks,
+      quantity: reportTotals.totalQty,
+      unit: firstQtyUnit,
+      totalWeight: reportTotals.totalNet,
+      containerCount: form.containerCount || 0,
+      salesRate: avgRateKg,
+      totalSalesAmount: reportTotals.grandPrimaryFinal,
+      currency: form.currencyType,
+      status: isTransferred ? "Posted" : "Pending",
+      paymentStatus: isTransferred ? "completed" : "pending",
+      branchName: form.branchName || "",
+      countryName: form.branchCountry || "",
+      createdAt: new Date().toISOString(),
+      totalGrossWeight: reportTotals.totalGross,
+      totalNetWeight: reportTotals.totalNet,
+      salesAmount: reportTotals.grandPrimaryFinal,
+      finalAmount: reportTotals.grandFinal,
+      form_data: { form, goodsEntries },
+      audit: {
+        userName: form.userName || "",
+        userId: form.userId || "",
+        branchCode: form.branchCode || ""
+      }
+    };
+
+    openSalesA4ReportWindow({
+      title: "Sales Booking Order",
+      subtitle: "DGT Accounts Sales Registry",
+      salesData: reportData,
+      autoPrint
+    });
+  };
+
+  const handleReset = () => {
+    setForm({ ...DEFAULT_FORM });
+    setGoodsEntries([]);
+    setReportsList([]);
+    setSavedOrderId("");
+    setSavedOrderNo("");
+    setIsTransferred(false);
+    setTransferredData(null);
+    setSaveMessage(t(lang, "sales.inputs_cleared_msg", "All inputs and goods listings cleared."));
+  };
+
+  const handleNewReportSubmit = (e) => {
+    e.preventDefault();
+    if (!newReportForm.name.trim()) {
+      alert(t(lang, "sales.report_name_required_alert", "Report name is required."));
+      return;
+    }
+    const newReport = {
+      id: crypto.randomUUID(),
+      name: newReportForm.name,
+      description: newReportForm.description,
+      notes: newReportForm.notes,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    const updatedReports = [...reportsList, newReport];
+    setReportsList(updatedReports);
+    setSelectedReportId(newReport.id);
+    setNewReportForm({ name: "", description: "", notes: "" });
+    setIsNewReportModalOpen(false);
+
+    if (savedOrderId) {
+      setTimeout(() => {
+        handleSaveSalesOrder(false);
+      }, 100);
+    }
+  };
+
+  const handleDeleteReport = (id) => {
+    if (!window.confirm(t(lang, "sales.confirm_delete_report", "Are you sure you want to delete this report?"))) return;
+    const updatedReports = reportsList.filter(r => r.id !== id);
+    setReportsList(updatedReports);
+    if (selectedReportId === id) setSelectedReportId("");
+    if (savedOrderId) {
+      setTimeout(() => {
+        handleSaveSalesOrder(false);
+      }, 100);
+    }
+  };
+
+  const handleAddGoodsEntry = async () => {
+    const searchName = (form.goodsName || "").trim().toUpperCase();
+    if (!searchName) {
+      alert(t(lang, "sales.select_enter_goods_name_alert", "Please select or enter Goods Name before adding an item to the list."));
+      return;
+    }
+    const selectedGood = dbGoods.find(g =>
+      (g.goods_name || g.goodsName || "").trim().toUpperCase() === searchName
+    );
+    const sizeStr = (form.size || "").trim();
+    const brandStr = (form.brand || "").trim();
+
+    if (selectedGood && sizeStr && brandStr) {
+      const hasVar = (selectedGood.variations || []).some(v => 
+        (v.size || "").trim().toUpperCase() === sizeStr.toUpperCase() &&
+        (v.brand || "").trim().toUpperCase() === brandStr.toUpperCase()
+      );
+      if (!hasVar) {
+        fetch("/api/erp/goods/variations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            goodsId: selectedGood.id,
+            size: sizeStr.toUpperCase(),
+            brand: brandStr.toUpperCase()
+          })
+        }).then(res => res.json())
+          .then(data => {
+            if (data.ok) {
+              fetch(`/api/erp/goods?limit=500&lang=${lang}`)
+                .then(r => r.json())
+                .then(reloadRes => {
+                  const goodsData = reloadRes?.data?.goods || reloadRes?.goods;
+                  if (goodsData) setDbGoods(goodsData);
+                }).catch(() => {});
+            }
+          }).catch(() => {});
+      }
+    }
+
+    const calculated = calculateItemTotals(form);
+    setGoodsEntries((prev) => [
+      ...prev,
+      {
+        allotName: form.allotName || `ALT-${Math.floor(1000 + Math.random() * 9000)}`,
+        goodsName: form.goodsName,
+        size: form.size || "-",
+        brand: form.brand || "-",
+        origin: form.origin || "-",
+        hsCode: form.hsCode || "-",
+        qtyName: form.qtyName || "BAGS",
+        qtyNo: Number(form.qtyNo || 0),
+        qtyKgs: Number(form.qtyKgs || 0),
+        grossWeight: calculated.grossWeight,
+        emptyKgs: Number(form.emptyKgs || 0),
+        netWeight: calculated.netWeight,
+        priceType: form.priceType || "P/KGs",
+        divideType: form.divideType || "D/KGs",
+        divideWeight: Number(form.divideWeight || 1),
+        coursePrice: Number(form.coursePrice || 0),
+        currencyType: form.currencyType || "USD",
+        purchaseCurrency: form.purchaseCurrency || form.currencyType || "USD",
+        exchangeRate: Number(form.exchangeRate || 1),
+        totalAmount: form.manualTotalAmount !== undefined && form.manualTotalAmount !== "" ? Number(form.manualTotalAmount) : calculated.totalAmount,
+        op: form.operator || "*",
+        finalAmount: form.manualFinalAmount !== undefined && form.manualFinalAmount !== "" ? Number(form.manualFinalAmount) : calculated.finalAmount
+      }
+    ]);
+    setSaveMessage(t(lang, "sales.item_added_draft_msg", "Item added to live report draft list."));
+    // Clear/reset item fields
+    setForm((prev) => ({
+      ...prev,
+      goodsName: "",
+      size: "",
+      brand: "",
+      origin: "",
+      hsCode: "",
+      qtyNo: 0,
+      qtyKgs: 0,
+      emptyKgs: 0,
+      netWeight: "",
+      coursePrice: 0,
+      allotName: `ALT-${Math.floor(4424 + Math.random() * 1000)}`,
+      manualTotalAmount: "",
+      manualFinalAmount: ""
+    }));
+  };
+
+  const handleViewGoodsEntry = (index) => {
+    const row = goodsEntries[index];
+    alert(`View Item:
+
+Goods: ${row.goodsName}
+Brand: ${row.brand}
+Size: ${row.size}
+Origin: ${row.origin}
+Qty: ${row.qtyNo} ${row.qtyName}
+Price: ${row.coursePrice} ${row.currencyType}
+Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
+  };
+
+  const handleEditGoodsEntry = (index) => {
+    const row = goodsEntries[index];
+    setForm((prev) => ({
+      ...prev,
+      goodsName: row.goodsName,
+      size: row.size,
+      brand: row.brand,
+      origin: row.origin,
+      hsCode: row.hsCode,
+      qtyName: row.qtyName,
+      qtyNo: row.qtyNo,
+      qtyKgs: row.qtyKgs,
+      emptyKgs: row.emptyKgs,
+      netWeight: row.netWeight,
+      priceType: row.priceType,
+      divideType: row.divideType,
+      divideWeight: row.divideWeight,
+      coursePrice: row.coursePrice,
+      currencyType: row.currencyType,
+      salesCurrency: row.purchaseCurrency || row.salesCurrency,
+      exchangeRate: row.exchangeRate,
+      operator: row.op,
+      allotName: row.allotName,
+      manualTotalAmount: row.totalAmount,
+      manualFinalAmount: row.finalAmount
+    }));
+    setGoodsEntries((prev) => prev.filter((_, idx) => idx !== index));
+    setActiveTab("goods");
+    setSaveMessage(t(lang, "sales.item_moved_edit_msg", "Item moved to form for editing."));
+  };
+
+  const handleAddNewCountry = async () => {
+    const { name } = newCountryForm;
+    if (!name.trim()) {
+      setNewCountryError(t(lang, "purchase.wiz_country_name_required", "Country name is required."));
+      return;
+    }
+    setNewCountryLoading(true);
+    setNewCountryError("");
+    try {
+      const trimmed = name.trim();
+      const iso2 = trimmed.slice(0, 2).toUpperCase();
+      const iso3 = trimmed.slice(0, 3).toUpperCase();
+      const code = iso2.toLowerCase();
+      const response = await fetch("/api/erp/locations/countries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: trimmed,
+          iso2,
+          iso3,
+          currencyCode: "USD",
+          officialEmail: `official.${code}@dgtllc.com`,
+          adminEmail: `admin.${code}@dgtllc.com`,
+          whatsappNumber: null
+        })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.ok) {
+        throw new Error(payload?.error?.message || payload?.error || t(lang, "purchase.wiz_err_create_country", "Failed to create country."));
+      }
+      const created = payload.data?.country;
+      if (created) {
+        setAllCountries(prev => [...prev, created]);
+        if (newCountryForm.targetField === "loadingCountry") {
+          setValue("loadingCountry", created.name);
+          setValue("originCountry", created.name);
+          setValue("origin", created.name);
+        } else if (newCountryForm.targetField === "receivingCountry") {
+          setValue("receivingCountry", created.name);
+          setValue("receivedCountry", created.name);
+          setValue("destinationCountry", created.name);
+        } else if (newGoodModal) {
+          setNewGoodForm(p => ({ ...p, originCountryId: created.id }));
+        } else if (customVariationModal) {
+          setCustomVariationForm(p => ({ ...p, originCountryId: created.id }));
+        } else {
+          setValue("origin", created.name);
+        }
+      }
+      const reloadRes = await fetch(`/api/erp/locations/countries?all=true&limit=500&lang=${lang}`).then(r => r.json()).catch(() => ({}));
+      const countriesData = reloadRes?.data?.countries || reloadRes?.countries;
+      if (countriesData) setAllCountries(countriesData);
+      setNewCountryModal(false);
+      setNewCountryForm({ name: "" });
+      setSaveMessage(`Country "${trimmed}" saved to master.`);
+    } catch (err) {
+      setNewCountryError(err instanceof Error ? err.message : t(lang, "purchase.wiz_err_create_country", "Failed to create country."));
+    } finally {
+      setNewCountryLoading(false);
+    }
+  };
+
+  const handleAddNewGood = async () => {
+    const { goodsName, chsCode } = newGoodForm;
+    if (!goodsName.trim() || !chsCode.trim()) {
+      setNewGoodError(t(lang, "purchase.wiz_goods_hscode_required", "Goods name and HS code are required."));
+      return;
+    }
+    setNewGoodLoading(true);
+    setNewGoodError("");
+    try {
+      const response = await fetch("/api/erp/goods", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          goodsName: goodsName.trim().toUpperCase(),
+          chsCode: chsCode.trim(),
+          originalLanguage: "en"
+        })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.ok) {
+        throw new Error(payload?.error?.message || payload?.error || t(lang, "purchase.wiz_err_create_good", "Failed to create good."));
+      }
+      const reloadRes = await fetch(`/api/erp/goods?limit=500&lang=${lang}`).then(r => r.json()).catch(() => ({}));
+      const goodsData = reloadRes?.data?.goods || reloadRes?.goods;
+      if (goodsData) setDbGoods(goodsData);
+      setValue("goodsName", goodsName.trim().toUpperCase());
+      setValue("hsCode", chsCode.trim());
+      setNewGoodModal(false);
+      setNewGoodForm({ goodsName: "", chsCode: "" });
+      setSaveMessage(`Good "${goodsName.trim().toUpperCase()}" saved to master.`);
+    } catch (err) {
+      setNewGoodError(err instanceof Error ? err.message : t(lang, "purchase.wiz_err_create_good", "Failed to create good."));
+    } finally {
+      setNewGoodLoading(false);
+    }
+  };
+
+  const openCreateAccountModal = (type) => {
+    const defaultName = type === "purchase"
+      ? (customerDetail ? (customerDetail.customer_name ? `${customerDetail.customer_name} (${customerDetail.company_name})` : customerDetail.customer_name) : (form.customerName || ""))
+      : (sellerDetail ? (sellerDetail.customer_name ? `${sellerDetail.customer_name} (${sellerDetail.company_name})` : sellerDetail.customer_name) : (form.customerName || ""));
+
+    setCreateAccountType(type);
+    setCreateAccountForm({
+      code: "AUTO",
+      name: defaultName,
+      kind: type === "purchase" ? "asset" : "revenue",
+      currency: form.currencyType || "USD",
+      parentId: "",
+      isControlAccount: false
+    });
+    setCreateAccountError("");
+    setCreateAccountModalOpen(true);
+  };
+
+  const handleAddNewAccount = async () => {
+    const { code, name, kind, currency, parentId, isControlAccount } = createAccountForm;
+    if (!name.trim() || !code.trim()) {
+      setCreateAccountError(t(lang, "purchase.wiz_account_name_code_required", "Account name and code are required."));
+      return;
+    }
+    setCreateAccountLoading(true);
+    setCreateAccountError("");
+
+    try {
+      const scope = form.cityBranchId ? "city_branch" : form.countryBranchId ? "main_branch" : form.countryId ? "country" : "super_admin";
+      const payload = {
+        scope,
+        countryId: form.countryId || null,
+        countryBranchId: form.countryBranchId || null,
+        cityBranchId: form.cityBranchId || null,
+        parentId: parentId || null,
+        customerId: form.customerId || null,
+        code: code.trim(),
+        manualReferenceNumber: null,
+        name: name.trim(),
+        kind,
+        currency: currency.toUpperCase(),
+        openingBalance: 0,
+        isControlAccount
+      };
+
+      const response = await fetch("/api/erp/accounting/accounts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const payloadData = await response.json().catch(() => ({}));
+      if (!response.ok || !payloadData.ok) {
+        throw new Error(payloadData?.error?.message || payloadData?.error || t(lang, "purchase.wiz_err_create_account", "Failed to create account."));
+      }
+
+      const reloadRes = await fetch("/api/erp/accounting/accounts?limit=1000").then(r => r.json()).catch(() => ({}));
+      if (reloadRes?.data?.accounts) {
+        const mapped = reloadRes.data.accounts.map(mapEnterpriseAccount);
+        setDbAccounts(mapped);
+
+        const createdAcc = mapped.find(acc => acc.accountCode === payloadData.accountCode);
+        if (createdAcc) {
+          applyAccountMaster(createAccountType, createdAcc);
+        } else {
+          applyAccountMaster(createAccountType, {
+            accountCode: payloadData.accountCode,
+            accountName: name.trim(),
+            cityBranchName: "",
+            ledgerCurrency: currency.toUpperCase(),
+            customerId: payload.customerId
+          });
+        }
+      }
+
+      setCreateAccountModalOpen(false);
+    } catch (err) {
+      setCreateAccountError(err instanceof Error ? err.message : t(lang, "purchase.wiz_err_create_account", "Failed to create account."));
+    } finally {
+      setCreateAccountSaving(false);
+    }
+  };
+
+  const handleSaveParamToMaster = async (paramType, paramValue) => {
+    const selectedGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
+    if (!selectedGood || !paramValue || !paramValue.trim()) return;
+
+    setSavingOrder(true);
+    setSaveMessage(`Saving ${paramType.replace("_", " ")} to Goods Master...`);
+    try {
+      const response = await fetch("/api/erp/goods/parameters", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          goodsId: selectedGood.id,
+          paramType,
+          paramValue: paramValue.trim(),
+          sortOrder: 1,
+          isActive: true
+        })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.ok) throw new Error(data?.error || data?.error?.message || "Failed to save parameter to master.");
+
+      const reloadRes = await fetch(`/api/erp/goods?limit=500&lang=${lang}`).then(r => r.json()).catch(() => ({}));
+      const goodsData = reloadRes?.data?.goods || reloadRes?.goods;
+      if (goodsData) setDbGoods(goodsData);
+
+      setSaveMessage(`Saved "${paramValue.trim()}" to Goods Master.`);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Error saving parameter.");
+    } finally {
+      setSavingOrder(false);
+      setTimeout(() => setSaveMessage(""), 3000);
+    }
+  };
+
+  const handleAddNewCompany = async () => {
+    const { name, legalName, baseCurrency } = createCompanyForm;
+    if (!name.trim()) {
+      setCreateCompanyError(t(lang, "purchase.wiz_company_name_required", "Company name is required."));
+      return;
+    }
+    setCreateCompanyLoading(true);
+    setCreateCompanyError("");
+
+    try {
+      const lang = (typeof document !== "undefined" ? document.documentElement.lang : "en") || "en";
+      const originalLanguage = ["ar", "ur", "fa", "ps"].includes(lang) ? lang : "en";
+
+      const response = await fetch("/api/erp/companies", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          legalName: legalName.trim() || name.trim(),
+          baseCurrency: baseCurrency || "USD",
+          originalLanguage
+        })
+      });
+
+      const payloadData = await response.json().catch(() => ({}));
+      if (!response.ok || !payloadData.ok) {
+        throw new Error(payloadData?.error?.message || payloadData?.error || t(lang, "purchase.wiz_err_create_company", "Failed to create company."));
+      }
+
+      const createdId = payloadData.companyId || payloadData.data?.companyId;
+      const finalName = name.trim();
+      const finalCode = "COM-" + finalName.slice(0, 3).toUpperCase();
+
+      const reloadRes = await fetch("/api/erp/companies?limit=100").then(r => r.json()).catch(() => ({}));
+      const companiesData = reloadRes?.data?.companies || reloadRes?.companies;
+      if (companiesData) {
+        setDbCompanies(companiesData);
+      } else {
+        setDbCompanies(prev => [...prev, { id: createdId, name: finalName, legal_name: legalName.trim() || finalName }]);
+      }
+
+      if (createCompanyType === "purchase") {
+        setValue("purchaseCompanyId", createdId);
+        setValue("purchaseCompanyName", finalName);
+        setValue("purchaseCompanyCode", finalCode);
+      } else {
+        setValue("salesCompanyId", createdId);
+        setValue("salesCompanyName", finalName);
+        setValue("salesCompanyCode", finalCode);
+      }
+
+      setCreateCompanyModalOpen(false);
+      setCreateCompanyForm({ name: "", legalName: "", baseCurrency: "USD" });
+      setSaveMessage(`Company "${finalName}" created successfully.`);
+    } catch (err) {
+      setCreateCompanyError(err instanceof Error ? err.message : t(lang, "purchase.wiz_err_create_company", "Failed to create company."));
+    } finally {
+      setCreateCompanyLoading(false);
+    }
+  };
+
+  const handleSaveCustomVariation = async () => {
+    const { goodsName, brand, size } = customVariationForm;
+    if (!brand.trim() || !size.trim()) {
+      alert(t(lang, "purchase.wiz_fill_brand_size", "Please fill both Brand and Size."));
+      return;
+    }
+
+    const searchName = goodsName?.trim().toUpperCase() || "";
+    const selectedGood = dbGoods.find(g => {
+      const gName = (g.goods_name || g.goodsName || "").trim().toUpperCase();
+      return gName === searchName;
+    });
+
+    let targetGoodsId = null;
+
+    if (!selectedGood) {
+      setSavingOrder(true);
+      setSaveMessage(`Creating new Good "${searchName}" in master...`);
+      try {
+        let baseCode = searchName.substring(0, 10).trim();
+        let finalCode = baseCode;
+        let suffix = 1;
+        while (dbGoods.some(g => (g.chs_code || g.chsCode || "").trim().toUpperCase() === finalCode.toUpperCase())) {
+          const suffixStr = `-${suffix}`;
+          finalCode = `${baseCode.substring(0, 10 - suffixStr.length)}${suffixStr}`;
+          suffix++;
+        }
+
+        const createRes = await fetch("/api/erp/goods", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            goodsName: searchName,
+            chsCode: finalCode,
+            originalLanguage: "en",
+            initialVariation: {
+              size: size.trim().toUpperCase(),
+              brand: brand.trim().toUpperCase()
+            }
+          })
+        });
+        const createData = await createRes.json().catch(() => ({}));
+        if (!createRes.ok || !createData.ok) {
+          throw new Error(createData?.error?.message || createData?.error || t(lang, "purchase.wiz_err_create_good_master", "Failed to create Good in master."));
+        }
+        targetGoodsId = createData.goodsId || createData.data?.goodsId;
+      } catch (err) {
+        setSavingOrder(false);
+        alert(err instanceof Error ? err.message : "Error creating Good.");
+        return;
+      }
+    } else {
+      targetGoodsId = selectedGood.id;
+      setSavingOrder(true);
+      setSaveMessage(`Registering variation ${brand.trim().toUpperCase()} - ${size.trim().toUpperCase()}...`);
+      try {
+        const response = await fetch("/api/erp/goods/variations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            goodsId: targetGoodsId,
+            size: size.trim().toUpperCase(),
+            brand: brand.trim().toUpperCase()
+          })
+        });
+
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || !payload.ok) {
+          throw new Error(payload?.error?.message || payload?.error || t(lang, "purchase.wiz_err_save_variation", "Failed to save variation."));
+        }
+      } catch (err) {
+        setSavingOrder(false);
+        alert(err instanceof Error ? err.message : "Error saving variation.");
+        return;
+      }
+    }
+
+    try {
+      const reloadRes = await fetch(`/api/erp/goods?limit=500&lang=${lang}`).then(r => r.json()).catch(() => ({}));
+      const goodsData = reloadRes?.data?.goods || reloadRes?.goods;
+      if (goodsData) {
+        setDbGoods(goodsData);
+      }
+
+      setValue("brand", brand.trim().toUpperCase());
+      setValue("size", size.trim().toUpperCase());
+
+      const good = goodsData?.find((g) => g.id === targetGoodsId);
+      if (good?.origin_country_id) {
+        const matching = transitCountryOptions.find(c => c.id === good.origin_country_id);
+        if (matching) {
+          setValue("origin", matching.name);
+        }
+      }
+      setCustomVariationModal(false);
+      setSaveMessage(`Variation "${brand.trim().toUpperCase()} - ${size.trim().toUpperCase()}" saved successfully.`);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Error saving variation.");
+    } finally {
+      setSavingOrder(false);
+    }
+  };
+
+  const handleUpdateHsCode = async () => {
+    const selectedGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
+    if (!selectedGood) return;
+    
+    setSavingOrder(true);
+    setSaveMessage(t(lang, "sales.updating_hs_code_msg", "Updating HS Code..."));
+    try {
+      const response = await fetch(`/api/erp/goods/${selectedGood.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chsCode: form.hsCode })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.ok) throw new Error(data?.error || data?.error?.message || t(lang, "purchase.wiz_err_update_hs_code", "Failed to update HS Code."));
+      
+      const reloadRes = await fetch(`/api/erp/goods?limit=500&lang=${lang}`).then(r => r.json()).catch(() => ({}));
+      const goodsData = reloadRes?.data?.goods || reloadRes?.goods;
+      if (goodsData) setDbGoods(goodsData);
+      
+      setSaveMessage(t(lang, "sales.hs_code_updated_msg", "HS Code updated successfully."));
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Error updating HS Code.");
+    } finally {
+      setSavingOrder(false);
+      setTimeout(() => setSaveMessage(""), 3000);
+    }
+  };
+
+  const handleAddNewVariationItem = async (type) => {
+    const selectedGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
+    if (!selectedGood) {
+       alert(`Please select a Good first before adding a new ${type}.`);
+       return;
+    }
+    
+    const value = window.prompt(`Enter New ${type === 'brand' ? 'Brand' : 'Size'}:`);
+    if (!value || !value.trim()) return;
+    
+    setSavingOrder(true);
+    setSaveMessage(`Saving new ${type}...`);
+    try {
+      const response = await fetch("/api/erp/goods/variations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          goodsId: selectedGood.id,
+          size: type === 'size' ? value.trim().toUpperCase() : (form.size || "-").trim().toUpperCase(),
+          brand: type === 'brand' ? value.trim().toUpperCase() : (form.brand || "-").trim().toUpperCase()
+        })
+      });
+
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.ok) {
+        throw new Error(payload?.error?.message || payload?.error || `Failed to save ${type}.`);
+      }
+      
+      const reloadRes = await fetch(`/api/erp/goods?limit=500&lang=${lang}`).then(r => r.json()).catch(() => ({}));
+      const goodsData = reloadRes?.data?.goods || reloadRes?.goods;
+      if (goodsData) setDbGoods(goodsData);
+      
+      setValue(type, value.trim().toUpperCase());
+      setSaveMessage(`New ${type} saved successfully.`);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : `Error saving ${type}.`);
+    } finally {
+      setSavingOrder(false);
+      setTimeout(() => setSaveMessage(""), 3000);
+    }
+  };
+
+  const handleAddNewLocationItem = async (type, targetField) => {
+    const value = window.prompt(`Enter New ${type === 'country' ? 'Country' : 'Port'} Name:`);
+    if (!value || !value.trim()) return;
+    const trimmed = value.trim();
+
+    setSavingOrder(true);
+    setSaveMessage(`Saving new ${type}...`);
+
+    try {
+      if (type === "country") {
+        const iso2 = trimmed.slice(0, 2).toUpperCase();
+        const iso3 = trimmed.slice(0, 3).toUpperCase();
+        const code = iso2.toLowerCase();
+        
+        const response = await fetch("/api/erp/locations/countries", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: trimmed,
+            iso2,
+            iso3,
+            currencyCode: "USD",
+            officialEmail: `official.${code}@dgtllc.com`,
+            adminEmail: `admin.${code}@dgtllc.com`,
+            whatsappNumber: null
+          })
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || !payload.ok) throw new Error(payload?.error?.message || payload?.error || t(lang, "purchase.wiz_err_create_country", "Failed to create country."));
+        
+        const reloadRes = await fetch(`/api/erp/locations/countries?all=true&limit=500&lang=${lang}`).then(r => r.json()).catch(() => ({}));
+        const countriesData = reloadRes?.data?.countries || reloadRes?.countries;
+        if (countriesData) setAllCountries(countriesData);
+        
+        if (targetField === "loadingCountry") {
+          setValue("loadingCountry", trimmed);
+          setValue("originCountry", trimmed);
+          setValue("origin", trimmed);
+          setValue("loadingPort", "");
+          setValue("loadingLocation", "");
+        } else if (targetField === "receivingCountry") {
+          setValue("receivingCountry", trimmed);
+          setValue("receivedCountry", trimmed);
+          setValue("destinationCountry", trimmed);
+          setValue("receivingPort", "");
+          setValue("destinationPort", "");
+          setValue("receivedPort", "");
+        }
+      } else if (type === "port") {
+        let countryName = "";
+        let isReceiving = false;
+        if (targetField === "loadingPort") {
+           countryName = form.loadingCountry;
+        } else if (targetField === "receivingPort") {
+           countryName = form.receivingCountry;
+           isReceiving = true;
+        }
+        
+        const countryObj = allCountries.find(c => c.name === countryName);
+        const countryId = countryObj ? countryObj.id : null;
+        
+        const transportTypeMapping = {
+          "By Sea": "sea",
+          "By Road": "road",
+          "By Air": "air"
+        };
+        const transportType = transportTypeMapping[form.shippingMode] || "sea";
+
+        const endpoint = isReceiving ? "/api/erp/ports/received" : "/api/erp/ports/loading";
+        
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            portName: trimmed,
+            countryId: countryId,
+            portCode: trimmed.slice(0, 3).toUpperCase(),
+            transportType: transportType,
+            isActive: true
+          })
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || !payload.ok) throw new Error(payload?.error?.message || payload?.error || t(lang, "purchase.wiz_err_create_port", "Failed to create port."));
+
+        const [loadRes, recRes] = await Promise.all([
+          fetch("/api/erp/ports/loading?all=true&limit=500"),
+          fetch("/api/erp/ports/received?all=true&limit=500")
+        ]);
+        const loadPorts = await loadRes.json().then(r => r?.data?.ports || r?.ports).catch(() => null);
+        const recPorts = await recRes.json().then(r => r?.data?.ports || r?.ports).catch(() => null);
+        
+        if (loadPorts) setDbLoadingPorts(loadPorts);
+        if (recPorts) setDbReceivedPorts(recPorts);
+
+        if (targetField === "loadingPort") {
+          setValue("loadingPort", trimmed);
+          setValue("loadingLocation", trimmed);
+          if (form.shippingMode === "By Air") setValue("airportName", trimmed);
+          if (form.shippingMode === "By Road") setValue("loadingBorder", trimmed);
+        } else if (targetField === "receivingPort") {
+          setValue("receivingPort", trimmed);
+          setValue("destinationPort", trimmed);
+          setValue("receivedPort", trimmed);
+          if (form.shippingMode === "By Air") setValue("destinationAirportName", trimmed);
+          if (form.shippingMode === "By Road") setValue("receivingBorder", trimmed);
+        }
+      }
+      
+      setSaveMessage(`New ${type} saved successfully.`);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : `Error saving ${type}.`);
+    } finally {
+      setSavingOrder(false);
+      setTimeout(() => setSaveMessage(""), 3000);
+    }
+  };
+
+  const [customerPinDropdownOpen, setPurchasePinDropdownOpen] = useState(false);
+  const [salesPinDropdownOpen, setSalesPinDropdownOpen] = useState(false);
+  const [companySelectOpen, setPurchaseCompanySelectOpen] = useState(false);
+  const [salesCompanySelectOpen, setSalesCompanySelectOpen] = useState(false);
+  const [dbCompanies, setDbCompanies] = useState([]);
+
+  // Account Creation Modal States
+  const [createAccountModalOpen, setCreateAccountModalOpen] = useState(false);
+  const [createAccountType, setCreateAccountType] = useState("purchase"); // "purchase" | "sales"
+  const [createAccountForm, setCreateAccountForm] = useState({
+    code: "AUTO",
+    name: "",
+    kind: "liability",
+    currency: "USD",
+    parentId: "",
+    isControlAccount: false
+  });
+  const [createAccountLoading, setCreateAccountLoading] = useState(false);
+  const [createAccountError, setCreateAccountError] = useState("");
+
+  // Inline Company Creation Modal States
+  const [createCompanyModalOpen, setCreateCompanyModalOpen] = useState(false);
+  const [createCompanyType, setCreateCompanyType] = useState("purchase"); // "purchase" | "sales"
+  const [createCompanyForm, setCreateCompanyForm] = useState({
+    name: "",
+    legalName: "",
+    baseCurrency: "USD"
+  });
+  const [createCompanyLoading, setCreateCompanyLoading] = useState(false);
+  const [createCompanyError, setCreateCompanyError] = useState("");
+
+  // Inline Master-Creation Modal States
+  const [newCountryModal, setNewCountryModal] = useState(false);
+  const [newCountryForm, setNewCountryForm] = useState({ name: "" });
+  const [newCountryLoading, setNewCountryLoading] = useState(false);
+  const [newCountryError, setNewCountryError] = useState("");
+
+  const [newPortModal, setNewPortModal] = useState(false);
+  const [newPortForm, setNewPortForm] = useState({ portName: "", countryName: "", transportType: "sea", side: "loading" });
+  const [newPortError, setNewPortError] = useState("");
+  const [newPortLoading, setNewPortLoading] = useState(false);
+
+  const [customVariationModal, setCustomVariationModal] = useState(false);
+  const [customVariationForm, setCustomVariationForm] = useState({ goodsName: "", brand: "", size: "", originCountryId: "" });
+
+  const [newGoodModal, setNewGoodModal] = useState(false);
+  const [newGoodForm, setNewGoodForm] = useState({ goodsName: "", chsCode: "", size: "", brand: "", originCountryId: "" });
+  const [newGoodLoading, setNewGoodLoading] = useState(false);
+  const [newGoodError, setNewGoodError] = useState("");
+
+  const renderGlobalInfoCards = () => {
+    // Determine logged-in user's branch details
+    let loginBranchName = "N/A";
+    let loginBranchCode = "N/A";
+    let loginCityName = "N/A";
+    let loginCountryName = "N/A";
+
+    if (isSuperAdmin) {
+      loginBranchName = "";
+      loginBranchCode = "GLOBAL-00";
+      loginCountryName = "All";
+      loginCityName = "Global HQ";
+    } else {
+      const uCid = activeSession?.countryIds?.[0] || activeSession?.scopes?.countryIds?.[0];
+      const uBid = activeSession?.countryBranchIds?.[0] || activeSession?.scopes?.countryBranchIds?.[0];
+      const uCbid = activeSession?.cityBranchIds?.[0] || activeSession?.scopes?.cityBranchIds?.[0];
+
+      const c = countries.find(x => x.id === uCid) || allCountries.find(x => x.id === uCid);
+      const mb = mainBranches.find(x => x.id === uBid);
+      const cb = cityBranches.find(x => x.id === uCbid);
+
+      if (uCbid && cb) {
+        loginBranchName = cb.name || cb.city_name;
+        loginBranchCode = cb.code || cb.branch_code;
+        loginCityName = cb.city_name || cb.name;
+        loginCountryName = c?.name || "N/A";
+      } else if (uBid && mb) {
+        loginBranchName = mb.name;
+        loginBranchCode = mb.code;
+        loginCityName = "";
+        loginCountryName = c?.name || "N/A";
+      } else if (uCid && c) {
+        loginBranchName = `${c.name} Region`;
+        loginBranchCode = c.iso2 || "N/A";
+        loginCityName = "All Cities";
+        loginCountryName = c.name;
+      } else {
+        // Fallback to what's in the form if lists haven't loaded yet
+        loginBranchName = form.branchName;
+        loginBranchCode = form.branchCode;
+        loginCityName = form.branchCity;
+        loginCountryName = form.branchCountry;
+      }
+    }
+
+    const primaryRole = (activeSession?.roles?.[0] || activeSession?.scopes?.roles?.[0] || "User").replace(/_/g, " ");
+
+    return (
+      <div className="w-full mb-4 animate-in fade-in duration-300">
+        <div className="bg-card border border-border shadow-md rounded-lg p-3 relative">
+          {/* Horizontal Cards row */}
+          <div className="z-10 bg-card pb-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5">
+
+              {/* Card 1: Branch Login Details */}
+              <div className="bg-card border border-border shadow-sm rounded-xl p-3.5 hover:shadow-md hover:border-primary/30 transition duration-200">
+                <div className="flex items-center gap-2 mb-2.5 pb-1.5 border-b border-border/60">
+                  <span className="p-1 rounded-md bg-primary/10 text-primary dark:bg-primary/20">
+                    <Building2 className="h-3.5 w-3.5" />
+                  </span>
+                  <h4 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{t(lang, "purchase.card_branch_login_details", "Branch Login Details")}</h4>
+                </div>
+                <div className="space-y-1.5 text-[10px]">
+                  <div className="space-y-0.5 border-b border-border/40 pb-1.5 mb-1.5">
+                    <span className="text-muted-foreground block text-[8px] uppercase font-bold">{t(lang, "cdash.col_branch_name", "Branch Name")}</span>
+                    <span className="font-black text-primary block truncate text-xs" title={loginBranchName}>{loginBranchName || "N/A"}</span>
+                  </div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_branch_code_colon", "Branch Code:")}</span> <span className="font-semibold text-foreground font-mono">{loginBranchCode || "N/A"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_user_admin_colon", "User Admin:")}</span> <span className="font-black text-emerald-600 dark:text-emerald-450 uppercase">{form.userName}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_user_id_colon", "User ID:")}</span> <span className="font-semibold text-foreground font-mono text-[9px]">{form.userId || "N/A"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_role_colon", "Role:")}</span> <span className="font-semibold text-foreground capitalize text-[9px]">{primaryRole}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_location_colon", "Location:")}</span> <span className="font-semibold text-foreground truncate" title={`${loginCityName || "N/A"}, ${loginCountryName || "N/A"}`}>{loginCityName || "N/A"}, {loginCountryName || "N/A"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_country_colon", "Country:")}</span> <span className="font-semibold text-foreground truncate" title={loginCountryName}>{loginCountryName || "N/A"}</span></div>
+                </div>
+              </div>
+
+              {/* Card 2: Bill Details */}
+              <div className="bg-card border border-border shadow-sm rounded-xl p-3.5 hover:shadow-md hover:border-primary/30 transition duration-200">
+                <div className="flex items-center gap-2 mb-2.5 pb-1.5 border-b border-border/60">
+                  <span className="p-1 rounded-md bg-primary/10 text-primary dark:bg-primary/20">
+                    <FileText className="h-3.5 w-3.5" />
+                  </span>
+                  <h4 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{t(lang, "purchase.card_bill_details", "Bill Details")}</h4>
+                </div>
+                <div className="space-y-1.5 text-[10px]">
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_booking_date_colon", "Booking Date:")}</span> <span className="font-semibold text-foreground">{form.salesDate}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_fiscal_year_colon", "Fiscal Year:")}</span> <span className="font-semibold">2025-26</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground font-bold">{t(lang, "purchase.card_booking_branch_colon", "Booking Branch:")}</span> <span className="font-bold text-emerald-600 dark:text-emerald-450 truncate" title={loginBranchName}>{loginBranchName || "N/A"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_status_colon", "Status:")}</span> <span className="inline-flex items-center rounded-full bg-yellow-500/10 px-1.5 py-0.2 text-[8px] font-bold text-yellow-600 dark:text-yellow-450 uppercase">{form.salesStatus}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_system_serial_colon", "System Serial:")}</span> <span className="font-bold text-foreground truncate font-mono" title={form.salesOrderNo}>{form.salesOrderNo}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground font-bold text-primary">{t(lang, "purchase.card_branch_serial_colon", "Branch Serial:")}</span> <span className="font-bold text-primary truncate font-mono" title={form.billNo}>{form.billNo}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_contract_no_colon", "Contract No:")}</span> <span className="font-semibold text-foreground truncate font-mono" title={form.salesContractNo}>{form.salesContractNo}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_loading_mode_colon", "Loading Mode:")}</span> <span className="font-semibold text-foreground truncate" title={form.shippingMode}>{form.shippingMode || "N/A"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_origin_country_colon", "Origin Country:")}</span> <span className="font-semibold text-foreground truncate" title={form.origin || form.branchCountry}>{form.origin || form.branchCountry || "N/A"}</span></div>
+                </div>
+              </div>
+
+              {/* Card 3: Sales Account Details */}
+              <div className="bg-card border border-border shadow-sm rounded-xl p-3.5 hover:shadow-md hover:border-primary/30 transition duration-200">
+                <div className="flex items-center gap-2 mb-2.5 pb-1.5 border-b border-border/60">
+                  <span className="p-1 rounded-md bg-primary/10 text-primary dark:bg-primary/20">
+                    <ArrowUpRight className="h-3.5 w-3.5" />
+                  </span>
+                  <h4 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{t(lang, "purchase.sales_account_cr_badge", "Sales Account (CR)")}</h4>
+                </div>
+                <div className="space-y-1.5 text-[10px]">
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span> <span className="font-bold text-foreground truncate block w-full text-right font-mono" title={form.salesAccountNo}>{form.salesAccountNo}</span></div>
+                  <div className="space-y-0.5 pt-1">
+                    <span className="text-muted-foreground block text-[9px]">{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span>
+                    <span className="font-semibold text-foreground block truncate text-xs text-primary" title={form.salesAccountName}>{form.salesAccountName}</span>
+                  </div>
+                  <div className="flex justify-between pt-1"><span className="text-muted-foreground">{t(lang, "purchase.branch_colon_label", "Branch:")}</span> <span className="font-semibold text-foreground truncate" title={form.salesAccountBranch}>{form.salesAccountBranch}</span></div>
+                  <div className="flex justify-between pt-0.5"><span className="text-muted-foreground">{t(lang, "purchase.currency_colon_label", "Currency:")}</span> <span className="font-bold text-foreground">{form.salesAccountCurrency || form.salesCurrency || form.secondaryCurrency || "-"}</span></div>
+                  <div className="flex justify-between items-center pt-0.5 border-t border-border/20 mt-1 relative" ref={salesCompanyDropdownRef}>
+                    <span className="text-muted-foreground font-semibold">{t(lang, "purchase.card_company_colon", "Company:")}</span>
+                    <div className="flex items-center gap-1">
+                      <span className="font-bold text-foreground truncate max-w-[100px] text-[8.5px] text-right font-mono" title={form.salesCompanyName ? `${form.salesCompanyName} (${form.salesCompanyCode || "COM-N/A"})` : t(lang, "purchase.card_none_label", "None")}>
+                        {form.salesCompanyName ? `${form.salesCompanyName} (${form.salesCompanyCode || "COM-N/A"})` : t(lang, "purchase.card_none_label", "None")}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setSalesCompanySelectOpen(prev => !prev)}
+                        className="p-0.5 rounded hover:bg-muted text-muted-foreground hover:text-primary transition-colors shrink-0"
+                        title={t(lang, "purchase.card_select_company_title", "Select Company")}
+                      >
+                        <Pin className={`h-2.5 w-2.5 ${salesCompanySelectOpen ? "text-primary fill-primary/25" : ""}`} />
+                      </button>
+                    </div>
+
+                    {salesCompanySelectOpen && (
+                      <div className="absolute right-0 top-6 w-48 rounded-xl bg-card border border-border shadow-2xl z-[60] p-1.5 animate-in fade-in slide-in-from-top-2 duration-150 text-left">
+                        <div className="px-2 py-0.5 text-[8px] font-black uppercase text-primary tracking-wider border-b border-border/40 mb-1">
+                          {t(lang, "purchase.card_select_company_title", "Select Company")}
+                        </div>
+                        <div className="max-h-32 overflow-y-auto space-y-0.5 scrollbar-thin">
+                          {dbCompanies.length === 0 ? (
+                            <div className="px-2 py-2 text-center text-muted-foreground text-[8px] italic">
+                              {t(lang, "purchase.card_no_companies_found", "No companies found.")}
+                            </div>
+                          ) : (
+                            dbCompanies.map((c) => {
+                              const cCode = "COM-" + c.name.slice(0, 3).toUpperCase();
+                              return (
+                                <button
+                                  key={c.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setValue("salesCompanyId", c.id);
+                                    setValue("salesCompanyName", c.name);
+                                    setValue("salesCompanyCode", cCode);
+                                    setSalesCompanySelectOpen(false);
+                                  }}
+                                  className="w-full text-left px-2 py-0.5 rounded hover:bg-muted text-[8.5px] text-foreground font-semibold truncate block"
+                                  title={c.name}
+                                 >
+                                   {c.name} ({cCode})
+                                 </button>
+                               );
+                             })
+                           )}
+                         </div>
+                       </div>
+                     )}
+                   </div>
+                </div>
+              </div>
+
+              {/* Card 4: Customer Account Details */}
+              <div className="bg-card border border-border shadow-sm rounded-xl p-3.5 hover:shadow-md hover:border-primary/30 transition duration-200">
+                <div className="flex items-center gap-2 mb-2.5 pb-1.5 border-b border-border/60">
+                  <span className="p-1 rounded-md bg-rose-100 text-rose-700 dark:bg-rose-950/30">
+                    <ArrowDownLeft className="h-3.5 w-3.5" />
+                  </span>
+                  <h4 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{t(lang, "sales.customer_account_dr_badge", "Customer Account (DR)")}</h4>
+                </div>
+                <div className="space-y-1.5 text-[10px]">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span>
+                    <span className="font-bold text-foreground truncate block font-mono text-right" title={form.customerAccountNo}>{form.customerAccountNo || "N/A"}</span>
+                  </div>
+                  <div className="space-y-0.5 pt-1">
+                    <span className="text-muted-foreground block text-[9px]">{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span>
+                    <span className="font-semibold text-rose-700 dark:text-rose-400 block truncate text-xs" title={form.customerAccountName}>{form.customerAccountName || "N/A"}</span>
+                  </div>
+                  <div className="flex justify-between pt-1">
+                    <span className="text-muted-foreground">{t(lang, "purchase.branch_colon_label", "Branch:")}</span>
+                    <span className="font-semibold text-foreground truncate" title={form.customerAccountBranch}>{form.customerAccountBranch || "N/A"}</span>
+                  </div>
+                  <div className="flex justify-between pt-0.5">
+                    <span className="text-muted-foreground">{t(lang, "purchase.currency_colon_label", "Currency:")}</span>
+                    <span className="font-bold text-foreground">{form.customerAccountCurrency || form.salesCurrency || form.secondaryCurrency || "-"}</span>
+                  </div>
+                  <div className="flex justify-between items-center pt-0.5 border-t border-border/20 mt-1">
+                    <span className="text-muted-foreground font-semibold">{t(lang, "purchase.card_company_colon", "Company:")}</span>
+                    <span className="font-bold text-foreground truncate max-w-[120px] text-[8.5px] text-right font-mono" title={form.salesCompanyName || t(lang, "purchase.card_none_label", "None")}>
+                      {form.salesCompanyName || t(lang, "purchase.card_none_label", "None")}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+  // "Close Form" shows this page's Sales Booking register (same pattern as the Purchase
+  // Booking wizard); "+ New Sales Booking" reopens the form in place.
+  if (isMounted && !isFormOpen) {
+    return (
+      <div className="space-y-6 text-foreground bg-background">
+        <SalesBookingJournalReportView
+          onNewBooking={() => {
+            handleReset();
+            setIsFormOpen(true);
+            setActiveTab("booking");
+          }}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div id="wizard-root-print" className="space-y-2 text-foreground bg-background mt-[-10px] max-w-[1500px] mx-auto">
+      {activeHandover && (
+        <div className="rounded-xl border border-blue-200 bg-blue-50/80 p-4 shadow-sm dark:border-blue-900/60 dark:bg-blue-950/30 animate-in fade-in duration-200">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-xs shrink-0">
+                <Repeat2 className="h-4 w-4" />
+              </span>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black uppercase tracking-wider text-blue-900 dark:text-blue-300">
+                    {t(lang, "tc.active_handover_task", "Active Handover Task")}
+                  </span>
+                  <Badge variant="outline" className="text-[10px] font-bold border-blue-300 text-blue-700 bg-white dark:bg-slate-900">
+                    {activeHandover.metadata?.requestedTask || activeHandover.narration || t(lang, "tc.task_assigned", "Task Assigned")}
+                  </Badge>
+                  {activeHandover.metadata?.priority && (
+                    <Badge variant={activeHandover.metadata.priority === "urgent" ? "destructive" : "secondary"} className="text-[9px] uppercase">
+                      {activeHandover.metadata.priority}
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                  {t(lang, "tc.assigned_by", "Assigned by")}: <span className="font-bold text-slate-800 dark:text-slate-200">{activeHandover.sender_name || t(lang, "tc.branch_user", "Branch User")}</span> • {t(lang, "tc.instruction", "Instruction")}: <span className="italic font-medium">"{activeHandover.remarks || activeHandover.narration || t(lang, "tc.please_complete_work", "Please review and complete assigned work.")}"</span>
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              {activeHandover.status === "pending" && (
+                <Button size="sm" type="button" onClick={() => void runHandoverAction(activeHandover.id, "accept")} className="gap-1.5 bg-emerald-600 text-xs font-bold text-white hover:bg-emerald-700">
+                  <CheckCircle2 className="h-3.5 w-3.5" /> {t(lang, "tc.accept_task", "Accept Task")}
+                </Button>
+              )}
+              {activeHandover.status === "accepted" && (
+                <Button size="sm" type="button" onClick={() => void runHandoverAction(activeHandover.id, "complete")} className="gap-1.5 bg-emerald-600 text-xs font-bold text-white hover:bg-emerald-700">
+                  <CheckCheck className="h-3.5 w-3.5" /> {t(lang, "tc.complete_task", "Mark Done")}
+                </Button>
+              )}
+              <Button size="sm" type="button" variant="outline" onClick={() => setHandoverModalOpen(true)} className="gap-1.5 text-xs font-bold border-blue-200 text-blue-700 hover:bg-blue-50 dark:border-blue-900 dark:text-blue-300">
+                <Send className="h-3.5 w-3.5" /> {t(lang, "tc.transfer_next", "Handover to Next User")}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      {isSuperAdmin && showScopeModal ? (
+        <SimpleModal
+          isOpen={true}
+          onClose={() => setShowScopeModal(false)}
+          title={t(lang, "sales.super_admin_select_scope_title", "Super Admin: Select Working Scope")}
+          width="md"
+        >
+          <div className="space-y-4 p-2">
+            <p className="text-xs text-slate-600 dark:text-slate-400">
+              {t(lang, "sales.select_scope_msg", "Please select the Country, Branch, and City Branch you want to work in for Sales Orders.")}
+            </p>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-black">{t(lang, "report.country", "Country")}</label>
+                <select
+                  value={form.countryId || ""}
+                  onChange={(e) => {
+                    const country = countries.find(c => c.id === e.target.value);
+                    setForm(p => ({
+                      ...p,
+                      countryId: e.target.value,
+                      countryBranchId: "",
+                      cityBranchId: "",
+                      currencyType: "USD",
+                      salesCurrency: country ? country.currency_code : p.salesCurrency,
+                      secondaryCurrency: country ? country.currency_code : p.secondaryCurrency,
+                      paymentCurrency: country ? country.currency_code : p.paymentCurrency
+                    }));
+                  }}
+                  className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-xs font-semibold outline-none"
+                >
+                  <option value="">{t(lang, "purchase.select_country_ellipsis", "Select Country...")}</option>
+                  {countries.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name} ({c.currency_code})</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-black">{t(lang, "report.branch", "Branch")}</label>
+                <select
+                  value={form.countryBranchId || ""}
+                  onChange={(e) => setForm(p => ({ ...p, countryBranchId: e.target.value, cityBranchId: "" }))}
+                  disabled={!form.countryId}
+                  className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-xs font-semibold outline-none"
+                >
+                  <option value="">{t(lang, "purchase.select_branch_ellipsis", "Select Branch...")}</option>
+                  {mainBranches.map((b) => (
+                    <option key={b.id} value={b.id}>{b.name} ({b.code})</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-black">{t(lang, "report.scope_city_branch", "City Branch")}</label>
+                <select
+                  value={form.cityBranchId || ""}
+                  onChange={(e) => setForm(p => ({ ...p, cityBranchId: e.target.value }))}
+                  disabled={!form.countryBranchId}
+                  className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-xs font-semibold outline-none"
+                >
+                  <option value="">{t(lang, "purchase.select_city_branch_ellipsis", "Select City Branch...")}</option>
+                  {cityBranches.map((b) => (
+                    <option key={b.id} value={b.id}>{b.city_name || b.name} ({b.code || b.branch_code})</option>
+                  ))}
+                </select>
+              </div>
+              <div className="pt-4 flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowScopeModal(false)}
+                  className="h-9 text-xs px-4"
+                >
+                  {t(lang, "common.cancel", "Cancel")}
+                </Button>
+                <Button
+                  onClick={() => {
+                    setScopeConfirmed(true);
+                    setShowScopeModal(false);
+                  }}
+                  disabled={!form.countryId || !form.countryBranchId}
+                  className="bg-[#0F172A] hover:bg-slate-800 text-white font-bold h-9 text-xs px-6 rounded-lg shadow-sm disabled:opacity-50 disabled:bg-slate-300 disabled:text-slate-500"
+                >
+                  Confirm Working Scope &rarr;
+                </Button>
+              </div>
+            </div>
+          </div>
+        </SimpleModal>
+      ) : (
+        <>
+          {titlePortal && actionsPortal ? (
+            <>
+              {createPortal(
+                <div className="flex items-center gap-3 shrink-0">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-primary" />
+                    <h2 className="text-[11px] sm:text-xs font-black tracking-tight uppercase text-foreground">
+                      {t(lang, "sales.booking_order_title", "Sales Booking Order")}
+                    </h2>
+                  </div>
+                  <div className="h-4 w-px bg-border/60"></div>
+                  <h2 className="text-[11px] sm:text-xs font-black tracking-tight uppercase text-primary/80">
+                    {t(lang, "sales.booking_report_title", "Sales Booking Report")}
+                  </h2>
+                </div>,
+                titlePortal
+              )}
+              {createPortal(
+                <div className="flex items-center gap-1.5 shrink-0 relative" ref={dropdownRef}>
+                  <div className="flex items-center gap-0.5 bg-muted/40 p-0.5 rounded border border-border/50 mr-2">
+                    <button type="button" onClick={() => setActiveTab("booking")} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "booking" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_booking", "1 Booking")}</button>
+                    <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("goods"); }} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "goods" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_goods", "2 Goods")}</button>
+                    <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("shipping"); }} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${(activeTab === "shipping" || activeTab === "others") ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "purchase.tab3_shipping_payment", "3 Shipping & Payment")}</button>
+                    <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("reports_tab"); }} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "reports_tab" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_reports", "4 Reports")}</button>
+                    <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("report"); }} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "report" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_verify", "5 Verify")}</button>
+                  </div>
+                  <div className="flex items-center gap-2 bg-muted/50 rounded-md p-1 border border-border/50 mr-1">
+                    <span className="relative flex h-2 w-2 ml-1">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider pr-1">{t(lang, "purchase.live_badge", "Live")}</span>
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={() => window.location.reload()}
+                    className="flex items-center gap-1 h-7.5 px-2.5 bg-emerald-600 hover:bg-emerald-700 text-white transition-all shadow-md font-bold text-[10px]"
+                  >
+                    + {t(lang, "sow.new_short", "New")}
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setReportSaved(!!form.orderReportRemarks);
+                      setIsTransferred(false);
+                      setActiveTab("report");
+                    }}
+                    className="flex items-center gap-1 h-7.5 px-2.5 bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-md font-bold text-[10px]"
+                  >
+                    <FileText className="h-3.5 w-3.5" /> {t(lang, "purchase.report_short", "Report")}
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => setViewDropdownOpen(!viewDropdownOpen)}
+                    className="flex items-center gap-1 h-7.5 px-2 bg-slate-800 text-white hover:bg-slate-700 transition"
+                  >
+                    {t(lang, "form.actions", "Actions")}<ChevronDown className="h-3 w-3" />
+                  </Button>
+
+                  {viewDropdownOpen && (
+                    <div className="absolute right-0 top-8.5 w-48 rounded-xl bg-card border border-border shadow-2xl z-50 p-1.5 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setViewDropdownOpen(false);
+                          handleReset();
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition"
+                      >
+                        <span className="h-3.5 w-3.5 flex items-center justify-center font-bold text-sm text-primary">+</span>
+                        <span>{t(lang, "purchase.dd_new_booking", "New Booking")}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setViewDropdownOpen(false);
+                          setGoodsEntries([]);
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 text-left transition"
+                      >
+                        <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                        <span>{t(lang, "purchase.dd_clear_goods", "Clear Goods")}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setViewDropdownOpen(false);
+                          setIsFormOpen(false);
+                          handleReset();
+                          if (searchParams.get("id") || searchParams.get("salesOrderNo")) {
+                            router.push("/dashboard/sales/sales-booking-journal-report");
+                          }
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-900 text-left transition border-b border-border/40 pb-2 mb-1"
+                      >
+                        <X className="h-3.5 w-3.5 text-slate-500" />
+                        <span>{t(lang, "purchase.dd_close_form", "Close Form")}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setViewDropdownOpen(false); import("@/lib/reports/print-dom-fragment").then((m) => { if (!m.printDomFragmentViaModal("wizard-root-print", t(lang, "purchase.dd_print_screen", "Print Screen"), { lang })) window.print(); }); }}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition border-b border-border/40 pb-2 mb-1"
+                      >
+                        <Printer className="h-3.5 w-3.5 text-blue-500" />
+                        <span>{t(lang, "purchase.dd_print_screen", "Print Screen")}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setViewDropdownOpen(false);
+                          setPreviewModalOpen(true);
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition"
+                      >
+                        <Eye className="h-3.5 w-3.5 text-sky-500" />
+                        <span>{t(lang, "purchase.dd_open_large_preview", "Open Large Preview")}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setViewDropdownOpen(false);
+                          handleOpenA4Report(false);
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition border-b border-border/40 pb-2 mb-1"
+                      >
+                        <Download className="h-3.5 w-3.5 text-blue-500" />
+                        <span>{t(lang, "purchase.dd_open_a4_template", "Open A4 / PDF Template")}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setViewDropdownOpen(false);
+                          setReportSaved(!!form.orderReportRemarks);
+                          setIsTransferred(false);
+                          setActiveTab("report");
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition border-b border-border/40 pb-2 mb-1"
+                      >
+                        <Eye className="h-3.5 w-3.5 text-emerald-500 animate-pulse" />
+                        <span className="font-bold text-emerald-600 dark:text-emerald-400">{t(lang, "purchase.dd_view_check_entry", "View / Check Entry")}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setViewDropdownOpen(false); setTradeDocsOpen(true); }}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition"
+                      >
+                        <FileText className="h-3.5 w-3.5 text-blue-500" />
+                        <span>{t(lang, "tdoc.center_title", "Commercial Document Center")}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setViewDropdownOpen(false); setHandoverModalOpen(true); }}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition"
+                      >
+                        <Send className="h-3.5 w-3.5 text-indigo-500" />
+                        <span>{t(lang, "tc.handover_task", "Handover / Delegate Task to User")}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setViewDropdownOpen(false);
+                          handleSaveSalesOrder(false);
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition"
+                      >
+                        <Save className="h-3.5 w-3.5 text-blue-500" />
+                        <span>{t(lang, "pb.save_draft", "Save Draft")}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setViewDropdownOpen(false);
+                          handleSaveSalesOrder(true);
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition"
+                      >
+                        <Check className="h-3.5 w-3.5 text-emerald-500" />
+                        <span>{t(lang, "sales.save_close_btn", "Save & Close")}</span>
+                      </button>
+                    </div>
+                  )}
+                </div>,
+                actionsPortal
+              )}
+            </>
+          ) : (
+            <div className="pb-2 border-b border-border/60 flex items-center justify-between">
+              <div className="flex items-center gap-3 shrink-0">
+                <div className="flex items-center gap-2">
+                  <Building2 className="h-4 w-4 text-primary" />
+                  <h2 className="text-[11px] sm:text-xs font-black tracking-tight uppercase text-foreground">
+                    {t(lang, "sales.booking_order_title", "Sales Booking Order")}
+                  </h2>
+                </div>
+                <div className="h-4 w-px bg-border/60"></div>
+                <h2 className="text-[11px] sm:text-xs font-black tracking-tight uppercase text-primary/80">
+                  {t(lang, "sales.booking_report_title", "Sales Booking Report")}
+                </h2>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0 relative" ref={dropdownRef}>
+                <div className="flex items-center gap-0.5 bg-muted/40 p-0.5 rounded border border-border/50 mr-2">
+                  <button type="button" onClick={() => setActiveTab("booking")} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "booking" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_booking", "1 Booking")}</button>
+                  <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("goods"); }} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "goods" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_goods", "2 Goods")}</button>
+                  <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("shipping"); }} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${(activeTab === "shipping" || activeTab === "others") ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "purchase.tab3_shipping_payment", "3 Shipping & Payment")}</button>
+                  <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("reports_tab"); }} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "reports_tab" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_reports", "4 Reports")}</button>
+                  <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("report"); }} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "report" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_verify", "5 Verify")}</button>
+                </div>
+                <div className="flex items-center gap-2 bg-muted/50 rounded-md p-1 border border-border/50 mr-1">
+                  <span className="relative flex h-2 w-2 ml-1">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  </span>
+                  <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider pr-1">{t(lang, "purchase.live_badge", "Live")}</span>
+                </div>
+                <Button
+                  type="button"
+                  onClick={() => window.location.reload()}
+                  className="flex items-center gap-1 h-7.5 px-2.5 bg-emerald-600 hover:bg-emerald-700 text-white transition-all shadow-md font-bold text-[10px]"
+                >
+                  + {t(lang, "sow.new_short", "New")}
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => {
+                    setReportSaved(!!form.orderReportRemarks);
+                    setIsTransferred(false);
+                    setActiveTab("report");
+                  }}
+                  className="flex items-center gap-1 h-7.5 px-2.5 bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-md font-bold text-[10px]"
+                >
+                  <FileText className="h-3.5 w-3.5" /> {t(lang, "purchase.report_short", "Report")}
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => setViewDropdownOpen(!viewDropdownOpen)}
+                  className="flex items-center gap-1 h-7.5 px-2 bg-slate-800 text-white hover:bg-slate-700 transition"
+                >
+                  {t(lang, "form.actions", "Actions")}<ChevronDown className="h-3 w-3" />
+                </Button>
+
+                {viewDropdownOpen && (
+                  <div className="absolute right-0 top-8.5 w-48 rounded-xl bg-card border border-border shadow-2xl z-50 p-1.5 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setViewDropdownOpen(false);
+                        handleReset();
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition"
+                    >
+                      <span className="h-3.5 w-3.5 flex items-center justify-center font-bold text-sm text-primary">+</span>
+                      <span>{t(lang, "purchase.dd_new_booking", "New Booking")}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setViewDropdownOpen(false);
+                        setGoodsEntries([]);
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 text-left transition"
+                    >
+                      <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                      <span>{t(lang, "purchase.dd_clear_goods", "Clear Goods")}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setViewDropdownOpen(false);
+                        setIsFormOpen(false);
+                        handleReset();
+                        if (searchParams.get("id") || searchParams.get("salesOrderNo")) {
+                          router.push("/dashboard/sales/sales-booking-journal-report");
+                        }
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-900 text-left transition border-b border-border/40 pb-2 mb-1"
+                    >
+                      <X className="h-3.5 w-3.5 text-slate-500" />
+                      <span>{t(lang, "purchase.dd_close_form", "Close Form")}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setViewDropdownOpen(false); import("@/lib/reports/print-dom-fragment").then((m) => { if (!m.printDomFragmentViaModal("wizard-root-print", t(lang, "purchase.dd_print_screen", "Print Screen"), { lang })) window.print(); }); }}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition border-b border-border/40 pb-2 mb-1"
+                    >
+                      <Printer className="h-3.5 w-3.5 text-blue-500" />
+                      <span>{t(lang, "purchase.dd_print_screen", "Print Screen")}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setViewDropdownOpen(false);
+                        setPreviewModalOpen(true);
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition"
+                    >
+                      <Eye className="h-3.5 w-3.5 text-sky-500" />
+                      <span>{t(lang, "purchase.dd_open_large_preview", "Open Large Preview")}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setViewDropdownOpen(false);
+                        handleOpenA4Report(false);
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition border-b border-border/40 pb-2 mb-1"
+                    >
+                      <Download className="h-3.5 w-3.5 text-blue-500" />
+                      <span>{t(lang, "purchase.dd_open_a4_template", "Open A4 / PDF Template")}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setViewDropdownOpen(false);
+                        setReportSaved(!!form.orderReportRemarks);
+                        setIsTransferred(false);
+                        setActiveTab("report");
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition border-b border-border/40 pb-2 mb-1"
+                    >
+                      <Eye className="h-3.5 w-3.5 text-emerald-500 animate-pulse" />
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400">{t(lang, "purchase.dd_view_check_entry", "View / Check Entry")}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setViewDropdownOpen(false);
+                        handleSaveSalesOrder(false);
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition"
+                    >
+                      <Save className="h-3.5 w-3.5 text-blue-500" />
+                      <span>{t(lang, "pb.save_draft", "Save Draft")}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setViewDropdownOpen(false);
+                        handleSaveSalesOrder(true);
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-foreground hover:bg-muted/80 text-left transition"
+                    >
+                      <Check className="h-3.5 w-3.5 text-emerald-500" />
+                      <span>{t(lang, "sales.save_close_btn", "Save & Close")}</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === "report" && isMounted && document.getElementById("erp-page-actions-slot") && createPortal(
+            <>
+              {!isTransferred && (
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    onClick={handleTransfer}
+                    disabled={savingOrder || isTransferred}
+                    className={cn(
+                      "h-10 text-[11px] font-black tracking-wider uppercase px-8 text-white transition-all duration-200",
+                      isLocalSale
+                        ? "bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-200"
+                        : "bg-blue-600 hover:bg-blue-700 shadow-[0_4px_14px_0_rgb(37,99,235,0.39)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.23)] hover:-translate-y-0.5"
+                    )}
+                  >
+                    <CheckCircle2 className="h-4 w-4"/> {t(lang, "sales.confirm_transfer_btn", "CONFIRM & TRANSFER")}
+                  </Button>
+                </div>
+              )}
+            </>,
+            document.getElementById("erp-page-actions-slot")
+          )}
+
+          {activeTab === "reports_tab" ? (
+            <div className="w-full mt-4 space-y-4 animate-in fade-in duration-200">
+              <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 text-center space-y-4 max-w-xl mx-auto shadow-sm">
+                <div className={cn("inline-flex p-3 rounded-full mb-1", isLocalSale ? "bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400" : "bg-blue-50 text-blue-600")}>
+                  <FileText className="h-6 w-6" />
+                </div>
+                <h3 className="text-sm font-black uppercase text-slate-800 tracking-wider">
+                  {t(lang, "sales.step4_review_reports", "Step 4: Review Reports")}
+                </h3>
+                <p className="text-xs text-slate-500 font-semibold leading-relaxed">
+                  {t(lang, "sales.review_reports_subtitle", "Review all generated reports and notes before final verification.")}
+                </p>
+                <div className="flex items-center justify-between gap-4 pt-4 border-t border-slate-200 mt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setActiveTab("shipping")}
+                    className="font-bold text-xs h-10 px-8 border-slate-200 text-slate-700 hover:bg-slate-50"
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-1.5" /> {t(lang, "common.back", "Back")}
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => setActiveTab("report")}
+                    className={cn(
+                      "font-black text-xs h-10 px-8 text-white shadow-md transition-all uppercase tracking-wider flex items-center gap-2",
+                      isLocalSale
+                        ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
+                        : "bg-blue-600 hover:bg-blue-700"
+                    )}
+                  >
+                    {t(lang, "common.next", "Next")} <ChevronRight className="h-4 w-4 ml-1.5" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ) : (activeTab === "shipping" || activeTab === "others") ? (
+            <div className="w-full mt-4 space-y-4 animate-in fade-in duration-200">
+              {/* Global Info Cards at top */}
+              {renderGlobalInfoCards()}
+
+              {/* Step 3 Form: Spacious 2-Column Layout */}
+              <fieldset disabled={isTransferred && !session?.scopes?.isSuperAdmin} className="space-y-4 w-full">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+                  {/* LEFT COLUMN: Shipping & Location */}
+                  <div className="space-y-4">
+                    {/* SECTION 1: SHIPPING & LOCATION */}
+                    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+                      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
+                        <div className="flex items-center gap-2.5">
+                          <div className="grid h-9 w-9 place-items-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300">
+                            <Globe2 className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-black uppercase tracking-[0.18em] text-slate-900 dark:text-slate-100">{t(lang, "purchase.shipping_location_title", "Shipping & Location")}</h4>
+                            <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">{t(lang, "purchase.shipping_location_subtitle", "Essential route information only: country, port, mode and dates.")}</p>
+                          </div>
+                        </div>
+                        <label className="min-w-[150px] space-y-1">
+                          <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.shipping_mode_label", "Shipping Mode")}</span>
+                          <select
+                            value={form.shippingMode || "By Sea"}
+                            onChange={(e) => {
+                              const mode = e.target.value;
+                              setValue("shippingMode", mode);
+                              setValue("shipmentType", mode === "By Sea" ? "By Ship" : mode);
+                            }}
+                            className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-bold text-slate-900 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                          >
+                            {LOADING_TYPES.map((type) => <option key={type} value={type}>{type}</option>)}
+                          </select>
+                        </label>
+                      </div>
+
+                      <div className="flex flex-col gap-4">
+                        <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-4 dark:border-amber-900/50 dark:bg-amber-950/10">
+                          <div className="mb-3 flex items-center gap-2 border-b border-amber-100 pb-2 dark:border-amber-900/40">
+                            <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
+                            <h5 className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">{t(lang, "purchase.loading_departure_title", "Loading / Departure")}</h5>
+                          </div>
+                          <div className="grid gap-3 sm:grid-cols-3">
+                            <label className="space-y-1">
+                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.loading_country_label", "Loading Country")}</span>
+                              <SearchableSelect
+                                value={form.loadingCountry || ""}
+                                onChange={(val) => {
+                                  if (val === "__ADD_NEW__") {
+                                    handleAddNewLocationItem("country", "loadingCountry");
+                                  } else {
+                                    setValue("loadingCountry", val);
+                                    setValue("originCountry", val);
+                                    setValue("origin", val);
+                                    setValue("loadingPort", "");
+                                    setValue("loadingLocation", "");
+                                  }
+                                }}
+                                options={masterCountryOptions.map((c) => ({ label: `${c.name} ${c.iso2 ? `(${c.iso2})` : ""}`, value: c.name }))}
+                                placeholder={t(lang, "sales.select_country_ph", "Select Country")}
+                                addOptionLabel="Add New Country"
+                              />
+                            </label>
+                            <label className="space-y-1">
+                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.loading_port_label", "Loading Port")}</span>
+                              <SearchableSelect
+                                value={form.loadingPort || form.airportName || form.loadingBorder || ""}
+                                onChange={(val) => {
+                                  if (val === "__ADD_NEW__") {
+                                    handleAddNewLocationItem("port", "loadingPort");
+                                  } else {
+                                    setValue("loadingPort", val);
+                                    setValue("loadingLocation", val);
+                                    if (form.shippingMode === "By Air") setValue("airportName", val);
+                                    if (form.shippingMode === "By Road") setValue("loadingBorder", val);
+                                  }
+                                }}
+                                options={currentLoadingPorts.map((p, idx) => ({ label: `${p.port_name} ${p.port_code ? `[${p.port_code}]` : ""}`, value: p.port_name }))}
+                                placeholder={t(lang, "sales.select_port_ph", "Select Port")}
+                                addOptionLabel="Add New Port"
+                                disabled={!form.loadingCountry && currentLoadingPorts.length === 0}
+                              />
+                            </label>
+                            <label className="space-y-1">
+                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.loading_date_label", "Loading Date")}</span>
+                              <input
+                                type="date"
+                                value={form.loadingDate || ""}
+                                onChange={(e) => setValue("loadingDate", e.target.value)}
+                                className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-900 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                              />
+                            </label>
+                          </div>
+                        </div>
+
+                        <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-4 dark:border-emerald-900/50 dark:bg-emerald-950/10">
+                          <div className="mb-3 flex items-center gap-2 border-b border-emerald-100 pb-2 dark:border-emerald-900/40">
+                            <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                            <h5 className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">{t(lang, "purchase.receiving_arrival_title", "Receiving / Arrival")}</h5>
+                          </div>
+                          <div className="grid gap-3 sm:grid-cols-3">
+                            <label className="space-y-1">
+                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.receiving_country_label", "Receiving Country")}</span>
+                              <SearchableSelect
+                                value={form.receivingCountry || form.destinationCountry || form.receivedCountry || ""}
+                                onChange={(val) => {
+                                  if (val === "__ADD_NEW__") {
+                                    handleAddNewLocationItem("country", "receivingCountry");
+                                  } else {
+                                    setValue("receivingCountry", val);
+                                    setValue("receivedCountry", val);
+                                    setValue("destinationCountry", val);
+                                    setValue("receivingPort", "");
+                                    setValue("destinationPort", "");
+                                    setValue("receivedPort", "");
+                                  }
+                                }}
+                                options={masterCountryOptions.map((c) => ({ label: `${c.name} ${c.iso2 ? `(${c.iso2})` : ""}`, value: c.name }))}
+                                placeholder={t(lang, "sales.select_country_ph", "Select Country")}
+                                addOptionLabel="Add New Country"
+                              />
+                            </label>
+                            <label className="space-y-1">
+                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.receiving_port_label", "Receiving Port")}</span>
+                              <SearchableSelect
+                                value={form.receivingPort || form.destinationPort || form.receivedPort || ""}
+                                onChange={(val) => {
+                                  if (val === "__ADD_NEW__") {
+                                    handleAddNewLocationItem("port", "receivingPort");
+                                  } else {
+                                    setValue("receivingPort", val);
+                                    setValue("destinationPort", val);
+                                    setValue("receivedPort", val);
+                                    if (form.shippingMode === "By Air") setValue("destinationAirportName", val);
+                                    if (form.shippingMode === "By Road") setValue("receivingBorder", val);
+                                  }
+                                }}
+                                options={currentReceivedPorts.map((p, idx) => ({ label: `${p.port_name} ${p.port_code ? `[${p.port_code}]` : ""}`, value: p.port_name }))}
+                                placeholder={t(lang, "sales.select_port_ph", "Select Port")}
+                                addOptionLabel="Add New Port"
+                                disabled={!(form.receivingCountry || form.destinationCountry || form.receivedCountry) && currentReceivedPorts.length === 0}
+                              />
+                            </label>
+                            <label className="space-y-1">
+                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.receiving_date_label", "Receiving Date")}</span>
+                              <input
+                                type="date"
+                                value={form.receivedDate || ""}
+                                onChange={(e) => setValue("receivedDate", e.target.value)}
+                                className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-900 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                              />
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Destination Branch (Country-to-Country Sale) */}
+                    <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-3 dark:border-emerald-900/50 dark:bg-emerald-950/10 space-y-2.5">
+                      <div className="flex items-center gap-2 border-b border-emerald-100 pb-1.5 dark:border-emerald-900/40">
+                        <div className="grid h-6 w-6 place-items-center rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                          <Globe2 className="h-3.5 w-3.5" />
+                        </div>
+                        <div>
+                          <h5 className="text-[10.5px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
+                            {t(lang, "ctransfer.destination", "Destination Country / Branch")}
+                          </h5>
+                          <p className="text-[9.5px] text-slate-500 dark:text-slate-400">
+                            {t(lang, "ctransfer.sale_subtitle", "Sales orders scoped for transfer from a selling country/branch to a destination (owning) country/branch.")}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <div>
+                          <label className="block text-[9.5px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                            {t(lang, "purchase.destination_country_colon", "Destination Country:")}
+                          </label>
+                          <select
+                            value={form.destCountryId || ""}
+                            onChange={(e) => setForm(p => ({ ...p, destCountryId: e.target.value, destCountryBranchId: "", destCityBranchId: "" }))}
+                            className="w-full h-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500"
+                          >
+                            <option value="">{t(lang, "purchase.select_country_ellipsis", "Select Country...")}</option>
+                            {(allCountries.length ? allCountries : countries).map((c) => (
+                              <option key={c.id} value={c.id}>{c.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[9.5px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                            {t(lang, "common.branch", "Main Branch")}
+                          </label>
+                          <select
+                            value={form.destCountryBranchId || ""}
+                            onChange={(e) => setForm(p => ({ ...p, destCountryBranchId: e.target.value, destCityBranchId: "" }))}
+                            disabled={!form.destCountryId}
+                            className="w-full h-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500 disabled:opacity-50"
+                          >
+                            <option value="">{t(lang, "purchase.select_branch_ellipsis", "Select Branch...")}</option>
+                            {destMainBranches.map((b) => (
+                              <option key={b.id} value={b.id}>{b.name} ({b.code})</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[9.5px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                            {t(lang, "common.branch", "City Branch")}
+                          </label>
+                          <select
+                            value={form.destCityBranchId || ""}
+                            onChange={(e) => setForm(p => ({ ...p, destCityBranchId: e.target.value }))}
+                            disabled={!form.destCountryId}
+                            className="w-full h-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500 disabled:opacity-50"
+                          >
+                            <option value="">{t(lang, "purchase.select_city_branch_ellipsis", "Select City Branch...")}</option>
+                            {destCityBranches.map((b) => (
+                              <option key={b.id} value={b.id}>{b.name} ({b.code})</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* RIGHT COLUMN: Advance & Payment Terms + Transport & Container Details + Remarks & Narration */}
+                  <div className="space-y-4">
+                    {/* SECTION 2: ADVANCE & PAYMENT TERMS */}
+                    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950 space-y-4">
+                      <div className="flex items-center gap-2 border-b border-slate-100 pb-3 dark:border-slate-800">
+                        <CreditCard className="h-4 w-4 text-blue-600" />
+                        <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">{t(lang, "purchase.advance_payment_terms_title", "Advance & Payment Terms")}</h4>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[10px] font-black uppercase text-slate-500 mb-1.5">{t(lang, "purchase.payment_type_label", "Payment Type")}</label>
+                          <select
+                            value={form.paymentType || ""}
+                            onChange={(e) => setValue("paymentType", e.target.value)}
+                            className="w-full h-9 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500"
+                          >
+                            <option value="">{t(lang, "common.select", "Select…")}</option>
+                            {PAYMENT_TYPES.map((p) => <option key={p} value={p}>{translateOptionLabel(lang, p)}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-black uppercase text-slate-500 mb-1.5">{t(lang, "purchase.advance_percentage_label", "Advance Percentage (%)")}</label>
+                          <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={form.advancePercent ?? ""}
+                            onChange={(e) => setValue("advancePercent", e.target.value ? Number(e.target.value) : null)}
+                            placeholder={t(lang, "sales.qty_example_ph", "e.g. 20")}
+                            className="w-full h-9 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500 font-mono"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-black uppercase text-slate-500 mb-1.5">{t(lang, "purchase.advance_payment_date_label", "Advance Payment Date")}</label>
+                          <input
+                            type="date"
+                            value={form.advancePaymentDate || ""}
+                            onChange={(e) => setValue("advancePaymentDate", e.target.value)}
+                            className="w-full h-9 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 text-xs font-semibold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-black uppercase text-slate-500 mb-1.5">{t(lang, "purchase.final_payment_date_label", "Final Payment Date")}</label>
+                          <input
+                            type="date"
+                            value={form.paymentDate || ""}
+                            onChange={(e) => setValue("paymentDate", e.target.value)}
+                            className="w-full h-9 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 text-xs font-semibold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* SECTION 3: TRANSPORT & CONTAINER DETAILS */}
+                    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950 space-y-4">
+                      <div className="flex items-center gap-2 border-b border-slate-100 pb-3 dark:border-slate-800">
+                        <Truck className="h-4 w-4 text-blue-600" />
+                        <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">{t(lang, "purchase.transport_container_title", "Transport & Container Details")}</h4>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[10px] font-black uppercase text-slate-500 mb-1.5">{t(lang, "purchase.container_numbers_label", "Container Numbers")}</label>
+                          <input
+                            type="text"
+                            value={form.containerNumbers || ""}
+                            onChange={(e) => setValue("containerNumbers", e.target.value)}
+                            placeholder={t(lang, "sales.container_example_ph", "e.g. ABCU1234567")}
+                            className="w-full h-9 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500 font-mono uppercase"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-black uppercase text-slate-500 mb-1.5">{t(lang, "purchase.container_size_type_label", "Container Size / Type")}</label>
+                          <select
+                            value={form.containerSize || ""}
+                            onChange={(e) => setValue("containerSize", e.target.value)}
+                            className="w-full h-9 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 text-xs font-bold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500"
+                          >
+                            <option value="">{t(lang, "purchase.select_type_placeholder", "Select Type...")}</option>
+                            {CONTAINER_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* SECTION 4: REMARKS & NARRATION */}
+                    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950 space-y-3">
+                      <div className="flex items-center gap-2 border-b border-slate-100 pb-2 dark:border-slate-800">
+                        <MessageSquare className="h-4 w-4 text-blue-600" />
+                        <label className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">{t(lang, "purchase.remarks_narration_title", "Remarks & Narration")}</label>
+                      </div>
+                      <textarea
+                        rows={3}
+                        value={form.remarks || ""}
+                        onChange={(e) => setValue("remarks", e.target.value)}
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500 resize-none leading-relaxed"
+                        placeholder={t(lang, "sales.remarks_narration_ph", "Add any remarks or narration here...")}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Step 3 Action Navigation */}
+                <div className="flex items-center justify-between gap-4 pt-4 border-t border-slate-200 mt-6">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setActiveTab("goods")}
+                    className="font-bold text-xs h-10 px-8 border-slate-200 text-slate-700 hover:bg-slate-50"
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-1.5" /> {t(lang, "common.back", "Back")}
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => setActiveTab("reports_tab")}
+                    className={cn(
+                      "font-black text-xs h-10 px-8 text-white shadow-md transition-all uppercase tracking-wider flex items-center gap-2",
+                      isLocalSale
+                        ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
+                        : "bg-blue-600 hover:bg-blue-700"
+                    )}
+                  >
+                    {t(lang, "common.next", "Next")} <ChevronRight className="h-4 w-4 ml-1.5" />
+                  </Button>
+                </div>
+              </fieldset>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-0 items-start w-full">
+              <section className="lg:col-span-9 space-y-4 order-2 lg:order-2 mt-4">
+                {/* GLOBAL INFO CARDS (Always visible at top) */}
+                {renderGlobalInfoCards()}
+
+                {/* LOT STOCK PANEL */}
+                {lotPanelOpen && (
+                  <div className="rounded-2xl border border-border bg-card p-4 shadow-sm animate-in fade-in zoom-in-95 duration-200">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3 border-b border-border pb-2">
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-primary">{t(lang, "sales.lot_stock_panel_title", "Lot Stock Panel")}</p>
+                        <h4 className="text-sm font-black text-foreground">{selectedSaleSource.label}</h4>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={lotSearch}
+                          onChange={(e) => setLotSearch(e.target.value)}
+                          placeholder={t(lang, "sales.search_lot_ph", "Search lot no, goods, stock ref...")}
+                          className="h-8 w-56 rounded-lg border border-input bg-background px-3 text-[10px] outline-none focus:border-primary"
+                        />
+                        <button type="button" onClick={() => setLotPanelOpen(false)} className="flex h-8 w-8 items-center justify-center rounded-lg border border-border hover:bg-muted">
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="overflow-x-auto rounded-xl border border-border">
+                      <table className="w-full text-[10px] text-foreground border-collapse text-left whitespace-nowrap">
+                        <thead className="bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700">
+                          <tr className="font-bold uppercase tracking-wider text-[9px]">
+                            <Th className="px-3 py-2.5 text-left">{t(lang, "sales.lot_no_label", "Lot No")}</Th>
+                            <Th className="px-3 py-2.5 text-left">{t(lang, "sales.goods_brand_label", "Goods / Brand")}</Th>
+                            <Th className="px-3 py-2.5 text-right">{t(lang, "god.as_available", "Available")}</Th>
+                            <Th className="px-3 py-2.5 text-right">{t(lang, "sales.net_kg_label", "Net KG")}</Th>
+                            <Th className="px-3 py-2.5 text-left">{t(lang, "company_form.section_location", "Location")}</Th>
+                            <Th className="px-3 py-2.5 text-left">{t(lang, "log.tbl_status", "Status")}</Th>
+                            <Th className="px-3 py-2.5 text-center w-36">{t(lang, "purchase.th_action", "Action")}</Th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredSaleLots.map((lot) => {
+                            const isChecked = checkedLotNo === lot.lotNo;
+                            const deductions = lotDeductions[lot.lotNo] || [];
+                            const totalDeductedQty = deductions.reduce((sum, d) => sum + d.quantity, 0);
+                            const totalDeductedWeight = deductions.reduce((sum, d) => sum + d.weight, 0);
+                            const originalQty = lot.availableQty + totalDeductedQty;
+                            const originalWeight = lot.netWeight + totalDeductedWeight;
+                            return (
+                              <React.Fragment key={lot.lotNo}>
+                                <tr className="border-t border-border hover:bg-sky-50/50 transition">
+                                  <td className="px-3 py-2.5 font-black text-primary">
+                                    {lot.lotNo}
+                                    <div className="text-[9px] font-semibold text-muted-foreground font-mono">{lot.stockRef}</div>
+                                  </td>
+                                  <td className="px-3 py-2.5 font-bold text-foreground">
+                                    {lot.goodsName}
+                                    <div className="text-[9px] font-semibold text-muted-foreground">{lot.brand} / {lot.size} / {lot.origin}</div>
+                                  </td>
+                                  <td className="px-3 py-2.5 text-right font-black">{Number(lot.availableQty || 0).toLocaleString()} {translateOptionLabel(lang, lot.qtyName)}</td>
+                                  <td className="px-3 py-2.5 text-right font-mono font-bold">{Number(lot.netWeight || 0).toLocaleString()}</td>
+                                  <td className="px-3 py-2.5 text-muted-foreground">{lot.location}</td>
+                                  <td className="px-3 py-2.5"><span className="rounded-full bg-emerald-50 px-2 py-1 text-[9px] font-black text-emerald-700">{lot.status}</span></td>
+                                  <td className="px-3 py-2.5 text-center">
+                                    <div className="flex gap-1.5 justify-center items-center">
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          applySaleLot(lot);
+                                          setLotPanelOpen(false);
+                                        }}
+                                        className="rounded-lg bg-sky-600 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-white shadow-sm hover:bg-sky-700 transition shrink-0"
+                                      >
+                                        {t(lang, "sales.use_lot_btn", "Use Lot")}
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const next = checkedLotNo === lot.lotNo ? null : lot.lotNo;
+                                          setCheckedLotNo(next);
+                                          if (next) loadLotDeductions(lot);
+                                        }}
+                                        className="rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider transition shrink-0"
+                                      >
+                                        {checkedLotNo === lot.lotNo ? t(lang, "sales.hide_word", "Hide") : t(lang, "sales.check_stock_btn", "Check Stock")}
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                                {isChecked && (
+                                  <tr className="bg-slate-50/70 border-t border-b border-slate-250 animate-in fade-in slide-in-from-top-1 duration-200">
+                                    <td colSpan={7} className="px-4 py-3 bg-slate-50/50">
+                                      <div className="space-y-2.5 max-w-[95%] mx-auto">
+                                        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1">
+                                          <h5 className="text-[10px] font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                                            <span className="h-1.5 w-1.5 rounded-full bg-sky-500 animate-pulse"></span>
+                                            Stock Utilization History & Balance for {lot.lotNo}
+                                          </h5>
+                                          <div className="text-[9px] font-bold text-slate-500">
+                                            {t(lang, "sales.original_capacity_colon", "Original Capacity:")}<span className="font-mono text-slate-800">{originalQty.toLocaleString()} {translateOptionLabel(lang, lot.qtyName)}</span> ({originalWeight.toLocaleString()} KG)
+                                          </div>
+                                        </div>
+
+                                        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+                                          <table className="w-full text-[9px] text-slate-700 border-collapse">
+                                            <thead className="bg-slate-100 text-slate-600 font-bold uppercase tracking-wider text-[8px] border-b border-slate-200">
+                                              <tr>
+                                                <Th className="px-3 py-1.5 text-left">{t(lang, "sales.transaction_ref_label", "Transaction Ref")}</Th>
+                                                <Th className="px-3 py-1.5 text-left">{t(lang, "sales.sale_date_label", "Sale Date")}</Th>
+                                                <Th className="px-3 py-1.5 text-left">{t(lang, "sales.customer_debtor_label", "Customer / Debtor")}</Th>
+                                                <Th className="px-3 py-1.5 text-right">{t(lang, "sales.qty_deducted_label", "Qty Deducted")}</Th>
+                                                <Th className="px-3 py-1.5 text-right">{t(lang, "sales.weight_deducted_label", "Weight Deducted")}</Th>
+                                                <Th className="px-3 py-1.5 text-left">{t(lang, "log.tbl_status", "Status")}</Th>
+                                              </tr>
+                                            </thead>
+                                            <tbody>
+                                              {/* Initial import/purchase record */}
+                                              <tr className="border-b border-slate-100 font-semibold bg-emerald-50/20 text-emerald-800">
+                                                <td className="px-3 py-1.5 font-mono">{lot.stockRef}</td>
+                                                <td className="px-3 py-1.5">{t(lang, "sales.intake_date_label", "Intake Date")}</td>
+                                                <td className="px-3 py-1.5 italic text-emerald-700">{t(lang, "sales.initial_import_inbound", "Initial Import / Stock Inbound")}</td>
+                                                <td className="px-3 py-1.5 text-right font-mono font-bold text-emerald-600">+{originalQty.toLocaleString()}</td>
+                                                <td className="px-3 py-1.5 text-right font-mono font-bold text-emerald-600">+{originalWeight.toLocaleString()} KG</td>
+                                                <td className="px-3 py-1.5"><span className="text-[8px] font-black uppercase bg-emerald-100 text-emerald-800 px-1 py-0.5 rounded">{t(lang, "sales.inbound_word", "Inbound")}</span></td>
+                                              </tr>
+
+                                              {/* Deduction history */}
+                                              {deductions.map((d, dIdx) => (
+                                                <tr key={dIdx} className="border-b border-slate-100 text-red-800 hover:bg-slate-50/50 transition">
+                                                  <td className="px-3 py-1.5 font-mono font-bold">{d.reference}</td>
+                                                  <td className="px-3 py-1.5">{d.date}</td>
+                                                  <td className="px-3 py-1.5 font-semibold text-slate-800">{d.customer}</td>
+                                                  <td className="px-3 py-1.5 text-right font-mono font-bold">-{d.quantity.toLocaleString()}</td>
+                                                  <td className="px-3 py-1.5 text-right font-mono font-bold">-{d.weight.toLocaleString()} KG</td>
+                                                  <td className="px-3 py-1.5"><span className="text-[8px] font-black uppercase bg-red-100 text-red-800 px-1 py-0.5 rounded">{t(lang, "sales.sold_out_word", "Sold Out")}</span></td>
+                                                </tr>
+                                              ))}
+
+                                              {/* Total Sold Summary row */}
+                                              {deductions.length > 0 && (
+                                                <tr className="bg-slate-50/50 border-t border-slate-150 font-bold">
+                                                  <td colSpan={3} className="px-3 py-1.5 text-right text-slate-500 uppercase tracking-wider text-[8px]">{t(lang, "sales.total_outward_deductions_colon", "Total Outward Deductions:")}</td>
+                                                  <td className="px-3 py-1.5 text-right font-mono text-red-600 font-black">-{totalDeductedQty.toLocaleString()} {translateOptionLabel(lang, lot.qtyName)}</td>
+                                                  <td className="px-3 py-1.5 text-right font-mono text-red-600 font-black">-{totalDeductedWeight.toLocaleString()} KG</td>
+                                                  <td className="px-3 py-1.5 text-slate-400 font-semibold">—</td>
+                                                </tr>
+                                              )}
+
+                                              {/* Net Remaining Balance row */}
+                                              <tr className="bg-sky-50 border-t border-slate-200 font-black text-sky-950">
+                                                <td colSpan={3} className="px-3 py-1.5 text-right uppercase tracking-wider text-[8px]">{t(lang, "sales.net_available_balance_colon", "Net Available Balance:")}</td>
+                                                <td className="px-3 py-1.5 text-right font-mono text-[10px] font-black text-sky-700">{lot.availableQty.toLocaleString()} {translateOptionLabel(lang, lot.qtyName)}</td>
+                                                <td className="px-3 py-1.5 text-right font-mono text-[10px] font-black text-sky-700">{lot.netWeight.toLocaleString()} KG</td>
+                                                <td className="px-3 py-1.5"><span className="text-[8px] font-black uppercase bg-sky-200 text-sky-800 px-1 py-0.5 rounded animate-pulse">{t(lang, "sales.live_stock_title", "Live Stock")}</span></td>
+                                              </tr>
+                                            </tbody>
+                                          </table>
+                                        </div>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                )}
+                              </React.Fragment>
+                            );
+                          })}
+                          {filteredSaleLots.length === 0 && (
+                            <tr>
+                              <td colSpan={7} className="px-3 py-6 text-center text-muted-foreground italic font-semibold">
+                                {t(lang, "sales.no_lots_found_source", "No lots found for this source.")}
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* GOODS LIST TABLE */}
+                {activeTab === "goods" && (
+                  <div className="mt-4">
+                    {isLocalSale && (
+                      <div className="flex items-center justify-between rounded-t-lg bg-gradient-to-r from-amber-100 to-amber-200 dark:from-amber-950/40 dark:to-amber-900/30 border border-b-0 border-amber-300 dark:border-amber-800 px-3.5 py-2">
+                        <span className="text-xs font-black uppercase tracking-wider text-amber-900 dark:text-amber-200 flex items-center gap-2">
+                          <Package className="h-4 w-4 text-emerald-600" /> {t(lang, "lp.goods_table_title", "GOODS TABLE")}
+                        </span>
+                        <span className="text-[10px] font-mono font-bold bg-blue-600 text-white px-2 py-0.5 rounded-full">
+                          {goodsEntries.length} {t(lang, "lp.goods_entered_badge", "Goods Entered")}
+                        </span>
+                      </div>
+                    )}
+                    <div className={cn("overflow-x-auto border border-border bg-background shadow-sm", isLocalSale ? "rounded-b-lg" : "rounded-lg")}>
+                      <table className="w-full text-[9px] text-foreground border-collapse text-left whitespace-nowrap">
+                        <thead>
+                          <tr className="bg-muted/80 text-muted-foreground border-b border-border font-bold uppercase tracking-wider">
+                            <Th className="px-3 py-2.5 text-center w-8">#</Th>
+                            <Th className="px-3 py-2.5">{t(lang, "purchase.th_goods_name", "Goods Name")}</Th>
+                            <Th className="px-3 py-2.5 text-center">{t(lang, "purchase.th_size", "Size")}</Th>
+                            <Th className="px-3 py-2.5 text-center">{t(lang, "purchase.th_brand", "Brand")}</Th>
+                            <Th className="px-3 py-2.5 text-center">{t(lang, "purchase.th_hs_code", "HS Code")}</Th>
+                            <Th className="px-3 py-2.5 text-center">{t(lang, "purchase.th_origin", "Origin")}</Th>
+                            <Th className="px-3 py-2.5 text-right">{t(lang, "purchase.th_qty", "Qty")}</Th>
+                            <Th className="px-3 py-2.5 text-center">{t(lang, "purchase.th_unit", "Unit")}</Th>
+                            <Th className="px-3 py-2.5 text-right">Price ({form.currencyType || "USD"})</Th>
+                            <Th className="px-3 py-2.5 text-right">Amount ({form.currencyType || "USD"})</Th>
+                            <Th className="px-3 py-2.5 text-center">{t(lang, "purchase.th_ex_rate", "Ex. Rate")}</Th>
+                            <Th className="px-3 py-2.5 text-right bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">Final ({form.secondaryCurrency || "PKR"})</Th>
+                            <Th className="px-3 py-2.5 text-center w-10">{t(lang, "purchase.th_action", "Action")}</Th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {goodsEntries.length === 0 ? (
+                            <tr>
+                              <td colSpan={13} className="px-3 py-6 text-center text-muted-foreground italic font-semibold text-[10px]">
+                                {t(lang, "purchase.goods_table_empty", "No goods added yet. Add an item above to see it here.")}
+                              </td>
+                            </tr>
+                          ) : (
+                            goodsEntries.map((row, index) => (
+                              <tr key={index} className="border-t border-border hover:bg-muted/50 transition">
+                                <td className="px-3 py-2 text-center font-mono text-muted-foreground">{index + 1}</td>
+                                <td className="px-3 py-2 font-black text-primary">{row.goodsName}</td>
+                                <td className="px-3 py-2 text-center font-semibold">{row.size}</td>
+                                <td className="px-3 py-2 text-center font-semibold">{row.brand}</td>
+                                <td className="px-3 py-2 text-center font-mono text-muted-foreground">{row.hsCode}</td>
+                                <td className="px-3 py-2 text-center font-semibold">{row.origin}</td>
+                                <td className="px-3 py-2 text-right font-mono font-bold">{row.qtyNo.toLocaleString()}</td>
+                                <td className="px-3 py-2 text-center font-semibold">{translateOptionLabel(lang, row.qtyName)}</td>
+                                <td className="px-3 py-2 text-right font-mono font-bold text-muted-foreground">{row.coursePrice.toFixed(2)}</td>
+                                <td className="px-3 py-2 text-right font-mono font-black text-yellow-600 dark:text-yellow-450">{row.totalAmount.toLocaleString()}</td>
+                                <td className="px-3 py-2 text-center font-mono text-muted-foreground">{row.op || "*"} {row.exchangeRate}</td>
+                                <td className="px-3 py-2 text-right font-mono font-black text-emerald-600 dark:text-emerald-400 bg-emerald-500/5">
+                                  {row.finalAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </td>
+                                <td className="px-3 py-2 text-center">
+                                  <div className="flex items-center justify-center gap-1.5">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleViewGoodsEntry(index)}
+                                      className="flex items-center gap-1 px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[9px] font-bold transition-colors"
+                                      title={t(lang, "branch.view", "View")}
+                                    >
+                                      <Eye className="h-3 w-3" /> {t(lang, "branch.view", "View")}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleEditGoodsEntry(index)}
+                                      className="flex items-center gap-1 px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded text-[9px] font-bold transition-colors shadow-sm border border-blue-200"
+                                      title={t(lang, "branch.edit", "Edit")}
+                                    >
+                                      <Edit3 className="h-3 w-3" /> {t(lang, "branch.edit", "Edit")}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setGoodsEntries(prev => prev.filter((_, idx) => idx !== index))}
+                                      className="flex items-center gap-1 px-2 py-1 bg-red-50 hover:bg-red-100 text-red-600 rounded text-[9px] font-bold transition-colors shadow-sm border border-red-100"
+                                      title={t(lang, "common.delete", "Delete")}
+                                    >
+                                      <Trash2 className="h-3 w-3" /> {t(lang, "common.delete", "Delete")}
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </section>
+
+              <main className="lg:col-span-3 space-y-3 flex flex-col order-1 lg:order-1 mt-4">
+
+              {activeTab === "booking" && (
+                <fieldset disabled={isTransferred && !session?.scopes?.isSuperAdmin} className={cn("space-y-3 order-2 w-full mt-0", sectionPanelCls)}>
+                  <div className={sectionPanelHeaderCls}>
+                    <h3 className={cn("text-xs font-black uppercase tracking-wider", isLocalSale ? "text-amber-900 dark:text-amber-200" : "text-foreground")}>{t(lang, "sales.booking_bill_info_title", "Sales Booking / Bill Info")}</h3>
+                    {isLocalSale && (
+                      <span className="text-[9px] font-bold text-amber-800 bg-amber-50 dark:bg-amber-950/60 dark:text-amber-300 px-2 py-0.5 rounded border border-amber-400 dark:border-amber-700 uppercase tracking-wide shrink-0">
+                        {t(lang, "sales.local_sale_badge", "Local Sale")}
+                      </span>
+                    )}
+                  </div>
+
+                  <VoiceFormFill
+                    context="sales"
+                    lang={lang}
+                    compact
+                    onApply={(f) => setForm((prev) => {
+                      const next = { ...prev };
+                      if (f.customerName && "customerName" in prev) next.customerName = String(f.customerName);
+                      if (f.currencyCode && "salesCurrency" in prev) next.salesCurrency = String(f.currencyCode).toUpperCase().slice(0, 3);
+                      return next;
+                    })}
+                  />
+
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="relative" ref={customerDropdownRef}>
+                      <label className="block text-[10px] font-bold text-foreground mb-1">{t(lang, "sales.customer_account_dr_star", "Customer Account (DR)*")}</label>
+                      <div className="relative flex items-center">
+                        <input
+                          type="text"
+                          placeholder={form.customerAccountName ? formatAccountDisplayLabel(form.customerAccountName, form.customerAccountNo, form.customerAccountManualReferenceNumber) : "Search Code, Name, Branch, Manual A/C..."}
+                          value={customerDropdownOpen ? customerSearch : (form.customerAccountName ? formatAccountDisplayLabel(form.customerAccountName, form.customerAccountNo, form.customerAccountManualReferenceNumber) : form.customerAccountNo || "")}
+                          onChange={(e) => handleTextChange("purchase", e.target.value)}
+                          onFocus={() => {
+                            setPurchaseDropdownOpen(true);
+                            setPurchasePinDropdownOpen(false);
+                            setPurchaseSearch("");
+                          }}
+                          className="w-full bg-background border border-input rounded pl-2.5 pr-8 py-1.5 text-foreground font-semibold outline-none focus:border-primary text-xs h-9"
+                        />
+                        <button
+                          type="button"
+                          disabled={!form.customerId}
+                          onClick={() => {
+                            setPurchasePinDropdownOpen(prev => !prev);
+                            setPurchaseDropdownOpen(false);
+                          }}
+                          className="absolute right-2 text-muted-foreground hover:text-primary transition-colors disabled:opacity-30"
+                        >
+                          <Pin className={`h-3.5 w-3.5 ${customerPinDropdownOpen ? "text-primary rotate-45" : ""}`} />
+                        </button>
+                      </div>
+
+                      {customerDropdownOpen && (
+                        <div className="absolute left-0 mt-1.5 w-full min-w-[290px] sm:min-w-[440px] md:min-w-[520px] rounded-2xl bg-card border-2 border-primary/40 shadow-2xl z-[80] p-2 overflow-hidden backdrop-blur-md">
+                          <div className="flex justify-between items-center px-2.5 py-1.5 bg-primary/5 rounded-lg mb-1.5 border border-primary/10">
+                            <span className="text-[10px] font-black uppercase text-primary tracking-wider">{t(lang, "sales.select_customer_account_dr_header", "Select Customer Account (DR)")}</span>
+                            <span className="text-[9px] font-mono font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                              {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, customerSearch)).length} found
+                            </span>
+                          </div>
+                          <div className="max-h-64 overflow-y-auto space-y-1.5 pr-0.5">
+                            {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, customerSearch)).map((acc) => {
+                              const compName = acc.companyName || acc.company_name || (acc.companyId && dbCompanies.find(c => c.id === acc.companyId)?.name) || dbCompanies[0]?.name || t(lang, "purchase.card_none_label", "None");
+                              return (
+                                <button
+                                  key={acc.accountCode}
+                                  type="button"
+                                  onClick={() => {
+                                    applyAccountMaster("purchase", acc);
+                                    setPurchaseDropdownOpen(false);
+                                    setPurchaseSearch("");
+                                  }}
+                                  className="w-full text-left p-2.5 rounded-xl border border-border/60 hover:border-primary/50 hover:bg-primary/5 transition duration-150 group bg-background/60"
+                                >
+                                  <div className="flex justify-between items-start gap-2 mb-1">
+                                    <span className="font-bold text-xs text-foreground group-hover:text-primary transition-colors">{formatAccountDisplayLabel(acc.accountName, acc.accountCode, acc.manualReferenceNumber)}</span>
+                                    <span className="font-mono text-[9.5px] font-black bg-primary/10 text-primary px-1.5 py-0.5 rounded shrink-0">System: {acc.accountCode}</span>
+                                  </div>
+                                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 text-[9px] text-muted-foreground">
+                                    <div><span className="font-semibold text-foreground/80">{t(lang, "purchase.branch_colon_label", "Branch:")}</span> {acc.cityBranchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}</div>
+                                    <div>
+                                      {acc.manualReferenceNumber && (
+                                        <div className="mb-0.5"><span className="font-semibold text-foreground/80">{t(lang, "purchase.manual_ac_colon", "Manual A/C:")}</span> <span className="font-bold text-slate-700 dark:text-slate-300">{acc.manualReferenceNumber}</span></div>
+                                      )}
+                                      <div><span className="font-semibold text-foreground/80">{t(lang, "purchase.curr_colon", "Curr:")}</span> <span className="font-bold text-emerald-600 dark:text-emerald-400">{acc.ledgerCurrency || "PKR"}</span></div>
+                                    </div>
+                                    <div><span className="font-semibold text-foreground/80">{t(lang, "purchase.card_company_colon", "Company:")}</span> <span className="truncate inline-block max-w-[120px] align-bottom">{compName}</span></div>
+                                  </div>
+                                </button>
+                              );
+                            })}
+                            {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, customerSearch)).length === 0 && (
+                              <div className="p-4 text-center text-muted-foreground text-xs italic">
+                                {dbAccountsLoading
+                                  ? t(lang, "purchase.loading_accounts", "Loading accounts...")
+                                  : customerSearch.length < 2
+                                  ? t(lang, "purchase.type_min_2_chars", "Type at least 2 characters to search accounts...")
+                                  : t(lang, "purchase.no_matching_accounts", "No matching accounts found. Try searching by Code, Name, Currency, or Phone.")}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="relative" ref={salesDropdownRef}>
+                      <label className="block text-[10px] font-bold text-foreground mb-1">{t(lang, "purchase.sales_account_cr_star", "Sales Account (CR)*")}</label>
+                      <div className="relative flex items-center">
+                        <input
+                          type="text"
+                          placeholder={form.salesAccountName ? formatAccountDisplayLabel(form.salesAccountName, form.salesAccountNo, form.salesAccountManualReferenceNumber) : "Search Code, Name, Branch, Manual A/C..."}
+                          value={salesDropdownOpen ? salesSearch : (form.salesAccountName ? formatAccountDisplayLabel(form.salesAccountName, form.salesAccountNo, form.salesAccountManualReferenceNumber) : form.salesAccountNo || "")}
+                          onChange={(e) => handleTextChange("sales", e.target.value)}
+                          onFocus={() => {
+                            setSalesDropdownOpen(true);
+                            setSalesPinDropdownOpen(false);
+                            setSalesSearch("");
+                          }}
+                          className="w-full bg-background border border-input rounded pl-2.5 pr-8 py-1.5 text-foreground font-semibold outline-none focus:border-primary text-xs h-9"
+                        />
+                        <button
+                          type="button"
+                          disabled={!form.customerId}
+                          onClick={() => {
+                            setSalesPinDropdownOpen(prev => !prev);
+                            setSalesDropdownOpen(false);
+                          }}
+                          className="absolute right-2 text-muted-foreground hover:text-primary transition-colors disabled:opacity-30"
+                        >
+                          <Pin className={`h-3.5 w-3.5 ${salesPinDropdownOpen ? "text-primary rotate-45" : ""}`} />
+                        </button>
+                      </div>
+                      {salesDropdownOpen && (
+                        <div className="absolute left-0 mt-1.5 w-full min-w-[290px] sm:min-w-[440px] md:min-w-[520px] rounded-2xl bg-card border-2 border-primary/40 shadow-2xl z-[80] p-2 overflow-hidden backdrop-blur-md">
+                          <div className="flex justify-between items-center px-2.5 py-1.5 bg-primary/5 rounded-lg mb-1.5 border border-primary/10">
+                            <span className="text-[10px] font-black uppercase text-primary tracking-wider">{t(lang, "purchase.select_sales_account_cr_header", "Select Sales Account (CR)")}</span>
+                            <span className="text-[9px] font-mono font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                              {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, salesSearch)).length} found
+                            </span>
+                          </div>
+                          <div className="max-h-64 overflow-y-auto space-y-1.5 pr-0.5">
+                            {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, salesSearch)).map((acc) => {
+                              const compName = acc.companyName || acc.company_name || (acc.companyId && dbCompanies.find(c => c.id === acc.companyId)?.name) || dbCompanies[0]?.name || t(lang, "purchase.card_none_label", "None");
+                              return (
+                                <button
+                                  key={acc.accountCode}
+                                  type="button"
+                                  onClick={() => {
+                                    applyAccountMaster("sales", acc);
+                                    setSalesDropdownOpen(false);
+                                    setSalesSearch("");
+                                  }}
+                                  className="w-full text-left p-2.5 rounded-xl border border-border/60 hover:border-primary/50 hover:bg-primary/5 transition duration-150 group bg-background/60"
+                                >
+                                  <div className="flex justify-between items-start gap-2 mb-1">
+                                    <span className="font-bold text-xs text-foreground group-hover:text-primary transition-colors">{formatAccountDisplayLabel(acc.accountName, acc.accountCode, acc.manualReferenceNumber)}</span>
+                                    <span className="font-mono text-[9.5px] font-black bg-primary/10 text-primary px-1.5 py-0.5 rounded shrink-0">System: {acc.accountCode}</span>
+                                  </div>
+                                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 text-[9px] text-muted-foreground">
+                                    <div><span className="font-semibold text-foreground/80">{t(lang, "purchase.branch_colon_label", "Branch:")}</span> {acc.cityBranchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}</div>
+                                    <div>
+                                      {acc.manualReferenceNumber && (
+                                        <div className="mb-0.5"><span className="font-semibold text-foreground/80">{t(lang, "purchase.manual_ac_colon", "Manual A/C:")}</span> <span className="font-bold text-slate-700 dark:text-slate-300">{acc.manualReferenceNumber}</span></div>
+                                      )}
+                                      <div><span className="font-semibold text-foreground/80">{t(lang, "purchase.curr_colon", "Curr:")}</span> <span className="font-bold text-emerald-600 dark:text-emerald-400">{acc.ledgerCurrency || "PKR"}</span></div>
+                                    </div>
+                                    <div><span className="font-semibold text-foreground/80">{t(lang, "purchase.card_company_colon", "Company:")}</span> <span className="truncate inline-block max-w-[120px] align-bottom">{compName}</span></div>
+                                  </div>
+                                </button>
+                              );
+                            })}
+                            {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, salesSearch)).length === 0 && (
+                              <div className="p-4 text-center text-muted-foreground text-xs italic">
+                                {dbAccountsLoading
+                                  ? t(lang, "purchase.loading_accounts", "Loading accounts...")
+                                  : salesSearch.length < 2
+                                  ? t(lang, "purchase.type_min_2_chars", "Type at least 2 characters to search accounts...")
+                                  : t(lang, "purchase.no_matching_accounts", "No matching accounts found. Try searching by Code, Name, Currency, or Phone.")}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="rounded-lg border border-border bg-muted/20 p-3">
+                    <div className="grid grid-cols-1 gap-3">
+                      <div>
+                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.contract_no_label", "Contract No")}</label>
+                        <input
+                          type="text"
+                          value={form.salesContractNo}
+                          onChange={(e) => setValue("salesContractNo", e.target.value)}
+                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] h-8 font-mono"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.contract_booking_date_label", "Contract / Booking Date")}</label>
+                        <input
+                          type="date"
+                          value={form.salesDate}
+                          onChange={(e) => setValue("salesDate", e.target.value)}
+                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] h-8 font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 mt-3">
+                      <div>
+                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.invoice_payment_select_label", "Invoice / Payment Select")}</label>
+                        <select
+                          value={form.paymentType || ""}
+                          onChange={(e) => setValue("paymentType", e.target.value)}
+                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] h-8"
+                        >
+                          <option value="">{t(lang, "common.select", "Select…")}</option>
+                          {PAYMENT_TYPES.map((type) => (
+                            <option key={type} value={type}>{translateOptionLabel(lang, type)}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.ship_option_label", "Ship Option")}</label>
+                        <select
+                          value={form.shippingMode}
+                          onChange={(e) => {
+                            const mode = e.target.value;
+                            setValue("shippingMode", mode);
+                            setValue("shipmentType", mode === "By Sea" ? "By Ship" : mode);
+                          }}
+                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] h-8"
+                        >
+                          {LOADING_TYPES.map((type) => (
+                            <option key={type} value={type}>{type}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "log.tbl_status", "Status")}</label>
+                        <select
+                          value={form.salesStatus}
+                          onChange={(e) => setValue("salesStatus", e.target.value)}
+                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] h-8"
+                        >
+                          <option value="Draft">{t(lang, "bdash.status_draft", "Draft")}</option>
+                          <option value="Pending">{t(lang, "log.seg_pending", "Pending")}</option>
+                          <option value="Confirmed">{t(lang, "purchase.opt_confirmed", "Confirmed")}</option>
+                          <option value="Transferred">{t(lang, "purchase.opt_transferred", "Transferred")}</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="mt-3">
+                      <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.booking_remarks_terms_label", "Booking Remarks / Terms")}</label>
+                      <textarea
+                        rows={2}
+                        value={form.remarks}
+                        onChange={(e) => setValue("remarks", e.target.value)}
+                        placeholder={t(lang, "sales.remarks_ph", "Write booking terms, payment notes, invoice note, or shipping instruction…")}
+                        className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] resize-none"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-3 pt-4 border-t border-border mt-4">
+                    <Button
+                      type="button"
+                      onClick={() => { if (!validateStep1Ownership()) return; setActiveTab("goods"); }}
+                      className={cn(
+                        "w-full font-bold h-10 rounded-lg text-xs uppercase tracking-wider transition-all shadow",
+                        isLocalSale
+                          ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
+                          : "bg-primary text-primary-foreground hover:bg-primary/90"
+                      )}
+                    >
+                      {t(lang, "lp.next_goods_entry", "Next: Goods Entry")}
+                    </Button>
+                  </div>
+                </fieldset>
+              )}
+
+              {activeTab === "goods" && (
+                <fieldset disabled={isTransferred && !session?.scopes?.isSuperAdmin} className={cn("space-y-4 order-2 w-full mt-0 animate-in fade-in zoom-in-95 duration-200", sectionPanelCls)}>
+                  <div className="flex items-center justify-between border-b border-border pb-2.5">
+                    <h3 className={cn("text-xs font-black uppercase tracking-wider flex items-center gap-2", isLocalSale ? "text-amber-900 dark:text-amber-200" : "text-foreground")}>
+                      <Package className="h-4 w-4 text-blue-600" />
+                      {t(lang, "purchase.goods_entry_title", "GOODS ENTRY")}
+                    </h3>
+                    <div className="flex items-center gap-2">
+                      {isLocalSale && (
+                        <span className="text-[9px] font-bold text-amber-800 bg-amber-50 dark:bg-amber-950/60 dark:text-amber-300 px-2 py-0.5 rounded border border-amber-400 dark:border-amber-700 uppercase tracking-wide shrink-0">
+                          {t(lang, "sales.local_sale_badge", "Local Sale")}
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab("booking")}
+                        className="text-[10.5px] font-bold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 underline"
+                      >
+                        {t(lang, "purchase.back_to_booking", "← Back to Booking")}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 1. TOP QUESTION: Endorse Sale vs Stock Sale */}
+                  <div className="rounded-xl border border-blue-200 dark:border-blue-900/60 bg-blue-50/50 dark:bg-blue-950/20 p-3.5 shadow-xs space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                      <h4 className="text-xs font-black text-slate-900 dark:text-slate-100">
+                        {t(lang, "sales.sale_type_question", "Are you selling through Endorse or from available Stock?")}
+                      </h4>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {/* Choice 1: Endorse Sale */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setValue("saleType", "endorse");
+                          setValue("saleSource", "endorse");
+                          setValue("isEndorseSale", true);
+                          setValue("stockLotNo", "");
+                          setValue("selectedLotId", "");
+                        }}
+                        className={`p-3 rounded-xl border text-left transition-all flex items-start gap-3 cursor-pointer ${
+                          (form.saleType === "endorse" || form.saleSource === "endorse")
+                            ? "border-blue-600 bg-white dark:bg-slate-900 shadow-md ring-2 ring-blue-500/20"
+                            : "border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/50 hover:border-slate-300 dark:hover:border-slate-700"
+                        }`}
+                      >
+                        <div className={`mt-0.5 rounded-lg p-2 ${
+                          (form.saleType === "endorse" || form.saleSource === "endorse")
+                            ? "bg-blue-600 text-white"
+                            : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                        }`}>
+                          <FileSignature className="h-4 w-4" />
+                        </div>
+                        <div className="space-y-0.5 flex-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-black text-slate-900 dark:text-slate-100">
+                              {t(lang, "sales.opt_endorse_sale", "Endorse Sale")}
+                            </span>
+                            {(form.saleType === "endorse" || form.saleSource === "endorse") && (
+                              <Badge className="bg-blue-600 text-white text-[9px] px-1.5 py-0 h-4">{t(lang, "sales.badge_selected", "Selected")}</Badge>
+                            )}
+                          </div>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                            {t(lang, "sales.endorse_sale_desc", "Sell goods agreed before purchase. No physical stock deducted.")}
+                          </p>
+                        </div>
+                      </button>
+
+                      {/* Choice 2: Stock Sale */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setValue("saleType", "stock");
+                          setValue("saleSource", "stock");
+                          setValue("isEndorseSale", false);
+                        }}
+                        className={`p-3 rounded-xl border text-left transition-all flex items-start gap-3 cursor-pointer ${
+                          (form.saleType !== "endorse" && form.saleSource !== "endorse")
+                            ? "border-blue-600 bg-white dark:bg-slate-900 shadow-md ring-2 ring-blue-500/20"
+                            : "border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/50 hover:border-slate-300 dark:hover:border-slate-700"
+                        }`}
+                      >
+                        <div className={`mt-0.5 rounded-lg p-2 ${
+                          (form.saleType !== "endorse" && form.saleSource !== "endorse")
+                            ? "bg-blue-600 text-white"
+                            : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                        }`}>
+                          <Package className="h-4 w-4" />
+                        </div>
+                        <div className="space-y-0.5 flex-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-black text-slate-900 dark:text-slate-100">
+                              {t(lang, "sales.opt_stock_sale", "Stock Sale")}
+                            </span>
+                            {(form.saleType !== "endorse" && form.saleSource !== "endorse") && (
+                              <Badge className="bg-blue-600 text-white text-[9px] px-1.5 py-0 h-4">{t(lang, "sales.badge_selected", "Selected")}</Badge>
+                            )}
+                          </div>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                            {t(lang, "sales.stock_sale_desc", "Sell from real available inventory across warehouse and branches.")}
+                          </p>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 2. IMMEDIATELY BELOW: Required Goods / Product Selection */}
+                  <div className="relative">
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300">
+                        {t(lang, "purchase.goods_name_star", "Goods Name*")}
+                      </label>
+                      <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400">
+                        {t(lang, "sales.field_required_both", "*Required for both Endorse & Stock")}
+                      </span>
+                    </div>
+                    <SearchableSelect
+                      value={form.goodsName || ""}
+                      onChange={(val) => {
+                        if (val === "__ADD_NEW__") {
+                          setNewGoodForm({ goodsName: "", chsCode: "", size: "", brand: "", originCountryId: "" });
+                          setNewGoodError("");
+                          setNewGoodModal(true);
+                        } else {
+                          setValue("goodsName", val);
+                          const foundGood = dbGoods.find(g => (g.goods_name || g.goodsName) === val);
+                          if (foundGood) {
+                            const hs = foundGood.chs_code || foundGood.chsCode || "";
+                            const firstVar = foundGood.variations?.[0] || {};
+                            const br = firstVar.brand || foundGood.brand || "";
+                            const sz = firstVar.size || foundGood.size || "";
+                            const originId = foundGood.origin_country_id || foundGood.originCountryId;
+                            const originCountryObj = originId ? (allCountries.find(c => c.id === originId) || countries.find(c => c.id === originId) || transitCountryOptions.find(c => c.id === originId)) : null;
+                            const cName = originCountryObj?.name || foundGood.origin || "";
+
+                            setForm(prev => ({
+                              ...prev,
+                              goodsName: val,
+                              goodsId: foundGood.id || prev.goodsId,
+                              hsCode: hs || prev.hsCode,
+                              brand: br || prev.brand,
+                              size: sz || prev.size,
+                              origin: cName || prev.origin,
+                              stockLotNo: "",
+                              selectedLotId: ""
+                            }));
+                          }
+                        }
+                      }}
+                      options={[
+                        ...dbGoods.map(g => ({ label: g.goods_name || g.goodsName, value: g.goods_name || g.goodsName })),
+                      ]}
+                      placeholder={t(lang, "sales.select_goods_ph", "Select Goods")}
+                      addOptionLabel="Add New Good"
+                    />
+                  </div>
+
+                  {/* 3A. FOR STOCK SALE: Available Lots Table & Remaining Balance */}
+                  {form.saleType !== "endorse" && form.saleSource !== "endorse" && (
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 space-y-2.5">
+                      <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                          <Package className="h-3.5 w-3.5 text-blue-600" />
+                          {t(lang, "sales.selected_lot_title", "Selected Stock Lot")} ({availableLotsForProduct.length})
+                        </span>
+                        <span className="text-[9.5px] text-muted-foreground font-semibold">
+                          {form.goodsName ? `${availableLotsForProduct.length} lots for "${form.goodsName}"` : t(lang, "sales.field_required_both", "*Required for both Endorse & Stock")}
+                        </span>
+                      </div>
+
+                      {!form.goodsName ? (
+                        <div className="p-3 text-center rounded-lg border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 text-[10.5px] text-slate-500">
+                          ℹ️ {t(lang, "sales.open_stock_lots_msg", "Please select Goods / Product above to view available stock lots.")}
+                        </div>
+                      ) : saleLotsLoading ? (
+                        <div className="p-4 text-center text-xs text-muted-foreground flex items-center justify-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                          <span>{t(lang, "cns.loading", "Loading available lots…")}</span>
+                        </div>
+                      ) : availableLotsForProduct.length === 0 ? (
+                        <div className="p-3 rounded-lg border border-amber-200 bg-amber-50/60 dark:border-amber-900/60 dark:bg-amber-950/20 text-[10.5px] text-amber-800 dark:text-amber-200">
+                          ⚠️ {t(lang, "sales.no_lots_for_product", "No available inventory lots found for this product. You can choose another product or switch to Endorse Sale.")}
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto max-h-48 overflow-y-auto border border-slate-200 dark:border-slate-800 rounded-lg">
+                          <table className="w-full text-[10px] text-left">
+                            <thead className="bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 font-black border-b border-slate-200 dark:border-slate-800 sticky top-0">
+                              <tr>
+                                <th className="py-1.5 px-2 text-center w-10">Select</th>
+                                <th className="py-1.5 px-2">Branch</th>
+                                <th className="py-1.5 px-2">Warehouse / Loc</th>
+                                <th className="py-1.5 px-2">Lot Ref</th>
+                                <th className="py-1.5 px-2 text-right">Available Qty</th>
+                                <th className="py-1.5 px-2 text-right">Net WT</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                              {availableLotsForProduct.map((lot) => {
+                                const isSelected = form.stockLotNo === lot.lotNo || (form.selectedLotId && form.selectedLotId === lot.id);
+                                return (
+                                  <tr
+                                    key={lot.lotNo + (lot.id || '')}
+                                    onClick={() => applySaleLot(lot)}
+                                    className={`cursor-pointer transition-colors ${
+                                      isSelected
+                                        ? "bg-blue-50 dark:bg-blue-950/40 font-bold"
+                                        : "hover:bg-slate-50 dark:hover:bg-slate-800/40"
+                                    }`}
+                                  >
+                                    <td className="py-1.5 px-2 text-center">
+                                      <input
+                                        type="radio"
+                                        name="selected_stock_lot"
+                                        checked={isSelected}
+                                        onChange={() => applySaleLot(lot)}
+                                        className="cursor-pointer"
+                                      />
+                                    </td>
+                                    <td className="py-1.5 px-2 truncate max-w-[110px]">{lot.branchName || "Main Branch"}</td>
+                                    <td className="py-1.5 px-2 truncate max-w-[120px]">{lot.warehouseName || lot.location}</td>
+                                    <td className="py-1.5 px-2 font-mono font-bold text-blue-600">{lot.lotNo}</td>
+                                    <td className="py-1.5 px-2 text-right font-mono font-bold">
+                                      {Number(lot.availableQty || 0).toLocaleString()} {translateOptionLabel(lang, lot.qtyName)}
+                                    </td>
+                                    <td className="py-1.5 px-2 text-right font-mono">
+                                      {Number(lot.netWeight || 0).toLocaleString()} KG
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+
+                      {/* Selected Lot Summary with Live Stock Balance Indicator */}
+                      {selectedSaleLot && (
+                        <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 dark:border-emerald-900/60 dark:bg-emerald-950/20 p-3 space-y-2">
+                          <div className="flex items-center justify-between border-b border-emerald-100 dark:border-emerald-900/40 pb-1.5">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+                              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                              {t(lang, "sales.selected_lot_title", "Selected Stock Lot")}: <span className="font-mono text-xs text-foreground font-black">{selectedSaleLot.lotNo}</span>
+                            </span>
+                            <Badge variant="outline" className="text-[9px] border-emerald-300 text-emerald-700 bg-white">
+                              {selectedSaleLot.branchName || "Branch Stock"}
+                            </Badge>
+                          </div>
+
+                          <div className="grid grid-cols-3 gap-2 text-center pt-0.5">
+                            <div className="bg-white/80 dark:bg-slate-900/80 rounded-lg p-2 border border-emerald-100 dark:border-emerald-900/30">
+                              <div className="text-[9px] font-black uppercase text-slate-500">{t(lang, "sales.lbl_lot_available", "Available in Lot")}</div>
+                              <div className="text-xs sm:text-sm font-black text-slate-800 dark:text-slate-100 font-mono mt-0.5">
+                                {Number(selectedSaleLot.availableQty || 0).toLocaleString()} {selectedSaleLot.qtyName}
+                              </div>
+                            </div>
+
+                            <div className="bg-white/80 dark:bg-slate-900/80 rounded-lg p-2 border border-blue-100 dark:border-blue-900/30">
+                              <div className="text-[9px] font-black uppercase text-blue-600">{t(lang, "sales.lbl_selling_qty", "Selling Qty")}</div>
+                              <div className="text-xs sm:text-sm font-black text-blue-600 font-mono mt-0.5">
+                                {Number(form.qtyNo || 0).toLocaleString()} {form.qtyName || selectedSaleLot.qtyName}
+                              </div>
+                            </div>
+
+                            <div className="bg-white/80 dark:bg-slate-900/80 rounded-lg p-2 border border-emerald-100 dark:border-emerald-900/30">
+                              <div className="text-[9px] font-black uppercase text-slate-500">{t(lang, "sales.lbl_remaining_stock", "Remaining Stock")}</div>
+                              <div className={`text-xs sm:text-sm font-black font-mono mt-0.5 ${
+                                (Number(selectedSaleLot.availableQty || 0) - Number(form.qtyNo || 0)) < 0
+                                  ? "text-rose-600"
+                                  : "text-emerald-700 dark:text-emerald-300"
+                              }`}>
+                                {(Number(selectedSaleLot.availableQty || 0) - Number(form.qtyNo || 0)).toLocaleString()} {selectedSaleLot.qtyName}
+                              </div>
+                            </div>
+                          </div>
+
+                          {(Number(selectedSaleLot.availableQty || 0) - Number(form.qtyNo || 0)) < 0 && (
+                            <div className="text-[10px] font-bold text-rose-600 bg-rose-50 dark:bg-rose-950/40 p-2 rounded-lg border border-rose-200 dark:border-rose-900 flex items-center gap-1.5">
+                              <span>⚠️</span>
+                              <span>{t(lang, "sales.err_selling_exceeds_stock", "Selling quantity exceeds available lot quantity! Please adjust selling quantity.")}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* 3B. FOR ENDORSE SALE: Fulfillment Status & Lot Linker */}
+                  {(form.saleType === "endorse" || form.saleSource === "endorse") && (
+                    <div className="rounded-xl border border-purple-200 bg-purple-50/60 dark:border-purple-900/60 dark:bg-purple-950/20 p-3.5 space-y-3">
+                      <div className="flex items-center justify-between border-b border-purple-100 dark:border-purple-900/40 pb-2">
+                        <div className="flex items-center gap-2">
+                          <FileSignature className="h-4 w-4 text-purple-600" />
+                          <h4 className="text-xs font-black uppercase tracking-wider text-purple-950 dark:text-purple-200">
+                            {t(lang, "sales.endorse_fulfillment_title", "Endorse Fulfillment Status")}
+                          </h4>
+                        </div>
+                        <Badge className="bg-purple-600 text-white text-[9px] px-2 py-0.5">
+                          {t(lang, "sales.badge_endorse_agreement", "Pre-Purchase Agreement")}
+                        </Badge>
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+                        <div className="bg-white/80 dark:bg-slate-900/80 rounded-lg p-2 border border-purple-100 dark:border-purple-900/30">
+                          <div className="text-[9px] font-black uppercase text-slate-500">{t(lang, "sales.endorse_sale_qty", "Sale Quantity")}</div>
+                          <div className="text-xs sm:text-sm font-black text-purple-700 dark:text-purple-300 font-mono mt-0.5">
+                            {Number(form.qtyNo || 0).toLocaleString()} {form.qtyName || "BAGS"}
+                          </div>
+                        </div>
+
+                        <div className="bg-white/80 dark:bg-slate-900/80 rounded-lg p-2 border border-purple-100 dark:border-purple-900/30">
+                          <div className="text-[9px] font-black uppercase text-slate-500">{t(lang, "sales.endorse_qty_purchased", "Qty Purchased")}</div>
+                          <div className="text-xs sm:text-sm font-black text-slate-800 dark:text-slate-100 font-mono mt-0.5">
+                            {Number(form.endorseQtyPurchased || 0).toLocaleString()} {form.qtyName || "BAGS"}
+                          </div>
+                        </div>
+
+                        <div className="bg-white/80 dark:bg-slate-900/80 rounded-lg p-2 border border-purple-100 dark:border-purple-900/30">
+                          <div className="text-[9px] font-black uppercase text-slate-500">{t(lang, "sales.endorse_qty_allocated", "Qty Allocated")}</div>
+                          <div className="text-xs sm:text-sm font-black text-emerald-600 font-mono mt-0.5">
+                            {Number(form.endorseQtyAllocated || 0).toLocaleString()} {form.qtyName || "BAGS"}
+                          </div>
+                        </div>
+
+                        <div className="bg-white/80 dark:bg-slate-900/80 rounded-lg p-2 border border-purple-100 dark:border-purple-900/30">
+                          <div className="text-[9px] font-black uppercase text-slate-500">{t(lang, "sales.endorse_qty_outstanding", "Qty Outstanding")}</div>
+                          <div className="text-xs sm:text-sm font-black text-amber-600 font-mono mt-0.5">
+                            {Math.max(0, Number(form.qtyNo || 0) - Number(form.endorseQtyAllocated || 0)).toLocaleString()} {form.qtyName || "BAGS"}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="bg-white/90 dark:bg-slate-900/90 rounded-xl p-3 border border-purple-100 dark:border-purple-900/30 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <label className="text-[10px] font-black uppercase text-slate-700 dark:text-slate-300">
+                            {t(lang, "sales.link_purchased_lot_label", "Link Purchased Lot (When Entered Into Stock)")}
+                          </label>
+                          <span className="text-[9px] text-muted-foreground">{t(lang, "sales.optional_fulfillment", "Optional / Post-Purchase")}</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={form.endorseLinkedLotNo || ""}
+                            onChange={(e) => setValue("endorseLinkedLotNo", e.target.value)}
+                            placeholder={t(lang, "sales.link_lot_ph", "Enter or select purchased Lot No. (e.g. WH-..., LP-..., PO-...)")}
+                            className="flex-1 bg-background border border-input rounded-lg px-2.5 py-1.5 text-foreground outline-none focus:border-purple-500 text-xs font-mono"
+                          />
+                          {form.endorseLinkedLotNo && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setValue("endorseLinkedLotNo", "")}
+                              className="text-[10px] h-8"
+                            >
+                              {t(lang, "common.clear", "Clear")}
+                            </Button>
+                          )}
+                        </div>
+                        <p className="text-[9.5px] text-slate-500 dark:text-slate-400">
+                          ℹ️ {t(lang, "sales.endorse_note", "Goods sold under Endorse agreement will be saved without deducting physical stock. When purchase arrival occurs, link the lot here to fulfill this order.")}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 4. SECONDARY GOODS ENTRY FIELDS */}
+                  <div className="grid grid-cols-1 gap-3 pt-2">
+                    {/* Manual Net KGs Input */}
+                    <div>
+                      <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.net_kgs_weight", "Net KGs (Weight)")}</label>
+                      <input
+                        type="number"
+                        value={form.netWeight !== undefined && form.netWeight !== "" ? form.netWeight : ""}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setValue("netWeight", val === "" ? "" : Number(val));
+                          setValue("manualTotalAmount", "");
+                          setValue("manualFinalAmount", "");
+                        }}
+                        className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] font-mono font-bold"
+                        placeholder="0.00"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.f_origin_country", "Origin Country")}</label>
+                      <select
+                        value={form.origin || ""}
+                        onChange={(e) => setValue("origin", e.target.value)}
+                        className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
+                      >
+                        <option value="">{t(lang, "purchase.select_origin", "Select Origin")}</option>
+                        {Array.from(new Set([
+                          "United Arab Emirates", "Iran", "USA", "Vietnam", "Pakistan", "India", "Afghanistan", "China", "Turkey",
+                          ...allCountries.map(c => c.name).filter(Boolean),
+                          ...transitCountryOptions.map(c => c.name).filter(Boolean),
+                          form.origin
+                        ].filter(Boolean))).sort().map(c => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-[10px] text-muted-foreground">{t(lang, "purchase.th_hs_code", "HS Code")}</label>
+                          {form.goodsName && (() => {
+                            const selectedGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === form.goodsName.trim().toUpperCase());
+                            if (selectedGood && (selectedGood.chs_code || selectedGood.chsCode || "") !== (form.hsCode || "")) {
+                              return (
+                                <button
+                                  type="button"
+                                  onClick={handleUpdateHsCode}
+                                  className="text-[9px] bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground px-1.5 py-0.5 rounded transition-colors"
+                                >
+                                  {t(lang, "purchase.save_to_master", "Save to Master")}
+                                </button>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
+                        <input
+                          type="text"
+                          value={form.hsCode || ""}
+                          onChange={(e) => setValue("hsCode", e.target.value)}
+                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] font-mono"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-muted-foreground mb-1 font-bold">{t(lang, "purchase.allot_name_id", "Allot Name / ID")}</label>
+                        <input
+                          type="text"
+                          value={form.allotName || form.stockLotNo || ""}
+                          onChange={(e) => setValue("allotName", e.target.value)}
+                          placeholder={t(lang, "sales.alt_code_example_ph", "e.g. ALT-2003")}
+                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] font-mono font-bold"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-[10px] text-muted-foreground">{t(lang, "purchase.th_brand", "Brand")}</label>
+                          {form.goodsName && form.brand && (() => {
+                            const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
+                            const masterBrands = selGood?.master_brands || (selGood?.variations || []).map(v => v.brand).filter(Boolean);
+                            if (selGood && !masterBrands.includes(form.brand)) {
+                              return (
+                                <button
+                                  type="button"
+                                  onClick={() => handleSaveParamToMaster("brand", form.brand)}
+                                  className="text-[9px] bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground px-1.5 py-0.5 rounded transition-colors"
+                                >
+                                  {t(lang, "purchase.save_to_master", "Save to Master")}
+                                </button>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
+                        <SearchableSelect
+                          value={form.brand || ""}
+                          onChange={(val) => {
+                            if (val === "__ADD_NEW__") {
+                              const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
+                              if (!selGood) {
+                                alert(t(lang, "sales.select_good_first_brand_alert", "Please select a Good first before adding a new Brand."));
+                                return;
+                              }
+                              const newB = window.prompt("Enter New Brand:");
+                              if (newB && newB.trim()) {
+                                setValue("brand", newB.trim());
+                                handleSaveParamToMaster("brand", newB.trim());
+                              }
+                            } else {
+                              setValue("brand", val);
+                            }
+                          }}
+                          options={(() => {
+                            const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
+                            const brands = Array.from(new Set([
+                              ...(selGood?.master_brands || []),
+                              ...(selGood?.variations || []).map(v => v.brand).filter(Boolean),
+                              ...dbGoods.flatMap(g => [...(g.master_brands || []), ...(g.variations || []).map(v => v.brand)]).filter(Boolean),
+                              form.brand
+                            ].filter(Boolean))).sort();
+                            return brands.map(b => ({ label: b, value: b }));
+                          })()}
+                          placeholder={t(lang, "sales.select_brand_ph", "Select Brand")}
+                          addOptionLabel="Add New Brand"
+                        />
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-[10px] text-muted-foreground">{t(lang, "lp.size_spec", "Size Specification")}</label>
+                          {form.goodsName && form.size && (() => {
+                            const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
+                            const masterSizes = selGood?.master_sizes || (selGood?.variations || []).map(v => v.size).filter(Boolean);
+                            if (selGood && !masterSizes.includes(form.size)) {
+                              return (
+                                <button
+                                  type="button"
+                                  onClick={() => handleSaveParamToMaster("size", form.size)}
+                                  className="text-[9px] bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground px-1.5 py-0.5 rounded transition-colors"
+                                >
+                                  {t(lang, "purchase.save_to_master", "Save to Master")}
+                                </button>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
+                        <SearchableSelect
+                          value={form.size || ""}
+                          onChange={(val) => {
+                            if (val === "__ADD_NEW__") {
+                              const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
+                              if (!selGood) {
+                                alert(t(lang, "sales.select_good_first_size_alert", "Please select a Good first before adding a new Size."));
+                                return;
+                              }
+                              const newS = window.prompt("Enter New Size:");
+                              if (newS && newS.trim()) {
+                                setValue("size", newS.trim());
+                                handleSaveParamToMaster("size", newS.trim());
+                              }
+                            } else {
+                              setValue("size", val);
+                            }
+                          }}
+                          options={(() => {
+                            const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
+                            const sizes = Array.from(new Set([
+                              ...(selGood?.master_sizes || []),
+                              ...(selGood?.variations || []).map(v => v.size).filter(Boolean),
+                              ...dbGoods.flatMap(g => [...(g.master_sizes || []), ...(g.variations || []).map(v => v.size)]).filter(Boolean),
+                              form.size
+                            ].filter(Boolean))).sort();
+                            return sizes.map(s => ({ label: s, value: s }));
+                          })()}
+                          placeholder={t(lang, "sales.select_size_ph", "Select Size")}
+                          addOptionLabel="Add New Size"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-[10px] text-muted-foreground">{t(lang, "purchase.variety_label", "Variety")}</label>
+                          {form.goodsName && form.variety && (() => {
+                            const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
+                            const masterVars = selGood?.master_varieties || [];
+                            if (selGood && !masterVars.includes(form.variety)) {
+                              return (
+                                <button
+                                  type="button"
+                                  onClick={() => handleSaveParamToMaster("variety", form.variety)}
+                                  className="text-[9px] bg-amber-500/10 text-amber-700 dark:text-amber-300 hover:bg-amber-500 hover:text-white px-1.5 py-0.5 rounded transition-colors"
+                                >
+                                  {t(lang, "purchase.save_to_master", "Save to Master")}
+                                </button>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
+                        <SearchableSelect
+                          value={form.variety || ""}
+                          onChange={(val) => {
+                            if (val === "__ADD_NEW__") {
+                              const newV = window.prompt("Enter New Variety:");
+                              if (newV && newV.trim()) {
+                                setValue("variety", newV.trim());
+                                handleSaveParamToMaster("variety", newV.trim());
+                              }
+                            } else {
+                              setValue("variety", val);
+                            }
+                          }}
+                          options={(() => {
+                            const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
+                            const varieties = Array.from(new Set([
+                              ...(selGood?.master_varieties || []),
+                              ...(selGood?.variations || []).map(v => v.variety).filter(Boolean),
+                              ...dbGoods.flatMap(g => (g.variations || []).map(v => v.variety)).filter(Boolean),
+                              form.variety
+                            ].filter(Boolean))).sort();
+                            return varieties.map(v => ({ label: v, value: v }));
+                          })()}
+                          placeholder={t(lang, "purchase.select_variety", "Select Variety")}
+                          addOptionLabel="Add New Variety"
+                        />
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-[10px] text-muted-foreground">{t(lang, "purchase.extra_details_label", "Quality / Extra Details")}</label>
+                          {form.goodsName && form.extraDetails && (() => {
+                            const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
+                            const masterSpecs = selGood?.master_extra_details || [];
+                            if (selGood && !masterSpecs.includes(form.extraDetails)) {
+                              return (
+                                <button
+                                  type="button"
+                                  onClick={() => handleSaveParamToMaster("extra_details", form.extraDetails)}
+                                  className="text-[9px] bg-amber-500/10 text-amber-700 dark:text-amber-300 hover:bg-amber-500 hover:text-white px-1.5 py-0.5 rounded transition-colors"
+                                >
+                                  {t(lang, "purchase.save_to_master", "Save to Master")}
+                                </button>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
+                        <input
+                          type="text"
+                          value={form.extraDetails || ""}
+                          onChange={(e) => setValue("extraDetails", e.target.value)}
+                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
+                          placeholder={t(lang, "purchase.extra_details_placeholder", "e.g. Soft Shell / Light Color")}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.qty_name_label", "Qty Name")}</label>
+                        <SearchableSelect
+                          value={form.qtyName || "BAGS"}
+                          onChange={(val) => {
+                            if (val === "__ADD_NEW__") {
+                              const newQty = window.prompt("Enter New Qty Name:");
+                              if (newQty && newQty.trim()) {
+                                setValue("qtyName", newQty.trim());
+                                setCustomQtyNames(prev => [...prev, newQty.trim()]);
+                              }
+                            } else {
+                              setValue("qtyName", val);
+                            }
+                          }}
+                          options={Array.from(new Set([...QTY_TYPE_OPTIONS, ...customQtyNames, form.qtyName])).filter(Boolean).map(q => ({ label: translateOptionLabel(lang, q), value: q }))}
+                          placeholder={t(lang, "sales.select_qty_name_ph", "Select Qty Name")}
+                          addOptionLabel="Add New Qty Name"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.quantity_no", "Quantity No")}</label>
+                        <input
+                          type="number"
+                          value={form.qtyNo || ""}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            setValue("qtyNo", val);
+                            setValue("manualTotalAmount", "");
+                            setValue("manualFinalAmount", "");
+                            const qtyKgs = Number(form.qtyKgs || 0);
+                            const emptyKgs = Number(form.emptyKgs || 0);
+                            setValue("netWeight", val * qtyKgs - val * emptyKgs);
+                          }}
+                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.qty_kgs_1", "1 Qty KGS")}</label>
+                        <input
+                          type="number"
+                          value={form.qtyKgs || ""}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            setValue("qtyKgs", val);
+                            setValue("manualTotalAmount", "");
+                            setValue("manualFinalAmount", "");
+                            const qtyNo = Number(form.qtyNo || 0);
+                            const emptyKgs = Number(form.emptyKgs || 0);
+                            setValue("netWeight", qtyNo * val - qtyNo * emptyKgs);
+                          }}
+                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] font-mono"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.empty_kgs_1", "1 Empty KGS")}</label>
+                        <input
+                          type="number"
+                          value={form.emptyKgs || ""}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            setValue("emptyKgs", val);
+                            setValue("manualTotalAmount", "");
+                            setValue("manualFinalAmount", "");
+                            const qtyNo = Number(form.qtyNo || 0);
+                            const qtyKgs = Number(form.qtyKgs || 0);
+                            setValue("netWeight", qtyNo * qtyKgs - qtyNo * val);
+                          }}
+                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.divide_type", "Divide Type")}</label>
+                        <select
+                          value={form.divideType || "D/KGs"}
+                          onChange={(e) => setValue("divideType", e.target.value)}
+                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
+                        >
+                          <option value="D/KGs">{t(lang, "purchase.opt_divide_per_kg", "Divide / Kg")}</option>
+                          <option value="D/LBs">{t(lang, "purchase.opt_divide_per_lb", "Divide / Lb")}</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.divide_weight_value", "Divide Weight / Value")}</label>
+                        <input
+                          type="number"
+                          value={form.divideWeight || 1}
+                          onChange={(e) => {
+                            setValue("divideWeight", Number(e.target.value));
+                            setValue("manualTotalAmount", "");
+                            setValue("manualFinalAmount", "");
+                          }}
+                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.price_type", "Price Type")}</label>
+                        <select
+                          value={form.priceType || "P/KGs"}
+                          onChange={(e) => setValue("priceType", e.target.value)}
+                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
+                        >
+                          <option value="P/KGs">{t(lang, "purchase.opt_price_per_kg", "Price / Kg")}</option>
+                          <option value="P/LBs">{t(lang, "purchase.opt_price_per_lb", "Price / Lb")}</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.price_rate_c1", "Price Rate (C1)")}</label>
+                        <input
+                          type="number"
+                          value={form.coursePrice || ""}
+                          onChange={(e) => {
+                            setValue("coursePrice", Number(e.target.value));
+                            setValue("manualTotalAmount", "");
+                            setValue("manualFinalAmount", "");
+                          }}
+                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] font-mono"
+                        />
+                      </div>
+                    </div>
+ 
+                    <div className="bg-emerald-50/50 dark:bg-emerald-950/20 p-3 rounded-lg border border-emerald-100 dark:border-emerald-900 mt-2">
+                      <h4 className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400 mb-2">{t(lang, "sales.currency_conversion_title", "Sales Currency & Conversion")}</h4>
+                      <div className="grid grid-cols-2 gap-3 mb-2">
+                        <div>
+                          <label className="block text-[9px] text-emerald-700 dark:text-emerald-500 mb-1 font-bold">{t(lang, "purchase.pricing_currency", "Pricing Currency")}</label>
+                          <select
+                            value={form.currencyType || "USD"}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setForm(prev => ({ ...prev, currencyType: val, salesCurrency: val }));
+                            }}
+                            className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
+                          >
+                            {CURRENCY_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[9px] text-emerald-700 dark:text-emerald-500 mb-1 font-bold">Exchange Rate to {form.secondaryCurrency || "PKR"}</label>
+                          <div className="flex gap-1.5">
+                            <input
+                               type="number"
+                               value={form.exchangeRate || 1}
+                               onChange={(e) => {
+                                 setValue("exchangeRate", Number(e.target.value));
+                                 setValue("manualFinalAmount", "");
+                               }}
+                               className="flex-1 min-w-0 bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] font-mono h-8"
+                            />
+                            <select
+                              value={form.operator || "*"}
+                              onChange={(e) => {
+                                setValue("operator", e.target.value);
+                                setValue("manualFinalAmount", "");
+                              }}
+                              className="w-12 bg-background border border-input rounded text-center text-xs font-bold text-foreground outline-none focus:border-primary h-8"
+                            >
+                              <option value="*">*</option>
+                              <option value="/">/</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 mt-2">
+                        <div>
+                          <label className="block text-[9px] text-emerald-700 dark:text-emerald-500 mb-1 font-bold">Amount ({form.currencyType || "USD"})</label>
+                          <input
+                            type="number"
+                            value={form.manualTotalAmount !== undefined && form.manualTotalAmount !== "" ? form.manualTotalAmount : currentItemTotals.totalAmount}
+                            onChange={(e) => setValue("manualTotalAmount", e.target.value === "" ? "" : Number(e.target.value))}
+                            placeholder={currentItemTotals.totalAmount.toFixed(2)}
+                            className="w-full bg-background border border-emerald-200 dark:border-emerald-800 rounded px-2.5 py-1.5 text-foreground outline-none focus:border-emerald-500 text-[10px] font-mono"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] text-emerald-700 dark:text-emerald-500 mb-1 font-bold">Final ({form.secondaryCurrency || "PKR"})</label>
+                          <input
+                            type="number"
+                            value={form.manualFinalAmount !== undefined && form.manualFinalAmount !== "" ? form.manualFinalAmount : currentItemTotals.finalAmount}
+                            onChange={(e) => setValue("manualFinalAmount", e.target.value === "" ? "" : Number(e.target.value))}
+                            placeholder={currentItemTotals.finalAmount.toFixed(2)}
+                            className="w-full bg-background border border-emerald-200 dark:border-emerald-800 rounded px-2.5 py-1.5 text-foreground outline-none focus:border-emerald-500 text-[10px] font-mono"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+ 
+                  <div className="flex flex-col gap-2.5 pt-4 border-t border-border mt-4">
+                    <Button
+                      type="button"
+                      onClick={handleAddGoodsEntry}
+                      className="w-full font-bold h-10 rounded-lg text-xs uppercase tracking-wider bg-emerald-600 hover:bg-emerald-700 text-white shadow transition-all"
+                    >
+                      + {t(lang, "sow.add_item_to_list", "Add Item to List")}
+                    </Button>
+                    <div className="flex gap-3">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setActiveTab("booking")}
+                        className="flex-1 font-bold h-10 rounded-lg text-xs text-slate-600 hover:bg-slate-50 border border-input"
+                      >
+                        {t(lang, "common.back", "Back")}
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={() => setActiveTab("shipping")}
+                        className={cn(
+                          "flex-1 font-bold h-10 rounded-lg text-xs transition-all",
+                          isLocalSale
+                            ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
+                            : "bg-primary text-primary-foreground hover:bg-primary/90"
+                        )}
+                      >
+                        {t(lang, "common.next", "Next")}
+                      </Button>
+                    </div>
+                  </div>
+                </fieldset>
+              )}
+            </main>
+          </div>
+        )}
+
+      {activeTab === "report" && (
+        <div className="flex-1 overflow-y-auto p-4 space-y-6 bg-slate-50/50">
+
+          {/* Top Review Header Banner */}
+          <div className={cn("flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between p-4 rounded-xl shadow-sm", isLocalSale ? "bg-gradient-to-r from-amber-100 to-amber-200 dark:from-amber-950/40 dark:to-amber-900/30 border border-amber-300 dark:border-amber-800" : "bg-white border border-slate-200 dark:bg-slate-950 dark:border-slate-800")}>
+            <div>
+              <h2 className={cn("text-base font-black uppercase tracking-wider", isLocalSale ? "text-amber-900 dark:text-amber-200" : "text-slate-900")}>{t(lang, "sales.final_review_title", "Sales Booking Order – Final Review & Approval")}</h2>
+              <p className={cn("text-[10px] font-semibold mt-0.5", isLocalSale ? "text-amber-800/80 dark:text-amber-300/70" : "text-slate-500")}>Please review all information carefully before final approval. You can approve, send back for edit, or request changes.</p>
+            </div>
+            <div className="flex gap-2.5">
+              <Button
+                type="button"
+                onClick={() => handleOpenA4Report(false)}
+                className="bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-[10px] font-bold h-9 px-3 rounded-lg shadow-sm flex items-center gap-1.5"
+              >
+                <Download className="h-3.5 w-3.5 text-slate-500" />
+                {t(lang, "sales.download_review_report", "Download Review Report (PDF)")}
+              </Button>
+              <Button
+                type="button"
+                onClick={() => handleOpenA4Report && handleOpenA4Report(true)}
+                className="bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-[10px] font-bold h-9 px-3 rounded-lg shadow-sm flex items-center gap-1.5"
+              >
+                <Printer className="h-3.5 w-3.5 text-slate-500" />
+                {t(lang, "sales.print_review_btn", "Print Review")}
+              </Button>
+            </div>
+          </div>
+
+          {/* Alert Success bar */}
+          <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl p-3.5 flex items-center gap-3 text-[10px] font-bold shadow-sm">
+            <span className="h-6 w-6 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 text-xs font-black">✓</span>
+            {t(lang, "cbs.all_saved_ready", "All information has been saved successfully and is ready for final review.")}
+          </div>
+
+          {/* Grid Layout Cards */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            
+            {/* 1. Branch & Booking Info */}
+            <div className={miniCardCls}>
+              <h3 className="font-black text-slate-800 border-b border-slate-100 pb-1.5 mb-2.5 uppercase flex items-center gap-2">
+                <span className={cn("w-4 h-4 rounded flex items-center justify-center font-bold text-[8px]", isLocalSale ? cn(localBadgeCls(1), "text-white") : "bg-blue-50 text-blue-600")}>1</span>
+                {t(lang, "branch.section_branch_info", "Branch Information")}
+              </h3>
+              <div className="grid grid-cols-[90px_1fr] gap-x-2 gap-y-1.5">
+                <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_country_colon", "Country:")}</span><span className="font-bold text-slate-800">{form.branchCountry || "Pakistan"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.main_branch_colon", "Main Branch:")}</span><span className="font-bold text-slate-800">{form.branchName || "N/A"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.city_branch_colon", "City Branch:")}</span><span className="font-bold text-slate-800">{form.branchName || "N/A"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_branch_code_colon", "Branch Code:")}</span><span className="font-bold text-slate-800">{form.branchCode || "N/A"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_user_admin_colon", "User Admin:")}</span><span className="font-bold text-slate-800">{form.userName || "—"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_user_id_colon", "User ID:")}</span><span className="font-bold text-slate-800 font-mono">{form.userId || "USR-1001"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "purchase.currency_colon_label", "Currency:")}</span><span className="font-bold text-slate-800">{form.salesCurrency || "PKR"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_status_colon", "Status:")}</span><span className="inline-block px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[8px] font-black uppercase w-max">{isTransferred ? t(lang, "common.active", "Active") : t(lang, "bdash.status_draft", "Draft")}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.established_date_colon", "Established Date:")}</span><span className="font-bold text-slate-800">{form.salesDate}</span>
+              </div>
+            </div>
+
+            {/* 2. Address & Logistics */}
+            <div className={miniCardCls}>
+              <h3 className="font-black text-slate-800 border-b border-slate-100 pb-1.5 mb-2.5 uppercase flex items-center gap-2">
+                <span className={cn("w-4 h-4 rounded flex items-center justify-center font-bold text-[8px]", isLocalSale ? cn(localBadgeCls(2), "text-white") : "bg-blue-50 text-blue-600")}>2</span>
+                {t(lang, "sales.logistics_routing_title", "Logistics & Routing")}
+              </h3>
+              <div className="grid grid-cols-[90px_1fr] gap-x-2 gap-y-1.5">
+                <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_loading_mode_colon", "Loading Mode:")}</span><span className="font-bold text-slate-800">{form.salesLoadingMode || "By Sea"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_contract_no_colon", "Contract No:")}</span><span className="font-bold text-slate-800">{form.salesContractNo || "N/A"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.port_of_loading_colon", "Port of Loading:")}</span><span className="font-bold text-slate-800">{form.salesPortOfLoading || "N/A"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.port_of_discharge_colon", "Port of Discharge:")}</span><span className="font-bold text-slate-800">{form.salesPortOfDischarge || "N/A"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "purchase.destination_country_colon", "Destination Country:")}</span><span className="font-bold text-slate-800">{form.salesDestinationCountry || "N/A"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_origin_country_colon", "Origin Country:")}</span><span className="font-bold text-slate-800">{form.origin || "Pakistan"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.delivery_term_colon", "Delivery Term:")}</span><span className="font-bold text-slate-800">{form.deliveryTerm || "CFR"}</span>
+              </div>
+            </div>
+
+            {/* 3. Customer Account (DR) */}
+            <div className={miniCardCls}>
+              <h3 className="font-black text-slate-800 border-b border-slate-100 pb-1.5 mb-2.5 uppercase flex items-center gap-2">
+                <span className={cn("w-4 h-4 rounded flex items-center justify-center font-bold text-[8px]", isLocalSale ? cn(localBadgeCls(3), "text-white") : "bg-blue-50 text-blue-600")}>3</span>
+                {t(lang, "sales.customer_account_dr_badge", "Customer Account (DR)")}
+              </h3>
+              {form.customerAccountNo || form.customerAccountName ? (
+                <div className="grid grid-cols-[90px_1fr] gap-x-2 gap-y-1.5">
+                  <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span><span className="font-bold text-slate-800 font-mono">{form.customerAccountNo || "—"}</span>
+                  <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span><span className="font-bold text-slate-800">{form.customerAccountName || "—"}</span>
+                  <span className="text-slate-400 font-semibold">{t(lang, "purchase.branch_colon_label", "Branch:")}</span><span className="font-bold text-slate-800">{form.customerAccountBranch || "—"}</span>
+                  <span className="text-slate-400 font-semibold">{t(lang, "purchase.currency_colon_label", "Currency:")}</span><span className="font-bold text-slate-800">{form.salesCurrency || "—"}</span>
+                  <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_company_colon", "Company:")}</span><span className="font-bold text-slate-800">{form.salesCompanyName || "—"}</span>
+                  <span className="text-slate-400 font-semibold">{t(lang, "cusm.email_word", "Email:")}</span><span className="font-bold text-slate-800 truncate" title={form.customerAccountEmail}>{form.customerAccountEmail || "—"}</span>
+                  <span className="text-slate-400 font-semibold">{t(lang, "sales.whatsapp_colon", "WhatsApp:")}</span><span className="font-bold text-slate-800">{form.customerAccountWhatsapp || "—"}</span>
+                </div>
+              ) : (
+                <div className="text-slate-400 italic text-[11px] text-center py-6">
+                  {t(lang, "sales.no_customer_selected", "No customer account selected")}
+                </div>
+              )}
+            </div>
+
+            {/* 4. Sales Account (CR) */}
+            <div className={miniCardCls}>
+              <h3 className="font-black text-slate-800 border-b border-slate-100 pb-1.5 mb-2.5 uppercase flex items-center gap-2">
+                <span className={cn("w-4 h-4 rounded flex items-center justify-center font-bold text-[8px]", isLocalSale ? cn(localBadgeCls(4), "text-white") : "bg-blue-50 text-blue-600")}>4</span>
+                {t(lang, "purchase.sales_account_cr_badge", "Sales Account (CR)")}
+              </h3>
+              {form.salesAccountNo || form.salesAccountName ? (
+                <div className="grid grid-cols-[90px_1fr] gap-x-2 gap-y-1.5">
+                  <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span><span className="font-bold text-slate-800 font-mono">{form.salesAccountNo || "—"}</span>
+                  <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span><span className="font-bold text-slate-800">{form.salesAccountName || "—"}</span>
+                  <span className="text-slate-400 font-semibold">{t(lang, "purchase.branch_colon_label", "Branch:")}</span><span className="font-bold text-slate-800">{form.salesAccountBranch || "—"}</span>
+                  <span className="text-slate-400 font-semibold">{t(lang, "purchase.currency_colon_label", "Currency:")}</span><span className="font-bold text-slate-800">{form.salesCurrency || "—"}</span>
+                  <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_company_colon", "Company:")}</span><span className="font-bold text-slate-800">{form.salesCompanyName || "—"}</span>
+                  <span className="text-slate-400 font-semibold">{t(lang, "cusm.email_word", "Email:")}</span><span className="font-bold text-slate-800 truncate" title={form.salesAccountEmail}>{form.salesAccountEmail || "—"}</span>
+                  <span className="text-slate-400 font-semibold">{t(lang, "sales.whatsapp_colon", "WhatsApp:")}</span><span className="font-bold text-slate-800">{form.salesAccountWhatsapp || "—"}</span>
+                </div>
+              ) : (
+                <div className="text-slate-400 italic text-[11px] text-center py-6">
+                  {t(lang, "sales.no_sales_account_selected", "No sales account selected")}
+                </div>
+              )}
+            </div>
+
+          </div>
+
+          {/* Row 2 Grid Cards */}
+          <div className="grid gap-4 md:grid-cols-3">
+
+            {/* 5. Roles & Permissions Summary */}
+            <div className={miniCardCls}>
+              <h3 className="font-black text-slate-800 border-b border-slate-100 pb-1.5 mb-2.5 uppercase flex items-center gap-2">
+                <span className={cn("w-4 h-4 rounded flex items-center justify-center font-bold text-[8px]", isLocalSale ? cn(localBadgeCls(5), "text-white") : "bg-blue-50 text-blue-600")}>5</span>
+                {t(lang, "branch.wizard_step7_title", "Roles & Permissions")}
+              </h3>
+              <table className="w-full text-left text-[9px] mt-1">
+                <thead>
+                  <tr className="border-b border-slate-150 text-slate-400 font-bold uppercase tracking-wider">
+                    <Th className="pb-1.5">{t(lang, "sales.role_name_label", "Role Name")}</Th>
+                    <Th className="pb-1.5">{t(lang, "cbs.users_word", "Users")}</Th>
+                    <Th className="pb-1.5 text-right">{t(lang, "branch.permissions_label", "Permissions")}</Th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-semibold">
+                  <tr><td className="py-1">{t(lang, "cbs.role_branch_admin", "Branch Admin")}</td><td className="py-1">2</td><td className="py-1 text-right text-blue-600">{t(lang, "cbs.access_full", "Full Access")}</td></tr>
+                  <tr><td className="py-1">{t(lang, "cbs.role_accountant", "Accountant")}</td><td className="py-1">3</td><td className="py-1 text-right text-blue-600">{t(lang, "sales.accounting_access_label", "Accounting Access")}</td></tr>
+                  <tr><td className="py-1">{t(lang, "cbs.role_store_manager", "Store Manager")}</td><td className="py-1">1</td><td className="py-1 text-right text-blue-600">{t(lang, "branch.perm_inventory_access", "Inventory Access")}</td></tr>
+                  <tr><td className="py-1">{t(lang, "cbs.role_sales_executive", "Sales Executive")}</td><td className="py-1">4</td><td className="py-1 text-right text-blue-600">{t(lang, "cbs.access_sales", "Sales Access")}</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* 6. Accounting Setup / Parameters */}
+            <div className={miniCardCls}>
+              <h3 className="font-black text-slate-800 border-b border-slate-100 pb-1.5 mb-2.5 uppercase flex items-center gap-2">
+                <span className={cn("w-4 h-4 rounded flex items-center justify-center font-bold text-[8px]", isLocalSale ? cn(localBadgeCls(6), "text-white") : "bg-blue-50 text-blue-600")}>6</span>
+                {t(lang, "cbs.step7_label", "Accounting Setup")}
+              </h3>
+              <div className="grid grid-cols-[140px_1fr] gap-x-2 gap-y-1.5">
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.default_purchase_account_colon", "Default Purchase Account:")}</span><span className="font-bold text-slate-800">{t(lang, "sales.purchases_local_value", "Purchases - Local")}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.default_sales_account_colon", "Default Sales Account:")}</span><span className="font-bold text-slate-800">{t(lang, "sales.sales_local_value", "Sales - Local")}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "purchase.general_serial_no", "General Serial No:")}</span><span className="font-bold text-slate-800 font-mono">{form.generalSerialNumber || "N/A"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "purchase.roznamcha_journal_no", "Roznamcha (Journal) No:")}</span><span className="font-bold text-slate-800 font-mono">{form.journalNumber || "N/A"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "purchase.cash_entry_serial", "Cash Entry Serial:")}</span><span className="font-bold text-slate-800 font-mono">{form.cashEntrySerial || "N/A"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.current_year_start_colon", "Current Year Start:")}</span><span className="font-bold text-slate-800">{form.currentYearStart || form.fiscalYearStart || "—"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.accounting_method_colon", "Accounting Method:")}</span><span className="font-bold text-slate-800">{t(lang, "sales.accrual_basis_value", "Accrual Basis")}</span>
+              </div>
+            </div>
+
+            {/* 7. Communication Setup */}
+            <div className={miniCardCls}>
+              <h3 className="font-black text-slate-800 border-b border-slate-100 pb-1.5 mb-2.5 uppercase flex items-center gap-2">
+                <span className={cn("w-4 h-4 rounded flex items-center justify-center font-bold text-[8px]", isLocalSale ? cn(localBadgeCls(7), "text-white") : "bg-blue-50 text-blue-600")}>7</span>
+                {t(lang, "cbs.communication_setup_label", "Communication Setup")}
+              </h3>
+              <div className="grid grid-cols-[140px_1fr] gap-x-2 gap-y-1.5">
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.email_documents_colon", "Email (For Documents):")}</span><span className="font-bold text-slate-850 truncate">{form.branchEmail || "—"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.email_notifications_colon", "Email (Notifications):")}</span><span className="font-bold text-slate-850 truncate">{form.notificationsEmail || "—"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.whatsapp_number_colon", "WhatsApp Number:")}</span><span className="font-bold text-slate-800">+92 333 1234567</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.sms_notifications_colon", "SMS Notifications:")}</span><span className="inline-block px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[8px] font-black uppercase w-max">{t(lang, "cbs.enabled_word", "Enabled")}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.email_notifications_row_colon", "Email Notifications:")}</span><span className="inline-block px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[8px] font-black uppercase w-max">{t(lang, "cbs.enabled_word", "Enabled")}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.language_colon", "Language:")}</span><span className="font-bold text-slate-800">{t(lang, "cbs.lang_english_word", "English")}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "sales.timezone_colon", "Time Zone:")}</span><span className="font-bold text-slate-800 truncate">(GMT+05:00) Pakistan</span>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Goods Details Spreadsheet-like Table */}
+          <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+            <h3 className="font-black text-[11px] text-slate-800 border-b border-slate-100 pb-2 mb-3 uppercase flex items-center gap-2">
+              <Package className="h-3.5 w-3.5 text-blue-600" /> {t(lang, "purchase.goods_details_title", "Goods Details")}
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-[10px] text-left border-collapse border border-slate-200">
+                <thead className="bg-slate-50 text-slate-650 font-bold uppercase tracking-wider text-[8px] border-b border-slate-200">
+                  <tr>
+                    <Th className="p-2 border-r border-slate-200">{t(lang, "purchase.th_goods", "Goods")}</Th>
+                    <Th className="p-2 border-r border-slate-200">{t(lang, "purchase.th_brand", "Brand")}</Th>
+                    <Th className="p-2 border-r border-slate-200">{t(lang, "purchase.th_origin", "Origin")}</Th>
+                    <Th className="p-2 border-r border-slate-200 text-right">{t(lang, "purchase.th_qty", "Qty")}</Th>
+                    <Th className="p-2 border-r border-slate-200 text-right">{t(lang, "sales.gwt_abbr", "G.Wt")}</Th>
+                    <Th className="p-2 border-r border-slate-200 text-right">{t(lang, "sales.nwt_abbr", "N.Wt")}</Th>
+                    <Th className="p-2 border-r border-slate-200 text-right">{t(lang, "purchase.th_rate", "Rate")}</Th>
+                    <Th className="p-2 border-r border-slate-200 text-right">Amount ({form.currencyType || "USD"})</Th>
+                    <Th className="p-2 text-right text-emerald-800">Final ({form.secondaryCurrency || "PKR"})</Th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-150 font-semibold">
+                  {goodsEntries.map((row, idx) => (
+                    <tr key={idx} className="hover:bg-slate-50/50 transition">
+                      <td className="p-2 font-bold border-r border-slate-200">{row.goodsName}</td>
+                      <td className="p-2 border-r border-slate-200">{row.brand}</td>
+                      <td className="p-2 border-r border-slate-200">{row.origin}</td>
+                      <td className="p-2 text-right border-r border-slate-200 font-mono font-bold">{row.qtyNo.toLocaleString()} {translateOptionLabel(lang, row.qtyName)}</td>
+                      <td className="p-2 text-right border-r border-slate-200 font-mono">{row.grossWeight.toFixed(2)}</td>
+                      <td className="p-2 text-right border-r border-slate-200 font-mono font-bold">{row.netWeight.toFixed(2)}</td>
+                      <td className="p-2 text-right border-r border-slate-200 font-mono">{row.coursePrice.toFixed(2)}</td>
+                      <td className="p-2 text-right border-r border-slate-200 font-mono font-bold text-slate-700">{row.totalAmount.toLocaleString()}</td>
+                      <td className="p-2 text-right font-mono font-bold text-emerald-700 bg-emerald-50/40">
+                        {row.finalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </td>
+                    </tr>
+                  ))}
+                  {goodsEntries.length > 0 && (
+                    <tr className="bg-slate-50 font-black border-t-2 border-slate-300 text-slate-800">
+                      <td colSpan={3} className="p-2 text-right border-r border-slate-200">{t(lang, "purchase.totals_label", "TOTALS:")}</td>
+                      <td className="p-2 text-right border-r border-slate-200">{reportTotals.totalQty.toLocaleString()} {goodsEntries[0]?.qtyName || ""}</td>
+                      <td className="p-2 text-right border-r border-slate-200 font-mono">{reportTotals.totalGross.toFixed(2)}</td>
+                      <td className="p-2 text-right border-r border-slate-200 font-mono">{reportTotals.totalNet.toFixed(2)}</td>
+                      <td className="p-2 text-right border-r border-slate-200 font-mono bg-slate-100/50">-</td>
+                      <td className="p-2 text-right border-r border-slate-200 font-mono text-slate-900">{reportTotals.grandPrimaryFinal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                      <td className="p-2 text-right font-mono text-emerald-800 bg-emerald-100">{reportTotals.grandFinal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Remarks (Report) Input */}
+          <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+            <h3 className="font-black text-[11px] text-slate-800 border-b border-slate-100 pb-2 mb-3 uppercase">
+              {t(lang, "sales.remarks_report_summary", "Remarks (Report Summary)")}
+            </h3>
+            <textarea
+              value={form.orderReportRemarks}
+              onChange={(e) => handleTextChange("orderReportRemarks", e.target.value)}
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-slate-900 outline-none focus:border-blue-500 resize-none h-24 text-[10px] font-semibold"
+              placeholder={t(lang, "sales.verification_remarks_ph", "Type verification, approval, or audit remarks here...")}
+            />
+          </div>
+
+          {/* Saved Reports */}
+          {reportsList.length > 0 && (
+            <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+              <h3 className="font-black text-[11px] text-slate-800 border-b border-slate-100 pb-2 mb-3 uppercase">{t(lang, "sales.saved_reports_title", "Saved Reports")}</h3>
+              <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+                {reportsList.map((report) => (
+                  <div key={report.id} className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-[10px] font-semibold relative">
+                    <div className="flex justify-between items-start mb-1.5">
+                      <span className="font-bold text-slate-800 uppercase tracking-wider">{report.name}</span>
+                      <button type="button" onClick={() => handleDeleteReport(report.id)} className="text-red-500 hover:text-red-700 transition">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                    {report.description && <p className="text-slate-600 mb-1.5">{report.description}</p>}
+                    <p className="text-slate-400 font-mono text-[8px]">{formatShortDate(report.createdAt)}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* FINAL APPROVAL ACTIONS (Approve, Send Back, Request Changes) */}
+          <div className="grid gap-4 md:grid-cols-3">
+
+            {/* A. Approve & Activate */}
+            <div className="bg-white border border-slate-200 p-5 rounded-xl shadow-sm flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="h-5 w-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-[10px]">✓</span>
+                  <h4 className="text-xs font-black text-slate-900 uppercase">{t(lang, "sales.approve_activate_order_btn", "Approve & Activate Order")}</h4>
+                </div>
+                <p className="text-[10px] text-slate-500 font-semibold leading-relaxed mb-4">
+                  Approve this booking order and transfer/post it to the General Ledger. The booking will become active and available for all operations.
+                </p>
+              </div>
+              <div>
+                {isTransferred ? (
+                  <div className="w-full bg-emerald-50 text-emerald-800 text-[10px] font-black uppercase text-center py-2 border border-emerald-200 rounded-lg">
+                    {t(lang, "sales.approved_transferred_status", "Approved & Transferred")}
+                  </div>
+                ) : (
+                  <Button
+                    type="button"
+                    onClick={handleTransfer}
+                    disabled={savingOrder || isTransferred}
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-10 rounded-lg text-xs uppercase tracking-wider shadow transition-all flex items-center justify-center gap-2"
+                  >
+                    {t(lang, "cbs.approve_activate_btn", "Approve & Activate")}
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* B. Send Back for Edit */}
+            <div className="bg-white border border-slate-200 p-5 rounded-xl shadow-sm flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="h-5 w-5 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-[10px]">↩</span>
+                  <h4 className="text-xs font-black text-slate-900 uppercase">{t(lang, "cbs.send_back_title", "Send Back for Edit")}</h4>
+                </div>
+                <p className="text-[10px] text-slate-500 font-semibold leading-relaxed mb-4">
+                  Send this booking back to the entries screen for corrections, adjustments, or additional cargo/amount information.
+                </p>
+              </div>
+              <Button
+                type="button"
+                onClick={() => setActiveTab("goods")}
+                className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold h-10 rounded-lg text-xs uppercase tracking-wider shadow transition-all"
+              >
+                {t(lang, "cbs.send_back_title", "Send Back for Edit")}
+              </Button>
+            </div>
+
+            {/* C. Request Changes */}
+            <div className="bg-white border border-slate-200 p-5 rounded-xl shadow-sm flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="h-5 w-5 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center font-bold text-[10px]">✕</span>
+                  <h4 className="text-xs font-black text-slate-900 uppercase">{t(lang, "sales.request_changes_cancel_btn", "Request Changes / Cancel")}</h4>
+                </div>
+                <p className="text-[10px] text-slate-500 font-semibold leading-relaxed mb-4">
+                  Flag specific discrepancies or cancel this booking process entirely. All logs will record this audit action.
+                </p>
+              </div>
+              <Button
+                type="button"
+                onClick={() => {
+                  if (confirm(t(lang, "sales.confirm_request_changes_reset", "Are you sure you want to request changes and reset this booking?"))) {
+                    handleReset();
+                    setActiveTab("booking");
+                  }
+                }}
+                className="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold h-10 rounded-lg text-xs uppercase tracking-wider shadow transition-all"
+              >
+                {t(lang, "cbs.request_changes", "Request Changes")}
+              </Button>
+            </div>
+
+          </div>
+
+          {/* Information banner */}
+          <div className="bg-slate-50 border border-slate-200 p-3 rounded-lg text-[9px] font-semibold text-slate-500 leading-relaxed">
+            Please review all information carefully before taking action. Once approved, the booking will be finalized and its postings posted permanently to the general ledger.
+          </div>
+
+          {/* Bottom Navigation Buttons */}
+          <div className="flex justify-between items-center border-t border-slate-200 pt-4 mt-6">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setActiveTab("goods")}
+              className="bg-white border-slate-200 text-slate-700 hover:bg-slate-50 text-[11px] font-bold h-10 px-6 rounded-lg shadow-sm"
+            >
+              {t(lang, "sow.back_to_previous", "← Back to Previous")}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push("/dashboard/sales/sales-booking-journal-report")}
+              className="bg-white border-slate-200 text-slate-700 hover:bg-slate-50 text-[11px] font-bold h-10 px-6 rounded-lg shadow-sm"
+            >
+              {t(lang, "sow.close_review", "Close Review ✕")}
+            </Button>
+          </div>
+
+        </div>
+      )}
+
+      {previewModalOpen && (
+        <div className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/70 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-5xl h-[90vh] bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden relative">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50">
+              <h2 className="text-sm font-black text-slate-800 uppercase tracking-wide flex items-center gap-2">
+                <Printer className="h-4 w-4 text-blue-600" /> {t(lang, "acct.print_preview", "Print Preview")}
+              </h2>
+              <div className="flex items-center gap-3">
+                <Button type="button" onClick={() => { import("@/lib/reports/print-dom-fragment").then((m) => { if (!m.printDomFragmentViaModal("wizard-a4-preview", t(lang, "purchase.print_document_btn", "Print Document"), { lang })) window.print(); }); }} className="bg-blue-600 hover:bg-blue-700 text-white h-8 px-4 text-xs font-bold rounded shadow transition-all">{t(lang, "purchase.print_document_btn", "Print Document")}</Button>
+                <Button type="button" variant="outline" onClick={() => setPreviewModalOpen(false)} className="h-8 px-4 text-xs font-bold hover:bg-slate-100">{t(lang, "purchase.close_btn", "Close")}</Button>
+              </div>
+            </div>
+            {/* flex+justify-center clips the start of overflowing content when it also
+                scrolls (a well-known flexbox centering bug) — margin-auto on the child
+                centers it when it fits and scrolls cleanly from the true left edge when
+                it doesn't, on any screen narrower than 210mm. */}
+            <div className="flex-1 overflow-auto p-8 bg-slate-100/50 custom-scrollbar">
+              <div id="wizard-a4-preview" className="w-[210mm] min-h-[297mm] mx-auto bg-white shadow-xl border border-slate-200 p-8 transform scale-[0.9] origin-top print:scale-100 print:shadow-none print:m-0 print:border-none print:p-0">
+
+                {/* Header Banner */}
+                <div className="mb-6 overflow-hidden rounded-xl border border-slate-200 text-left">
+                  <div className="flex flex-col gap-4 bg-slate-950 px-5 py-4 text-white md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">{form.branchCompanyName || form.salesCompanyName || form.branchName || form.branchCountry || ""}</p>
+                      <h1 className="mt-1 text-xl font-black uppercase tracking-[0.22em]">{t(lang, "sales.booking_order_title", "Sales Booking Order")}</h1>
+                      <p className="mt-1 text-[10px] font-semibold text-slate-300">{t(lang, "sales.professional_verification_subtitle", "Professional verification, account routing, goods, payment and audit template")}</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-5 gap-y-1 text-right text-[10px] font-bold md:min-w-[360px]">
+                      <span className="text-slate-400">{t(lang, "sales.so_no_label", "SO No")}</span><span>{form.salesOrderNo || "N/A"}</span>
+                      <span className="text-slate-400">{t(lang, "rozrep.bill_no", "Bill No")}</span><span>{form.billNo || "N/A"}</span>
+                      <span className="text-slate-400">{t(lang, "bdash.col_date", "Date")}</span><span>{form.salesDate || "N/A"}</span>
+                      <span className="text-slate-400">{t(lang, "log.tbl_status", "Status")}</span><span className={isTransferred ? "text-emerald-300" : "text-amber-300"}>{isTransferred ? t(lang, "sales.transferred_status_word", "Transferred") : t(lang, "sales.pending_transfer_status_word", "Pending Transfer")}</span>
+                    </div>
+                  </div>
+
+                  {/* Account Info Cards */}
+                  <div className="grid gap-4 p-4 text-[10px] md:grid-cols-2 bg-slate-50/50">
+                    <div className="border border-slate-300 bg-white p-3 rounded shadow-sm">
+                      <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800 text-[10px]">{t(lang, "purchase.sales_account_cr_badge", "Sales Account (CR)")}</h3>
+                      <div className="grid grid-cols-[80px_1fr] gap-1">
+                        <span className="text-slate-500 font-semibold">{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span><span className="font-bold">{form.salesAccountNo || "N/A"}</span>
+                        <span className="text-slate-500 font-semibold">{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span><span className="font-bold">{form.salesAccountName || "N/A"}</span>
+                        <span className="text-slate-500 font-semibold">{t(lang, "purchase.card_company_colon", "Company:")}</span><span className="font-bold">{form.salesCompanyName || "N/A"}</span>
+                      </div>
+                    </div>
+                    <div className="border border-slate-300 bg-white p-3 rounded shadow-sm">
+                      <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800 text-[10px]">{t(lang, "sales.customer_account_dr_badge", "Customer Account (DR)")}</h3>
+                      <div className="grid grid-cols-[80px_1fr] gap-1">
+                        <span className="text-slate-500 font-semibold">{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span><span className="font-bold">{form.customerAccountNo || "N/A"}</span>
+                        <span className="text-slate-500 font-semibold">{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span><span className="font-bold">{form.customerAccountName || "N/A"}</span>
+                        <span className="text-slate-500 font-semibold">{t(lang, "purchase.card_company_colon", "Company:")}</span><span className="font-bold">{form.salesCompanyName || "N/A"}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Routing row */}
+                  <div className="grid gap-0 border-t border-slate-200 bg-white text-[10px] font-semibold text-slate-700 md:grid-cols-4">
+                    <div className="border-b border-slate-200 p-3 md:border-b-0 md:border-r"><span className="block text-[8px] uppercase tracking-wider text-slate-400">{t(lang, "report.country", "Country")}</span>{form.branchCountry || form.origin || "N/A"}</div>
+                    <div className="border-b border-slate-200 p-3 md:border-b-0 md:border-r"><span className="block text-[8px] uppercase tracking-wider text-slate-400">{t(lang, "report.branch", "Branch")}</span>{form.branchName || "N/A"}</div>
+                    <div className="border-b border-slate-200 p-3 md:border-b-0 md:border-r"><span className="block text-[8px] uppercase tracking-wider text-slate-400">{t(lang, "bdash.branch_code", "Branch Code")}</span>{form.branchCode || "N/A"}</div>
+                    <div className="p-3"><span className="block text-[8px] uppercase tracking-wider text-slate-400">{t(lang, "hr.f_currency", "Currency")}</span>{form.salesCurrency || form.currencyType || "N/A"}</div>
+                  </div>
+                </div>
+
+                {/* Goods Table */}
+                <div className="mb-6">
+                  <h3 className="font-black text-xs border-b-2 border-slate-400 pb-1 mb-2 uppercase text-slate-800">{t(lang, "purchase.goods_details_title", "Goods Details")}</h3>
+                  <table className="w-full text-[9px] border-collapse border border-slate-300">
+                    <thead>
+                      <tr className="bg-slate-100 border-b border-slate-300">
+                        <Th className="border-r border-slate-300 p-1.5 text-left">#</Th>
+                        <Th className="border-r border-slate-300 p-1.5 text-left">{t(lang, "purchase.th_goods_name", "Goods Name")}</Th>
+                        <Th className="border-r border-slate-300 p-1.5 text-center">{t(lang, "purchase.th_hs_code", "HS Code")}</Th>
+                        <Th className="border-r border-slate-300 p-1.5 text-center">{t(lang, "purchase.th_origin", "Origin")}</Th>
+                        <Th className="border-r border-slate-300 p-1.5 text-right">{t(lang, "purchase.th_qty", "Qty")}</Th>
+                        <Th className="border-r border-slate-300 p-1.5 text-center">{t(lang, "purchase.th_unit", "Unit")}</Th>
+                        <Th className="border-r border-slate-300 p-1.5 text-right">Price ({form.currencyType || "USD"})</Th>
+                        <Th className="border-r border-slate-300 p-1.5 text-center">{t(lang, "purchase.th_ex_rate", "Ex. Rate")}</Th>
+                        <Th className="p-1.5 text-right">Final ({form.secondaryCurrency || "PKR"})</Th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {goodsEntries.length === 0 ? (
+                        <tr><td colSpan={9} className="p-3 text-center italic text-slate-500">{t(lang, "purchase.no_goods_entries", "No goods entries.")}</td></tr>
+                      ) : (
+                        goodsEntries.map((g, i) => (
+                          <tr key={i} className="border-b border-slate-200">
+                            <td className="border-r border-slate-200 p-1.5 text-center">{i + 1}</td>
+                            <td className="border-r border-slate-200 p-1.5 font-bold">{g.goodsName} {g.brand ? `(${g.brand})` : ""}</td>
+                            <td className="border-r border-slate-200 p-1.5 text-center">{g.hsCode}</td>
+                            <td className="border-r border-slate-200 p-1.5 text-center">{g.origin}</td>
+                            <td className="border-r border-slate-200 p-1.5 text-right font-bold">{g.qtyNo.toLocaleString()}</td>
+                            <td className="border-r border-slate-200 p-1.5 text-center">{translateOptionLabel(lang, g.qtyName)}</td>
+                            <td className="border-r border-slate-200 p-1.5 text-right">{g.coursePrice}</td>
+                            <td className="border-r border-slate-200 p-1.5 text-center">{g.exchangeRate}</td>
+                            <td className="p-1.5 text-right font-bold">{g.finalAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                    <tfoot>
+                      <tr className="bg-slate-50 border-t-2 border-slate-400 font-bold">
+                        <td colSpan={4} className="p-1.5 text-right">{t(lang, "purchase.total_colon", "Total:")}</td>
+                        <td className="border-r border-slate-200 p-1.5 text-right">{reportTotals.totalQty.toLocaleString()}</td>
+                        <td colSpan={3} className="border-r border-slate-200 p-1.5 text-right text-[8px] text-slate-500 uppercase">{t(lang, "purchase.grand_total_colon", "Grand Total:")}</td>
+                        <td className="p-1.5 text-right">{form.secondaryCurrency || "PKR"} {reportTotals.grandFinal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+
+                {/* Loading Details */}
+                <div className="mb-4 border border-slate-300 rounded p-3 text-[10px]">
+                  <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800">{t(lang, "purchase.loading_transit_report", "Loading & Transit Report")}</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-[100px_1fr] gap-1">
+                      <span className="text-slate-500 font-semibold">{t(lang, "purchase.shipping_mode_colon", "Shipping Mode:")}</span><span className="font-bold">{form.shippingMode || "N/A"}</span>
+                      <span className="text-slate-500 font-semibold">{t(lang, "purchase.card_origin_country_colon", "Origin Country:")}</span><span className="font-bold">{form.origin || "N/A"}</span>
+                      <span className="text-slate-500 font-semibold">{t(lang, "purchase.loading_port_border_colon", "Loading Port/Border:")}</span><span className="font-bold">{form.loadingPort || form.loadingBorder || form.airportName || "N/A"}</span>
+                      <span className="text-slate-500 font-semibold">{t(lang, "purchase.loading_date_colon", "Loading Date:")}</span><span className="font-bold">{form.loadingDate || "N/A"}</span>
+                    </div>
+                    <div className="grid grid-cols-[100px_1fr] gap-1">
+                      <span className="text-slate-500 font-semibold">{t(lang, "purchase.transit_country_colon", "Transit Country:")}</span><span className="font-bold">{form.transitCountry || "N/A"}</span>
+                      <span className="text-slate-500 font-semibold">{t(lang, "purchase.destination_country_colon", "Destination Country:")}</span><span className="font-bold">{form.receivedCountry || "N/A"}</span>
+                      <span className="text-slate-500 font-semibold">{t(lang, "purchase.received_port_border_colon", "Received Port/Border:")}</span><span className="font-bold">{form.receivedPort || form.receivedBorder || form.receivedPortName || "N/A"}</span>
+                      <span className="text-slate-500 font-semibold">{t(lang, "purchase.received_date_colon", "Received Date:")}</span><span className="font-bold">{form.receivedDate || "N/A"}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Payment Condition */}
+                <div className="mb-4 border border-slate-300 rounded p-3 text-[10px]">
+                  <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800">{t(lang, "purchase.payment_conditions_report", "Payment Conditions Report")}</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-[120px_1fr] gap-1">
+                      <span className="text-slate-500 font-semibold">{t(lang, "purchase.payment_term_colon", "Payment Term:")}</span><span className="font-bold">{form.paymentType || "N/A"}</span>
+                      <span className="text-slate-500 font-semibold">{t(lang, "purchase.advance_pct_colon", "Advance (%):")}</span><span className="font-bold">{form.advancePercent || 0}%</span>
+                      <span className="text-slate-500 font-semibold">{t(lang, "purchase.advance_payment_date_colon", "Advance Payment Date:")}</span><span className="font-bold">{form.advancePaymentDate || "N/A"}</span>
+                    </div>
+                    <div className="grid grid-cols-[120px_1fr] gap-1">
+                      <span className="text-slate-500 font-semibold">{t(lang, "purchase.invoice_terms_colon", "Invoice Terms:")}</span><span className="font-bold">{form.invoicePayment || "N/A"}</span>
+                      <span className="text-slate-500 font-semibold">{t(lang, "purchase.remaining_pct_colon", "Remaining (%):")}</span><span className="font-bold">{100 - (form.advancePercent || 0)}%</span>
+                      <span className="text-slate-500 font-semibold">{t(lang, "purchase.final_payment_date_colon", "Final Payment Date:")}</span><span className="font-bold">{form.paymentDate || "N/A"}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Remarks & Narration */}
+                {form.remarks && (
+                  <div className="mb-4 border border-slate-300 rounded p-3 text-[10px]">
+                    <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800">{t(lang, "purchase.remarks_narration_title", "Remarks & Narration")}</h3>
+                    <p className="whitespace-pre-wrap font-medium text-slate-800">{form.remarks}</p>
+                  </div>
+                )}
+
+                {/* User Remarks (Report) */}
+                {form.orderReportRemarks && (
+                  <div className="mb-4 border border-slate-300 rounded p-3 text-[10px]">
+                    <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800">{t(lang, "purchase.user_remarks_report_title", "User Remarks (Report)")}</h3>
+                    <p className="whitespace-pre-wrap font-medium text-slate-800">{form.orderReportRemarks}</p>
+                  </div>
+                )}
+
+                {/* Dynamic Reports */}
+                {reportsList.length > 0 && (
+                  <div className="mb-4 border border-slate-300 rounded p-3 text-[10px]">
+                    <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800">{t(lang, "purchase.dynamic_reports_notes_title", "Dynamic Reports & Notes")}</h3>
+                    <div className="space-y-3">
+                      {reportsList.map((r, i) => (
+                        <div key={r.id}>
+                          <h4 className="font-bold text-slate-900 underline underline-offset-2 mb-1">{r.name}</h4>
+                          <p className="whitespace-pre-wrap text-slate-800">{r.notes || r.description}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Signatures */}
+                <div className="mt-16 grid grid-cols-3 gap-8 text-center text-[10px] font-bold">
+                  <div>
+                    <div className="border-t border-slate-400 pt-1">{t(lang, "purchase.prepared_by_label", "Prepared By")}</div>
+                  </div>
+                  <div>
+                    <div className="border-t border-slate-400 pt-1">{t(lang, "purchase.checked_by_label", "Checked By")}</div>
+                  </div>
+                  <div>
+                    <div className="border-t border-slate-400 pt-1">{t(lang, "purchase.authorized_signatory_label", "Authorized Signatory")}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- NEW COUNTRY MODAL --- */}
+      {newCountryModal && (
+        <div className="fixed inset-0 z-[80] grid place-items-center bg-slate-950/70 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-xs rounded-xl border border-border bg-card shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+              <div>
+                <h3 className="text-sm font-bold tracking-tight text-foreground">{t(lang, "purchase.add_new_country_label", "Add New Country")}</h3>
+                <p className="text-[10px] text-muted-foreground mt-0.5">{t(lang, "sales.iso_codes_auto_generated", "ISO codes and emails are auto-generated")}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => { setNewCountryModal(false); setNewCountryError(""); setNewCountryForm({ name: "" }); }}
+                className="text-muted-foreground hover:text-foreground transition-colors text-lg leading-none font-bold"
+              >✕</button>
+            </div>
+            <div className="p-5 space-y-3">
+              {newCountryError && (
+                <div className="bg-destructive/10 border border-destructive/30 text-destructive text-[10px] rounded px-3 py-2">{newCountryError}</div>
+              )}
+              <div>
+                <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "sales.country_name_star", "Country Name *")}</label>
+                <input
+                  type="text"
+                  value={newCountryForm.name}
+                  onChange={(e) => setNewCountryForm({ name: e.target.value })}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleAddNewCountry(); }}
+                  placeholder={t(lang, "purchase.wiz_ph_country_example", "e.g. Iran")}
+                  autoFocus
+                  className="w-full bg-background border border-input rounded px-3 py-1.5 text-foreground text-[11px] outline-none focus:border-primary"
+                />
+              </div>
+              <p className="text-[9px] text-muted-foreground/60">ISO-2, ISO-3, currency code and system emails will be auto-generated. You can update them later in Location Setup.</p>
+            </div>
+            <div className="flex justify-end gap-2 px-5 pb-4">
+              <button
+                type="button"
+                onClick={() => { setNewCountryModal(false); setNewCountryError(""); setNewCountryForm({ name: "" }); }}
+                className="px-4 py-1.5 text-[11px] rounded border border-input text-muted-foreground hover:text-foreground transition-colors"
+              >{t(lang, "common.cancel", "Cancel")}</button>
+              <button
+                type="button"
+                onClick={handleAddNewCountry}
+                disabled={newCountryLoading}
+                className="px-4 py-1.5 text-[11px] rounded bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity disabled:opacity-60"
+              >{newCountryLoading ? "Saving…" : "Save Country"}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- NEW GOOD MODAL --- */}
+      {newGoodModal && (
+        <div className="fixed inset-0 z-[80] grid place-items-center bg-slate-950/70 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-xl border border-border bg-card shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+              <div>
+                <h3 className="text-sm font-bold tracking-tight text-foreground">{t(lang, "purchase.add_new_good", "Add New Good")}</h3>
+                <p className="text-[10px] text-muted-foreground mt-0.5">{t(lang, "sales.creates_new_item_goods_master", "Creates a new item in the Goods Master")}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => { setNewGoodModal(false); setNewGoodError(""); setNewGoodForm({ goodsName: "", chsCode: "" }); }}
+                className="text-muted-foreground hover:text-foreground transition-colors text-lg leading-none font-bold"
+              >✕</button>
+            </div>
+            <div className="p-5 space-y-3">
+              {newGoodError && (
+                <div className="bg-destructive/10 border border-destructive/30 text-destructive text-[10px] rounded px-3 py-2">{newGoodError}</div>
+              )}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="col-span-2">
+                  <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "tl.goods_name_label", "Goods Name *")}</label>
+                  <input
+                    type="text"
+                    value={newGoodForm.goodsName}
+                    onChange={(e) => setNewGoodForm(p => ({ ...p, goodsName: e.target.value.toUpperCase() }))}
+                    placeholder={t(lang, "purchase.wiz_ph_goods_name_example", "e.g. PINE NUTS INSHELL")}
+                    className="w-full bg-background border border-input rounded px-3 py-1.5 text-foreground text-[11px] outline-none focus:border-primary uppercase"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "sales.hs_code_star", "HS Code *")}</label>
+                  <input
+                    type="text"
+                    value={newGoodForm.chsCode}
+                    onChange={(e) => setNewGoodForm(p => ({ ...p, chsCode: e.target.value }))}
+                    placeholder="0802.90"
+                    className="w-full bg-background border border-input rounded px-3 py-1.5 text-foreground text-[11px] outline-none focus:border-primary font-mono"
+                  />
+                </div>
+              </div>
+              <p className="text-[9px] text-muted-foreground/60">{t(lang, "sales.after_saving_good_msg", "After saving, this good will be auto-selected with HS Code pre-filled.")}</p>
+            </div>
+            <div className="flex justify-end gap-2 px-5 pb-4">
+              <button
+                type="button"
+                onClick={() => { setNewGoodModal(false); setNewGoodError(""); setNewGoodForm({ goodsName: "", chsCode: "" }); }}
+                className="px-4 py-1.5 text-[11px] rounded border border-input text-muted-foreground hover:text-foreground transition-colors"
+              >{t(lang, "common.cancel", "Cancel")}</button>
+              <button
+                type="button"
+                onClick={handleAddNewGood}
+                disabled={newGoodLoading}
+                className="px-4 py-1.5 text-[11px] rounded bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity disabled:opacity-60"
+              >{newGoodLoading ? "Saving…" : "Save Good"}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- NEW PORT / BORDER / AIRPORT MODAL --- */}
+      {newPortModal && (
+        <div className="fixed inset-0 z-[80] grid place-items-center bg-slate-950/70 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-xs rounded-xl border border-border bg-card shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+              <div>
+                <h3 className="text-sm font-bold tracking-tight text-foreground uppercase">
+                  {t(lang, "sales.add_new_prefix_word", "Add New {0}").replace("{0}", newPortForm.transportType === "sea" ? t(lang, "sales.port_word", "Port") : newPortForm.transportType === "road" ? t(lang, "sales.border_word", "Border") : t(lang, "sales.airport_word", "Airport"))}
+                </h3>
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  {t(lang, "sales.adding_to_registry_msg", "Adding to {0} registry").replace("{0}", newPortForm.side === "loading" ? t(lang, "sales.loading_word", "Loading") : t(lang, "sales.received_word", "Received"))}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => { setNewPortModal(false); setNewPortError(""); setNewPortForm(p => ({ ...p, portName: "" })); }}
+                className="text-muted-foreground hover:text-foreground transition-colors text-lg leading-none font-bold"
+              >✕</button>
+            </div>
+            <div className="p-5 space-y-3">
+              {newPortError && (
+                <div className="bg-destructive/10 border border-destructive/30 text-destructive text-[10px] rounded px-3 py-2">{newPortError}</div>
+              )}
+              <div>
+                <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "sales.country_name_star", "Country Name *")}</label>
+                <select
+                  value={newPortForm.countryName || ""}
+                  onChange={(e) => setNewPortForm(p => ({ ...p, countryName: e.target.value }))}
+                  className="w-full bg-background border border-input rounded px-3 py-1.5 text-foreground text-[11px] outline-none focus:border-primary"
+                >
+                  <option value="">{t(lang, "purchase.select_country_ellipsis", "Select Country...")}</option>
+                  {transitCountryOptions.map(c => <option key={c.name || c.id} value={c.name}>{c.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-[10px] text-muted-foreground mb-1">
+                  {t(lang, "sales.name_star_suffix", "{0} Name *").replace("{0}", newPortForm.transportType === "sea" ? t(lang, "sales.port_word", "Port") : newPortForm.transportType === "road" ? t(lang, "sales.border_word", "Border") : t(lang, "sales.airport_word", "Airport"))}
+                </label>
+                <input
+                  type="text"
+                  value={newPortForm.portName}
+                  onChange={(e) => setNewPortForm(p => ({ ...p, portName: e.target.value }))}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && newPortForm.portName.trim()) {
+                      handleCreatePort(newPortForm.portName.trim(), newPortForm.countryName, newPortForm.transportType, newPortForm.side);
+                      setNewPortModal(false);
+                    }
+                  }}
+                  placeholder={`e.g. ${newPortForm.transportType === "sea" ? "Karachi Port" : newPortForm.transportType === "road" ? "Torkham" : "Kabul Airport"}`}
+                  autoFocus
+                  className="w-full bg-background border border-input rounded px-3 py-1.5 text-foreground text-[11px] outline-none focus:border-primary"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 px-5 pb-4">
+              <button
+                type="button"
+                onClick={() => { setNewPortModal(false); setNewPortError(""); setNewPortForm(p => ({ ...p, portName: "" })); }}
+                className="px-4 py-1.5 text-[11px] rounded border border-input text-muted-foreground hover:text-foreground transition-colors"
+              >{t(lang, "common.cancel", "Cancel")}</button>
+              <button
+                type="button"
+                disabled={!newPortForm.portName.trim()}
+                onClick={() => {
+                  if (newPortForm.portName.trim()) {
+                    handleCreatePort(newPortForm.portName.trim(), newPortForm.countryName, newPortForm.transportType, newPortForm.side);
+                    setNewPortModal(false);
+                  }
+                }}
+                className="px-4 py-1.5 text-[11px] rounded bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity disabled:opacity-60"
+              >{t(lang, "common.save", "Save")}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- NEW GOOD VARIATION MODAL --- */}
+      {customVariationModal && (
+        <div className="fixed inset-0 z-[80] grid place-items-center bg-slate-950/70 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-xs rounded-xl border border-border bg-card shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+              <div>
+                <h3 className="text-sm font-bold tracking-tight text-foreground uppercase">
+                  {t(lang, "purchase.wiz_add_good_variation", "Add Good Variation")}
+                </h3>
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  {t(lang, "purchase.wiz_specify_size_brand", "Specify size/brand under selected good")}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCustomVariationModal(false)}
+                className="text-muted-foreground hover:text-foreground transition-colors text-lg leading-none font-bold"
+              >✕</button>
+            </div>
+            <div className="p-5 space-y-3">
+              <div>
+                <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.th_goods_name", "Goods Name")}</label>
+                <input
+                  type="text"
+                  value={customVariationForm.goodsName}
+                  disabled
+                  className="w-full bg-muted border border-input rounded px-3 py-1.5 text-muted-foreground text-[11px] outline-none uppercase"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "sales.brand_name_star", "Brand Name *")}</label>
+                <input
+                  type="text"
+                  value={customVariationForm.brand}
+                  onChange={(e) => setCustomVariationForm(p => ({ ...p, brand: e.target.value.toUpperCase() }))}
+                  placeholder={t(lang, "purchase.wiz_ph_brand_example", "e.g. PREMIUM")}
+                  className="w-full bg-background border border-input rounded px-3 py-1.5 text-foreground text-[11px] outline-none focus:border-primary uppercase"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "sales.size_spec_star", "Size Specification *")}</label>
+                <input
+                  type="text"
+                  value={customVariationForm.size}
+                  onChange={(e) => setCustomVariationForm(p => ({ ...p, size: e.target.value.toUpperCase() }))}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleSaveCustomVariation();
+                    }
+                  }}
+                  placeholder={t(lang, "purchase.wiz_ph_size_example", "e.g. 20/22")}
+                  className="w-full bg-background border border-input rounded px-3 py-1.5 text-foreground text-[11px] outline-none focus:border-primary uppercase"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 px-5 pb-4">
+              <button
+                type="button"
+                onClick={() => setCustomVariationModal(false)}
+                className="px-4 py-1.5 text-[11px] rounded border border-input text-muted-foreground hover:text-foreground transition-colors"
+              >{t(lang, "common.cancel", "Cancel")}</button>
+              <button
+                type="button"
+                onClick={handleSaveCustomVariation}
+                className="px-4 py-1.5 text-[11px] rounded bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity"
+              >{t(lang, "common.save", "Save")}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- CREATE NEW ACCOUNT MODAL --- */}
+      {createAccountModalOpen && (
+        <div className="fixed inset-0 z-[80] grid place-items-center bg-slate-950/70 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-xl border border-border bg-card shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+              <div>
+                <h3 className="text-sm font-bold tracking-tight text-foreground">
+                  {t(lang, "sales.create_new_prefix", "Create New {0}").replace("{0}", createAccountType === "purchase" ? t(lang, "sales.supplier_account_word", "Supplier Account") : t(lang, "sales.customer_account_word", "Customer Account"))}
+                </h3>
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  {t(lang, "sales.scope_colon", "Scope:")} {form.cityBranchId ? t(lang, "report.scope_city_branch", "City Branch") : form.countryBranchId ? t(lang, "purchase.card_main_branch_fallback", "Main Branch") : form.countryId ? t(lang, "sales.country_scope_word", "Country Scope") : t(lang, "sales.super_admin_scope_word", "Super Admin")}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCreateAccountModalOpen(false)}
+                className="text-muted-foreground hover:text-foreground transition-colors text-lg leading-none font-bold"
+              >✕</button>
+            </div>
+            <div className="p-5 space-y-3">
+              {createAccountError && (
+                <div className="bg-destructive/10 border border-destructive/30 text-destructive text-[10px] rounded px-3 py-2">
+                  {createAccountError}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "sales.account_name_star", "Account Name *")}</label>
+                <input
+                  type="text"
+                  value={createAccountForm.name}
+                  onChange={(e) => setCreateAccountForm(p => ({ ...p, name: e.target.value }))}
+                  placeholder={t(lang, "purchase.wiz_ph_account_name_example", "e.g. Haji Ahmad Dry Fruits")}
+                  className="w-full bg-background border border-input rounded px-3 py-1.5 text-foreground text-[11px] outline-none focus:border-primary"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "sales.account_code_star", "Account Code *")}</label>
+                  <input
+                    type="text"
+                    value={createAccountForm.code}
+                    onChange={(e) => setCreateAccountForm(p => ({ ...p, code: e.target.value }))}
+                    placeholder={t(lang, "purchase.wiz_ph_auto", "AUTO")}
+                    className="w-full bg-background border border-input rounded px-3 py-1.5 text-foreground text-[11px] outline-none focus:border-primary font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "sales.currency_star", "Currency *")}</label>
+                  <select
+                    value={createAccountForm.currency}
+                    onChange={(e) => setCreateAccountForm(p => ({ ...p, currency: e.target.value }))}
+                    className="w-full bg-background border border-input rounded px-3 py-1.5 text-foreground text-[11px] outline-none focus:border-primary"
+                  >
+                    {CURRENCY_OPTIONS.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "sales.account_category_star", "Account Category *")}</label>
+                  <select
+                    value={createAccountForm.kind}
+                    onChange={(e) => setCreateAccountForm(p => ({ ...p, kind: e.target.value }))}
+                    className="w-full bg-background border border-input rounded px-3 py-1.5 text-foreground text-[11px] outline-none focus:border-primary"
+                  >
+                    <option value="liability">{t(lang, "sales.liability_word", "Liability")}</option>
+                    <option value="asset">{t(lang, "sales.asset_word", "Asset")}</option>
+                    <option value="expense">{t(lang, "sae.expense", "Expense")}</option>
+                    <option value="income">{t(lang, "sales.income_word", "Income")}</option>
+                    <option value="equity">{t(lang, "acct.grp_equity", "Equity")}</option>
+                  </select>
+                </div>
+                <div className="flex items-center pt-5">
+                  <label className="flex items-center gap-1.5 text-[10px] font-semibold text-foreground cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={createAccountForm.isControlAccount}
+                      onChange={(e) => setCreateAccountForm(p => ({ ...p, isControlAccount: e.target.checked }))}
+                      className="rounded border-input text-primary focus:ring-primary h-3.5 w-3.5"
+                    />
+                    {t(lang, "purchase.wiz_control_account", "Control Account")}
+                  </label>
+                </div>
+              </div>
+
+              <p className="text-[9px] text-muted-foreground/60">
+                This account will be created under the selected country and branch scoping, and auto-selected.
+              </p>
+            </div>
+            <div className="flex justify-end gap-2 px-5 pb-4">
+              <button
+                type="button"
+                onClick={() => setCreateAccountModalOpen(false)}
+                className="px-4 py-1.5 text-[11px] rounded border border-input text-muted-foreground hover:text-foreground transition-colors"
+              >{t(lang, "common.cancel", "Cancel")}</button>
+              <button
+                type="button"
+                onClick={handleAddNewAccount}
+                disabled={createAccountLoading}
+                className="px-4 py-1.5 text-[11px] rounded bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity disabled:opacity-60"
+              >
+                {createAccountLoading ? "Saving…" : "Save Account"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* New Report Modal */}
+      {isNewReportModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-background rounded-xl border border-border shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-4 border-b border-border/60 bg-muted/30">
+              <h3 className="font-bold text-base text-foreground flex items-center gap-2">
+                {t(lang, "purchase.wiz_create_new_report", "Create New Report")}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsNewReportModalOpen(false)}
+                className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md hover:bg-muted"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <form onSubmit={handleNewReportSubmit} className="p-5 space-y-4">
+              <div>
+                <label className="text-xs font-bold text-foreground mb-1.5 block">{t(lang, "report.builder_report_name", "Report Name")}<span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  required
+                  value={newReportForm.name}
+                  onChange={(e) => setNewReportForm({ ...newReportForm, name: e.target.value })}
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  placeholder={t(lang, "purchase.wiz_ph_report_name_example", "e.g. Loading Report, Shipping Report")}
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-foreground mb-1.5 block">{t(lang, "common.description", "Description")}</label>
+                <input
+                  type="text"
+                  value={newReportForm.description}
+                  onChange={(e) => setNewReportForm({ ...newReportForm, description: e.target.value })}
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  placeholder={t(lang, "purchase.wiz_ph_optional_description", "Optional description")}
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-foreground mb-1.5 block">{t(lang, "cusm.notes", "Notes")}</label>
+                <textarea
+                  rows={3}
+                  value={newReportForm.notes}
+                  onChange={(e) => setNewReportForm({ ...newReportForm, notes: e.target.value })}
+                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  placeholder={t(lang, "purchase.wiz_ph_additional_notes", "Additional notes for this report")}
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-2 border-t border-border/60">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsNewReportModalOpen(false)}
+                  className="h-9"
+                >
+                  {t(lang, "common.cancel", "Cancel")}
+                </Button>
+                <Button
+                  type="submit"
+                  className="h-9 bg-primary hover:bg-primary/90 font-bold"
+                >
+                  {t(lang, "purchase.wiz_create_and_save", "Create & Save")}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- CREATE NEW COMPANY MODAL --- */}
+      {createCompanyModalOpen && (
+        <div className="fixed inset-0 z-[80] grid place-items-center bg-slate-950/70 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-xl border border-border bg-card shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+              <div>
+                <h3 className="text-sm font-bold tracking-tight text-foreground">
+                  {t(lang, "purchase.wiz_create_new_company", "Create New Company")}
+                </h3>
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  {t(lang, "purchase.wiz_adding_to_company_registry", "Adding to Company Master Settings registry")}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCreateCompanyModalOpen(false)}
+                className="text-muted-foreground hover:text-foreground transition-colors text-lg leading-none font-bold"
+              >✕</button>
+            </div>
+            <div className="p-5 space-y-3">
+              {createCompanyError && (
+                <div className="bg-destructive/10 border border-destructive/30 text-destructive text-[10px] rounded px-3 py-2">
+                  {createCompanyError}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "tl.company_name_label", "Company Name *")}</label>
+                <input
+                  type="text"
+                  value={createCompanyForm.name}
+                  onChange={(e) => setCreateCompanyForm(p => ({ ...p, name: e.target.value }))}
+                  placeholder={t(lang, "purchase.wiz_ph_company_example", "e.g. Apex Trading LLC")}
+                  className="w-full bg-background border border-input rounded px-3 py-1.5 text-foreground text-[11px] outline-none focus:border-primary"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "branch.legal_name_label", "Legal Name")}</label>
+                <input
+                  type="text"
+                  value={createCompanyForm.legalName}
+                  onChange={(e) => setCreateCompanyForm(p => ({ ...p, legalName: e.target.value }))}
+                  placeholder={t(lang, "purchase.wiz_ph_company_legal_example", "e.g. Apex Imports (Optional)")}
+                  className="w-full bg-background border border-input rounded px-3 py-1.5 text-foreground text-[11px] outline-none focus:border-primary"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "sales.base_currency_star", "Base Currency *")}</label>
+                <select
+                  value={createCompanyForm.baseCurrency}
+                  onChange={(e) => setCreateCompanyForm(p => ({ ...p, baseCurrency: e.target.value }))}
+                  className="w-full bg-background border border-input rounded px-3 py-1.5 text-foreground text-[11px] outline-none focus:border-primary"
+                >
+                  {CURRENCY_OPTIONS.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+
+              <p className="text-[9px] text-muted-foreground/60">
+                This company will be saved to the master company registry and auto-selected for the current account.
+              </p>
+            </div>
+            <div className="flex justify-end gap-2 px-5 pb-4">
+              <button
+                type="button"
+                onClick={() => setCreateCompanyModalOpen(false)}
+                className="px-4 py-1.5 text-[11px] rounded border border-input text-muted-foreground hover:text-foreground transition-colors"
+              >{t(lang, "common.cancel", "Cancel")}</button>
+              <button
+                type="button"
+                onClick={handleAddNewCompany}
+                disabled={createCompanyLoading}
+                className="px-4 py-1.5 text-[11px] rounded bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity disabled:opacity-60"
+              >
+                {createCompanyLoading ? "Saving…" : "Save Company"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+        </>
+      )}
+
+      {/* --- TRANSFER CONFIRMATION MODAL --- */}
+      {transferConfirmModal && (
+        <div className="fixed inset-0 z-[150] grid place-items-center bg-slate-950/80 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-xl shadow-2xl overflow-hidden w-full max-w-lg animate-in zoom-in-95 duration-200">
+            <div className="bg-blue-900 text-white p-4 flex items-center justify-between border-b border-blue-800">
+              <h2 className="font-black tracking-wider uppercase text-sm flex items-center gap-2">
+                <FileSignature className="h-4 w-4 text-blue-300" /> {t(lang, "purchase.wiz_transfer_to_payment_module", "Transfer to Payment Module")}
+              </h2>
+              <button type="button" onClick={() => setTransferConfirmModal(false)} className="text-blue-300 hover:text-white transition">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-5 text-xs text-slate-800 bg-slate-50/50">
+              <div className="flex items-start gap-3 bg-blue-50 text-blue-800 p-3 rounded-lg border border-blue-100">
+                <CheckSquare className="h-5 w-5 shrink-0 mt-0.5 text-blue-600" />
+                <p className="font-semibold leading-relaxed">
+                  {t(lang, "sales.about_to_transfer_booking", "You are about to transfer this Sales Booking to the")}<strong>{t(lang, "sales.transfer_receipt_module", "Sales Transfer / Receipt")}</strong> {t(lang, "sales.module_word_period", "module.")}
+                  <br/><br/>
+                  <em>Note: No accounting entries (Roznamcha, Ledger) will be posted at this stage. Entries will only be posted when the payment is officially processed.</em>
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="border border-slate-200 rounded p-2.5 bg-white shadow-sm flex justify-between items-center">
+                  <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">{t(lang, "lpjr.inv_invoice_no", "Invoice No")}</span>
+                  <div className="font-black font-mono text-slate-900">{form.salesOrderNo}</div>
+                </div>
+                <div className="border border-slate-200 rounded p-2.5 bg-white shadow-sm flex justify-between items-center">
+                  <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">{t(lang, "sales.base_entry_no_label", "Base Entry No")}</span>
+                  <div className="font-black font-mono text-slate-900">{savedOrderNo || t(lang, "purchase.wiz_pending_ellipsis", "Pending...")}</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-slate-100 border-t border-slate-200 p-4 flex justify-end gap-3 rounded-b-xl">
+              <Button type="button" variant="outline" className="font-bold border-slate-300 text-slate-600" onClick={() => setTransferConfirmModal(false)}>
+                {t(lang, "common.cancel", "Cancel")}
+              </Button>
+              <Button
+                type="button"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-black px-6 shadow-md transition-all uppercase tracking-wider"
+                disabled={savingOrder}
+                onClick={() => {
+                  setTransferConfirmModal(false);
+                  handleTransfer();
+                }}
+              >
+                {savingOrder ? t(lang, "sales.processing_ellipsis", "Processing...") : t(lang, "sales.confirm_transfer_short", "Confirm & Transfer")}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* LOT DETAILS MODAL ("Parda") */}
+      {isLotModalOpen && (
+        <div className="fixed inset-0 z-[150] grid place-items-center bg-slate-950/70 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-xl shadow-2xl border border-border overflow-hidden w-full max-w-md animate-in zoom-in-95 duration-200 text-slate-800">
+            <div className="bg-slate-50 border-b border-slate-200 dark:bg-slate-800 dark:border-slate-700 text-slate-900 dark:text-white p-4 flex items-center justify-between">
+              <h3 className="font-black text-xs uppercase tracking-wider flex items-center gap-2">
+                <Package className="h-4 w-4 text-blue-600 dark:text-sky-400" />
+                {form.saleSource === "in_transit" ? t(lang, "sales.transit_cargo_details_title", "Transit Cargo Details") : t(lang, "sales.lot_details_title", "Lot Details")}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsLotModalOpen(false)}
+                className="text-slate-400 hover:text-slate-700 dark:text-white/60 dark:hover:text-white transition"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="p-5 space-y-4 text-xs">
+              {(() => {
+                const lot = saleLots.find((l) => l.lotNo === selectedLotId);
+                if (!lot) return <p className="text-muted-foreground italic">{t(lang, "sales.no_lot_selected", "No lot selected.")}</p>;
+                return (
+                  <>
+                    <div className="grid grid-cols-2 gap-3 border-b border-slate-100 pb-3">
+                      <div>
+                        <span className="text-[10px] text-muted-foreground font-semibold block uppercase">{t(lang, "sales.lot_number_label", "Lot Number")}</span>
+                        <span className="font-mono font-black text-primary text-sm">{lot.lotNo}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-muted-foreground font-semibold block uppercase">{t(lang, "sales.reference_number_label", "Reference Number")}</span>
+                        <span className="font-mono font-bold text-slate-700">{lot.stockRef}</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex justify-between py-1 border-b border-slate-50">
+                        <span className="text-slate-500 font-medium">{t(lang, "sales.goods_name_colon", "Goods Name:")}</span>
+                        <span className="font-bold text-slate-900">{lot.goodsName}</span>
+                      </div>
+                      <div className="flex justify-between py-1 border-b border-slate-50">
+                        <span className="text-slate-500 font-medium">{t(lang, "sales.brand_colon", "Brand:")}</span>
+                        <span className="font-semibold text-slate-900">{lot.brand}</span>
+                      </div>
+                      <div className="flex justify-between py-1 border-b border-slate-50">
+                        <span className="text-slate-500 font-medium">{t(lang, "sales.size_colon", "Size:")}</span>
+                        <span className="font-semibold text-slate-900">{lot.size}</span>
+                      </div>
+                      <div className="flex justify-between py-1 border-b border-slate-50">
+                        <span className="text-slate-500 font-medium">{t(lang, "sales.origin_colon", "Origin:")}</span>
+                        <span className="font-semibold text-slate-900">{lot.origin}</span>
+                      </div>
+                      <div className="flex justify-between py-1 border-b border-slate-50">
+                        <span className="text-slate-500 font-medium">{t(lang, "sales.available_quantity_colon", "Available Quantity:")}</span>
+                        <span className="font-black text-emerald-600">{Number(lot.availableQty).toLocaleString()} {translateOptionLabel(lang, lot.qtyName)}</span>
+                      </div>
+                      <div className="flex justify-between py-1 border-b border-slate-50">
+                        <span className="text-slate-500 font-medium">{t(lang, "tl.net_weight_colon", "Net Weight:")}</span>
+                        <span className="font-bold text-slate-900">{Number(lot.netWeight).toLocaleString()} KG</span>
+                      </div>
+                      <div className="flex justify-between py-1">
+                        <span className="text-slate-500 font-medium">{t(lang, "sales.price_colon", "Price:")}</span>
+                        <span className="font-bold text-slate-950">{lot.currencyType} {lot.coursePrice}</span>
+                      </div>
+                    </div>
+
+                    <div className="bg-sky-50 text-sky-900 p-3 rounded-lg border border-sky-100 flex items-start gap-2.5 mt-2">
+                      <input
+                        type="checkbox"
+                        id="confirm-lot-chk"
+                        className="mt-0.5 h-3.5 w-3.5 rounded border-sky-300 text-sky-600 focus:ring-sky-500"
+                        defaultChecked
+                      />
+                      <label htmlFor="confirm-lot-chk" className="font-bold text-[10px] leading-tight cursor-pointer">
+                        {t(lang, "sales.confirm_lot_selection_msg", "Confirm selection of this cargo lot to apply details to the goods entry form.")}
+                      </label>
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-3 border-t border-slate-100 mt-4">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-9 font-bold"
+                        onClick={() => setIsLotModalOpen(false)}
+                      >
+                        {t(lang, "common.cancel", "Cancel")}
+                      </Button>
+                      <Button
+                        type="button"
+                        className="h-9 bg-emerald-600 hover:bg-emerald-700 text-white font-black px-5 shadow-md"
+                        onClick={() => {
+                          applySaleLot(lot);
+                          setIsLotModalOpen(false);
+                        }}
+                      >
+                        {t(lang, "sales.save_apply_btn", "Save & Apply")}
+                      </Button>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {tradeDocsOpen && (
+        <TradeDocumentCenter
+          open={tradeDocsOpen}
+          onClose={() => setTradeDocsOpen(false)}
+          txnKind="sales"
+          source="sales_order"
+          record={{
+            id: savedOrderId || undefined,
+            sales_order_no: form.salesOrderNo,
+            sales_contract_no: form.salesContractNo,
+            currency_code: form.currencyCode || form.currencyType,
+            exchange_rate: form.exchangeRate,
+            order_total: form.orderTotal,
+            country_id: form.countryId,
+            country_branch_id: form.countryBranchId,
+            city_branch_id: form.cityBranchId,
+            customer_name: form.customerName,
+            form_data: { form, goodsEntries },
+          }}
+          companyId={form.salesCompanyId || null}
+          scope={{
+            countryId: form.countryId || null,
+            countryBranchId: form.countryBranchId || null,
+            cityBranchId: form.cityBranchId || null,
+          }}
+        />
+      )}
+
+      {handoverModalOpen && (
+        <TaskHandoverModal
+          open={handoverModalOpen}
+          onClose={() => setHandoverModalOpen(false)}
+          orderReference={form.salesOrderNo || form.salesContractNo || "New Sales Booking"}
+          sourceTable="sales_orders"
+          sourceId={savedOrderId || undefined}
+          targetUrl={
+            savedOrderId
+              ? `/dashboard/sales/sales-booking-journal-report?id=${savedOrderId}`
+              : `/dashboard/sales/sales-booking-journal-report`
+          }
+          currentStage={activeTab}
+          defaultTask={t(lang, "tc.please_complete_work", "Please review and complete assigned work.")}
+          sourceCountryId={form.countryId || null}
+          sourceCountryBranchId={form.countryBranchId || null}
+          sourceCityBranchId={form.cityBranchId || null}
+          domain="business"
+          customerPartyName={form.customerAccountName || form.salesAccountName || form.customerName}
+          lang={lang}
+          onSuccess={() => {
+            setHandoverModalOpen(false);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+
+
+
+
+
+

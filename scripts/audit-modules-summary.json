@@ -1,0 +1,302 @@
+[
+  {
+    "name": "Dashboard",
+    "category": "Core System",
+    "path": "app/dashboard",
+    "routes": [
+      "/dashboard",
+      "/dashboard/analytics"
+    ],
+    "features": [
+      "KPI Cards",
+      "Live Currency Rates",
+      "Branch Scopes",
+      "Notifications"
+    ],
+    "languages": [
+      "en",
+      "ur",
+      "ps",
+      "fa",
+      "ar"
+    ],
+    "printSupported": true,
+    "status": "Verified / Working"
+  },
+  {
+    "name": "Branch Management",
+    "category": "Master Setup",
+    "path": "features/branch-management",
+    "routes": [
+      "/dashboard/branch-management/countries",
+      "/dashboard/branch-management/branches",
+      "/dashboard/branch-management/city-branches"
+    ],
+    "features": [
+      "Country CRUD",
+      "Branch CRUD",
+      "City Branch CRUD",
+      "Multi-country filter"
+    ],
+    "languages": [
+      "en",
+      "ur",
+      "ps",
+      "fa",
+      "ar"
+    ],
+    "printSupported": true,
+    "status": "Verified / Working"
+  },
+  {
+    "name": "Purchase Orders & Management",
+    "category": "Purchases & Supply Chain",
+    "path": "features/purchases",
+    "routes": [
+      "/dashboard/purchases/orders",
+      "/dashboard/purchases/invoices",
+      "/dashboard/purchases/transfers"
+    ],
+    "features": [
+      "Order Entry",
+      "Edit/Update",
+      "Multi-currency Calc",
+      "Posting to Roznamcha",
+      "Branch Lock"
+    ],
+    "languages": [
+      "en",
+      "ur",
+      "ps",
+      "fa",
+      "ar"
+    ],
+    "printSupported": true,
+    "status": "Verified / Working"
+  },
+  {
+    "name": "Sales Orders & Management",
+    "category": "Sales & Distribution",
+    "path": "features/sales",
+    "routes": [
+      "/dashboard/sales/orders",
+      "/dashboard/sales/invoices",
+      "/dashboard/sales/delivery"
+    ],
+    "features": [
+      "Sales Booking",
+      "Customer Party Mapping",
+      "Delivery Status",
+      "Stock Decrement"
+    ],
+    "languages": [
+      "en",
+      "ur",
+      "ps",
+      "fa",
+      "ar"
+    ],
+    "printSupported": true,
+    "status": "Verified / Working"
+  },
+  {
+    "name": "Purchase Order Payment Journal",
+    "category": "Financial Journals",
+    "path": "features/journal/components/purchase-order-payment-journal.tsx",
+    "routes": [
+      "/dashboard/journal/purchase-payment"
+    ],
+    "features": [
+      "Advance Payment",
+      "Remaining Payment",
+      "Credit Payment",
+      "Country/Branch Lock",
+      "DR/CR Card Preview",
+      "Valid UUID Resolution"
+    ],
+    "languages": [
+      "en",
+      "ur",
+      "ps",
+      "fa",
+      "ar"
+    ],
+    "printSupported": true,
+    "status": "Verified / Working"
+  },
+  {
+    "name": "Sales Order Payment Journal",
+    "category": "Financial Journals",
+    "path": "features/journal/components/sales-order-payment-journal.tsx",
+    "routes": [
+      "/dashboard/journal/sales-payment"
+    ],
+    "features": [
+      "Customer Advance",
+      "Remaining Settlement",
+      "Credit Payment",
+      "DR/CR Card Preview",
+      "Auto-locked Scope",
+      "Valid UUID Resolution"
+    ],
+    "languages": [
+      "en",
+      "ur",
+      "ps",
+      "fa",
+      "ar"
+    ],
+    "printSupported": true,
+    "status": "Verified / Working"
+  },
+  {
+    "name": "Roznamcha (General Cash Book & Journal)",
+    "category": "Financial Journals",
+    "path": "features/roznamcha",
+    "routes": [
+      "/dashboard/roznamcha",
+      "/dashboard/roznamcha/cash-entry",
+      "/dashboard/roznamcha/daily-book"
+    ],
+    "features": [
+      "Cash Book Entry",
+      "Bank Transfer Entry",
+      "Double Entry Balance (DR=CR)",
+      "Branch Tagging",
+      "Daily Closing"
+    ],
+    "languages": [
+      "en",
+      "ur",
+      "ps",
+      "fa",
+      "ar"
+    ],
+    "printSupported": true,
+    "status": "Verified / Working"
+  },
+  {
+    "name": "Customer Clearing Agent Management",
+    "category": "Logistics & Clearance",
+    "path": "features/clearing-agent",
+    "routes": [
+      "/dashboard/clearing-agent/customer-orders",
+      "/dashboard/clearing-agent/loading-records"
+    ],
+    "features": [
+      "Customer Order Entry",
+      "Sticky Right Summary Pane",
+      "Clean Non-repeating Labels",
+      "Real DB Search & Edit"
+    ],
+    "languages": [
+      "en",
+      "ur",
+      "ps",
+      "fa",
+      "ar"
+    ],
+    "printSupported": true,
+    "status": "Verified / Working"
+  },
+  {
+    "name": "Currency & Exchange Monitoring",
+    "category": "Treasury & FX",
+    "path": "features/currency",
+    "routes": [
+      "/dashboard/currency/monitoring",
+      "/dashboard/currency/rates"
+    ],
+    "features": [
+      "Live Buy/Sell Rates",
+      "Debit/Credit Rates",
+      "Auto-conversion in Forms",
+      "Currency History"
+    ],
+    "languages": [
+      "en",
+      "ur",
+      "ps",
+      "fa",
+      "ar"
+    ],
+    "printSupported": true,
+    "status": "Verified / Working"
+  },
+  {
+    "name": "General Office & Employees",
+    "category": "Human Resources & Office",
+    "path": "features/general-office",
+    "routes": [
+      "/dashboard/general-office/employees",
+      "/dashboard/general-office/departments"
+    ],
+    "features": [
+      "Employee Master CRUD",
+      "Department Assignment",
+      "Salary Ledger Link",
+      "Search & Filter"
+    ],
+    "languages": [
+      "en",
+      "ur",
+      "ps",
+      "fa",
+      "ar"
+    ],
+    "printSupported": true,
+    "status": "Verified / Working"
+  },
+  {
+    "name": "Ledger Reports & Financial Statements",
+    "category": "Reports & Analytics",
+    "path": "features/reports",
+    "routes": [
+      "/dashboard/reports/ledger-report",
+      "/dashboard/reports/trial-balance",
+      "/dashboard/reports/statement"
+    ],
+    "features": [
+      "Single Ledger Statement",
+      "Multi-branch Consolidation",
+      "Date Filtering",
+      "Opening/Closing Balance",
+      "A4 PDF Export",
+      "Print"
+    ],
+    "languages": [
+      "en",
+      "ur",
+      "ps",
+      "fa",
+      "ar"
+    ],
+    "printSupported": true,
+    "status": "Verified / Working"
+  },
+  {
+    "name": "Settings & Master Setup",
+    "category": "Administration",
+    "path": "features/settings",
+    "routes": [
+      "/dashboard/settings/profile",
+      "/dashboard/settings/system",
+      "/dashboard/settings/roles"
+    ],
+    "features": [
+      "Theme Toggle (Light/Dark)",
+      "Language Switcher (5 Languages)",
+      "User Permissions",
+      "Audit Logs"
+    ],
+    "languages": [
+      "en",
+      "ur",
+      "ps",
+      "fa",
+      "ar"
+    ],
+    "printSupported": true,
+    "status": "Verified / Working"
+  }
+]

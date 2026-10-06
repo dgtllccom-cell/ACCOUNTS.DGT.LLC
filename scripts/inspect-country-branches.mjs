@@ -1,0 +1,33 @@
+import { resolveDbUrl } from "./lib/prod-db-url.mjs";
+import fs from 'node:fs';
+import postgres from 'postgres';
+
+function parseEnvFile(file) {
+  const env = {};
+  if (!fs.existsSync(file)) return env;
+  for (const line of fs.readFileSync(file, 'utf8').split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const index = trimmed.indexOf('=');
+    if (index === -1) continue;
+    env[trimmed.slice(0, index)] = trimmed.slice(index + 1).replace(/^"|"$/g, '');
+  }
+  return env;
+}
+
+const localEnv = { ...parseEnvFile('.env'), ...parseEnvFile('.env.local') };
+const vpsEnv = { DATABASE_URL: resolveDbUrl("prod") };
+
+const localSql = postgres(localEnv.DATABASE_URL, { max: 5 });
+const vpsSql = postgres(vpsEnv.DATABASE_URL, { max: 5, ssl: { rejectUnauthorized: false } });
+
+async function main() {
+  const localCB = await localSql`SELECT id, name, code, country_id FROM country_branches`;
+  console.log('Local Country Branches:', localCB);
+  const vpsCB = await vpsSql`SELECT id, name, code, country_id FROM country_branches`;
+  console.log('VPS Country Branches:', vpsCB);
+  await localSql.end();
+  await vpsSql.end();
+}
+
+main().catch(console.error);

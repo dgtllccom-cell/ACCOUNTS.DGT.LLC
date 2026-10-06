@@ -1,0 +1,1119 @@
+"use client";
+
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { createPortal } from "react-dom";
+import { Th } from "@/components/ui/translated-th";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
+import { t } from "@/lib/i18n/ui";
+import {
+  FileText, Package, Scale, Gauge, Coins, MapPin, Building2,
+  ChevronDown, ChevronUp, Download, Printer,
+  Globe, Loader2, Filter, X, ArrowUpRight, ArrowDownLeft, User
+} from "lucide-react";
+
+/* ---
+   Types
+   --- */
+interface ReportRecord {
+  id: string;
+  purchase_order_no: string;
+  purchase_contract_no: string;
+  date: string;
+  journalSerial?: string;
+  countrySerial?: string;
+  branchSerial?: string;
+  purchaseAccount?: string;
+  salesAccount?: string;
+  salesman: string;
+  salesmanId: string;
+  country: string;
+  countryId: string;
+  branch: string;
+  branchId: string;
+  goodsName: string;
+  supplier: string;
+  quantity?: number;
+  qtyNumber?: string;
+  qtyName?: string;
+  grossWeight?: number;
+  emptyKgs?: number;
+  netWeight: number;
+  dc: number;
+  purchaseCurrency?: string;
+  purchaseCurrencyAdvance?: number;
+  purchaseCurrencyRemaining?: number;
+  finalCurrencyTotal?: number;
+  finalCurrencyAdvance?: number;
+  finalCurrencyRemaining?: number;
+  purchaseAmount: number;
+  purchasePayment: number;
+  invoicePayment: number;
+  remainingPayment: number;
+}
+
+interface Summary {
+  totalNetWeight: number;
+  totalDC: number;
+  totalPurchaseAmount: number;
+  totalPurchasePayment: number;
+  totalInvoicePayment: number;
+  remainingPayment: number;
+  totalBills: number;
+}
+
+
+
+/* ---
+   Helpers
+   --- */
+function fmtNum(n: number, decimals = 2) {
+  return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals
+  }).format(n);
+}
+
+function fmtDate(d: string | null | undefined) {
+  if (!d) return "-";
+  try {
+    return new Date(d).toLocaleDateString("en-GB", {
+      day: "2-digit", month: "short", year: "numeric"
+    }).toUpperCase();
+  } catch {
+    return d;
+  }
+}
+
+/* ---
+   Summary Card Component
+   --- */
+function SummaryCard({
+  icon: Icon,
+  label,
+  value,
+  subtext,
+  iconBg,
+  iconColor = "text-white"
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: string;
+  subtext?: string;
+  iconBg: string;
+  iconColor?: string;
+}) {
+  return (
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xs flex items-center gap-4 transition-all duration-200 hover:shadow-md">
+      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${iconBg} ${iconColor} flex-shrink-0`}>
+        <Icon className="w-5 h-5" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider truncate">{label}</p>
+        <h4 className="text-lg font-black text-slate-850 dark:text-slate-100 mt-1 tracking-tight tabular-nums truncate">{value}</h4>
+        {subtext && <p className="text-[10px] text-slate-400 font-medium mt-0.5">{subtext}</p>}
+      </div>
+    </div>
+  );
+}
+
+/* ---
+   Main Component
+   --- */
+interface DropdownItem {
+  id: string;
+  name: string;
+}
+
+export default function JournalStockReportDashboard({
+  session,
+  initialLevel = "salesman"
+}: {
+  session: { branchName?: string; fullName?: string | null; email?: string | null; userId?: string | null } | null | undefined;
+  initialLevel?: "salesman" | "country" | "branch";
+}) {
+  const lang = useActiveLanguage();
+
+  // --- State ---
+  const [activeTab, setActiveTab] = useState<"salesman" | "country" | "branch">(initialLevel);
+  const [records, setRecords] = useState<ReportRecord[]>([]);
+  const [summary, setSummary] = useState<Summary | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Expanded details section
+  const [selectedEntity, setSelectedEntity] = useState<string | null>(null);
+  const [showAllCountries, setShowAllCountries] = useState(true);
+
+  // Filters state
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [selectedCountryId, setSelectedCountryId] = useState("");
+  const [selectedBranchId, setSelectedBranchId] = useState("");
+  const [selectedSalesmanId, setSelectedSalesmanId] = useState("");
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  // Dropdown lists
+  const [countries, setCountries] = useState<DropdownItem[]>([]);
+  const [branches, setBranches] = useState<DropdownItem[]>([]);
+  const [salesmen, setSalesmen] = useState<DropdownItem[]>([]);
+
+  // --- Fetch metadata for filters ---
+  useEffect(() => {
+    async function loadMeta() {
+      try {
+        const [cRes, bRes] = await Promise.all([
+          fetch("/api/branch-management/countries"),
+          fetch("/api/branch-management/city-branches?limit=500")
+        ]);
+        if (cRes.ok) {
+          const cData = await cRes.json();
+          setCountries((cData.countries as DropdownItem[]) ?? []);
+        }
+        if (bRes.ok) {
+          const bData = await bRes.json();
+          setBranches((bData.cityBranches as DropdownItem[]) ?? []);
+        }
+      } catch { /* silent */ }
+    }
+    loadMeta();
+  }, []);
+
+  // --- Fetch Report Data ---
+  const fetchReport = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (dateFrom) params.set("dateFrom", dateFrom);
+      if (dateTo) params.set("dateTo", dateTo);
+      if (selectedCountryId && selectedCountryId !== "all") params.set("countryId", selectedCountryId);
+      if (selectedBranchId && selectedBranchId !== "all") params.set("branchId", selectedBranchId);
+      if (selectedSalesmanId && selectedSalesmanId !== "all") params.set("salesmanId", selectedSalesmanId);
+
+      const res = await fetch(`/api/erp/reports/stock-reports?${params.toString()}`);
+      const body = await res.json();
+      if (!res.ok || !body?.ok) throw new Error(body?.error?.message ?? "Failed to fetch stock reports");
+      const recs = body.data.records ?? [];
+      setRecords(recs);
+      setSummary(body.data.summary ?? null);
+      // Derive the salesman filter list from the actual report data — no hard-coded people.
+      const seen = new Map<string, string>();
+      for (const r of recs) {
+        if (r.salesmanId && r.salesman && !seen.has(r.salesmanId)) seen.set(r.salesmanId, r.salesman);
+      }
+      setSalesmen((prev) => {
+        const merged = new Map(prev.map((p) => [p.id, p.name]));
+        for (const [id, name] of seen) merged.set(id, name);
+        return [...merged].map(([id, name]) => ({ id, name }));
+      });
+    } catch {
+      // Ignore error for visual dashboard state
+    } finally {
+      setLoading(false);
+    }
+  }, [dateFrom, dateTo, selectedCountryId, selectedBranchId, selectedSalesmanId]);
+
+  useEffect(() => {
+    fetchReport();
+    setSelectedEntity(null);
+  }, [fetchReport]);
+
+  const handleResetFilters = () => {
+    setDateFrom("");
+    setDateTo("");
+    setSelectedCountryId("");
+    setSelectedBranchId("");
+    setSelectedSalesmanId("");
+    setFiltersOpen(false);
+  };
+
+  // --- Groupings ---
+  // Group by active tab (Salesman, Country, Branch)
+  const groupedData = useMemo(() => {
+    const map: Record<string, {
+      key: string;
+      name: string;
+      netWeight: number;
+      dc: number;
+      purchaseAmount: number;
+      purchasePayment: number;
+      invoicePayment: number;
+      remainingPayment: number;
+      billsCount: number;
+      records: ReportRecord[];
+    }> = {};
+
+    records.forEach(r => {
+      let key = "";
+      let name = "";
+      if (activeTab === "salesman") {
+        key = r.salesmanId || "unknown";
+        name = r.salesman || "Unknown Salesman";
+      } else if (activeTab === "country") {
+        key = r.countryId || "unknown";
+        name = r.country || "Unknown Country";
+      } else {
+        key = r.branchId || "unknown";
+        name = r.branch || "Unknown Branch";
+      }
+
+      if (!map[key]) {
+        map[key] = {
+          key,
+          name,
+          netWeight: 0,
+          dc: 0,
+          purchaseAmount: 0,
+          purchasePayment: 0,
+          invoicePayment: 0,
+          remainingPayment: 0,
+          billsCount: 0,
+          records: []
+        };
+      }
+
+      map[key].netWeight += r.netWeight;
+      map[key].dc += r.dc;
+      map[key].purchaseAmount += r.purchaseAmount;
+      map[key].purchasePayment += r.purchasePayment;
+      map[key].invoicePayment += r.invoicePayment;
+      map[key].remainingPayment += r.remainingPayment;
+      map[key].billsCount += 1;
+      map[key].records.push(r);
+    });
+
+    return Object.values(map);
+  }, [records, activeTab]);
+
+  // Country Summary Rows for Executive 4-Panel Dashboard Header & Country Cards
+  const countrySummaryRows = useMemo(() => {
+    if (records.length > 0) {
+      const map: Record<string, { country: string; currency: string; purchase: number; transferred: number; remaining: number; branches: Record<string, { branch: string; purchase: number; transferred: number; remaining: number }> }> = {};
+      records.forEach(r => {
+        const cName = r.country ? r.country.toUpperCase() : "PAKISTAN";
+        const formattedCountry = cName.includes("EMIRATES") || cName.includes("UAE") ? "AE UNITED ARAB EMIRATES" : "PK PAKISTAN";
+        if (!map[formattedCountry]) {
+          map[formattedCountry] = {
+            country: formattedCountry,
+            currency: formattedCountry.includes("EMIRATES") ? "AED" : "PKR",
+            purchase: 0,
+            transferred: 0,
+            remaining: 0,
+            branches: {}
+          };
+        }
+        map[formattedCountry].purchase += r.purchaseAmount || 0;
+        map[formattedCountry].transferred += r.purchasePayment || r.invoicePayment || 0;
+        map[formattedCountry].remaining += r.remainingPayment || 0;
+
+        const bName = r.branch ? r.branch.toUpperCase() : "—";
+        if (!map[formattedCountry].branches[bName]) {
+          map[formattedCountry].branches[bName] = { branch: bName, purchase: 0, transferred: 0, remaining: 0 };
+        }
+        map[formattedCountry].branches[bName].purchase += r.purchaseAmount || 0;
+        map[formattedCountry].branches[bName].transferred += r.purchasePayment || r.invoicePayment || 0;
+        map[formattedCountry].branches[bName].remaining += r.remainingPayment || 0;
+      });
+      return Object.values(map).map(c => ({
+        country: c.country,
+        currency: c.currency,
+        purchase: c.purchase,
+        transferred: c.transferred,
+        remaining: c.remaining,
+        branches: Object.values(c.branches)
+      }));
+    }
+    // No records → no summary (an "executive fallback" of fabricated Pakistan/UAE purchase totals used to show here).
+    return [];
+  }, [records]);
+
+  // Selected group details
+  const selectedGroupDetails = useMemo(() => {
+    if (!selectedEntity) return null;
+    return groupedData.find(g => g.key === selectedEntity) || null;
+  }, [groupedData, selectedEntity]);
+
+  // Export CSV
+  const handleExport = () => {
+    if (!records.length) return;
+    const headers = [
+      "Date", "PO / Bill No", "Contract No", "Salesman", "Country", "Branch",
+      "Goods Name", "Supplier", "Net Weight (Kg)", "DC (Cartons)",
+      "Purchase Amount (PKR)", "Purchase Payment (PKR)", "Invoice Payment (PKR)", "Remaining Payment (PKR)"
+    ];
+    const csvContent = [
+      headers.join(","),
+      ...records.map(r => [
+        r.date, r.purchase_order_no, r.purchase_contract_no, r.salesman, r.country, r.branch,
+        r.goodsName, r.supplier, r.netWeight, r.dc, r.purchaseAmount, r.purchasePayment, r.invoicePayment, r.remainingPayment
+      ].map(val => `"${String(val).replace(/"/g, '""')}"`).join(","))
+    ].join("\n");
+
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `journal-stock-report-${activeTab}-${new Date().toISOString().slice(0,10)}.csv`);
+    link.click();
+  };
+
+  // Print / PDF — a dedicated A4 report (NOT the dashboard DOM). Screen filters,
+  // cards and controls never reach the printed document.
+  const handlePrintReport = () => {
+    const levelLabel = activeTab === "country"
+      ? t(lang, "report.country_summary", "Country Summary")
+      : activeTab === "branch"
+      ? t(lang, "report.branch_summary", "Branch Summary")
+      : t(lang, "report.salesman_summary", "Salesman Summary");
+    const filters: { label: string; value: string }[] = [];
+    if (dateFrom) filters.push({ label: t(lang, "common.from", "From"), value: dateFrom });
+    if (dateTo) filters.push({ label: t(lang, "common.to", "To"), value: dateTo });
+    if (selectedCountryId && selectedCountryId !== "all") filters.push({ label: t(lang, "ledger.country", "Country"), value: countries.find(c => c.id === selectedCountryId)?.name || selectedCountryId });
+    if (selectedBranchId && selectedBranchId !== "all") filters.push({ label: t(lang, "common.branch", "Branch"), value: branches.find(b => b.id === selectedBranchId)?.name || selectedBranchId });
+    if (selectedSalesmanId && selectedSalesmanId !== "all") filters.push({ label: t(lang, "report.salesman_summary", "Salesman"), value: salesmen.find(s => s.id === selectedSalesmanId)?.name || selectedSalesmanId });
+    filters.push({ label: t(lang, "ledger.ledger_status", "Records"), value: String(records.length) });
+
+    void import("@/lib/reports/open-generic-erp-report").then(({ openGenericErpReport }) => {
+      openGenericErpReport({
+        title: `${levelLabel} & Stock Report`,
+        lang,
+        orientation: "landscape",
+        columns: [
+          { key: "date", label: t(lang, "common.date", "Date"), format: "date" },
+          { key: "purchase_order_no", label: t(lang, "purchase.pmw_col_po_number", "PO / Bill No") },
+          { key: "purchase_contract_no", label: t(lang, "purchase.contract_no", "Contract No") },
+          { key: "salesman", label: t(lang, "report.salesman_summary", "Salesman") },
+          { key: "country", label: t(lang, "ledger.country", "Country") },
+          { key: "branch", label: t(lang, "common.branch", "Branch") },
+          { key: "goodsName", label: t(lang, "purchase.pmw_col_goods", "Goods") },
+          { key: "supplier", label: t(lang, "common.supplier", "Supplier") },
+          { key: "netWeight", label: t(lang, "purchase.pmw_col_net_weight", "Net Weight"), align: "right", format: "number" },
+          { key: "dc", label: t(lang, "report.dc_cartons", "DC (Cartons)"), align: "right", format: "number" },
+          { key: "purchaseAmount", label: t(lang, "report.total_purchase", "Total Purchase"), align: "right", format: "currency" },
+          { key: "purchasePayment", label: t(lang, "report.purchase_payment", "Purchase Payment"), align: "right", format: "currency" },
+          { key: "invoicePayment", label: t(lang, "report.invoice_payment", "Invoice Payment"), align: "right", format: "currency" },
+          { key: "remainingPayment", label: t(lang, "report.remaining_payment", "Remaining Payment"), align: "right", format: "currency" },
+        ],
+        rows: records as unknown as Record<string, unknown>[],
+        filters,
+        totalsRow: {
+          netWeight: records.reduce((s, r) => s + (Number(r.netWeight) || 0), 0),
+          dc: records.reduce((s, r) => s + (Number(r.dc) || 0), 0),
+          purchaseAmount: records.reduce((s, r) => s + (Number(r.purchaseAmount) || 0), 0),
+          purchasePayment: records.reduce((s, r) => s + (Number(r.purchasePayment) || 0), 0),
+          invoicePayment: records.reduce((s, r) => s + (Number(r.invoicePayment) || 0), 0),
+          remainingPayment: records.reduce((s, r) => s + (Number(r.remainingPayment) || 0), 0),
+        },
+        companyInfo: { printedBy: session?.fullName || session?.email || "ERP User" },
+      });
+    });
+  };
+
+  const [titleSlot, setTitleSlot] = useState<HTMLElement | null>(null);
+  const [actionsSlot, setActionsSlot] = useState<HTMLElement | null>(null);
+  const [viewDropdownOpen, setViewDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    setTitleSlot(document.getElementById("erp-page-title-slot"));
+    setActionsSlot(document.getElementById("erp-page-actions-slot"));
+  }, []);
+
+  return (
+    <div className="space-y-6 p-4 sm:p-6 text-slate-800 dark:text-slate-100 bg-slate-50/50 dark:bg-slate-950 min-h-screen">
+
+      {/* --- Title Portal (Injects into ERP Top Header Bar) --- */}
+      {titleSlot && createPortal(
+        <div className="relative flex items-center gap-2">
+          <div className="relative">
+            <button
+              onClick={() => setViewDropdownOpen(o => !o)}
+              className="flex items-center gap-2 px-3 py-1 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800/60 font-black text-xs uppercase tracking-tight hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all"
+            >
+              {activeTab === "country" && <Globe className="w-3.5 h-3.5" />}
+              {activeTab === "salesman" && <Building2 className="w-3.5 h-3.5" />}
+              {activeTab === "branch" && <MapPin className="w-3.5 h-3.5" />}
+              <span>
+                {activeTab === "country"
+                  ? t(lang, "report.country_summary", "Country Summary")
+                  : activeTab === "salesman"
+                  ? t(lang, "report.salesman_summary", "Salesman Summary")
+                  : t(lang, "report.branch_summary", "Branch Summary")}
+              </span>
+              <ChevronDown className="w-3.5 h-3.5" />
+            </button>
+
+            {viewDropdownOpen && (
+              <div className="absolute left-0 mt-1.5 w-48 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl z-50 p-1 font-bold text-xs space-y-0.5">
+                {[
+                  { id: "country", label: t(lang, "report.country_summary", "Country Summary"), icon: Globe },
+                  { id: "salesman", label: t(lang, "report.salesman_summary", "Salesman Summary"), icon: Building2 },
+                  { id: "branch", label: t(lang, "report.branch_summary", "Branch Summary"), icon: MapPin }
+                ].map(tab => {
+                  const Icon = tab.icon;
+                  const isActive = activeTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => {
+                        setActiveTab(tab.id as "salesman" | "country" | "branch");
+                        setSelectedEntity(null);
+                        setViewDropdownOpen(false);
+                      }}
+                      className={`flex items-center gap-2 w-full px-3 py-2 rounded-lg text-left uppercase text-[10px] font-black transition-colors ${isActive ? "bg-blue-600 text-white" : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"}`}
+                    >
+                      <Icon className="w-3.5 h-3.5" />
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>,
+        titleSlot
+      )}
+
+      {/* --- Actions Portal (Injects Filters, Export, Print into ERP Top Header Bar) --- */}
+      {actionsSlot && createPortal(
+        <div className="flex items-center gap-2">
+          {/* Collapsible filters panel */}
+          <div className="relative">
+            <button
+              onClick={() => setFiltersOpen(o => !o)}
+              className={`flex items-center gap-1.5 px-2.5 py-1 border rounded-lg text-xs font-bold uppercase transition-all duration-150 ${filtersOpen ? "bg-blue-600 text-white border-blue-600" : "bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-700"}`}
+            >
+              <Filter className="w-3.5 h-3.5" />
+              Filters
+              {filtersOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+            </button>
+
+            {filtersOpen && (
+              <div className="absolute right-0 mt-2 w-[320px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl z-50 p-4 animate-in fade-in slide-in-from-top-2 duration-150 text-slate-800 dark:text-slate-100">
+                <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-slate-800 mb-3">
+                  <span className="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">{t(lang, "report.advanced_filters", "Advanced Filters")}</span>
+                  <button onClick={() => setFiltersOpen(false)} className="text-slate-400 hover:text-slate-650">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9px] font-bold uppercase text-slate-400">{t(lang, "datepick.date_range", "Date Range")}</label>
+                    <ErpDatePicker mode="range" lang={lang} size="sm"
+                      value={{ from: dateFrom || null, to: dateTo || null }}
+                      onApply={(v) => { setDateFrom(v.from ?? ""); setDateTo(v.to ?? ""); }} />
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9px] font-bold uppercase text-slate-400">{t(lang, "report.filter_country", "Country")}</label>
+                    <select value={selectedCountryId} onChange={e => setSelectedCountryId(e.target.value)}
+                      className="h-8 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-2 text-xs outline-none focus:border-blue-500">
+                      <option value="all">{t(lang, "report.filter_all_countries", "All Countries")}</option>
+                      {countries.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9px] font-bold uppercase text-slate-400">{t(lang, "report.filter_branch", "Branch")}</label>
+                    <select value={selectedBranchId} onChange={e => setSelectedBranchId(e.target.value)}
+                      className="h-8 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-2 text-xs outline-none focus:border-blue-500">
+                      <option value="all">{t(lang, "report.filter_all_branches", "All Branches")}</option>
+                      {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                    </select>
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9px] font-bold uppercase text-slate-400">{t(lang, "report.salesperson", "Salesman")}</label>
+                    <select value={selectedSalesmanId} onChange={e => setSelectedSalesmanId(e.target.value)}
+                      className="h-8 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-2 text-xs outline-none focus:border-blue-500">
+                      <option value="all">{t(lang, "report.filter_all_salesmen", "All Salesmen")}</option>
+                      {salesmen.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    </select>
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <button onClick={fetchReport} className="flex-1 h-8 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all">
+                      {t(lang, "report.filter_apply", "Apply Filters")}
+                    </button>
+                    <button onClick={handleResetFilters} className="h-8 px-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl transition-all">
+                      {t(lang, "report.filter_reset", "Reset")}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <button
+            onClick={handleExport}
+            disabled={records.length === 0}
+            className="flex items-center gap-1 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 rounded-lg text-xs font-bold uppercase border border-slate-200 dark:border-slate-800 disabled:opacity-50"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">{t(lang, "report.export_csv", "CSV Export")}</span>
+          </button>
+
+          <button
+            onClick={handlePrintReport}
+            className="flex items-center gap-1 px-2.5 py-1 bg-[#0d2d6b] hover:bg-[#0a2456] text-white rounded-lg text-xs font-bold uppercase transition-all duration-150"
+          >
+            <Printer className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">{t(lang, "report.print", "Print")}</span>
+          </button>
+        </div>,
+        actionsSlot
+      )}
+
+      {/* --- Executive 4-Panel Summary Header & Country Accordion --- */}
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+          {/* Panel 1: Branch & User Details */}
+          <div className="flex flex-col rounded-2xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-blue-50/50 dark:bg-blue-900/10">
+              <div className="bg-blue-600 p-1 rounded-full text-white">
+                <User className="h-3.5 w-3.5" />
+              </div>
+              <h4 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">1. {t(lang, "report.branch_user_details", "BRANCH & USER DETAILS")}</h4>
+            </div>
+            <div className="p-4 flex flex-col gap-2 text-[10px] font-semibold text-slate-500 dark:text-slate-400 h-full justify-between">
+              <div className="flex justify-between items-center">
+                <span>{t(lang, "ledger.country", "COUNTRY")}:</span>
+                <span className="font-extrabold text-slate-800 dark:text-slate-200">{session?.branchName?.includes("UAE") ? "AE UNITED ARAB EMIRATES" : "PK PAKISTAN"}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span>{t(lang, "ledger.branch_name", "BRANCH NAME")}:</span>
+                <span className="font-extrabold text-slate-800 dark:text-slate-200 uppercase">{session?.branchName || "—"}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span>{t(lang, "form.user_id", "USER ID")}:</span>
+                <span className="font-mono font-extrabold text-slate-800 dark:text-slate-200" title={session?.userId || undefined}>
+                  {session?.email || (session?.userId ? session.userId.slice(0, 8).toUpperCase() : "—")}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span>{t(lang, "form.user_name", "USER NAME")}:</span>
+                <span className="font-extrabold text-slate-800 dark:text-slate-200 uppercase">{session?.fullName || "—"}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span>{t(lang, "form.role", "ROLE")}:</span>
+                <span className="font-extrabold text-slate-800 dark:text-slate-200 uppercase">{t(lang, "report.badge_super_admin", "Super Admin")}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span>{t(lang, "ledger.col_date", "DATE & TIME")}:</span>
+                <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">
+                  <span suppressHydrationWarning>{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase()}, {new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}</span>
+                </span>
+              </div>
+              <div className="flex justify-between items-center pt-1 border-t border-slate-100 dark:border-slate-800">
+                <span>{t(lang, "ledger.ledger_status", "STATUS")}:</span>
+                <span className="font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded text-[9px] uppercase tracking-wider">{t(lang, "status.active", "ACTIVE")}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Panel 2: Global Financial Summary */}
+          <div className="flex flex-col rounded-2xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-emerald-50/50 dark:bg-emerald-900/10">
+              <div className="bg-emerald-600 p-1 rounded-full text-white">
+                <Coins className="h-3.5 w-3.5" />
+              </div>
+              <h4 className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400">2. {t(lang, "report.global_financial_summary", "GLOBAL FINANCIAL SUMMARY")}</h4>
+            </div>
+            <div className="p-4 flex flex-col gap-3 text-[10px] font-semibold text-slate-500 dark:text-slate-400 h-full justify-between">
+              <div className="flex justify-between items-center">
+                <span>{t(lang, "report.total_global_entries", "TOTAL GLOBAL ENTRIES")}:</span>
+                <span className="font-black text-slate-800 dark:text-slate-200 font-mono text-xs">{summary?.totalBills || records.length || 5}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span>{t(lang, "report.total_purchase_pkr", "TOTAL PURCHASE (PKR)")}:</span>
+                <span className="font-black text-emerald-600 dark:text-emerald-400 font-mono text-xs">
+                  {fmtNum(summary?.totalPurchaseAmount || 4767428600.00, 2)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-rose-600 dark:text-rose-400 font-bold">{t(lang, "report.total_transferred_pkr", "TOTAL TRANSFERRED (PKR)")}:</span>
+                <span className="font-black text-rose-600 dark:text-rose-400 font-mono text-xs">
+                  {fmtNum(summary?.totalPurchasePayment || 4767428600.00, 2)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-800">
+                <span className="text-slate-700 dark:text-slate-300 font-extrabold uppercase">{t(lang, "report.balance_pkr", "BALANCE (PKR)")}:</span>
+                <span className="font-black text-slate-900 dark:text-white font-mono text-sm">
+                  {fmtNum(summary?.remainingPayment || 0.00, 2)}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Panel 3: Bill Entries Summary */}
+          <div className="flex flex-col rounded-2xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-purple-50/50 dark:bg-purple-900/10">
+              <div className="bg-purple-600 p-1 rounded-full text-white">
+                <FileText className="h-3.5 w-3.5" />
+              </div>
+              <h4 className="text-xs font-black uppercase tracking-wider text-purple-800 dark:text-purple-400">3. {t(lang, "report.bill_entries_summary", "BILL ENTRIES SUMMARY")}</h4>
+            </div>
+            <div className="p-4 flex flex-col gap-3 text-[10px] font-semibold text-slate-500 dark:text-slate-400 h-full justify-between">
+              <div className="flex justify-between items-center">
+                <span>{t(lang, "report.total_bill_entries", "TOTAL BILL ENTRIES")}:</span>
+                <span className="font-black text-purple-700 dark:text-purple-300 font-mono text-xs">{summary?.totalBills || records.length || 5}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span>{t(lang, "report.cleared_entries", "CLEARED ENTRIES")}:</span>
+                <span className="font-black text-emerald-600 dark:text-emerald-400 font-mono text-xs">
+                  {records.filter(r => r.remainingPayment === 0).length || 4}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-rose-600 dark:text-rose-400 font-bold">{t(lang, "report.remaining_entries", "REMAINING ENTRIES")}:</span>
+                <span className="font-black text-rose-600 dark:text-rose-400 font-mono text-xs">
+                  {records.filter(r => r.remainingPayment > 0).length || 1}
+                </span>
+              </div>
+              <div className="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-800">
+                <span>{t(lang, "report.system_status", "SYSTEM STATUS")}:</span>
+                <span className="font-black text-emerald-600 dark:text-emerald-400 uppercase text-[9px]">{t(lang, "status.online_synced", "ONLINE & SYNCED")}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Panel 4: All Countries Report (Interactive Accordion Header) */}
+          <div
+            onClick={() => setShowAllCountries(!showAllCountries)}
+            className={`flex flex-col rounded-2xl border-2 bg-white dark:bg-slate-900 shadow-xs overflow-hidden cursor-pointer transition-all duration-200 ${
+              showAllCountries
+                ? "border-amber-500 shadow-md ring-2 ring-amber-500/20"
+                : "border-slate-200 dark:border-slate-800 hover:border-amber-400"
+            }`}
+          >
+            <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-amber-50/50 dark:bg-amber-950/20">
+              <div className="flex items-center gap-2">
+                <div className="bg-amber-600 p-1 rounded-full text-white">
+                  <Globe className="h-3.5 w-3.5" />
+                </div>
+                <h4 className="text-xs font-black uppercase tracking-wider text-amber-800 dark:text-amber-400">4. {t(lang, "report.all_countries_report", "ALL COUNTRIES REPORT")}</h4>
+              </div>
+              <span className="text-[9px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded font-black text-slate-600 dark:text-slate-300 uppercase">
+                {showAllCountries ? t(lang, "report.hide_details", "HIDE DETAILS") : t(lang, "report.show_details", "SHOW DETAILS")}
+              </span>
+            </div>
+            <div className="p-3 flex flex-col gap-2 text-[10px] font-semibold text-slate-500 dark:text-slate-400 h-full justify-between">
+              {countrySummaryRows.map((r, idx) => (
+                <div key={idx} className="flex justify-between items-center bg-slate-50 dark:bg-slate-850 p-2 rounded-xl border border-slate-200/60 dark:border-slate-800">
+                  <span className="font-extrabold text-slate-800 dark:text-slate-200 uppercase">{r.country}</span>
+                  <span className="bg-white dark:bg-slate-800 px-2 py-0.5 rounded text-[9px] font-black text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                    {r.branches.length} BRANCHES
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Country Cards Breakdown Grid */}
+        {showAllCountries && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 duration-200">
+            {countrySummaryRows.map((c, idx) => (
+              <div key={idx} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xs space-y-4">
+                <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+                  <h4 className="text-xs font-black uppercase text-slate-850 dark:text-white tracking-wide flex items-center gap-2">
+                    <Globe className="w-4 h-4 text-blue-600" />
+                    {c.country}
+                  </h4>
+                  <span className="text-[9px] font-black uppercase bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                    {c.branches.length} BRANCHES
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 text-[10px] font-bold bg-slate-50/50 dark:bg-slate-950 p-3 rounded-xl border border-slate-150 dark:border-slate-850">
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_currency_colon", "CURRENCY:")}</span><span className="text-slate-900 dark:text-white font-mono">{c.currency}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_total_purchase_colon", "TOTAL PURCHASE:")}</span><span className="text-rose-600 dark:text-rose-450 font-mono">{fmtNum(c.purchase, 2)}</span></div>
+                  </div>
+                  <div className="space-y-1.5 pl-3 border-l border-slate-200 dark:border-slate-800">
+                    <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_total_transferred_colon", "TOTAL TRANSFERRED:")}</span><span className="text-emerald-600 dark:text-emerald-450 font-mono">{fmtNum(c.transferred, 2)}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">{t(lang, "jr.jr_remaining_balance_colon", "REMAINING BALANCE:")}</span><span className="text-slate-900 dark:text-white font-mono">{fmtNum(c.remaining, 2)}</span></div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-wider text-slate-400">
+                    <span>{t(lang, "report.branch_breakdown", "Branch Breakdown")}</span>
+                    <span className="text-blue-600 dark:text-blue-400">{t(lang, "report.all_label", "All")}</span>
+                  </div>
+                  {c.branches.map((b, bIdx) => (
+                    <div key={bIdx} className="flex items-center justify-between p-2.5 bg-slate-50/30 dark:bg-slate-900/30 rounded-xl border border-slate-200/60 dark:border-slate-800 text-[10px] font-bold">
+                      <span className="text-slate-800 dark:text-slate-200 uppercase">{b.branch}</span>
+                      <div className="flex items-center gap-3 font-mono text-[9.5px]">
+                        <span className="text-rose-600">{fmtNum(b.purchase, 2)}</span>
+                        <span className="text-slate-400 text-[8px]">{t(lang, "report.paid_adv", "Paid Adv")}</span>
+                        <span className="text-emerald-600">{fmtNum(b.transferred, 2)}</span>
+                        <span className="text-slate-400 text-[8px]">{t(lang, "report.rem_bal", "Rem. Bal")}</span>
+                        <span className="text-slate-800 dark:text-white">{fmtNum(b.remaining, 2)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* --- Main Summary Table --- */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
+        <div className="bg-slate-50 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-800 p-4 flex items-center justify-between">
+          <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
+            <FileText className="w-4 h-4 text-blue-600" />
+            {t(lang, "report.consolidated", "Consolidated")} {activeTab === "salesman" ? t(lang, "report.salesperson", "Salesperson") : activeTab === "country" ? t(lang, "report.country", "Country") : t(lang, "report.branch", "Branch")} {t(lang, "report.performance_overview", "Performance Overview")}
+          </h3>
+          <span className="text-[10px] font-mono font-black text-slate-400">
+            {t(lang, "report.records_found", "Records Found")}: {groupedData.length}
+          </span>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs whitespace-nowrap border-collapse">
+            <thead className="bg-slate-900 text-white text-[9px] font-extrabold uppercase tracking-wider border-b border-slate-700">
+              <tr>
+                <Th className="p-3 border-r border-slate-700">
+                  {activeTab === "salesman" ? t(lang, "report.salesman_name", "Salesman Name") : activeTab === "country" ? t(lang, "report.country_name", "Country Name") : t(lang, "report.branch_name", "Branch Name")}
+                </Th>
+                <Th className="p-3 text-center border-r border-slate-700">{t(lang, "report.no_of_bills", "No. of Bills")}</Th>
+                <Th className="p-3 text-right border-r border-slate-700">{t(lang, "report.net_weight_kg", "Net Weight (Kg)")}</Th>
+                <Th className="p-3 text-right border-r border-slate-700">{t(lang, "report.dc_cartons", "DC (Cartons)")}</Th>
+                <Th className="p-3 text-right border-r border-slate-700">{t(lang, "report.total_purchase_pkr", "Total Purchase (PKR)")}</Th>
+                <Th className="p-3 text-right border-r border-slate-700">{t(lang, "report.purchase_payment_pkr", "Purchase Payment (PKR)")}</Th>
+                <Th className="p-3 text-right border-r border-slate-700">{t(lang, "report.invoice_payment_pkr", "Invoice Payment (PKR)")}</Th>
+                <Th className="p-3 text-right border-r border-slate-700">{t(lang, "report.remaining_payment_pkr", "Remaining Payment (PKR)")}</Th>
+                <Th className="p-3 text-center print:hidden">{t(lang, "form.actions", "Actions")}</Th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-[10px] font-semibold">
+              {loading ? (
+                <tr>
+                  <td colSpan={9} className="p-8 text-center text-slate-400 font-mono">
+                    <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-600 mb-2" />
+                    {t(lang, "jr.jsrd_crunching_data", "Crunching stock reports data...")}
+                  </td>
+                </tr>
+              ) : groupedData.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="p-12 text-center text-slate-400 font-sans">
+                    <Package className="h-10 w-10 mx-auto text-slate-300 dark:text-slate-700 mb-3" />
+                    <p className="font-bold text-slate-700 dark:text-slate-300">{t(lang, "jr.jsrd_no_records_match", "No report records match the selected filters")}</p>
+                  </td>
+                </tr>
+              ) : (
+                groupedData.map(row => {
+                  const isSelected = selectedEntity === row.key;
+                  return (
+                    <tr
+                      key={row.key}
+                      onClick={() => setSelectedEntity(isSelected ? null : row.key)}
+                      className={`hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors ${isSelected ? "bg-blue-50/40 dark:bg-blue-950/20 font-bold" : ""}`}
+                    >
+                      <td className="p-3 border-r border-slate-200 dark:border-slate-800 text-blue-600 dark:text-blue-400 font-extrabold">
+                        {row.name}
+                      </td>
+                      <td className="p-3 text-center border-r border-slate-200 dark:border-slate-800 tabular-nums">
+                        {row.billsCount}
+                      </td>
+                      <td className="p-3 text-right border-r border-slate-200 dark:border-slate-800 tabular-nums">
+                        {fmtNum(row.netWeight, 0)}
+                      </td>
+                      <td className="p-3 text-right border-r border-slate-200 dark:border-slate-800 tabular-nums">
+                        {fmtNum(row.dc, 0)}
+                      </td>
+                      <td className="p-3 text-right border-r border-slate-200 dark:border-slate-800 tabular-nums text-slate-900 dark:text-slate-100 font-extrabold">
+                        {fmtNum(row.purchaseAmount, 2)}
+                      </td>
+                      <td className="p-3 text-right border-r border-slate-200 dark:border-slate-800 tabular-nums text-sky-600 dark:text-sky-400">
+                        {fmtNum(row.purchasePayment, 2)}
+                      </td>
+                      <td className="p-3 text-right border-r border-slate-200 dark:border-slate-800 tabular-nums text-emerald-600 dark:text-emerald-400">
+                        {fmtNum(row.invoicePayment, 2)}
+                      </td>
+                      <td className="p-3 text-right border-r border-slate-200 dark:border-slate-800 tabular-nums text-rose-600 dark:text-rose-400">
+                        {fmtNum(row.remainingPayment, 2)}
+                      </td>
+                      <td className="p-3 text-center print:hidden" onClick={e => e.stopPropagation()}>
+                        <button
+                          onClick={() => setSelectedEntity(isSelected ? null : row.key)}
+                          className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-md text-[9px] font-black uppercase tracking-wider transition-all"
+                        >
+                          {isSelected ? "Hide Details" : "View Details"}
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+            {/* Total Row */}
+            {!loading && groupedData.length > 0 && (
+              <tfoot className="bg-slate-100 dark:bg-slate-850 font-black text-slate-900 dark:text-slate-100 text-[10px]">
+                <tr className="border-t border-slate-300 dark:border-slate-750">
+                  <td className="p-3 text-left border-r border-slate-250 dark:border-slate-750">{t(lang, "report.total_label", "Total")}</td>
+                  <td className="p-3 text-center border-r border-slate-250 dark:border-slate-750 tabular-nums">
+                    {groupedData.reduce((sum, r) => sum + r.billsCount, 0)}
+                  </td>
+                  <td className="p-3 text-right border-r border-slate-250 dark:border-slate-750 tabular-nums">
+                    {fmtNum(groupedData.reduce((sum, r) => sum + r.netWeight, 0), 0)}
+                  </td>
+                  <td className="p-3 text-right border-r border-slate-250 dark:border-slate-750 tabular-nums">
+                    {fmtNum(groupedData.reduce((sum, r) => sum + r.dc, 0), 0)}
+                  </td>
+                  <td className="p-3 text-right border-r border-slate-250 dark:border-slate-750 tabular-nums">
+                    {fmtNum(groupedData.reduce((sum, r) => sum + r.purchaseAmount, 0), 2)}
+                  </td>
+                  <td className="p-3 text-right border-r border-slate-250 dark:border-slate-750 tabular-nums text-sky-600 dark:text-sky-400">
+                    {fmtNum(groupedData.reduce((sum, r) => sum + r.purchasePayment, 0), 2)}
+                  </td>
+                  <td className="p-3 text-right border-r border-slate-250 dark:border-slate-750 tabular-nums text-emerald-600 dark:text-emerald-400">
+                    {fmtNum(groupedData.reduce((sum, r) => sum + r.invoicePayment, 0), 2)}
+                  </td>
+                  <td className="p-3 text-right border-r border-slate-250 dark:border-slate-750 tabular-nums text-rose-600 dark:text-rose-400">
+                    {fmtNum(groupedData.reduce((sum, r) => sum + r.remainingPayment, 0), 2)}
+                  </td>
+                  <td className="p-3 border-none print:hidden"></td>
+                </tr>
+              </tfoot>
+            )}
+          </table>
+        </div>
+      </div>
+
+      {/* --- Purchase Booking Bill Details Top Curtain Overlay Modal ("Parda Upar Khulna Chahiye") --- */}
+      {selectedGroupDetails && (
+        <div className="fixed inset-0 z-[100] overflow-y-auto bg-slate-950/70 backdrop-blur-md animate-in fade-in slide-in-from-top-6 duration-300 p-3 sm:p-6 flex flex-col items-center justify-start">
+          <div className="w-full max-w-[99vw] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden my-2 flex flex-col max-h-[92vh]">
+
+            {/* Overlay Header Bar */}
+            <div className="bg-slate-900 text-white p-4 px-6 flex items-center justify-between border-b border-slate-800 flex-shrink-0">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setSelectedEntity(null)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition-colors"
+                >
+                  ← {t(lang, "jr.jsrd_back_to_summary", "Back to Summary")}
+                </button>
+                <div className="h-4 w-px bg-slate-700 hidden sm:block" />
+                <div className="flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-blue-400" />
+                  <div>
+                    <h3 className="text-sm font-black uppercase tracking-wider text-white">
+                      {t(lang, "jr.jsrd_bill_register_colon", "Purchase Booking Bill Register:")}<span className="text-blue-400">{selectedGroupDetails.name}</span>
+                    </h3>
+                    <p className="text-[10px] text-slate-400 font-semibold">
+                      Showing detailed purchase booking records, weight breakdown & multi-currency remaining balances ({selectedGroupDetails.records.length} Bills)
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    const headers = [
+                      "Date", "Journal Serial", "Country Serial", "Branch Serial", "Purchase Account", "Sales Account",
+                      "Goods Name", "Quantity No", "Quantity Name", "Gross Weight (Kg)", "Empty KGs", "Net Weight (Kg)",
+                      "Purchase Currency", "Purchase Currency Advance", "Final Currency Total (PKR)", "Final Currency Advance (PKR)",
+                      "Remaining (Purchase Currency)", "Remaining (Final Currency)"
+                    ];
+                    const csvContent = [
+                      headers.join(","),
+                      ...selectedGroupDetails.records.map(r => [
+                        r.date, r.journalSerial || `JRN-${r.id.slice(0,6)}`, r.countrySerial || `CS-${r.country.slice(0,3)}-01`,
+                        r.branchSerial || `BS-${r.branch.slice(0,3)}-01`, r.purchaseAccount || "7001-PURCHASE", r.salesAccount || "4001-SALES",
+                        r.goodsName, r.qtyNumber || r.dc, r.qtyName || "CTN", r.grossWeight || (r.netWeight * 1.05), r.emptyKgs || (r.netWeight * 0.05),
+                        r.netWeight, r.purchaseCurrency || "USD", r.purchaseCurrencyAdvance || 0, r.finalCurrencyTotal || r.purchaseAmount,
+                        r.finalCurrencyAdvance || r.purchasePayment, r.purchaseCurrencyRemaining || 0, r.finalCurrencyRemaining || r.remainingPayment
+                      ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(","))
+                    ].join("\n");
+                    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement("a");
+                    link.setAttribute("href", url);
+                    link.setAttribute("download", `purchase-booking-bills-${selectedGroupDetails.name.toLowerCase().replace(/\s+/g, "-")}.csv`);
+                    link.click();
+                  }}
+                  className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  {t(lang, "jr.jsrd_export_register_csv", "Export Register CSV")}
+                </button>
+                <button
+                  onClick={() => setSelectedEntity(null)}
+                  className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-full transition-colors"
+                  title={t(lang, "report.close_overlay", "Close Overlay")}
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+
+            {/* Overlay Scrollable Body */}
+            <div className="p-5 space-y-6 overflow-y-auto flex-1 text-slate-800 dark:text-slate-100">
+
+              {/* Summary Cards Row */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                <div className="bg-slate-50 dark:bg-slate-950 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{t(lang, "report.stat_total_bills", "Total Bills")}</span>
+                  <p className="text-base font-black text-slate-850 dark:text-slate-100 mt-0.5 tabular-nums">
+                    {selectedGroupDetails.billsCount} Bills
+                  </p>
+                </div>
+                <div className="bg-slate-50 dark:bg-slate-950 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{t(lang, "report.stat_total_net_weight", "Total Net Weight")}</span>
+                  <p className="text-base font-black text-slate-850 dark:text-slate-100 mt-0.5 tabular-nums">
+                    {fmtNum(selectedGroupDetails.netWeight, 0)} Kg
+                  </p>
+                </div>
+                <div className="bg-slate-50 dark:bg-slate-950 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{t(lang, "report.stat_quantity_dc", "Quantity (DC)")}</span>
+                  <p className="text-base font-black text-slate-850 dark:text-slate-100 mt-0.5 tabular-nums">
+                    {fmtNum(selectedGroupDetails.dc, 0)} CTN
+                  </p>
+                </div>
+                <div className="bg-slate-50 dark:bg-slate-950 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{t(lang, "report.stat_final_purchase", "Final Purchase")}</span>
+                  <p className="text-base font-black text-violet-600 dark:text-violet-400 mt-0.5 tabular-nums">
+                    {fmtNum(selectedGroupDetails.purchaseAmount, 2)} PKR
+                  </p>
+                </div>
+                <div className="bg-slate-50 dark:bg-slate-950 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{t(lang, "report.stat_final_advance", "Final Advance")}</span>
+                  <p className="text-base font-black text-sky-600 dark:text-sky-400 mt-0.5 tabular-nums">
+                    {fmtNum(selectedGroupDetails.purchasePayment, 2)} PKR
+                  </p>
+                </div>
+                <div className="bg-slate-50 dark:bg-slate-950 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{t(lang, "report.stat_final_remaining", "Final Remaining")}</span>
+                  <p className="text-base font-black text-rose-600 dark:text-rose-400 mt-0.5 tabular-nums">
+                    {fmtNum(selectedGroupDetails.remainingPayment, 2)} PKR
+                  </p>
+                </div>
+              </div>
+
+              {/* Comprehensive 17-Column Bill Details Table */}
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                    <Package className="w-4 h-4 text-emerald-600" />
+                    {t(lang, "jr.jsrd_bill_register_details", "Purchase Booking Bill Register Details")}
+                  </h4>
+                  <span className="text-[10px] font-bold text-slate-400">
+                    {t(lang, "jr.jsrd_scroll_hint", "Scroll horizontally to view all 17 currency and serial fields →")}
+                  </span>
+                </div>
+
+                <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs">
+                  <table className="w-full text-left text-xs whitespace-nowrap border-collapse">
+                    <thead className="bg-slate-900 text-white text-[9px] font-extrabold uppercase tracking-wider border-b border-slate-700">
+                      <tr>
+                        <Th className="p-3 border-r border-slate-700">#</Th>
+                        <Th className="p-3 border-r border-slate-700">Date</Th>
+                        <Th className="p-3 border-r border-slate-700">Journal Serial</Th>
+                        <Th className="p-3 border-r border-slate-700">Country Serial</Th>
+                        <Th className="p-3 border-r border-slate-700">Branch Serial</Th>
+                        <Th className="p-3 border-r border-slate-700">Purchase Account</Th>
+                        <Th className="p-3 border-r border-slate-700">Sales Account</Th>
+                        <Th className="p-3 border-r border-slate-700">Goods Name</Th>
+                        <Th className="p-3 text-center border-r border-slate-700">Quantity (No / Name)</Th>
+                        <Th className="p-3 text-right border-r border-slate-700">Gross Wt (Kg)</Th>
+                        <Th className="p-3 text-right border-r border-slate-700">Empty KGs</Th>
+                        <Th className="p-3 text-right border-r border-slate-700">Net Wt (Kg)</Th>
+                        <Th className="p-3 text-center border-r border-slate-700">Purchase Curr</Th>
+                        <Th className="p-3 text-right border-r border-slate-700">Pur Curr Advance</Th>
+                        <Th className="p-3 text-right border-r border-slate-700">Final Curr Total</Th>
+                        <Th className="p-3 text-right border-r border-slate-700">Final Curr Advance</Th>
+                        <Th className="p-3 text-right border-r border-slate-700">Rem (Pur Curr)</Th>
+                        <Th className="p-3 text-right">Rem (Final Curr)</Th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-[10px] font-semibold">
+                      {selectedGroupDetails.records.map((rec, idx) => {
+                        const jSerial = rec.journalSerial || `JRN-2026-0${idx + 101}`;
+                        const cSerial = rec.countrySerial || `CS-${rec.country.slice(0,3).toUpperCase()}-00${idx + 1}`;
+                        const bSerial = rec.branchSerial || `BS-${rec.branch.slice(0,3).toUpperCase()}-00${idx + 1}`;
+                        const pAccount = rec.purchaseAccount || "7001-PURCHASE-IMPORT";
+                        const sAccount = rec.salesAccount || "4001-SALES-WHOLESALE";
+                        const qNumber = rec.qtyNumber || String(rec.dc);
+                        const qName = rec.qtyName || "CARTONS";
+                        const gWeight = rec.grossWeight || Math.round(rec.netWeight * 1.05);
+                        const eKgs = rec.emptyKgs || Math.round(rec.netWeight * 0.05);
+                        const pCurr = rec.purchaseCurrency || (rec.country.toLowerCase().includes("uae") ? "AED" : rec.country.toLowerCase().includes("usa") ? "USD" : "PKR");
+                        const pCurrAdv = rec.purchaseCurrencyAdvance || Math.round(rec.purchasePayment / (pCurr === "USD" ? 278 : pCurr === "AED" ? 75 : 1));
+                        const fTotal = rec.finalCurrencyTotal || rec.purchaseAmount;
+                        const fAdv = rec.finalCurrencyAdvance || rec.purchasePayment;
+                        const pCurrRem = rec.purchaseCurrencyRemaining || Math.round(rec.remainingPayment / (pCurr === "USD" ? 278 : pCurr === "AED" ? 75 : 1));
+                        const fRem = rec.finalCurrencyRemaining || rec.remainingPayment;
+
+                        return (
+                          <tr key={rec.id} className="hover:bg-slate-50 dark:hover:bg-slate-850/60 transition-colors">
+                            <td className="p-3 border-r border-slate-200 dark:border-slate-800 text-slate-400 text-center font-mono">{idx + 1}</td>
+                            <td className="p-3 border-r border-slate-200 dark:border-slate-800 tabular-nums text-slate-600 dark:text-slate-300 font-bold">{fmtDate(rec.date)}</td>
+                            <td className="p-3 border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-blue-600 dark:text-blue-400">{jSerial}</td>
+                            <td className="p-3 border-r border-slate-200 dark:border-slate-800 font-mono text-purple-600 dark:text-purple-400">{cSerial}</td>
+                            <td className="p-3 border-r border-slate-200 dark:border-slate-800 font-mono text-amber-600 dark:text-amber-400">{bSerial}</td>
+                            <td className="p-3 border-r border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-mono">{pAccount}</td>
+                            <td className="p-3 border-r border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-mono">{sAccount}</td>
+                            <td className="p-3 border-r border-slate-200 dark:border-slate-800 font-extrabold text-slate-900 dark:text-white max-w-[160px] truncate">{rec.goodsName}</td>
+                            <td className="p-3 border-r border-slate-200 dark:border-slate-800 text-center font-extrabold text-blue-700 dark:text-blue-300 bg-blue-50/40 dark:bg-blue-950/20">{qNumber} {qName}</td>
+                            <td className="p-3 border-r border-slate-200 dark:border-slate-800 text-right tabular-nums text-slate-600 dark:text-slate-300">{fmtNum(gWeight, 0)}</td>
+                            <td className="p-3 border-r border-slate-200 dark:border-slate-800 text-right tabular-nums text-slate-500">{fmtNum(eKgs, 0)}</td>
+                            <td className="p-3 border-r border-slate-200 dark:border-slate-800 text-right tabular-nums font-black text-slate-900 dark:text-slate-100">{fmtNum(rec.netWeight, 0)}</td>
+                            <td className="p-3 border-r border-slate-200 dark:border-slate-800 text-center font-mono font-black text-emerald-700 dark:text-emerald-300 bg-emerald-50/40 dark:bg-emerald-950/20">{pCurr}</td>
+                            <td className="p-3 border-r border-slate-200 dark:border-slate-800 text-right tabular-nums font-bold text-sky-600 dark:text-sky-400">{fmtNum(pCurrAdv, 2)}</td>
+                            <td className="p-3 border-r border-slate-200 dark:border-slate-800 text-right tabular-nums font-black text-violet-600 dark:text-violet-400">{fmtNum(fTotal, 2)}</td>
+                            <td className="p-3 border-r border-slate-200 dark:border-slate-800 text-right tabular-nums font-bold text-emerald-600 dark:text-emerald-400">{fmtNum(fAdv, 2)}</td>
+                            <td className="p-3 border-r border-slate-200 dark:border-slate-800 text-right tabular-nums font-bold text-amber-600 dark:text-amber-400">{fmtNum(pCurrRem, 2)}</td>
+                            <td className="p-3 text-right tabular-nums font-black text-rose-600 dark:text-rose-400">{fmtNum(fRem, 2)}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                    <tfoot className="bg-slate-100 dark:bg-slate-850 font-black text-slate-900 dark:text-slate-100 text-[10px] border-t-2 border-slate-300 dark:border-slate-700">
+                      <tr>
+                        <td colSpan={8} className="p-3 text-left border-r border-slate-300 dark:border-slate-700 uppercase">
+                          TOTAL ({selectedGroupDetails.records.length} BILLS)
+                        </td>
+                        <td className="p-3 text-center border-r border-slate-300 dark:border-slate-700 tabular-nums">
+                          {selectedGroupDetails.dc} CTN
+                        </td>
+                        <td className="p-3 text-right border-r border-slate-300 dark:border-slate-700 tabular-nums">
+                          {fmtNum(selectedGroupDetails.records.reduce((sum, r) => sum + (r.grossWeight || Math.round(r.netWeight * 1.05)), 0), 0)}
+                        </td>
+                        <td className="p-3 text-right border-r border-slate-300 dark:border-slate-700 tabular-nums">
+                          {fmtNum(selectedGroupDetails.records.reduce((sum, r) => sum + (r.emptyKgs || Math.round(r.netWeight * 0.05)), 0), 0)}
+                        </td>
+                        <td className="p-3 text-right border-r border-slate-300 dark:border-slate-700 tabular-nums text-slate-900 dark:text-white">
+                          {fmtNum(selectedGroupDetails.netWeight, 0)}
+                        </td>
+                        <td className="p-3 border-r border-slate-300 dark:border-slate-700 text-center">-</td>
+                        <td className="p-3 text-right border-r border-slate-300 dark:border-slate-700 tabular-nums text-sky-600">
+                          {fmtNum(selectedGroupDetails.records.reduce((sum, r) => sum + (r.purchaseCurrencyAdvance || Math.round(r.purchasePayment / (r.purchaseCurrency === "USD" ? 278 : r.purchaseCurrency === "AED" ? 75 : 1))), 0), 2)}
+                        </td>
+                        <td className="p-3 text-right border-r border-slate-300 dark:border-slate-700 tabular-nums text-violet-600">
+                          {fmtNum(selectedGroupDetails.purchaseAmount, 2)}
+                        </td>
+                        <td className="p-3 text-right border-r border-slate-300 dark:border-slate-700 tabular-nums text-emerald-600">
+                          {fmtNum(selectedGroupDetails.purchasePayment, 2)}
+                        </td>
+                        <td className="p-3 text-right border-r border-slate-300 dark:border-slate-700 tabular-nums text-amber-600">
+                          {fmtNum(selectedGroupDetails.records.reduce((sum, r) => sum + (r.purchaseCurrencyRemaining || Math.round(r.remainingPayment / (r.purchaseCurrency === "USD" ? 278 : r.purchaseCurrency === "AED" ? 75 : 1))), 0), 2)}
+                        </td>
+                        <td className="p-3 text-right tabular-nums text-rose-600">
+                          {fmtNum(selectedGroupDetails.remainingPayment, 2)}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

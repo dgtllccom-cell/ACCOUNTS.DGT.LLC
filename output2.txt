@@ -1,0 +1,22 @@
+Found </SimpleModal> at line 3485
+3480:               >
+3481:                 Confirm Scope
+3482:               </Button>
+3483:             </div>
+3484:           </div>
+3485:         </SimpleModal>
+3486:       )}
+3487:       {isTransferred ? (
+3488:         <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 animate-in fade-in duration-300">
+3489:           <div className="space-y-1">
+3490:             <span className="bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 text-[9px] font-black uppercase px-2 py-0.5 rounded border border-emerald-500/20">
+3491:               POSTED VOUCHER REGISTRATION
+3492:             </span>
+3493:             <h2 className="text-lg font-black text-slate-800 dark:text-slate-100">
+3494:               Voucher JV-{(transferredData?.purchaseOrderNo || form.purchaseOrderNo).slice(-6)} Successfully Registered
+3495:             </h2>
+3496:             <p className="text-xs text-muted-foreground font-medium">
+3497:               The purchase booking has been successfully transferred to payment records and logged into the accounts ledger database.
+3498:             </p>
+3499:           </div>
+3500:           <div className="flex items-center gap-2">

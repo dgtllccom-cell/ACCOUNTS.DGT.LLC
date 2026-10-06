@@ -1,0 +1,2863 @@
+"use client";
+
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import type { Route } from "next";
+import {
+  FileText,
+  FolderOpen,
+  FolderPlus,
+  Plus,
+  ChevronRight,
+  Upload,
+  Camera,
+  Search,
+  Download,
+  Printer,
+  Trash2,
+  Edit,
+  Eye,
+  FileCheck,
+  Globe,
+  RefreshCw,
+  X,
+  FileSpreadsheet,
+  Image as ImageIcon,
+  Building2,
+  CreditCard,
+  UserCheck,
+  HardDrive,
+  Activity,
+  Layers,
+  LayoutGrid,
+  List,
+  CheckCircle2,
+  Scan,
+  ShieldCheck,
+  Move,
+  Folder,
+  SlidersHorizontal,
+  ChevronDown,
+  Calendar,
+  Sparkles,
+  Filter,
+  Check,
+  RotateCcw,
+  ArrowRight,
+  ArrowLeft,
+  Loader2
+} from "lucide-react";
+import { apiGet } from "@/lib/api/client";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { translateHeader } from "@/lib/i18n/table-headers";
+import { ErpDatePicker } from "@/components/ui/erp-date-picker";
+import {
+  buildDocumentDestinationLabel,
+  buildDocumentFileName,
+  buildDocumentFolderPath
+} from "@/lib/documents/document-filing";
+
+interface OfficeDocument {
+  id: string;
+  title: string;
+  file_name: string;
+  file_url: string;
+  file_type: string;
+  file_size: number;
+  country_id?: string;
+  country_name?: string;
+  country_branch_id?: string;
+  main_branch_name?: string;
+  city_branch_id?: string;
+  city_branch_name?: string;
+  company_id?: string;
+  company_code?: string;
+  company_name?: string;
+  account_id?: string;
+  account_code?: string;
+  account_name?: string;
+  module_type: string;
+  category?: string;
+  person_account_id?: string;
+  person_account_code?: string;
+  person_account_name?: string;
+  person_account_type?: string;
+  tags?: string[];
+  metadata?: Record<string, any>;
+  source_module?: string;
+  source_record_id?: string;
+  source_record_no?: string;
+  document_type?: string;
+  document_path?: string;
+  storage_key?: string;
+  scanned_at?: string;
+  created_by?: string;
+  scanner_device_name?: string;
+  scanner_bridge?: string;
+  created_at: string;
+}
+
+interface CustomFolder {
+  id: string;
+  name: string;
+  countryId?: string;
+  branchId?: string;
+  createdAt: string;
+}
+
+const DEFAULT_MODULE_FOLDERS = [
+  "Purchase Documents",
+  "Sales Documents",
+  "Ledger Documents",
+  "Contracts",
+  "Invoices",
+  "Packing Lists",
+  "Bills of Lading",
+  "Payment Documents",
+  "Customs Documents",
+  "Other Attachments"
+];
+
+const DOCUMENT_TYPES = [
+  "Document",
+  "Purchase",
+  "Sales",
+  "Invoice",
+  "Payment Receipt",
+  "Journal",
+  "Ledger",
+  "Shipping",
+  "Bill of Lading",
+  "Loading",
+  "Receiving",
+  "Customs",
+  "Attachment"
+];
+
+const TRANSLATIONS: Record<string, Record<string, string>> = {
+  page_tag: {
+    ur: "دستاویزات کا انتظام اور کیمرہ کیپچر",
+    ar: "إدارة المستندات والالتقاط بالكاميرا",
+    ps: "د اسنادو مدیریت او د کامرې اخیستنه",
+    fa: "مدیریت اسناد و ثبت با دوربین",
+    en: "Document Management & Camera Capture"
+  },
+  page_title: {
+    ur: "سپر ایڈمن دستاویزات اسٹوریج ڈائریکٹری",
+    ar: "دليل تخزين مستندات المشرف العام",
+    ps: "د سوپر اډمین اسنادو ذخیره کولو لارښود",
+    fa: "فهرست ذخیره‌سازی اسناد سوپر ادمین",
+    en: "Super Admin Document Storage Directory"
+  },
+  upload_file: {
+    ur: "فائل اپ لوڈ کریں",
+    ar: "تحميل ملف",
+    ps: "فایل پورته کول",
+    fa: "بارگذاری فایل",
+    en: "Upload File"
+  },
+  uploading: {
+    ur: "اپ لوڈ ہو رہا ہے...",
+    ar: "جاري التحميل...",
+    ps: "پورته کیږي...",
+    fa: "در حال بارگذاری...",
+    en: "Uploading..."
+  },
+  start_scan: {
+    ur: "کیمرہ سے کیپچر کریں",
+    ar: "الالتقاط بالكاميرا",
+    ps: "د کامرې اخیستنه",
+    fa: "ثبت با دوربین",
+    en: "Camera Capture"
+  },
+  new_folder: {
+    ur: "نیا فولڈر بنائیں",
+    ar: "إنشاء مجلد جديد",
+    ps: "نوی فولډر جوړ کړئ",
+    fa: "ایجاد پوشه جدید",
+    en: "New Custom Folder"
+  },
+  dir_hierarchy: {
+    ur: "ڈائریکٹری درجہ بندی",
+    ar: "هيكل الدليل",
+    ps: "د لارښود درجه بندي",
+    fa: "ساختار دایرکتوری",
+    en: "Directory Hierarchy"
+  },
+  search_placeholder: {
+    ur: "عنوان، پارٹی، کمپنی، یا ٹیگز سے تلاش کریں...",
+    ar: "البحث بالعنوان، الطرف، الشركة...",
+    ps: "د سرلیک، پارټۍ، شرکت له مخې لټون...",
+    fa: "جستجوی اسناد بر اساس عنوان، طرف حساب...",
+    en: "Search documents by title, party, invoice #..."
+  },
+  refresh: {
+    ur: "تازہ کریں",
+    ar: "تحديث",
+    ps: "تازه کول",
+    fa: "تازه‌سازی",
+    en: "Refresh"
+  },
+  active_path: {
+    ur: "موجودہ راستہ:",
+    ar: "المسار الحالي:",
+    ps: "فعاله لاره:",
+    fa: "مسیر فعال:",
+    en: "Active Path:"
+  },
+  no_docs: {
+    ur: "اس ڈائریکٹری فولڈر میں کوئی دستاویزات نہیں ملیں۔",
+    ar: "لم يتم العثور على مستندات في هذا المجلد.",
+    ps: "په دې فولډر کې هیڅ اسناد ونه موندل شول.",
+    fa: "هیچ سندی در این پوشه یافت نشد.",
+    en: "No documents found in this directory folder."
+  },
+  loading_docs: {
+    ur: "دستاویزات لوڈ ہو رہی ہیں...",
+    ar: "جاري تحميل المستندات...",
+    ps: "اسناد لوډ کیږي...",
+    fa: "در حال بارگذاری اسناد...",
+    en: "Loading document repository..."
+  }
+};
+
+function formatBytes(bytes: number, decimals = 1) {
+  if (!bytes || bytes === 0) return "0 B";
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ["B", "KB", "MB", "GB", "TB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
+}
+
+export function DocumentManager() {
+  const router = useRouter();
+  const lang = useActiveLanguage();
+  const isRtl = lang === "ur" || lang === "ar" || lang === "fa" || lang === "ps";
+
+  const t = useCallback(
+    (key: string, fallback?: string): string => {
+      const entry = TRANSLATIONS[key];
+      if (entry && entry[lang]) return entry[lang];
+      if (entry && entry.en) return entry.en;
+      return fallback || key;
+    },
+    [lang]
+  );
+  // Central-dictionary fallback for short labels/headers not in the local block.
+  const th = useCallback((s: string): string => translateHeader(lang, s), [lang]);
+
+  // ── Session Context ──
+  const [sessionCtx, setSessionCtx] = useState<{
+    userName: string;
+    userEmail: string;
+    userId: string;
+    countryName: string;
+    branchName: string;
+    isSuperAdmin: boolean;
+    roles: string[];
+  } | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/erp/auth/session", { credentials: "include" })
+      .then((r) => r.json())
+      .then((json: any) => {
+        if (!active || !json?.user) return;
+        setSessionCtx({
+          userName: json.user.fullName || json.user.email || "—",
+          userEmail: json.user.email || "",
+          userId: json.user.id || "",
+          countryName: json.scopes?.summary?.countryName || "",
+          branchName: json.scopes?.summary?.branchDisplayName || "",
+          isSuperAdmin: !!json.scopes?.isSuperAdmin,
+          roles: json.roles || []
+        });
+      })
+      .catch(console.error);
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // ── State for Hierarchy & Data ──
+  const [countries, setCountries] = useState<any[]>([]);
+  const [selectedCountryId, setSelectedCountryId] = useState<string>("");
+  const [selectedMainBranchId, setSelectedMainBranchId] = useState<string>("");
+  const [selectedCityBranchId, setSelectedCityBranchId] = useState<string>("");
+  const [selectedModule, setSelectedModule] = useState<string>("all");
+  const [selectedDocumentType, setSelectedDocumentType] = useState<string>("");
+  const [scopeRole, setScopeRole] = useState<"super_admin" | "country_admin" | "branch_user">("super_admin");
+
+  // Dropdown / Popover states
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState<boolean>(false);
+  const [isQuickLinksOpen, setIsQuickLinksOpen] = useState<boolean>(false);
+  const [isDateMenuOpen, setIsDateMenuOpen] = useState<boolean>(false);
+  const [isScopeMenuOpen, setIsScopeMenuOpen] = useState<boolean>(false);
+  const [isActionsMenuOpen, setIsActionsMenuOpen] = useState<boolean>(false);
+
+  // Filter & Search
+  const [documents, setDocuments] = useState<OfficeDocument[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [dateFilter, setDateFilter] = useState<"all" | "today" | "yesterday" | "this_month" | "last_30_days" | "custom">("all");
+  const [customDateFrom, setCustomDateFrom] = useState<string>("");
+  const [customDateTo, setCustomDateTo] = useState<string>("");
+  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
+
+  // Custom Folders
+  const [customFolders, setCustomFolders] = useState<CustomFolder[]>(() => {
+    try {
+      const saved = localStorage.getItem("dgt_erp_custom_folders");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Lookup Options
+  const [companyOptions, setCompanyOptions] = useState<SearchSelectOption[]>([]);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
+  // Deep link from Company Master / Company 360: /dashboard/documents?companyId=<id>
+  useEffect(() => {
+    try {
+      const cid = new URLSearchParams(window.location.search).get("companyId");
+      if (cid && /^[0-9a-f-]{36}$/i.test(cid)) setSelectedCompanyId(cid);
+    } catch {
+      /* no deep link */
+    }
+  }, []);
+  const [selectedCompanyCode, setSelectedCompanyCode] = useState<string>("");
+  const [selectedCompanyName, setSelectedCompanyName] = useState<string>("");
+
+  const [personOptions, setPersonOptions] = useState<SearchSelectOption[]>([]);
+  const [selectedPersonId, setSelectedPersonId] = useState<string>("");
+  const [selectedPersonCode, setSelectedPersonCode] = useState<string>("");
+  const [selectedPersonName, setSelectedPersonName] = useState<string>("");
+  const [selectedPersonType, setSelectedPersonType] = useState<string>("");
+
+  const [accountOptions, setAccountOptions] = useState<SearchSelectOption[]>([]);
+  const [selectedAccountId, setSelectedAccountId] = useState<string>("");
+  const [selectedAccountCode, setSelectedAccountCode] = useState<string>("");
+  const [selectedAccountName, setSelectedAccountName] = useState<string>("");
+
+  // Modals
+  const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [smartUploadOpen, setSmartUploadOpen] = useState<boolean>(false);
+  const [smartUploadFile, setSmartUploadFile] = useState<File | null>(null);
+  const [smartUploadTitle, setSmartUploadTitle] = useState<string>("");
+  const [smartUploadDocType, setSmartUploadDocType] = useState<string>("Document");
+  const [isScannerOpen, setIsScannerOpen] = useState<boolean>(false);
+  const [scanStatus, setScanStatus] = useState<string>("");
+  const [scanError, setScanError] = useState<string>("");
+  const [cameraReady, setCameraReady] = useState<boolean>(false);
+  const [capturedShots, setCapturedShots] = useState<string[]>([]); // data URLs
+
+  const [isNewFolderOpen, setIsNewFolderOpen] = useState<boolean>(false);
+  const [newFolderName, setNewFolderName] = useState<string>("");
+
+  const [previewDoc, setPreviewDoc] = useState<OfficeDocument | null>(null);
+  const [editingDoc, setEditingDoc] = useState<OfficeDocument | null>(null);
+  const [editTitle, setEditTitle] = useState<string>("");
+  const [editModule, setEditModule] = useState<string>("");
+  const [editDocType, setEditDocType] = useState<string>("");
+  const [editCompany, setEditCompany] = useState<string>("");
+  const [editAccount, setEditAccount] = useState<string>("");
+
+  // Audit history modal
+  const [auditDoc, setAuditDoc] = useState<OfficeDocument | null>(null);
+  const [auditEvents, setAuditEvents] = useState<any[]>([]);
+  const [auditLoading, setAuditLoading] = useState<boolean>(false);
+  const versionInputRef = useRef<HTMLInputElement>(null);
+  const [versioningDoc, setVersioningDoc] = useState<OfficeDocument | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const cameraStreamRef = useRef<MediaStream | null>(null);
+
+  // Close popovers on outside click
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsQuickLinksOpen(false);
+        setIsDateMenuOpen(false);
+        setIsScopeMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // ── Load Hierarchy ──
+  const fetchHierarchy = useCallback(async () => {
+    try {
+      const res = await apiGet<any>("/api/branch-management/general-report");
+      if (res && Array.isArray(res.countries) && res.countries.length > 0) {
+        setCountries(res.countries);
+      } else {
+        const locRes = await apiGet<any>("/api/erp/locations/countries");
+        if (locRes && Array.isArray(locRes.countries)) {
+          setCountries(
+            locRes.countries.map((c: any) => ({
+              id: c.id,
+              name: c.name,
+              code: c.iso2 || c.iso3,
+              mainBranches: []
+            }))
+          );
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load hierarchy:", e);
+    }
+  }, []);
+
+  useEffect(() => {
+    void fetchHierarchy();
+  }, [fetchHierarchy]);
+
+  // ── Load Documents ──
+  const fetchDocs = useCallback(async () => {
+    setLoading(true);
+    try {
+      const qp = new URLSearchParams();
+      if (selectedCountryId) qp.set("countryId", selectedCountryId);
+      if (selectedMainBranchId) qp.set("mainBranchId", selectedMainBranchId);
+      if (selectedCityBranchId) qp.set("cityBranchId", selectedCityBranchId);
+      if (selectedModule && selectedModule !== "all") qp.set("moduleType", selectedModule);
+      if (selectedCompanyId) qp.set("companyId", selectedCompanyId);
+      if (selectedAccountId) qp.set("accountId", selectedAccountId);
+      if (selectedPersonId) qp.set("personAccountId", selectedPersonId);
+      if (selectedDocumentType) qp.set("documentType", selectedDocumentType);
+      if (searchQuery.trim()) qp.set("search", searchQuery.trim());
+
+      const res = await fetch(`/api/documents?${qp.toString()}`);
+      if (res.ok) {
+        const json = await res.json();
+        setDocuments(Array.isArray(json.documents) ? json.documents : []);
+      }
+    } catch (err) {
+      console.error("Error fetching docs:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [
+    selectedCountryId,
+    selectedMainBranchId,
+    selectedCityBranchId,
+    selectedModule,
+    selectedCompanyId,
+    selectedAccountId,
+    selectedPersonId,
+    selectedDocumentType,
+    searchQuery
+  ]);
+
+  useEffect(() => {
+    void fetchDocs();
+  }, [fetchDocs]);
+
+  const [accountsList, setAccountsList] = useState<any[]>([]);
+
+  // ── Load Select Options ──
+  useEffect(() => {
+    let active = true;
+    async function loadOptions() {
+      try {
+        const [compRes, custRes, empRes, genRes] = await Promise.all([
+          apiGet<any>("/api/erp/companies").catch(() => null),
+          apiGet<any>("/api/erp/customers").catch(() => null),
+          apiGet<any>("/api/erp/hr-payroll/employees").catch(() => null),
+          apiGet<any>("/api/erp/accounting/reports/accounts/general?limit=500").catch(() => null)
+        ]);
+
+        if (!active) return;
+
+        if (compRes?.companies) {
+          setCompanyOptions(
+            compRes.companies.map((c: any) => ({
+              value: c.id,
+              label: [c.company_code || c.code, c.name || c.legal_name].filter(Boolean).join(" • "),
+              keywords: [c.name, c.company_code, c.code, c.registration_no].filter(Boolean).join(" ")
+            }))
+          );
+        }
+
+        const persons: SearchSelectOption[] = [];
+        if (custRes?.customers) {
+          custRes.customers.forEach((c: any) => {
+            persons.push({
+              value: `cust_${c.id}`,
+              label: `Customer • ${c.customer_code || c.customer_name || c.id} • ${c.customer_name || ""}`,
+              keywords: [c.customer_code, c.customer_name, c.mobile, c.email].filter(Boolean).join(" ")
+            });
+          });
+        }
+        if (empRes?.employees) {
+          empRes.employees.forEach((e: any) => {
+            persons.push({
+              value: `emp_${e.id}`,
+              label: `Employee • ${e.employee_code || e.employeeCode || e.id} • ${e.fullName || e.name || ""}`,
+              keywords: [e.employee_code, e.fullName, e.department, e.jobTitle].filter(Boolean).join(" ")
+            });
+          });
+        }
+        setPersonOptions(persons);
+
+        if (genRes?.rows) {
+          setAccountsList(genRes.rows);
+          setAccountOptions(
+            genRes.rows.map((a: any) => ({
+              value: a.accountId,
+              label: [a.manualReferenceNumber || a.accountCode, a.accountName, a.currency].filter(Boolean).join(" • "),
+              keywords: [a.accountCode, a.manualReferenceNumber, a.accountName, a.companyName].filter(Boolean).join(" ")
+            }))
+          );
+        }
+      } catch (err) {
+        console.error("Failed loading select options:", err);
+      }
+    }
+    void loadOptions();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // ── Date Filtering ──
+  const filteredDocuments = useMemo(() => {
+    return documents.filter((doc) => {
+      if (dateFilter === "all") return true;
+      const created = new Date(doc.created_at || doc.scanned_at || Date.now());
+      const now = new Date();
+      if (dateFilter === "today") {
+        return created.toDateString() === now.toDateString();
+      }
+      if (dateFilter === "yesterday") {
+        const yest = new Date(now);
+        yest.setDate(yest.getDate() - 1);
+        return created.toDateString() === yest.toDateString();
+      }
+      if (dateFilter === "this_month") {
+        return created.getMonth() === now.getMonth() && created.getFullYear() === now.getFullYear();
+      }
+      if (dateFilter === "last_30_days") {
+        const past30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        return created >= past30;
+      }
+      if (dateFilter === "custom") {
+        const docDateStr = (doc.created_at || doc.scanned_at || "").slice(0, 10);
+        if (customDateFrom && docDateStr < customDateFrom) return false;
+        if (customDateTo && docDateStr > customDateTo) return false;
+        return true;
+      }
+      return true;
+    });
+  }, [documents, dateFilter, customDateFrom, customDateTo]);
+
+  // ── Summary Stats for KPI Cards ──
+  const summaryStats = useMemo(() => {
+    const totalDocs = documents.length;
+    const totalBytes = documents.reduce((acc, d) => acc + (Number(d.file_size) || 0), 0);
+    const scannedCount = documents.filter((d) => d.category === "Scanned" || d.scanner_device_name).length;
+    const totalCountriesCount = countries.length;
+    const totalBranchesCount = countries.reduce(
+      (acc, c) => acc + (c.mainBranches?.length || 0) + (c.mainBranches?.reduce((a: number, m: any) => a + (m.cityBranches?.length || 0), 0) || 0),
+      0
+    );
+    const linkedCompaniesCount = new Set(documents.map((d) => d.company_code || d.company_name).filter(Boolean)).size;
+
+    return {
+      totalDocs,
+      totalBytes: formatBytes(totalBytes),
+      scannedCount,
+      totalCountriesCount,
+      totalBranchesCount,
+      linkedCompaniesCount
+    };
+  }, [documents, countries]);
+
+  // Active filters count
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (selectedCountryId) count++;
+    if (selectedMainBranchId) count++;
+    if (selectedCityBranchId) count++;
+    if (selectedModule && selectedModule !== "all") count++;
+    if (selectedCompanyId) count++;
+    if (selectedAccountId || selectedPersonId) count++;
+    return count;
+  }, [selectedCountryId, selectedMainBranchId, selectedCityBranchId, selectedModule, selectedCompanyId, selectedAccountId, selectedPersonId]);
+
+  const activeCountry = countries.find((c) => c.id === selectedCountryId);
+  const activeMainBranch = activeCountry?.mainBranches?.find((b: any) => b.id === selectedMainBranchId);
+  const activeCityBranch = activeMainBranch?.cityBranches?.find((b: any) => b.id === selectedCityBranchId);
+
+  // File Upload
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const moduleLabel = selectedModule === "all" ? "Purchase Documents" : selectedModule;
+      const docTypeValue = selectedDocumentType || "Document";
+      const destinationFileName = file.name;
+      const destinationPath = buildDocumentFolderPath({
+        countryName: activeCountry?.name || sessionCtx?.countryName,
+        branchName: activeCityBranch?.name || activeMainBranch?.name || sessionCtx?.branchName,
+        companyCode: selectedCompanyCode || null,
+        companyName: selectedCompanyName || null,
+        personAccountCode: selectedPersonCode || selectedAccountCode || null,
+        personAccountName: selectedPersonName || selectedAccountName || null,
+        personAccountType: selectedPersonType || null,
+        accountCode: selectedAccountCode || null,
+        accountName: selectedAccountName || null,
+        moduleType: moduleLabel,
+        documentType: docTypeValue
+      });
+
+      const payload = new FormData();
+      payload.append("title", file.name.replace(/\.[^/.]+$/, ""));
+      payload.append("file_name", destinationFileName);
+      payload.append("file_type", file.type || "pdf");
+      payload.append("file_size", String(file.size));
+      payload.append("country_id", selectedCountryId || "");
+      payload.append("country_name", activeCountry?.name || sessionCtx?.countryName || "");
+      payload.append("country_branch_id", selectedMainBranchId || "");
+      payload.append("main_branch_name", activeMainBranch?.name || sessionCtx?.branchName || "");
+      payload.append("city_branch_id", selectedCityBranchId || "");
+      payload.append("city_branch_name", activeCityBranch?.name || "");
+      payload.append("company_id", selectedCompanyId || "");
+      payload.append("company_code", selectedCompanyCode || "");
+      payload.append("company_name", selectedCompanyName || "");
+      payload.append("account_id", selectedAccountId || "");
+      payload.append("account_code", selectedAccountCode || "");
+      payload.append("account_name", selectedAccountName || "");
+      payload.append("person_account_id", selectedPersonId || "");
+      payload.append("person_account_code", selectedPersonCode || "");
+      payload.append("person_account_name", selectedPersonName || "");
+      payload.append("person_account_type", selectedPersonType || "");
+      payload.append("module_type", moduleLabel);
+      payload.append("document_type", docTypeValue);
+      payload.append("source_module", moduleLabel);
+      payload.append("document_path", destinationPath);
+      payload.append("storage_key", `${destinationPath}/${destinationFileName}`);
+      payload.append("created_by", sessionCtx?.userName || "Admin User");
+      payload.append("file", file, file.name);
+
+      await fetch("/api/documents", {
+        method: "POST",
+        body: payload
+      });
+
+      await fetchDocs();
+    } catch (err) {
+      console.error("Upload error:", err);
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
+  async function submitSmartUpload() {
+    if (!smartUploadFile) {
+      alert(t("file_req", "Please select a file to upload."));
+      return;
+    }
+    if (!smartUploadTitle.trim()) {
+      alert(t("title_req", "Document Name / Title is mandatory."));
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const moduleLabel = selectedModule === "all" ? "Purchase Documents" : selectedModule;
+      const docTypeValue = smartUploadDocType || selectedDocumentType || "Document";
+      const destinationFileName = smartUploadFile.name;
+      const destinationPath = buildDocumentFolderPath({
+        countryName: activeCountry?.name || sessionCtx?.countryName,
+        branchName: activeCityBranch?.name || activeMainBranch?.name || sessionCtx?.branchName,
+        companyCode: selectedCompanyCode || null,
+        companyName: selectedCompanyName || null,
+        personAccountCode: selectedPersonCode || selectedAccountCode || null,
+        personAccountName: selectedPersonName || selectedAccountName || null,
+        personAccountType: selectedPersonType || null,
+        accountCode: selectedAccountCode || null,
+        accountName: selectedAccountName || null,
+        moduleType: moduleLabel,
+        documentType: docTypeValue
+      });
+
+      const payload = new FormData();
+      payload.append("title", smartUploadTitle.trim());
+      payload.append("file_name", destinationFileName);
+      payload.append("file_type", smartUploadFile.type || "pdf");
+      payload.append("file_size", String(smartUploadFile.size));
+      payload.append("country_id", selectedCountryId || "");
+      payload.append("country_name", activeCountry?.name || sessionCtx?.countryName || "");
+      payload.append("country_branch_id", selectedMainBranchId || "");
+      payload.append("main_branch_name", activeMainBranch?.name || sessionCtx?.branchName || "");
+      payload.append("city_branch_id", selectedCityBranchId || "");
+      payload.append("city_branch_name", activeCityBranch?.name || "");
+      payload.append("company_id", selectedCompanyId || "");
+      payload.append("company_code", selectedCompanyCode || "");
+      payload.append("company_name", selectedCompanyName || "");
+      payload.append("account_id", selectedAccountId || "");
+      payload.append("account_code", selectedAccountCode || "");
+      payload.append("account_name", selectedAccountName || "");
+      payload.append("person_account_id", selectedPersonId || "");
+      payload.append("person_account_code", selectedPersonCode || "");
+      payload.append("person_account_name", selectedPersonName || "");
+      payload.append("person_account_type", selectedPersonType || "");
+      payload.append("module_type", moduleLabel);
+      payload.append("document_type", docTypeValue);
+      payload.append("source_module", moduleLabel);
+      payload.append("document_path", destinationPath);
+      payload.append("storage_key", `${destinationPath}/${destinationFileName}`);
+      payload.append("created_by", sessionCtx?.userName || "Admin User");
+      payload.append("file", smartUploadFile, smartUploadFile.name);
+
+      const res = await fetch("/api/documents", {
+        method: "POST",
+        body: payload
+      });
+      const resJson = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(resJson.error || "Failed to upload document.");
+      }
+
+      setSmartUploadOpen(false);
+      setSmartUploadFile(null);
+      setSmartUploadTitle("");
+      await fetchDocs();
+    } catch (err) {
+      console.error("Upload error:", err);
+      alert(err instanceof Error ? err.message : "Error uploading document.");
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
+  // ── Real device-camera document capture (webcam / phone rear camera) ──
+  const startCamera = useCallback(async () => {
+    setScanError("");
+    setCameraReady(false);
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setScanError(t("camera_unsupported", "This browser/device does not expose a camera. Use Upload File instead."));
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+        audio: false
+      });
+      cameraStreamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play().catch(() => {});
+      }
+      setCameraReady(true);
+    } catch (err: any) {
+      setScanError(
+        err?.name === "NotAllowedError"
+          ? t("camera_denied", "Camera permission was denied. Allow camera access and retry, or use Upload File.")
+          : t("camera_error", "Could not open the camera: ") + (err?.message || String(err))
+      );
+    }
+  }, [t]);
+
+  const stopCamera = useCallback(() => {
+    cameraStreamRef.current?.getTracks().forEach((tr) => tr.stop());
+    cameraStreamRef.current = null;
+    if (videoRef.current) videoRef.current.srcObject = null;
+    setCameraReady(false);
+  }, []);
+
+  const captureShot = useCallback(() => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas || !video.videoWidth) return;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    setCapturedShots((prev) => [...prev, canvas.toDataURL("image/jpeg", 0.92)]);
+  }, []);
+
+  function dataUrlToBlob(dataUrl: string): Blob {
+    const [head, b64] = dataUrl.split(",");
+    const mime = head.match(/:(.*?);/)?.[1] || "image/jpeg";
+    const bin = atob(b64);
+    const arr = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    return new Blob([arr], { type: mime });
+  }
+
+  async function handleSaveCapturedScan() {
+    if (capturedShots.length === 0) {
+      setScanError(t("capture_first", "Capture at least one page before saving."));
+      return;
+    }
+    setScanStatus(t("scan_saving", "Uploading captured page(s) to secure storage…"));
+    try {
+      const moduleLabel = selectedModule === "all" ? "Purchase Documents" : selectedModule;
+      const docTypeValue = selectedDocumentType || "Document";
+      const ts = Date.now();
+
+      for (let i = 0; i < capturedShots.length; i++) {
+        const blob = dataUrlToBlob(capturedShots[i]);
+        const pageSuffix = capturedShots.length > 1 ? `_p${i + 1}` : "";
+        const fileName = `CAMERA_SCAN_${ts}${pageSuffix}.jpg`;
+        const destinationPath = buildDocumentFolderPath({
+          countryName: activeCountry?.name || sessionCtx?.countryName,
+          branchName: activeCityBranch?.name || activeMainBranch?.name || sessionCtx?.branchName,
+          companyCode: selectedCompanyCode || null,
+          companyName: selectedCompanyName || null,
+          personAccountCode: selectedPersonCode || selectedAccountCode || null,
+          personAccountName: selectedPersonName || selectedAccountName || null,
+          personAccountType: selectedPersonType || null,
+          accountCode: selectedAccountCode || null,
+          accountName: selectedAccountName || null,
+          moduleType: moduleLabel,
+          documentType: docTypeValue
+        });
+
+        const payload = new FormData();
+        payload.append("title", `Camera Scan — ${new Date().toLocaleDateString()}${pageSuffix ? ` (page ${i + 1})` : ""}`);
+        payload.append("file_name", fileName);
+        payload.append("file_type", "jpg");
+        payload.append("country_id", selectedCountryId || "");
+        payload.append("country_name", activeCountry?.name || sessionCtx?.countryName || "");
+        payload.append("country_branch_id", selectedMainBranchId || "");
+        payload.append("main_branch_name", activeMainBranch?.name || sessionCtx?.branchName || "");
+        payload.append("city_branch_id", selectedCityBranchId || "");
+        payload.append("city_branch_name", activeCityBranch?.name || "");
+        payload.append("company_id", selectedCompanyId || "");
+        payload.append("company_code", selectedCompanyCode || "");
+        payload.append("company_name", selectedCompanyName || "");
+        payload.append("account_id", selectedAccountId || "");
+        payload.append("account_code", selectedAccountCode || "");
+        payload.append("account_name", selectedAccountName || "");
+        payload.append("person_account_id", selectedPersonId || "");
+        payload.append("person_account_code", selectedPersonCode || "");
+        payload.append("person_account_name", selectedPersonName || "");
+        payload.append("person_account_type", selectedPersonType || "");
+        payload.append("module_type", moduleLabel);
+        payload.append("document_type", docTypeValue);
+        payload.append("source_module", moduleLabel);
+        payload.append("category", "Scanned");
+        payload.append("tags", JSON.stringify(["CameraScan", docTypeValue]));
+        payload.append("metadata", JSON.stringify({ captureMethod: "device_camera", page: i + 1, totalPages: capturedShots.length }));
+        payload.append("document_path", destinationPath);
+        payload.append("created_by", sessionCtx?.userName || "");
+        payload.append("scanner_device_name", "Device Camera");
+        payload.append("scanner_bridge", "getUserMedia");
+        payload.append("file", new File([blob], fileName, { type: "image/jpeg" }), fileName);
+
+        const res = await fetch("/api/documents", { method: "POST", body: payload });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err?.error || `Upload failed for page ${i + 1}`);
+        }
+      }
+
+      stopCamera();
+      setCapturedShots([]);
+      setIsScannerOpen(false);
+      await fetchDocs();
+    } catch (err: any) {
+      console.error("Camera scan save error:", err);
+      setScanError(err?.message || t("scan_save_failed", "Failed to save the captured document."));
+    } finally {
+      setScanStatus("");
+    }
+  }
+
+  // Auto start/stop camera with the modal.
+  useEffect(() => {
+    if (isScannerOpen) {
+      void startCamera();
+    } else {
+      stopCamera();
+      setCapturedShots([]);
+      setScanError("");
+    }
+    return () => stopCamera();
+  }, [isScannerOpen, startCamera, stopCamera]);
+
+  // ── Version upload + audit history ──
+  async function handleUploadNewVersion(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    const doc = versioningDoc;
+    if (!file || !doc) return;
+    try {
+      const fd = new FormData();
+      fd.append("file", file, file.name);
+      const res = await fetch(`/api/documents/${doc.id}/version`, { method: "POST", body: fd });
+      const json = await res.json();
+      if (!res.ok) {
+        alert(json?.error || t("version_failed", "New version upload failed."));
+      } else {
+        await fetchDocs();
+        if (auditDoc?.id === doc.id) void openAuditHistory(doc);
+      }
+    } catch (err) {
+      console.error("Version upload error:", err);
+      alert(t("version_failed", "New version upload failed."));
+    } finally {
+      setVersioningDoc(null);
+      if (versionInputRef.current) versionInputRef.current.value = "";
+    }
+  }
+
+  async function openAuditHistory(doc: OfficeDocument) {
+    setAuditDoc(doc);
+    setAuditLoading(true);
+    setAuditEvents([]);
+    try {
+      const res = await fetch(`/api/documents/${doc.id}/audit`, { credentials: "include" });
+      const json = await res.json();
+      if (res.ok) setAuditEvents(Array.isArray(json.events) ? json.events : []);
+    } catch (err) {
+      console.error("Audit history error:", err);
+    } finally {
+      setAuditLoading(false);
+    }
+  }
+
+  // Create Custom Folder
+  const handleCreateFolder = () => {
+    if (!newFolderName.trim()) return;
+    const newFld: CustomFolder = {
+      id: `folder_${Date.now()}`,
+      name: newFolderName.trim(),
+      countryId: selectedCountryId,
+      branchId: selectedMainBranchId || selectedCityBranchId,
+      createdAt: new Date().toISOString()
+    };
+    const updated = [...customFolders, newFld];
+    setCustomFolders(updated);
+    try {
+      localStorage.setItem("dgt_erp_custom_folders", JSON.stringify(updated));
+    } catch {}
+    setNewFolderName("");
+    setIsNewFolderOpen(false);
+    setSelectedModule(newFld.name);
+  };
+
+  async function handleDownloadDoc(doc: OfficeDocument) {
+    // Always fetch the REAL stored blob through the API, which resolves it from
+    // Supabase Storage or the local uploads fallback and streams it with the
+    // correct filename. Never fabricate placeholder content.
+    try {
+      const res = await fetch(`/api/documents/download?id=${encodeURIComponent(doc.id)}`, {
+        credentials: "include"
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(err?.error || t("download_failed", "The stored file could not be downloaded."));
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = doc.file_name || `${doc.id}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error("Download error:", e);
+      alert(t("download_failed", "The stored file could not be downloaded."));
+    }
+  }
+
+  function handlePreviewDoc(doc: OfficeDocument) {
+    // Open the real file inline in a new tab (PDF/image viewer).
+    window.open(`/api/documents/download?id=${encodeURIComponent(doc.id)}&disposition=inline`, "_blank", "noopener");
+  }
+
+  // Edit / Move Document
+  const handleOpenEdit = (doc: OfficeDocument) => {
+    setEditingDoc(doc);
+    setEditTitle(doc.title);
+    setEditModule(doc.module_type || "Purchase Documents");
+    setEditDocType(doc.document_type || "Document");
+    setEditCompany(doc.company_name || "");
+    setEditAccount(doc.account_name || "");
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingDoc) return;
+    try {
+      await fetch("/api/documents", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: editingDoc.id,
+          title: editTitle,
+          module_type: editModule,
+          document_type: editDocType,
+          company_name: editCompany,
+          account_name: editAccount
+        })
+      });
+      setEditingDoc(null);
+      await fetchDocs();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // Delete Document
+  const handleDelete = async (id: string) => {
+    if (!confirm(t("delete_confirm", "Are you sure you want to delete this document?"))) return;
+    try {
+      await fetch(`/api/documents?id=${id}`, { method: "DELETE" });
+      await fetchDocs();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Reset Filters
+  const handleResetFilters = () => {
+    setSelectedCountryId("");
+    setSelectedMainBranchId("");
+    setSelectedCityBranchId("");
+    setSelectedModule("all");
+    setSelectedCompanyId("");
+    setSelectedAccountId("");
+    setSelectedPersonId("");
+    setSearchQuery("");
+    setDateFilter("all");
+  };
+
+  // All Folders
+  const allFolderList = useMemo(() => {
+    const customNames = customFolders.map((f) => f.name);
+    return Array.from(new Set([...DEFAULT_MODULE_FOLDERS, ...customNames]));
+  }, [customFolders]);
+
+  return (
+    <div className={cn("space-y-4 pb-16 min-h-screen font-sans", isRtl && "text-right")} dir={isRtl ? "rtl" : "ltr"}>
+      {/* ── Top Unified Header Bar ("Safaid Patti" / Header Toolbar) ── */}
+      <div
+        ref={dropdownRef}
+        className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-3 sm:p-3.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs relative z-20"
+      >
+        {/* Left: Back Button + Module Icon + Title + Active Count */}
+        <div className="flex items-center gap-2 shrink-0">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => router.push("/dashboard" as Route)}
+            className="h-8.5 px-2.5 rounded-xl border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 text-xs font-bold gap-1 shadow-xs"
+            title={th("Back to Dashboard")}
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">{th("Back")}</span>
+          </Button>
+
+          <div className="h-9 w-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-200/60 dark:border-indigo-900 shrink-0 shadow-xs">
+            <FolderOpen className="h-4.5 w-4.5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-sm sm:text-base font-black text-slate-900 dark:text-slate-100 tracking-tight whitespace-nowrap">
+                {th("Document Management")}
+              </h1>
+              <span className="inline-flex items-center justify-center whitespace-nowrap px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shadow-xs leading-none">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1 shrink-0" />
+                {filteredDocuments.length} {t("active_docs", "Active")}
+              </span>
+            </div>
+            <p className="text-[10px] text-slate-400 font-semibold -mt-0.5 hidden sm:block">{th("Camera Capture & Cloud Storage")}</p>
+          </div>
+        </div>
+
+        {/* Center: Search + Date Range Dropdown + Filter Trigger */}
+        <div className="flex flex-1 flex-wrap items-center gap-2 max-w-2xl">
+          {/* 1. Spacious Search Input */}
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t("search_placeholder", "Search documents by title, party, code...")}
+              className="h-8.5 pl-9 pr-3 text-xs bg-slate-50/70 dark:bg-slate-950 border-slate-200 dark:border-slate-700 rounded-xl w-full"
+            />
+          </div>
+
+          {/* 2. Enhanced Date Range Dropdown (with Date-to-Date Picker) */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => {
+                setIsDateMenuOpen(!isDateMenuOpen);
+                setIsActionsMenuOpen(false);
+                setIsScopeMenuOpen(false);
+              }}
+              className={cn(
+                "h-8.5 rounded-xl border px-2.5 text-xs font-bold flex items-center gap-1.5 shadow-xs transition-colors",
+                dateFilter !== "all"
+                  ? "bg-blue-50 text-blue-700 border-blue-300 dark:bg-blue-950 dark:border-blue-800"
+                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+              )}
+            >
+              <Calendar className="h-3.5 w-3.5 text-slate-500" />
+              <span>
+                {dateFilter === "all"
+                  ? "All Dates"
+                  : dateFilter === "today"
+                  ? "Today"
+                  : dateFilter === "yesterday"
+                  ? "Yesterday"
+                  : dateFilter === "this_month"
+                  ? "This Month"
+                  : dateFilter === "last_30_days"
+                  ? "Last 30 Days"
+                  : customDateFrom || customDateTo
+                  ? `${customDateFrom || "..."} → ${customDateTo || "..."}`
+                  : "Custom Date"}
+              </span>
+              <ChevronDown className="h-3 w-3 text-slate-400" />
+            </button>
+
+            {isDateMenuOpen && (
+              <div className="absolute left-0 mt-1.5 w-72 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-2xl p-3 z-50 text-xs space-y-3 font-sans">
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">{th("Quick Presets")}</span>
+                  <div className="grid grid-cols-2 gap-1 mt-1.5">
+                    {[
+                      { key: "all", label: th("All Dates") },
+                      { key: "today", label: th("Today") },
+                      { key: "yesterday", label: th("Yesterday") },
+                      { key: "this_month", label: th("This Month") },
+                      { key: "last_30_days", label: th("Last 30 Days") }
+                    ].map((item) => (
+                      <button
+                        key={item.key}
+                        type="button"
+                        onClick={() => {
+                          setDateFilter(item.key as any);
+                          setIsDateMenuOpen(false);
+                        }}
+                        className={cn(
+                          "px-2 py-1.5 rounded-lg text-left text-xs font-semibold flex items-center justify-between transition-colors",
+                          dateFilter === item.key
+                            ? "bg-blue-50 text-blue-700 dark:bg-blue-950 font-bold"
+                            : "hover:bg-slate-100 text-slate-700 dark:text-slate-300 dark:hover:bg-slate-900"
+                        )}
+                      >
+                        <span>{item.label}</span>
+                        {dateFilter === item.key && <Check className="h-3.5 w-3.5 text-blue-600" />}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="border-t border-slate-100 dark:border-slate-800 pt-2.5 space-y-2">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">{th("Date Range")}</span>
+                  <ErpDatePicker
+                    mode="range"
+                    lang={lang}
+                    size="sm"
+                    value={{ from: customDateFrom || null, to: customDateTo || null }}
+                    onApply={(v) => { setCustomDateFrom(v.from ?? ""); setCustomDateTo(v.to ?? ""); }}
+                  />
+                  <div className="flex items-center justify-between pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCustomDateFrom("");
+                        setCustomDateTo("");
+                        setDateFilter("all");
+                        setIsDateMenuOpen(false);
+                      }}
+                      className="text-[11px] text-slate-500 hover:text-slate-800 font-semibold"
+                    >
+                      {th("Clear")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDateFilter("custom");
+                        setIsDateMenuOpen(false);
+                      }}
+                      className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-xs"
+                    >
+                      {th("Apply Range")}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* 3. Collapsible Filters Toggle Button ("Parda" / Curtain Button) */}
+          <button
+            type="button"
+            onClick={() => setIsFilterDrawerOpen(!isFilterDrawerOpen)}
+            className={cn(
+              "h-8.5 rounded-xl border px-2.5 text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all",
+              isFilterDrawerOpen || activeFiltersCount > 0
+                ? "bg-indigo-600 text-white border-indigo-600 shadow-sm"
+                : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+            )}
+          >
+            <Filter className="h-3.5 w-3.5" />
+            <span>{t("filters", "Scope & Hierarchy Filters")}</span>
+            {activeFiltersCount > 0 && (
+              <span className="h-4 w-4 rounded-full bg-white text-indigo-700 font-black text-[10px] flex items-center justify-center">
+                {activeFiltersCount}
+              </span>
+            )}
+            <ChevronDown className={cn("h-3 w-3 transition-transform", isFilterDrawerOpen && "rotate-180")} />
+          </button>
+        </div>
+
+        {/* Right: Actions Dropdown + Scope Selector + Refresh & View Mode */}
+        <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+          {/* 1. Combined Actions Dropdown Button (Scan / Upload / New Folder) */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileUpload}
+            className="hidden"
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+          />
+
+          <div className="relative">
+            <Button
+              type="button"
+              onClick={() => {
+                setIsActionsMenuOpen(!isActionsMenuOpen);
+                setIsDateMenuOpen(false);
+                setIsScopeMenuOpen(false);
+              }}
+              className="h-8.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 gap-1.5 shadow-sm"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span>{t("actions_menu", "New / Actions")}</span>
+              <ChevronDown className={cn("h-3 w-3 transition-transform", isActionsMenuOpen && "rotate-180")} />
+            </Button>
+
+            {isActionsMenuOpen && (
+              <div className="absolute right-0 mt-1.5 w-56 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-2xl p-1.5 z-50 text-xs font-semibold space-y-1">
+                {/* 1. Camera Capture */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsActionsMenuOpen(false);
+                    setIsScannerOpen(true);
+                  }}
+                  className="w-full text-left px-3 py-2 rounded-xl flex items-center gap-2.5 hover:bg-emerald-50 text-emerald-800 dark:hover:bg-emerald-950 dark:text-emerald-300 transition-colors"
+                >
+                  <div className="h-7 w-7 rounded-lg bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 flex items-center justify-center">
+                    <Camera className="h-3.5 w-3.5" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-xs">{t("start_scan", "Camera Capture")}</p>
+                    <p className="text-[10px] text-slate-400 font-normal">{th("Device camera (webcam / phone)")}</p>
+                  </div>
+                </button>
+
+                {/* 2. Upload File */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsActionsMenuOpen(false);
+                    setSmartUploadOpen(true);
+                  }}
+                  disabled={isUploading}
+                  className="w-full text-left px-3 py-2 rounded-xl flex items-center gap-2.5 hover:bg-blue-50 text-blue-800 dark:hover:bg-blue-950 dark:text-blue-300 transition-colors"
+                >
+                  <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 flex items-center justify-center">
+                    <Upload className="h-3.5 w-3.5" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-xs">{isUploading ? t("uploading", "Uploading...") : t("upload_file", "Upload File")}</p>
+                    <p className="text-[10px] text-slate-400 font-normal">{th("PDF, DOC, Images, XLS")}</p>
+                  </div>
+                </button>
+
+                {/* 3. New Custom Folder */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsActionsMenuOpen(false);
+                    setIsNewFolderOpen(true);
+                  }}
+                  className="w-full text-left px-3 py-2 rounded-xl flex items-center gap-2.5 hover:bg-purple-50 text-purple-850 dark:hover:bg-purple-950 dark:text-purple-300 transition-colors border-t border-slate-100 dark:border-slate-800 pt-1.5"
+                >
+                  <div className="h-7 w-7 rounded-lg bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 flex items-center justify-center">
+                    <FolderPlus className="h-3.5 w-3.5" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-xs">{t("new_folder", "New Custom Folder")}</p>
+                    <p className="text-[10px] text-slate-400 font-normal">{th("Create repository folder")}</p>
+                  </div>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Divider */}
+          <div className="h-5 w-px bg-slate-200 dark:bg-slate-700 mx-0.5" />
+
+          {/* 2. Scope Selector Dropdown Button (Super Admin) - Placed on the right side next to View switcher */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => {
+                setIsScopeMenuOpen(!isScopeMenuOpen);
+                setIsDateMenuOpen(false);
+                setIsActionsMenuOpen(false);
+              }}
+              className="h-8.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 px-2.5 text-xs font-bold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 flex items-center gap-1.5 shadow-xs transition-colors"
+            >
+              <span>{scopeRole === "super_admin" ? `👑 ${th("Super Admin")}` : scopeRole === "country_admin" ? `🌍 ${th("Country Admin")}` : `🏢 ${th("Branch User")}`}</span>
+              <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+            </button>
+
+            {isScopeMenuOpen && (
+              <div className="absolute right-0 mt-1.5 w-48 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-xl p-1 z-50 text-xs font-semibold space-y-0.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setScopeRole("super_admin");
+                    handleResetFilters();
+                    setIsScopeMenuOpen(false);
+                  }}
+                  className={cn(
+                    "w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between transition-colors",
+                    scopeRole === "super_admin" ? "bg-blue-50 text-blue-700 dark:bg-blue-950 font-bold" : "hover:bg-slate-50 text-slate-700 dark:text-slate-300"
+                  )}
+                >
+                  <span className="flex items-center gap-1.5">👑 {th("Super Admin Storage")}</span>
+                  {scopeRole === "super_admin" && <Check className="h-3.5 w-3.5" />}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setScopeRole("country_admin");
+                    setIsScopeMenuOpen(false);
+                  }}
+                  className={cn(
+                    "w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between transition-colors",
+                    scopeRole === "country_admin" ? "bg-blue-50 text-blue-700 dark:bg-blue-950 font-bold" : "hover:bg-slate-50 text-slate-700 dark:text-slate-300"
+                  )}
+                >
+                  <span className="flex items-center gap-1.5">🌍 {th("Country Admin Scope")}</span>
+                  {scopeRole === "country_admin" && <Check className="h-3.5 w-3.5" />}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setScopeRole("branch_user");
+                    setIsScopeMenuOpen(false);
+                  }}
+                  className={cn(
+                    "w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between transition-colors",
+                    scopeRole === "branch_user" ? "bg-blue-50 text-blue-700 dark:bg-blue-950 font-bold" : "hover:bg-slate-50 text-slate-700 dark:text-slate-300"
+                  )}
+                >
+                  <span className="flex items-center gap-1.5">🏢 {th("Branch User Scope")}</span>
+                  {scopeRole === "branch_user" && <Check className="h-3.5 w-3.5" />}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Refresh Button */}
+          <button
+            type="button"
+            onClick={() => fetchDocs()}
+            title={t("refresh", "Refresh")}
+            className="h-8.5 w-8.5 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-900 shadow-xs"
+          >
+            <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin text-blue-600")} />
+          </button>
+
+          {/* View Mode Grid/Table Switcher */}
+          <div className="flex items-center rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 p-0.5 shadow-xs">
+            <button
+              type="button"
+              onClick={() => setViewMode("grid")}
+              title={th("Grid View")}
+              className={cn(
+                "h-7 w-7 rounded-lg flex items-center justify-center transition-colors",
+                viewMode === "grid"
+                  ? "bg-blue-600 text-white shadow-xs"
+                  : "text-slate-500 hover:text-slate-900"
+              )}
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("table")}
+              title={th("Table View")}
+              className={cn(
+                "h-7 w-7 rounded-lg flex items-center justify-center transition-colors",
+                viewMode === "table"
+                  ? "bg-blue-600 text-white shadow-xs"
+                  : "text-slate-500 hover:text-slate-900"
+              )}
+            >
+              <List className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Collapsible Scope & Hierarchy Filters Curtain ("Chhota Sa Parda") ── */}
+      {isFilterDrawerOpen && (
+        <div className="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-indigo-200/80 dark:border-indigo-900/60 shadow-md font-sans space-y-3 animate-in fade-in slide-in-from-top-2 duration-200 relative z-10">
+          <div className="flex items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+            <div className="flex min-w-0 items-center gap-2">
+              <SlidersHorizontal className="h-4 w-4 shrink-0 text-indigo-600" />
+              <span className="truncate text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">
+                {t("hierarchy_selectors", "Directory Scope & Hierarchy Dropdowns")}
+              </span>
+            </div>
+
+            <div className="flex shrink-0 items-center gap-2">
+              {activeFiltersCount > 0 && (
+                <button
+                  type="button"
+                  onClick={handleResetFilters}
+                  className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-[11px] font-bold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  {t("reset_filters", "Reset All")}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setIsFilterDrawerOpen(false)}
+                className="h-6 w-6 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 flex items-center justify-center text-slate-500"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </div>
+
+          <div className="grid gap-2.5 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+            {/* 1. Country Dropdown */}
+            <SearchSelect
+              label={t("countries", "Country")}
+              value={selectedCountryId}
+              placeholder={t("all_countries", "All Countries")}
+              options={countries.map((country) => ({
+                value: country.id,
+                label: country.name,
+                keywords: [country.name, country.code, country.iso_code].filter(Boolean).join(" ")
+              }))}
+              onValueChange={(value) => {
+                setSelectedCountryId(value);
+                setSelectedMainBranchId("");
+                setSelectedCityBranchId("");
+              }}
+              searchPlaceholder={t("search", "Search...")}
+              emptyLabel={t("no_matches_found", "No matches found")}
+            />
+
+            {/* 2. Main Branch Dropdown */}
+            <SearchSelect
+              label={t("main_branches", "Main Branch")}
+              value={selectedMainBranchId}
+              placeholder={t("all_main_branches", "All Main Branches")}
+              options={(activeCountry?.mainBranches || []).map((branch: any) => ({
+                value: branch.id,
+                label: branch.name,
+                keywords: [branch.name, branch.code, branch.branch_code, branch.owner_name].filter(Boolean).join(" ")
+              }))}
+              disabled={!activeCountry && countries.length > 0}
+              onValueChange={(value) => {
+                setSelectedMainBranchId(value);
+                setSelectedCityBranchId("");
+              }}
+              searchPlaceholder={t("search", "Search...")}
+              emptyLabel={t("no_matches_found", "No matches found")}
+            />
+
+            {/* 3. City Branch Dropdown */}
+            <SearchSelect
+              label={t("city_branches", "City Branch")}
+              value={selectedCityBranchId}
+              placeholder={t("all_city_branches", "All City Branches")}
+              options={(activeMainBranch?.cityBranches || []).map((branch: any) => ({
+                value: branch.id,
+                label: branch.name,
+                keywords: [branch.name, branch.code, branch.branch_code, branch.owner_name].filter(Boolean).join(" ")
+              }))}
+              disabled={!activeMainBranch}
+              onValueChange={(value) => setSelectedCityBranchId(value)}
+              searchPlaceholder={t("search", "Search...")}
+              emptyLabel={t("no_matches_found", "No matches found")}
+            />
+
+            {/* 4. Module / Custom Folder Dropdown */}
+            <div>
+              <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                {t("module_folders", "Module / Folder")}
+              </label>
+              <select
+                value={selectedModule}
+                onChange={(e) => setSelectedModule(e.target.value)}
+                className="w-full h-9 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+              >
+                <option value="all">{t("all_module_folders", "📁 All Module Folders")}</option>
+                <optgroup label={th("ERP Modules")}>
+                  {DEFAULT_MODULE_FOLDERS.map((m) => (
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
+                  ))}
+                </optgroup>
+                {customFolders.length > 0 && (
+                  <optgroup label={th("Custom Folders")}>
+                    {customFolders.map((cf) => (
+                      <option key={cf.id} value={cf.name}>
+                        ⭐ {cf.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+              </select>
+            </div>
+
+            {/* 5. Company Filter Dropdown */}
+            <SearchSelect
+              label={t("company", "Company")}
+              value={selectedCompanyId}
+              placeholder={t("all_companies", "All Companies")}
+              options={companyOptions}
+              onValueChange={(val) => {
+                setSelectedCompanyId(val);
+                const found = companyOptions.find((o) => o.value === val);
+                setSelectedCompanyName(found ? found.label.split(" • ")[1] || found.label : "");
+              }}
+              searchPlaceholder={t("search", "Search...")}
+              emptyLabel={t("no_matches_found", "No matches found")}
+            />
+
+            {/* 6. Account / Person Filter Dropdown */}
+            <SearchSelect
+              label={t("account_person", "Account / Party")}
+              value={selectedAccountId || selectedPersonId}
+              placeholder={t("all_accounts", "All Accounts")}
+              options={[...accountOptions, ...personOptions]}
+              onValueChange={(val) => {
+                if (val.startsWith("cust_") || val.startsWith("emp_")) {
+                  setSelectedPersonId(val);
+                  setSelectedAccountId("");
+                } else {
+                  setSelectedAccountId(val);
+                  setSelectedPersonId("");
+                }
+              }}
+              searchPlaceholder={t("search", "Search...")}
+              emptyLabel={t("no_matches_found", "No matches found")}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* ── 5 KPI SUMMARY CARDS GRID ── */}
+      <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 font-sans">
+        {/* Card 1: BRANCH & USER DETAILS */}
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-xs dark:border-slate-800 dark:bg-slate-950">
+          <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+            <Globe className="h-4 w-4 text-blue-600" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">1. {t("card_1_title", "BRANCH & USER DETAILS")}</span>
+          </div>
+          <div className="mt-2.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+            <div className="flex justify-between gap-2">
+              <span className="shrink-0">{t("country", "Country")}:</span>
+              <span className="min-w-0 truncate text-right font-bold text-slate-900 dark:text-slate-100">{activeCountry?.name || sessionCtx?.countryName || "—"}</span>
+            </div>
+            <div className="flex justify-between gap-2">
+              <span className="shrink-0">{t("branch_name", "Branch Name")}:</span>
+              <span className="min-w-0 truncate text-right font-bold text-slate-900 dark:text-slate-100 uppercase">{activeCityBranch?.name || activeMainBranch?.name || sessionCtx?.branchName || "—"}</span>
+            </div>
+            <div className="flex justify-between gap-2">
+              <span className="shrink-0">{t("user_id_name", "User ID / Name")}:</span>
+              <span className="min-w-0 truncate text-right font-bold text-slate-900 dark:text-slate-100">{sessionCtx?.userName || "—"}</span>
+            </div>
+            <div className="flex justify-between gap-2 text-emerald-600 dark:text-emerald-400 font-bold">
+              <span className="shrink-0">{t("status", "Status")}:</span>
+              <span className="bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded text-[10px] flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                {t("active_session", "Active Session")}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 2: DOCUMENTS SUMMARY */}
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-xs dark:border-slate-800 dark:bg-slate-950">
+          <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+            <FileText className="h-4 w-4 text-emerald-600" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">2. {t("card_2_title", "DOCUMENTS SUMMARY")}</span>
+          </div>
+          <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
+            <div className="flex justify-between text-slate-600 dark:text-slate-400">
+              <span>{t("total_docs", "Total Documents")}:</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">{summaryStats.totalDocs}</span>
+            </div>
+            <div className="flex justify-between text-emerald-600 font-bold">
+              <span>{t("active_files", "Active Files")}:</span>
+              <span>{filteredDocuments.length}</span>
+            </div>
+            <div className="flex justify-between text-blue-600 font-bold">
+              <span>{t("hardware_scans", "Hardware Scans")}:</span>
+              <span>{summaryStats.scannedCount}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 3: STORAGE & HARDWARE */}
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-xs dark:border-slate-800 dark:bg-slate-950">
+          <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+            <HardDrive className="h-4 w-4 text-purple-600" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">3. {t("card_3_title", "STORAGE & SCANNER")}</span>
+          </div>
+          <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
+            <div className="flex justify-between text-slate-600 dark:text-slate-400">
+              <span>{t("storage_used", "Storage Size")}:</span>
+              <span className="font-bold font-mono text-slate-900 dark:text-slate-100">{summaryStats.totalBytes}</span>
+            </div>
+            <div className="flex justify-between text-purple-600 font-bold">
+              <span>{t("direct_scan_bridge", "Scanner Bridge")}:</span>
+              <span className="text-[10px] bg-purple-50 dark:bg-purple-950/40 px-1 py-0.5 rounded">{th("Camera Ready")}</span>
+            </div>
+            <div className="flex justify-between text-indigo-600 font-bold">
+              <span>{t("cloud_bucket", "Cloud Bucket")}:</span>
+              <span className="text-[10px]">erp-documents</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 4: BRANCHES & COMPANIES */}
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-xs dark:border-slate-800 dark:bg-slate-950">
+          <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+            <Building2 className="h-4 w-4 text-indigo-600" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">4. {t("card_4_title", "BRANCHES & COMPANIES")}</span>
+          </div>
+          <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
+            <div className="flex justify-between text-slate-600 dark:text-slate-400">
+              <span>{t("total_countries", "Total Countries")}:</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">{summaryStats.totalCountriesCount}</span>
+            </div>
+            <div className="flex justify-between text-indigo-600 font-bold">
+              <span>{t("total_branches", "Total Branches")}:</span>
+              <span>{summaryStats.totalBranchesCount}</span>
+            </div>
+            <div className="flex justify-between text-emerald-600 font-bold">
+              <span>{t("linked_companies", "Linked Companies")}:</span>
+              <span>{summaryStats.linkedCompaniesCount}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 5: QUICK DOCUMENT REPORTS */}
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-xs dark:border-slate-800 dark:bg-slate-950">
+          <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+            <Activity className="h-4 w-4 text-amber-500" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">5. {t("card_5_title", "QUICK ACTIONS")}</span>
+          </div>
+          <div className="mt-2 space-y-1 text-[10px] font-semibold">
+            <div
+              onClick={() => setDateFilter("today")}
+              className="flex justify-between items-center text-slate-600 dark:text-slate-400 hover:text-blue-600 cursor-pointer"
+            >
+              <span>{t("today_scanned", "Today Scanned")}</span>
+              <span className="text-blue-600 font-bold">📈 {t("view", "View")}</span>
+            </div>
+            <div
+              onClick={() => setIsScannerOpen(true)}
+              className="flex justify-between items-center text-slate-600 dark:text-slate-400 hover:text-emerald-600 cursor-pointer"
+            >
+              <span>{t("direct_scan_studio", "Camera Capture")}</span>
+              <span className="text-emerald-600 font-bold">📷 {t("open", "Open")}</span>
+            </div>
+            <div
+              onClick={() => setIsNewFolderOpen(true)}
+              className="flex justify-between items-center text-slate-600 dark:text-slate-400 hover:text-purple-600 cursor-pointer"
+            >
+              <span>{t("custom_folder_maker", "Custom Folder")}</span>
+              <span className="text-purple-600 font-bold">📁 {t("create", "Create")}</span>
+            </div>
+            <div
+              onClick={() => fetchDocs()}
+              className="flex justify-between items-center text-slate-600 dark:text-slate-400 hover:text-indigo-600 cursor-pointer"
+            >
+              <span>{t("reload_repository", "Reload Repository")}</span>
+              <span className="text-indigo-600 font-bold">🔄 {t("sync", "Sync")}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Main Full-Screen Explorer & Grid Layout ── */}
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-[280px_1fr] font-sans">
+        {/* Left Tree Hierarchy Sidebar */}
+        <div
+          className={cn(
+            "rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-950 space-y-3",
+            !sidebarOpen && "hidden lg:block"
+          )}
+        >
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+            <div className="flex items-center gap-2">
+              <Layers className="h-4 w-4 text-blue-600" />
+              <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                {t("dir_hierarchy", "Directory Hierarchy")}
+              </span>
+            </div>
+            <button
+              onClick={() => setIsNewFolderOpen(true)}
+              className="text-[11px] text-blue-600 hover:underline font-bold flex items-center gap-0.5"
+            >
+              + {t("new", "New")}
+            </button>
+          </div>
+
+          {/* Tree Navigation Items */}
+          <div className="space-y-1 text-xs">
+            {/* Root: Storage Scope */}
+            <div
+              onClick={() => handleResetFilters()}
+              className={cn(
+                "flex items-center justify-between p-2 rounded-xl cursor-pointer font-bold transition-colors",
+                !selectedCountryId && selectedModule === "all"
+                  ? "bg-blue-50 text-blue-800 dark:bg-blue-950/60 dark:text-blue-200"
+                  : "hover:bg-slate-50 text-slate-700 dark:text-slate-300 dark:hover:bg-slate-900"
+              )}
+            >
+              <span className="flex items-center gap-1.5 truncate">
+                <Globe className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+                👑 {th("Super Admin Storage")} ({th("All")})
+              </span>
+              <span className="text-[10px] bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded-full font-mono">
+                {documents.length}
+              </span>
+            </div>
+
+            {/* Countries & Branches Tree */}
+            <div className="pl-2 space-y-1">
+              {countries.map((c) => {
+                const isSelectedC = selectedCountryId === c.id;
+                const cDocCount = documents.filter((d) => d.country_id === c.id || d.country_name === c.name).length;
+                return (
+                  <div key={c.id} className="space-y-1">
+                    <div
+                      onClick={() => {
+                        setSelectedCountryId(c.id);
+                        setSelectedMainBranchId("");
+                        setSelectedCityBranchId("");
+                        setSelectedModule("all");
+                      }}
+                      className={cn(
+                        "flex items-center justify-between p-1.5 rounded-lg cursor-pointer font-bold transition-colors",
+                        isSelectedC && !selectedMainBranchId
+                          ? "bg-indigo-50 text-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-200"
+                          : "hover:bg-slate-50 text-slate-700 dark:text-slate-300 dark:hover:bg-slate-900"
+                      )}
+                    >
+                      <span className="flex items-center gap-1.5 truncate">
+                        <Folder className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                        {c.name}
+                      </span>
+                      <span className="text-[10px] font-mono text-slate-400">{cDocCount}</span>
+                    </div>
+
+                    {/* Main Branches */}
+                    {isSelectedC && (
+                      <div className="pl-3 space-y-0.5">
+                        {(c.mainBranches || []).map((mb: any) => {
+                          const isSelectedMB = selectedMainBranchId === mb.id;
+                          return (
+                            <div key={mb.id} className="space-y-0.5">
+                              <div
+                                onClick={() => {
+                                  setSelectedMainBranchId(mb.id);
+                                  setSelectedCityBranchId("");
+                                  setSelectedAccountId("");
+                                  setSelectedAccountCode("");
+                                  setSelectedAccountName("");
+                                  setSelectedModule("all");
+                                }}
+                                className={cn(
+                                  "flex items-center justify-between p-1 rounded-md cursor-pointer text-[11px] font-semibold transition-colors",
+                                  isSelectedMB && !selectedCityBranchId && !selectedAccountId
+                                    ? "bg-blue-100/70 text-blue-900 dark:bg-blue-950 dark:text-blue-200 font-bold"
+                                    : "hover:bg-slate-50 text-slate-600 dark:text-slate-400"
+                                )}
+                              >
+                                <span className="flex items-center gap-1 truncate">
+                                  <FolderOpen className="h-3 w-3 text-indigo-500 shrink-0" />
+                                  {mb.name}
+                                </span>
+                              </div>
+
+                              {/* City Branches */}
+                              {isSelectedMB && (
+                                <div className="pl-3 space-y-0.5">
+                                  {(mb.cityBranches || []).map((cb: any) => {
+                                    const isSelectedCB = selectedCityBranchId === cb.id;
+                                    const branchAccounts = accountsList.filter(
+                                      (a) => a.cityId === cb.id || a.cityBranchId === cb.id || (a.countryId === c.id && (!a.cityId || a.cityId === "-"))
+                                    );
+                                    return (
+                                      <div key={cb.id} className="space-y-0.5">
+                                        <div
+                                          onClick={() => {
+                                            setSelectedCityBranchId(cb.id);
+                                            setSelectedAccountId("");
+                                            setSelectedAccountCode("");
+                                            setSelectedAccountName("");
+                                            setSelectedModule("all");
+                                          }}
+                                          className={cn(
+                                            "flex items-center justify-between p-1 rounded-md cursor-pointer text-[10.5px] transition-colors",
+                                            isSelectedCB && !selectedAccountId
+                                              ? "bg-blue-600 text-white font-bold"
+                                              : "hover:bg-slate-50 text-slate-600 dark:text-slate-400"
+                                          )}
+                                        >
+                                          <span className="truncate flex items-center gap-1">
+                                            <Folder className="h-2.5 w-2.5" />
+                                            {cb.name}
+                                          </span>
+                                        </div>
+
+                                        {/* Account Folders under City Branch */}
+                                        {isSelectedCB && branchAccounts.length > 0 && (
+                                          <div className="pl-3 space-y-0.5 border-l border-slate-100 dark:border-slate-800 ml-1">
+                                            {branchAccounts.map((acc) => {
+                                              const isSelectedAcc = selectedAccountId === acc.accountId || selectedAccountCode === acc.accountCode;
+                                              const accDocCount = documents.filter(
+                                                (d) => d.account_code === acc.accountCode || d.account_id === acc.accountId
+                                              ).length;
+                                              return (
+                                                <div key={acc.accountId || acc.accountCode} className="space-y-0.5">
+                                                  <div
+                                                    onClick={(e) => {
+                                                      e.stopPropagation();
+                                                      setSelectedAccountId(acc.accountId);
+                                                      setSelectedAccountCode(acc.accountCode);
+                                                      setSelectedAccountName(acc.accountName);
+                                                      setSelectedModule("all");
+                                                    }}
+                                                    className={cn(
+                                                      "flex items-center justify-between px-1.5 py-1 rounded-md cursor-pointer text-[9.5px] transition-colors",
+                                                      isSelectedAcc
+                                                        ? "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200 font-black border border-amber-300"
+                                                        : "hover:bg-slate-100 text-slate-700 dark:text-slate-300"
+                                                    )}
+                                                    title={`${acc.manualReferenceNumber || acc.accountCode} • ${acc.accountName}`}
+                                                  >
+                                                    <span className="flex min-w-0 items-center gap-1">
+                                                      <CreditCard className="h-2.5 w-2.5 text-amber-600 shrink-0" />
+                                                      <span className="max-w-[84px] shrink-0 truncate font-mono font-bold text-[9px] text-blue-600 dark:text-blue-400">
+                                                        {acc.manualReferenceNumber || acc.accountCode}
+                                                      </span>
+                                                      <span className="min-w-0 truncate">{acc.accountName}</span>
+                                                    </span>
+                                                    <span className="ms-1 text-[8.5px] font-mono text-slate-400 shrink-0">
+                                                      {accDocCount}
+                                                    </span>
+                                                  </div>
+
+                                                  {/* Level 5: 10 Canonical Categories directly nested under this Account Folder */}
+                                                  {isSelectedAcc && (
+                                                    <div className="pl-3 space-y-0.5 border-l-2 border-amber-400 dark:border-amber-600 ml-1.5 my-1">
+                                                      {DEFAULT_MODULE_FOLDERS.map((catName) => {
+                                                        const isCatSelected = selectedModule === catName;
+                                                        const catCount = documents.filter(
+                                                          (d) =>
+                                                            (d.account_code === acc.accountCode || d.account_id === acc.accountId) &&
+                                                            d.module_type === catName
+                                                        ).length;
+                                                        return (
+                                                          <div
+                                                            key={catName}
+                                                            onClick={(e) => {
+                                                              e.stopPropagation();
+                                                              setSelectedAccountId(acc.accountId);
+                                                              setSelectedAccountCode(acc.accountCode);
+                                                              setSelectedAccountName(acc.accountName);
+                                                              setSelectedModule(catName);
+                                                            }}
+                                                            className={cn(
+                                                              "flex items-center justify-between px-1.5 py-0.5 rounded text-[8.5px] cursor-pointer transition-colors",
+                                                              isCatSelected
+                                                                ? "bg-emerald-600 text-white font-black shadow-xs"
+                                                                : "hover:bg-slate-100 text-slate-600 dark:text-slate-400 font-semibold"
+                                                            )}
+                                                          >
+                                                            <span className="truncate flex items-center gap-1">
+                                                              <Folder className="h-2 w-2 shrink-0" />
+                                                              {catName}
+                                                            </span>
+                                                            <span className={cn("ms-1 text-[8px] font-mono", isCatSelected ? "text-emerald-100" : "text-slate-400")}>
+                                                              {catCount}
+                                                            </span>
+                                                          </div>
+                                                        );
+                                                      })}
+                                                    </div>
+                                                  )}
+                                                </div>
+                                              );
+                                            })}
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Module Folders Quick List */}
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1">
+              <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-1">
+                {t("folder_categories", "Folder Categories")}
+              </div>
+              {allFolderList.map((folderName) => {
+                const count = documents.filter((d) => d.module_type === folderName).length;
+                const isSelected = selectedModule === folderName;
+                return (
+                  <div
+                    key={folderName}
+                    onClick={() => setSelectedModule(folderName)}
+                    className={cn(
+                      "flex items-center justify-between px-2 py-1 rounded-lg cursor-pointer text-xs font-semibold transition-colors",
+                      isSelected
+                        ? "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-200 font-bold"
+                        : "hover:bg-slate-50 text-slate-600 dark:text-slate-400"
+                    )}
+                  >
+                    <span className="flex items-center gap-1.5 truncate">
+                      <Folder className="h-3 w-3 text-amber-500 shrink-0" />
+                      {folderName}
+                    </span>
+                    <span className="text-[10px] font-mono text-slate-400">{count}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Main Document Explorer Area */}
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-950 space-y-4">
+          {/* Active Clickable Breadcrumb Path Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-slate-100 dark:border-slate-800">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 flex-wrap">
+              <span className="text-slate-400 mr-1">{t("active_path", "Active Path:")}</span>
+
+              {/* 1. Super Admin Storage Root Link */}
+              <button
+                type="button"
+                onClick={() => handleResetFilters()}
+                className={cn(
+                  "hover:underline hover:text-blue-600 transition-colors flex items-center gap-1 px-1.5 py-0.5 rounded",
+                  !selectedCountryId ? "text-blue-600 font-black bg-blue-50 dark:bg-blue-950" : "text-slate-600"
+                )}
+              >
+                👑 {th("Super Admin")}
+              </button>
+
+              {/* 2. Country Link */}
+              {activeCountry && (
+                <>
+                  <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedMainBranchId("");
+                      setSelectedCityBranchId("");
+                      setSelectedModule("all");
+                    }}
+                    className={cn(
+                      "hover:underline hover:text-blue-600 transition-colors flex items-center gap-1 px-1.5 py-0.5 rounded",
+                      !selectedMainBranchId ? "text-blue-600 font-black bg-blue-50 dark:bg-blue-950" : "text-slate-600"
+                    )}
+                  >
+                    🌍 {activeCountry.name}
+                  </button>
+                </>
+              )}
+
+              {/* 3. Main Branch Link */}
+              {activeMainBranch && (
+                <>
+                  <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedCityBranchId("");
+                      setSelectedModule("all");
+                    }}
+                    className={cn(
+                      "hover:underline hover:text-blue-600 transition-colors flex items-center gap-1 px-1.5 py-0.5 rounded",
+                      !selectedCityBranchId && selectedModule === "all" ? "text-blue-600 font-black bg-blue-50 dark:bg-blue-950" : "text-slate-600"
+                    )}
+                  >
+                    🏢 {activeMainBranch.name}
+                  </button>
+                </>
+              )}
+
+              {/* 4. City Branch Link */}
+              {activeCityBranch && (
+                <>
+                  <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+                  <span className="text-slate-800 dark:text-slate-200 font-bold">
+                    📍 {activeCityBranch.name}
+                  </span>
+                </>
+              )}
+
+              {/* 5. Account Link */}
+              {(selectedAccountCode || selectedAccountName) && (
+                <>
+                  <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+                  <span className="text-amber-800 dark:text-amber-200 font-bold bg-amber-50 dark:bg-amber-950 px-1.5 py-0.5 rounded border border-amber-200">
+                    💳 {selectedAccountCode} • {selectedAccountName}
+                  </span>
+                </>
+              )}
+
+              {/* 6. Module Link */}
+              {selectedModule !== "all" && (
+                <>
+                  <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+                  <span className="text-emerald-700 dark:text-emerald-300 font-bold bg-emerald-50 dark:bg-emerald-950 px-1.5 py-0.5 rounded">
+                    📁 {selectedModule}
+                  </span>
+                </>
+              )}
+            </div>
+
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 font-semibold">
+              <span>{filteredDocuments.length} {filteredDocuments.length === 1 ? "document" : "documents"} in view</span>
+            </div>
+          </div>
+
+          {/* ── Files & Documents List / Grid ── */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                <FileText className="h-4 w-4 text-blue-600" />
+                <span>
+                  {selectedAccountName
+                    ? `${selectedAccountName} Documents`
+                    : selectedModule !== "all"
+                    ? `${selectedModule} Documents`
+                    : activeMainBranch
+                    ? `${activeMainBranch.name} Documents`
+                    : activeCountry
+                    ? `${activeCountry.name} Documents`
+                    : "All Super Admin Repository Documents"}{" "}
+                  ({filteredDocuments.length})
+                </span>
+              </div>
+            </div>
+
+            {loading ? (
+              <div className="py-12 text-center text-slate-400 space-y-2">
+                <RefreshCw className="h-6 w-6 animate-spin mx-auto text-blue-600" />
+                <p className="text-xs font-semibold">{t("loading_docs", "Loading documents...")}</p>
+              </div>
+            ) : filteredDocuments.length === 0 ? (
+              <div className="py-12 text-center text-slate-400 space-y-3">
+                <div className="h-10 w-10 rounded-2xl bg-slate-100 dark:bg-slate-900 flex items-center justify-center mx-auto text-slate-400">
+                  <FolderOpen className="h-5 w-5" />
+                </div>
+                <p className="text-xs font-semibold">{t("no_docs", "No documents found in this directory level.")}</p>
+                <div className="flex items-center justify-center gap-2 pt-1">
+                  <Button
+                    size="sm"
+                    onClick={() => setSmartUploadOpen(true)}
+                    className="rounded-xl bg-blue-600 text-white text-xs font-bold"
+                  >
+                    <Upload className="h-3.5 w-3.5 mr-1" />
+                    {t("upload_first_doc", "Upload Document")}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setIsScannerOpen(true)}
+                    className="rounded-xl border-emerald-300 text-emerald-700 bg-emerald-50 text-xs font-bold"
+                  >
+                    <Camera className="h-3.5 w-3.5 mr-1" />
+                    {t("start_scan", "Camera Capture")}
+                  </Button>
+                </div>
+              </div>
+            ) : viewMode === "grid" ? (
+              /* Grid View */
+              <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
+                {filteredDocuments.map((doc) => {
+                  const isPdf = doc.file_type?.toLowerCase().includes("pdf") || doc.file_name?.toLowerCase().endsWith(".pdf");
+                  const isImg =
+                    doc.file_type?.toLowerCase().includes("image") ||
+                    /\.(png|jpe?g|webp)$/i.test(doc.file_name || "");
+                  const isSheet =
+                    doc.file_type?.toLowerCase().includes("sheet") ||
+                    /\.(xlsx?|csv)$/i.test(doc.file_name || "");
+
+                  return (
+                    <div
+                      key={doc.id}
+                      className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 p-3.5 hover:shadow-md transition-all flex flex-col justify-between space-y-3 group"
+                    >
+                      <div>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <div className="h-8 w-8 rounded-lg bg-slate-100 dark:bg-slate-900 flex items-center justify-center shrink-0">
+                              {isPdf ? (
+                                <FileText className="h-4 w-4 text-red-500" />
+                              ) : isImg ? (
+                                <ImageIcon className="h-4 w-4 text-blue-500" />
+                              ) : isSheet ? (
+                                <FileSpreadsheet className="h-4 w-4 text-emerald-500" />
+                              ) : (
+                                <FileCheck className="h-4 w-4 text-indigo-500" />
+                              )}
+                            </div>
+                            <div className="overflow-hidden">
+                              <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate" title={doc.title}>
+                                {doc.title}
+                              </h3>
+                              <p className="text-[10px] font-mono text-slate-400 truncate" title={doc.file_name}>
+                                {doc.file_name}
+                              </p>
+                            </div>
+                          </div>
+
+                          <span className="text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                            {formatBytes(doc.file_size)}
+                          </span>
+                        </div>
+
+                        <div className="mt-2.5 flex max-w-full flex-wrap gap-1 overflow-hidden">
+                          <span className="max-w-full truncate text-[9.5px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                            {doc.module_type}
+                          </span>
+                          {doc.country_name && (
+                            <span className="max-w-full truncate text-[9.5px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                              🌍 {doc.country_name}
+                            </span>
+                          )}
+                          {doc.main_branch_name && (
+                            <span className="max-w-full truncate text-[9.5px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                              🏢 {doc.main_branch_name}
+                            </span>
+                          )}
+                          {doc.company_name && (
+                            <span className="max-w-full truncate text-[9.5px] font-semibold px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300" title={doc.company_name}>
+                              {doc.company_name}
+                            </span>
+                          )}
+                          {doc.person_account_name && (
+                            <span className="max-w-full truncate text-[9.5px] font-semibold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" title={doc.person_account_name}>
+                              👤 {doc.person_account_name}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="pt-2 border-t border-slate-100 dark:border-slate-850 flex items-center justify-between gap-2">
+                        <span className="text-[10px] text-slate-400 font-mono">
+                          {new Date(doc.scanned_at || doc.created_at).toLocaleDateString()}
+                        </span>
+
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => setPreviewDoc(doc)}
+                            className="h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-blue-50 hover:text-blue-600 flex items-center justify-center text-slate-600 transition-colors"
+                            title={t("view", "View")}
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadDoc(doc)}
+                            className="h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-emerald-50 hover:text-emerald-600 flex items-center justify-center text-slate-600 transition-colors"
+                            title={t("download", "Download")}
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEdit(doc)}
+                            className="h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-purple-50 hover:text-purple-600 flex items-center justify-center text-slate-600 transition-colors"
+                            title={t("edit_move", "Edit / Move")}
+                          >
+                            <Move className="h-3.5 w-3.5" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(doc.id)}
+                            className="h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-red-50 hover:text-red-600 flex items-center justify-center text-slate-600 transition-colors"
+                            title={t("delete", "Delete")}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              /* Table View */
+              <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                <table className="w-full text-xs text-left">
+                  <thead className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-bold uppercase text-[10px]">
+                    <tr>
+                      <th className="p-2.5">{th("Title / File")}</th>
+                      <th className="p-2.5">{th("Country & Branch")}</th>
+                      <th className="p-2.5">{th("Module & Type")}</th>
+                      <th className="p-2.5">{th("Party / Company")}</th>
+                      <th className="p-2.5">{th("Size")}</th>
+                      <th className="p-2.5">{th("Date")}</th>
+                      <th className="p-2.5 text-right">{th("Actions")}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {filteredDocuments.map((doc) => (
+                      <tr key={doc.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/50">
+                        <td className="p-2.5 font-bold text-slate-900 dark:text-slate-100">
+                          <div className="truncate max-w-[180px]">{doc.title}</div>
+                          <div className="text-[10px] font-mono text-slate-400 truncate max-w-[180px]">{doc.file_name}</div>
+                        </td>
+                        <td className="p-2.5 text-slate-600 dark:text-slate-300">
+                          <div>{doc.country_name || "—"}</div>
+                          <div className="text-[10px] text-slate-400">{doc.main_branch_name || ""}</div>
+                        </td>
+                        <td className="p-2.5">
+                          <span className="font-semibold text-blue-600">{doc.module_type}</span>
+                          {doc.document_type && <span className="text-slate-400"> • {doc.document_type}</span>}
+                        </td>
+                        <td className="p-2.5 text-slate-600 dark:text-slate-300">
+                          <div>{doc.company_name || "—"}</div>
+                          <div className="text-[10px] text-slate-400">{doc.person_account_name || doc.account_name || ""}</div>
+                        </td>
+                        <td className="p-2.5 font-mono text-slate-500">{formatBytes(doc.file_size)}</td>
+                        <td className="p-2.5 text-slate-500 font-mono text-[10px]">
+                          {new Date(doc.scanned_at || doc.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="p-2.5 text-right space-x-1">
+                          <button
+                            onClick={() => setPreviewDoc(doc)}
+                            className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                            title={th("View")}
+                          >
+                            <Eye className="h-3.5 w-3.5 inline" />
+                          </button>
+                          <button
+                            onClick={() => handleDownloadDoc(doc)}
+                            className="p-1 text-emerald-600 hover:bg-emerald-50 rounded"
+                            title={t("download", "Download")}
+                          >
+                            <Download className="h-3.5 w-3.5 inline" />
+                          </button>
+                          <button
+                            onClick={() => handleOpenEdit(doc)}
+                            className="p-1 text-purple-600 hover:bg-purple-50 rounded"
+                            title={th("Edit / Move")}
+                          >
+                            <Move className="h-3.5 w-3.5 inline" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(doc.id)}
+                            className="p-1 text-red-600 hover:bg-red-50 rounded"
+                            title={th("Delete")}
+                          >
+                            <Trash2 className="h-3.5 w-3.5 inline" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Modal: Smart Document Upload with Mandatory Name ── */}
+      <Dialog open={smartUploadOpen} onOpenChange={setSmartUploadOpen}>
+        <DialogContent className="max-w-lg rounded-2xl p-6 font-sans">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base font-black text-slate-900 dark:text-slate-100">
+              <Upload className="h-5 w-5 text-blue-600" />
+              {t("smart_upload_title", "Smart Document Upload & Filing")}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2 text-xs">
+            {/* Inherited Pre-populated Metadata (Read-Only) */}
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3.5 dark:border-slate-800 dark:bg-slate-900/60 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                  {t("inherited_metadata", "INHERITED HIERARCHY & CONTEXT")}
+                </span>
+                <span className="rounded bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 text-[9px] font-bold">
+                  Auto-Prefilled
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-[11px]">
+                <div>
+                  <span className="text-slate-400 block text-[10px] font-semibold">{t("country", "Country")}</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200 truncate block">
+                    {activeCountry?.name || sessionCtx?.countryName || "All Countries"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[10px] font-semibold">{t("branch", "Branch / City")}</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200 truncate block">
+                    {activeCityBranch?.name || activeMainBranch?.name || sessionCtx?.branchName || "Main Office"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[10px] font-semibold">{t("account_folder", "Account Folder")}</span>
+                  <span className="font-bold text-amber-700 dark:text-amber-400 truncate block">
+                    {selectedAccountCode ? `${selectedAccountCode} — ${selectedAccountName}` : "General (No Account Folder)"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[10px] font-semibold">{t("category_folder", "Category Folder")}</span>
+                  <span className="font-bold text-emerald-700 dark:text-emerald-400 truncate block">
+                    {selectedModule === "all" ? "Purchase Documents" : selectedModule}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[10px] font-semibold">{t("uploaded_by", "Uploaded By")}</span>
+                  <span className="font-bold text-slate-700 dark:text-slate-300 truncate block">
+                    {sessionCtx?.userName || "Admin User"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[10px] font-semibold">{t("date_time", "Date & Time")}</span>
+                  <span className="font-mono text-[10px] text-slate-600 dark:text-slate-400 block">
+                    {new Date().toLocaleString()}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* File Picker */}
+            <div>
+              <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1.5">
+                {t("select_file", "Original File *")}
+              </label>
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="cursor-pointer rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 p-4 text-center hover:border-blue-500 transition-colors bg-white dark:bg-slate-900"
+              >
+                <Upload className="mx-auto h-6 w-6 text-slate-400 mb-1.5" />
+                {smartUploadFile ? (
+                  <div>
+                    <p className="font-mono font-bold text-xs text-blue-600 dark:text-blue-400 truncate">
+                      {smartUploadFile.name}
+                    </p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">
+                      {formatBytes(smartUploadFile.size)} · {smartUploadFile.type || "Document"}
+                    </p>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="font-semibold text-slate-700 dark:text-slate-300 text-xs">
+                      {t("click_to_pick", "Click to select a file (PDF, Images, Excel, Word)")}
+                    </p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">Max 50 MB</p>
+                  </div>
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) {
+                      setSmartUploadFile(f);
+                      if (!smartUploadTitle.trim()) {
+                        setSmartUploadTitle(f.name.replace(/\.[^/.]+$/, ""));
+                      }
+                    }
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Mandatory Document Name / Title */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="font-bold text-slate-800 dark:text-slate-200">
+                  {t("doc_title_mandatory", "Document Name / Title *")}
+                </label>
+                <span className="text-[10px] font-bold text-rose-500">Required</span>
+              </div>
+              <Input
+                type="text"
+                required
+                value={smartUploadTitle}
+                onChange={(e) => setSmartUploadTitle(e.target.value)}
+                placeholder="e.g. Kandahar Grain Supplier Invoice Sept 2026"
+                className="h-10 rounded-xl text-xs font-semibold"
+              />
+              <p className="text-[10.5px] text-slate-500 dark:text-slate-400 mt-1">
+                ℹ️ Both this meaningful title and original filename ({smartUploadFile ? smartUploadFile.name : "e.g. IMG_847362.jpg"}) are preserved and searchable.
+              </p>
+            </div>
+
+            {/* Document Type Selector */}
+            <div>
+              <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                {t("document_type", "Document Type")}
+              </label>
+              <select
+                value={smartUploadDocType}
+                onChange={(e) => setSmartUploadDocType(e.target.value)}
+                className="h-9 w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 text-xs text-slate-800 dark:text-slate-200 outline-none"
+              >
+                {DOCUMENT_TYPES.map((dt) => (
+                  <option key={dt} value={dt}>{dt}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0 mt-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSmartUploadOpen(false);
+                setSmartUploadFile(null);
+                setSmartUploadTitle("");
+              }}
+              className="rounded-xl text-xs"
+            >
+              {t("cancel", "Cancel")}
+            </Button>
+            <Button
+              onClick={submitSmartUpload}
+              disabled={isUploading || !smartUploadFile || !smartUploadTitle.trim()}
+              className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 disabled:opacity-40"
+            >
+              {isUploading ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                  {t("uploading", "Uploading...")}
+                </>
+              ) : (
+                <>
+                  <Upload className="h-3.5 w-3.5 mr-1.5" />
+                  {t("confirm_upload", "Confirm & Upload Document")}
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Modal 1: Camera Document Capture ── */}
+      <Dialog open={isScannerOpen} onOpenChange={setIsScannerOpen}>
+        <DialogContent className="max-w-lg rounded-2xl p-5 font-sans">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base font-black text-slate-900 dark:text-slate-100">
+              <Camera className="h-5 w-5 text-emerald-600" />
+              {t("camera_scan_title", "Camera Document Capture")}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2 text-xs">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              {t("camera_scan_hint", "Uses your device camera (rear camera on phones/tablets). Capture one or more pages, then save them to the selected filing path.")}
+            </p>
+
+            <div className="rounded-xl bg-slate-50 dark:bg-slate-800 p-2.5 border border-slate-200 dark:border-slate-700 space-y-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{th("Destination Filing Path")}</span>
+              <div className="text-[11px] font-mono text-slate-700 dark:text-slate-300 truncate">
+                {activeCountry?.name || th("Super Admin Storage")} › {activeMainBranch?.name || th("All Branches")} › {selectedModule}
+              </div>
+            </div>
+
+            <div className="relative rounded-xl overflow-hidden bg-black aspect-video flex items-center justify-center">
+              <video ref={videoRef} playsInline muted className="w-full h-full object-contain" />
+              {!cameraReady && !scanError && (
+                <div className="absolute inset-0 flex items-center justify-center text-white/80 text-xs gap-2">
+                  <RefreshCw className="h-4 w-4 animate-spin" /> {t("camera_starting", "Starting camera…")}
+                </div>
+              )}
+            </div>
+            <canvas ref={canvasRef} className="hidden" />
+
+            {scanError && (
+              <div className="rounded-xl bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-900 p-2.5 text-red-700 dark:text-red-300 text-[11px] font-semibold">
+                {scanError}
+                <button type="button" onClick={() => startCamera()} className="ml-2 underline">{t("retry", "Retry")}</button>
+              </div>
+            )}
+
+            {capturedShots.length > 0 && (
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  {t("captured_pages", "Captured pages")} ({capturedShots.length})
+                </span>
+                <div className="flex gap-2 mt-1.5 flex-wrap">
+                  {capturedShots.map((src, i) => (
+                    <div key={i} className="relative h-16 w-12 rounded-md overflow-hidden border border-slate-300 dark:border-slate-600">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={src} alt={`page ${i + 1}`} className="h-full w-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setCapturedShots((p) => p.filter((_, idx) => idx !== i))}
+                        className="absolute top-0 right-0 bg-red-600 text-white h-4 w-4 flex items-center justify-center text-[10px] leading-none"
+                        aria-label={t("remove", "Remove")}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {scanStatus && (
+              <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-900 p-2.5 text-emerald-800 dark:text-emerald-300 flex items-center gap-2 font-bold text-[11px]">
+                <RefreshCw className="h-4 w-4 animate-spin" /> {scanStatus}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setIsScannerOpen(false)} disabled={!!scanStatus} className="rounded-xl text-xs">
+              {t("cancel", "Cancel")}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={captureShot}
+              disabled={!cameraReady || !!scanStatus}
+              className="rounded-xl text-xs font-bold"
+            >
+              <Camera className="h-3.5 w-3.5 mr-1" />
+              {t("capture_page", "Capture Page")}
+            </Button>
+            <Button
+              onClick={handleSaveCapturedScan}
+              disabled={capturedShots.length === 0 || !!scanStatus}
+              className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs"
+            >
+              {t("save_scan", "Save")} ({capturedShots.length})
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Modal 2: Create Custom Folder ── */}
+      <Dialog open={isNewFolderOpen} onOpenChange={setIsNewFolderOpen}>
+        <DialogContent className="max-w-sm rounded-2xl p-5 font-sans">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base font-black text-slate-900">
+              <FolderPlus className="h-5 w-5 text-purple-600" />
+              {t("create_folder", "Create Custom Folder")}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2 text-xs">
+            <div>
+              <label className="font-bold text-slate-700 block mb-1">
+                {t("folder_name", "Folder Name / Title")}
+              </label>
+              <Input
+                type="text"
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+                placeholder={th("e.g. Audit 2026, Personal Dossier, Customs Vouchers...")}
+                className="h-9 rounded-xl text-xs"
+              />
+            </div>
+
+            <div className="rounded-xl bg-purple-50 p-2.5 border border-purple-200 text-purple-900 text-[11px]">
+              📁 Creates a custom folder under the current branch scope for quick filing and isolation.
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setIsNewFolderOpen(false)} className="rounded-xl text-xs">
+              {t("cancel", "Cancel")}
+            </Button>
+            <Button onClick={handleCreateFolder} className="rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs">
+              {t("create", "Create Folder")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Modal 3: Edit / Move Document ── */}
+      <Dialog open={!!editingDoc} onOpenChange={(open) => !open && setEditingDoc(null)}>
+        <DialogContent className="max-w-md rounded-2xl p-5 font-sans">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base font-black text-slate-900">
+              <Move className="h-5 w-5 text-indigo-600" />
+              {t("edit_title", "Edit / Move Document")}
+            </DialogTitle>
+          </DialogHeader>
+
+          {editingDoc && (
+            <div className="space-y-3 py-2 text-xs">
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">{t("doc_title", "Document Title")}</label>
+                <Input
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="h-9 rounded-xl text-xs font-semibold"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">{t("module_folder", "Module Folder")}</label>
+                  <select
+                    value={editModule}
+                    onChange={(e) => setEditModule(e.target.value)}
+                    className="w-full h-9 rounded-xl border border-slate-200 bg-slate-50 px-2.5 font-semibold text-slate-800"
+                  >
+                    {allFolderList.map((m) => (
+                      <option key={m} value={m}>
+                        {m}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">{t("document_type", "Document Type")}</label>
+                  <select
+                    value={editDocType}
+                    onChange={(e) => setEditDocType(e.target.value)}
+                    className="w-full h-9 rounded-xl border border-slate-200 bg-slate-50 px-2.5 font-semibold text-slate-800"
+                  >
+                    {DOCUMENT_TYPES.map((dt) => (
+                      <option key={dt} value={dt}>
+                        {dt}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">{t("company_name", "Company Name")}</label>
+                <Input
+                  type="text"
+                  value={editCompany}
+                  onChange={(e) => setEditCompany(e.target.value)}
+                  className="h-9 rounded-xl text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">{t("account_name", "Account Name")}</label>
+                <Input
+                  type="text"
+                  value={editAccount}
+                  onChange={(e) => setEditAccount(e.target.value)}
+                  className="h-9 rounded-xl text-xs"
+                />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setEditingDoc(null)} className="rounded-xl text-xs">
+              {t("cancel", "Cancel")}
+            </Button>
+            <Button onClick={handleSaveEdit} className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs">
+              {t("save_changes", "Save Changes")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Modal 4: Document Viewer & Details ── */}
+      <Dialog open={!!previewDoc} onOpenChange={(open) => !open && setPreviewDoc(null)}>
+        <DialogContent className="max-w-2xl rounded-2xl p-5 font-sans">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between text-base font-black text-slate-900 pr-6">
+              <span className="truncate">{previewDoc?.title}</span>
+              <span className="text-xs font-mono font-normal text-slate-400">{previewDoc?.file_name}</span>
+            </DialogTitle>
+          </DialogHeader>
+
+          {previewDoc && (
+            <div className="space-y-3.5 py-2 text-xs">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 rounded-xl bg-slate-50 dark:bg-slate-900 p-3 border border-slate-200 dark:border-slate-800 text-[11px]">
+                <div>
+                  <span className="text-slate-400 block text-[9.5px] uppercase font-bold">{th("Module")}</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200">{previewDoc.module_type}</span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[9.5px] uppercase font-bold">{th("Type")}</span>
+                  <span className="font-bold text-purple-600">{previewDoc.document_type || th("Document")}</span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[9.5px] uppercase font-bold">{th("Size")}</span>
+                  <span className="font-bold font-mono text-slate-800 dark:text-slate-200">{formatBytes(previewDoc.file_size)}</span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[9.5px] uppercase font-bold">{th("Scanned At")}</span>
+                  <span className="font-bold font-mono text-slate-800 dark:text-slate-200">
+                    {new Date(previewDoc.scanned_at || previewDoc.created_at).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+
+              {previewDoc.document_path && (
+                <div className="rounded-xl bg-slate-100/70 dark:bg-slate-800 p-2 text-[11px] font-mono text-slate-600 dark:text-slate-300 truncate">
+                  📂 {previewDoc.document_path}
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-3 text-[11px]">
+                <div className="rounded-xl bg-slate-50 dark:bg-slate-800 p-2">
+                  <span className="text-slate-400 font-bold uppercase tracking-wide text-[10px]">{th("Version")}</span>
+                  <p className="font-bold font-mono text-slate-800 dark:text-slate-200">v{(previewDoc as any).version ?? 1}</p>
+                </div>
+                <div className="rounded-xl bg-slate-50 dark:bg-slate-800 p-2">
+                  <span className="text-slate-400 font-bold uppercase tracking-wide text-[10px]">{th("Checksum")}</span>
+                  <p className="font-mono text-slate-600 dark:text-slate-300 truncate">{((previewDoc as any).checksum_sha256 || "—").slice(0, 16)}</p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => openAuditHistory(previewDoc)}
+                  className="rounded-xl text-xs font-bold gap-1"
+                >
+                  <Activity className="h-3.5 w-3.5" />
+                  {t("history", "History")}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => { setVersioningDoc(previewDoc); versionInputRef.current?.click(); }}
+                  className="rounded-xl text-xs font-bold gap-1"
+                >
+                  <Upload className="h-3.5 w-3.5" />
+                  {t("new_version", "New Version")}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => handlePreviewDoc(previewDoc)}
+                  className="rounded-xl text-xs font-bold gap-1"
+                >
+                  <Eye className="h-3.5 w-3.5" />
+                  {t("open_fullscreen", "Open Full Screen")}
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => handleDownloadDoc(previewDoc)}
+                  className="inline-flex items-center justify-center gap-1 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-700"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  {t("download", "Download")}
+                </button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Hidden input for "New Version" upload */}
+      <input
+        type="file"
+        ref={versionInputRef}
+        onChange={handleUploadNewVersion}
+        className="hidden"
+        accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+      />
+
+      {/* ── Audit History Modal ── */}
+      <Dialog open={!!auditDoc} onOpenChange={(open) => !open && setAuditDoc(null)}>
+        <DialogContent className="max-w-2xl rounded-2xl p-5 font-sans">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base font-black text-slate-900 dark:text-slate-100">
+              <Activity className="h-5 w-5 text-indigo-600" />
+              {t("audit_history", "Audit History")} — <span className="font-mono text-xs truncate">{auditDoc?.file_name}</span>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-y-auto py-2">
+            {auditLoading ? (
+              <div className="flex items-center justify-center gap-2 py-8 text-xs text-slate-500">
+                <RefreshCw className="h-4 w-4 animate-spin" /> {t("loading", "Loading…")}
+              </div>
+            ) : auditEvents.length === 0 ? (
+              <p className="py-8 text-center text-xs text-slate-400">{t("no_audit", "No audit events recorded for this document.")}</p>
+            ) : (
+              <ol className="relative border-s border-slate-200 dark:border-slate-700 ms-3 space-y-4">
+                {auditEvents.map((ev) => (
+                  <li key={ev.id} className="ms-4">
+                    <span className="absolute -start-1.5 mt-1 h-3 w-3 rounded-full bg-indigo-500 border border-white dark:border-slate-900" />
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-[11px] font-black text-slate-800 dark:text-slate-200">{th(ev.action.replace("office_document.", "").toUpperCase())}</span>
+                      <span className="text-[10px] text-slate-400">{new Date(ev.created_at).toLocaleString(lang)}</span>
+                      {ev.actor_name && <span className="text-[10px] text-slate-500 font-semibold">· {ev.actor_name}</span>}
+                      {ev.ip_address && <span className="text-[10px] font-mono text-slate-400">· {ev.ip_address}</span>}
+                    </div>
+                    {(ev.before || ev.after) && (
+                      <pre className="mt-1 text-[10px] bg-slate-50 dark:bg-slate-800 rounded-lg p-2 overflow-x-auto text-slate-600 dark:text-slate-300 max-h-40">
+                        {JSON.stringify(ev.after ?? ev.before, null, 2)}
+                      </pre>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

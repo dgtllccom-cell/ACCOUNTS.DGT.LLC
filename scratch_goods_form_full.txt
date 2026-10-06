@@ -1,0 +1,290 @@
+              {activeTab === "goods" && (
+                <fieldset disabled={isTransferred && !session?.scopes?.isSuperAdmin} className="space-y-4 order-2 w-full mt-4 animate-in fade-in zoom-in-95 duration-200">
+                  <div className="border-b border-border pb-2 mb-3">
+                    <h3 className="text-xs font-black uppercase tracking-wider text-foreground flex items-center gap-2">
+                      {t(lang, "purchase.goods_entry_title", "GOODS ENTRY")}
+                    </h3>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-3">
+                    {/* Manual Net KGs Input */}
+                    <div>
+                      <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.net_kgs_weight", "Net KGs (Weight)")}</label>
+                      <input
+                        type="number"
+                        value={form.netWeight !== undefined && form.netWeight !== "" ? form.netWeight : ""}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setValue("netWeight", val === "" ? "" : Number(val));
+                          setValue("manualTotalAmount", "");
+                          setValue("manualFinalAmount", "");
+                        }}
+                        className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] font-mono font-bold"
+                        placeholder="0.00"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.f_origin_country", "Origin Country")}</label>
+                      <select
+                        value={form.origin || ""}
+                        onChange={(e) => setValue("origin", e.target.value)}
+                        className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
+                      >
+                        <option value="">{t(lang, "purchase.select_origin", "Select Origin")}</option>
+                        {Array.from(new Set([
+                          "United Arab Emirates", "Iran", "USA", "Vietnam", "Pakistan", "India", "Afghanistan", "China", "Turkey",
+                          ...allCountries.map(c => c.name).filter(Boolean),
+                          ...transitCountryOptions.map(c => c.name).filter(Boolean),
+                          form.origin
+                        ].filter(Boolean))).sort().map(c => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="relative">
+                      <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.goods_name_star", "Goods Name*")}</label>
+                      <SearchableSelect
+                        value={form.goodsName || ""}
+                        onChange={(val) => {
+                          if (val === "__ADD_NEW__") {
+                            setNewGoodForm({ goodsName: "", chsCode: "", size: "", brand: "", originCountryId: "" });
+                            setNewGoodError("");
+                            setNewGoodModal(true);
+                          } else {
+                            setValue("goodsName", val);
+                            const foundGood = dbGoods.find(g => (g.goods_name || g.goodsName) === val);
+                            if (foundGood) {
+                              const hs = foundGood.chs_code || foundGood.chsCode || "";
+                              const firstVar = foundGood.variations?.[0] || {};
+                              const br = firstVar.brand || foundGood.brand || "";
+                              const sz = firstVar.size || foundGood.size || "";
+                              const originId = foundGood.origin_country_id || foundGood.originCountryId;
+                              const originCountryObj = originId ? (allCountries.find(c => c.id === originId) || countries.find(c => c.id === originId) || transitCountryOptions.find(c => c.id === originId)) : null;
+                              const cName = originCountryObj?.name || foundGood.origin || "";
+
+                              setForm(prev => ({
+                                ...prev,
+                                goodsName: val,
+                                hsCode: hs || prev.hsCode,
+                                brand: br || prev.brand,
+                                size: sz || prev.size,
+                                origin: cName || prev.origin
+                              }));
+                            }
+                          }
+                        }}
+                        options={[
+                          ...dbGoods.map(g => ({ label: g.goods_name || g.goodsName, value: g.goods_name || g.goodsName })),
+                          ...GOODS_OPTIONS.filter(go => !dbGoods.some(g => (g.goods_name || g.goodsName) === go)).map(g => ({ label: g, value: g }))
+                        ]}
+                        placeholder={t(lang, "purchase.select_goods", "Select Goods")}
+                        addOptionLabel={t(lang, "purchase.add_new_good", "Add New Good")}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-[10px] text-muted-foreground">{t(lang, "purchase.th_hs_code", "HS Code")}</label>
+                          {form.goodsName && (() => {
+                            const selectedGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === form.goodsName.trim().toUpperCase());
+                            if (selectedGood && (selectedGood.chs_code || selectedGood.chsCode || "") !== (form.hsCode || "")) {
+                              return (
+                                <button
+                                  type="button"
+                                  onClick={handleUpdateHsCode}
+                                  className="text-[9px] bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground px-1.5 py-0.5 rounded transition-colors"
+                                >
+                                  {t(lang, "purchase.save_to_master", "Save to Master")}
+                                </button>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
+                        <input
+                          type="text"
+                          value={form.hsCode || ""}
+                          onChange={(e) => setValue("hsCode", e.target.value)}
+                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] font-mono"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.allot_name_id", "Allot Name / ID")}</label>
+                        <input
+                          type="text"
+                          value={form.allotName || ""}
+                          onChange={(e) => setValue("allotName", e.target.value)}
+                          className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-[10px] text-muted-foreground">{t(lang, "purchase.th_brand", "Brand")}</label>
+                          {form.goodsName && form.brand && (() => {
+                            const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
+                            const masterBrands = selGood?.master_brands || (selGood?.variations || []).map(v => v.brand).filter(Boolean);
+                            if (selGood && !masterBrands.includes(form.brand)) {
+                              return (
+                                <button
+                                  type="button"
+                                  onClick={() => handleSaveParamToMaster("brand", form.brand)}
+                                  className="text-[9px] bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground px-1.5 py-0.5 rounded transition-colors"
+                                >
+                                  {t(lang, "purchase.save_to_master", "Save to Master")}
+                                </button>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
+                        <SearchableSelect
+                          value={form.brand || ""}
+                          onChange={(val) => {
+                            if (val === "__ADD_NEW__") {
+                              const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
+                              if (!selGood) {
+                                alert(t(lang, "purchase.select_good_first_brand", "Please select a Good first before adding a new Brand."));
+                                return;
+                              }
+                              const newB = window.prompt("Enter New Brand:");
+                              if (newB && newB.trim()) {
+                                setValue("brand", newB.trim());
+                                handleSaveParamToMaster("brand", newB.trim());
+                              }
+                            } else {
+                              setValue("brand", val);
+                            }
+                          }}
+                          options={(() => {
+                            const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
+                            const brands = Array.from(new Set([
+                              ...(selGood?.master_brands || []),
+                              ...(selGood?.variations || []).map(v => v.brand).filter(Boolean),
+                              ...BRAND_OPTIONS,
+                              ...dbGoods.flatMap(g => [...(g.master_brands || []), ...(g.variations || []).map(v => v.brand)]).filter(Boolean),
+                              form.brand
+                            ].filter(Boolean))).sort();
+                            return brands.map(b => ({ label: b, value: b }));
+                          })()}
+                          placeholder={t(lang, "purchase.select_brand", "Select Brand")}
+                          addOptionLabel={t(lang, "purchase.add_new_brand", "Add New Brand")}
+                        />
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-[10px] text-muted-foreground">{t(lang, "purchase.th_size", "Size Specification")}</label>
+                          {form.goodsName && form.size && (() => {
+                            const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
+                            const masterSizes = selGood?.master_sizes || (selGood?.variations || []).map(v => v.size).filter(Boolean);
+                            if (selGood && !masterSizes.includes(form.size)) {
+                              return (
+                                <button
+                                  type="button"
+                                  onClick={() => handleSaveParamToMaster("size", form.size)}
+                                  className="text-[9px] bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground px-1.5 py-0.5 rounded transition-colors"
+                                >
+                                  {t(lang, "purchase.save_to_master", "Save to Master")}
+                                </button>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
+                        <SearchableSelect
+                          value={form.size || ""}
+                          onChange={(val) => {
+                            if (val === "__ADD_NEW__") {
+                              const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
+                              if (!selGood) {
+                                alert(t(lang, "purchase.select_good_first_size", "Please select a Good first before adding a new Size."));
+                                return;
+                              }
+                              const newS = window.prompt("Enter New Size:");
+                              if (newS && newS.trim()) {
+                                setValue("size", newS.trim());
+                                handleSaveParamToMaster("size", newS.trim());
+                              }
+                            } else {
+                              setValue("size", val);
+                            }
+                          }}
+                          options={(() => {
+                            const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
+                            const sizes = Array.from(new Set([
+                              ...(selGood?.master_sizes || []),
+                              ...(selGood?.variations || []).map(v => v.size).filter(Boolean),
+                              ...SIZE_OPTIONS,
+                              ...dbGoods.flatMap(g => [...(g.master_sizes || []), ...(g.variations || []).map(v => v.size)]).filter(Boolean),
+                              form.size
+                            ].filter(Boolean))).sort();
+                            return sizes.map(s => ({ label: s, value: s }));
+                          })()}
+                          placeholder={t(lang, "purchase.select_size", "Select Size")}
+                          addOptionLabel={t(lang, "purchase.add_new_size", "Add New Size")}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-[10px] text-muted-foreground">{t(lang, "purchase.variety_label", "Variety")}</label>
+                          {form.goodsName && form.variety && (() => {
+                            const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
+                            const masterVars = selGood?.master_varieties || [];
+                            if (selGood && !masterVars.includes(form.variety)) {
+                              return (
+                                <button
+                                  type="button"
+                                  onClick={() => handleSaveParamToMaster("variety", form.variety)}
+                                  className="text-[9px] bg-amber-500/10 text-amber-700 dark:text-amber-300 hover:bg-amber-500 hover:text-white px-1.5 py-0.5 rounded transition-colors"
+                                >
+                                  {t(lang, "purchase.save_to_master", "Save to Master")}
+                                </button>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
+                        <SearchableSelect
+                          value={form.variety || ""}
+                          onChange={(val) => {
+                            if (val === "__ADD_NEW__") {
+                              const newV = window.prompt("Enter New Variety:");
+                              if (newV && newV.trim()) {
+                                setValue("variety", newV.trim());
+                                handleSaveParamToMaster("variety", newV.trim());
+                              }
+                            } else {
+                              setValue("variety", val);
+                            }
+                          }}
+                          options={(() => {
+                            const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
+                            const varieties = Array.from(new Set([
+                              ...(selGood?.master_varieties || []),
+                              "Nonpareil", "Carmel", "Independence", "Butte", "Marcona", "Aldrich", "Fritz", "Monterey", "Padre", "Price", "Sonora", "Wood Colony",
+                              form.variety
+                            ].filter(Boolean))).sort();
+                            return varieties.map(v => ({ label: v, value: v }));
+                          })()}
+                          placeholder={t(lang, "purchase.select_variety", "Select Variety")}
+                          addOptionLabel={t(lang, "purchase.add_new_variety", "Add New Variety")}
+                        />
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-[10px] text-muted-foreground">{t(lang, "purchase.extra_details_label", "Quality / Extra Details")}</label>
+                          {form.goodsName && form.extraDetails && (() => {
+                            const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
+                            const masterSpecs = selGood?.master_extra_details || [];
+                            if (selGood && !masterSpecs.includes(form.extraDetails)) {
+                              return (
+                                <button
+                                  type="button"
