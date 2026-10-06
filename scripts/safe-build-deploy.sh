@@ -120,13 +120,16 @@ mv "$BUILD_DIR" "$LIVE_DIR"
 
 log "Reloading PM2 (zero-downtime graceful reload, never delete+start)..."
 if ! pm2 reload "$PM2_APP" --update-env 2>/dev/null; then
-  log "No existing '$PM2_APP' process to reload (first-ever deploy on this host) — starting fresh."
-  if [ -f "ecosystem.config.cjs" ]; then
-    pm2 start ecosystem.config.cjs --update-env
-  elif [ -f "ecosystem.config.js" ]; then
-    pm2 start ecosystem.config.js --update-env
-  else
-    pm2 start npm --name "$PM2_APP" --update-env -- start
+  log "pm2 reload did not succeed (process might be stopped) — attempting pm2 restart..."
+  if ! pm2 restart "$PM2_APP" --update-env 2>/dev/null; then
+    log "Starting fresh via ecosystem config..."
+    if [ -f "ecosystem.config.cjs" ]; then
+      pm2 start ecosystem.config.cjs --update-env
+    elif [ -f "ecosystem.config.js" ]; then
+      pm2 start ecosystem.config.js --update-env
+    else
+      pm2 start npm --name "$PM2_APP" --update-env -- start
+    fi
   fi
 fi
 
