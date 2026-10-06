@@ -45,6 +45,23 @@ export function isSecureVoiceContext(): boolean {
   return loc.protocol === "https:" || loc.protocol === "file:" || isLocalhostName(loc.hostname);
 }
 
+/**
+ * True on iPhone / iPad / iPod (including iPadOS Safari, which reports a Mac UA
+ * but exposes multi-touch). iOS Safari has NO address-bar microphone/lock icon,
+ * so the desktop "click the lock icon" guidance is wrong there — the mic is
+ * granted from the "aA" page menu → Website Settings → Microphone, or from
+ * Settings → Safari → Microphone, and Dictation must be enabled. In-app browsers
+ * (links opened inside WhatsApp, Gmail, a chat preview, etc.) commonly block the
+ * mic entirely; the fix there is to open the page in full Safari.
+ */
+export function isIOS(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent || "";
+  if (/iPad|iPhone|iPod/.test(ua)) return true;
+  // iPadOS 13+ masquerades as macOS; distinguish by touch support.
+  return /Macintosh/.test(ua) && typeof document !== "undefined" && "ontouchend" in document;
+}
+
 /** True when the browser exposes getUserMedia for raw audio capture. */
 export function hasMediaCapture(): boolean {
   return typeof navigator !== "undefined" && !!navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === "function";

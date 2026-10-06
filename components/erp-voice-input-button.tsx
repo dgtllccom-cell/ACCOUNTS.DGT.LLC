@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import type { VoiceContext } from "@/lib/services/voice-context-interpreter";
-import { getSpeechRecognitionCtor, resolveVoiceSupport } from "@/lib/voice/voice-support";
+import { getSpeechRecognitionCtor, resolveVoiceSupport, isIOS } from "@/lib/voice/voice-support";
 
 const SPEECH_LANG_MAP: Record<SupportedLanguage, string> = {
   en: "en-US",
@@ -133,7 +133,9 @@ export function ErpVoiceInputButton({
         // the user cannot grant permission — point them at the https link instead.
         msg = resolveVoiceSupport({ requireSpeechRecognition: true }).reason === "insecure"
           ? blockedMessage("insecure")
-          : s.t("permission_denied", "Microphone access was denied. Click the microphone/lock icon in the address bar to allow it, then press Retry.");
+          : isIOS()
+            ? s.t("permission_denied_ios", "Microphone access was denied. On iPhone/iPad, open this page in Safari (tap the compass icon at the bottom if it opened inside another app), then allow the microphone in Settings → Safari → Microphone and turn on Settings → General → Keyboard → Enable Dictation. Then press Retry.")
+            : s.t("permission_denied", "Microphone access was denied. Click the microphone/lock icon in the address bar to allow it, then press Retry.");
       } else if (errType === "no-speech") {
         msg = s.t("no_speech", "No speech detected. Please speak clearly into your microphone and try again.");
       } else if (errType === "network") {

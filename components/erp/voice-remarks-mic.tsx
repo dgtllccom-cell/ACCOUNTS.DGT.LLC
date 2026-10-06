@@ -19,7 +19,7 @@ import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { supportedLanguages, type SupportedLanguage } from "@/lib/i18n/languages";
 import type { VoiceContext } from "@/lib/services/voice-context-interpreter";
 import { cn } from "@/lib/utils";
-import { getSpeechRecognitionCtor, resolveVoiceSupport } from "@/lib/voice/voice-support";
+import { getSpeechRecognitionCtor, resolveVoiceSupport, isIOS } from "@/lib/voice/voice-support";
 
 const SPEECH_LANG_MAP: Record<SupportedLanguage, string> = {
   en: "en-US",
@@ -176,10 +176,15 @@ export function VoiceRemarksMic({
                   "insecure_context",
                   "Voice needs a secure (HTTPS) connection. Please open the ERP through the secure https link instead of the http IP address, then try again.",
                 )
-              : s.t(
-                  "permission_denied",
-                  "Microphone access was denied. Click the microphone/lock icon in the address bar to allow it, then press Retry.",
-                ),
+              : isIOS()
+                ? s.t(
+                    "permission_denied_ios",
+                    "Microphone access was denied. On iPhone/iPad, open this page in Safari (tap the compass icon at the bottom if it opened inside another app), then allow the microphone in Settings → Safari → Microphone and turn on Settings → General → Keyboard → Enable Dictation. Then press Retry.",
+                  )
+                : s.t(
+                    "permission_denied",
+                    "Microphone access was denied. Click the microphone/lock icon in the address bar to allow it, then press Retry.",
+                  ),
           );
         } else if (errType === "no-speech") {
           // Non-fatal: keep waiting for speech
