@@ -256,9 +256,10 @@ export function ExpensesBillEntryForm({
       })
       .catch(console.error);
 
-    apiGet<any>('/api/erp/locations/taxes').then(res => {
-      setTaxes(res?.taxes || []);
-    });
+    // Tax codes are loaded by fetchTaxes() below from /api/erp/master-data/taxes (the real endpoint).
+    // The earlier call to /api/erp/locations/taxes was a dead path — Next routed it to
+    // /api/erp/locations/[id] with id="taxes", which 404'd with "Location not found"
+    // (an unhandled promise rejection); removed so the page raises no error.
 
     // Fetch active ledgers for transfer dropdowns
     import("@/features/reports/ledger-report/ledger-report-api").then(({ listLedgerReportLedgers }) => {
