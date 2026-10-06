@@ -5,6 +5,7 @@ import { Mic, Square, Play, Pause, Loader2, Send, Volume2, History, Trash2, Lang
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { supportedLanguages, type SupportedLanguage } from "@/lib/i18n/languages";
 import { Button } from "@/components/ui/button";
+import { resolveVoiceSupport } from "@/lib/voice/voice-support";
 
 // All derived from the central language registry — NOT a parallel UI dictionary.
 const LANG_CODES = supportedLanguages.map((l) => l.code) as SupportedLanguage[];
@@ -94,6 +95,25 @@ export function VoiceTextEntryView({ lang: langProp }: { lang?: SupportedLanguag
     setAudioUrl(null);
     setAudioBlob(null);
     setDurationMs(0);
+
+    // 0. Gate on secure context + mic capture BEFORE requesting the microphone, so
+    // an http LAN origin shows the actionable "open the https link" message instead
+    // of the browser's misleading NotAllowedError → "permission denied".
+    const cap = resolveVoiceSupport({ requireSpeechRecognition: false, requireMediaCapture: true });
+    if (!cap.ok) {
+      setError(
+        cap.reason === "insecure"
+          ? s.t(
+              "insecure_context",
+              "Voice needs a secure (HTTPS) connection. Please open the ERP through the secure https link instead of the http IP address, then try again.",
+            )
+          : s.t(
+              "unsupported_voice",
+              "Voice capture is not supported in this browser. Try Chrome, Edge, or Safari, or switch to Text input.",
+            ),
+      );
+      return;
+    }
 
     // 1. Audio capture (real MediaRecorder)
     try {

@@ -11562,6 +11562,16 @@ export type UiKey =
   | "cashstyle.executive"
   | "cashstyle.hint"
   | "acct.swipe_cols"
+  | "voice.insecure_title"
+  | "voice.insecure_context"
+  | "voice.unsupported"
+  | "voice.permission_denied"
+  | "voice.no_speech"
+  | "voice.network"
+  | "voice.retry"
+  | "ait.insecure_context"
+  | "ait.unsupported_voice"
+  | "ait.retry"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -34414,6 +34424,16 @@ const en: Dict = {
   "cashstyle.executive": "Executive Split Desk",
   "cashstyle.hint": "Appearance only — your entries and data are not affected.",
   "acct.swipe_cols": "Swipe sideways to see all columns",
+  "voice.insecure_title": "Secure connection required",
+  "voice.insecure_context": "Voice needs a secure (HTTPS) connection. Please open the ERP through the secure https link instead of the http IP address, then try again.",
+  "voice.unsupported": "Voice is not supported in this browser. Please try Chrome, Edge, or Safari.",
+  "voice.permission_denied": "Microphone access was denied. Click the microphone/lock icon in the address bar to allow it, then press Retry.",
+  "voice.no_speech": "No speech detected. Please speak clearly into your microphone and try again.",
+  "voice.network": "Speech recognition network error. Please check your connection and try again.",
+  "voice.retry": "Retry",
+  "ait.insecure_context": "Voice needs a secure (HTTPS) connection. Please open the ERP through the secure https link instead of the http IP address, then try again.",
+  "ait.unsupported_voice": "Voice capture is not supported in this browser. Try Chrome, Edge, or Safari, or switch to Text input.",
+  "ait.retry": "Retry",
 };
 
 const ur: Dict = {
@@ -57235,6 +57255,16 @@ const ur: Dict = {
   "cashstyle.executive": "ایگزیکٹو اسپلٹ ڈیسک",
   "cashstyle.hint": "صرف ظاہری انداز — آپ کی اندراجات اور ڈیٹا پر کوئی اثر نہیں۔",
   "acct.swipe_cols": "تمام کالم دیکھنے کے لیے دائیں بائیں سوائپ کریں",
+  "voice.insecure_title": "محفوظ کنکشن درکار ہے",
+  "voice.insecure_context": "صوتی ان پٹ کے لیے محفوظ (HTTPS) کنکشن ضروری ہے۔ براہِ کرم http IP ایڈریس کے بجائے محفوظ https لنک سے ERP کھولیں، پھر دوبارہ کوشش کریں۔",
+  "voice.unsupported": "اس براؤزر میں صوتی سہولت دستیاب نہیں۔ براہِ کرم Chrome، Edge یا Safari استعمال کریں۔",
+  "voice.permission_denied": "مائیکروفون تک رسائی مسترد کر دی گئی۔ ایڈریس بار میں مائیکروفون/لاک آئیکن پر کلک کر کے اجازت دیں، پھر دوبارہ کوشش کریں۔",
+  "voice.no_speech": "کوئی آواز محسوس نہیں ہوئی۔ براہِ کرم مائیکروفون میں واضح بولیں اور دوبارہ کوشش کریں۔",
+  "voice.network": "تقریری شناخت میں نیٹ ورک کی خرابی۔ براہِ کرم اپنا کنکشن چیک کریں اور دوبارہ کوشش کریں۔",
+  "voice.retry": "دوبارہ کوشش کریں",
+  "ait.insecure_context": "صوتی ان پٹ کے لیے محفوظ (HTTPS) کنکشن ضروری ہے۔ براہِ کرم http IP ایڈریس کے بجائے محفوظ https لنک سے ERP کھولیں، پھر دوبارہ کوشش کریں۔",
+  "ait.unsupported_voice": "اس براؤزر میں صوتی ریکارڈنگ دستیاب نہیں۔ Chrome، Edge یا Safari آزمائیں، یا ٹیکسٹ ان پٹ پر جائیں۔",
+  "ait.retry": "دوبارہ کوشش کریں",
 };
 
 const ar: Dict = {
@@ -80057,6 +80087,16 @@ const ar: Dict = {
   "cashstyle.executive": "مكتب تنفيذي مقسّم",
   "cashstyle.hint": "المظهر فقط — لا تتأثر إدخالاتك وبياناتك.",
   "acct.swipe_cols": "اسحب جانبياً لعرض كل الأعمدة",
+  "voice.insecure_title": "مطلوب اتصال آمن",
+  "voice.insecure_context": "يتطلب الإدخال الصوتي اتصالاً آمناً (HTTPS). يرجى فتح النظام عبر رابط https الآمن بدلاً من عنوان http، ثم المحاولة مرة أخرى.",
+  "voice.unsupported": "الإدخال الصوتي غير مدعوم في هذا المتصفح. يرجى استخدام Chrome أو Edge أو Safari.",
+  "voice.permission_denied": "تم رفض الوصول إلى الميكروفون. انقر على أيقونة الميكروفون/القفل في شريط العنوان للسماح به، ثم اضغط على إعادة المحاولة.",
+  "voice.no_speech": "لم يتم اكتشاف أي كلام. يرجى التحدث بوضوح في الميكروفون والمحاولة مرة أخرى.",
+  "voice.network": "خطأ في شبكة التعرف على الكلام. يرجى التحقق من اتصالك والمحاولة مرة أخرى.",
+  "voice.retry": "إعادة المحاولة",
+  "ait.insecure_context": "يتطلب الإدخال الصوتي اتصالاً آمناً (HTTPS). يرجى فتح النظام عبر رابط https الآمن بدلاً من عنوان http، ثم المحاولة مرة أخرى.",
+  "ait.unsupported_voice": "التقاط الصوت غير مدعوم في هذا المتصفح. جرّب Chrome أو Edge أو Safari، أو انتقل إلى الإدخال النصي.",
+  "ait.retry": "إعادة المحاولة",
 };
 
 const fa: Dict = {
@@ -102878,6 +102918,16 @@ const fa: Dict = {
   "cashstyle.executive": "میز اجرایی دوبخشی",
   "cashstyle.hint": "فقط ظاهر — ورودی‌ها و داده‌های شما تغییر نمی‌کند.",
   "acct.swipe_cols": "برای دیدن همه ستون‌ها به طرفین بکشید",
+  "voice.insecure_title": "اتصال امن لازم است",
+  "voice.insecure_context": "ورودی صوتی به اتصال امن (HTTPS) نیاز دارد. لطفاً سیستم را به‌جای آدرس http با پیوند امن https باز کنید و سپس دوباره تلاش کنید.",
+  "voice.unsupported": "ورودی صوتی در این مرورگر پشتیبانی نمی‌شود. لطفاً از Chrome، Edge یا Safari استفاده کنید.",
+  "voice.permission_denied": "دسترسی به میکروفون رد شد. روی نماد میکروفون/قفل در نوار آدرس کلیک کنید تا اجازه دهید، سپس دوباره تلاش کنید.",
+  "voice.no_speech": "هیچ گفتاری تشخیص داده نشد. لطفاً واضح در میکروفون صحبت کنید و دوباره تلاش کنید.",
+  "voice.network": "خطای شبکه در تشخیص گفتار. لطفاً اتصال خود را بررسی کنید و دوباره تلاش کنید.",
+  "voice.retry": "تلاش مجدد",
+  "ait.insecure_context": "ورودی صوتی به اتصال امن (HTTPS) نیاز دارد. لطفاً سیستم را به‌جای آدرس http با پیوند امن https باز کنید و سپس دوباره تلاش کنید.",
+  "ait.unsupported_voice": "ضبط صدا در این مرورگر پشتیبانی نمی‌شود. از Chrome، Edge یا Safari استفاده کنید یا به ورودی متنی بروید.",
+  "ait.retry": "تلاش مجدد",
 };
 
 const ps: Dict = {
@@ -125706,6 +125756,16 @@ const ps: Dict = {
   "cashstyle.executive": "اجرایوي ویشلې میز",
   "cashstyle.hint": "یوازې بڼه — ستاسو ننوتنې او معلومات نه اغیزمن کیږي.",
   "acct.swipe_cols": "د ټولو کالمونو لیدو لپاره څنګ ته سوایپ کړئ",
+  "voice.insecure_title": "خوندي اړیکه اړینه ده",
+  "voice.insecure_context": "غږیزه ننوتنه خوندي (HTTPS) اړیکې ته اړتیا لري. مهرباني وکړئ د http IP پتې پر ځای د خوندي https لینک له لارې ERP پرانیزئ، بیا هڅه وکړئ.",
+  "voice.unsupported": "په دې براوزر کې غږ نه ملاتړ کیږي. مهرباني وکړئ Chrome، Edge یا Safari وکاروئ.",
+  "voice.permission_denied": "مایکروفون ته لاسرسی رد شو. د پتې په بار کې د مایکروفون/تالا آیکون کلیک کړئ ترڅو اجازه ورکړئ، بیا هڅه وکړئ.",
+  "voice.no_speech": "هیڅ غږ ونه موندل شو. مهرباني وکړئ په مایکروفون کې په څرګنده خبرې وکړئ او بیا هڅه وکړئ.",
+  "voice.network": "د وینا پیژندنې د شبکې تېروتنه. مهرباني وکړئ خپله اړیکه وګورئ او بیا هڅه وکړئ.",
+  "voice.retry": "بیا هڅه وکړئ",
+  "ait.insecure_context": "غږیزه ننوتنه خوندي (HTTPS) اړیکې ته اړتیا لري. مهرباني وکړئ د http IP پتې پر ځای د خوندي https لینک له لارې ERP پرانیزئ، بیا هڅه وکړئ.",
+  "ait.unsupported_voice": "په دې براوزر کې د غږ ثبتول نه ملاتړ کیږي. Chrome، Edge یا Safari وآزمویئ، یا متن ننوتنې ته لاړ شئ.",
+  "ait.retry": "بیا هڅه وکړئ",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

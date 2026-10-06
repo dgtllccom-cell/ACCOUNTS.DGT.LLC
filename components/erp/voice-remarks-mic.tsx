@@ -19,6 +19,7 @@ import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { supportedLanguages, type SupportedLanguage } from "@/lib/i18n/languages";
 import type { VoiceContext } from "@/lib/services/voice-context-interpreter";
 import { cn } from "@/lib/utils";
+import { getSpeechRecognitionCtor, resolveVoiceSupport } from "@/lib/voice/voice-support";
 
 const SPEECH_LANG_MAP: Record<SupportedLanguage, string> = {
   en: "en-US",
@@ -104,20 +105,26 @@ export function VoiceRemarksMic({
     setIsPaused(false);
     isPausedRef.current = false;
 
-    const SR =
-      (typeof window !== "undefined" &&
-        ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition)) ||
-      null;
-
-    if (!SR) {
+    // Gate on secure context + API support BEFORE touching the mic, so an http LAN
+    // origin shows the actionable "open the https link" message rather than a
+    // misleading "permission denied".
+    const cap = resolveVoiceSupport({ requireSpeechRecognition: true });
+    if (!cap.ok) {
       setError(
-        s.t(
-          "speech_not_supported",
-          "Speech recognition is not supported in this browser. Please use Chrome, Edge, or enter text manually."
-        )
+        cap.reason === "insecure"
+          ? s.t(
+              "insecure_context",
+              "Voice needs a secure (HTTPS) connection. Please open the ERP through the secure https link instead of the http IP address, then try again.",
+            )
+          : s.t(
+              "unsupported",
+              "Voice is not supported in this browser. Please try Chrome, Edge, or Safari.",
+            ),
       );
       return;
     }
+
+    const SR = getSpeechRecognitionCtor();
 
     try {
       const rec = new SR();
@@ -160,19 +167,26 @@ export function VoiceRemarksMic({
 
       rec.onerror = (e: any) => {
         const errType = e?.error || "unknown";
-        if (errType === "not-allowed") {
+        if (errType === "not-allowed" || errType === "service-not-allowed") {
+          // On an insecure (http LAN) origin the browser blocks the mic and cannot
+          // be granted — steer the user to the https link instead.
           setError(
-            s.t(
-              "mic_permission_denied",
-              "Microphone permission was denied. Please allow microphone access in your browser settings."
-            )
+            resolveVoiceSupport({ requireSpeechRecognition: true }).reason === "insecure"
+              ? s.t(
+                  "insecure_context",
+                  "Voice needs a secure (HTTPS) connection. Please open the ERP through the secure https link instead of the http IP address, then try again.",
+                )
+              : s.t(
+                  "permission_denied",
+                  "Microphone access was denied. Click the microphone/lock icon in the address bar to allow it, then press Retry.",
+                ),
           );
         } else if (errType === "no-speech") {
           // Non-fatal: keep waiting for speech
         } else if (errType === "network") {
-          setError(s.t("mic_network_error", "Speech network error. Please check your connection."));
+          setError(s.t("network", "Speech recognition network error. Please check your connection and try again."));
         } else {
-          setError(`Speech recognition: ${errType}`);
+          setError(`${s.t("error", "Voice input error")}: ${errType}`);
         }
         setIsRecording(false);
         if (timerRef.current) clearInterval(timerRef.current);
