@@ -1009,6 +1009,8 @@ export function UserJournalReport() {
             />
           </div>
         </div>
+      )}
+
       {/* Temporary Password Modal Overlay */}
       {tempPasswordModal && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
