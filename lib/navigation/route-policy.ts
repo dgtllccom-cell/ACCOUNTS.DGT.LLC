@@ -28,6 +28,7 @@ const BASE_ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/dashboard/new-entry/users/branch": ["users:create", "users:read", "route:/dashboard/new-entry/users/branch"],
   "/dashboard/new-entry/users/country": ["country_admin", "main_branch_admin", "city_branch_admin", "business_super_admin", "route:/dashboard/new-entry/users/country"],
   "/dashboard/new-entry/users/credentials-pdf": ["super_admin", "route:/dashboard/new-entry/users/credentials-pdf"],
+  "/dashboard/users/credentials-pdf": ["super_admin", "route:/dashboard/users/credentials-pdf"],
   "/dashboard/new-entry/branch-entry/country-branch": ["country_branches:create", "country_branches:read", "route:/dashboard/new-entry/branch-entry/country-branch"],
   "/dashboard/new-entry/branch-entry/city-branch": ["city_branches:create", "city_branches:read", "route:/dashboard/new-entry/branch-entry/city-branch"],
   "/dashboard/new-entry/branches/super-admin": ["country_branches:create", "super_admin", "route:/dashboard/new-entry/branches/super-admin"],

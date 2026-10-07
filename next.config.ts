@@ -121,6 +121,11 @@ const nextConfig: NextConfig = {
         permanent: false,
       },
       {
+        source: "/dashboard/users/credentials-pdf",
+        destination: "/dashboard/new-entry/users/credentials-pdf",
+        permanent: false,
+      },
+      {
         source: "/dashboard/communication/whatsapp",
         destination: "/dashboard/communication-center",
         permanent: false,

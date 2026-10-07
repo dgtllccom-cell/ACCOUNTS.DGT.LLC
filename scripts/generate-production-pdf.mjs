@@ -78,7 +78,7 @@ async function main() {
 
   console.log(`Loaded ${users.length} verified users from production database.`);
 
-  const password = "Chaman@9090";
+  const password = process.env.USER_CREDENTIALS_DEFAULT_PASSWORD || "••••••••";
 
   const rowsHtml = users.map((u, idx) => {
     const primaryAssignment = u.assignments?.[0] || {};
