@@ -45,6 +45,21 @@ const patchSchema = z.object({
   amount: z.union([z.number(), z.string().trim()]).nullable().optional(),
   currencyCode: z.string().trim().max(8).nullable().optional(),
   remarks: z.string().trim().max(4000).nullable().optional(),
+  items: z
+    .array(
+      z.object({
+        goodsId: z.string().uuid().optional().nullable(),
+        goodsName: z.string().trim().max(240).optional().nullable(),
+        quantity: z.union([z.number(), z.string().trim()]).optional().nullable(),
+        weightCartons: z.union([z.number(), z.string().trim()]).optional().nullable(),
+        unit: z.string().trim().max(40).optional().nullable(),
+        rate: z.union([z.number(), z.string().trim()]).optional().nullable(),
+        amount: z.union([z.number(), z.string().trim()]).optional().nullable(),
+      }),
+    )
+    .max(200)
+    .optional()
+    .nullable(),
 });
 
 export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {

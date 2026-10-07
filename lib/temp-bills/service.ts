@@ -45,6 +45,7 @@ export interface TempBillRow {
   amount: number | null;
   currency_code: string;
   remarks: string | null;
+  items: TempBillItemInput[] | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -72,6 +73,18 @@ export interface TempBillInput {
   countryId?: string | null;
   countryBranchId?: string | null;
   cityBranchId?: string | null;
+  // Repeatable goods line items (tracking only — no accounting/stock posting).
+  items?: TempBillItemInput[] | null;
+}
+
+export interface TempBillItemInput {
+  goodsId?: string | null;
+  goodsName?: string | null;
+  quantity?: number | string | null;
+  weightCartons?: number | string | null;
+  unit?: string | null;
+  rate?: number | string | null;
+  amount?: number | string | null;
 }
 
 async function pgWrite<T>(fn: Parameters<typeof withLocalPg<T>>[0]): Promise<T> {
@@ -221,24 +234,34 @@ function assertScopeOnWrite(session: ErpSession, countryId: string | null | unde
   }
 }
 
+// party_account_id is a read-only link to the Accounts Master (enterprise_accounts). The party name is
+// always stored as text, so an id that is not an enterprise account (e.g. a legacy account match) is
+// dropped instead of failing the whole save on the foreign key.
+async function linkableAccountId(sql: any, id: string | null | undefined): Promise<string | null> {
+  if (!id) return null;
+  const [hit] = (await sql`SELECT id FROM public.enterprise_accounts WHERE id = ${id}::uuid LIMIT 1`) as unknown as Array<{ id: string }>;
+  return hit?.id ?? null;
+}
+
 export async function createTempBill(session: ErpSession, input: TempBillInput, lang: SupportedLanguage = "en"): Promise<{ id: string; entryNo: string }> {
   const countryId = input.countryId ?? session.countryIds?.[0] ?? null;
   assertScopeOnWrite(session, countryId);
   const name = input.partyName.trim();
   return pgWrite(async (sql) => {
+    const partyAccountId = await linkableAccountId(sql, input.partyAccountId);
     const [row] = (await sql`
       INSERT INTO public.temp_bill (
         bill_kind, country_id, country_branch_id, city_branch_id,
         party_account_id, party_customer_id, party_name, reference_no,
         goods_id, goods_name, bill_no, container_no, bl_no, bill_date,
-        quantity, weight_cartons, unit, rate, amount, currency_code, remarks, created_by
+        quantity, weight_cartons, unit, rate, amount, currency_code, remarks, items, created_by
       ) VALUES (
         ${input.billKind}, ${countryId}, ${input.countryBranchId ?? session.countryBranchIds?.[0] ?? null}, ${input.cityBranchId ?? session.cityBranchIds?.[0] ?? null},
-        ${input.partyAccountId ?? null}, ${input.partyCustomerId ?? null}, ${name}, ${input.referenceNo ?? null},
+        ${partyAccountId}, ${input.partyCustomerId ?? null}, ${name}, ${input.referenceNo ?? null},
         ${input.goodsId ?? null}, ${input.goodsName ?? null}, ${input.billNo ?? null}, ${input.containerNo ?? null}, ${input.blNo ?? null},
         ${input.billDate ?? null} ${input.billDate ? sql`::date` : sql``},
         ${num(input.quantity)}, ${num(input.weightCartons)}, ${input.unit ?? null}, ${num(input.rate)}, ${num(input.amount)},
-        ${(input.currencyCode ?? "USD").toUpperCase()}, ${input.remarks ?? null}, ${session.userId}::uuid
+        ${(input.currencyCode ?? "USD").toUpperCase()}, ${input.remarks ?? null}, ${sql.json((input.items ?? []) as any)}, ${session.userId}::uuid
       )
       RETURNING id, entry_no
     `) as unknown as Array<{ id: string; entry_no: string }>;
@@ -267,7 +290,7 @@ export async function updateTempBill(session: ErpSession, id: string, patch: Par
 
     const set: Record<string, unknown> = {};
     if (patch.billKind !== undefined) set.bill_kind = patch.billKind;
-    if (patch.partyAccountId !== undefined) set.party_account_id = patch.partyAccountId ?? null;
+    if (patch.partyAccountId !== undefined) set.party_account_id = await linkableAccountId(sql, patch.partyAccountId);
     if (patch.partyCustomerId !== undefined) set.party_customer_id = patch.partyCustomerId ?? null;
     if (patch.partyName !== undefined) set.party_name = patch.partyName.trim();
     if (patch.referenceNo !== undefined) set.reference_no = patch.referenceNo ?? null;
@@ -285,6 +308,7 @@ export async function updateTempBill(session: ErpSession, id: string, patch: Par
     if (patch.currencyCode !== undefined) set.currency_code = (patch.currencyCode ?? "USD").toUpperCase();
     if (patch.remarks !== undefined) set.remarks = patch.remarks ?? null;
 
+    if (patch.items !== undefined) set.items = sql.json((patch.items ?? []) as any);
     if (Object.keys(set).length === 0) return;
     await sql`UPDATE public.temp_bill SET ${sql(set)} WHERE id = ${id}::uuid`;
   });

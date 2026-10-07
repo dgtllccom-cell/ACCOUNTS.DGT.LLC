@@ -1,5 +1,16 @@
 import { apiGet, apiPost, apiPatch, apiDelete } from "@/lib/api/client";
 
+// A goods line item on an Arzi bill (tracking only — never posted to accounting/stock).
+export type TempBillItem = {
+  goodsId?: string | null;
+  goodsName?: string | null;
+  quantity?: number | string | null;
+  weightCartons?: number | string | null;
+  unit?: string | null;
+  rate?: number | string | null;
+  amount?: number | string | null;
+};
+
 export type TempBillListRow = {
   id: string;
   entry_no: string | null;
@@ -18,6 +29,8 @@ export type TempBillListRow = {
   amount: number | null;
   currency_code: string;
   remarks: string | null;
+  items?: TempBillItem[] | null;
+  party_account_id?: string | null;
   country_name?: string | null;
   country_branch_name?: string | null;
   city_branch_name?: string | null;
@@ -49,6 +62,7 @@ export type TempBillInput = {
   amount?: number | string | null;
   currencyCode?: string | null;
   remarks?: string | null;
+  items?: TempBillItem[] | null;
 };
 
 export async function fetchTempBills(params: {

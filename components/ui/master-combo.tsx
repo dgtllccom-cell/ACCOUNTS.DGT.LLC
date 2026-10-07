@@ -14,7 +14,7 @@ const SOURCES: Record<string, { url: (q: string) => string; map: (row: any) => O
   // Accounts master (best-match lookup)
   account: {
     url: (q) => `/api/erp/accounting/accounts/lookup?q=${encodeURIComponent(q)}&limit=20`,
-    map: (r) => ({ id: r.ledgerId || r.id || r.accountId, label: r.accountName || r.ledgerName || r.accountCode || r.id, sub: r.accountCode || r.companyName || undefined }),
+    map: (r) => ({ id: r.accountId || r.id || r.ledgerId, label: r.accountName || r.ledgerName || r.accountCode || r.id, sub: r.accountCode || r.companyName || undefined }),
   },
   // Goods master
   goods: {
