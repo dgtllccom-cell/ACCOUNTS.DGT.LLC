@@ -11654,11 +11654,45 @@ export type UiKey =
   | "cmf.cmethod_other"
   | "cmf.no_accounts_opt"
   | "cmf.new_account_opt"
+  | "cef.step2_title"
+  | "cef.step2_subtitle"
+  | "cef.same_branch_accounts"
+  | "cef.cross_branch_recipient"
+  | "cef.same_country_badge"
+  | "cef.cross_branch_search_ph"
+  | "cef.restricted_lookup_hint"
+  | "cef.select_recipient"
+  | "cef.no_cross_branch_account"
+  | "cef.cross_branch_confirmed"
+  | "cef.account_selected"
+  | "cef.cross_branch_badge"
+  | "cef.verified_badge"
+  | "cef.owning_branch"
+  | "cef.originating_branch"
+  | "cef.isolated_ledger_notice"
+  | "cef.country_locked"
   | (string & {});
 
 type Dict = Record<string, string>;
 
 const en: Dict = {
+  "cef.step2_title": "Account / Customer Selection",
+  "cef.step2_subtitle": "Select an account from the active branch or search across branches within the same country",
+  "cef.same_branch_accounts": "Same Branch",
+  "cef.cross_branch_recipient": "Cross-Branch Recipient",
+  "cef.same_country_badge": "Same Country",
+  "cef.cross_branch_search_ph": "Search recipient by account number or customer name in other branches...",
+  "cef.restricted_lookup_hint": "Restricted Lookup: Displays only account number, customer name and branch. Ledger balances and history remain isolated.",
+  "cef.select_recipient": "Select Recipient",
+  "cef.no_cross_branch_account": "No recipient accounts found in other branches matching your search.",
+  "cef.cross_branch_confirmed": "Cross-Branch Recipient Confirmed",
+  "cef.account_selected": "Account Selected",
+  "cef.cross_branch_badge": "Cross-Branch Authorized",
+  "cef.verified_badge": "Verified ✓",
+  "cef.owning_branch": "Recipient Owning Branch",
+  "cef.originating_branch": "Originating Paying Branch",
+  "cef.isolated_ledger_notice": "Confidential Isolation Active: Recipient ledger records and balances remain restricted. Payment will post with inter-branch settlement audit trail.",
+  "cef.country_locked": "Country Admin: Locked to Assigned Country",
   "plr.unknown_supplier": "Supplier",
   "plr.remaining_qty": "Remaining",
   "plr.loading_progress": "Loading Progress",
@@ -34602,6 +34636,23 @@ const en: Dict = {
 
 const ur: Dict = {
 ...en,
+  "cef.step2_title": "اکاؤنٹ / کسٹمر کا انتخاب",
+  "cef.step2_subtitle": "فعال برانچ سے اکاؤنٹ منتخب کریں یا اسی ملک کی دوسری برانچز میں تلاش کریں",
+  "cef.same_branch_accounts": "اسی برانچ کے اکاؤنٹس",
+  "cef.cross_branch_recipient": "دوسری برانچ کا وصول کنندہ",
+  "cef.same_country_badge": "ایک ہی ملک",
+  "cef.cross_branch_search_ph": "دوسری شاخوں میں اکاؤنٹ نمبر یا گاہک کے نام سے تلاش کریں...",
+  "cef.restricted_lookup_hint": "محدود تلاش: صرف اکاؤنٹ نمبر، کسٹمر کا نام اور برانچ دکھاتا ہے۔ لیجر بیلنس اور ہسٹری پوشیدہ رہتی ہے۔",
+  "cef.select_recipient": "وصول کنندہ منتخب کریں",
+  "cef.no_cross_branch_account": "آپ کی تلاش سے مماثل دوسری شاخوں میں کوئی وصول کنندہ اکاؤنٹ نہیں ملا۔",
+  "cef.cross_branch_confirmed": "دوسری برانچ کا وصول کنندہ تصدیق شدہ",
+  "cef.account_selected": "اکاؤنٹ منتخب ہو گیا",
+  "cef.cross_branch_badge": "مجاز برائے کراس برانچ",
+  "cef.verified_badge": "تصدیق شدہ ✓",
+  "cef.owning_branch": "وصول کنندہ کی ملکیت والی برانچ",
+  "cef.originating_branch": "ادائیگی کرنے والی اصل برانچ",
+  "cef.isolated_ledger_notice": "خفیہ تنہائی فعال: وصول کنندہ کے لیجر ریکارڈز اور بیلنس پوشیدہ رہتے ہیں۔ ادائیگی بین شاخ تصفیہ آڈٹ ٹریل کے ساتھ درج ہوگی۔",
+  "cef.country_locked": "کنٹری ایڈمن: تفویض کردہ ملک کے لیے مقفل",
   "plr.unknown_supplier": "سپلائر",
   "plr.remaining_qty": "بقیہ",
   "plr.loading_progress": "لوڈنگ کی پیش رفت",
@@ -57515,6 +57566,23 @@ const ur: Dict = {
 
 const ar: Dict = {
 ...en,
+  "cef.step2_title": "اختيار الحساب / العميل",
+  "cef.step2_subtitle": "حدد حساباً من الفرع النشط أو ابحث عبر الفروع داخل نفس البلد",
+  "cef.same_branch_accounts": "نفس الفرع",
+  "cef.cross_branch_recipient": "مستلم من فرع آخر",
+  "cef.same_country_badge": "نفس البلد",
+  "cef.cross_branch_search_ph": "ابحث عن المستلم برقم الحساب أو اسم العميل في الفروع الأخرى...",
+  "cef.restricted_lookup_hint": "بحث مقيد: يعرض فقط رقم الحساب واسم العميل والفرع. تظل أرصدة وسجلات الحسابات معزولة ومحمية.",
+  "cef.select_recipient": "اختيار المستلم",
+  "cef.no_cross_branch_account": "لم يتم العثور على حسابات مستلمين في فروع أخرى تطابق بحثك.",
+  "cef.cross_branch_confirmed": "تم تأكيد المستلم من الفرع الآخر",
+  "cef.account_selected": "تم تحديد الحساب",
+  "cef.cross_branch_badge": "معتمد بين الفروع",
+  "cef.verified_badge": "تم التحقق ✓",
+  "cef.owning_branch": "فرع المستلم المالك",
+  "cef.originating_branch": "الفرع المنشئ والدافع",
+  "cef.isolated_ledger_notice": "العزل السري نشط: تظل سجلات وأرصدة دفتر أستاذ المستلم مقيدة. سيتم ترحيل الدفعة مع مسار تدقيق التسوية بين الفروع.",
+  "cef.country_locked": "مدير الدولة: مقفل على البلد المعين",
   "plr.unknown_supplier": "المورد",
   "plr.remaining_qty": "المتبقي",
   "plr.loading_progress": "تقدم الشحن",
@@ -80429,6 +80497,23 @@ const ar: Dict = {
 
 const fa: Dict = {
 ...en,
+  "cef.step2_title": "انتخاب حساب / مشتری",
+  "cef.step2_subtitle": "حسابی را از شعبه فعال انتخاب کنید یا در بین شعب همان کشور جستجو نمایید",
+  "cef.same_branch_accounts": "حساب‌های همان شعبه",
+  "cef.cross_branch_recipient": "دریافت‌کننده شعبه دیگر",
+  "cef.same_country_badge": "همان کشور",
+  "cef.cross_branch_search_ph": "جستجوی دریافت‌کننده با شماره حساب یا نام مشتری در شعب دیگر...",
+  "cef.restricted_lookup_hint": "جستجوی محدود: فقط شماره حساب، نام مشتری و شعبه را نمایش می‌دهد. مانده و تاریخچه دفترکل کاملاً محرمانه می‌ماند.",
+  "cef.select_recipient": "انتخاب دریافت‌کننده",
+  "cef.no_cross_branch_account": "هیچ حساب دریافت‌کننده‌ای در شعب دیگر مطابق با جستجوی شما یافت نشد.",
+  "cef.cross_branch_confirmed": "دریافت‌کننده شعبه دیگر تأیید شد",
+  "cef.account_selected": "حساب انتخاب شد",
+  "cef.cross_branch_badge": "مجاز بین‌شعب",
+  "cef.verified_badge": "تأییدشده ✓",
+  "cef.owning_branch": "شعبه مالک دریافت‌کننده",
+  "cef.originating_branch": "شعبه پرداخت‌کننده مبدأ",
+  "cef.isolated_ledger_notice": "انزوای محرمانه فعال است: سوابق و مانده دفترکل دریافت‌کننده محفوظ می‌ماند. پرداخت با ردگیری تسویه حساب بین‌شعب ثبت می‌شود.",
+  "cef.country_locked": "مدیر کشور: قفل‌شده روی کشور اختصاصی",
   "plr.unknown_supplier": "تأمین‌کننده",
   "plr.remaining_qty": "باقی‌مانده",
   "plr.loading_progress": "پیشرفت بارگیری",
@@ -103342,6 +103427,23 @@ const fa: Dict = {
 
 const ps: Dict = {
 ...en,
+  "cef.step2_title": "د حساب / پیرودونکي ټاکنه",
+  "cef.step2_subtitle": "د فعالې څانګې څخه حساب وټاکئ یا په ورته هیواد کې د څانګو ترمنځ لټون وکړئ",
+  "cef.same_branch_accounts": "د همدې څانګې حسابونه",
+  "cef.cross_branch_recipient": "د بلې څانګې ترلاسه کوونکی",
+  "cef.same_country_badge": "همدغه هیواد",
+  "cef.cross_branch_search_ph": "په نورو څانګو کې د حساب شمیرې یا پیرودونکي نوم لخوا لټون وکړئ...",
+  "cef.restricted_lookup_hint": "محدود لټون: یوازې د حساب شمیره، د پیرودونکي نوم او څانګه ښیې. بیلانس او لیجر پټ پاتې کیږي.",
+  "cef.select_recipient": "ترلاسه کوونکی وټاکئ",
+  "cef.no_cross_branch_account": "ستاسو د لټون سره سم په نورو څانګو کې د ترلاسه کوونکي هیڅ حساب ونه موندل شو.",
+  "cef.cross_branch_confirmed": "د بلې څانګې ترلاسه کوونکی تایید شو",
+  "cef.account_selected": "حساب وټاکل شو",
+  "cef.cross_branch_badge": "د څانګو ترمنځ مجاز",
+  "cef.verified_badge": "تایید شوی ✓",
+  "cef.owning_branch": "د ترلاسه کوونکي اصلي څانګه",
+  "cef.originating_branch": "اصلي تادیه کوونکې څانګه",
+  "cef.isolated_ledger_notice": "محرمانه انزوا فعاله ده: د ترلاسه کوونکي لیجر ریکارډونه او بیلانس پټ پاتې کیږي. تادیه به د څانګو ترمنځ د تصفیې ریکارډ سره ثبت شي.",
+  "cef.country_locked": "د هیواد مدیر: ټاکل شوي هیواد ته تړل شوی",
   "plr.unknown_supplier": "عرضه کوونکی",
   "plr.remaining_qty": "پاتې",
   "plr.loading_progress": "د بارولو پرمختګ",

@@ -41,7 +41,10 @@ import {
   Pencil,
   Mic,
   Calendar,
-  AlertCircle
+  AlertCircle,
+  Lock,
+  ShieldCheck,
+  Globe2
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -284,6 +287,11 @@ export function CashEntryForm({
   onSaved?: (entryId: string | null) => void;
 }) {
   const router = useRouter();
+
+  const tr = (key: string, defaultEn?: string): string => {
+    return t(lang, key as any, defaultEn);
+  };
+
   // When we auto-derive scope from the selected account/ledger, avoid wiping selections
   // in the "country changed" reset effect.
   const suppressScopeResetRef = useRef(false);
@@ -311,6 +319,38 @@ export function CashEntryForm({
 
   const [mainBranches, setMainBranches] = useState<CountryBranchRow[]>([]);
   const [cityBranches, setCityBranches] = useState<CityBranchRow[]>([]);
+
+  // Cross-branch recipient lookup state
+  const [accountSearchMode, setAccountSearchMode] = useState<"same_branch" | "cross_branch">("same_branch");
+  const [crossBranchQuery, setCrossBranchQuery] = useState("");
+  const [crossBranchResults, setCrossBranchResults] = useState<Array<{
+    id: string;
+    code: string;
+    name: string;
+    accountNumber: string;
+    customerName: string;
+    owningBranchName: string;
+    owningBranchCode: string;
+    cityName: string;
+    ledgerId: string;
+    currency: string;
+    isOwnBranch: boolean;
+  }>>([]);
+  const [loadingCrossBranch, setLoadingCrossBranch] = useState(false);
+  const [selectedCrossBranchAccount, setSelectedCrossBranchAccount] = useState<{
+    id: string;
+    code: string;
+    name: string;
+    accountNumber: string;
+    customerName: string;
+    owningBranchName: string;
+    owningBranchCode: string;
+    cityName: string;
+    ledgerId: string;
+    currency: string;
+    isOwnBranch: boolean;
+  } | null>(null);
+  const [crossBranchDropdownOpen, setCrossBranchDropdownOpen] = useState(false);
 
   // Load Countries (Only countries with active branches)
   useEffect(() => {
@@ -743,6 +783,90 @@ export function CashEntryForm({
     return "operator";
   }, [isSuperAdmin, session]);
 
+  const isCountryAdmin = useMemo(() => {
+    if (isSuperAdmin) return false;
+    return Boolean(
+      session?.roles?.includes("country_admin") ||
+      userRoleLevel === "country" ||
+      (!session?.scopes?.isSuperAdmin && session?.scopes?.countryIds && session.scopes.countryIds.length > 0 && (!session.scopes.countryBranchIds || session.scopes.countryBranchIds.length === 0))
+    );
+  }, [isSuperAdmin, session, userRoleLevel]);
+
+  const canCrossBranchLookup = useMemo(() => {
+    if (isSuperAdmin) return true;
+    const roles = session?.roles || [];
+    return roles.some((r) => ["country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"].includes(r));
+  }, [isSuperAdmin, session]);
+
+  // Debounced search for same-country cross-branch recipient
+  useEffect(() => {
+    if (accountSearchMode !== "cross_branch") return;
+    const q = crossBranchQuery.trim();
+    if (q.length < 2) {
+      setCrossBranchResults([]);
+      return;
+    }
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      try {
+        setLoadingCrossBranch(true);
+        const params = new URLSearchParams({ q });
+        if (countryId) params.set("countryId", countryId);
+        const res = await apiGet<{ ok: boolean; accounts: any[] }>(`/api/erp/accounts/cross-branch-lookup?${params.toString()}`);
+        if (!cancelled) {
+          setCrossBranchResults(res?.accounts || []);
+          setCrossBranchDropdownOpen(true);
+        }
+      } catch (err) {
+        console.error("Failed cross-branch account lookup", err);
+        if (!cancelled) setCrossBranchResults([]);
+      } finally {
+        if (!cancelled) setLoadingCrossBranch(false);
+      }
+    }, 300);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [crossBranchQuery, accountSearchMode, countryId]);
+
+  function handleSelectCrossBranchAccount(acc: (typeof crossBranchResults)[0]) {
+    setSelectedCrossBranchAccount(acc);
+    setCounterLedgerId(acc.ledgerId);
+    setAccountNoInput(acc.accountNumber || acc.code);
+    setAccountLookupError(null);
+    setCrossBranchDropdownOpen(false);
+
+    // Provide synthetic ledger row for payment calculation without touching originating countryBranchId / cityBranchId
+    const syntheticLedger: LedgerLookupRow = {
+      accountId: acc.id,
+      ledgerId: acc.ledgerId,
+      accountName: acc.name || acc.customerName,
+      accountCode: acc.code || acc.accountNumber,
+      customerNumber: acc.accountNumber,
+      ledgerName: acc.name,
+      ledgerCode: acc.code,
+      ledgerCurrency: acc.currency || branchCurrency,
+      countryBranchName: acc.owningBranchName,
+      cityBranchName: acc.owningBranchName,
+      cityName: acc.cityName,
+      countryId: countryId,
+      scope: "branch",
+      currentBalance: 0,
+      debitTotal: 0,
+      creditTotal: 0,
+      normalBalance: "debit",
+      countryName: selectedCountry?.name || "",
+      countryBranchId: countryBranchId,
+      cityBranchId: cityBranchId || "",
+    } as unknown as LedgerLookupRow;
+    setSelectedLookupLedger(syntheticLedger);
+    const nextCur = (acc.currency || branchCurrency).trim();
+    if (nextCur.length === 3) setCurrency(nextCur.toUpperCase());
+    setRoznamchaBookType((current) => current || "branch_payment_voucher");
+  }
+
   const recentEntriesSummary = useMemo(() => {
     let totalCredit = 0;
     let totalDebit = 0;
@@ -947,6 +1071,8 @@ export function CashEntryForm({
     }
   };
 
+  const normalizedCurrency = currency.trim().toUpperCase();
+
   useEffect(() => {
     if (normalizedCurrency === "USD") {
       setExchangeRate("1");
@@ -1069,7 +1195,6 @@ export function CashEntryForm({
     return new Set(list);
   }, [branchCurrency, targetAccountCurrency]);
 
-  const normalizedCurrency = currency.trim().toUpperCase();
   const isLocalCurrency = normalizedCurrency === targetAccountCurrency.toUpperCase();
 
   const showCalcPanel =
@@ -1128,6 +1253,18 @@ export function CashEntryForm({
   }, [ledgerRowsWithAccount, cashLedgerId, selectedCounterLedger?.ledgerId]);
 
   useEffect(() => {
+    if (selectedCrossBranchAccount) {
+      setAccountSnapshot({
+        loading: false,
+        oldBalance: 0,
+        totalCredit: 0,
+        totalDebit: 0,
+        currentBalance: 0,
+        lastTransactionDate: null,
+        transactionCount: 0,
+      });
+      return;
+    }
     const lId = selectedCounterLedger?.ledgerId;
     if (!lId) {
       setAccountSnapshot({
@@ -1614,8 +1751,8 @@ export function CashEntryForm({
   const isRatePending = isForeignCurrency && (!dailyRate || !dailyRate.found || Number(exchangeRate) <= 0);
 
   const canSave =
-    Boolean(countryId && countryBranchId) &&
-    Boolean(selectedCounterLedger?.ledgerId) &&
+    Boolean(countryId && (countryBranchId || cityBranchId)) &&
+    Boolean(counterLedgerId || selectedCrossBranchAccount) &&
     Boolean(paymentMode) &&
     Boolean(paymentType) &&
     Boolean(amount && amount > 0) &&
@@ -1626,8 +1763,8 @@ export function CashEntryForm({
 
   useEffect(() => {
     console.log("canSave check details:", {
-      countryBranch: Boolean(countryId && countryBranchId),
-      selectedCounter: Boolean(selectedCounterLedger?.ledgerId),
+      countryBranch: Boolean(countryId && (countryBranchId || cityBranchId)),
+      selectedCounter: Boolean(selectedCounterLedger?.ledgerId || selectedCrossBranchAccount),
       paymentMode: Boolean(paymentMode),
       paymentType: Boolean(paymentType),
       amountVal: Boolean(amount && amount > 0),
@@ -1637,9 +1774,10 @@ export function CashEntryForm({
       amount,
       currency,
       exchangeRate,
-      selectedCounterLedger
+      selectedCounterLedger,
+      selectedCrossBranchAccount
     });
-  }, [countryId, countryBranchId, selectedCounterLedger, paymentMode, paymentType, amount, currency, exchangeRate, saving]);
+  }, [countryId, countryBranchId, cityBranchId, selectedCounterLedger, selectedCrossBranchAccount, paymentMode, paymentType, amount, currency, exchangeRate, saving]);
 
   const canEditOrDelete = useMemo(() => {
     if (!session) return false;
@@ -1653,6 +1791,7 @@ export function CashEntryForm({
   }, [session]);
 
   function applyScopeFromLedger(row: LedgerLookupRow) {
+    if (accountSearchMode === "cross_branch" || selectedCrossBranchAccount) return;
     if (!row.countryId || !row.countryBranchId) return;
 
     const needsCountry = row.countryId !== countryId;
@@ -1661,9 +1800,9 @@ export function CashEntryForm({
     const needsCity = nextCityBranchId !== cityBranchId;
 
     suppressScopeResetRef.current = true;
-    if (needsCountry) setCountryId(row.countryId);
-    if (needsMain) setCountryBranchId(row.countryBranchId);
-    if (needsCity) setCityBranchId(nextCityBranchId);
+    if (needsCountry && isSuperAdmin) setCountryId(row.countryId);
+    if (needsMain && isSuperAdmin) setCountryBranchId(row.countryBranchId);
+    if (needsCity && isSuperAdmin) setCityBranchId(nextCityBranchId);
   }
 
   function applyPostingLedger(row: LedgerLookupRow) {
@@ -1695,6 +1834,10 @@ export function CashEntryForm({
   function clearSelectedAccount() {
     setCounterLedgerId("");
     setSelectedLookupLedger(null);
+    setSelectedCrossBranchAccount(null);
+    setCrossBranchQuery("");
+    setCrossBranchResults([]);
+    setCrossBranchDropdownOpen(false);
     setAccountNoInput("");
     setAccountLookupError(null);
     setPaymentType("");
@@ -2233,17 +2376,69 @@ export function CashEntryForm({
       const combinedNarration = remarks.trim();
       const finalNarration = `${combinedNarration.trim()}\n${auditTrail}`;
       
+      const isCrossBranch = Boolean(selectedCrossBranchAccount) || Boolean(
+        selectedLookupLedger && (
+          (selectedLookupLedger.cityBranchId && cityBranchId && selectedLookupLedger.cityBranchId !== cityBranchId) ||
+          (selectedLookupLedger.countryBranchId && countryBranchId && selectedLookupLedger.countryBranchId !== countryBranchId)
+        )
+      );
+
       let effectivePostingType = postingType || "branch";
-      if (selectedCounterLedger?.scope === "super_admin") effectivePostingType = "super_admin";
-      else if (selectedCounterLedger?.scope === "country") effectivePostingType = "country";
-      else if (selectedCounterLedger?.scope === "main_branch" || selectedCounterLedger?.scope === "city_branch" || selectedCounterLedger?.scope === "country_branch" || selectedCounterLedger?.scope === "branch") effectivePostingType = "branch";
+      if (!isCrossBranch) {
+        if (selectedCounterLedger?.scope === "super_admin") effectivePostingType = "super_admin";
+        else if (selectedCounterLedger?.scope === "country") effectivePostingType = "country";
+        else if (selectedCounterLedger?.scope === "main_branch" || selectedCounterLedger?.scope === "city_branch" || selectedCounterLedger?.scope === "country_branch" || selectedCounterLedger?.scope === "branch") effectivePostingType = "branch";
+      }
+
+      // Preserve Branch A as originating branch (never allow recipient branch to overwrite)
+      const effectiveCountryId = countryId || null;
+      const effectiveCountryBranchId = countryBranchId || null;
+      const effectiveCityBranchId = cityBranchId || null;
+
+      const postingLines: any[] = [
+        {
+          paymentEntryType: roznamchaBookType === "bank" ? (paymentMode === "DEBIT" ? "bank_cheque" : "bank_deposit") : (paymentMode === "DEBIT" ? "cash_payment" : "cash_receipt"),
+          enterpriseAccountId: selectedCrossBranchAccount?.id || selectedCounterLedger?.accountId || null,
+          ledgerId: counterLedgerId || "",
+          description: finalNarration.trim() ? finalNarration.trim() : undefined,
+          debit: paymentMode === "DEBIT" ? amount : 0,
+          credit: paymentMode === "CREDIT" ? amount : 0,
+          currency: targetAccountCurrency.trim().toUpperCase(),
+          exchangeRate: Number(exchangeRate),
+          accountNumber: selectedCrossBranchAccount?.accountNumber || selectedCrossBranchAccount?.code || selectedCounterLedger?.accountCode || selectedCounterLedger?.rawAccountCode || null,
+          manualReferenceNumber: selectedCounterLedger?.manualReferenceNumber || null,
+          customerNumber: selectedCrossBranchAccount?.accountNumber || selectedCounterLedger?.customerNumber || null,
+          countrySerialNumber: selectedCounterLedger?.countrySerialNumber || null,
+          branchSerialNumber: selectedCounterLedger?.branchSerialNumber || null
+        }
+      ];
+
+      // If cross-branch payment, or if selectedCashLedger is chosen, include source bank/cash offset
+      if (selectedCashLedger?.ledgerId && (isCrossBranch || selectedCashLedger.ledgerId !== counterLedgerId)) {
+        const sourceCurrency = (selectedCashLedger.ledgerCurrency || branchCurrency).trim().toUpperCase();
+        postingLines.push({
+          paymentEntryType: roznamchaBookType === "bank" ? (paymentMode === "DEBIT" ? "bank_payment" : "bank_deposit") : (paymentMode === "DEBIT" ? "cash_payment" : "cash_receipt"),
+          enterpriseAccountId: selectedCashLedger.accountId || null,
+          ledgerId: selectedCashLedger.ledgerId,
+          description: `Offset - Source Cash/Bank (${selectedMainBranch?.name || "Branch A"})`,
+          debit: paymentMode === "CREDIT" ? amount : 0,
+          credit: paymentMode === "DEBIT" ? amount : 0,
+          currency: sourceCurrency,
+          exchangeRate: Number(exchangeRate),
+          accountNumber: selectedCashLedger.accountCode || selectedCashLedger.rawAccountCode || null,
+          manualReferenceNumber: selectedCashLedger.manualReferenceNumber || null,
+          customerNumber: selectedCashLedger.customerNumber || null,
+          countrySerialNumber: selectedCashLedger.countrySerialNumber || null,
+          branchSerialNumber: selectedCashLedger.branchSerialNumber || null
+        });
+      }
 
       const payload = {
         mode: "post" as const,
         type: effectivePostingType,
-        countryId: effectivePostingType === "super_admin" ? null : (selectedCounterLedger?.countryId || countryId || null),
-        countryBranchId: (effectivePostingType === "super_admin" || effectivePostingType === "country") ? null : (selectedCounterLedger?.countryBranchId || countryBranchId || null),
-        cityBranchId: (effectivePostingType === "super_admin" || effectivePostingType === "country") ? null : (selectedCounterLedger?.cityBranchId || cityBranchId || null),
+        countryId: effectivePostingType === "super_admin" ? null : effectiveCountryId,
+        countryBranchId: (effectivePostingType === "super_admin" || effectivePostingType === "country") ? null : effectiveCountryBranchId,
+        cityBranchId: (effectivePostingType === "super_admin" || effectivePostingType === "country") ? null : effectiveCityBranchId,
         entryDate,
         roznamchaBookType,
         journalNo: effectiveJournal,
@@ -2292,23 +2487,7 @@ export function CashEntryForm({
           purchaseInfo: typeDetails.purchaseInfo ?? null,
           transferInfo: typeDetails.transferInfo ?? null
         },
-        lines: [
-          {
-            paymentEntryType: roznamchaBookType === "bank" ? (paymentMode === "DEBIT" ? "bank_cheque" : "bank_deposit") : (paymentMode === "DEBIT" ? "cash_payment" : "cash_receipt"),
-            enterpriseAccountId: selectedCounterLedger?.accountId || null,
-            ledgerId: counterLedgerId || "",
-            description: finalNarration.trim() ? finalNarration.trim() : undefined,
-            debit: paymentMode === "DEBIT" ? amount : 0,
-            credit: paymentMode === "CREDIT" ? amount : 0,
-            currency: targetAccountCurrency.trim().toUpperCase(),
-            exchangeRate: Number(exchangeRate),
-            accountNumber: selectedCounterLedger?.accountCode || selectedCounterLedger?.rawAccountCode || null,
-            manualReferenceNumber: selectedCounterLedger?.manualReferenceNumber || null,
-            customerNumber: selectedCounterLedger?.customerNumber || null,
-            countrySerialNumber: selectedCounterLedger?.countrySerialNumber || null,
-            branchSerialNumber: selectedCounterLedger?.branchSerialNumber || null
-          }
-        ]
+        lines: postingLines
       };
 
       const res = await apiPost<RoznamchaPostResponse>("/api/erp/roznamcha", payload);
@@ -3042,7 +3221,7 @@ export function CashEntryForm({
                             balance: userCountry.branches[0].balance,
                             balanceType: userCountry.branches[0].balanceType,
                             entryCount: userCountry.branches[0].entryCount,
-                            transactions: userCountry.branches[0].transactions || []
+                            transactions: (userCountry.branches[0] as any).transactions || []
                           });
                         }
                       }}
@@ -3067,7 +3246,7 @@ export function CashEntryForm({
                             balance: userCountry.branches[0].balance,
                             balanceType: userCountry.branches[0].balanceType,
                             entryCount: userCountry.branches[0].entryCount,
-                            transactions: userCountry.branches[0].transactions || []
+                            transactions: (userCountry.branches[0] as any).transactions || []
                           });
                         }
                       }}
@@ -3123,7 +3302,7 @@ export function CashEntryForm({
                                     balance: b.balance,
                                     balanceType: b.balanceType,
                                     entryCount: b.entryCount,
-                                    transactions: b.transactions || []
+                                    transactions: (b as any).transactions || []
                                   })
                                 }
                                 className="hover:bg-indigo-50/70 dark:hover:bg-slate-800/40 cursor-pointer transition-colors"
@@ -3184,7 +3363,7 @@ export function CashEntryForm({
                                     balance: pos.branches[0].balance,
                                     balanceType: pos.branches[0].balanceType,
                                     entryCount: pos.branches[0].entryCount,
-                                    transactions: pos.branches[0].transactions || []
+                                    transactions: (pos.branches[0] as any).transactions || []
                                   });
                                 }
                               }}
@@ -3396,17 +3575,31 @@ export function CashEntryForm({
                         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50/70 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 text-[10px] font-black uppercase">
                           <Building2 className="h-3 w-3" />
                           <span>
-                            {selectedCountry ? `${selectedCountry.name.toUpperCase()} - ${selectedCityBranch?.name?.toUpperCase() || selectedMainBranch?.name?.toUpperCase() || "DEIRA CITY BRANCH"}` : "UNITED ARAB EMIRATES - DEIRA CITY BRANCH"}
+                            {selectedCountry ? `${selectedCountry.name.toUpperCase()} - ${selectedCityBranch?.name?.toUpperCase() || selectedMainBranch?.name?.toUpperCase() || "SELECT BRANCH"}` : "SELECT COUNTRY & BRANCH"}
                           </span>
+                          {isCountryAdmin && (
+                            <span className="inline-flex items-center gap-0.5 bg-amber-500 text-white rounded px-1.5 py-0.5 text-[8px] font-black tracking-wider">
+                              <Lock className="h-2 w-2" />
+                              LOCKED
+                            </span>
+                          )}
                         </span>
                       </div>
 
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                         <div className="space-y-1">
-                          <Label className="text-[10px] font-bold text-slate-500 uppercase">Country</Label>
+                          <div className="flex items-center justify-between">
+                            <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "common.country", "Country")}</Label>
+                            {isCountryAdmin && (
+                              <span className="text-[8px] font-black text-amber-700 dark:text-amber-400 flex items-center gap-0.5">
+                                <Lock className="h-2 w-2" />
+                                Locked
+                              </span>
+                            )}
+                          </div>
                           <select
                             value={countryId}
-                            disabled={loadingCountries || (!isSuperAdmin && effectiveScopeMode !== "super_admin")}
+                            disabled={loadingCountries || isCountryAdmin || (!isSuperAdmin && effectiveScopeMode !== "super_admin")}
                             onChange={(e) => {
                               setCountryId(e.target.value);
                               setCountryBranchId("");
@@ -3426,7 +3619,7 @@ export function CashEntryForm({
                         </div>
 
                         <div className="space-y-1">
-                          <Label className="text-[10px] font-bold text-slate-500 uppercase">Main Branch</Label>
+                          <Label className="text-[10px] font-bold text-slate-500 uppercase">{t(lang, "roz.branch_name", "Main Branch")}</Label>
                           <select
                             value={countryBranchId}
                             disabled={!countryId}
@@ -3481,46 +3674,201 @@ export function CashEntryForm({
 
                     {/* Step 2: Search & Select Account */}
                     <div className="space-y-2.5 p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xs">
-                      <div className="flex items-center gap-2">
-                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-white text-xs font-black shrink-0">
-                          2
-                        </span>
-                        <div>
-                          <h4 className="text-xs font-black text-slate-900 dark:text-white">
-                            Search &amp; Select Account
-                          </h4>
-                          <p className="text-[10px] text-slate-400 font-medium">
-                            Choose the account to post this transaction
-                          </p>
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-white text-xs font-black shrink-0">
+                            2
+                          </span>
+                          <div>
+                            <h4 className="text-xs font-black text-slate-900 dark:text-white">
+                              {tr("cef.step2_title", "Search & Select Account")}
+                            </h4>
+                            <p className="text-[10px] text-slate-400 font-medium">
+                              {tr("cef.step2_subtitle", "Choose recipient customer or account for payment posting")}
+                            </p>
+                          </div>
                         </div>
+
+                        {/* Search Mode Toggle */}
+                        {canCrossBranchLookup && (
+                          <div className="flex items-center p-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[11px] font-bold">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setAccountSearchMode("same_branch");
+                                clearSelectedAccount();
+                              }}
+                              className={cn(
+                                "px-2.5 py-1 rounded-md transition cursor-pointer flex items-center gap-1",
+                                accountSearchMode === "same_branch"
+                                  ? "bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 shadow-2xs font-black"
+                                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                              )}
+                            >
+                              <Building2 className="h-3 w-3" />
+                              <span>{tr("cef.same_branch_accounts", "Same Branch")}</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setAccountSearchMode("cross_branch");
+                                clearSelectedAccount();
+                              }}
+                              className={cn(
+                                "px-2.5 py-1 rounded-md transition cursor-pointer flex items-center gap-1.5",
+                                accountSearchMode === "cross_branch"
+                                  ? "bg-white dark:bg-slate-900 text-indigo-700 dark:text-indigo-300 shadow-2xs font-black"
+                                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                              )}
+                            >
+                              <Globe className="h-3 w-3" />
+                              <span>{tr("cef.cross_branch_recipient", "Cross-Branch Recipient")}</span>
+                              <span className="text-[8px] bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 px-1 rounded font-black">
+                                {tr("cef.same_country_badge", "Same Country")}
+                              </span>
+                            </button>
+                          </div>
+                        )}
                       </div>
 
-                      <SearchSelect
-                        label=""
-                        value={counterLedgerId}
-                        placeholder={t(lang, "cef.search_account_ph", "Search account code or name...")}
-                        options={accountOptions}
-                        disabled={loadingLedgers}
-                        onValueChange={handleCounterLedgerChange}
-                        onSearchValueChange={setAccountNoInput}
-                      />
+                      {accountSearchMode === "same_branch" ? (
+                        <SearchSelect
+                          label=""
+                          value={counterLedgerId}
+                          placeholder={t(lang, "cef.search_account_ph", "Search account code or name...")}
+                          options={accountOptions}
+                          disabled={loadingLedgers}
+                          onValueChange={handleCounterLedgerChange}
+                          onSearchValueChange={setAccountNoInput}
+                        />
+                      ) : (
+                        /* Restricted Cross-Branch Recipient Lookup */
+                        <div className="relative space-y-1.5">
+                          <div className="relative">
+                            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                            <Input
+                              value={crossBranchQuery}
+                              onChange={(e) => {
+                                setCrossBranchQuery(e.target.value);
+                                setCrossBranchDropdownOpen(true);
+                              }}
+                              onFocus={() => {
+                                if (crossBranchResults.length > 0) setCrossBranchDropdownOpen(true);
+                              }}
+                              placeholder={tr("cef.cross_branch_search_ph", "Search recipient by account number or customer name in other branches...")}
+                              className="h-10 pl-9 pr-8 text-xs font-semibold bg-white dark:bg-slate-950 border-indigo-200 dark:border-indigo-800 focus:border-indigo-500"
+                            />
+                            {loadingCrossBranch && (
+                              <RefreshCw className="h-3.5 w-3.5 animate-spin absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                            )}
+                          </div>
 
-                      {/* Account Selected Confirmation Banner */}
-                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-50/90 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-xs shadow-2xs">
-                        <div className="flex items-center gap-2.5 flex-wrap">
-                          <CheckCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                          <span className="font-extrabold text-emerald-900 dark:text-emerald-200">Account Selected</span>
-                          <span className="font-mono font-bold text-slate-700 dark:text-slate-300">
-                            {selectedCounterLedger?.accountCode || selectedCounterLedger?.ledgerCode || "UAE-DET-AC-0003"}
-                          </span>
-                          <span className="font-black text-slate-900 dark:text-white">
-                            {selectedCounterLedger?.accountName || selectedCounterLedger?.ledgerName || "Rex Trading LLC"}
-                          </span>
+                          <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-semibold px-1">
+                            <ShieldCheck className="h-3 w-3 text-indigo-600 shrink-0" />
+                            <span>{tr("cef.restricted_lookup_hint", "Restricted Lookup: Displays only account number, customer name and branch. Ledger balances and history remain isolated.")}</span>
+                          </div>
+
+                          {crossBranchDropdownOpen && crossBranchResults.length > 0 && (
+                            <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl p-1 space-y-1">
+                              {crossBranchResults.map((acc) => (
+                                <button
+                                  key={acc.id}
+                                  type="button"
+                                  onClick={() => handleSelectCrossBranchAccount(acc)}
+                                  className="w-full text-left p-2.5 rounded-lg hover:bg-indigo-50/70 dark:hover:bg-indigo-950/40 border border-transparent hover:border-indigo-100 transition cursor-pointer flex items-center justify-between gap-3"
+                                >
+                                  <div className="min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-mono font-bold text-xs text-indigo-700 dark:text-indigo-400">
+                                        {acc.accountNumber || acc.code}
+                                      </span>
+                                      <span className="font-bold text-xs text-slate-900 dark:text-white truncate">
+                                        {acc.name || acc.customerName}
+                                      </span>
+                                    </div>
+                                    <div className="text-[10px] text-slate-500 flex items-center gap-2 mt-0.5">
+                                      <span>🏢 {acc.owningBranchName} ({acc.owningBranchCode})</span>
+                                      {acc.cityName && <span>• {acc.cityName}</span>}
+                                      {acc.currency && <span className="font-mono font-bold">• {acc.currency}</span>}
+                                    </div>
+                                  </div>
+                                  <span className="shrink-0 text-[9px] font-black uppercase px-2 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200">
+                                    {tr("cef.select_recipient", "Select Recipient")}
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+
+                          {crossBranchDropdownOpen && !loadingCrossBranch && crossBranchQuery.trim().length >= 2 && crossBranchResults.length === 0 && (
+                            <div className="p-3 text-center text-xs text-slate-500 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                              {tr("cef.no_cross_branch_account", "No recipient accounts found in other branches matching your search.")}
+                            </div>
+                          )}
                         </div>
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-700">
-                          Verified ✓
-                        </span>
-                      </div>
+                      )}
+
+                      {/* Recipient Confirmation Card */}
+                      {(selectedCounterLedger || selectedCrossBranchAccount) && (
+                        <div className={cn(
+                          "p-3 rounded-xl border text-xs shadow-2xs space-y-2 transition-all",
+                          selectedCrossBranchAccount
+                            ? "bg-indigo-50/80 dark:bg-indigo-950/30 border-indigo-200 dark:border-indigo-800"
+                            : "bg-emerald-50/90 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800"
+                        )}>
+                          <div className="flex items-center justify-between flex-wrap gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <CheckCircle className={cn(
+                                "h-4 w-4 shrink-0",
+                                selectedCrossBranchAccount ? "text-indigo-600 dark:text-indigo-400" : "text-emerald-600 dark:text-emerald-400"
+                              )} />
+                              <span className={cn(
+                                "font-extrabold uppercase text-[10px] tracking-wide",
+                                selectedCrossBranchAccount ? "text-indigo-900 dark:text-indigo-200" : "text-emerald-900 dark:text-emerald-200"
+                              )}>
+                                {selectedCrossBranchAccount ? tr("cef.cross_branch_confirmed", "Cross-Branch Recipient Confirmed") : tr("cef.account_selected", "Account Selected")}
+                              </span>
+                              <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
+                                {selectedCrossBranchAccount?.accountNumber || selectedCrossBranchAccount?.code || selectedCounterLedger?.accountCode || selectedCounterLedger?.ledgerCode}
+                              </span>
+                              <span className="font-black text-slate-950 dark:text-white">
+                                {selectedCrossBranchAccount?.name || selectedCrossBranchAccount?.customerName || selectedCounterLedger?.accountName || selectedCounterLedger?.ledgerName}
+                              </span>
+                            </div>
+                            <span className={cn(
+                              "px-2 py-0.5 rounded-full text-[10px] font-black border",
+                              selectedCrossBranchAccount
+                                ? "bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-200 border-indigo-300 dark:border-indigo-700"
+                                : "bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 border-emerald-300 dark:border-emerald-700"
+                            )}>
+                              {selectedCrossBranchAccount ? tr("cef.cross_branch_badge", "Cross-Branch Authorized") : tr("cef.verified_badge", "Verified ✓")}
+                            </span>
+                          </div>
+
+                          {/* Recipient Details & Owning Branch Confirmation */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-slate-200/60 dark:border-slate-800 text-[11px]">
+                            <div>
+                              <span className="text-slate-500 font-semibold">{tr("cef.owning_branch", "Recipient Owning Branch")}: </span>
+                              <strong className="text-slate-900 dark:text-slate-150">
+                                {selectedCrossBranchAccount ? `${selectedCrossBranchAccount.owningBranchName} (${selectedCrossBranchAccount.owningBranchCode})` : (selectedCounterLedger?.cityBranchName || selectedCounterLedger?.countryBranchName || selectedMainBranch?.name || "Same Branch")}
+                              </strong>
+                            </div>
+                            <div>
+                              <span className="text-slate-500 font-semibold">{tr("cef.originating_branch", "Originating Paying Branch")}: </span>
+                              <strong className="text-slate-900 dark:text-slate-150">
+                                {selectedCityBranch?.name || selectedMainBranch?.name || "Active Branch"} ({selectedMainBranch?.code || "MB"})
+                              </strong>
+                            </div>
+                          </div>
+
+                          {selectedCrossBranchAccount && (
+                            <div className="flex items-center gap-1.5 text-[10px] font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-100/50 dark:bg-indigo-900/30 p-2 rounded-lg">
+                              <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
+                              <span>{tr("cef.isolated_ledger_notice", "Confidential Isolation Active: Recipient ledger records and balances remain restricted. Payment will post with inter-branch settlement audit trail.")}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* Step 3: Roznamcha Details */}
@@ -4179,19 +4527,23 @@ export function CashEntryForm({
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2 flex-wrap">
                               <h4 className="text-xs font-black text-slate-900 dark:text-white truncate">
-                                {selectedCounterLedger?.accountName || selectedCounterLedger?.ledgerName || "—"}
+                                {selectedCrossBranchAccount ? (selectedCrossBranchAccount.name || selectedCrossBranchAccount.customerName) : (selectedCounterLedger?.accountName || selectedCounterLedger?.ledgerName || "—")}
                               </h4>
-                              {selectedCounterLedger?.accountKind && (
+                              {selectedCrossBranchAccount ? (
+                                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-200">
+                                  Cross-Branch Recipient
+                                </span>
+                              ) : selectedCounterLedger?.accountKind ? (
                                 <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200">
                                   {localizeTerm(selectedCounterLedger.accountKind, lang)}
                                 </span>
-                              )}
+                              ) : null}
                               <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200">
-                                {selectedCounterLedger?.status === "archived" ? "Archived" : "Active"}
+                                Active
                               </span>
                             </div>
                             <p className="text-[11px] font-mono text-slate-500 font-bold mt-0.5">
-                              Account No. {selectedCounterLedger?.accountCode || selectedCounterLedger?.ledgerCode || "—"}
+                              Account No. {selectedCrossBranchAccount ? (selectedCrossBranchAccount.accountNumber || selectedCrossBranchAccount.code) : (selectedCounterLedger?.accountCode || selectedCounterLedger?.ledgerCode || "—")}
                             </p>
                           </div>
                         </div>
@@ -4207,70 +4559,49 @@ export function CashEntryForm({
                             <div className="grid grid-cols-[110px_1fr] py-1 border-b border-slate-100 dark:border-slate-800">
                               <span className="text-slate-500 font-semibold">Account Name</span>
                               <span className="font-bold text-slate-900 dark:text-white">
-                                {selectedCounterLedger?.accountName || selectedCounterLedger?.ledgerName || "—"}
+                                {selectedCrossBranchAccount ? (selectedCrossBranchAccount.name || selectedCrossBranchAccount.customerName) : (selectedCounterLedger?.accountName || selectedCounterLedger?.ledgerName || "—")}
                               </span>
                             </div>
 
                             <div className="grid grid-cols-[110px_1fr] py-1 border-b border-slate-100 dark:border-slate-800">
                               <span className="text-slate-500 font-semibold">Account No.</span>
                               <span className="font-mono font-bold text-slate-900 dark:text-white">
-                                {selectedCounterLedger?.accountCode || selectedCounterLedger?.ledgerCode || "—"}
+                                {selectedCrossBranchAccount ? (selectedCrossBranchAccount.accountNumber || selectedCrossBranchAccount.code) : (selectedCounterLedger?.accountCode || selectedCounterLedger?.ledgerCode || "—")}
                               </span>
                             </div>
 
                             <div className="grid grid-cols-[110px_1fr] py-1 border-b border-slate-100 dark:border-slate-800">
                               <span className="text-slate-500 font-semibold">Country</span>
                               <span className="font-bold text-slate-800 dark:text-slate-200">
-                                {selectedCounterLedger?.countryName || selectedCountry?.name || "—"}
-                              </span>
-                            </div>
-
-                            <div className="grid grid-cols-[110px_1fr] py-1 border-b border-slate-100 dark:border-slate-800">
-                              <span className="text-slate-500 font-semibold">State / Province</span>
-                              <span className="font-bold text-slate-800 dark:text-slate-200">
-                                {selectedCounterLedger?.stateName || selectedCounterLedger?.cityName || "—"}
+                                {selectedCountry?.name || "Assigned Country"}
                               </span>
                             </div>
 
                             <div className="grid grid-cols-[110px_1fr] py-1 border-b border-slate-100 dark:border-slate-800">
                               <span className="text-slate-500 font-semibold">City</span>
                               <span className="font-bold text-slate-800 dark:text-slate-200">
-                                {selectedCounterLedger?.cityName || "—"}
+                                {selectedCrossBranchAccount ? (selectedCrossBranchAccount.cityName || "—") : (selectedCounterLedger?.cityName || "—")}
                               </span>
                             </div>
 
                             <div className="grid grid-cols-[110px_1fr] py-1 border-b border-slate-100 dark:border-slate-800">
-                              <span className="text-slate-500 font-semibold">Permanent Address</span>
+                              <span className="text-slate-500 font-semibold">Owning Branch</span>
+                              <span className="font-bold text-slate-800 dark:text-slate-200">
+                                {selectedCrossBranchAccount ? `${selectedCrossBranchAccount.owningBranchName} (${selectedCrossBranchAccount.owningBranchCode})` : (selectedCounterLedger?.cityBranchName || selectedCounterLedger?.countryBranchName || selectedCityBranch?.name || selectedMainBranch?.name || "—")}
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-[110px_1fr] py-1 border-b border-slate-100 dark:border-slate-800">
+                              <span className="text-slate-500 font-semibold">Address</span>
                               <span className="font-medium text-slate-700 dark:text-slate-300 text-[11px] leading-snug">
-                                {selectedCounterLedger?.address || "—"}
-                              </span>
-                            </div>
-
-                            <div className="grid grid-cols-[110px_1fr] py-1 border-b border-slate-100 dark:border-slate-800">
-                              <span className="text-slate-500 font-semibold">Branch Name</span>
-                              <span className="font-bold text-slate-800 dark:text-slate-200">
-                                {selectedCounterLedger?.branchName || selectedCityBranch?.name || selectedMainBranch?.name || "—"}
-                              </span>
-                            </div>
-
-                            <div className="grid grid-cols-[110px_1fr] py-1 border-b border-slate-100 dark:border-slate-800">
-                              <span className="text-slate-500 font-semibold">Branch Code</span>
-                              <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                                {selectedCounterLedger?.branchCode || selectedCityBranch?.code || selectedMainBranch?.code || "—"}
-                              </span>
-                            </div>
-
-                            <div className="grid grid-cols-[110px_1fr] py-1 border-b border-slate-100 dark:border-slate-800">
-                              <span className="text-slate-500 font-semibold">Created Date</span>
-                              <span className="font-bold text-slate-800 dark:text-slate-200">
-                                {selectedCounterLedger?.createdAt ? new Date(selectedCounterLedger.createdAt).toLocaleDateString() : "—"}
+                                {selectedCrossBranchAccount ? "🔒 Restricted under enterprise privacy policy" : (selectedCounterLedger?.address || "—")}
                               </span>
                             </div>
 
                             <div className="grid grid-cols-[110px_1fr] py-1">
                               <span className="text-slate-500 font-semibold">Currency</span>
                               <span className="font-mono font-bold text-slate-900 dark:text-white">
-                                {selectedCounterLedger?.ledgerCurrency || branchCurrency || "AED"}
+                                {selectedCrossBranchAccount ? (selectedCrossBranchAccount.currency || branchCurrency || "AED") : (selectedCounterLedger?.ledgerCurrency || branchCurrency || "AED")}
                               </span>
                             </div>
                           </div>
@@ -4294,57 +4625,108 @@ export function CashEntryForm({
                         </div>
                       </CardHeader>
 
-                      <CardContent className="p-4 space-y-2 text-xs">
-                        <div className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-slate-800">
-                          <span className="text-slate-500 font-semibold">Old Balance</span>
-                          <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                            {accountSnapshot.loading ? "..." : fmtAmount(accountSnapshot.oldBalance)}
-                          </span>
-                        </div>
+                      {selectedCrossBranchAccount ? (
+                        <CardContent className="p-4 space-y-3 text-xs">
+                          <div className="flex items-start gap-2.5 p-3 rounded-xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-indigo-900 dark:text-indigo-200">
+                            <ShieldCheck className="h-5 w-5 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
+                            <div>
+                              <div className="font-black text-xs">Ledger Isolation Policy Enforced</div>
+                              <div className="text-[11px] text-indigo-700 dark:text-indigo-300 mt-0.5">
+                                Recipient balances, ledger statements, and historical transactions belong to <strong>{selectedCrossBranchAccount.owningBranchName}</strong> and are strictly isolated.
+                              </div>
+                            </div>
+                          </div>
 
-                        <div className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-slate-800">
-                          <span className="text-slate-500 font-semibold">Total Credit</span>
-                          <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                            {accountSnapshot.loading ? "..." : fmtAmount(accountSnapshot.totalCredit)}
-                          </span>
-                        </div>
+                          <div className="space-y-2 text-xs pt-1">
+                            <div className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-slate-800">
+                              <span className="text-slate-500 font-semibold">Ledger Visibility</span>
+                              <span className="font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                                <Lock className="h-3 w-3" />
+                                Restricted / Isolated
+                              </span>
+                            </div>
 
-                        <div className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-slate-800">
-                          <span className="text-slate-500 font-semibold">Total Debit</span>
-                          <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                            {accountSnapshot.loading ? "..." : fmtAmount(accountSnapshot.totalDebit)}
-                          </span>
-                        </div>
+                            <div className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-slate-800">
+                              <span className="text-slate-500 font-semibold">Recipient Branch</span>
+                              <span className="font-bold text-slate-800 dark:text-slate-200">
+                                {selectedCrossBranchAccount.owningBranchName}
+                              </span>
+                            </div>
 
-                        <div className="flex items-center justify-between py-1.5 border-b border-slate-100 dark:border-slate-800">
-                          <span className="text-slate-800 dark:text-slate-200 font-black text-xs">Current Balance</span>
-                          <span className={cn(
-                            "font-mono font-black text-base",
-                            accountSnapshot.currentBalance >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
-                          )}>
-                            {accountSnapshot.loading ? "..." : fmtAmount(accountSnapshot.currentBalance)}
-                          </span>
-                        </div>
+                            <div className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-slate-800">
+                              <span className="text-slate-500 font-semibold">Originating Branch</span>
+                              <span className="font-bold text-slate-800 dark:text-slate-200">
+                                {selectedCityBranch?.name || selectedMainBranch?.name}
+                              </span>
+                            </div>
 
-                        <div className="flex items-center justify-between py-1">
-                          <span className="text-slate-500 font-semibold">Last Transaction Date</span>
-                          <span className="font-bold text-slate-800 dark:text-slate-200">
-                            {accountSnapshot.loading
-                              ? "..."
-                              : accountSnapshot.lastTransactionDate
-                              ? new Date(accountSnapshot.lastTransactionDate).toLocaleDateString()
-                              : "—"}
-                          </span>
-                        </div>
-                      </CardContent>
+                            <div className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-slate-800">
+                              <span className="text-slate-500 font-semibold">Source Account</span>
+                              <span className="font-bold text-slate-800 dark:text-slate-200 truncate max-w-[170px]" title={selectedCashLedger?.accountName || "Bank/Cash"}>
+                                {selectedCashLedger?.accountName || "Branch Cash/Bank"}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center justify-between py-1">
+                              <span className="text-slate-500 font-semibold">Inter-Branch Settlement</span>
+                              <span className="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                                <CheckCircle className="h-3 w-3" />
+                                Automatic Audit Logging
+                              </span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      ) : (
+                        <CardContent className="p-4 space-y-2 text-xs">
+                          <div className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-slate-800">
+                            <span className="text-slate-500 font-semibold">Old Balance</span>
+                            <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
+                              {accountSnapshot.loading ? "..." : fmtAmount(accountSnapshot.oldBalance)}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-slate-800">
+                            <span className="text-slate-500 font-semibold">Total Credit</span>
+                            <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
+                              {accountSnapshot.loading ? "..." : fmtAmount(accountSnapshot.totalCredit)}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-slate-800">
+                            <span className="text-slate-500 font-semibold">Total Debit</span>
+                            <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
+                              {accountSnapshot.loading ? "..." : fmtAmount(accountSnapshot.totalDebit)}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-between py-1.5 border-b border-slate-100 dark:border-slate-800">
+                            <span className="text-slate-800 dark:text-slate-200 font-black text-xs">Current Balance</span>
+                            <span className={cn(
+                              "font-mono font-black text-base",
+                              accountSnapshot.currentBalance >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
+                            )}>
+                              {accountSnapshot.loading ? "..." : fmtAmount(accountSnapshot.currentBalance)}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-between py-1">
+                            <span className="text-slate-500 font-semibold">Last Transaction Date</span>
+                            <span className="font-bold text-slate-800 dark:text-slate-200">
+                              {accountSnapshot.loading
+                                ? "..."
+                                : accountSnapshot.lastTransactionDate
+                                ? new Date(accountSnapshot.lastTransactionDate).toLocaleDateString()
+                                : "—"}
+                            </span>
+                          </div>
+                        </CardContent>
+                      )}
                     </Card>
 
                     {/* Drill-down Modal for Daily Cash Position */}
                     <SimpleModal
-                      open={Boolean(drilldownBranch)}
-                      onOpenChange={(open) => {
-                        if (!open) setDrilldownBranch(null);
-                      }}
+                      isOpen={Boolean(drilldownBranch)}
+                      onClose={() => setDrilldownBranch(null)}
                       title={`Branch Cash Position Drill-Down — ${drilldownBranch?.branchName || ""} (${drilldownBranch?.branchCode || ""})`}
                     >
                       <div className="space-y-4 text-xs">

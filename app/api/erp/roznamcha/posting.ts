@@ -641,22 +641,46 @@ async function postRoznamchaWithErpSessionPg(sql: any, input: {
     // below (unlike validateLedgerCountryScope further down, which is advisory/fail-open
     // when the admin client is unavailable). A session without this permission keeps the
     // exact original same-branch-only behavior.
-    const crossBranchPostingAllowed = Boolean(input.session) && hasRolePermission(input.session, "roznamcha", "post_cross_branch");
+    const crossBranchPostingAllowed =
+      Boolean(input.session) &&
+      (
+        Boolean(input.session.isSuperAdmin) ||
+        hasRolePermission(input.session, "cross_branch_payment", "post") ||
+        hasRolePermission(input.session, "roznamcha", "post_cross_branch")
+      );
 
-    if (!crossBranchPostingAllowed) {
+    const isCrossBranchLine = Boolean(
+      (body.cityBranchId && ledger.city_branch_id && ledger.city_branch_id !== body.cityBranchId) ||
+      (body.countryBranchId && ledger.country_branch_id && ledger.country_branch_id !== body.countryBranchId)
+    );
+
+    if (isCrossBranchLine) {
+      if (!crossBranchPostingAllowed) {
+        throw new Error("The selected account does not belong to the posting branch. (Missing permission: cross_branch_payment:post)");
+      }
+
+      const domains: string[] = input.session?.operationalDomains ?? ["business"];
+      const isShippingOnly = !input.session?.isSuperAdmin && domains.length === 1 && domains[0] === "shipping";
+      if (isShippingOnly) {
+        throw new Error("Cross-branch customer payments are restricted to authorized Business users.");
+      }
+
+      const effectiveEntryCountryId = effectiveCountryId || (ledger.country_id as string | null);
+      if (ledger.country_id && effectiveEntryCountryId && ledger.country_id !== effectiveEntryCountryId) {
+        throw new Error("Cross-country payment is strictly prohibited. Both branches must belong to the same country.");
+      }
+
+      const ownCountryIds: string[] = input.session?.countryIds ?? [];
+      const sessionCanAccessCountry = Boolean(input.session?.isSuperAdmin) || (ledger.country_id ? ownCountryIds.includes(ledger.country_id) : true);
+      if (!sessionCanAccessCountry) {
+        throw new Error("Cross-branch posting is only permitted within your authorized country scope.");
+      }
+    } else {
       if (body.cityBranchId && ledger.city_branch_id && ledger.city_branch_id !== body.cityBranchId) {
         throw new Error("The selected account does not belong to the posting branch.");
       }
       if (body.countryBranchId && ledger.country_branch_id && ledger.country_branch_id !== body.countryBranchId) {
         throw new Error("The selected account does not belong to the posting main branch.");
-      }
-    } else if (ledger.country_id) {
-      const isSuperAdmin = Boolean(input.session?.isSuperAdmin);
-      const ownCountryIds: string[] = input.session?.countryIds ?? [];
-      const sameCountryAsPostingEntry = !effectiveCountryId || ledger.country_id === effectiveCountryId;
-      const sameCountryAsSession = isSuperAdmin || ownCountryIds.includes(ledger.country_id);
-      if (!sameCountryAsPostingEntry || !sameCountryAsSession) {
-        throw new Error("Cross-branch posting is only permitted within your own country scope.");
       }
     }
 
@@ -798,6 +822,68 @@ async function postRoznamchaWithErpSessionPg(sql: any, input: {
         values (${ledgerId}, ${body.entryDate}, 0, ${debit}, ${credit}, ${debit - credit})
       `;
     }
+
+    if (isCrossBranchLine) {
+      try {
+        const transferNo = await nextEntitySerialPg(sql, "global", "global", "inter_branch_transfer", "IBT");
+        const sourceLedgerId = body.lines.find((l) => l.ledgerId !== ledgerId)?.ledgerId ?? ledgerId;
+        const transferAmount = debit > 0 ? debit : credit;
+
+        const srcCity = body.cityBranchId ?? null;
+        const srcCountryBranch = body.countryBranchId ?? null;
+        const dstCity = ledger.city_branch_id ?? null;
+        const dstCountryBranch = ledger.country_branch_id ?? null;
+
+        const hasSource = Boolean(srcCity || srcCountryBranch);
+        const hasDest = Boolean(dstCity || dstCountryBranch);
+        const isDistinct = (srcCity || srcCountryBranch) !== (dstCity || dstCountryBranch);
+
+        if (hasSource && hasDest && isDistinct && transferAmount > 0) {
+          const ibtRows = await sql`
+            insert into public.inter_branch_ledger_transfers (
+              transfer_no, country_id, source_country_branch_id, source_city_branch_id,
+              destination_country_branch_id, destination_city_branch_id,
+              source_ledger_id, destination_ledger_id, amount, currency, exchange_rate,
+              reference_no, remarks, status, created_by, posted_at, created_at, updated_at
+            ) values (
+              ${transferNo}, ${effectiveCountryId}, ${srcCountryBranch}, ${srcCity},
+              ${dstCountryBranch}, ${dstCity},
+              ${sourceLedgerId}, ${ledgerId}, ${transferAmount}, ${line.currency}, ${conversion.usdRate},
+              ${body.referenceNo ?? body.voucherNo ?? null},
+              ${body.narration ?? 'Cross-branch customer payment'},
+              'posted', ${actorId}, now(), now(), now()
+            )
+            returning id
+          `;
+
+          const ibtId = ibtRows[0]?.id;
+          if (ibtId) {
+            await sql`
+              insert into public.ledger_transaction_audit_trail (
+                inter_branch_transfer_id, country_id, country_branch_id, city_branch_id,
+                ledger_id, actor_id, action, after_data, created_at
+              ) values (
+                ${ibtId}, ${effectiveCountryId}, ${body.countryBranchId ?? null}, ${body.cityBranchId ?? null},
+                ${ledgerId}, ${actorId}, 'cross_branch_payment_posted',
+                ${sql.json({
+                  voucherNo: body.voucherNo,
+                  journalNo: body.journalNo,
+                  amount: transferAmount,
+                  currency: line.currency,
+                  sourceBranchId: srcCity || srcCountryBranch,
+                  destinationBranchId: dstCity || dstCountryBranch,
+                  destinationLedgerId: ledgerId,
+                  entryId
+                })},
+                now()
+              )
+            `;
+          }
+        }
+      } catch (ibtErr: any) {
+        console.warn("[posting][pg] inter_branch_ledger_transfers recording error:", ibtErr?.message);
+      }
+    }
   }
 
   return { entryId, transactionSerials };
@@ -899,11 +985,47 @@ async function postRoznamchaWithErpSessionSupabase(input: {
       throw new Error("Ledger belongs to a different financial scope");
     }
 
-    if (body.cityBranchId && ledger.city_branch_id && ledger.city_branch_id !== body.cityBranchId) {
-      throw new Error("The selected account does not belong to the posting branch.");
-    }
-    if (body.countryBranchId && ledger.country_branch_id && ledger.country_branch_id !== body.countryBranchId) {
-      throw new Error("The selected account does not belong to the posting main branch.");
+    const crossBranchPostingAllowed =
+      Boolean(input.session) &&
+      (
+        Boolean(input.session.isSuperAdmin) ||
+        hasRolePermission(input.session, "cross_branch_payment", "post") ||
+        hasRolePermission(input.session, "roznamcha", "post_cross_branch")
+      );
+
+    const isCrossBranchLine = Boolean(
+      (body.cityBranchId && ledger.city_branch_id && ledger.city_branch_id !== body.cityBranchId) ||
+      (body.countryBranchId && ledger.country_branch_id && ledger.country_branch_id !== body.countryBranchId)
+    );
+
+    if (isCrossBranchLine) {
+      if (!crossBranchPostingAllowed) {
+        throw new Error("The selected account does not belong to the posting branch. (Missing permission: cross_branch_payment:post)");
+      }
+
+      const domains: string[] = input.session?.operationalDomains ?? ["business"];
+      const isShippingOnly = !input.session?.isSuperAdmin && domains.length === 1 && domains[0] === "shipping";
+      if (isShippingOnly) {
+        throw new Error("Cross-branch customer payments are restricted to authorized Business users.");
+      }
+
+      const effectiveEntryCountryId = effectiveCountryId || (ledger.country_id as string | null);
+      if (ledger.country_id && effectiveEntryCountryId && ledger.country_id !== effectiveEntryCountryId) {
+        throw new Error("Cross-country payment is strictly prohibited. Both branches must belong to the same country.");
+      }
+
+      const ownCountryIds: string[] = input.session?.countryIds ?? [];
+      const sessionCanAccessCountry = Boolean(input.session?.isSuperAdmin) || (ledger.country_id ? ownCountryIds.includes(ledger.country_id) : true);
+      if (!sessionCanAccessCountry) {
+        throw new Error("Cross-branch posting is only permitted within your authorized country scope.");
+      }
+    } else {
+      if (body.cityBranchId && ledger.city_branch_id && ledger.city_branch_id !== body.cityBranchId) {
+        throw new Error("The selected account does not belong to the posting branch.");
+      }
+      if (body.countryBranchId && ledger.country_branch_id && ledger.country_branch_id !== body.countryBranchId) {
+        throw new Error("The selected account does not belong to the posting main branch.");
+      }
     }
 
     // ── Rule 1: Country Scope Validation ──
@@ -1061,6 +1183,72 @@ async function postRoznamchaWithErpSessionSupabase(input: {
         closing_balance: debit - credit
       });
       if (balanceInsertError) throw new Error(balanceInsertError.message);
+    }
+
+    if (isCrossBranchLine) {
+      try {
+        const transferNo = await nextEntitySerialSupabase(admin, "global", "global", "inter_branch_transfer", "IBT");
+        const sourceLedgerId = body.lines.find((l) => l.ledgerId !== ledgerId)?.ledgerId ?? ledgerId;
+        const transferAmount = debit > 0 ? debit : credit;
+
+        const srcCity = body.cityBranchId ?? null;
+        const srcCountryBranch = body.countryBranchId ?? null;
+        const dstCity = ledger.city_branch_id ?? null;
+        const dstCountryBranch = ledger.country_branch_id ?? null;
+
+        const hasSource = Boolean(srcCity || srcCountryBranch);
+        const hasDest = Boolean(dstCity || dstCountryBranch);
+        const isDistinct = (srcCity || srcCountryBranch) !== (dstCity || dstCountryBranch);
+
+        if (hasSource && hasDest && isDistinct && transferAmount > 0) {
+          const { data: ibtData } = await admin
+            .from("inter_branch_ledger_transfers")
+            .insert({
+              transfer_no: transferNo,
+              country_id: effectiveCountryId,
+              source_country_branch_id: srcCountryBranch,
+              source_city_branch_id: srcCity,
+              destination_country_branch_id: dstCountryBranch,
+              destination_city_branch_id: dstCity,
+              source_ledger_id: sourceLedgerId,
+              destination_ledger_id: ledgerId,
+              amount: transferAmount,
+              currency: line.currency,
+              exchange_rate: conversion.usdRate,
+              reference_no: body.referenceNo ?? body.voucherNo ?? null,
+              remarks: body.narration ?? "Cross-branch customer payment",
+              status: "posted",
+              created_by: actorId,
+              posted_at: new Date().toISOString()
+            })
+            .select("id")
+            .single();
+
+          if (ibtData?.id) {
+            await admin.from("ledger_transaction_audit_trail").insert({
+              inter_branch_transfer_id: ibtData.id,
+              country_id: effectiveCountryId,
+              country_branch_id: body.countryBranchId ?? null,
+              city_branch_id: body.cityBranchId ?? null,
+              ledger_id: ledgerId,
+              actor_id: actorId,
+              action: "cross_branch_payment_posted",
+              after_data: {
+                voucherNo: body.voucherNo,
+                journalNo: body.journalNo,
+                amount: transferAmount,
+                currency: line.currency,
+                sourceBranchId: srcCity || srcCountryBranch,
+                destinationBranchId: dstCity || dstCountryBranch,
+                destinationLedgerId: ledgerId,
+                entryId
+              }
+            });
+          }
+        }
+      } catch (ibtErr: any) {
+        console.warn("[posting][supabase] inter_branch_ledger_transfers recording error:", ibtErr?.message);
+      }
     }
   }
 
