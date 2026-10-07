@@ -11641,6 +11641,19 @@ export type UiKey =
   | "cmf.draft_badge"
   | "cmf.company_name_lbl"
   | "cmf.location"
+  | "cmf.sec_contact_methods"
+  | "cmf.contacts_methods_hint"
+  | "cmf.cmethod_person"
+  | "cmf.cmethod_designation"
+  | "cmf.cmethod_mobile"
+  | "cmf.cmethod_phone"
+  | "cmf.cmethod_whatsapp"
+  | "cmf.cmethod_email"
+  | "cmf.cmethod_website"
+  | "cmf.cmethod_fax"
+  | "cmf.cmethod_other"
+  | "cmf.no_accounts_opt"
+  | "cmf.new_account_opt"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -34572,6 +34585,19 @@ const en: Dict = {
   "cmf.draft_badge": "Will be created",
   "cmf.company_name_lbl": "Company Name",
   "cmf.location": "Location",
+  "cmf.sec_contact_methods": "Contact Methods",
+  "cmf.contacts_methods_hint": "Add contact methods — e.g. WhatsApp, Email, Phone, Website. Choose the type, then enter its value.",
+  "cmf.cmethod_person": "Contact Person",
+  "cmf.cmethod_designation": "Designation",
+  "cmf.cmethod_mobile": "Mobile",
+  "cmf.cmethod_phone": "Phone",
+  "cmf.cmethod_whatsapp": "WhatsApp",
+  "cmf.cmethod_email": "Email",
+  "cmf.cmethod_website": "Website",
+  "cmf.cmethod_fax": "Fax",
+  "cmf.cmethod_other": "Other",
+  "cmf.no_accounts_opt": "— No account yet —",
+  "cmf.new_account_opt": "+ New Account…",
 };
 
 const ur: Dict = {
@@ -57472,6 +57498,19 @@ const ur: Dict = {
   "cmf.draft_badge": "بنائی جائے گی",
   "cmf.company_name_lbl": "کمپنی کا نام",
   "cmf.location": "مقام",
+  "cmf.sec_contact_methods": "رابطے کے طریقے",
+  "cmf.contacts_methods_hint": "رابطے کے طریقے شامل کریں — مثلاً واٹس ایپ، ای میل، فون، ویب سائٹ۔ قسم منتخب کریں، پھر اس کی ویلیو درج کریں۔",
+  "cmf.cmethod_person": "رابطہ شخص",
+  "cmf.cmethod_designation": "عہدہ",
+  "cmf.cmethod_mobile": "موبائل",
+  "cmf.cmethod_phone": "فون",
+  "cmf.cmethod_whatsapp": "واٹس ایپ",
+  "cmf.cmethod_email": "ای میل",
+  "cmf.cmethod_website": "ویب سائٹ",
+  "cmf.cmethod_fax": "فیکس",
+  "cmf.cmethod_other": "دیگر",
+  "cmf.no_accounts_opt": "— ابھی کوئی اکاؤنٹ نہیں —",
+  "cmf.new_account_opt": "+ نیا اکاؤنٹ…",
 };
 
 const ar: Dict = {
@@ -80373,6 +80412,19 @@ const ar: Dict = {
   "cmf.draft_badge": "سيتم إنشاؤها",
   "cmf.company_name_lbl": "اسم الشركة",
   "cmf.location": "الموقع",
+  "cmf.sec_contact_methods": "طرق التواصل",
+  "cmf.contacts_methods_hint": "أضف طرق التواصل — مثل واتساب، البريد الإلكتروني، الهاتف، الموقع. اختر النوع ثم أدخل قيمته.",
+  "cmf.cmethod_person": "جهة الاتصال",
+  "cmf.cmethod_designation": "المسمى الوظيفي",
+  "cmf.cmethod_mobile": "الجوال",
+  "cmf.cmethod_phone": "الهاتف",
+  "cmf.cmethod_whatsapp": "واتساب",
+  "cmf.cmethod_email": "البريد الإلكتروني",
+  "cmf.cmethod_website": "الموقع الإلكتروني",
+  "cmf.cmethod_fax": "الفاكس",
+  "cmf.cmethod_other": "أخرى",
+  "cmf.no_accounts_opt": "— لا يوجد حساب بعد —",
+  "cmf.new_account_opt": "+ حساب جديد…",
 };
 
 const fa: Dict = {
@@ -103273,6 +103325,19 @@ const fa: Dict = {
   "cmf.draft_badge": "ایجاد خواهد شد",
   "cmf.company_name_lbl": "نام شرکت",
   "cmf.location": "موقعیت",
+  "cmf.sec_contact_methods": "روش‌های تماس",
+  "cmf.contacts_methods_hint": "روش‌های تماس را اضافه کنید — مثلاً واتساپ، ایمیل، تلفن، وب‌سایت. نوع را انتخاب کنید و سپس مقدار آن را وارد کنید.",
+  "cmf.cmethod_person": "شخص تماس",
+  "cmf.cmethod_designation": "سمت",
+  "cmf.cmethod_mobile": "موبایل",
+  "cmf.cmethod_phone": "تلفن",
+  "cmf.cmethod_whatsapp": "واتساپ",
+  "cmf.cmethod_email": "ایمیل",
+  "cmf.cmethod_website": "وب‌سایت",
+  "cmf.cmethod_fax": "فکس",
+  "cmf.cmethod_other": "سایر",
+  "cmf.no_accounts_opt": "— هنوز حسابی نیست —",
+  "cmf.new_account_opt": "+ حساب جدید…",
 };
 
 const ps: Dict = {
@@ -126180,6 +126245,19 @@ const ps: Dict = {
   "cmf.draft_badge": "جوړ به شي",
   "cmf.company_name_lbl": "د شرکت نوم",
   "cmf.location": "موقعیت",
+  "cmf.sec_contact_methods": "د اړیکې لارې",
+  "cmf.contacts_methods_hint": "د اړیکې لارې اضافه کړئ — لکه واټساپ، ایمیل، تلیفون، ویب پاڼه. ډول وټاکئ، بیا یې ارزښت ولیکئ.",
+  "cmf.cmethod_person": "د اړیکې شخص",
+  "cmf.cmethod_designation": "دنده",
+  "cmf.cmethod_mobile": "موبایل",
+  "cmf.cmethod_phone": "تلیفون",
+  "cmf.cmethod_whatsapp": "واټساپ",
+  "cmf.cmethod_email": "ایمیل",
+  "cmf.cmethod_website": "ویب پاڼه",
+  "cmf.cmethod_fax": "فکس",
+  "cmf.cmethod_other": "نور",
+  "cmf.no_accounts_opt": "— تر اوسه حساب نشته —",
+  "cmf.new_account_opt": "+ نوی حساب…",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

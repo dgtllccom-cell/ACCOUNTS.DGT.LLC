@@ -31,14 +31,11 @@ import {
 } from "@/features/companies/company-labels";
 import { cn } from "@/lib/utils";
 
+// A contact is a repeatable contact METHOD: a Type (Person/Phone/WhatsApp/Email/Website…) + its Value.
 export type CompanyContactItem = {
   id: string;
   type: string;
-  name: string;
-  designation: string;
-  email: string;
-  phone: string;
-  whatsapp: string;
+  value: string;
 };
 
 export type CompanyRegistrationEntry = { type: string; value: string };
@@ -79,12 +76,18 @@ type BranchOption = { id: string; name: string; code: string | null; city_name?:
 type DupCandidate = CompanyDuplicateCandidate & { reasons?: string[]; registrationNumber?: string | null; taxNumber?: string | null };
 
 const CURRENCIES = ["AED", "PKR", "AFN", "INR", "CNY", "USD", "EUR", "GBP", "SAR", "IRR", "TRY", "OMR", "QAR"];
-const CONTACT_TYPES = [
-  { value: "main", key: "contact_main", en: "Main Contact" },
-  { value: "authorized", key: "contact_authorized", en: "Authorized Person" },
-  { value: "accounts", key: "contact_accounts", en: "Accounts" },
-  { value: "operations", key: "contact_operations", en: "Operations" },
-] as const;
+// Contact METHODS — repeatable Type + Value. Only the value input for the chosen type is shown.
+const CONTACT_METHOD_TYPES: Array<{ value: string; key: string; en: string; input: string; ph: string }> = [
+  { value: "person", key: "cmethod_person", en: "Contact Person", input: "text", ph: "Full name" },
+  { value: "designation", key: "cmethod_designation", en: "Designation", input: "text", ph: "e.g. Manager" },
+  { value: "mobile", key: "cmethod_mobile", en: "Mobile", input: "tel", ph: "+00 000 000000" },
+  { value: "phone", key: "cmethod_phone", en: "Phone", input: "tel", ph: "+00 000 000000" },
+  { value: "whatsapp", key: "cmethod_whatsapp", en: "WhatsApp", input: "tel", ph: "+00 000 000000" },
+  { value: "email", key: "cmethod_email", en: "Email", input: "email", ph: "name@example.com" },
+  { value: "website", key: "cmethod_website", en: "Website", input: "url", ph: "https://example.com" },
+  { value: "fax", key: "cmethod_fax", en: "Fax", input: "tel", ph: "+00 000 000000" },
+  { value: "other", key: "cmethod_other", en: "Other", input: "text", ph: "Value" },
+];
 
 // Repeatable tax-registration types (owner spec: NTN / TRN / VAT / GST / Other).
 const TAX_TYPE_OPTIONS: Array<{ value: string; key: string; en: string }> = [
@@ -112,8 +115,30 @@ const field = "h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text
 const label = "mb-1 block text-xs font-semibold text-slate-700 dark:text-slate-300";
 const card = "rounded-2xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900 sm:p-5";
 
-function newContact(): CompanyContactItem {
-  return { id: `c-${Math.random().toString(36).slice(2, 9)}`, type: "main", name: "", designation: "", email: "", phone: "", whatsapp: "" };
+function newContact(type = "mobile"): CompanyContactItem {
+  return { id: `c-${Math.random().toString(36).slice(2, 9)}`, type, value: "" };
+}
+// Expand a stored contact (new {type,value} or legacy {name,phone,email,whatsapp,…}) into method rows,
+// so no previously-saved contact information is lost on edit.
+function contactToRows(x: any): CompanyContactItem[] {
+  const rows: CompanyContactItem[] = [];
+  const push = (type: string, value: unknown) => {
+    const v = String(value ?? "").trim();
+    if (v) rows.push({ id: `c-${Math.random().toString(36).slice(2, 9)}`, type, value: v });
+  };
+  if (x && typeof x === "object") {
+    if (x.value && (x.type === "person" || x.type === "designation" || !x.name)) push(x.type || "other", x.value);
+    push("person", x.name);
+    push("designation", x.designation);
+    push("mobile", x.mobile);
+    push("phone", x.phone);
+    push("whatsapp", x.whatsapp);
+    push("email", x.email);
+    push("website", x.website);
+    // a bare {type,value} already captured above when no legacy person fields exist
+    if (rows.length === 0 && x.value) push(x.type || "other", x.value);
+  }
+  return rows;
 }
 
 export function CompanyIncorporationForm({
@@ -301,18 +326,15 @@ export function CompanyIncorporationForm({
   }, [owner, savedId, s.lang]);
 
   // Load the selected customer's accounts (session-scoped list, filtered to this customer).
-  // If the customer has several accounts the user picks the correct one; one account auto-selects.
-  useEffect(() => {
-    if (!owner) {
-      setAccounts([]);
-      setAccountId("");
-      return;
-    }
-    setAccountsLoading(true);
-    apiGet<any>(`/api/erp/accounting/accounts?limit=500&lang=${s.lang}`)
-      .then((r) => {
+  // One account auto-selects; several → the user picks. `selectNewest` is used after returning
+  // from "+ New Account" to auto-select a newly-created account.
+  const loadAccounts = useCallback(
+    async (ownerId: string, selectNewest = false) => {
+      setAccountsLoading(true);
+      try {
+        const r = await apiGet<any>(`/api/erp/accounting/accounts?limit=500&lang=${s.lang}`);
         const list: AccountOption[] = (r?.accounts ?? [])
-          .filter((a: any) => a.customer_id && String(a.customer_id) === String(owner.id))
+          .filter((a: any) => a.customer_id && String(a.customer_id) === String(ownerId))
           .map((a: any) => ({
             id: a.id,
             accountNumber: a.account_number ?? a.customer_number ?? a.code ?? null,
@@ -324,12 +346,42 @@ export function CompanyIncorporationForm({
             cityBranchId: a.city_branch_id ?? null,
             companyId: a.company_id ?? null,
           }));
-        setAccounts(list);
-        setAccountId((prev) => (prev && list.some((a) => a.id === prev) ? prev : list.length === 1 ? list[0].id : ""));
-      })
-      .catch(() => setAccounts([]))
-      .finally(() => setAccountsLoading(false));
-  }, [owner, s.lang]);
+        setAccounts((prev) => {
+          if (selectNewest) {
+            const added = list.find((a) => !prev.some((p) => p.id === a.id));
+            if (added) setAccountId(added.id);
+          }
+          return list;
+        });
+        setAccountId((prev) => (prev && list.some((a) => a.id === prev) ? prev : list.length === 1 ? list[0].id : prev));
+      } catch {
+        setAccounts([]);
+      } finally {
+        setAccountsLoading(false);
+      }
+    },
+    [s.lang],
+  );
+
+  useEffect(() => {
+    if (!owner) {
+      setAccounts([]);
+      setAccountId("");
+      return;
+    }
+    void loadAccounts(owner.id);
+  }, [owner, loadAccounts]);
+
+  // Re-fetch accounts when the window regains focus — picks up accounts created in the New Account tab.
+  const awaitingNewAccount = useRef(false);
+  useEffect(() => {
+    const onFocus = () => {
+      if (owner) void loadAccounts(owner.id, awaitingNewAccount.current);
+      awaitingNewAccount.current = false;
+    };
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [owner, loadAccounts]);
 
   useEffect(() => {
     if (initialOwnerPersonId && !initialCompanyId) void loadOwner(initialOwnerPersonId);
@@ -388,17 +440,7 @@ export function CompanyIncorporationForm({
         setAddress(c.address || "");
         setZipCode(c.zip_code || "");
         setSavedCode(c.company_code || null);
-        setContacts(
-          (Array.isArray(c.contacts) ? c.contacts : []).map((x: any) => ({
-            id: x.id || `c-${Math.random().toString(36).slice(2, 9)}`,
-            type: x.type || "main",
-            name: x.name || x.value || "",
-            designation: x.designation || "",
-            email: x.email || "",
-            phone: x.phone || "",
-            whatsapp: x.whatsapp || "",
-          }))
-        );
+        setContacts((Array.isArray(c.contacts) ? c.contacts : []).flatMap((x: any) => contactToRows(x)));
         if (c.owner_person_id) await loadOwner(c.owner_person_id);
       } catch (e: any) {
         if (alive) setError(e?.message || s.t("load_failed", "The company could not be loaded."));
@@ -503,8 +545,8 @@ export function CompanyIncorporationForm({
       isBranchOperative: companyType === "internal",
       originalLanguage: s.lang,
       contacts: contacts
-        .filter((c) => c.name.trim() || c.phone.trim() || c.email.trim())
-        .map((c) => ({ id: c.id, type: c.type, name: c.name.trim(), designation: c.designation.trim(), email: c.email.trim(), phone: c.phone.trim(), whatsapp: c.whatsapp.trim(), value: c.phone.trim() || c.email.trim() })),
+        .filter((c) => c.value.trim())
+        .map((c) => ({ id: c.id, type: c.type, value: c.value.trim() })),
       registrations: [
         registrationNumber.trim() ? { type: registrationType || "registration", value: registrationNumber.trim() } : null,
         taxNumber.trim() ? { type: "trn", value: taxNumber.trim() } : null,
@@ -576,6 +618,13 @@ export function CompanyIncorporationForm({
     const sistersHtml = sisters.length
       ? sisters.map((c) => `<tr><td>${esc(c.name)}</td><td>${esc(c.company_code)}</td><td>${esc(c.registration_number)}</td><td>${esc(c.country_name)}</td></tr>`).join("")
       : `<tr><td colspan="4" class="muted">${esc(s.t("no_sisters", "No other registered company for this owner yet."))}</td></tr>`;
+    const contactsHtml = contacts
+      .filter((c) => c.value.trim())
+      .map((c) => {
+        const m = CONTACT_METHOD_TYPES.find((x) => x.value === c.type) || CONTACT_METHOD_TYPES[0];
+        return row(s.t(m.key, m.en), c.value);
+      })
+      .join("");
     const align = s.isRtl ? "right" : "left";
     const html = `<!doctype html><html dir="${s.isRtl ? "rtl" : "ltr"}" lang="${s.lang}"><head><meta charset="utf-8"><title>${esc(s.t("live_report", "Live Registration Report"))}</title>
     <style>@page{size:A4;margin:14mm}*{box-sizing:border-box}body{font-family:Arial,'Segoe UI',sans-serif;color:#0f172a;font-size:12px}h1{font-size:18px;margin:0 0 2px}.sub{color:#64748b;font-size:11px;margin-bottom:14px}h2{font-size:13px;margin:16px 0 6px;border-bottom:1px solid #cbd5e1;padding-bottom:3px}table{width:100%;border-collapse:collapse}td,th{padding:4px 6px;vertical-align:top;text-align:${align}}.k{color:#64748b;width:40%;font-weight:600}.v{font-weight:600}.grid td{border-bottom:1px solid #f1f5f9}.lnk th{background:#f1f5f9;font-size:10px;text-transform:uppercase;border-bottom:1px solid #cbd5e1}.lnk td{border-bottom:1px solid #f1f5f9}.muted{color:#94a3b8}.draft{border:1px solid #f59e0b;background:#fffbeb;padding:8px;border-radius:6px}</style></head><body>
@@ -588,7 +637,8 @@ export function CompanyIncorporationForm({
     <h2>${esc(s.t("existing_linked", "Existing Linked Companies"))} (${sisters.length})</h2>
     <table class="lnk"><thead><tr><th>${esc(s.t("company_name_lbl", "Company Name"))}</th><th>${esc(s.t("company_code", "Company Code"))}</th><th>${esc(s.t("registration_number", "Registration / License Number"))}</th><th>${esc(s.t("country", "Country"))}</th></tr></thead><tbody>${sistersHtml}</tbody></table>
     <h2>${esc(s.t("new_draft", "New Company Draft"))}</h2>
-    <div class="draft"><table class="grid">${row(s.t("company_name_lbl", "Company Name"), legalName || tradeName)}${row(s.t("nature_label", "Company Type / Business Nature"), natureOfBusiness)}${row(s.t("sum_registrations", "Tax registrations"), String(regCount))}${row(s.t("location", "Location"), [cityName, stateName, countries.find((c) => c.id === countryId)?.name].filter(Boolean).join(", "))}${row(s.t("sum_contracts", "Contracts"), String(contracts.filter((r) => r.reference.trim() || r.note.trim()).length))}${row(s.t("sum_contacts", "Contacts"), String(contacts.filter((c) => c.name.trim() || c.phone.trim() || c.email.trim()).length))}</table></div>
+    <div class="draft"><table class="grid">${row(s.t("company_name_lbl", "Company Name"), legalName || tradeName)}${row(s.t("nature_label", "Company Type / Business Nature"), natureOfBusiness)}${row(s.t("sum_registrations", "Tax registrations"), String(regCount))}${row(s.t("location", "Location"), [cityName, stateName, countries.find((c) => c.id === countryId)?.name].filter(Boolean).join(", "))}${row(s.t("sum_contracts", "Contracts"), String(contracts.filter((r) => r.reference.trim() || r.note.trim()).length))}${row(s.t("sum_contacts", "Contact methods"), String(contacts.filter((c) => c.value.trim()).length))}</table></div>
+    ${contactsHtml ? `<h2>${esc(s.t("sec_contact_methods", "Contact Methods"))}</h2><table class="grid">${contactsHtml}</table>` : ""}
     <script>window.onload=function(){setTimeout(function(){window.print();},250);};</script></body></html>`;
     const w = window.open("", "_blank", "width=920,height=720");
     if (w) { w.document.open(); w.document.write(html); w.document.close(); }
@@ -748,15 +798,36 @@ export function CompanyIncorporationForm({
                 <label className={label}>{s.t("account", "Account")}{accounts.length > 1 ? " *" : ""}</label>
                 {accountsLoading ? (
                   <div className="flex items-center gap-2 text-xs text-slate-500"><Loader2 className="h-3.5 w-3.5 animate-spin" /> {s.t("accounts_loading", "Loading accounts…")}</div>
-                ) : accounts.length === 0 ? (
-                  <p className="text-xs text-slate-500">{s.t("no_accounts", "This customer has no account in your scope. Accounts are opened in New Account.")}</p>
                 ) : (
-                  <select data-testid="account-select" className={field} value={accountId} onChange={(e) => setAccountId(e.target.value)}>
-                    {accounts.length > 1 && <option value="">{s.t("select_account", "— Select the account —")}</option>}
-                    {accounts.map((a) => (
-                      <option key={a.id} value={a.id}>{[a.accountNumber, a.name].filter(Boolean).join(" · ") || a.id}</option>
-                    ))}
-                  </select>
+                  <>
+                    <select
+                      data-testid="account-select"
+                      className={field}
+                      value={accountId}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (v === "__new_account__") {
+                          // Open the existing New Account master form; on return the list refreshes
+                          // and the newly-created account is auto-selected (window focus handler).
+                          awaitingNewAccount.current = true;
+                          window.open(`/dashboard/accounts/setup?customerId=${encodeURIComponent(owner?.id || "")}`, "_blank");
+                          return;
+                        }
+                        setAccountId(v);
+                      }}
+                    >
+                      {accounts.length !== 1 && (
+                        <option value="">{accounts.length === 0 ? s.t("no_accounts_opt", "— No account yet —") : s.t("select_account", "— Select the account —")}</option>
+                      )}
+                      {accounts.map((a) => (
+                        <option key={a.id} value={a.id}>{[a.accountNumber, a.name].filter(Boolean).join(" · ") || a.id}</option>
+                      ))}
+                      <option value="__new_account__">{s.t("new_account_opt", "+ New Account…")}</option>
+                    </select>
+                    {accounts.length === 0 && (
+                      <p className="mt-1 text-[11px] text-slate-500">{s.t("no_accounts", "This customer has no account in your scope. Accounts are opened in New Account.")}</p>
+                    )}
+                  </>
                 )}
                 {accountId && (
                   <div className="mt-1.5 inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
@@ -1110,37 +1181,41 @@ export function CompanyIncorporationForm({
         )}
       </section>
 
-      {/* Contacts */}
+      {/* Contact methods — repeatable Type + Value; only the input for the selected type is shown. */}
       <section className={card}>
         <div className="mb-3 flex items-center justify-between gap-2">
-          <h3 className="text-sm font-bold text-slate-900 dark:text-white">{s.t("sec_contacts", "Contacts & Authorized Persons")}</h3>
-          <button type="button" onClick={() => setContacts((p) => [...p, newContact()])} className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs font-semibold hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800">
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white">{s.t("sec_contact_methods", "Contact Methods")}</h3>
+          <button type="button" data-testid="add-contact" onClick={() => setContacts((p) => [...p, newContact()])} className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300">
             <Plus className="h-3.5 w-3.5" /> {s.t("add_contact", "Add Contact")}
           </button>
         </div>
         {contacts.length === 0 ? (
-          <div className="text-xs text-slate-500">{s.t("no_contacts", "No contacts added.")}</div>
+          <p className="text-xs text-slate-500">{s.t("contacts_methods_hint", "Add contact methods — e.g. WhatsApp, Email, Phone, Website. Choose the type, then enter its value.")}</p>
         ) : (
           <div className="space-y-2">
-            {contacts.map((c, i) => (
-              <div key={c.id} className="grid gap-2 rounded-xl border border-slate-200 p-2 dark:border-slate-700 sm:grid-cols-6">
-                <select className={field} value={c.type} onChange={(e) => setContacts((p) => p.map((x, j) => (j === i ? { ...x, type: e.target.value } : x)))}>
-                  {CONTACT_TYPES.map((o) => (
-                    <option key={o.value} value={o.value}>{s.t(o.key, o.en)}</option>
-                  ))}
-                </select>
-                <input className={field} placeholder={s.t("c_name", "Name")} value={c.name} onChange={(e) => setContacts((p) => p.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} />
-                <input className={field} placeholder={s.t("c_designation", "Designation")} value={c.designation} onChange={(e) => setContacts((p) => p.map((x, j) => (j === i ? { ...x, designation: e.target.value } : x)))} />
-                <input className={field} placeholder={s.t("c_phone", "Phone")} value={c.phone} onChange={(e) => setContacts((p) => p.map((x, j) => (j === i ? { ...x, phone: e.target.value } : x)))} />
-                <input className={field} placeholder={s.t("c_email", "Email")} value={c.email} onChange={(e) => setContacts((p) => p.map((x, j) => (j === i ? { ...x, email: e.target.value } : x)))} />
-                <div className="flex gap-2">
-                  <input className={field} placeholder={s.t("c_whatsapp", "WhatsApp")} value={c.whatsapp} onChange={(e) => setContacts((p) => p.map((x, j) => (j === i ? { ...x, whatsapp: e.target.value } : x)))} />
-                  <button type="button" aria-label={s.t("remove", "Remove")} onClick={() => setContacts((p) => p.filter((_, j) => j !== i))} className="rounded-lg px-2 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40">
+            {contacts.map((c, i) => {
+              const meta = CONTACT_METHOD_TYPES.find((m) => m.value === c.type) || CONTACT_METHOD_TYPES[0];
+              return (
+                <div key={c.id} className="grid gap-2 sm:grid-cols-[10rem_1fr_auto]">
+                  <select data-testid="contact-type" className={field} value={c.type} onChange={(e) => setContacts((p) => p.map((x, j) => (j === i ? { ...x, type: e.target.value } : x)))}>
+                    {CONTACT_METHOD_TYPES.map((o) => (
+                      <option key={o.value} value={o.value}>{s.t(o.key, o.en)}</option>
+                    ))}
+                  </select>
+                  <input
+                    type={meta.input}
+                    data-testid="contact-value"
+                    className={field}
+                    value={c.value}
+                    placeholder={meta.ph}
+                    onChange={(e) => setContacts((p) => p.map((x, j) => (j === i ? { ...x, value: e.target.value } : x)))}
+                  />
+                  <button type="button" aria-label={s.t("remove", "Remove")} onClick={() => setContacts((p) => p.filter((_, j) => j !== i))} className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-300 text-slate-500 hover:bg-rose-50 hover:text-rose-600 dark:border-slate-700 dark:hover:bg-rose-950/40">
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>
@@ -1314,8 +1389,18 @@ export function CompanyIncorporationForm({
                     <Row k={s.t("sum_registrations", "Tax registrations")} v={String(regCount)} />
                     <Row k={s.t("location", "Location")} v={[cityName, stateName, countries.find((c) => c.id === countryId)?.name].filter(Boolean).join(", ")} />
                     <Row k={s.t("sum_contracts", "Contracts")} v={String(contracts.filter((r) => r.reference.trim() || r.note.trim()).length)} />
-                    <Row k={s.t("sum_contacts", "Contacts")} v={String(contacts.filter((c) => c.name.trim() || c.phone.trim() || c.email.trim()).length)} />
+                    <Row k={s.t("sum_contacts", "Contact methods")} v={String(contacts.filter((c) => c.value.trim()).length)} />
                   </div>
+                  {contacts.some((c) => c.value.trim()) && (
+                    <div className="mt-1.5 space-y-0.5 border-t border-amber-200/60 pt-1.5 dark:border-amber-900/40">
+                      {contacts.filter((c) => c.value.trim()).map((c) => (
+                        <div key={c.id} className="flex items-start justify-between gap-2 text-[11px]">
+                          <span className="shrink-0 font-semibold text-slate-500 dark:text-slate-400">{s.t((CONTACT_METHOD_TYPES.find((m) => m.value === c.type) || CONTACT_METHOD_TYPES[0]).key, (CONTACT_METHOD_TYPES.find((m) => m.value === c.type) || CONTACT_METHOD_TYPES[0]).en)}</span>
+                          <span className={cn("min-w-0 break-words text-end font-semibold text-slate-800 dark:text-slate-100", s.isRtl && "text-start")}>{c.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             );
