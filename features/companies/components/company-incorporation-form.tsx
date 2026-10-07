@@ -14,7 +14,7 @@
  * user decides. An AI Document Intake draft (Scan / Upload) only pre-fills — the user saves.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import type { Route } from "next";
 import { Building2, Link2, Loader2, Plus, Minus, Search, ShieldCheck, Trash2, UserRound, AlertTriangle, FileText, ScanLine } from "lucide-react";
@@ -62,7 +62,18 @@ export type CompanyIncorporationData = {
   address: string;
 };
 
-type OwnerOption = { id: string; name: string; code: string | null; mobile: string | null; email: string | null };
+type OwnerOption = { id: string; name: string; code: string | null; mobile: string | null; email: string | null; address?: string | null };
+type AccountOption = {
+  id: string;
+  accountNumber: string | null;
+  name: string | null;
+  status: string | null;
+  kind: string | null;
+  countryId: string | null;
+  countryBranchId: string | null;
+  cityBranchId: string | null;
+  companyId: string | null;
+};
 type SisterCompany = { id: string; name: string; company_code: string | null; registration_number: string | null; country_name: string | null };
 type BranchOption = { id: string; name: string; code: string | null; city_name?: string | null; company_id: string | null };
 type DupCandidate = CompanyDuplicateCandidate & { reasons?: string[]; registrationNumber?: string | null; taxNumber?: string | null };
@@ -131,6 +142,12 @@ export function CompanyIncorporationForm({
   const [ownerResults, setOwnerResults] = useState<OwnerOption[]>([]);
   const [ownerSearching, setOwnerSearching] = useState(false);
   const [sisters, setSisters] = useState<SisterCompany[]>([]);
+  // accounts of the selected customer (reference: pick the correct one if several)
+  const [accounts, setAccounts] = useState<AccountOption[]>([]);
+  const [accountId, setAccountId] = useState("");
+  const [accountsLoading, setAccountsLoading] = useState(false);
+  // responsive: on phones/tablets switch between Form and Live Report; desktop shows both side by side
+  const [mobileView, setMobileView] = useState<"form" | "report">("form");
   // legal identity
   const [legalName, setLegalName] = useState("");
   const [tradeName, setTradeName] = useState("");
@@ -143,8 +160,6 @@ export function CompanyIncorporationForm({
   const [taxRegs, setTaxRegs] = useState<TaxRegItem[]>([]);
   // Repeatable contract details (saved to the companies.contracts jsonb).
   const [contracts, setContracts] = useState<ContractItem[]>([]);
-  // Live summary card (sticky; collapsible so it stays usable on mobile).
-  const [summaryOpen, setSummaryOpen] = useState(true);
   const [incorporationDate, setIncorporationDate] = useState("");
   const [licenseExpiryDate, setLicenseExpiryDate] = useState("");
   const [companyStatus, setCompanyStatus] = useState("active");
@@ -256,7 +271,11 @@ export function CompanyIncorporationForm({
       const r = await apiGet<any>(`/api/erp/customers/${encodeURIComponent(id)}`);
       const c = r?.customer ?? r;
       if (c?.id) {
-        const o = { id: c.id, name: c.customer_name || c.company_name || "—", code: c.person_code || null, mobile: c.mobile || null, email: c.email || null };
+        const addr =
+          c.address ||
+          [c.address_line1 || c.street, c.city || c.city_name, c.state || c.state_name, c.country || c.country_name].filter(Boolean).join(", ") ||
+          null;
+        const o = { id: c.id, name: c.customer_name || c.company_name || "—", code: c.person_code || c.customer_code || null, mobile: c.mobile || null, email: c.email || null, address: addr };
         setOwner(o);
         setOwnerQuery(o.name);
       }
@@ -280,6 +299,37 @@ export function CompanyIncorporationForm({
       )
       .catch(() => setSisters([]));
   }, [owner, savedId, s.lang]);
+
+  // Load the selected customer's accounts (session-scoped list, filtered to this customer).
+  // If the customer has several accounts the user picks the correct one; one account auto-selects.
+  useEffect(() => {
+    if (!owner) {
+      setAccounts([]);
+      setAccountId("");
+      return;
+    }
+    setAccountsLoading(true);
+    apiGet<any>(`/api/erp/accounting/accounts?limit=500&lang=${s.lang}`)
+      .then((r) => {
+        const list: AccountOption[] = (r?.accounts ?? [])
+          .filter((a: any) => a.customer_id && String(a.customer_id) === String(owner.id))
+          .map((a: any) => ({
+            id: a.id,
+            accountNumber: a.account_number ?? a.customer_number ?? a.code ?? null,
+            name: a.name ?? null,
+            status: a.status ?? null,
+            kind: a.kind ?? a.category ?? null,
+            countryId: a.country_id ?? null,
+            countryBranchId: a.country_branch_id ?? null,
+            cityBranchId: a.city_branch_id ?? null,
+            companyId: a.company_id ?? null,
+          }));
+        setAccounts(list);
+        setAccountId((prev) => (prev && list.some((a) => a.id === prev) ? prev : list.length === 1 ? list[0].id : ""));
+      })
+      .catch(() => setAccounts([]))
+      .finally(() => setAccountsLoading(false));
+  }, [owner, s.lang]);
 
   useEffect(() => {
     if (initialOwnerPersonId && !initialCompanyId) void loadOwner(initialOwnerPersonId);
@@ -516,6 +566,34 @@ export function CompanyIncorporationForm({
     }
   }
 
+  // View / Print / PDF of the Live Registration Report — A4, RTL-aware, in the active language.
+  const printLiveReport = useCallback(() => {
+    const selAcc = accounts.find((a) => a.id === accountId) || null;
+    const accCountry = countries.find((c) => c.id === selAcc?.countryId)?.name || "";
+    const esc = (v: unknown) => String(v ?? "—").replace(/[&<>]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[m] as string));
+    const row = (k: string, v: unknown) => `<tr><td class="k">${esc(k)}</td><td class="v">${esc(v || "—")}</td></tr>`;
+    const regCount = (registrationNumber.trim() ? 1 : 0) + (taxNumber.trim() ? 1 : 0) + taxRegs.filter((r) => r.value.trim()).length;
+    const sistersHtml = sisters.length
+      ? sisters.map((c) => `<tr><td>${esc(c.name)}</td><td>${esc(c.company_code)}</td><td>${esc(c.registration_number)}</td><td>${esc(c.country_name)}</td></tr>`).join("")
+      : `<tr><td colspan="4" class="muted">${esc(s.t("no_sisters", "No other registered company for this owner yet."))}</td></tr>`;
+    const align = s.isRtl ? "right" : "left";
+    const html = `<!doctype html><html dir="${s.isRtl ? "rtl" : "ltr"}" lang="${s.lang}"><head><meta charset="utf-8"><title>${esc(s.t("live_report", "Live Registration Report"))}</title>
+    <style>@page{size:A4;margin:14mm}*{box-sizing:border-box}body{font-family:Arial,'Segoe UI',sans-serif;color:#0f172a;font-size:12px}h1{font-size:18px;margin:0 0 2px}.sub{color:#64748b;font-size:11px;margin-bottom:14px}h2{font-size:13px;margin:16px 0 6px;border-bottom:1px solid #cbd5e1;padding-bottom:3px}table{width:100%;border-collapse:collapse}td,th{padding:4px 6px;vertical-align:top;text-align:${align}}.k{color:#64748b;width:40%;font-weight:600}.v{font-weight:600}.grid td{border-bottom:1px solid #f1f5f9}.lnk th{background:#f1f5f9;font-size:10px;text-transform:uppercase;border-bottom:1px solid #cbd5e1}.lnk td{border-bottom:1px solid #f1f5f9}.muted{color:#94a3b8}.draft{border:1px solid #f59e0b;background:#fffbeb;padding:8px;border-radius:6px}</style></head><body>
+    <h1>${esc(s.t("live_report", "Live Registration Report"))}</h1>
+    <div class="sub">${esc(savedId ? s.t("title_edit", "Edit Company — Company Master") : s.t("title_new", "New Company — Company Master"))} · ${esc(new Date().toLocaleString())}</div>
+    <h2>${esc(s.t("sel_account", "Selected Account Details"))}</h2>
+    <table class="grid">${row(s.t("account_number", "Account Number"), selAcc?.accountNumber)}${row(s.t("account_name", "Account Name"), selAcc?.name)}${row(s.t("account_type", "Type"), selAcc?.kind)}${row(s.t("status", "Status"), selAcc?.status)}${row(s.t("country", "Country"), accCountry)}</table>
+    <h2>${esc(s.t("sel_customer", "Selected Customer Details"))}</h2>
+    <table class="grid">${row(s.t("customer_code", "Customer Code"), owner?.code)}${row(s.t("customer_name", "Customer Name"), owner?.name)}${row(s.t("phone", "Phone"), owner?.mobile)}${row(s.t("address", "Address"), owner?.address)}</table>
+    <h2>${esc(s.t("existing_linked", "Existing Linked Companies"))} (${sisters.length})</h2>
+    <table class="lnk"><thead><tr><th>${esc(s.t("company_name_lbl", "Company Name"))}</th><th>${esc(s.t("company_code", "Company Code"))}</th><th>${esc(s.t("registration_number", "Registration / License Number"))}</th><th>${esc(s.t("country", "Country"))}</th></tr></thead><tbody>${sistersHtml}</tbody></table>
+    <h2>${esc(s.t("new_draft", "New Company Draft"))}</h2>
+    <div class="draft"><table class="grid">${row(s.t("company_name_lbl", "Company Name"), legalName || tradeName)}${row(s.t("nature_label", "Company Type / Business Nature"), natureOfBusiness)}${row(s.t("sum_registrations", "Tax registrations"), String(regCount))}${row(s.t("location", "Location"), [cityName, stateName, countries.find((c) => c.id === countryId)?.name].filter(Boolean).join(", "))}${row(s.t("sum_contracts", "Contracts"), String(contracts.filter((r) => r.reference.trim() || r.note.trim()).length))}${row(s.t("sum_contacts", "Contacts"), String(contacts.filter((c) => c.name.trim() || c.phone.trim() || c.email.trim()).length))}</table></div>
+    <script>window.onload=function(){setTimeout(function(){window.print();},250);};</script></body></html>`;
+    const w = window.open("", "_blank", "width=920,height=720");
+    if (w) { w.document.open(); w.document.write(html); w.document.close(); }
+  }, [accounts, accountId, countries, owner, sisters, legalName, tradeName, natureOfBusiness, registrationNumber, taxNumber, taxRegs, contracts, contacts, cityName, stateName, countryId, savedId, s]);
+
   const branchLinkedElsewhere = (b: BranchOption) => Boolean(b.company_id && b.company_id !== savedId);
 
   if (loading) {
@@ -527,7 +605,7 @@ export function CompanyIncorporationForm({
   }
 
   return (
-    <div dir={s.dir} className={cn("w-full space-y-4 font-sans", mode === "embedded" ? "" : "mx-auto max-w-5xl")}>
+    <div dir={s.dir} className={cn("w-full space-y-4 font-sans", mode === "embedded" ? "" : "mx-auto max-w-7xl")}>
       {/* Header */}
       <div className={cn(card, "flex flex-wrap items-center justify-between gap-3")}>
         <div className="flex min-w-0 items-center gap-3">
@@ -548,41 +626,38 @@ export function CompanyIncorporationForm({
         )}
       </div>
 
-      {/* Live Summary — sticky + collapsible so it stays reachable on mobile while the long form scrolls. */}
-      <div className={cn(card, "sticky top-2 z-10 !p-0 overflow-hidden border-blue-200 dark:border-blue-900/50")}>
-        <button
-          type="button"
-          onClick={() => setSummaryOpen((v) => !v)}
-          aria-expanded={summaryOpen}
-          className="flex w-full items-center justify-between gap-2 bg-blue-50/70 px-4 py-2.5 text-left dark:bg-blue-950/30"
-        >
-          <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-blue-700 dark:text-blue-300">
-            <FileText className="h-4 w-4" /> {s.t("live_summary", "Live Summary")}
-          </span>
-          <span className="truncate text-xs font-semibold text-slate-600 dark:text-slate-300">
-            {(legalName || tradeName || s.t("sum_untitled", "Untitled company")).trim()}
-          </span>
-        </button>
-        {summaryOpen && (
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2 px-4 py-3 text-xs sm:grid-cols-3 lg:grid-cols-4">
-            {[
-              [s.t("nature_label", "Company Type / Business Nature"), natureOfBusiness || "—"],
-              [s.t("country", "Country"), countries.find((c) => c.id === countryId)?.name || "—"],
-              [s.t("state", "State / Province"), stateName || "—"],
-              [s.t("city", "City"), cityName || "—"],
-              [s.t("base_currency", "Base Currency"), baseCurrency || "—"],
-              [s.t("sum_registrations", "Tax registrations"), String((registrationNumber.trim() ? 1 : 0) + (taxNumber.trim() ? 1 : 0) + taxRegs.filter((r) => r.value.trim()).length)],
-              [s.t("sum_contracts", "Contracts"), String(contracts.filter((r) => r.reference.trim() || r.note.trim()).length)],
-              [s.t("sum_contacts", "Contacts"), String(contacts.filter((c) => c.name.trim() || c.phone.trim() || c.email.trim()).length)],
-            ].map(([k, v], i) => (
-              <div key={i} className="min-w-0">
-                <div className="truncate text-[10px] font-semibold uppercase text-slate-400 dark:text-slate-500">{k}</div>
-                <div className="truncate font-semibold text-slate-800 dark:text-slate-100">{v}</div>
-              </div>
-            ))}
-          </div>
-        )}
+      {/* Step indicator — the existing sections grouped into five clear steps (visual guide, non-blocking). */}
+      <div className="overflow-x-auto">
+        <ol className="flex min-w-max items-center gap-1 rounded-2xl border border-slate-200 bg-white px-2 py-2 text-xs shadow-xs dark:border-slate-800 dark:bg-slate-900">
+          {[
+            s.t("step1", "Select Customer / Account"),
+            s.t("step2", "Company Details"),
+            s.t("step3", "Tax & Location"),
+            s.t("step4", "Contacts & Contracts"),
+            s.t("step5", "Review & Save"),
+          ].map((lbl, i) => (
+            <li key={i} className="flex items-center gap-1">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-600 text-[11px] font-bold text-white">{i + 1}</span>
+              <span className="whitespace-nowrap px-1 font-semibold text-slate-700 dark:text-slate-300">{lbl}</span>
+              {i < 4 && <span className="mx-1 h-px w-5 bg-slate-300 dark:bg-slate-700" />}
+            </li>
+          ))}
+        </ol>
       </div>
+
+      {/* Phone / tablet: switch between the Form and the Live Report. Desktop shows both side by side. */}
+      <div className="flex gap-2 lg:hidden">
+        <button type="button" onClick={() => setMobileView("form")} className={cn("flex-1 rounded-lg border px-3 py-2 text-sm font-bold", mobileView === "form" ? "border-blue-500 bg-blue-600 text-white" : "border-slate-300 text-slate-600 dark:border-slate-700 dark:text-slate-300")}>
+          {s.t("tab_form", "Form")}
+        </button>
+        <button type="button" onClick={() => setMobileView("report")} className={cn("flex-1 rounded-lg border px-3 py-2 text-sm font-bold", mobileView === "report" ? "border-blue-500 bg-blue-600 text-white" : "border-slate-300 text-slate-600 dark:border-slate-700 dark:text-slate-300")}>
+          {s.t("tab_report", "Live Report")}{sisters.length ? ` (${sisters.length})` : ""}
+        </button>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
+        {/* LEFT COLUMN — the form: every original section, grouped into the five steps. */}
+        <div className={cn("min-w-0 space-y-4", mobileView === "report" && "hidden lg:block")}>
 
       {intake.draft && (
         <div className="flex items-start gap-2 rounded-xl border border-violet-200 bg-violet-50 p-3 text-xs text-violet-900 dark:border-violet-900 dark:bg-violet-950/40 dark:text-violet-200">
@@ -653,6 +728,7 @@ export function CompanyIncorporationForm({
                       setOwner(o);
                       setOwnerQuery(o.name);
                       setOwnerResults([]);
+                      void loadOwner(o.id);
                     }}
                   >
                     <span className="text-sm font-semibold text-slate-900 dark:text-white">{o.name}</span>
@@ -666,7 +742,30 @@ export function CompanyIncorporationForm({
             <div data-testid="owner-card" className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs dark:border-slate-700 dark:bg-slate-800/50">
               <div className="font-bold text-slate-900 dark:text-white">{owner.name}</div>
               <div className="text-slate-500">{[owner.code, owner.mobile, owner.email].filter(Boolean).join(" · ") || "—"}</div>
-              <div className="mt-2 font-semibold text-slate-700 dark:text-slate-300">
+
+              {/* Account — pick the correct account when the customer has several. Accounts are opened in New Account. */}
+              <div className="mt-3 border-t border-slate-200 pt-3 dark:border-slate-700">
+                <label className={label}>{s.t("account", "Account")}{accounts.length > 1 ? " *" : ""}</label>
+                {accountsLoading ? (
+                  <div className="flex items-center gap-2 text-xs text-slate-500"><Loader2 className="h-3.5 w-3.5 animate-spin" /> {s.t("accounts_loading", "Loading accounts…")}</div>
+                ) : accounts.length === 0 ? (
+                  <p className="text-xs text-slate-500">{s.t("no_accounts", "This customer has no account in your scope. Accounts are opened in New Account.")}</p>
+                ) : (
+                  <select data-testid="account-select" className={field} value={accountId} onChange={(e) => setAccountId(e.target.value)}>
+                    {accounts.length > 1 && <option value="">{s.t("select_account", "— Select the account —")}</option>}
+                    {accounts.map((a) => (
+                      <option key={a.id} value={a.id}>{[a.accountNumber, a.name].filter(Boolean).join(" · ") || a.id}</option>
+                    ))}
+                  </select>
+                )}
+                {accountId && (
+                  <div className="mt-1.5 inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+                    {s.t("linked_account_number", "Linked Account Number")}: <span className="font-mono">{accounts.find((a) => a.id === accountId)?.accountNumber || "—"}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-3 font-semibold text-slate-700 dark:text-slate-300">
                 {s.t("sister_companies", "Sister companies of this owner")} ({sisters.length})
               </div>
               {sisters.length === 0 ? (
@@ -1101,6 +1200,127 @@ export function CompanyIncorporationForm({
           {saving && <Loader2 className="h-4 w-4 animate-spin" />}
           {savedId ? s.t("save_changes", "Save Changes") : s.t("save_company", "Save Company")}
         </button>
+      </div>
+        </div>
+        {/* RIGHT COLUMN — Live Registration Report (read-only existing records + the new company draft). */}
+        <div className={cn("min-w-0 lg:sticky lg:top-2", mobileView === "form" && "hidden lg:block")}>
+          {(() => {
+            const selAcc = accounts.find((a) => a.id === accountId) || null;
+            const accCountry = countries.find((c) => c.id === selAcc?.countryId)?.name || null;
+            const regCount = (registrationNumber.trim() ? 1 : 0) + (taxNumber.trim() ? 1 : 0) + taxRegs.filter((r) => r.value.trim()).length;
+            const Row = ({ k, v }: { k: string; v: ReactNode }) => (
+              <div className="flex items-start justify-between gap-3 py-1.5">
+                <span className="shrink-0 text-[11px] font-semibold text-slate-500 dark:text-slate-400">{k}</span>
+                <span className={cn("min-w-0 break-words text-end text-xs font-semibold text-slate-800 dark:text-slate-100", s.isRtl && "text-start")}>{v || "—"}</span>
+              </div>
+            );
+            const Badge = ({ txt }: { txt: string }) => (
+              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300">{txt}</span>
+            );
+            return (
+              <div className={cn(card, "space-y-4 border-blue-200 dark:border-blue-900/50")}>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <h3 className="truncate text-sm font-black text-slate-900 dark:text-white">{s.t("live_report", "Live Registration Report")}</h3>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> {s.t("updating_live", "Updating in real time")}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    data-testid="view-full-report"
+                    onClick={printLiveReport}
+                    className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-slate-300 px-2.5 py-1.5 text-[11px] font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                  >
+                    <FileText className="h-3.5 w-3.5" /> {s.t("view_full_report", "View Full Report")}
+                  </button>
+                </div>
+
+                {/* 1. Selected Account Details */}
+                <div className="rounded-xl border border-slate-200 p-3 dark:border-slate-800">
+                  <div className="mb-1 flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-100">{s.t("sel_account", "Selected Account Details")}</span>
+                    <span className="text-[10px] font-semibold text-slate-400">{s.t("read_only", "Read-only")}</span>
+                  </div>
+                  {selAcc ? (
+                    <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                      <Row k={s.t("account_number", "Account Number")} v={<span className="font-mono">{selAcc.accountNumber || "—"}</span>} />
+                      <Row k={s.t("account_name", "Account Name")} v={selAcc.name} />
+                      <Row k={s.t("account_type", "Type")} v={selAcc.kind} />
+                      <Row k={s.t("status", "Status")} v={selAcc.status ? <Badge txt={selAcc.status} /> : "—"} />
+                      <Row k={s.t("country", "Country")} v={accCountry} />
+                    </div>
+                  ) : (
+                    <p className="text-[11px] text-slate-500">{owner ? s.t("pick_account", "Select an account to see its details.") : s.t("pick_customer_first", "Select a customer to begin.")}</p>
+                  )}
+                </div>
+
+                {/* 2. Selected Customer Details */}
+                <div className="rounded-xl border border-slate-200 p-3 dark:border-slate-800">
+                  <div className="mb-1 flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-100">{s.t("sel_customer", "Selected Customer Details")}</span>
+                    <span className="text-[10px] font-semibold text-slate-400">{s.t("read_only", "Read-only")}</span>
+                  </div>
+                  {owner ? (
+                    <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                      <Row k={s.t("customer_code", "Customer Code")} v={<span className="font-mono">{owner.code || "—"}</span>} />
+                      <Row k={s.t("customer_name", "Customer Name")} v={owner.name} />
+                      <Row k={s.t("phone", "Phone")} v={owner.mobile} />
+                      <Row k={s.t("address", "Address")} v={owner.address} />
+                    </div>
+                  ) : (
+                    <p className="text-[11px] text-slate-500">{s.t("pick_customer_first", "Select a customer to begin.")}</p>
+                  )}
+                </div>
+
+                {/* 3. Existing Linked Companies */}
+                <div className="rounded-xl border border-slate-200 p-3 dark:border-slate-800">
+                  <div className="mb-1 flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-100">{s.t("existing_linked", "Existing Linked Companies")} ({sisters.length})</span>
+                    <span className="text-[10px] font-semibold text-slate-400">{s.t("read_only", "Read-only")}</span>
+                  </div>
+                  {sisters.length === 0 ? (
+                    <p className="text-[11px] text-slate-500">{owner ? s.t("no_sisters", "No other registered company for this owner yet.") : s.t("pick_customer_first", "Select a customer to begin.")}</p>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {sisters.map((c) => (
+                        <div key={c.id} className="flex items-center justify-between gap-2 rounded-lg bg-slate-50 px-2 py-1.5 dark:bg-slate-800/50">
+                          <div className="min-w-0">
+                            <div className="truncate text-xs font-bold text-slate-800 dark:text-slate-100">{c.name}</div>
+                            <div className="truncate text-[10px] text-slate-500">{[c.company_code, c.registration_number, c.country_name].filter(Boolean).join(" · ") || "—"}</div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => router.push(`/dashboard/settings/company-setup?companyId=${encodeURIComponent(c.id)}` as Route)}
+                            className="inline-flex shrink-0 items-center gap-1 rounded-md border border-blue-300 px-2 py-1 text-[10px] font-bold text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-950/40"
+                          >
+                            {s.t("view", "View")}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* 4. New Company Draft — shown separately from existing records */}
+                <div className="rounded-xl border border-amber-300 bg-amber-50/40 p-3 dark:border-amber-800 dark:bg-amber-950/20">
+                  <div className="mb-1 flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-100">{s.t("new_draft", "New Company Draft")}</span>
+                    <span className="rounded-full bg-amber-200 px-2 py-0.5 text-[10px] font-bold text-amber-900 dark:bg-amber-900/60 dark:text-amber-200">{savedId ? s.t("saved_badge", "Saved") : s.t("draft_badge", "Will be created")}</span>
+                  </div>
+                  <div className="divide-y divide-amber-200/60 dark:divide-amber-900/40">
+                    <Row k={s.t("company_name_lbl", "Company Name")} v={legalName || tradeName} />
+                    <Row k={s.t("nature_label", "Company Type / Business Nature")} v={natureOfBusiness} />
+                    <Row k={s.t("sum_registrations", "Tax registrations")} v={String(regCount)} />
+                    <Row k={s.t("location", "Location")} v={[cityName, stateName, countries.find((c) => c.id === countryId)?.name].filter(Boolean).join(", ")} />
+                    <Row k={s.t("sum_contracts", "Contracts")} v={String(contracts.filter((r) => r.reference.trim() || r.note.trim()).length)} />
+                    <Row k={s.t("sum_contacts", "Contacts")} v={String(contacts.filter((c) => c.name.trim() || c.phone.trim() || c.email.trim()).length)} />
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
       </div>
 
       {dupModal && (
