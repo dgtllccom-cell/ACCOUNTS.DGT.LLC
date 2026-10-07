@@ -3075,6 +3075,7 @@ export const HEADER_TRANSLATIONS: Record<string, Row> = {
   "LICENSE EXPIRY": { ur: "لائسنس کی میعاد", ar: "انتهاء الرخصة", fa: "انقضای مجوز", ps: "د جواز پای" },
   "IN PROGRESS": { ur: "جاری", ar: "قيد التنفيذ", fa: "در حال انجام", ps: "روان" },
   "NEW": { ur: "نیا", ar: "جديد", fa: "جدید", ps: "نوی" },
+  "NEW COMPANY (FORM)": { ur: "نئی کمپنی (فارم)", ar: "شركة جديدة (نموذج)", fa: "شرکت جدید (فرم)", ps: "نوی شرکت (فورمه)" },
 };
 
 // Concise 5-language headings (new entries + shorter replacements) — see table-headers-extra.ts
