@@ -639,9 +639,36 @@ export function CompanyIncorporationForm({
     <h2>${esc(s.t("new_draft", "New Company Draft"))}</h2>
     <div class="draft"><table class="grid">${row(s.t("company_name_lbl", "Company Name"), legalName || tradeName)}${row(s.t("nature_label", "Company Type / Business Nature"), natureOfBusiness)}${row(s.t("sum_registrations", "Tax registrations"), String(regCount))}${row(s.t("location", "Location"), [cityName, stateName, countries.find((c) => c.id === countryId)?.name].filter(Boolean).join(", "))}${row(s.t("sum_contracts", "Contracts"), String(contracts.filter((r) => r.reference.trim() || r.note.trim()).length))}${row(s.t("sum_contacts", "Contact methods"), String(contacts.filter((c) => c.value.trim()).length))}</table></div>
     ${contactsHtml ? `<h2>${esc(s.t("sec_contact_methods", "Contact Methods"))}</h2><table class="grid">${contactsHtml}</table>` : ""}
-    <script>window.onload=function(){setTimeout(function(){window.print();},250);};</script></body></html>`;
+    </body></html>`;
+    // Prefer a separate window (nicer for "Save as PDF"); fall back to a hidden iframe when
+    // the browser blocks the popup, so Print/PDF always works without a popup allowance.
     const w = window.open("", "_blank", "width=920,height=720");
-    if (w) { w.document.open(); w.document.write(html); w.document.close(); }
+    if (w) {
+      w.document.open();
+      w.document.write(html);
+      w.document.close();
+      const go = () => { try { w.focus(); w.print(); } catch { /* user can still print */ } };
+      if (w.document.readyState === "complete") setTimeout(go, 300);
+      else w.onload = () => setTimeout(go, 200);
+    } else {
+      const iframe = document.createElement("iframe");
+      iframe.setAttribute("aria-hidden", "true");
+      iframe.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;";
+      document.body.appendChild(iframe);
+      const doc = iframe.contentWindow?.document;
+      if (doc) {
+        doc.open();
+        doc.write(html);
+        doc.close();
+        const go = () => {
+          try { iframe.contentWindow?.focus(); iframe.contentWindow?.print(); } catch { /* noop */ }
+          setTimeout(() => { try { iframe.remove(); } catch { /* noop */ } }, 2000);
+        };
+        setTimeout(go, 450);
+      } else {
+        iframe.remove();
+      }
+    }
   }, [accounts, accountId, countries, owner, sisters, legalName, tradeName, natureOfBusiness, registrationNumber, taxNumber, taxRegs, contracts, contacts, cityName, stateName, countryId, savedId, s]);
 
   const branchLinkedElsewhere = (b: BranchOption) => Boolean(b.company_id && b.company_id !== savedId);
