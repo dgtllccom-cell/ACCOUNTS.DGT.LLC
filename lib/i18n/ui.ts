@@ -423,6 +423,7 @@ export type UiKey =
   | "tbill.save"
   | "tbill.saving"
   | "tbill.form_note"
+  | "tbill.f_date_range"
   | "health.f_dup_key"
   | "health.fx_dup_key"
   | "health.f_landing"
@@ -11654,6 +11655,27 @@ export type UiKey =
   | "cmf.cmethod_other"
   | "cmf.no_accounts_opt"
   | "cmf.new_account_opt"
+  | "tbill.item"
+  | "tbill.print_title_purchase"
+  | "tbill.print_title_sale"
+  | "tbill.print_note"
+  | "tbill.form_new_purchase"
+  | "tbill.form_new_sale"
+  | "tbill.step_bill"
+  | "tbill.step_items"
+  | "tbill.step_review"
+  | "tbill.err_items"
+  | "tbill.add_item"
+  | "tbill.items_count"
+  | "tbill.total_qty"
+  | "tbill.total_weight"
+  | "tbill.total_amount"
+  | "tbill.bill_summary"
+  | "tbill.print_pdf"
+  | "tbill.save_bill"
+  | "tbill.back"
+  | "tbill.next"
+  | "tbill.remove"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -30664,6 +30686,7 @@ const en: Dict = {
   "tbill.save": "Save",
   "tbill.saving": "Saving…",
   "tbill.form_note": "This bill is stored only in the Temporary Bills Register. It does not post to Ledger, Roznamcha, Journal, DR/CR, Stock or any Voucher, and it is not transferred to the main ERP.",
+  "tbill.f_date_range": "Date Range",
   "smart_due.approval": "Approval",
   "smart_due.task": "User Task",
   "nav.smart_operations": "Smart Operations",
@@ -34598,6 +34621,27 @@ const en: Dict = {
   "cmf.cmethod_other": "Other",
   "cmf.no_accounts_opt": "— No account yet —",
   "cmf.new_account_opt": "+ New Account…",
+  "tbill.item": "Item",
+  "tbill.print_title_purchase": "Arzi Purchase Bill (Temporary)",
+  "tbill.print_title_sale": "Arzi Sales Bill (Temporary)",
+  "tbill.print_note": "Temporary / tracking bill only — NOT main ERP accounting. No Ledger, Roznamcha, Journal, DR/CR, Stock or Voucher posting.",
+  "tbill.form_new_purchase": "New Arzi Purchase Bill",
+  "tbill.form_new_sale": "New Arzi Sales Bill",
+  "tbill.step_bill": "Bill & Party",
+  "tbill.step_items": "Goods Items",
+  "tbill.step_review": "Review & Save",
+  "tbill.err_items": "Add at least one goods item.",
+  "tbill.add_item": "Add Item",
+  "tbill.items_count": "Items",
+  "tbill.total_qty": "Total Quantity",
+  "tbill.total_weight": "Total Weight / Cartons",
+  "tbill.total_amount": "Total Amount",
+  "tbill.bill_summary": "Bill Summary",
+  "tbill.print_pdf": "Print / PDF",
+  "tbill.save_bill": "Save Bill",
+  "tbill.back": "Back",
+  "tbill.next": "Next",
+  "tbill.remove": "Remove",
 };
 
 const ur: Dict = {
@@ -53445,6 +53489,7 @@ const ur: Dict = {
   "tbill.save": "محفوظ کریں",
   "tbill.saving": "محفوظ ہو رہا ہے…",
   "tbill.form_note": "یہ بل صرف عارضی بل رجسٹر میں محفوظ ہوتا ہے۔ یہ لیجر، روزنامچہ، جرنل، ڈیبٹ/کریڈٹ، اسٹاک یا کسی واؤچر میں پوسٹ نہیں ہوتا، اور مین ERP میں منتقل نہیں ہوتا۔",
+  "tbill.f_date_range": "تاریخ کی حد",
   "smart_due.approval": "منظوری",
   "smart_due.task": "صارف ٹاسک",
   "nav.smart_operations": "سمارٹ آپریشنز",
@@ -57511,6 +57556,27 @@ const ur: Dict = {
   "cmf.cmethod_other": "دیگر",
   "cmf.no_accounts_opt": "— ابھی کوئی اکاؤنٹ نہیں —",
   "cmf.new_account_opt": "+ نیا اکاؤنٹ…",
+  "tbill.item": "آئٹم",
+  "tbill.print_title_purchase": "عارضی خریداری بل (Arzi)",
+  "tbill.print_title_sale": "عارضی فروخت بل (Arzi)",
+  "tbill.print_note": "صرف عارضی / ٹریکنگ بل — مرکزی ERP اکاؤنٹنگ نہیں۔ کوئی لیجر، روزنامچہ، جرنل، ڈیبٹ/کریڈٹ، اسٹاک یا واؤچر پوسٹنگ نہیں۔",
+  "tbill.form_new_purchase": "نیا عارضی خریداری بل",
+  "tbill.form_new_sale": "نیا عارضی فروخت بل",
+  "tbill.step_bill": "بل اور پارٹی",
+  "tbill.step_items": "اشیاء (آئٹمز)",
+  "tbill.step_review": "جائزہ اور محفوظ کریں",
+  "tbill.err_items": "کم از کم ایک آئٹم شامل کریں۔",
+  "tbill.add_item": "آئٹم شامل کریں",
+  "tbill.items_count": "آئٹمز",
+  "tbill.total_qty": "کل مقدار",
+  "tbill.total_weight": "کل وزن / کارٹن",
+  "tbill.total_amount": "کل رقم",
+  "tbill.bill_summary": "بل کا خلاصہ",
+  "tbill.print_pdf": "پرنٹ / PDF",
+  "tbill.save_bill": "بل محفوظ کریں",
+  "tbill.back": "واپس",
+  "tbill.next": "اگلا",
+  "tbill.remove": "ہٹائیں",
 };
 
 const ar: Dict = {
@@ -76308,6 +76374,7 @@ const ar: Dict = {
   "tbill.save": "حفظ",
   "tbill.saving": "جارٍ الحفظ…",
   "tbill.form_note": "تُحفظ هذه الفاتورة في سجل الفواتير المؤقتة فقط. لا تُرحَّل إلى دفتر الأستاذ أو الروزنامة أو اليومية أو مدين/دائن أو المخزون أو أي سند، ولا تُحوَّل إلى النظام الرئيسي.",
+  "tbill.f_date_range": "النطاق الزمني",
   "smart_due.approval": "موافقة",
   "smart_due.task": "مهمة المستخدم",
   "nav.smart_operations": "العمليات الذكية",
@@ -80425,6 +80492,27 @@ const ar: Dict = {
   "cmf.cmethod_other": "أخرى",
   "cmf.no_accounts_opt": "— لا يوجد حساب بعد —",
   "cmf.new_account_opt": "+ حساب جديد…",
+  "tbill.item": "صنف",
+  "tbill.print_title_purchase": "فاتورة شراء مؤقتة (Arzi)",
+  "tbill.print_title_sale": "فاتورة مبيعات مؤقتة (Arzi)",
+  "tbill.print_note": "فاتورة مؤقتة / للتتبع فقط — ليست محاسبة ERP الرئيسية. لا يوجد ترحيل لدفتر الأستاذ أو الروزنامة أو اليومية أو مدين/دائن أو المخزون أو السند.",
+  "tbill.form_new_purchase": "فاتورة شراء مؤقتة جديدة",
+  "tbill.form_new_sale": "فاتورة مبيعات مؤقتة جديدة",
+  "tbill.step_bill": "الفاتورة والطرف",
+  "tbill.step_items": "أصناف البضائع",
+  "tbill.step_review": "مراجعة وحفظ",
+  "tbill.err_items": "أضف صنف بضاعة واحدًا على الأقل.",
+  "tbill.add_item": "إضافة صنف",
+  "tbill.items_count": "الأصناف",
+  "tbill.total_qty": "إجمالي الكمية",
+  "tbill.total_weight": "إجمالي الوزن / الكراتين",
+  "tbill.total_amount": "المبلغ الإجمالي",
+  "tbill.bill_summary": "ملخص الفاتورة",
+  "tbill.print_pdf": "طباعة / PDF",
+  "tbill.save_bill": "حفظ الفاتورة",
+  "tbill.back": "رجوع",
+  "tbill.next": "التالي",
+  "tbill.remove": "إزالة",
 };
 
 const fa: Dict = {
@@ -99221,6 +99309,7 @@ const fa: Dict = {
   "tbill.save": "ذخیره",
   "tbill.saving": "در حال ذخیره…",
   "tbill.form_note": "این صورتحساب فقط در دفتر صورتحساب‌های موقت ذخیره می‌شود. در دفتر کل، روزنامچه، ژورنال، بدهکار/بستانکار، موجودی یا هیچ سندی ثبت نمی‌شود و به ERP اصلی منتقل نمی‌شود.",
+  "tbill.f_date_range": "بازه تاریخ",
   "smart_due.approval": "تأیید",
   "smart_due.task": "وظیفه کاربر",
   "nav.smart_operations": "عملیات هوشمند",
@@ -103338,6 +103427,27 @@ const fa: Dict = {
   "cmf.cmethod_other": "سایر",
   "cmf.no_accounts_opt": "— هنوز حسابی نیست —",
   "cmf.new_account_opt": "+ حساب جدید…",
+  "tbill.item": "قلم",
+  "tbill.print_title_purchase": "صورتحساب خرید موقت (Arzi)",
+  "tbill.print_title_sale": "صورتحساب فروش موقت (Arzi)",
+  "tbill.print_note": "فقط صورتحساب موقت / پیگیری — حسابداری اصلی ERP نیست. هیچ ثبتی در دفتر کل، روزنامچه، ژورنال، بدهکار/بستانکار، انبار یا سند انجام نمی‌شود.",
+  "tbill.form_new_purchase": "صورتحساب خرید موقت جدید",
+  "tbill.form_new_sale": "صورتحساب فروش موقت جدید",
+  "tbill.step_bill": "صورتحساب و طرف",
+  "tbill.step_items": "اقلام کالا",
+  "tbill.step_review": "بازبینی و ذخیره",
+  "tbill.err_items": "حداقل یک قلم کالا اضافه کنید.",
+  "tbill.add_item": "افزودن قلم",
+  "tbill.items_count": "اقلام",
+  "tbill.total_qty": "مقدار کل",
+  "tbill.total_weight": "وزن کل / کارتن",
+  "tbill.total_amount": "مبلغ کل",
+  "tbill.bill_summary": "خلاصه صورتحساب",
+  "tbill.print_pdf": "چاپ / PDF",
+  "tbill.save_bill": "ذخیره صورتحساب",
+  "tbill.back": "بازگشت",
+  "tbill.next": "بعدی",
+  "tbill.remove": "حذف",
 };
 
 const ps: Dict = {
@@ -122132,6 +122242,7 @@ const ps: Dict = {
   "tbill.save": "خوندي کړئ",
   "tbill.saving": "خوندي کیږي…",
   "tbill.form_note": "دا بل یوازې د لنډمهاله بلونو رجسټر کې خوندي کیږي. دا لیجر، روزنامچه، جورنال، ډیبټ/کریډیټ، سټاک یا کوم واوچر ته نه ثبتیږي، او اصلي ERP ته نه لیږدول کیږي.",
+  "tbill.f_date_range": "د نیټې سلسله",
   "smart_due.approval": "تصویب",
   "smart_due.task": "د کارونکي دنده",
   "nav.smart_operations": "سمارټ عملیات",
@@ -126258,6 +126369,27 @@ const ps: Dict = {
   "cmf.cmethod_other": "نور",
   "cmf.no_accounts_opt": "— تر اوسه حساب نشته —",
   "cmf.new_account_opt": "+ نوی حساب…",
+  "tbill.item": "توکی",
+  "tbill.print_title_purchase": "عارضي پیرودو بیل (Arzi)",
+  "tbill.print_title_sale": "عارضي پلور بیل (Arzi)",
+  "tbill.print_note": "یوازې عارضي / تعقیب بیل — د ERP اصلي محاسبه نه ده. د لیجر، روزنامچه، ژورنال، ډیبټ/کریډیټ، سټاک یا واوچر هیڅ ثبت نشته.",
+  "tbill.form_new_purchase": "نوی عارضي پیرودو بیل",
+  "tbill.form_new_sale": "نوی عارضي پلور بیل",
+  "tbill.step_bill": "بیل او اړخ",
+  "tbill.step_items": "د توکو توکي",
+  "tbill.step_review": "کتنه او خوندي کول",
+  "tbill.err_items": "لږ تر لږه یو توکی اضافه کړئ.",
+  "tbill.add_item": "توکی اضافه کړئ",
+  "tbill.items_count": "توکي",
+  "tbill.total_qty": "ټوله اندازه",
+  "tbill.total_weight": "ټول وزن / کارتنونه",
+  "tbill.total_amount": "ټوله اندازه پیسې",
+  "tbill.bill_summary": "د بیل لنډیز",
+  "tbill.print_pdf": "چاپ / PDF",
+  "tbill.save_bill": "بیل خوندي کړئ",
+  "tbill.back": "شاته",
+  "tbill.next": "راتلونکی",
+  "tbill.remove": "لرې کړئ",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
