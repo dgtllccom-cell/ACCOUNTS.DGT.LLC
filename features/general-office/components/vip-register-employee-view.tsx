@@ -44,6 +44,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t as tUi } from "@/lib/i18n/ui";
+import { Th } from "@/components/ui/translated-th";
 
 function getCountryFlagAndName(countryStr?: string | null): { flag: string; name: string } {
   if (!countryStr) return { flag: "🇦🇪", name: "UAE" };
@@ -682,25 +683,25 @@ export function VipRegisterEmployeeView() {
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/40 text-slate-500 dark:text-slate-400 font-bold text-[11px] uppercase tracking-wider">
-                <th className="py-3 px-4 w-10">
+                <Th className="py-3 px-4 w-10">
                   <input
                     type="checkbox"
                     checked={allSelected}
                     onChange={toggleSelectAll}
                     className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                   />
-                </th>
-                <th className="py-3 px-3 w-10">#</th>
-                <th className="py-3 px-3">Employee ID</th>
-                <th className="py-3 px-4">Employee Name</th>
-                <th className="py-3 px-3">Country</th>
-                <th className="py-3 px-3">Branch</th>
-                <th className="py-3 px-3">Department</th>
-                <th className="py-3 px-3">Designation</th>
-                <th className="py-3 px-4">Mobile</th>
-                <th className="py-3 px-3">Join Date</th>
-                <th className="py-3 px-3">Status</th>
-                <th className="py-3 px-4 text-center">Actions</th>
+                </Th>
+                <Th className="py-3 px-3 w-10">#</Th>
+                <Th className="py-3 px-3">Employee ID</Th>
+                <Th className="py-3 px-4">Employee Name</Th>
+                <Th className="py-3 px-3">Country</Th>
+                <Th className="py-3 px-3">Branch</Th>
+                <Th className="py-3 px-3">Department</Th>
+                <Th className="py-3 px-3">Designation</Th>
+                <Th className="py-3 px-4">Mobile</Th>
+                <Th className="py-3 px-3">Join Date</Th>
+                <Th className="py-3 px-3">Status</Th>
+                <Th className="py-3 px-4 text-center">Actions</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">

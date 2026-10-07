@@ -12,6 +12,7 @@ import {
 import type { SettlementKPIs, SettlementTransaction } from "../types/settlement";
 import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
+import { Th } from "@/components/ui/translated-th";
 
 export function SettlementDashboardView() {
   const s = useErpScreen("sett");
@@ -324,14 +325,14 @@ export function SettlementDashboardView() {
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 font-semibold border-b border-slate-200 dark:border-slate-800 uppercase tracking-wider text-[10px]">
               <tr>
-                <th className="py-3 px-4">{s.t("c_date_ref","Date / Ref")}</th>
-                <th className="py-3 px-4">{s.t("c_module_type","Module / Type")}</th>
-                <th className="py-3 px-4">{s.t("c_party","Party Name")}</th>
-                <th className="py-3 px-4">{s.t("c_dir","Dir")}</th>
-                <th className="py-3 px-4 text-right">{s.t("c_local_amount","Local Amount")}</th>
-                <th className="py-3 px-4 text-right">{s.t("c_usd_amount","USD Amount")}</th>
-                <th className="py-3 px-4 text-right">{s.t("c_remaining","Remaining")}</th>
-                <th className="py-3 px-4 text-center">{s.t("c_status","Status")}</th>
+                <Th className="py-3 px-4">{s.t("c_date_ref","Date / Ref")}</Th>
+                <Th className="py-3 px-4">{s.t("c_module_type","Module / Type")}</Th>
+                <Th className="py-3 px-4">{s.t("c_party","Party Name")}</Th>
+                <Th className="py-3 px-4">{s.t("c_dir","Dir")}</Th>
+                <Th className="py-3 px-4 text-right">{s.t("c_local_amount","Local Amount")}</Th>
+                <Th className="py-3 px-4 text-right">{s.t("c_usd_amount","USD Amount")}</Th>
+                <Th className="py-3 px-4 text-right">{s.t("c_remaining","Remaining")}</Th>
+                <Th className="py-3 px-4 text-center">{s.t("c_status","Status")}</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

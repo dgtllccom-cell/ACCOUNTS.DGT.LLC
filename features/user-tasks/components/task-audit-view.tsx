@@ -10,6 +10,7 @@ import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { useErpScope } from "@/lib/hooks/use-erp-scope";
 import { openScopedGenericReport, type GenericReportColumn } from "@/lib/reports/open-scoped-report";
 import { fmtDateTime } from "../lib/shared";
+import { Th } from "@/components/ui/translated-th";
 
 export function TaskAuditView({ lang: langProp }: { lang?: string }) {
   const s = useErpScreen("utask", langProp);
@@ -113,13 +114,13 @@ export function TaskAuditView({ lang: langProp }: { lang?: string }) {
             <table className="w-full text-start text-sm">
               <thead className="border-b bg-slate-50 text-[11px] uppercase text-slate-500">
                 <tr>
-                  <th className="px-3 py-2 text-start font-semibold">{s.t("col_updated", "When")}</th>
-                  <th className="px-3 py-2 text-start font-semibold">{s.t("col_task", "Task")}</th>
-                  <th className="px-3 py-2 text-start font-semibold">{s.t("event_col", "Event")}</th>
-                  <th className="px-3 py-2 text-start font-semibold">{s.t("col_status", "Status")}</th>
-                  <th className="px-3 py-2 text-start font-semibold">{s.t("col_by", "By")}</th>
-                  <th className="px-3 py-2 text-start font-semibold">{s.t("col_assignee", "Assignee")}</th>
-                  <th className="px-3 py-2 text-start font-semibold">{s.t("f_remarks", "Remarks")}</th>
+                  <Th className="px-3 py-2 text-start font-semibold">{s.t("col_updated", "When")}</Th>
+                  <Th className="px-3 py-2 text-start font-semibold">{s.t("col_task", "Task")}</Th>
+                  <Th className="px-3 py-2 text-start font-semibold">{s.t("event_col", "Event")}</Th>
+                  <Th className="px-3 py-2 text-start font-semibold">{s.t("col_status", "Status")}</Th>
+                  <Th className="px-3 py-2 text-start font-semibold">{s.t("col_by", "By")}</Th>
+                  <Th className="px-3 py-2 text-start font-semibold">{s.t("col_assignee", "Assignee")}</Th>
+                  <Th className="px-3 py-2 text-start font-semibold">{s.t("f_remarks", "Remarks")}</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">

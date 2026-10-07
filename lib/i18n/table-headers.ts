@@ -1,5 +1,6 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { translationPendingLabel } from "@/lib/i18n/verified-record-translations";
+import { HEADER_EXTRA, HEADER_EN_SHORT } from "@/lib/i18n/table-headers-extra";
 
 type Row = { ur: string; ar: string; fa: string; ps: string };
 
@@ -3076,6 +3077,9 @@ export const HEADER_TRANSLATIONS: Record<string, Row> = {
   "NEW": { ur: "نیا", ar: "جديد", fa: "جدید", ps: "نوی" },
 };
 
+// Concise 5-language headings (new entries + shorter replacements) — see table-headers-extra.ts
+Object.assign(HEADER_TRANSLATIONS, HEADER_EXTRA);
+
 /** Normalize an English header for lookup: trim, collapse whitespace, uppercase. */
 function normalize(label: string): string {
   return label.trim().replace(/\s+/g, " ").toUpperCase();
@@ -3093,7 +3097,13 @@ export function translateHeader(
   const original = label ?? "";
   if (!original.trim()) return original;
   const code = (lang || "en") as string;
-  if (code === "en") return original;
+
+  // a trailing sort arrow (↕ ⇅ ↓ ↑) is not part of the heading: translate the text, keep the arrow
+  const arrow = original.match(/\s*[↕⇅↓↑▲▼]+\s*$/);
+  if (arrow && arrow.index !== undefined && arrow.index > 0) return translateHeader(code, original.slice(0, arrow.index)) + arrow[0];
+
+  // English: overly long headings read in their concise form (same meaning)
+  if (code === "en") return HEADER_EN_SHORT[normalize(original)] ?? original;
 
   const norm = normalize(original);
   let row = HEADER_TRANSLATIONS[norm];

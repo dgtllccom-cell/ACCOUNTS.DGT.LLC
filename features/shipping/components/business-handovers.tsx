@@ -5,6 +5,7 @@ import { Loader2, Send, RefreshCw, Ban, Plus, X } from "lucide-react";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { apiGet, apiPost, apiPatch } from "@/lib/api/client";
+import { Th } from "@/components/ui/translated-th";
 
 type Row = Record<string, any>;
 
@@ -89,12 +90,12 @@ export function BusinessHandovers({ lang }: { lang?: string }) {
           <table className="w-full text-xs">
             <thead className="bg-slate-50 dark:bg-slate-800/60">
               <tr className="[&>th]:px-3 [&>th]:py-2.5 [&>th]:text-start [&>th]:font-bold [&>th]:text-slate-500">
-                <th>{s.t("bh_c_no", "Handover")}</th>
-                <th>{s.t("bh_c_source", "Business Record")}</th>
-                <th>{s.t("bh_c_action", "Action")}</th>
-                <th>{s.t("bh_c_agent", "Agent")}</th>
-                <th>{s.t("bh_c_status", "Status")}</th>
-                <th />
+                <Th>{s.t("bh_c_no", "Handover")}</Th>
+                <Th>{s.t("bh_c_source", "Business Record")}</Th>
+                <Th>{s.t("bh_c_action", "Action")}</Th>
+                <Th>{s.t("bh_c_agent", "Agent")}</Th>
+                <Th>{s.t("bh_c_status", "Status")}</Th>
+                <Th />
               </tr>
             </thead>
             <tbody>

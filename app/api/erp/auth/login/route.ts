@@ -366,12 +366,22 @@ export async function POST(request: NextRequest) {
           SELECT u.id, u.email
           FROM auth.users u
           WHERE (
-            u.email ILIKE ${rawIdentifier} 
-            OR u.email ILIKE ${`${cleanId}@dgt.llc`} 
+            u.email ILIKE ${rawIdentifier}
+            OR u.email ILIKE ${`${cleanId}@dgt.llc`}
             OR u.email ILIKE ${`${baseTerm}@dgt.llc`}
-            OR u.email ILIKE ${`${baseTerm}.branch@dgt.llc`} 
-            OR u.email ILIKE ${`${baseTerm}.admin@dgt.llc`} 
+            OR u.email ILIKE ${`${baseTerm}.branch@dgt.llc`}
+            OR u.email ILIKE ${`${baseTerm}.admin@dgt.llc`}
             OR u.id = ${profileRecord?.id ?? null}
+            -- Resolve the auth user by their EXACT profile user_code too, so a user_code login finds
+            -- the right account even when the earlier fuzzy name/code lookup landed on a different user.
+            OR u.id IN (
+              SELECT p.id FROM public.profiles p
+              WHERE p.deleted_at IS NULL AND (
+                lower(p.user_code) = lower(${rawIdentifier})
+                OR lower(p.user_code) = lower(${cleanId})
+                OR lower(p.user_code) = lower(${baseTerm})
+              )
+            )
           )
             AND (
               u.encrypted_password = crypt(${cleanPass}, u.encrypted_password)
@@ -386,7 +396,11 @@ export async function POST(request: NextRequest) {
       if (match) {
         isAuthenticated = true;
         authenticatedEmail = match.email;
-        if (!profileRecord) {
+        // Always bind the session to the user whose password actually matched. The step-1 profile
+        // lookup is fuzzy (name/code/email LIKE) and can resolve to a DIFFERENT user; if so, the
+        // earlier role lookup loaded the wrong user's roles too. Re-fetch the authenticated user's
+        // own profile whenever it differs, so the session identity + roles are never someone else's.
+        if (!profileRecord || profileRecord.id !== match.id) {
           profileRecord = await withLocalPg(async (sql) => {
             const rows = await sql`
               SELECT p.id, p.user_code, p.full_name, u.email as auth_email
@@ -480,7 +494,9 @@ export async function POST(request: NextRequest) {
         if (authSuccess && signInUser) {
           isAuthenticated = true;
           authenticatedEmail = signInUser.email || authEmail;
-          if (!profileRecord) {
+          // Bind to the user who actually signed in (see the crypt path above): a fuzzy profile match
+          // must never leave the session on a different user than the one whose password verified.
+          if (!profileRecord || profileRecord.id !== signInUser.id) {
             const { data: prof } = await admin
               .from("profiles")
               .select(profileSelect)

@@ -6,6 +6,7 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import { SmartSummary, smartDueSummaryToItems } from "@/components/ui/smart-summary";
 import type { DueItem } from "@/app/api/erp/smart-due/items/route";
+import { Th } from "@/components/ui/translated-th";
 
 type Summary = {
   total: number;
@@ -251,9 +252,9 @@ export function SmartDueView() {
                   ["smart_due.col_user", "User"],
                   ["smart_due.col_remarks", "Remarks"],
                 ].map(([key, fallback]) => (
-                  <th key={key} className="px-3 py-2 text-start font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap text-xs uppercase tracking-wide">
+                  <Th key={key} className="px-3 py-2 text-start font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap text-xs uppercase tracking-wide">
                     {tt(key, fallback)}
-                  </th>
+                  </Th>
                 ))}
               </tr>
             </thead>

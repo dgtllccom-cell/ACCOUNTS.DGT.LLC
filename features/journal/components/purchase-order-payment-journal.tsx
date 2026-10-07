@@ -1460,17 +1460,17 @@ function NestedPaymentHistory({
           <table className="w-full min-w-[1100px] border-collapse text-left text-[11px]">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-100/90 text-[9px] font-bold uppercase tracking-wider text-slate-600 dark:border-slate-800 dark:bg-slate-800/80 dark:text-slate-400">
-                <th className="border-r border-slate-200 px-2.5 py-1.5 dark:border-slate-800">{translateHeader(currentLanguage, "General Serial / Date")}</th>
-                <th className="border-r border-slate-200 px-2.5 py-1.5 dark:border-slate-800">{translateHeader(currentLanguage, "Reference / User")}</th>
-                <th className="border-r border-slate-200 px-2.5 py-1.5 dark:border-slate-800">{translateHeader(currentLanguage, "Debit & Credit Ledger Account")}</th>
-                <th className="border-r border-slate-200 px-2.5 py-1.5 text-right dark:border-slate-800">Target ({purchaseCurrency})</th>
-                <th className="border-r border-slate-200 px-2.5 py-1.5 text-right dark:border-slate-800">Paid ({purchaseCurrency})</th>
-                <th className="border-r border-slate-200 px-2.5 py-1.5 text-right dark:border-slate-800">Balance ({purchaseCurrency})</th>
-                <th className="border-r border-slate-200 px-2.5 py-1.5 text-center dark:border-slate-800">{translateHeader(currentLanguage, "Exchange Rate")}</th>
-                <th className="border-r border-slate-200 px-2.5 py-1.5 text-right dark:border-slate-800">Target ({calcs.finalCurr})</th>
-                <th className="border-r border-slate-200 px-2.5 py-1.5 text-right dark:border-slate-800">Paid ({calcs.finalCurr})</th>
-                <th className="border-r border-slate-200 px-2.5 py-1.5 text-right dark:border-slate-800">Balance ({calcs.finalCurr})</th>
-                <th className="w-20 px-2.5 py-1.5 text-center">{translateHeader(currentLanguage, "Actions")}</th>
+                <Th className="border-r border-slate-200 px-2.5 py-1.5 dark:border-slate-800">{translateHeader(currentLanguage, "General Serial / Date")}</Th>
+                <Th className="border-r border-slate-200 px-2.5 py-1.5 dark:border-slate-800">{translateHeader(currentLanguage, "Reference / User")}</Th>
+                <Th className="border-r border-slate-200 px-2.5 py-1.5 dark:border-slate-800">{translateHeader(currentLanguage, "Debit & Credit Ledger Account")}</Th>
+                <Th className="border-r border-slate-200 px-2.5 py-1.5 text-right dark:border-slate-800">Target ({purchaseCurrency})</Th>
+                <Th className="border-r border-slate-200 px-2.5 py-1.5 text-right dark:border-slate-800">Paid ({purchaseCurrency})</Th>
+                <Th className="border-r border-slate-200 px-2.5 py-1.5 text-right dark:border-slate-800">Balance ({purchaseCurrency})</Th>
+                <Th className="border-r border-slate-200 px-2.5 py-1.5 text-center dark:border-slate-800">{translateHeader(currentLanguage, "Exchange Rate")}</Th>
+                <Th className="border-r border-slate-200 px-2.5 py-1.5 text-right dark:border-slate-800">Target ({calcs.finalCurr})</Th>
+                <Th className="border-r border-slate-200 px-2.5 py-1.5 text-right dark:border-slate-800">Paid ({calcs.finalCurr})</Th>
+                <Th className="border-r border-slate-200 px-2.5 py-1.5 text-right dark:border-slate-800">Balance ({calcs.finalCurr})</Th>
+                <Th className="w-20 px-2.5 py-1.5 text-center">{translateHeader(currentLanguage, "Actions")}</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -2628,12 +2628,12 @@ function DashboardSummaryHeader({
               <table className="w-full text-left text-[10.5px] border-collapse font-sans">
                 <thead>
                   <tr className="text-slate-500 dark:text-slate-400 text-[9px] uppercase font-black border-b border-slate-200 dark:border-slate-800">
-                    <th className="py-1 px-1.5">{th("Branch Code")}</th>
-                    <th className="py-1 px-1.5">{th("Country Code")}</th>
-                    <th className="py-1 px-1.5">{th("Final Currency")}</th>
-                    <th className="py-1 px-1.5 text-center">{th("Total Entries")}</th>
-                    <th className="py-1 px-1.5 text-right">{th("Final Amount")}</th>
-                    <th className="py-1 px-1.5 text-right">{th("Final Advance Amount")}</th>
+                    <Th className="py-1 px-1.5">{th("Branch Code")}</Th>
+                    <Th className="py-1 px-1.5">{th("Country Code")}</Th>
+                    <Th className="py-1 px-1.5">{th("Final Currency")}</Th>
+                    <Th className="py-1 px-1.5 text-center">{th("Total Entries")}</Th>
+                    <Th className="py-1 px-1.5 text-right">{th("Final Amount")}</Th>
+                    <Th className="py-1 px-1.5 text-right">{th("Final Advance Amount")}</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-semibold text-slate-800 dark:text-slate-200">
@@ -5358,15 +5358,15 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                     <table className="w-full text-left text-xs border-collapse font-sans">
                       <thead>
                         <tr className="bg-slate-100 dark:bg-[#0b1329] text-slate-600 dark:text-slate-400 text-[9px] uppercase font-black border-b border-slate-200 dark:border-slate-800">
-                          <th className="px-3 py-2 text-center w-10">#</th>
-                          <th className="px-3 py-2">{translateHeader(currentLanguage, "GOODS / SIZE / BRAND / ORIGIN")}</th>
-                          <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "QTY")}</th>
-                          <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "KGS")}</th>
-                          <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "NET KGS")}</th>
-                          <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "TOTAL")}</th>
-                          <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "PRICE")}</th>
-                          <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "AMOUNT")}</th>
-                          <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "FINAL (AED)")}</th>
+                          <Th className="px-3 py-2 text-center w-10">#</Th>
+                          <Th className="px-3 py-2">{translateHeader(currentLanguage, "GOODS / SIZE / BRAND / ORIGIN")}</Th>
+                          <Th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "QTY")}</Th>
+                          <Th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "KGS")}</Th>
+                          <Th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "NET KGS")}</Th>
+                          <Th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "TOTAL")}</Th>
+                          <Th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "PRICE")}</Th>
+                          <Th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "AMOUNT")}</Th>
+                          <Th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "FINAL (AED)")}</Th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-semibold text-slate-800 dark:text-slate-200">
@@ -5490,10 +5490,10 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                           <table className="w-full text-left text-[9px] border-collapse">
                             <thead>
                               <tr className="text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
-                                <th className="py-0.5 font-bold">{translateHeader(currentLanguage, "Installment")}</th>
-                                <th className="py-0.5 text-center font-bold">{translateHeader(currentLanguage, "Percent")}</th>
-                                <th className="py-0.5 text-right font-bold">{translateHeader(currentLanguage, "Payment (USD)")}</th>
-                                <th className="py-0.5 text-right font-bold">{translateHeader(currentLanguage, "Payment (AED)")}</th>
+                                <Th className="py-0.5 font-bold">{translateHeader(currentLanguage, "Installment")}</Th>
+                                <Th className="py-0.5 text-center font-bold">{translateHeader(currentLanguage, "Percent")}</Th>
+                                <Th className="py-0.5 text-right font-bold">{translateHeader(currentLanguage, "Payment (USD)")}</Th>
+                                <Th className="py-0.5 text-right font-bold">{translateHeader(currentLanguage, "Payment (AED)")}</Th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40 text-slate-800 dark:text-slate-300 font-mono">
@@ -5534,16 +5534,16 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                         <table className="w-full text-left text-xs border-collapse">
                           <thead>
                             <tr className="bg-slate-100 dark:bg-[#0b1329] text-slate-600 dark:text-slate-400 text-[9px] uppercase font-black border-b border-slate-200 dark:border-slate-800">
-                              <th className="px-3 py-2 text-center w-10">S.#</th>
-                              <th className="px-3 py-2">{translateHeader(currentLanguage, "Transfer Date")}</th>
-                              <th className="px-3 py-2">{translateHeader(currentLanguage, "Bill No.")}</th>
-                              <th className="px-3 py-2">{translateHeader(currentLanguage, "Purchase A/c (DR)")}</th>
-                              <th className="px-3 py-2">{translateHeader(currentLanguage, "Supplier A/c (CR)")}</th>
-                              <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Roznamcha Serial")}</th>
-                              <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Credit Amount (USD)")}</th>
-                              <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Credit Amount (AED)")}</th>
-                              <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Transfer Serial")}</th>
-                              <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Status")}</th>
+                              <Th className="px-3 py-2 text-center w-10">S.#</Th>
+                              <Th className="px-3 py-2">{translateHeader(currentLanguage, "Transfer Date")}</Th>
+                              <Th className="px-3 py-2">{translateHeader(currentLanguage, "Bill No.")}</Th>
+                              <Th className="px-3 py-2">{translateHeader(currentLanguage, "Purchase A/c (DR)")}</Th>
+                              <Th className="px-3 py-2">{translateHeader(currentLanguage, "Supplier A/c (CR)")}</Th>
+                              <Th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Roznamcha Serial")}</Th>
+                              <Th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Credit Amount (USD)")}</Th>
+                              <Th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Credit Amount (AED)")}</Th>
+                              <Th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Transfer Serial")}</Th>
+                              <Th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Status")}</Th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-semibold text-slate-800 dark:text-slate-200">
@@ -5600,16 +5600,16 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                         <table className="w-full text-left text-xs border-collapse">
                           <thead>
                             <tr className="bg-slate-100 dark:bg-[#0b1329] text-slate-600 dark:text-slate-400 text-[9px] uppercase font-black border-b border-slate-200 dark:border-slate-800">
-                              <th className="px-3 py-2 text-center w-10">#</th>
-                              <th className="px-3 py-2">{translateHeader(currentLanguage, "Payment Date")}</th>
-                              <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Payment Serial")}</th>
-                              <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Amount Paid (USD)")}</th>
-                              <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Amount Paid (AED)")}</th>
-                              <th className="px-3 py-2">{translateHeader(currentLanguage, "Payment Account")}</th>
-                              <th className="px-3 py-2">{translateHeader(currentLanguage, "DR / CR")}</th>
-                              <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Roznamcha Serial")}</th>
-                              <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Remaining Balance (AED)")}</th>
-                              <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Action")}</th>
+                              <Th className="px-3 py-2 text-center w-10">#</Th>
+                              <Th className="px-3 py-2">{translateHeader(currentLanguage, "Payment Date")}</Th>
+                              <Th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Payment Serial")}</Th>
+                              <Th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Amount Paid (USD)")}</Th>
+                              <Th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Amount Paid (AED)")}</Th>
+                              <Th className="px-3 py-2">{translateHeader(currentLanguage, "Payment Account")}</Th>
+                              <Th className="px-3 py-2">{translateHeader(currentLanguage, "DR / CR")}</Th>
+                              <Th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Roznamcha Serial")}</Th>
+                              <Th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Remaining Balance (AED)")}</Th>
+                              <Th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Action")}</Th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-semibold text-slate-800 dark:text-slate-200">
@@ -5691,17 +5691,17 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                         <table className="w-full text-left text-xs border-collapse">
                           <thead>
                             <tr className="bg-slate-100 dark:bg-[#0b1329] text-slate-600 dark:text-slate-400 text-[9px] uppercase font-black border-b border-slate-200 dark:border-slate-800">
-                              <th className="px-3 py-2 text-center w-10">S.#</th>
-                              <th className="px-3 py-2">{translateHeader(currentLanguage, "Date")}</th>
-                              <th className="px-3 py-2">{translateHeader(currentLanguage, "User")}</th>
-                              <th className="px-3 py-2">{translateHeader(currentLanguage, "Branch")}</th>
-                              <th className="px-3 py-2">{translateHeader(currentLanguage, "Roz #")}</th>
-                              <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Total Amount (AED)")}</th>
-                              <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Percent")}</th>
-                              <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Advance (AED)")}</th>
-                              <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Balance (AED)")}</th>
-                              <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Total (AED)")}</th>
-                              <th className="px-3 py-2 text-center">{t("transfer_label", currentLanguage)}</th>
+                              <Th className="px-3 py-2 text-center w-10">S.#</Th>
+                              <Th className="px-3 py-2">{translateHeader(currentLanguage, "Date")}</Th>
+                              <Th className="px-3 py-2">{translateHeader(currentLanguage, "User")}</Th>
+                              <Th className="px-3 py-2">{translateHeader(currentLanguage, "Branch")}</Th>
+                              <Th className="px-3 py-2">{translateHeader(currentLanguage, "Roz #")}</Th>
+                              <Th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Total Amount (AED)")}</Th>
+                              <Th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Percent")}</Th>
+                              <Th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Advance (AED)")}</Th>
+                              <Th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Balance (AED)")}</Th>
+                              <Th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Total (AED)")}</Th>
+                              <Th className="px-3 py-2 text-center">{t("transfer_label", currentLanguage)}</Th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-semibold text-slate-800 dark:text-slate-200">
@@ -5742,17 +5742,17 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                         <table className="w-full text-left text-xs border-collapse">
                           <thead>
                             <tr className="bg-slate-100 dark:bg-[#0b1329] text-slate-600 dark:text-slate-400 text-[9px] uppercase font-black border-b border-slate-200 dark:border-slate-800">
-                              <th className="px-3 py-2 text-center w-10">#</th>
-                              <th className="px-3 py-2">{translateHeader(currentLanguage, "Date")}</th>
-                              <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Roz #")}</th>
-                              <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "R Name")}</th>
-                              <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "No.")}</th>
-                              <th className="px-3 py-2 text-emerald-600 dark:text-emerald-400 font-bold">{translateHeader(currentLanguage, "Type")}</th>
-                              <th className="px-3 py-2 text-rose-600 dark:text-rose-400 font-bold">{translateHeader(currentLanguage, "Dr.")}</th>
-                              <th className="px-3 py-2 text-blue-600 dark:text-blue-400 font-bold">{translateHeader(currentLanguage, "Cr.")}</th>
-                              <th className="px-3 py-2">{translateHeader(currentLanguage, "Details")}</th>
-                              <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Amount (AED)")}</th>
-                              <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Action")}</th>
+                              <Th className="px-3 py-2 text-center w-10">#</Th>
+                              <Th className="px-3 py-2">{translateHeader(currentLanguage, "Date")}</Th>
+                              <Th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Roz #")}</Th>
+                              <Th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "R Name")}</Th>
+                              <Th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "No.")}</Th>
+                              <Th className="px-3 py-2 text-emerald-600 dark:text-emerald-400 font-bold">{translateHeader(currentLanguage, "Type")}</Th>
+                              <Th className="px-3 py-2 text-rose-600 dark:text-rose-400 font-bold">{translateHeader(currentLanguage, "Dr.")}</Th>
+                              <Th className="px-3 py-2 text-blue-600 dark:text-blue-400 font-bold">{translateHeader(currentLanguage, "Cr.")}</Th>
+                              <Th className="px-3 py-2">{translateHeader(currentLanguage, "Details")}</Th>
+                              <Th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Amount (AED)")}</Th>
+                              <Th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Action")}</Th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-semibold text-slate-800 dark:text-slate-200">
@@ -5800,17 +5800,17 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                         <table className="w-full text-left text-xs border-collapse">
                           <thead>
                             <tr className="bg-slate-100 dark:bg-[#0b1329] text-slate-600 dark:text-slate-400 text-[9px] uppercase font-black border-b border-slate-200 dark:border-slate-800">
-                              <th className="px-3 py-2 text-center w-10">#</th>
-                              <th className="px-3 py-2">{translateHeader(currentLanguage, "Date")}</th>
-                              <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Roz #")}</th>
-                              <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "R Name")}</th>
-                              <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "No.")}</th>
-                              <th className="px-3 py-2 text-emerald-600 dark:text-emerald-400 font-bold">{translateHeader(currentLanguage, "Type")}</th>
-                              <th className="px-3 py-2 text-rose-600 dark:text-rose-400 font-bold">{translateHeader(currentLanguage, "Dr.")}</th>
-                              <th className="px-3 py-2 text-blue-600 dark:text-blue-400 font-bold">{translateHeader(currentLanguage, "Cr.")}</th>
-                              <th className="px-3 py-2">{translateHeader(currentLanguage, "Details")}</th>
-                              <th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Amount (AED)")}</th>
-                              <th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Action")}</th>
+                              <Th className="px-3 py-2 text-center w-10">#</Th>
+                              <Th className="px-3 py-2">{translateHeader(currentLanguage, "Date")}</Th>
+                              <Th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Roz #")}</Th>
+                              <Th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "R Name")}</Th>
+                              <Th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "No.")}</Th>
+                              <Th className="px-3 py-2 text-emerald-600 dark:text-emerald-400 font-bold">{translateHeader(currentLanguage, "Type")}</Th>
+                              <Th className="px-3 py-2 text-rose-600 dark:text-rose-400 font-bold">{translateHeader(currentLanguage, "Dr.")}</Th>
+                              <Th className="px-3 py-2 text-blue-600 dark:text-blue-400 font-bold">{translateHeader(currentLanguage, "Cr.")}</Th>
+                              <Th className="px-3 py-2">{translateHeader(currentLanguage, "Details")}</Th>
+                              <Th className="px-3 py-2 text-right">{translateHeader(currentLanguage, "Amount (AED)")}</Th>
+                              <Th className="px-3 py-2 text-center">{translateHeader(currentLanguage, "Action")}</Th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-semibold text-slate-800 dark:text-slate-200">

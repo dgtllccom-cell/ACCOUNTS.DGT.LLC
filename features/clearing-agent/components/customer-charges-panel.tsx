@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Plus, CheckCircle2, Loader2, Receipt } from "lucide-react";
 import { t } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { Th } from "@/components/ui/translated-th";
 
 type ChargeRow = {
   id: string;
@@ -190,11 +191,11 @@ export function CustomerChargesPanel({
           <table className="w-full text-left text-xs">
             <thead className="text-slate-500 uppercase text-[10px]">
               <tr>
-                <th className="px-2 py-1.5">{tt("charge_type", "Charge Type")}</th>
-                <th className="px-2 py-1.5">{tt("amount", "Amount")}</th>
-                <th className="px-2 py-1.5">{tt("remarks", "Remarks")}</th>
-                <th className="px-2 py-1.5">{tt("status", "Status")}</th>
-                <th className="px-2 py-1.5 text-right">{tt("action", "Action")}</th>
+                <Th className="px-2 py-1.5">{tt("charge_type", "Charge Type")}</Th>
+                <Th className="px-2 py-1.5">{tt("amount", "Amount")}</Th>
+                <Th className="px-2 py-1.5">{tt("remarks", "Remarks")}</Th>
+                <Th className="px-2 py-1.5">{tt("status", "Status")}</Th>
+                <Th className="px-2 py-1.5 text-right">{tt("action", "Action")}</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/50">

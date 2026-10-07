@@ -10,6 +10,7 @@ import { useCallback, useEffect, useState } from "react";
 import { PackageSearch, Search } from "lucide-react";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { apiGet } from "@/lib/api/client";
+import { Th } from "@/components/ui/translated-th";
 
 type Row = Record<string, any>;
 
@@ -64,10 +65,10 @@ export function CrmStockAvailability({ lang }: { lang?: string }) {
         <table className="w-full text-left text-xs">
           <thead className="bg-slate-50 dark:bg-slate-800/60">
             <tr>
-              <th className="px-3 py-2.5 font-bold">{s.t("th_goods", "Goods")}</th>
-              <th className="px-3 py-2.5 font-bold">{s.t("th_warehouse", "Warehouse")}</th>
-              <th className="px-3 py-2.5 font-bold">{s.t("th_country", "Country")}</th>
-              <th className="px-3 py-2.5 text-right font-bold">{s.t("th_available", "Available")}</th>
+              <Th className="px-3 py-2.5 font-bold">{s.t("th_goods", "Goods")}</Th>
+              <Th className="px-3 py-2.5 font-bold">{s.t("th_warehouse", "Warehouse")}</Th>
+              <Th className="px-3 py-2.5 font-bold">{s.t("th_country", "Country")}</Th>
+              <Th className="px-3 py-2.5 text-right font-bold">{s.t("th_available", "Available")}</Th>
             </tr>
           </thead>
           <tbody>

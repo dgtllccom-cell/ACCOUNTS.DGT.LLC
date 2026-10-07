@@ -52,6 +52,8 @@ import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { PremiumSidebarNav } from "@/components/layout/premium-sidebar-nav";
 import { DigitalDockPremiumSidebar } from "@/components/layout/digital-dock-premium-sidebar";
 import { evaluateRouteAccess } from "@/lib/navigation/route-policy";
+import { dashboardForRoles } from "@/lib/permissions/enterprise-roles";
+import { isUserManager } from "@/lib/permissions/user-management-scope";
 import { PreferencesControls } from "@/components/layout/preferences-controls";
 import { ErpPageActions } from "@/components/layout/erp-page-actions";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -359,6 +361,22 @@ export function DashboardFrame({
     () => filterSidebarTree(nodes, roles, permissions ?? null, sidebarMenuVisibility),
     [nodes, roles, permissions, sidebarMenuVisibility]
   );
+  const mobileNavItems = useMemo(() => {
+    const roleList = (roles ?? []) as string[];
+    const isSuper = roleList.includes("super_admin");
+    const home = dashboardForRoles(roleList, { isSuperAdmin: isSuper });
+    const routeOk = (href: string) =>
+      isSuper || Boolean(permissions?.length && evaluateRouteAccess({ pathname: href, permissions, roles, operationalDomains, canViewFinancials }).allowed);
+    const manager = isUserManager({ isSuperAdmin: isSuper, roles: roleList, countryIds: [], countryBranchIds: [], cityBranchIds: [] });
+    const items = [
+      { key: "home", href: home, icon: Home, label: t(lang, "nav.dashboard", "Dashboard"), active: pathname === "/dashboard" || pathname === home, show: true },
+      { key: "users", href: "/dashboard/users", icon: Users, label: t(lang, "nav.users", "Users"), active: pathname.startsWith("/dashboard/users"), show: manager && routeOk("/dashboard/users") },
+      { key: "ledgers", href: "/dashboard/ledger/detailed", icon: FileSpreadsheet, label: t(lang, "nav.ledgers", "Ledgers"), active: pathname.startsWith("/dashboard/ledger"), show: routeOk("/dashboard/ledger/detailed") },
+      { key: "settings", href: "/dashboard/settings/profile", icon: Settings, label: t(lang, "nav.settings", "Settings"), active: pathname.startsWith("/dashboard/settings"), show: true },
+    ];
+    return items.filter((i) => i.show);
+  }, [roles, permissions, operationalDomains, canViewFinancials, pathname, lang]);
+
   const roleLabel = useMemo(() => {
     if (!roles || roles.length === 0) return null;
 
@@ -800,59 +818,25 @@ export function DashboardFrame({
           )}
         </main>
 
-        {/* Mobile Bottom Navigation Bar matching Mobile Mockup */}
-        <nav className="fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-border/80 px-4 py-2 flex items-center justify-around lg:hidden shadow-lg">
-          <Link
-            href="/dashboard/super-admin"
-            className={cn(
-              "flex flex-col items-center gap-1 text-[10px] font-bold transition-colors",
-              pathname === "/dashboard/super-admin" || pathname === "/dashboard"
-                ? "text-blue-600 dark:text-blue-400"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <Home className="h-5 w-5" />
-            <span>{t(lang, "nav.dashboard", "Dashboard")}</span>
-          </Link>
-
-          <Link
-            href="/dashboard/users"
-            className={cn(
-              "flex flex-col items-center gap-1 text-[10px] font-bold transition-colors",
-              pathname.startsWith("/dashboard/users")
-                ? "text-blue-600 dark:text-blue-400"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <Users className="h-5 w-5" />
-            <span>{t(lang, "nav.users", "Users")}</span>
-          </Link>
-
-          <Link
-            href="/dashboard/ledgers"
-            className={cn(
-              "flex flex-col items-center gap-1 text-[10px] font-bold transition-colors",
-              pathname.startsWith("/dashboard/ledgers")
-                ? "text-blue-600 dark:text-blue-400"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <FileSpreadsheet className="h-5 w-5" />
-            <span>{t(lang, "nav.ledgers", "Ledgers")}</span>
-          </Link>
-
-          <Link
-            href="/dashboard/settings/profile"
-            className={cn(
-              "flex flex-col items-center gap-1 text-[10px] font-bold transition-colors",
-              pathname.startsWith("/dashboard/settings")
-                ? "text-blue-600 dark:text-blue-400"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <Settings className="h-5 w-5" />
-            <span>{t(lang, "nav.settings", "Settings")}</span>
-          </Link>
+        {/* Mobile bottom navigation (phones / tablets). Every entry passes the same route policy as the sidebar and the
+            server gate, so it never offers a page the login would be refused; Dashboard goes to the login's OWN home. */}
+        <nav className="fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-border/80 px-4 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] flex items-center justify-around lg:hidden shadow-lg">
+          {mobileNavItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.key}
+                href={item.href as never}
+                className={cn(
+                  "flex min-h-11 min-w-14 flex-col items-center justify-center gap-1 text-[10px] font-bold transition-colors",
+                  item.active ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Icon className="h-5 w-5" />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
         </nav>
       </div>
 

@@ -24,6 +24,7 @@ import { translateHeader } from "@/lib/i18n/table-headers";
 import { translateValue } from "@/lib/i18n/table-values";
 import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
 import { useErpScope } from "@/lib/hooks/use-erp-scope";
+import { Th } from "@/components/ui/translated-th";
 
 export interface ReportColumn<T = any> {
   key: string;
@@ -359,16 +360,16 @@ export function UniversalReportModal<T extends Record<string, any> = Record<stri
               <table className="w-full text-left text-xs print:text-[11px]">
                 <thead className="bg-slate-900/90 text-slate-200 uppercase font-semibold border-b border-slate-800 print:bg-slate-100 print:text-slate-900 print:border-slate-300">
                   <tr>
-                    <th className="px-4 py-3 text-center w-12 border-r border-slate-800 print:border-slate-300">#</th>
+                    <Th className="px-4 py-3 text-center w-12 border-r border-slate-800 print:border-slate-300">#</Th>
                     {columns.map(col => (
-                      <th
+                      <Th
                         key={col.key}
                         className={`px-4 py-3 border-r border-slate-800 print:border-slate-300 last:border-r-0 ${
                           col.align === "right" || col.isNumeric ? "text-right" : col.align === "center" ? "text-center" : "text-left"
                         }`}
                       >
                         {th(col.label)}
-                      </th>
+                      </Th>
                     ))}
                   </tr>
                 </thead>

@@ -6,6 +6,7 @@ import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { apiGet } from "@/lib/api/client";
 import { FilterBar, useEntitiesAndPeriods } from "@/features/uae-tax/components/uae-tax-shared";
+import { Th } from "@/components/ui/translated-th";
 
 const ENTITY_TYPES = ["tax_line", "vat_return", "e_invoice", "recovery", "period", "entity", "rule"] as const;
 
@@ -69,11 +70,11 @@ export function UaeTaxAuditView({ lang: langProp }: { lang?: SupportedLanguage }
           <table className="w-full text-xs">
             <thead className="bg-slate-50 dark:bg-slate-800/60">
               <tr className="text-left">
-                <th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("au_when", "When")}</th>
-                <th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("au_type", "Object")}</th>
-                <th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("au_action", "Action")}</th>
-                <th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("au_actor", "Actor")}</th>
-                <th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("au_change", "Change")}</th>
+                <Th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("au_when", "When")}</Th>
+                <Th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("au_type", "Object")}</Th>
+                <Th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("au_action", "Action")}</Th>
+                <Th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("au_actor", "Actor")}</Th>
+                <Th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("au_change", "Change")}</Th>
               </tr>
             </thead>
             <tbody>

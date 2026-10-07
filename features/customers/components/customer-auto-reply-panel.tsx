@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { apiGet, apiPost } from "@/lib/api/client";
 import { t } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { Th } from "@/components/ui/translated-th";
 
 type ReplyLang = "en" | "ur" | "ps" | "fa" | "ar";
 const REPLY_LANGS: { code: ReplyLang; label: string }[] = [
@@ -339,11 +340,11 @@ export function CustomerAutoReplyPanel({
                     <table className="w-full text-[11px] text-start">
                       <thead className="bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 uppercase font-bold">
                         <tr>
-                          <th className="px-2.5 py-1.5 text-start">{tr(lang, "col_when", "When")}</th>
-                          <th className="px-2.5 py-1.5 text-start">{tr(lang, "col_by", "Sent by")}</th>
-                          <th className="px-2.5 py-1.5 text-start">{tr(lang, "col_lang", "Language")}</th>
-                          <th className="px-2.5 py-1.5 text-start">{tr(lang, "col_channel", "Channel")}</th>
-                          <th className="px-2.5 py-1.5 text-start">{tr(lang, "col_status", "Status")}</th>
+                          <Th className="px-2.5 py-1.5 text-start">{tr(lang, "col_when", "When")}</Th>
+                          <Th className="px-2.5 py-1.5 text-start">{tr(lang, "col_by", "Sent by")}</Th>
+                          <Th className="px-2.5 py-1.5 text-start">{tr(lang, "col_lang", "Language")}</Th>
+                          <Th className="px-2.5 py-1.5 text-start">{tr(lang, "col_channel", "Channel")}</Th>
+                          <Th className="px-2.5 py-1.5 text-start">{tr(lang, "col_status", "Status")}</Th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

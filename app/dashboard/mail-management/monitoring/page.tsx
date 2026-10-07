@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { MailPageHeader } from "@/components/mail-management/mail-page-header";
 import { MailStatusBadge } from "@/components/mail-management/mail-status-badge";
+import { Th } from "@/components/ui/translated-th";
 
 interface DnsRecordItem {
   id: string;
@@ -316,10 +317,10 @@ export default function DgtMailMonitoringPage() {
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase font-semibold text-[10px] tracking-wider">
               <tr>
-                <th className="px-5 py-3">Port</th>
-                <th className="px-5 py-3">Service</th>
-                <th className="px-5 py-3">Purpose</th>
-                <th className="px-5 py-3 text-right">Status</th>
+                <Th className="px-5 py-3">Port</Th>
+                <Th className="px-5 py-3">Service</Th>
+                <Th className="px-5 py-3">Purpose</Th>
+                <Th className="px-5 py-3 text-right">Status</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -369,10 +370,10 @@ export default function DgtMailMonitoringPage() {
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase font-semibold text-[10px] tracking-wider">
               <tr>
-                <th className="px-5 py-3">DNS Record</th>
-                <th className="px-5 py-3">Status</th>
-                <th className="px-5 py-3">Current Value</th>
-                <th className="px-5 py-3 text-right">Action</th>
+                <Th className="px-5 py-3">DNS Record</Th>
+                <Th className="px-5 py-3">Status</Th>
+                <Th className="px-5 py-3">Current Value</Th>
+                <Th className="px-5 py-3 text-right">Action</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">

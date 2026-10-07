@@ -5374,18 +5374,18 @@ export function CustomerOrderManagementView() {
                           <table className="w-full text-left text-xs border-collapse">
                       <thead className="border-b border-slate-200 bg-slate-50/90 font-bold uppercase tracking-wider text-slate-500 dark:border-slate-750 dark:bg-slate-800 text-[9.5px]">
                         <tr>
-                          <th className="py-2.5 px-3">#</th>
-                          <th className="py-2.5 px-3">{tt("goods_item", "Goods Item")}</th>
-                          <th className="py-2.5 px-3">{tt("chs_code", "CHS Code")}</th>
-                          <th className="py-2.5 px-3">{tt("unit", "Unit")}</th>
-                          <th className="py-2.5 px-3 text-right">{tt("quantity", "Quantity")}</th>
-                          <th className="py-2.5 px-3 text-right">{tt("kg_per_unit", "KG/Unit")}</th>
-                          <th className="py-2.5 px-3 text-right">{tt("gross_wt_kg", "Gross (kg)")}</th>
-                          <th className="py-2.5 px-3 text-right">{tt("empty_tare_kg", "Tare (kg)")}</th>
-                          <th className="py-2.5 px-3 text-right">{tt("net_wt_kg", "Net (kg)")}</th>
-                          <th className="py-2.5 px-3">{tt("warehouse_source", "Warehouse Source")}</th>
-                          <th className="py-2.5 px-3 text-center">{tt("quality_photo", "Quality Photo")}</th>
-                          <th className="py-2.5 px-3 text-center">{tt("actions", "Actions")}</th>
+                          <Th className="py-2.5 px-3">#</Th>
+                          <Th className="py-2.5 px-3">{tt("goods_item", "Goods Item")}</Th>
+                          <Th className="py-2.5 px-3">{tt("chs_code", "CHS Code")}</Th>
+                          <Th className="py-2.5 px-3">{tt("unit", "Unit")}</Th>
+                          <Th className="py-2.5 px-3 text-right">{tt("quantity", "Quantity")}</Th>
+                          <Th className="py-2.5 px-3 text-right">{tt("kg_per_unit", "KG/Unit")}</Th>
+                          <Th className="py-2.5 px-3 text-right">{tt("gross_wt_kg", "Gross (kg)")}</Th>
+                          <Th className="py-2.5 px-3 text-right">{tt("empty_tare_kg", "Tare (kg)")}</Th>
+                          <Th className="py-2.5 px-3 text-right">{tt("net_wt_kg", "Net (kg)")}</Th>
+                          <Th className="py-2.5 px-3">{tt("warehouse_source", "Warehouse Source")}</Th>
+                          <Th className="py-2.5 px-3 text-center">{tt("quality_photo", "Quality Photo")}</Th>
+                          <Th className="py-2.5 px-3 text-center">{tt("actions", "Actions")}</Th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-750 text-[11px]">
@@ -7765,16 +7765,16 @@ function Step1BookingCustomer({
                 <table className="w-full text-left text-xs">
                   <thead className="bg-slate-100/90 dark:bg-slate-800 text-[10.5px] font-black uppercase text-slate-600 dark:text-slate-300">
                     <tr>
-                      <th className="py-2 px-2.5 w-8 text-center">#</th>
-                      <th className="py-2 px-2.5">{tt("goods_name_chs", "Goods Name & HS")}</th>
-                      <th className="py-2 px-2.5">{tt("size_brand", "Size / Quality")}</th>
-                      <th className="py-2 px-2.5">{tt("origin", "Origin")}</th>
-                      <th className="py-2 px-2.5 text-right">{tt("quantity", "Qty")}</th>
-                      <th className="py-2 px-2.5 text-right">{tt("gross_wt_kg", "Gross (kg)")}</th>
-                      <th className="py-2 px-2.5 text-right">{tt("empty_tare_kg", "Tare (kg)")}</th>
-                      <th className="py-2 px-2.5 text-right">{tt("net_wt_kg", "Net (kg)")}</th>
-                      <th className="py-2 px-2.5">{tt("warehouse", "Warehouse")}</th>
-                      <th className="py-2 px-2.5 text-center w-16">{tt("actions", "Actions")}</th>
+                      <Th className="py-2 px-2.5 w-8 text-center">#</Th>
+                      <Th className="py-2 px-2.5">{tt("goods_name_chs", "Goods Name & HS")}</Th>
+                      <Th className="py-2 px-2.5">{tt("size_brand", "Size / Quality")}</Th>
+                      <Th className="py-2 px-2.5">{tt("origin", "Origin")}</Th>
+                      <Th className="py-2 px-2.5 text-right">{tt("quantity", "Qty")}</Th>
+                      <Th className="py-2 px-2.5 text-right">{tt("gross_wt_kg", "Gross (kg)")}</Th>
+                      <Th className="py-2 px-2.5 text-right">{tt("empty_tare_kg", "Tare (kg)")}</Th>
+                      <Th className="py-2 px-2.5 text-right">{tt("net_wt_kg", "Net (kg)")}</Th>
+                      <Th className="py-2 px-2.5">{tt("warehouse", "Warehouse")}</Th>
+                      <Th className="py-2 px-2.5 text-center w-16">{tt("actions", "Actions")}</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900">
@@ -9621,16 +9621,16 @@ function Step4ReviewConfirm({
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50/80 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-800/50">
-                  <th className="py-2.5 px-3">#</th>
-                  <th className="py-2.5 px-3">{tt("goods_description_th", "Goods Description")}</th>
-                  <th className="py-2.5 px-3">{tt("chs_code", "CHS Code")}</th>
-                  <th className="py-2.5 px-3">{tt("packaging_unit_th", "Packaging / Unit")}</th>
-                  <th className="py-2.5 px-3 text-right">{tt("quantity", "Quantity")}</th>
-                  <th className="py-2.5 px-3 text-right">{tt("kg_per_unit_th", "KG / Unit")}</th>
-                  <th className="py-2.5 px-3 text-right">{tt("gross_wt_kg", "Gross (kg)")}</th>
-                  <th className="py-2.5 px-3 text-right">{tt("empty_tare_kg", "Tare (kg)")}</th>
-                  <th className="py-2.5 px-3 text-right">{tt("net_wt_kg", "Net (kg)")}</th>
-                  <th className="py-2.5 px-3">{tt("warehouse_source", "Warehouse Source")}</th>
+                  <Th className="py-2.5 px-3">#</Th>
+                  <Th className="py-2.5 px-3">{tt("goods_description_th", "Goods Description")}</Th>
+                  <Th className="py-2.5 px-3">{tt("chs_code", "CHS Code")}</Th>
+                  <Th className="py-2.5 px-3">{tt("packaging_unit_th", "Packaging / Unit")}</Th>
+                  <Th className="py-2.5 px-3 text-right">{tt("quantity", "Quantity")}</Th>
+                  <Th className="py-2.5 px-3 text-right">{tt("kg_per_unit_th", "KG / Unit")}</Th>
+                  <Th className="py-2.5 px-3 text-right">{tt("gross_wt_kg", "Gross (kg)")}</Th>
+                  <Th className="py-2.5 px-3 text-right">{tt("empty_tare_kg", "Tare (kg)")}</Th>
+                  <Th className="py-2.5 px-3 text-right">{tt("net_wt_kg", "Net (kg)")}</Th>
+                  <Th className="py-2.5 px-3">{tt("warehouse_source", "Warehouse Source")}</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

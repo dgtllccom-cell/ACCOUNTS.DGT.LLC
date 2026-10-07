@@ -7,6 +7,7 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { apiGet } from "@/lib/api/client";
 import { UniversalPrintActionButton } from "@/components/reports/universal-print-action-button";
 import { FilterBar, fmtAed, useEntitiesAndPeriods } from "@/features/uae-tax/components/uae-tax-shared";
+import { Th } from "@/components/ui/translated-th";
 
 export function UaeTaxReportsView({ lang: langProp }: { lang?: SupportedLanguage }) {
   const s = useErpScreen("tax_einv", langProp);
@@ -106,12 +107,12 @@ export function UaeTaxReportsView({ lang: langProp }: { lang?: SupportedLanguage
           <table className="w-full text-xs">
             <thead className="bg-slate-50 dark:bg-slate-800/60">
               <tr className="text-left">
-                <th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("cc_period", "Tax Period")}</th>
-                <th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("rep_direction", "Direction")}</th>
-                <th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("ln_tax_category", "Category")}</th>
-                <th className="px-4 py-2.5 text-right font-bold uppercase tracking-wider text-slate-400">{s.t("rep_lines", "Lines")}</th>
-                <th className="px-4 py-2.5 text-right font-bold uppercase tracking-wider text-slate-400">{s.t("ln_taxable_aed", "Taxable (AED)")}</th>
-                <th className="px-4 py-2.5 text-right font-bold uppercase tracking-wider text-slate-400">{s.t("ln_vat_aed", "VAT (AED)")}</th>
+                <Th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("cc_period", "Tax Period")}</Th>
+                <Th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("rep_direction", "Direction")}</Th>
+                <Th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("ln_tax_category", "Category")}</Th>
+                <Th className="px-4 py-2.5 text-right font-bold uppercase tracking-wider text-slate-400">{s.t("rep_lines", "Lines")}</Th>
+                <Th className="px-4 py-2.5 text-right font-bold uppercase tracking-wider text-slate-400">{s.t("ln_taxable_aed", "Taxable (AED)")}</Th>
+                <Th className="px-4 py-2.5 text-right font-bold uppercase tracking-wider text-slate-400">{s.t("ln_vat_aed", "VAT (AED)")}</Th>
               </tr>
             </thead>
             <tbody>
@@ -144,10 +145,10 @@ export function UaeTaxReportsView({ lang: langProp }: { lang?: SupportedLanguage
               <table className="w-full text-xs">
                 <thead className="bg-slate-50 dark:bg-slate-800/60">
                   <tr className="text-left">
-                    <th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("cc_entity", "Tax Entity")}</th>
-                    <th className="px-4 py-2.5 text-right font-bold uppercase tracking-wider text-slate-400">{s.t("rep_lines_output_vat", "Lines Output VAT")}</th>
-                    <th className="px-4 py-2.5 text-right font-bold uppercase tracking-wider text-slate-400">{s.t("rep_ledger_output", "Ledger Output")}</th>
-                    <th className="px-4 py-2.5 text-right font-bold uppercase tracking-wider text-slate-400">{s.t("rep_variance", "Variance")}</th>
+                    <Th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("cc_entity", "Tax Entity")}</Th>
+                    <Th className="px-4 py-2.5 text-right font-bold uppercase tracking-wider text-slate-400">{s.t("rep_lines_output_vat", "Lines Output VAT")}</Th>
+                    <Th className="px-4 py-2.5 text-right font-bold uppercase tracking-wider text-slate-400">{s.t("rep_ledger_output", "Ledger Output")}</Th>
+                    <Th className="px-4 py-2.5 text-right font-bold uppercase tracking-wider text-slate-400">{s.t("rep_variance", "Variance")}</Th>
                   </tr>
                 </thead>
                 <tbody>

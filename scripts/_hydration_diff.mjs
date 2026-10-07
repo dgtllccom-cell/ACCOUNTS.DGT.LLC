@@ -1,0 +1,21 @@
+// DEV-only: compare server-rendered HTML text with the hydrated DOM text to locate a React #418 text mismatch
+import fs from "node:fs";
+import { webkit } from "playwright";
+const BASE = process.env.BASE || "http://localhost:3230";
+const { password } = JSON.parse(fs.readFileSync(process.env.RBAC_SECRET, "utf8"));
+const lr = await fetch(BASE + "/api/erp/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ identifier: "rbac.super@rbac-test.dev", password }), redirect: "manual" });
+const token = lr.headers.getSetCookie().map((c) => c.split(";")[0]).find((c) => c.startsWith("erp_session=")).slice(12);
+const html = await (await fetch(BASE + process.env.PAGE_PATH, { headers: { cookie: token + "; erp_lang=en; erp_theme_mode=night" } })).text();
+const strip = (h) => h.replace(/<script[\s\S]*?<\/script>/g, " ").replace(/<style[\s\S]*?<\/style>/g, " ").replace(/<!--[\s\S]*?-->/g, "").replace(/<[^>]+>/g, "\n").replace(/&amp;/g, "&").replace(/&#x27;/g, "'").replace(/&quot;/g, '"').split("\n").map((s) => s.trim()).filter(Boolean);
+const ssr = new Set(strip(html));
+const b = await webkit.launch();
+const ctx = await b.newContext({ viewport: { width: Number(process.env.W || 393), height: 667 }, isMobile: true, hasTouch: true });
+await ctx.addInitScript(() => { try { localStorage.setItem("erp_theme_mode", "night"); localStorage.setItem("erp_lang", "en"); } catch {} });
+await ctx.addCookies([{ name: "erp_session", value: token.slice(12), domain: "localhost", path: "/" }, { name: "erp_lang", value: "en", domain: "localhost", path: "/" }, { name: "erp_theme_mode", value: "night", domain: "localhost", path: "/" }]);
+const p = await ctx.newPage();
+const errs = []; p.on("pageerror", (e) => errs.push(String(e).slice(0, 80)));
+await p.goto(BASE + process.env.PAGE_PATH, { waitUntil: "load", timeout: 90000 }); await p.waitForTimeout(8000);
+const dom = await p.evaluate(() => { const out = []; const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT); let n; while ((n = w.nextNode())) { const t = n.textContent.trim(); if (t && !n.parentElement.closest("script,style")) out.push(t); } return out; });
+console.log("errors:", errs, "dark:", await p.evaluate(() => document.documentElement.classList.contains("dark")));
+console.log("text in hydrated DOM but NOT in server HTML:", JSON.stringify(dom.filter((t) => !ssr.has(t)).slice(0, 25)));
+await b.close();

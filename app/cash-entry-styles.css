@@ -1,0 +1,95 @@
+/*
+ * CASH ENTRY — selectable VISUAL STYLES (appearance only).
+ * The attribute `data-cash-style` is set by features/roznamcha/components/cash-entry-style-scope.tsx on the Cash Entry page
+ * wrapper. These rules only re-skin it (colour tokens, radius, borders, shadows, numerals); the form's data, fields,
+ * validation and behaviour are untouched. Independent of Light / Dark / System: every style has a light and a dark variant.
+ *   standard  = the ERP's normal look (no rule below applies)
+ *   titanium  = Titanium Dark FinTech  (obsidian surfaces, emerald / coral signal colours, glowing hairlines, mono numerals)
+ *   swiss     = Swiss Minimalist       (white / graphite, navy ink, hairline borders, flat, airy)
+ *   executive = Executive Split Desk   (sapphire surfaces, amber highlights, banded cards)
+ * Screen only: print / PDF is untouched.
+ */
+@media screen {
+  /* ---------- Titanium Dark FinTech ---------- */
+  [data-cash-style="titanium"] {
+    --background: 215 20% 95%; --foreground: 222 40% 10%; --card: 0 0% 100%; --card-foreground: 222 40% 10%;
+    --popover: 0 0% 100%; --popover-foreground: 222 40% 10%; --muted: 215 18% 92%; --muted-foreground: 218 12% 40%;
+    --secondary: 215 18% 92%; --secondary-foreground: 222 40% 12%; --border: 215 16% 84%; --input: 215 14% 80%;
+    --primary: 160 84% 28%; --primary-foreground: 0 0% 100%; --ring: 160 84% 32%; --accent: 350 80% 52%; --accent-foreground: 0 0% 100%;
+    --cs-radius: 0.95rem;
+  }
+  :root.dark [data-cash-style="titanium"] {
+    --background: 222 52% 5%; --foreground: 210 30% 96%; --card: 222 42% 8%; --card-foreground: 210 30% 96%;
+    --popover: 222 42% 9%; --popover-foreground: 210 30% 96%; --muted: 222 34% 12%; --muted-foreground: 218 14% 66%;
+    --secondary: 222 34% 12%; --secondary-foreground: 210 30% 96%; --border: 222 30% 18%; --input: 222 26% 24%;
+    --primary: 160 84% 42%; --primary-foreground: 222 52% 6%; --ring: 160 84% 45%; --accent: 350 85% 62%; --accent-foreground: 0 0% 100%;
+  }
+
+  /* ---------- Swiss Minimalist ---------- */
+  [data-cash-style="swiss"] {
+    --background: 0 0% 100%; --foreground: 222 47% 11%; --card: 0 0% 100%; --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%; --popover-foreground: 222 47% 11%; --muted: 210 40% 98%; --muted-foreground: 215 16% 44%;
+    --secondary: 210 40% 98%; --secondary-foreground: 222 47% 11%; --border: 214 20% 90%; --input: 214 18% 86%;
+    --primary: 160 84% 29%; --primary-foreground: 0 0% 100%; --ring: 160 70% 36%; --accent: 160 84% 29%; --accent-foreground: 0 0% 100%;
+    --cs-radius: 0.4rem;
+  }
+  :root.dark [data-cash-style="swiss"] {
+    --background: 222 22% 7%; --foreground: 210 20% 96%; --card: 222 20% 10%; --card-foreground: 210 20% 96%;
+    --popover: 222 20% 10%; --popover-foreground: 210 20% 96%; --muted: 222 16% 14%; --muted-foreground: 218 12% 64%;
+    --secondary: 222 16% 14%; --secondary-foreground: 210 20% 96%; --border: 222 14% 20%; --input: 222 12% 26%;
+    --primary: 160 70% 45%; --primary-foreground: 222 22% 7%; --ring: 160 70% 48%; --accent: 160 70% 45%; --accent-foreground: 222 22% 7%;
+  }
+
+  /* ---------- Executive Split Desk ---------- */
+  [data-cash-style="executive"] {
+    --background: 226 60% 97%; --foreground: 224 60% 12%; --card: 0 0% 100%; --card-foreground: 224 60% 12%;
+    --popover: 0 0% 100%; --popover-foreground: 224 60% 12%; --muted: 226 40% 94%; --muted-foreground: 224 20% 40%;
+    --secondary: 226 40% 94%; --secondary-foreground: 224 60% 14%; --border: 226 30% 87%; --input: 226 26% 82%;
+    --primary: 38 92% 46%; --primary-foreground: 224 60% 10%; --ring: 38 92% 46%; --accent: 160 84% 30%; --accent-foreground: 0 0% 100%;
+    --cs-radius: 0.7rem;
+  }
+  :root.dark [data-cash-style="executive"] {
+    --background: 224 63% 8%; --foreground: 220 30% 96%; --card: 224 52% 12%; --card-foreground: 220 30% 96%;
+    --popover: 224 52% 13%; --popover-foreground: 220 30% 96%; --muted: 224 42% 16%; --muted-foreground: 220 16% 68%;
+    --secondary: 224 42% 16%; --secondary-foreground: 220 30% 96%; --border: 224 40% 22%; --input: 224 34% 28%;
+    --primary: 38 92% 52%; --primary-foreground: 224 63% 8%; --ring: 38 92% 55%; --accent: 160 84% 42%; --accent-foreground: 224 63% 8%;
+  }
+
+  /* ---------- shared by the three styles: the page becomes a desk panel and legacy hard-coded colours follow the tokens ---------- */
+  :is([data-cash-style="titanium"], [data-cash-style="swiss"], [data-cash-style="executive"]) {
+    background-color: hsl(var(--background)); color: hsl(var(--foreground));
+    border-radius: calc(var(--cs-radius) + 0.25rem); padding: 0.75rem; transition: background-color 0.2s ease;
+  }
+  :is([data-cash-style="titanium"], [data-cash-style="swiss"], [data-cash-style="executive"]) :is(.bg-white, .bg-card, .bg-slate-50, .bg-gray-50, .bg-white\/90, .bg-white\/80) { background-color: hsl(var(--card)); }
+  :is([data-cash-style="titanium"], [data-cash-style="swiss"], [data-cash-style="executive"]) :is(.bg-slate-100, .bg-gray-100, .bg-slate-100\/60, .bg-slate-50\/50, .bg-slate-50\/60) { background-color: hsl(var(--muted)); }
+  :is([data-cash-style="titanium"], [data-cash-style="swiss"], [data-cash-style="executive"]) :is(.text-slate-900, .text-slate-800, .text-gray-900, .text-black, .text-\[\#0f172a\]) { color: hsl(var(--foreground)); }
+  :is([data-cash-style="titanium"], [data-cash-style="swiss"], [data-cash-style="executive"]) :is(.text-slate-700, .text-slate-600, .text-slate-500, .text-slate-400, .text-gray-600, .text-gray-500) { color: hsl(var(--muted-foreground)); }
+  :is([data-cash-style="titanium"], [data-cash-style="swiss"], [data-cash-style="executive"]) :is(.border-slate-100, .border-slate-200, .border-slate-300, .border-gray-200, .border-input, .border) { border-color: hsl(var(--border)); }
+  :is([data-cash-style="titanium"], [data-cash-style="swiss"], [data-cash-style="executive"]) :is(input, select, textarea):not([type="checkbox"]):not([type="radio"]) { background-color: hsl(var(--background)); color: hsl(var(--foreground)); border-color: hsl(var(--input)); }
+  :is([data-cash-style="titanium"], [data-cash-style="swiss"], [data-cash-style="executive"]) :is(.bg-blue-600, .bg-primary, .bg-indigo-600, .bg-emerald-600) { background-color: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
+  :is([data-cash-style="titanium"], [data-cash-style="swiss"], [data-cash-style="executive"]) :is(.hover\:bg-blue-700:hover, .hover\:bg-emerald-700:hover, .hover\:bg-primary\/90:hover) { background-color: hsl(var(--primary) / 0.88); }
+  :is([data-cash-style="titanium"], [data-cash-style="swiss"], [data-cash-style="executive"]) :is(div, section, article):where(.rounded-xl, .rounded-2xl):where(.border) { border-radius: var(--cs-radius); }
+  :is([data-cash-style="titanium"], [data-cash-style="swiss"], [data-cash-style="executive"]) thead th { background-color: hsl(var(--muted)); color: hsl(var(--muted-foreground)); }
+  :is([data-cash-style="titanium"], [data-cash-style="swiss"], [data-cash-style="executive"]) [data-cash-style-bar] { color: hsl(var(--foreground)); }
+
+  /* ---------- per-style character ---------- */
+  /* Titanium: glowing hairlines, monospaced figures */
+  [data-cash-style="titanium"] :is(div, section, article):where(.rounded-xl, .rounded-2xl):where(.border) {
+    border-color: hsl(var(--primary) / 0.26);
+    box-shadow: 0 0 0 1px hsl(var(--primary) / 0.06), 0 12px 34px -18px hsl(var(--primary) / 0.5);
+  }
+  [data-cash-style="titanium"] :is(td, input[type="number"], .font-mono, .tabular-nums) { font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace; }
+  [data-cash-style="titanium"] :is(.text-emerald-600, .text-emerald-700, .text-green-600) { color: hsl(160 84% 40%); }
+  [data-cash-style="titanium"] :is(.text-red-600, .text-red-700, .text-rose-600) { color: hsl(var(--accent)); }
+
+  /* Swiss: flat, hairline, no shadow */
+  [data-cash-style="swiss"] :is(div, section, article):where(.rounded-xl, .rounded-2xl):where(.border) { box-shadow: none; border-color: hsl(var(--border)); }
+  [data-cash-style="swiss"] :is(h1, h2, h3, h4) { letter-spacing: -0.015em; }
+  [data-cash-style="swiss"] :is(button, [role="button"]):not(.rounded-full) { border-radius: var(--cs-radius); }
+
+  /* Executive: banded cards with an amber top edge */
+  [data-cash-style="executive"] :is(div, section, article):where(.rounded-xl, .rounded-2xl):where(.border) {
+    border-top: 3px solid hsl(var(--primary)); box-shadow: 0 10px 28px -20px hsl(var(--foreground) / 0.45);
+  }
+  [data-cash-style="executive"] thead th { border-bottom: 2px solid hsl(var(--primary) / 0.55); }
+}

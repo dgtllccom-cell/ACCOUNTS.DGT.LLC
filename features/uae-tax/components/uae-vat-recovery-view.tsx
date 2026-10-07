@@ -6,6 +6,7 @@ import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { apiGet, apiPost } from "@/lib/api/client";
 import { FilterBar, fmtAed, useEntitiesAndPeriods } from "@/features/uae-tax/components/uae-tax-shared";
+import { Th } from "@/components/ui/translated-th";
 
 const STATUSES = [
   "recoverable", "pending", "claimed", "carry_forward",
@@ -130,11 +131,11 @@ export function UaeVatRecoveryView({ lang: langProp }: { lang?: SupportedLanguag
           <table className="w-full text-xs">
             <thead className="bg-slate-50 dark:bg-slate-800/60">
               <tr className="text-left">
-                <th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("cc_period", "Tax Period")}</th>
-                <th className="px-4 py-2.5 text-right font-bold uppercase tracking-wider text-slate-400">{s.t("rc_amount", "Amount (AED)")}</th>
-                <th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("set_col_status", "Status")}</th>
-                <th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("vr_fta_ref", "FTA Reference")}</th>
-                <th className="px-4 py-2.5" />
+                <Th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("cc_period", "Tax Period")}</Th>
+                <Th className="px-4 py-2.5 text-right font-bold uppercase tracking-wider text-slate-400">{s.t("rc_amount", "Amount (AED)")}</Th>
+                <Th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("set_col_status", "Status")}</Th>
+                <Th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("vr_fta_ref", "FTA Reference")}</Th>
+                <Th className="px-4 py-2.5" />
               </tr>
             </thead>
             <tbody>

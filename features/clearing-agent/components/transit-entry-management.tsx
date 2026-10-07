@@ -39,6 +39,7 @@ import { Button } from "@/components/ui/button";
 import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { QrCode as QrCodeGraphic } from "@/components/ui/qr-code";
 import { VoiceDictateButton } from "@/components/voice-dictate-button";
+import { Th } from "@/components/ui/translated-th";
 
 export interface TransitDocument {
   id: string;
@@ -913,9 +914,9 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
                     <table className="w-full text-xs text-left">
                       <thead className="bg-muted/50 text-[10px] font-black uppercase tracking-wider text-muted-foreground border-b border-border">
                         <tr>
-                          <th className="px-3 py-2">{tt("transit.col_file_name", "File Name")}</th>
-                          <th className="px-3 py-2 text-center w-28">{tt("transit.col_size", "Size")}</th>
-                          <th className="px-3 py-2 text-center w-20">{tt("common.actions", "Action")}</th>
+                          <Th className="px-3 py-2">{tt("transit.col_file_name", "File Name")}</Th>
+                          <Th className="px-3 py-2 text-center w-28">{tt("transit.col_size", "Size")}</Th>
+                          <Th className="px-3 py-2 text-center w-20">{tt("common.actions", "Action")}</Th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border">
@@ -1273,13 +1274,13 @@ export function TransitEntryManagementView({ lang: langProp = "en" }: { lang?: S
               <table className="w-full text-xs text-left">
                 <thead className="bg-muted/60 text-[10px] font-black uppercase tracking-wider text-muted-foreground border-b border-border">
                   <tr>
-                    <th className="px-3 py-2.5">{tt("transit.col_entry_serial", "Entry Serial")}</th>
-                    <th className="px-3 py-2.5">{tt("transit.col_invoice_transit", "Invoice / Transit No")}</th>
-                    <th className="px-3 py-2.5">{tt("transit.col_goods_desc", "Goods Description")}</th>
-                    <th className="px-3 py-2.5">{tt("common.quantity", "Quantity")}</th>
-                    <th className="px-3 py-2.5">{tt("transit.col_total_amount", "Total Amount")}</th>
-                    <th className="px-3 py-2.5">{tt("transit.col_export_import", "Export / Import Company")}</th>
-                    <th className="px-3 py-2.5 text-center">{tt("common.actions", "Actions")}</th>
+                    <Th className="px-3 py-2.5">{tt("transit.col_entry_serial", "Entry Serial")}</Th>
+                    <Th className="px-3 py-2.5">{tt("transit.col_invoice_transit", "Invoice / Transit No")}</Th>
+                    <Th className="px-3 py-2.5">{tt("transit.col_goods_desc", "Goods Description")}</Th>
+                    <Th className="px-3 py-2.5">{tt("common.quantity", "Quantity")}</Th>
+                    <Th className="px-3 py-2.5">{tt("transit.col_total_amount", "Total Amount")}</Th>
+                    <Th className="px-3 py-2.5">{tt("transit.col_export_import", "Export / Import Company")}</Th>
+                    <Th className="px-3 py-2.5 text-center">{tt("common.actions", "Actions")}</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">

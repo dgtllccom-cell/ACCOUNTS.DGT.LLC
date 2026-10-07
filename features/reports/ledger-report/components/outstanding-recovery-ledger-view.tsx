@@ -859,29 +859,27 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
           <table className="ledger-table w-full min-w-[1350px] text-xs">
             <thead className="bg-slate-50/80 text-left font-bold uppercase text-slate-600 dark:bg-slate-800/80 dark:text-slate-300">
               <tr className="border-b border-slate-200 dark:border-slate-700">
-                <th className="px-3 py-3 text-center text-[10px] tracking-wider">{tr("SR#")}</th>
-                <th className="px-3 py-3 text-center text-[10px] tracking-wider">
+                <Th className="px-3 py-3 text-center text-[10px] tracking-wider">{tr("SR#")}</Th>
+                <Th className="px-3 py-3 text-center text-[10px] tracking-wider">
                   <div>{tr("START DATE")}</div>
-                  <div className="text-[9px] font-normal text-emerald-600 normal-case">({tr("This is start date")})</div>
-                </th>
-                <th className="px-3 py-3 text-[10px] tracking-wider">{tr("CODE")}</th>
-                <th className="px-3 py-3 text-[10px] tracking-wider">{tr("ACCOUNT NO")}</th>
-                <th className="px-3 py-3 text-[10px] tracking-wider">{tr("CONTRACT NO")}</th>
-                <th className="px-3 py-3 text-[10px] tracking-wider">{tr("ACCOUNT NAME")}</th>
-                <th className="px-3 py-3 text-[10px] tracking-wider">{tr("ACCOUNT TYPE")}</th>
-                <th className="px-3 py-3 text-[10px] tracking-wider">{tr("ACCOUNT STATUS")}</th>
-                <th className="px-3 py-3 text-right text-[10px] tracking-wider text-emerald-600">{tr("Credit")} (AED)</th>
-                <th className="px-3 py-3 text-right text-[10px] tracking-wider text-rose-600">{tr("Debit")} (AED)</th>
-                <th className="px-3 py-3 text-center text-[10px] tracking-wider">{tr("CURR")}</th>
-                <th className="px-3 py-3 text-center text-[10px] tracking-wider">
+                </Th>
+                <Th className="px-3 py-3 text-[10px] tracking-wider">{tr("CODE")}</Th>
+                <Th className="px-3 py-3 text-[10px] tracking-wider">{tr("ACCOUNT NO")}</Th>
+                <Th className="px-3 py-3 text-[10px] tracking-wider">{tr("CONTRACT NO")}</Th>
+                <Th className="px-3 py-3 text-[10px] tracking-wider">{tr("ACCOUNT NAME")}</Th>
+                <Th className="px-3 py-3 text-[10px] tracking-wider">{tr("ACCOUNT TYPE")}</Th>
+                <Th className="px-3 py-3 text-[10px] tracking-wider">{tr("ACCOUNT STATUS")}</Th>
+                <Th className="px-3 py-3 text-right text-[10px] tracking-wider text-emerald-600">{tr("Credit")} (AED)</Th>
+                <Th className="px-3 py-3 text-right text-[10px] tracking-wider text-rose-600">{tr("Debit")} (AED)</Th>
+                <Th className="px-3 py-3 text-center text-[10px] tracking-wider">{tr("CURR")}</Th>
+                <Th className="px-3 py-3 text-center text-[10px] tracking-wider">
                   <div>{tr("LAST DATE")}</div>
-                  <div className="text-[9px] font-normal text-rose-600 normal-case">({tr("This is last date")})</div>
-                </th>
-                <th className="px-3 py-3 text-right text-[10px] tracking-wider">{tr("DAYS (Diff.)")}</th>
-                <th className="px-3 py-3 text-center text-[10px] tracking-wider">{tr("TYPE")}</th>
-                <th className="px-3 py-3 text-right text-[10px] tracking-wider">{tr("Balance")} (AED)</th>
-                <th className="px-3 py-3 text-center text-[10px] tracking-wider">{tr("CONTACT")}</th>
-                <th className="px-3 py-3 text-center text-[10px] tracking-wider">{tr("ACTIONS")}</th>
+                </Th>
+                <Th className="px-3 py-3 text-right text-[10px] tracking-wider">{tr("DAYS (Diff.)")}</Th>
+                <Th className="px-3 py-3 text-center text-[10px] tracking-wider">{tr("TYPE")}</Th>
+                <Th className="px-3 py-3 text-right text-[10px] tracking-wider">{tr("Balance")} (AED)</Th>
+                <Th className="px-3 py-3 text-center text-[10px] tracking-wider">{tr("CONTACT")}</Th>
+                <Th className="px-3 py-3 text-center text-[10px] tracking-wider">{tr("ACTIONS")}</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

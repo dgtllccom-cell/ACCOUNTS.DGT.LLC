@@ -525,7 +525,7 @@ export function AdminUserManagementPanel() {
   };
 
   return (
-    <div className="space-y-6" dir={isRtl ? "rtl" : "ltr"}>
+    <div className="space-y-6 max-sm:space-y-4" dir={isRtl ? "rtl" : "ltr"}>
       {/* Live Report Modal */}
       {selectedReportUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
@@ -551,17 +551,17 @@ export function AdminUserManagementPanel() {
       )}
 
       {/* Header Section */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b pb-5">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b pb-5 max-sm:gap-3 max-sm:pb-3">
         <div>
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
             <ShieldCheck className="h-4 w-4" />
             <span>{tt("nav.admin_panel", "Admin Control Panel")}</span>
           </div>
           <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            {tt("nav.user_management", "User Login Management & Branch Scope Directory")}
+            {tt("aump.page_title", "User Login Management & Branch Scope Directory")}
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            {tt("nav.user_management", "Country Main Branches, City Branch Codes, Login IDs & Hierarchical Access Table")}
+            {tt("aump.page_subtitle", "Country Main Branches, City Branch Codes, Login IDs & Hierarchical Access Table")}
           </p>
         </div>
 
@@ -580,21 +580,21 @@ export function AdminUserManagementPanel() {
           <Link href="/dashboard/country">
             <Button variant="outline" size="sm" className="gap-2">
               <Building2 className="h-4 w-4 text-slate-500" />
-              <span>+ {tt("nav.country_management", "Add Branch / Country")}</span>
+              <span>+ {tt("aump.add_branch_country", "Add Branch / Country")}</span>
             </Button>
           </Link>
 
           <Link href="/dashboard/users/live">
             <Button size="sm" className="gap-2 bg-cyan-600 hover:bg-cyan-700 text-white font-medium shadow-sm">
               <Radio className="h-4 w-4 animate-pulse" />
-              <span>{tt("live_users_work", "Live Users / Current Work")}</span>
+              <span>{tt("aump.live_users_work", "Live Users / Current Work")}</span>
             </Button>
           </Link>
 
           <Link href="/dashboard/users/new">
             <Button size="sm" className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-sm">
               <UserPlus className="h-4 w-4" />
-              <span>{tt("nav.user_registration", "Register New User")}</span>
+              <span>{tt("aump.register_new_user", "Register New User")}</span>
             </Button>
           </Link>
 
@@ -613,55 +613,55 @@ export function AdminUserManagementPanel() {
       </div>
 
       {/* Overview Stat Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-xl border bg-card p-4 shadow-sm">
+      <div className="grid gap-4 max-sm:grid-cols-2 max-sm:gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="rounded-xl border bg-card p-4 shadow-sm max-sm:p-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">{tt("nav.users", "Total Users")}</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 max-sm:text-[10px] max-sm:tracking-normal">{tt("aump.total_users", "Total Users")}</span>
             <div className="grid h-8 w-8 place-items-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
               <Users className="h-4 w-4" />
             </div>
           </div>
-          <div className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-100">{totalMetrics.totalUsers}</div>
-          <p className="mt-1 text-xs text-slate-500">{totalMetrics.totalMainUsers} Admin / Main Users</p>
+          <div className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-100 max-sm:mt-1 max-sm:text-xl">{totalMetrics.totalUsers}</div>
+          <p className="mt-1 text-xs text-slate-500">{totalMetrics.totalMainUsers} {tt("aump.admin_main_users", "Admin / Main Users")}</p>
         </div>
 
-        <div className="rounded-xl border bg-card p-4 shadow-sm">
+        <div className="rounded-xl border bg-card p-4 shadow-sm max-sm:p-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">{tt("nav.countries", "Countries")}</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 max-sm:text-[10px] max-sm:tracking-normal">{tt("aump.card_countries", "Countries")}</span>
             <div className="grid h-8 w-8 place-items-center rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400">
               <Globe2 className="h-4 w-4" />
             </div>
           </div>
-          <div className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-100">{totalMetrics.totalCountries}</div>
+          <div className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-100 max-sm:mt-1 max-sm:text-xl">{totalMetrics.totalCountries}</div>
           <p className="mt-1 text-xs text-slate-500">{tt("aump.registered_operations", "Registered Operations")}</p>
         </div>
 
-        <div className="rounded-xl border bg-card p-4 shadow-sm">
+        <div className="rounded-xl border bg-card p-4 shadow-sm max-sm:p-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">{tt("nav.country_branch", "Main Country Branches")}</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 max-sm:text-[10px] max-sm:tracking-normal">{tt("aump.card_main_branches", "Main Country Branches")}</span>
             <div className="grid h-8 w-8 place-items-center rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400">
               <Building2 className="h-4 w-4" />
             </div>
           </div>
-          <div className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-100">{totalMetrics.totalMainBranches}</div>
+          <div className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-100 max-sm:mt-1 max-sm:text-xl">{totalMetrics.totalMainBranches}</div>
           <p className="mt-1 text-xs text-slate-500">{tt("aump.with_unique_main_branch_codes", "With Unique Main Branch Codes")}</p>
         </div>
 
-        <div className="rounded-xl border bg-card p-4 shadow-sm">
+        <div className="rounded-xl border bg-card p-4 shadow-sm max-sm:p-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">{tt("nav.city_branch", "City / Sub Branches")}</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 max-sm:text-[10px] max-sm:tracking-normal">{tt("aump.card_city_branches", "City / Sub Branches")}</span>
             <div className="grid h-8 w-8 place-items-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
               <GitBranch className="h-4 w-4" />
             </div>
           </div>
-          <div className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-100">{totalMetrics.totalCityBranches}</div>
+          <div className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-100 max-sm:mt-1 max-sm:text-xl">{totalMetrics.totalCityBranches}</div>
           <p className="mt-1 text-xs text-slate-500">{tt("aump.city_branch_codes_scope", "City Branch Codes & Scope")}</p>
         </div>
       </div>
 
       {/* Tabs & Search Navigation Bar */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b pb-4">
-        <div className="flex items-center gap-1 rounded-lg bg-slate-100 dark:bg-slate-800 p-1">
+        <div className="flex items-center gap-1 rounded-lg bg-slate-100 dark:bg-slate-800 p-1 max-lg:flex-wrap">
           <button
             type="button"
             onClick={() => setActiveTab("hierarchy")}
@@ -672,7 +672,7 @@ export function AdminUserManagementPanel() {
             }`}
           >
             <Layers className="h-4 w-4" />
-            <span>{tt("nav.country_management", "Country & Branch Hierarchy")}</span>
+            <span>{tt("aump.tab_hierarchy", "Country & Branch Hierarchy")}</span>
           </button>
 
           <button
@@ -710,7 +710,7 @@ export function AdminUserManagementPanel() {
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
             </span>
             <Radio className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-            <span>{tt("live_users_work", "Live Users / Current Work")}</span>
+            <span>{tt("aump.live_users_work", "Live Users / Current Work")}</span>
           </Link>
         </div>
 
@@ -719,7 +719,7 @@ export function AdminUserManagementPanel() {
             <div className="relative w-full sm:w-72">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
               <Input
-                placeholder={tt("common.search", "Search user, branch code, city...")}
+                placeholder={tt("aump.search_placeholder", "Search user, branch code, city...")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9 text-xs h-9"
@@ -733,7 +733,7 @@ export function AdminUserManagementPanel() {
       {loading ? (
         <div className="flex flex-col items-center justify-center py-16 text-slate-400">
           <RefreshCw className="h-8 w-8 animate-spin text-emerald-600 mb-3" />
-          <p className="text-sm font-medium">{tt("common.loading", "Loading Branch Codes & User Hierarchy...")}</p>
+          <p className="text-sm font-medium">{tt("aump.loading_hierarchy", "Loading Branch Codes & User Hierarchy...")}</p>
         </div>
       ) : activeTab === "roles" ? (
         <RolePermissionMatrix />
@@ -744,7 +744,7 @@ export function AdminUserManagementPanel() {
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-slate-600 dark:text-slate-400" />
               <h2 className="font-semibold text-sm text-slate-900 dark:text-slate-100">
-                All System Users ({filteredUsers.length})
+                {tt("aump.all_system_users", "All System Users")} ({filteredUsers.length})
               </h2>
             </div>
 
@@ -788,7 +788,7 @@ export function AdminUserManagementPanel() {
                 {filteredUsers.length === 0 ? (
                   <tr>
                     <td colSpan={10} className="px-4 py-12 text-center text-slate-400">
-                      {tt("inv.no_records", "No matching users found for your search criteria.")}
+                      {tt("aump.no_matching_users", "No matching users found for your search criteria.")}
                     </td>
                   </tr>
                 ) : (
@@ -800,7 +800,7 @@ export function AdminUserManagementPanel() {
         </div>
       ) : (
         /* Hierarchical Country -> Main Branch -> City Branch View */
-        <div className="space-y-6">
+        <div className="space-y-6 max-sm:space-y-2.5">
           {countries.length === 0 ? (
             <div className="rounded-xl border bg-card p-12 text-center">
               <Globe2 className="mx-auto h-10 w-10 text-slate-400 mb-3" />
@@ -809,7 +809,7 @@ export function AdminUserManagementPanel() {
               <Link href="/dashboard/country" className="inline-block mt-4">
                 <Button size="sm" className="gap-2">
                   <Plus className="h-4 w-4" />
-                  <span>{tt("nav.country_management", "Create Country & Main Branch")}</span>
+                  <span>{tt("aump.create_country_main_branch", "Create Country & Main Branch")}</span>
                 </Button>
               </Link>
             </div>
@@ -825,9 +825,9 @@ export function AdminUserManagementPanel() {
                   {/* Country Header Bar */}
                   <div
                     onClick={() => toggleCountryExpand(country.id)}
-                    className="flex cursor-pointer items-center justify-between border-b bg-gradient-to-r from-slate-900 to-slate-800 px-5 py-4 text-white hover:from-slate-850 hover:to-slate-750 transition-colors"
+                    className="flex cursor-pointer items-center justify-between border-b bg-gradient-to-r from-slate-900 to-slate-800 px-5 py-4 text-white hover:from-slate-850 hover:to-slate-750 transition-colors max-sm:flex-wrap max-sm:gap-2 max-sm:px-3 max-sm:py-3"
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex min-w-0 items-center gap-3 max-sm:gap-2">
                       <button type="button" className="p-1 rounded hover:bg-slate-700/50">
                         {isCountryExpanded ? (
                           <ChevronDown className="h-5 w-5 text-emerald-400" />
@@ -840,13 +840,13 @@ export function AdminUserManagementPanel() {
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <h2 className="text-lg font-bold tracking-tight">{country.name}</h2>
+                          <h2 className="text-lg font-bold tracking-tight max-sm:text-base">{country.name}</h2>
                           <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-xs">
                             {country.currencyCode}
                           </Badge>
                         </div>
                         <p className="text-xs text-slate-300">
-                          {country.mainBranches?.length || 0} Main Branches • {country.totalUsersCount || 0} Total Users
+                          {country.mainBranches?.length || 0} {tt("aump.main_branches", "Main Branches")} • {country.totalUsersCount || 0} {tt("aump.total_users", "Total Users")}
                         </p>
                       </div>
                     </div>
@@ -862,7 +862,7 @@ export function AdminUserManagementPanel() {
 
                   {/* Country Content (Main Branches & City Branches) */}
                   {isCountryExpanded && (
-                    <div className="p-5 space-y-6 bg-slate-50/40 dark:bg-slate-950/40">
+                    <div className="p-5 space-y-6 bg-slate-50/40 dark:bg-slate-950/40 max-sm:p-2.5 max-sm:space-y-3 max-lg:empty:hidden">
                       {/* Direct Country Level Users if any */}
                       {country.users && country.users.length > 0 && (
                         <div className="rounded-lg border bg-white dark:bg-slate-900 p-4 shadow-2xs">
@@ -879,10 +879,10 @@ export function AdminUserManagementPanel() {
                                   <Th className="px-4 py-2">Role</Th>
                                   <Th className="px-4 py-2">Branch Code</Th>
                                   <Th className="px-4 py-2">Login ID</Th>
+                                  <Th className="px-4 py-2">Status</Th>
                                   <Th className="px-4 py-2">Country</Th>
                                   <Th className="px-4 py-2">City</Th>
                                   <Th className="px-4 py-2">Last Login</Th>
-                                  <Th className="px-4 py-2">Status</Th>
                                   <Th className="px-4 py-2 text-right">Actions</Th>
                                 </tr>
                               </thead>
@@ -906,28 +906,28 @@ export function AdminUserManagementPanel() {
                             {/* Main Branch Header with Prominent Branch Code */}
                             <div
                               onClick={() => toggleMainBranchExpand(mainBranch.id)}
-                              className="flex cursor-pointer items-center justify-between border-b bg-slate-100/80 dark:bg-slate-800/80 px-4 py-3 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors"
+                              className="flex cursor-pointer items-center justify-between border-b bg-slate-100/80 dark:bg-slate-800/80 px-4 py-3 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors max-sm:flex-wrap max-sm:gap-2 max-sm:px-3"
                             >
-                              <div className="flex items-center gap-3">
+                              <div className="flex min-w-0 items-center gap-3 max-sm:gap-2">
                                 <button type="button" className="p-0.5 rounded text-slate-500">
                                   {isMainExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                                 </button>
                                 <div className="grid h-8 w-8 place-items-center rounded bg-emerald-600 text-white font-bold">
                                   <Building2 className="h-4 w-4" />
                                 </div>
-                                <div>
-                                  <div className="flex items-center gap-2">
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-2 max-lg:flex-wrap max-lg:gap-1.5">
                                     <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">
                                       {mainBranch.name}
                                     </h3>
                                     {/* PROMINENT MAIN BRANCH CODE */}
-                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 max-lg:whitespace-nowrap max-sm:px-1.5 max-sm:text-[10px]">
                                       <GitBranch className="h-3 w-3" />
-                                      Main Branch Code: {mainBranch.code}
+                                      {tt("aump.main_branch_code", "Main Branch Code")}: {mainBranch.code}
                                     </span>
                                   </div>
                                   <p className="text-xs text-slate-500">
-                                    Currency: {mainBranch.currency} • {mainBranch.cityBranches?.length || 0} City Branches
+                                    {tt("aump.currency", "Currency")}: {mainBranch.currency} • {mainBranch.cityBranches?.length || 0} {tt("aump.city_branches", "City Branches")}
                                   </p>
                                 </div>
                               </div>
@@ -944,7 +944,7 @@ export function AdminUserManagementPanel() {
 
                             {/* Main Branch Body */}
                             {isMainExpanded && (
-                              <div className="p-4 space-y-5">
+                              <div className="p-4 space-y-5 max-sm:p-2.5 max-sm:space-y-3">
                                 {/* Main Branch Users Table */}
                                 <div>
                                   <div className="flex items-center justify-between mb-2">
@@ -964,10 +964,10 @@ export function AdminUserManagementPanel() {
                                             <Th className="px-4 py-2.5">Role</Th>
                                             <Th className="px-4 py-2.5">Branch Code</Th>
                                             <Th className="px-4 py-2.5">Login ID</Th>
+                                            <Th className="px-4 py-2.5">Status</Th>
                                             <Th className="px-4 py-2.5">Country</Th>
                                             <Th className="px-4 py-2.5">City</Th>
                                             <Th className="px-4 py-2.5">Last Login</Th>
-                                            <Th className="px-4 py-2.5">Status</Th>
                                             <Th className="px-4 py-2.5 text-right">Actions</Th>
                                           </tr>
                                         </thead>
@@ -978,7 +978,7 @@ export function AdminUserManagementPanel() {
                                     </div>
                                   ) : (
                                     <div className="rounded-md border border-dashed p-4 text-center text-xs text-slate-400">
-                                      {tt("inv.no_records", "No direct users registered for this main branch yet.")}
+                                      {tt("aump.no_direct_users", "No direct users registered for this main branch yet.")}
                                     </div>
                                   )}
                                 </div>
@@ -988,35 +988,35 @@ export function AdminUserManagementPanel() {
                                   <div className="pt-2 border-t space-y-4">
                                     <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                                       <MapPin className="h-3.5 w-3.5 text-amber-500" />
-                                      <span>{tt("nav.city_branch", "City Branches under")} {mainBranch.name}</span>
+                                      <span>{tt("aump.city_branches_under", "City Branches under {name}").replace("{name}", mainBranch.name)}</span>
                                     </h4>
 
                                     <div className="grid gap-4">
                                       {mainBranch.cityBranches.map((cityBranch) => (
                                         <div
                                           key={cityBranch.id}
-                                          className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/70 p-4"
+                                          className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/70 p-4 max-sm:p-2.5"
                                         >
                                           <div className="flex flex-wrap items-center justify-between gap-2 mb-3 pb-2 border-b border-slate-200 dark:border-slate-800">
-                                            <div className="flex items-center gap-2">
-                                              <div className="grid h-7 w-7 place-items-center rounded bg-amber-500/20 text-amber-600 dark:text-amber-400 font-bold text-xs">
+                                            <div className="flex min-w-0 items-center gap-2">
+                                              <div className="grid h-7 w-7 shrink-0 place-items-center rounded bg-amber-500/20 text-amber-600 dark:text-amber-400 font-bold text-xs">
                                                 <GitBranch className="h-3.5 w-3.5" />
                                               </div>
-                                              <div>
-                                                <div className="flex items-center gap-2">
+                                              <div className="min-w-0">
+                                                <div className="flex items-center gap-2 max-lg:flex-wrap max-lg:gap-1">
                                                   <span className="font-bold text-slate-900 dark:text-slate-100 text-sm">
                                                     {cityBranch.cityName} - {cityBranch.name}
                                                   </span>
                                                   {/* CITY BRANCH CODE */}
-                                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-mono font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-                                                    Code: {cityBranch.code}
+                                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-mono font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-200 dark:border-amber-800 max-lg:whitespace-nowrap max-sm:px-1.5 max-sm:text-[10px]">
+                                                    {tt("aump.code", "Code")}: {cityBranch.code}
                                                   </span>
                                                 </div>
                                               </div>
                                             </div>
 
                                             <span className="text-xs text-slate-500 font-medium">
-                                              {cityBranch.users?.length || 0} Registered Users
+                                              {cityBranch.users?.length || 0} {tt("aump.registered_users", "Registered Users")}
                                             </span>
                                           </div>
 
@@ -1031,10 +1031,10 @@ export function AdminUserManagementPanel() {
                                                       <Th className="px-4 py-2">Role</Th>
                                                       <Th className="px-4 py-2">Branch Code</Th>
                                                       <Th className="px-4 py-2">Login ID</Th>
+                                                      <Th className="px-4 py-2">Status</Th>
                                                       <Th className="px-4 py-2">Country</Th>
                                                       <Th className="px-4 py-2">City</Th>
                                                       <Th className="px-4 py-2">Last Login</Th>
-                                                      <Th className="px-4 py-2">Status</Th>
                                                       <Th className="px-4 py-2 text-right">Actions</Th>
                                                     </tr>
                                                   </thead>
@@ -1047,7 +1047,7 @@ export function AdminUserManagementPanel() {
                                             </div>
                                           ) : (
                                             <div className="rounded-md border border-dashed p-3 text-center text-xs text-slate-400 bg-white dark:bg-slate-900">
-                                              No users assigned to {cityBranch.cityName} branch ({cityBranch.code}) yet.
+                                              {tt("aump.no_users_assigned", "No users assigned to {city} branch ({code}) yet.").replace("{city}", cityBranch.cityName || "").replace("{code}", cityBranch.code || "")}
                                             </div>
                                           )}
                                         </div>

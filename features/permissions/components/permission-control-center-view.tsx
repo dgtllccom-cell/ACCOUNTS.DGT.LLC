@@ -8,6 +8,7 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { BranchScopeDropdown, type BranchScopeCountry, type BranchScopeCountryBranch, type BranchScopeCityBranch, type BranchScopeValue } from "@/features/purchases/components/branch-scope-dropdown";
 import { enterpriseRolePermissions, enterpriseRoleScopes, type EnterpriseRole } from "@/lib/permissions/enterprise-roles";
 import { ERP_MODULE_DEFINITIONS } from "@/lib/permissions/rbac-matrix-builder";
+import { Th } from "@/components/ui/translated-th";
 
 type ScopeType = "country" | "country_branch" | "city_branch";
 
@@ -315,9 +316,9 @@ export function PermissionControlCenterView({ isSuperAdmin }: { isSuperAdmin: bo
               <table className="w-full min-w-[720px] text-xs text-left">
                 <thead className="bg-slate-50 dark:bg-slate-900/60 text-[9.5px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
                   <tr>
-                    <th className="px-3 py-2">{t(lang, "pcc.module", "Module")}</th>
+                    <Th className="px-3 py-2">{t(lang, "pcc.module", "Module")}</Th>
                     {ACTIONS.map((a) => (
-                      <th key={a.key} className="px-3 py-2 text-center">{t(lang, a.labelKey, a.fallback)}</th>
+                      <Th key={a.key} className="px-3 py-2 text-center">{t(lang, a.labelKey, a.fallback)}</Th>
                     ))}
                   </tr>
                 </thead>

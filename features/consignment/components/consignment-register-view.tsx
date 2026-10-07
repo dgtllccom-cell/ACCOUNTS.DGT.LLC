@@ -12,6 +12,7 @@ import {
 } from "@/features/consignment/consignment-api";
 import { CONSIGNMENT_STATUSES } from "@/lib/consignment/types";
 import { MasterCombo } from "@/components/ui/master-combo";
+import { Th } from "@/components/ui/translated-th";
 
 const CCY = ["USD", "AED", "PKR", "AFN", "EUR", "GBP", "INR", "CNY", "SAR", "IRR"];
 
@@ -121,15 +122,15 @@ export function ConsignmentRegisterView({ lang: langProp }: { lang?: string }) {
           <table className="w-full min-w-[820px] text-sm">
             <thead className="bg-muted/60 text-xs uppercase text-muted-foreground">
               <tr>
-                <th className={`px-3 py-2 ${s.textStart}`}>{s.t("col_no", "Consignment No")}</th>
-                <th className={`px-3 py-2 ${s.textStart}`}>{s.t("col_party", "Party / Account")}</th>
-                <th className={`px-3 py-2 ${s.textStart}`}>{s.t("col_date", "Date")}</th>
-                <th className="px-3 py-2 text-center">{s.t("col_containers", "Containers")}</th>
-                <th className={`px-3 py-2 ${s.textEnd}`}>{s.t("col_sales", "Sales")}</th>
-                <th className={`px-3 py-2 ${s.textEnd}`}>{s.t("col_receipts", "Receipts")}</th>
-                <th className={`px-3 py-2 ${s.textEnd}`}>{s.t("col_receivable", "Receivable")}</th>
-                <th className="px-3 py-2 text-center">{s.t("col_status", "Status")}</th>
-                <th className="px-3 py-2 text-center">{s.t("col_actions", "Actions")}</th>
+                <Th className={`px-3 py-2 ${s.textStart}`}>{s.t("col_no", "Consignment No")}</Th>
+                <Th className={`px-3 py-2 ${s.textStart}`}>{s.t("col_party", "Party / Account")}</Th>
+                <Th className={`px-3 py-2 ${s.textStart}`}>{s.t("col_date", "Date")}</Th>
+                <Th className="px-3 py-2 text-center">{s.t("col_containers", "Containers")}</Th>
+                <Th className={`px-3 py-2 ${s.textEnd}`}>{s.t("col_sales", "Sales")}</Th>
+                <Th className={`px-3 py-2 ${s.textEnd}`}>{s.t("col_receipts", "Receipts")}</Th>
+                <Th className={`px-3 py-2 ${s.textEnd}`}>{s.t("col_receivable", "Receivable")}</Th>
+                <Th className="px-3 py-2 text-center">{s.t("col_status", "Status")}</Th>
+                <Th className="px-3 py-2 text-center">{s.t("col_actions", "Actions")}</Th>
               </tr>
             </thead>
             <tbody>

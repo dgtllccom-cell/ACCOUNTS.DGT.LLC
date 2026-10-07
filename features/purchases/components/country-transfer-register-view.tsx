@@ -5,6 +5,7 @@ import { ArrowRight, Globe, RefreshCcw, Search } from "lucide-react";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import { JournalPrintButton } from "@/components/reports/journal-print-button";
+import { Th } from "@/components/ui/translated-th";
 
 function buildTt(lang: string) {
   return (key: string, fb: string) => t((lang || "en") as any, key as any, fb);
@@ -149,16 +150,16 @@ export function CountryTransferRegisterView() {
         <table className="w-full min-w-[1100px] text-xs">
           <thead className="bg-slate-50 dark:bg-slate-900">
             <tr className="text-start text-[10px] font-black uppercase tracking-wider text-slate-500">
-              <th className="px-3 py-2 text-start">{tt("ctransfer.bill_no", "Bill / PO No.")}</th>
-              <th className="px-3 py-2 text-start">{tt("ctransfer.source", "Source Country / Branch")}</th>
-              <th className="px-3 py-2 text-start"></th>
-              <th className="px-3 py-2 text-start">{tt("ctransfer.destination", "Destination Country / Branch")}</th>
-              <th className="px-3 py-2 text-start">{tt("ctransfer.goods", "Goods")}</th>
-              <th className="px-3 py-2 text-end">{tt("ctransfer.amount", "Purchase Amount")}</th>
-              <th className="px-3 py-2 text-end">{tt("ctransfer.advance", "Advance")}</th>
-              <th className="px-3 py-2 text-end">{tt("ctransfer.remaining", "Remaining")}</th>
-              <th className="px-3 py-2 text-start">{tt("common.status", "Status")}</th>
-              <th className="px-3 py-2 text-start">{tt("common.actions", "Actions")}</th>
+              <Th className="px-3 py-2 text-start">{tt("ctransfer.bill_no", "Bill / PO No.")}</Th>
+              <Th className="px-3 py-2 text-start">{tt("ctransfer.source", "Source Country / Branch")}</Th>
+              <Th className="px-3 py-2 text-start"></Th>
+              <Th className="px-3 py-2 text-start">{tt("ctransfer.destination", "Destination Country / Branch")}</Th>
+              <Th className="px-3 py-2 text-start">{tt("ctransfer.goods", "Goods")}</Th>
+              <Th className="px-3 py-2 text-end">{tt("ctransfer.amount", "Purchase Amount")}</Th>
+              <Th className="px-3 py-2 text-end">{tt("ctransfer.advance", "Advance")}</Th>
+              <Th className="px-3 py-2 text-end">{tt("ctransfer.remaining", "Remaining")}</Th>
+              <Th className="px-3 py-2 text-start">{tt("common.status", "Status")}</Th>
+              <Th className="px-3 py-2 text-start">{tt("common.actions", "Actions")}</Th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

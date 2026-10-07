@@ -51,6 +51,7 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t as tUi } from "@/lib/i18n/ui";
 import { CustomerProfile360Full } from "./customer-profile-360-full";
 import type { Customer360Payload, Customer360Row, UpcomingFollowUpRow } from "@/lib/crm/customer-360-service";
+import { Th } from "@/components/ui/translated-th";
 
 export function Customer360View() {
   const lang = useActiveLanguage();
@@ -700,7 +701,7 @@ export function Customer360View() {
           <table className="w-full text-left text-xs border-collapse">
             <thead className="bg-slate-50/70 dark:bg-slate-850 text-slate-500 font-bold uppercase text-[10.5px] tracking-wider border-b border-slate-200/80 dark:border-slate-800">
               <tr>
-                <th className="p-3.5 w-10 text-center">
+                <Th className="p-3.5 w-10 text-center">
                   <input
                     type="checkbox"
                     className="rounded border-slate-300"
@@ -713,18 +714,18 @@ export function Customer360View() {
                       setSelectedRowIds(next);
                     }}
                   />
-                </th>
-                <th className="p-3.5 w-12 text-center">{ct("srNo", "#")}</th>
-                <th className="p-3.5">{ct("customerId", "CUSTOMER ID")}</th>
-                <th className="p-3.5">{ct("company", "COMPANY")}</th>
-                <th className="p-3.5">{ct("country", "COUNTRY")}</th>
-                <th className="p-3.5">{ct("branch", "BRANCH")}</th>
-                <th className="p-3.5">{ct("assignedUser", "Assigned User")}</th>
-                <th className="p-3.5">{ct("lastContact", "LAST CONTACT")}</th>
-                <th className="p-3.5">{ct("nextAction", "NEXT ACTION")}</th>
-                <th className="p-3.5 text-center">{ct("health", "HEALTH")}</th>
-                <th className="p-3.5 text-center">{ct("status", "STATUS")}</th>
-                <th className="p-3.5 text-right">{ct("actions", "ACTIONS")}</th>
+                </Th>
+                <Th className="p-3.5 w-12 text-center">{ct("srNo", "#")}</Th>
+                <Th className="p-3.5">{ct("customerId", "CUSTOMER ID")}</Th>
+                <Th className="p-3.5">{ct("company", "COMPANY")}</Th>
+                <Th className="p-3.5">{ct("country", "COUNTRY")}</Th>
+                <Th className="p-3.5">{ct("branch", "BRANCH")}</Th>
+                <Th className="p-3.5">{ct("assignedUser", "Assigned User")}</Th>
+                <Th className="p-3.5">{ct("lastContact", "LAST CONTACT")}</Th>
+                <Th className="p-3.5">{ct("nextAction", "NEXT ACTION")}</Th>
+                <Th className="p-3.5 text-center">{ct("health", "HEALTH")}</Th>
+                <Th className="p-3.5 text-center">{ct("status", "STATUS")}</Th>
+                <Th className="p-3.5 text-right">{ct("actions", "ACTIONS")}</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -977,14 +978,14 @@ export function Customer360View() {
             <table className="w-full text-left text-xs">
               <thead className="bg-slate-50 dark:bg-slate-850 text-slate-500 font-bold uppercase text-[10px] tracking-wider border-b border-slate-200/80">
                 <tr>
-                  <th className="p-2.5">#</th>
-                  <th className="p-2.5">Customer</th>
-                  <th className="p-2.5">Type</th>
-                  <th className="p-2.5">Subject</th>
-                  <th className="p-2.5">Assigned To</th>
-                  <th className="p-2.5">Due Date</th>
-                  <th className="p-2.5 text-center">Status</th>
-                  <th className="p-2.5 text-right">Actions</th>
+                  <Th className="p-2.5">#</Th>
+                  <Th className="p-2.5">Customer</Th>
+                  <Th className="p-2.5">Type</Th>
+                  <Th className="p-2.5">Subject</Th>
+                  <Th className="p-2.5">Assigned To</Th>
+                  <Th className="p-2.5">Due Date</Th>
+                  <Th className="p-2.5 text-center">Status</Th>
+                  <Th className="p-2.5 text-right">Actions</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

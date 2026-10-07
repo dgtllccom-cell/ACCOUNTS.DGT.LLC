@@ -31,6 +31,7 @@ import {
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { cn } from "@/lib/utils";
 import { ErpDatePicker } from "@/components/ui/erp-date-picker";
+import { Th } from "@/components/ui/translated-th";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -474,7 +475,7 @@ export function UniversalReportShell(props: UniversalReportShellProps) {
               {budRows.map(([k, v, kind]) => (
                 <div key={k} className="flex items-baseline justify-between gap-3 text-[11px]">
                   <dt className="shrink-0 font-bold uppercase tracking-wide text-slate-400 text-[10px]">{k}</dt>
-                  <dd className={cn("truncate text-end font-bold", kind === "role" ? "text-blue-600 dark:text-blue-400" : "text-slate-800 dark:text-slate-100")} title={v}>
+                  <dd suppressHydrationWarning className={cn("truncate text-end font-bold", kind === "role" ? "text-blue-600 dark:text-blue-400" : "text-slate-800 dark:text-slate-100")} title={v}>
                     {v || "—"}
                   </dd>
                 </div>
@@ -550,9 +551,9 @@ export function UniversalReportShell(props: UniversalReportShellProps) {
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-100/70 text-[10px] font-black uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-900/80">
                   {props.table.columns.map((c) => (
-                    <th key={c.key} className={cn("whitespace-nowrap px-3 py-2.5", c.align === "end" ? "text-end" : c.align === "center" ? "text-center" : "text-start")}>
+                    <Th key={c.key} className={cn("whitespace-nowrap px-3 py-2.5", c.align === "end" ? "text-end" : c.align === "center" ? "text-center" : "text-start")}>
                       {c.label}
-                    </th>
+                    </Th>
                   ))}
                 </tr>
               </thead>

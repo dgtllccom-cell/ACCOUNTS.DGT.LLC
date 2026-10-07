@@ -33,6 +33,7 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import { downloadCsv } from "@/features/branches/components/branch-report-export";
 import { openScopedGenericReport } from "@/lib/reports/open-scoped-report";
+import { Th } from "@/components/ui/translated-th";
 
 interface DeletedRecordRow {
   id: string;
@@ -572,23 +573,23 @@ export function AllDeletedRecordsView() {
           <table className="w-full text-left text-xs border-collapse whitespace-nowrap">
             <thead>
               <tr className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                <th className="py-3 px-3.5 text-center w-8">#</th>
-                <th className="py-3 px-3.5 flex items-center gap-1 text-rose-700 dark:text-rose-400">
+                <Th className="py-3 px-3.5 text-center w-8">#</Th>
+                <Th className="py-3 px-3.5 flex items-center gap-1 text-rose-700 dark:text-rose-400">
                   <Trash2 className="h-3.5 w-3.5" />
                   <span>{t(lang, "audit.th_deleted_at", "Deleted At")}</span>
-                </th>
-                <th className="py-3 px-3">{t(lang, "audit.th_original_date", "Original Date")}</th>
-                <th className="py-3 px-3">{t(lang, "audit.th_module", "Module")}</th>
-                <th className="py-3 px-3">{t(lang, "audit.th_country", "Country")}</th>
-                <th className="py-3 px-3">{t(lang, "audit.th_branch", "Branch")}</th>
-                <th className="py-3 px-3">{t(lang, "audit.th_bill_ref", "Bill / Ref No.")}</th>
-                <th className="py-3 px-3">{t(lang, "audit.th_record_party", "Record / Party")}</th>
-                <th className="py-3 px-3">{t(lang, "audit.th_deleted_by", "Deleted By")}</th>
-                <th className="py-3 px-3">{t(lang, "audit.th_user_role", "User Role")}</th>
-                <th className="py-3 px-3">{t(lang, "audit.th_reason", "Reason")}</th>
-                <th className="py-3 px-3 text-center">{t(lang, "audit.th_risk", "Risk")}</th>
-                <th className="py-3 px-3 text-center">{t(lang, "audit.th_status", "Status")}</th>
-                <th className="py-3 px-3.5 text-center">{t(lang, "audit.th_action", "Action")}</th>
+                </Th>
+                <Th className="py-3 px-3">{t(lang, "audit.th_original_date", "Original Date")}</Th>
+                <Th className="py-3 px-3">{t(lang, "audit.th_module", "Module")}</Th>
+                <Th className="py-3 px-3">{t(lang, "audit.th_country", "Country")}</Th>
+                <Th className="py-3 px-3">{t(lang, "audit.th_branch", "Branch")}</Th>
+                <Th className="py-3 px-3">{t(lang, "audit.th_bill_ref", "Bill / Ref No.")}</Th>
+                <Th className="py-3 px-3">{t(lang, "audit.th_record_party", "Record / Party")}</Th>
+                <Th className="py-3 px-3">{t(lang, "audit.th_deleted_by", "Deleted By")}</Th>
+                <Th className="py-3 px-3">{t(lang, "audit.th_user_role", "User Role")}</Th>
+                <Th className="py-3 px-3">{t(lang, "audit.th_reason", "Reason")}</Th>
+                <Th className="py-3 px-3 text-center">{t(lang, "audit.th_risk", "Risk")}</Th>
+                <Th className="py-3 px-3 text-center">{t(lang, "audit.th_status", "Status")}</Th>
+                <Th className="py-3 px-3.5 text-center">{t(lang, "audit.th_action", "Action")}</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11.5px]">

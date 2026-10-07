@@ -32,6 +32,7 @@ import {
   type RoznamchaLineRow,
   type RoznamchaType
 } from "@/features/roznamcha/roznamcha-api";
+import { Th } from "@/components/ui/translated-th";
 
 type SessionInfo = {
   user?: {
@@ -2301,9 +2302,9 @@ function SuperAdminRoznamchaReportViewContent({
                 <thead className="sticky top-0 z-10 bg-[#071327] text-white">
                   <tr className="whitespace-nowrap text-left">
                     {columns.map((c) => (
-                      <th key={c.key} className={cn("border border-slate-200 px-3 py-2.5 font-black dark:border-slate-800", c.align === "right" ? "text-right" : c.align === "center" ? "text-center" : "")} style={{ width: c.width }}>
+                      <Th key={c.key} className={cn("border border-slate-200 px-3 py-2.5 font-black dark:border-slate-800", c.align === "right" ? "text-right" : c.align === "center" ? "text-center" : "")} style={{ width: c.width }}>
                         {th(c.header)}
-                      </th>
+                      </Th>
                     ))}
                   </tr>
                 </thead>
@@ -2430,11 +2431,11 @@ function SuperAdminRoznamchaReportViewContent({
                 <table className="w-full text-xs text-left">
                   <thead className="bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700">
                     <tr>
-                      <th className="px-3 py-2">{th("Type")}</th>
-                      <th className="px-3 py-2">{th("Account Code & Name")}</th>
-                      <th className="px-3 py-2 text-right">{th("Debit")}</th>
-                      <th className="px-3 py-2 text-right">{th("Credit")}</th>
-                      <th className="px-3 py-2 text-right">{th("USD Amount")}</th>
+                      <Th className="px-3 py-2">{th("Type")}</Th>
+                      <Th className="px-3 py-2">{th("Account Code & Name")}</Th>
+                      <Th className="px-3 py-2 text-right">{th("Debit")}</Th>
+                      <Th className="px-3 py-2 text-right">{th("Credit")}</Th>
+                      <Th className="px-3 py-2 text-right">{th("USD Amount")}</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y dark:divide-slate-800">

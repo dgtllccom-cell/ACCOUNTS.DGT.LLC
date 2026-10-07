@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { listCountries, type LocationCountry } from "@/features/locations/location-api";
+import { Th } from "@/components/ui/translated-th";
 
 type Status = "idle" | "extracting" | "reviewing" | "confirming" | "complete" | "error";
 type RowStatus = "valid" | "duplicate" | "invalid";
@@ -504,16 +505,16 @@ export function BulkAccountImport({
               <table className="w-full text-xs">
                 <thead className="sticky top-0 bg-slate-100 dark:bg-slate-800">
                   <tr className={s.textStart}>
-                    <th className="px-2 py-1.5"><input type="checkbox" checked={rows.every((r) => r._selected)} onChange={(e) => setRows((p) => p.map((r) => ({ ...r, _selected: e.target.checked && r.status !== "duplicate" })))} /></th>
-                    <th className="px-2 py-1.5">#</th>
-                    <th className="px-2 py-1.5">{s.t("h_code", "Code")}</th>
-                    <th className="px-2 py-1.5">{s.t("h_name", "Account Name")}</th>
-                    <th className="px-2 py-1.5">{s.t("h_cat", "Category")}</th>
-                    <th className="px-2 py-1.5">{s.t("h_branch", "Branch")}</th>
-                    <th className="px-2 py-1.5">{s.t("h_city", "City")}</th>
-                    <th className="px-2 py-1.5">{s.t("h_contact", "Mobile / Email")}</th>
-                    <th className="px-2 py-1.5">{s.t("h_status", "Status")}</th>
-                    <th className="px-2 py-1.5">{s.t("h_action", "Action")}</th>
+                    <Th className="px-2 py-1.5"><input type="checkbox" checked={rows.every((r) => r._selected)} onChange={(e) => setRows((p) => p.map((r) => ({ ...r, _selected: e.target.checked && r.status !== "duplicate" })))} /></Th>
+                    <Th className="px-2 py-1.5">#</Th>
+                    <Th className="px-2 py-1.5">{s.t("h_code", "Code")}</Th>
+                    <Th className="px-2 py-1.5">{s.t("h_name", "Account Name")}</Th>
+                    <Th className="px-2 py-1.5">{s.t("h_cat", "Category")}</Th>
+                    <Th className="px-2 py-1.5">{s.t("h_branch", "Branch")}</Th>
+                    <Th className="px-2 py-1.5">{s.t("h_city", "City")}</Th>
+                    <Th className="px-2 py-1.5">{s.t("h_contact", "Mobile / Email")}</Th>
+                    <Th className="px-2 py-1.5">{s.t("h_status", "Status")}</Th>
+                    <Th className="px-2 py-1.5">{s.t("h_action", "Action")}</Th>
                   </tr>
                 </thead>
                 <tbody>

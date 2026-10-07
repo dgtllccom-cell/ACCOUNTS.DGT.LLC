@@ -29,6 +29,7 @@ import {
 import { fieldMap, initialReview, missingFields, type JobBundle } from "@/lib/document-intelligence/review-init";
 import { lineAmount, type RateDirection } from "@/lib/document-intelligence/party-match";
 import type { ReviewContext, AccountOption } from "@/lib/services/document-intake-review-service";
+import { Th } from "@/components/ui/translated-th";
 
 type Row = Record<string, any>;
 type Bundle = JobBundle & { matches: Row[]; events: Row[]; draft?: Row | null };
@@ -789,7 +790,7 @@ export function IntakeReviewWorkspace({ s, jobId, moduleId, scope, onBack, onCha
                 {bundle.fields.length === 0 ? <p className="rounded-lg border border-dashed border-rose-300 bg-rose-50 p-3 text-center text-xs font-semibold text-rose-700">{T("no_fields", "No fields were extracted from this document.")}</p> : (
                   <div className="max-h-[60vh] overflow-auto rounded-lg border border-slate-200 dark:border-slate-800">
                     <table className="w-full text-[11px]">
-                      <thead className="sticky top-0 bg-slate-50 text-[10px] uppercase text-slate-400 dark:bg-slate-800"><tr><th className="p-1.5 text-start">{T("col_field", "Field")}</th><th className="p-1.5 text-start">{T("col_value", "Value")}</th><th className="p-1.5">{T("col_page", "Page")}</th><th className="p-1.5">%</th></tr></thead>
+                      <thead className="sticky top-0 bg-slate-50 text-[10px] uppercase text-slate-400 dark:bg-slate-800"><tr><Th className="p-1.5 text-start">{T("col_field", "Field")}</Th><Th className="p-1.5 text-start">{T("col_value", "Value")}</Th><Th className="p-1.5">{T("col_page", "Page")}</Th><Th className="p-1.5">%</Th></tr></thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                         {bundle.fields.map((fld) => (
                           <tr key={fld.field_key}>

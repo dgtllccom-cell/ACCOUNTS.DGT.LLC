@@ -617,7 +617,9 @@ html, body {
 /* ── Mobile dialogs: full screen ── */
 @media (max-width: 640px) {
   [data-radix-dialog-content],
-  [role="dialog"] > div {
+  /* a popover (dropdown / SearchSelect list) is also role=dialog: its inner Command must stay as wide as the popover,
+     not the whole screen — that pushed the search box and rows past the right edge */
+  [role="dialog"]:not([data-radix-popper-content-wrapper] *) > div {
     max-width: 100vw !important;
     max-height: 100dvh !important;
     width: 100vw !important;

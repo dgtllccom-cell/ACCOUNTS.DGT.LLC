@@ -25,6 +25,7 @@ import {
   Building2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Th } from "@/components/ui/translated-th";
 
 interface CrmReportsViewProps {
   session: ErpSession;
@@ -281,17 +282,17 @@ export function CrmReportsView({ session }: CrmReportsViewProps) {
           <table className="min-w-full text-xs text-slate-800 dark:text-slate-200">
             <thead className="bg-slate-50 dark:bg-slate-950 text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
               <tr>
-                <th className="px-3 py-3 text-center w-12">#</th>
-                <th className="px-3 py-3 text-left">{th("Serial / Ref")}</th>
-                <th className="px-3 py-3 text-left">{th("Item Type")}</th>
-                <th className="px-3 py-3 text-left">{th("Party / Customer")}</th>
-                <th className="px-3 py-3 text-left">{th("Country / Branch")}</th>
-                <th className="px-3 py-3 text-center">{th("Due Date")}</th>
-                <th className="px-3 py-3 text-right">{th("Total Amount")}</th>
-                <th className="px-3 py-3 text-right">{th("Paid")}</th>
-                <th className="px-3 py-3 text-right">{th("Remaining")}</th>
-                <th className="px-3 py-3 text-center">{th("Status")}</th>
-                <th className="px-3 py-3 text-left">{th("Assigned User")}</th>
+                <Th className="px-3 py-3 text-center w-12">#</Th>
+                <Th className="px-3 py-3 text-left">{th("Serial / Ref")}</Th>
+                <Th className="px-3 py-3 text-left">{th("Item Type")}</Th>
+                <Th className="px-3 py-3 text-left">{th("Party / Customer")}</Th>
+                <Th className="px-3 py-3 text-left">{th("Country / Branch")}</Th>
+                <Th className="px-3 py-3 text-center">{th("Due Date")}</Th>
+                <Th className="px-3 py-3 text-right">{th("Total Amount")}</Th>
+                <Th className="px-3 py-3 text-right">{th("Paid")}</Th>
+                <Th className="px-3 py-3 text-right">{th("Remaining")}</Th>
+                <Th className="px-3 py-3 text-center">{th("Status")}</Th>
+                <Th className="px-3 py-3 text-left">{th("Assigned User")}</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">

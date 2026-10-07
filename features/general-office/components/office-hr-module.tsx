@@ -7,6 +7,7 @@ import { t } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import type { DateRange } from "./employee-date-toolbar";
 import { openMasterProfileReportWindow } from "@/lib/reports/open-master-profile-report-window";
+import { Th } from "@/components/ui/translated-th";
 
 type FieldType = "text" | "date" | "time" | "number" | "select" | "employee";
 export type OfficeField = {
@@ -132,10 +133,10 @@ export function OfficeHrModule({ config, lang, dateRange, employees, canWrite }:
         <table className="min-w-full text-xs text-left">
           <thead className="bg-muted font-bold border-b">
             <tr>
-              <th className="px-3 py-2.5 text-start">{tt("rozrep.sno", "Sr")}</th>
-              <th className="px-3 py-2.5 text-start">{tt("sae.entry_name", "Employee")}</th>
-              {tableFields.map((f) => <th key={f.key} className="px-3 py-2.5 text-start">{tt(f.labelKey, f.labelFallback)}</th>)}
-              {canWrite && <th className="px-3 py-2.5 text-end">{tt("form.actions", "Actions")}</th>}
+              <Th className="px-3 py-2.5 text-start">{tt("rozrep.sno", "Sr")}</Th>
+              <Th className="px-3 py-2.5 text-start">{tt("sae.entry_name", "Employee")}</Th>
+              {tableFields.map((f) => <Th key={f.key} className="px-3 py-2.5 text-start">{tt(f.labelKey, f.labelFallback)}</Th>)}
+              {canWrite && <Th className="px-3 py-2.5 text-end">{tt("form.actions", "Actions")}</Th>}
             </tr>
           </thead>
           <tbody className="divide-y">

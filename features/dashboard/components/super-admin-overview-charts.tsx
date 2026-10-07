@@ -473,12 +473,12 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
                 <table className="w-full min-w-[340px] text-left text-[11px]">
                   <thead className="bg-muted/60 text-muted-foreground border-b border-border/70 sticky top-0 backdrop-blur-xs">
                     <tr>
-                      <th className="py-2 px-2.5 font-bold">{translateHeader(lang, "COUNTRY")}</th>
-                      <th className="py-2 px-1 text-center font-bold">{translateHeader(lang, "BRANCHES")}</th>
-                      <th className="py-2 px-1 text-center font-bold">{translateHeader(lang, "USERS")}</th>
-                      <th className="py-2 px-1 text-center font-bold">{translateHeader(lang, "CUSTOMERS")}</th>
-                      <th className="py-2 px-2.5 text-right font-bold">{t(lang, "cdash.col_sales", "Sales")}</th>
-                      <th className="py-2 px-2.5 text-right font-bold">{t(lang, "cdash.col_purchase", "Purchases")}</th>
+                      <Th className="py-2 px-2.5 font-bold">{translateHeader(lang, "COUNTRY")}</Th>
+                      <Th className="py-2 px-1 text-center font-bold">{translateHeader(lang, "BRANCHES")}</Th>
+                      <Th className="py-2 px-1 text-center font-bold">{translateHeader(lang, "USERS")}</Th>
+                      <Th className="py-2 px-1 text-center font-bold">{translateHeader(lang, "CUSTOMERS")}</Th>
+                      <Th className="py-2 px-2.5 text-right font-bold">{t(lang, "cdash.col_sales", "Sales")}</Th>
+                      <Th className="py-2 px-2.5 text-right font-bold">{t(lang, "cdash.col_purchase", "Purchases")}</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/50 font-medium">
@@ -666,12 +666,12 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
                 <table className="w-full min-w-[360px] text-left text-[11px]">
                   <thead className="bg-muted/60 text-muted-foreground border-b border-border/70">
                     <tr>
-                      <th className="py-2 px-2.5 font-bold">{translateHeader(lang, "SHIPMENT NO")}</th>
-                      <th className="py-2 px-2 font-bold">{translateHeader(lang, "CUSTOMER")}</th>
-                      <th className="py-2 px-1.5 font-bold">{translateHeader(lang, "COUNTRY")}</th>
-                      <th className="py-2 px-1 text-center font-bold">{translateHeader(lang, "MODE")}</th>
-                      <th className="py-2 px-1.5 text-center font-bold">{translateHeader(lang, "STATUS")}</th>
-                      <th className="py-2 px-2 text-right font-bold">{translateHeader(lang, "ETA")}</th>
+                      <Th className="py-2 px-2.5 font-bold">{translateHeader(lang, "SHIPMENT NO")}</Th>
+                      <Th className="py-2 px-2 font-bold">{translateHeader(lang, "CUSTOMER")}</Th>
+                      <Th className="py-2 px-1.5 font-bold">{translateHeader(lang, "COUNTRY")}</Th>
+                      <Th className="py-2 px-1 text-center font-bold">{translateHeader(lang, "MODE")}</Th>
+                      <Th className="py-2 px-1.5 text-center font-bold">{translateHeader(lang, "STATUS")}</Th>
+                      <Th className="py-2 px-2 text-right font-bold">{translateHeader(lang, "ETA")}</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/50 font-medium">
@@ -879,14 +879,14 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
                     <table className="w-full min-w-[500px] text-left text-xs">
                       <thead className="bg-muted/60 text-muted-foreground border-b border-border/70 sticky top-0 backdrop-blur-md">
                         <tr>
-                          <th className="py-2.5 px-3 font-bold">{translateHeader(lang, "COUNTRY")}</th>
-                          <th className="py-2.5 px-2 text-center font-bold">{translateHeader(lang, "BRANCHES")}</th>
-                          <th className="py-2.5 px-2 text-center font-bold">{translateHeader(lang, "USERS")}</th>
-                          <th className="py-2.5 px-2 text-center font-bold">{translateHeader(lang, "CUSTOMERS")}</th>
-                          <th className="py-2.5 px-3 text-right font-bold">{t(lang, "cdash.col_sales", "Sales")}</th>
-                          <th className="py-2.5 px-3 text-right font-bold">{t(lang, "cdash.col_purchase", "Purchases")}</th>
-                          <th className="py-2.5 px-3 text-right font-bold">Ledger Balance</th>
-                          <th className="py-2.5 px-3 text-center font-bold">Action</th>
+                          <Th className="py-2.5 px-3 font-bold">{translateHeader(lang, "COUNTRY")}</Th>
+                          <Th className="py-2.5 px-2 text-center font-bold">{translateHeader(lang, "BRANCHES")}</Th>
+                          <Th className="py-2.5 px-2 text-center font-bold">{translateHeader(lang, "USERS")}</Th>
+                          <Th className="py-2.5 px-2 text-center font-bold">{translateHeader(lang, "CUSTOMERS")}</Th>
+                          <Th className="py-2.5 px-3 text-right font-bold">{t(lang, "cdash.col_sales", "Sales")}</Th>
+                          <Th className="py-2.5 px-3 text-right font-bold">{t(lang, "cdash.col_purchase", "Purchases")}</Th>
+                          <Th className="py-2.5 px-3 text-right font-bold">Ledger Balance</Th>
+                          <Th className="py-2.5 px-3 text-center font-bold">Action</Th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border/50 font-medium">

@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { useErpScope } from "@/lib/hooks/use-erp-scope";
 import { openScopedGenericReport, type GenericReportColumn } from "@/lib/reports/open-scoped-report";
+import { Th } from "@/components/ui/translated-th";
 
 type Money = {
   originalCurrency: string;
@@ -224,13 +225,13 @@ export function BillDrilldownView({ id, lang: langProp }: { id: string; lang?: s
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b text-slate-500">
-                  <th className={s.textStart + " py-1"}>{s.t("dd_col_sr", "Sr")}</th>
-                  <th className={s.textStart}>{s.t("dd_g_name", "Goods")}</th>
-                  <th className={s.textStart}>{s.t("dd_g_variation", "Variation")}</th>
-                  <th className={s.textEnd}>{s.t("dd_g_qty", "Qty")}</th>
-                  <th className={s.textEnd}>{s.t("dd_g_weight", "Weight (kg)")}</th>
-                  <th className={s.textEnd}>{s.t("dd_g_rate", "Rate")}</th>
-                  <th className={s.textEnd}>{s.t("dd_g_amount", "Amount")}</th>
+                  <Th className={s.textStart + " py-1"}>{s.t("dd_col_sr", "Sr")}</Th>
+                  <Th className={s.textStart}>{s.t("dd_g_name", "Goods")}</Th>
+                  <Th className={s.textStart}>{s.t("dd_g_variation", "Variation")}</Th>
+                  <Th className={s.textEnd}>{s.t("dd_g_qty", "Qty")}</Th>
+                  <Th className={s.textEnd}>{s.t("dd_g_weight", "Weight (kg)")}</Th>
+                  <Th className={s.textEnd}>{s.t("dd_g_rate", "Rate")}</Th>
+                  <Th className={s.textEnd}>{s.t("dd_g_amount", "Amount")}</Th>
                 </tr>
               </thead>
               <tbody>
@@ -277,12 +278,12 @@ export function BillDrilldownView({ id, lang: langProp }: { id: string; lang?: s
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b text-slate-500">
-                  <th className={s.textStart + " py-1"}>{s.t("dd_col_sr", "Sr")}</th>
-                  <th className={s.textStart}>{s.t("dd_col_type", "Expense Type")}</th>
-                  <th className={s.textStart}>{s.t("dd_col_details", "Details")}</th>
-                  <th className={s.textEnd}>{s.t("dd_col_amount", "Amount")}</th>
-                  <th className={s.textEnd}>{s.t("dd_col_grand", "Grand (Functional)")}</th>
-                  <th className={s.textStart}>{s.t("dd_col_posting", "Accounting")}</th>
+                  <Th className={s.textStart + " py-1"}>{s.t("dd_col_sr", "Sr")}</Th>
+                  <Th className={s.textStart}>{s.t("dd_col_type", "Expense Type")}</Th>
+                  <Th className={s.textStart}>{s.t("dd_col_details", "Details")}</Th>
+                  <Th className={s.textEnd}>{s.t("dd_col_amount", "Amount")}</Th>
+                  <Th className={s.textEnd}>{s.t("dd_col_grand", "Grand (Functional)")}</Th>
+                  <Th className={s.textStart}>{s.t("dd_col_posting", "Accounting")}</Th>
                 </tr>
               </thead>
               <tbody>
@@ -323,11 +324,11 @@ export function BillDrilldownView({ id, lang: langProp }: { id: string; lang?: s
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b text-slate-500">
-                  <th className={s.textStart + " py-1"}>{s.t("dd_p_date", "Date")}</th>
-                  <th className={s.textStart}>{s.t("dd_p_kind", "Kind")}</th>
-                  <th className={s.textStart}>{s.t("dd_p_ref", "Reference")}</th>
-                  <th className={s.textEnd}>{s.t("dd_col_amount", "Amount")}</th>
-                  <th className={s.textStart}>{s.t("dd_p_status", "Status")}</th>
+                  <Th className={s.textStart + " py-1"}>{s.t("dd_p_date", "Date")}</Th>
+                  <Th className={s.textStart}>{s.t("dd_p_kind", "Kind")}</Th>
+                  <Th className={s.textStart}>{s.t("dd_p_ref", "Reference")}</Th>
+                  <Th className={s.textEnd}>{s.t("dd_col_amount", "Amount")}</Th>
+                  <Th className={s.textStart}>{s.t("dd_p_status", "Status")}</Th>
                 </tr>
               </thead>
               <tbody>
@@ -404,11 +405,11 @@ export function BillDrilldownView({ id, lang: langProp }: { id: string; lang?: s
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b text-slate-500">
-                  <th className={s.textStart + " py-1"}>{s.t("dd_so_no", "Sales Order")}</th>
-                  <th className={s.textStart}>{s.t("dd_so_customer", "Customer")}</th>
-                  <th className={s.textStart}>{s.t("dd_so_date", "Date")}</th>
-                  <th className={s.textEnd}>{s.t("dd_so_qty", "Qty")}</th>
-                  <th className={s.textEnd}>{s.t("dd_so_revenue", "Revenue")}</th>
+                  <Th className={s.textStart + " py-1"}>{s.t("dd_so_no", "Sales Order")}</Th>
+                  <Th className={s.textStart}>{s.t("dd_so_customer", "Customer")}</Th>
+                  <Th className={s.textStart}>{s.t("dd_so_date", "Date")}</Th>
+                  <Th className={s.textEnd}>{s.t("dd_so_qty", "Qty")}</Th>
+                  <Th className={s.textEnd}>{s.t("dd_so_revenue", "Revenue")}</Th>
                 </tr>
               </thead>
               <tbody>

@@ -77,6 +77,7 @@ import { openUserA4ReportWindow } from "@/lib/reports/open-user-a4-report-window
 import { UserProfileReportModal, UserProfileData } from "./user-profile-report-modal";
 import { ClearingAgentPicker } from "@/features/shipping/components/clearing-agent-picker";
 import { useErpScope } from "@/lib/hooks/use-erp-scope";
+import { Th } from "@/components/ui/translated-th";
 
 type MainBranchRow = { id: string; name: string; code: string; local_currency: string; is_main: boolean; city_id?: string | null };
 type CityBranchRow = { id: string; name: string; code: string; city_name: string; cityName?: string; local_currency: string; country_branch_id: string };
@@ -1210,8 +1211,8 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         </div>
       </div>
 
-      {/* Progress Steps Header */}
-      <div className="grid gap-2 sm:grid-cols-4">
+      {/* Progress Steps Header (data-studio-steps: compact 4-across strip on phones in the Studio theme) */}
+      <div className="grid gap-2 sm:grid-cols-4" data-studio-steps>
         {steps.map((s) => {
           const isActive = step === s.number;
           const isDone = step > s.number;
@@ -1241,7 +1242,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                 {isDone ? <Check className="h-4 w-4" /> : s.number}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Step {s.number}</div>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{centralT(activeLang, "urw2.step_label" as never, "Step")} {s.number}</div>
                 <div className="truncate text-xs font-bold text-slate-900 dark:text-slate-100">{s.label}</div>
               </div>
             </button>
@@ -1407,7 +1408,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
             {selectedEmployeeId && employeeProfile.fullName ? (
               <div className="space-y-4">
                 {/* Employee Card: Photo, Name, Code, Badges */}
-                <div className="flex items-center justify-between border-b pb-3">
+                <div className="flex max-sm:flex-wrap items-center justify-between max-sm:gap-2 border-b pb-3">
                   <div className="flex items-center gap-3">
                     <div className="h-14 w-14 rounded-xl bg-slate-900 text-slate-100 font-bold flex items-center justify-center border border-slate-800 shadow-inner overflow-hidden shrink-0">
                       {employeeProfile.photoUrl ? (
@@ -1614,9 +1615,9 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
             <CardHeader className="border-b bg-slate-900 text-white px-5 py-3 flex flex-row items-center justify-between">
               <CardTitle className="text-xs font-bold uppercase tracking-wider flex items-center gap-2 text-slate-100">
                 {steps[step - 1].icon}
-                <span>Step {step}: {steps[step - 1].label}</span>
+                <span>{centralT(activeLang, "urw2.step_label" as never, "Step")} {step}: {steps[step - 1].label}</span>
               </CardTitle>
-              <span className="text-xs font-mono font-bold text-emerald-400 bg-slate-800 px-2 py-0.5 rounded border border-slate-700">
+              <span className="shrink-0 whitespace-nowrap text-xs font-mono font-bold text-emerald-400 bg-slate-800 px-2 py-0.5 rounded border border-slate-700">
                 {userCode}
               </span>
             </CardHeader>
@@ -1915,7 +1916,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                   <div className="rounded-xl border border-teal-200 dark:border-teal-900 bg-teal-50/50 dark:bg-teal-950/20 p-3.5 space-y-3">
                     <Label className="text-xs font-bold uppercase tracking-wider text-teal-900 dark:text-teal-300 flex items-center gap-1.5">
                       <Shield className="h-4 w-4 text-teal-600" />
-                      <span>{centralT(activeLang, "urw2.user_type_heading" as never, "2. User Category & Authority Tier (ایڈمن یا عام یوزر)")}</span>
+                      <span>{centralT(activeLang, "urw2.user_type_heading" as never, "2. User Category & Authority Tier")}</span>
                     </Label>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
@@ -2360,13 +2361,13 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                         <table className="w-full text-left border-collapse">
                           <thead className="bg-slate-100 dark:bg-slate-800 sticky top-0 z-10 text-[10px] uppercase font-bold text-slate-600 dark:text-slate-300">
                             <tr>
-                              <th className="p-2 pl-3">Module / Form</th>
-                              <th className="p-2 text-center">View</th>
-                              <th className="p-2 text-center">Create</th>
-                              <th className="p-2 text-center">Edit</th>
-                              <th className="p-2 text-center">Delete</th>
-                              <th className="p-2 text-center">Post</th>
-                              <th className="p-2 text-center pr-3">Print</th>
+                              <Th className="p-2 pl-3">Module / Form</Th>
+                              <Th className="p-2 text-center">View</Th>
+                              <Th className="p-2 text-center">Create</Th>
+                              <Th className="p-2 text-center">Edit</Th>
+                              <Th className="p-2 text-center">Delete</Th>
+                              <Th className="p-2 text-center">Post</Th>
+                              <Th className="p-2 text-center pr-3">Print</Th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">

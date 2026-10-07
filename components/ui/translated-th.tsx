@@ -21,6 +21,9 @@ type ThProps = ThHTMLAttributes<HTMLTableCellElement> & { children?: ReactNode }
 
 export function Th({ children, ...props }: ThProps) {
   const lang = useActiveLanguage();
-  const content = typeof children === "string" ? translateHeader(lang, children) : children;
+  // plain text children are translated; so are the text pieces of mixed children such as [label, <span>↕</span>]
+  const translateNode = (node: ReactNode): ReactNode =>
+    typeof node === "string" ? translateHeader(lang, node) : Array.isArray(node) ? node.map((n, i) => (typeof n === "string" ? translateHeader(lang, n) : n)) : node;
+  const content = translateNode(children);
   return <th {...props}>{content}</th>;
 }

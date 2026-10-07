@@ -6,6 +6,7 @@ import { apiGet } from "@/lib/api/client";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { MobileCashShell } from "./mobile-cash-shell";
+import { Th } from "@/components/ui/translated-th";
 
 type Ledger = {
   id: string;
@@ -97,11 +98,11 @@ export function MobileLedgerView({ langProp }: { langProp?: SupportedLanguage })
             <table className="w-full text-xs">
               <thead>
                 <tr className="text-slate-400">
-                  <th className={`py-1 ${s.textStart}`}>{s.t("date", "Date")}</th>
-                  <th className={`py-1 ${s.textStart}`}>{s.t("details", "Details")}</th>
-                  <th className="py-1 text-end">{s.t("debit", "Debit")}</th>
-                  <th className="py-1 text-end">{s.t("credit", "Credit")}</th>
-                  <th className="py-1 text-end">{s.t("balance", "Balance")}</th>
+                  <Th className={`py-1 ${s.textStart}`}>{s.t("date", "Date")}</Th>
+                  <Th className={`py-1 ${s.textStart}`}>{s.t("details", "Details")}</Th>
+                  <Th className="py-1 text-end">{s.t("debit", "Debit")}</Th>
+                  <Th className="py-1 text-end">{s.t("credit", "Credit")}</Th>
+                  <Th className="py-1 text-end">{s.t("balance", "Balance")}</Th>
                 </tr>
               </thead>
               <tbody>

@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/dialog";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t as tUi } from "@/lib/i18n/ui";
+import { Th } from "@/components/ui/translated-th";
 
 interface CustomerProfile360FullProps {
   customerId: string;
@@ -512,14 +513,14 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
                   <table className="w-full text-left text-xs">
                     <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-600 font-bold border-b border-slate-200 dark:border-slate-800">
                       <tr>
-                        <th className="p-3">Order #</th>
-                        <th className="p-3">Contract #</th>
-                        <th className="p-3">Date</th>
-                        <th className="p-3 text-right">Total</th>
-                        <th className="p-3 text-right">Paid</th>
-                        <th className="p-3 text-right">Remaining</th>
-                        <th className="p-3">Status</th>
-                        <th className="p-3 text-right">Action</th>
+                        <Th className="p-3">Order #</Th>
+                        <Th className="p-3">Contract #</Th>
+                        <Th className="p-3">Date</Th>
+                        <Th className="p-3 text-right">Total</Th>
+                        <Th className="p-3 text-right">Paid</Th>
+                        <Th className="p-3 text-right">Remaining</Th>
+                        <Th className="p-3">Status</Th>
+                        <Th className="p-3 text-right">Action</Th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -570,13 +571,13 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
                   <table className="w-full text-left text-xs">
                     <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-600 font-bold border-b border-slate-200 dark:border-slate-800">
                       <tr>
-                        <th className="p-3">PO #</th>
-                        <th className="p-3">Contract #</th>
-                        <th className="p-3 text-right">Total</th>
-                        <th className="p-3 text-right">Advance Paid</th>
-                        <th className="p-3 text-right">Remaining Due</th>
-                        <th className="p-3">Status</th>
-                        <th className="p-3 text-right">Action</th>
+                        <Th className="p-3">PO #</Th>
+                        <Th className="p-3">Contract #</Th>
+                        <Th className="p-3 text-right">Total</Th>
+                        <Th className="p-3 text-right">Advance Paid</Th>
+                        <Th className="p-3 text-right">Remaining Due</Th>
+                        <Th className="p-3">Status</Th>
+                        <Th className="p-3 text-right">Action</Th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -626,14 +627,14 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
                   <table className="w-full text-left text-xs">
                     <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-600 font-bold border-b border-slate-200 dark:border-slate-800">
                       <tr>
-                        <th className="p-3">Cheque #</th>
-                        <th className="p-3">Bank Name</th>
-                        <th className="p-3">Particulars</th>
-                        <th className="p-3">Due Date</th>
-                        <th className="p-3 text-right">Debit</th>
-                        <th className="p-3 text-right">Credit</th>
-                        <th className="p-3">Status</th>
-                        <th className="p-3 text-right">Action</th>
+                        <Th className="p-3">Cheque #</Th>
+                        <Th className="p-3">Bank Name</Th>
+                        <Th className="p-3">Particulars</Th>
+                        <Th className="p-3">Due Date</Th>
+                        <Th className="p-3 text-right">Debit</Th>
+                        <Th className="p-3 text-right">Credit</Th>
+                        <Th className="p-3">Status</Th>
+                        <Th className="p-3 text-right">Action</Th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -684,12 +685,12 @@ export function CustomerProfile360Full({ customerId, onClose }: CustomerProfile3
                   <table className="w-full text-left text-xs">
                     <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-600 font-bold border-b border-slate-200 dark:border-slate-800">
                       <tr>
-                        <th className="p-3">Type</th>
-                        <th className="p-3">Reference / Order #</th>
-                        <th className="p-3">Details / Route</th>
-                        <th className="p-3">Date</th>
-                        <th className="p-3">Status</th>
-                        <th className="p-3 text-right">Action</th>
+                        <Th className="p-3">Type</Th>
+                        <Th className="p-3">Reference / Order #</Th>
+                        <Th className="p-3">Details / Route</Th>
+                        <Th className="p-3">Date</Th>
+                        <Th className="p-3">Status</Th>
+                        <Th className="p-3 text-right">Action</Th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

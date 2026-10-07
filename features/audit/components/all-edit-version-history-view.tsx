@@ -37,6 +37,7 @@ import { apiGet } from "@/lib/api/client";
 import { downloadCsv } from "@/features/branches/components/branch-report-export";
 import { openScopedGenericReport } from "@/lib/reports/open-scoped-report";
 import { VersionComparisonModal } from "./version-comparison-modal";
+import { Th } from "@/components/ui/translated-th";
 
 type SessionInfo = {
   user?: { fullName?: string | null; email?: string | null };
@@ -525,21 +526,21 @@ export function AllEditVersionHistoryView() {
           <table className="w-full text-left text-xs border-collapse whitespace-nowrap">
             <thead>
               <tr className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                <th className="py-3 px-3 text-center w-8"><input type="checkbox" className="rounded border-slate-300" /></th>
-                <th className="py-3 px-3 text-center w-8">#</th>
-                <th className="py-3 px-3">{t(lang, "audit.th_bill_ref", "Bill / Ref No.")}</th>
-                <th className="py-3 px-3 text-center">{t(lang, "audit.th_version", "Total Edits")}</th>
-                <th className="py-3 px-3">{t(lang, "audit.th_module", "Module")}</th>
-                <th className="py-3 px-3">{t(lang, "audit.th_country", "Country")}</th>
-                <th className="py-3 px-3">{t(lang, "audit.th_branch", "Branch")}</th>
-                <th className="py-3 px-3">{t(lang, "audit.th_record_party", "Record / Party")}</th>
-                <th className="py-3 px-3">{t(lang, "audit.th_original_date", "Original Date")}</th>
-                <th className="py-3 px-3">{t(lang, "audit.th_edited_at", "Last Edited At")}</th>
-                <th className="py-3 px-3">{t(lang, "audit.th_edited_by", "Last Edited By")}</th>
-                <th className="py-3 px-3 text-center">{t(lang, "audit.th_change_type", "Change Type")}</th>
-                <th className="py-3 px-3 text-center">{t(lang, "audit.th_risk", "Risk")}</th>
-                <th className="py-3 px-3 text-center">{t(lang, "audit.th_status", "Approval Status")}</th>
-                <th className="py-3 px-3 text-center">{t(lang, "audit.th_action", "Actions")}</th>
+                <Th className="py-3 px-3 text-center w-8"><input type="checkbox" className="rounded border-slate-300" /></Th>
+                <Th className="py-3 px-3 text-center w-8">#</Th>
+                <Th className="py-3 px-3">{t(lang, "audit.th_bill_ref", "Bill / Ref No.")}</Th>
+                <Th className="py-3 px-3 text-center">{t(lang, "audit.th_version", "Total Edits")}</Th>
+                <Th className="py-3 px-3">{t(lang, "audit.th_module", "Module")}</Th>
+                <Th className="py-3 px-3">{t(lang, "audit.th_country", "Country")}</Th>
+                <Th className="py-3 px-3">{t(lang, "audit.th_branch", "Branch")}</Th>
+                <Th className="py-3 px-3">{t(lang, "audit.th_record_party", "Record / Party")}</Th>
+                <Th className="py-3 px-3">{t(lang, "audit.th_original_date", "Original Date")}</Th>
+                <Th className="py-3 px-3">{t(lang, "audit.th_edited_at", "Last Edited At")}</Th>
+                <Th className="py-3 px-3">{t(lang, "audit.th_edited_by", "Last Edited By")}</Th>
+                <Th className="py-3 px-3 text-center">{t(lang, "audit.th_change_type", "Change Type")}</Th>
+                <Th className="py-3 px-3 text-center">{t(lang, "audit.th_risk", "Risk")}</Th>
+                <Th className="py-3 px-3 text-center">{t(lang, "audit.th_status", "Approval Status")}</Th>
+                <Th className="py-3 px-3 text-center">{t(lang, "audit.th_action", "Actions")}</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11.5px]">

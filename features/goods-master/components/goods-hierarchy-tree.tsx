@@ -22,6 +22,7 @@ import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { apiPost, apiPatch, apiDelete } from "@/lib/api/client";
 import type { GoodsRecord, GoodsVariation } from "./goods-master-registry";
+import { Th } from "@/components/ui/translated-th";
 
 // =========================================================================
 // Data Models for Commercial Specifications / Description
@@ -470,13 +471,13 @@ export function GoodsHierarchyTree({ goods, onRefresh }: GoodsHierarchyTreeProps
         <table className="w-full text-left text-xs border-collapse">
           <thead>
             <tr className="bg-[#f8fafc] dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold text-[11px]">
-              <th className="py-2.5 px-3 w-10 text-center">#</th>
-              <th className="py-2.5 px-3 w-32">Variety</th>
-              <th className="py-2.5 px-3 w-24">Size</th>
-              <th className="py-2.5 px-3 w-28">Grade</th>
-              <th className="py-2.5 px-3 w-28">Brand</th>
-              <th className="py-2.5 px-3">Description / Commercial Specification</th>
-              <th className="py-2.5 px-3 text-center w-12">Action</th>
+              <Th className="py-2.5 px-3 w-10 text-center">#</Th>
+              <Th className="py-2.5 px-3 w-32">Variety</Th>
+              <Th className="py-2.5 px-3 w-24">Size</Th>
+              <Th className="py-2.5 px-3 w-28">Grade</Th>
+              <Th className="py-2.5 px-3 w-28">Brand</Th>
+              <Th className="py-2.5 px-3">Description / Commercial Specification</Th>
+              <Th className="py-2.5 px-3 text-center w-12">Action</Th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">

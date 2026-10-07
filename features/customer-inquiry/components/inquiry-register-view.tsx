@@ -15,6 +15,7 @@ import {
 } from "../lib/shared";
 import { InquiryForm } from "./inquiry-form";
 import { InquiryDetailModal } from "./inquiry-detail-modal";
+import { Th } from "@/components/ui/translated-th";
 
 type Scope = "all" | "mine" | "assigned" | "follow_up";
 
@@ -144,14 +145,14 @@ export function InquiryRegisterView({ scope = "all", lang: langProp }: { scope?:
             <table className="w-full text-xs">
               <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 uppercase text-[10px]">
                 <tr>
-                  <th className={`px-3 py-2 ${s.textStart}`}>{s.t("col_no", "Inquiry #")}</th>
-                  <th className={`px-3 py-2 ${s.textStart}`}>{s.t("f_customer_name", "Customer")}</th>
-                  <th className={`px-3 py-2 ${s.textStart}`}>{s.t("f_business_type", "Business Type")}</th>
-                  <th className={`px-3 py-2 ${s.textStart}`}>{s.t("f_source", "Source")}</th>
-                  <th className={`px-3 py-2 ${s.textStart}`}>{s.t("col_status", "Status")}</th>
-                  <th className={`px-3 py-2 ${s.textStart}`}>{s.t("f_follow_up", "Follow-up")}</th>
-                  <th className={`px-3 py-2 ${s.textStart}`}>{s.t("f_assigned_to", "Assigned")}</th>
-                  <th className="px-3 py-2" />
+                  <Th className={`px-3 py-2 ${s.textStart}`}>{s.t("col_no", "Inquiry #")}</Th>
+                  <Th className={`px-3 py-2 ${s.textStart}`}>{s.t("f_customer_name", "Customer")}</Th>
+                  <Th className={`px-3 py-2 ${s.textStart}`}>{s.t("f_business_type", "Business Type")}</Th>
+                  <Th className={`px-3 py-2 ${s.textStart}`}>{s.t("f_source", "Source")}</Th>
+                  <Th className={`px-3 py-2 ${s.textStart}`}>{s.t("col_status", "Status")}</Th>
+                  <Th className={`px-3 py-2 ${s.textStart}`}>{s.t("f_follow_up", "Follow-up")}</Th>
+                  <Th className={`px-3 py-2 ${s.textStart}`}>{s.t("f_assigned_to", "Assigned")}</Th>
+                  <Th className="px-3 py-2" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

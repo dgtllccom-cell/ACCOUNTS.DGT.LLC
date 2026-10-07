@@ -4117,6 +4117,18 @@ export type UiKey =
   | "nav.language"
   | "nav.theme_mode"
   | "nav.theme_night"
+  | "nav.theme_system"
+  | "urw2.step_label"
+  | "aump.admin_main_users"
+  | "aump.all_system_users"
+  | "aump.main_branches"
+  | "aump.total_users"
+  | "aump.main_branch_code"
+  | "aump.currency"
+  | "aump.city_branches"
+  | "aump.code"
+  | "aump.registered_users"
+  | "aump.no_users_assigned"
   | "nav.theme_day"
   | "nav.theme_soft"
   | "nav.theme_green_business"
@@ -11527,6 +11539,75 @@ export type UiKey =
   | "bank.status_inactive"
   | "bank.status_frozen"
   | "bank.status_closed"
+  | "aump.page_title"
+  | "aump.page_subtitle"
+  | "aump.add_branch_country"
+  | "aump.live_users_work"
+  | "aump.register_new_user"
+  | "aump.card_countries"
+  | "aump.card_main_branches"
+  | "aump.card_city_branches"
+  | "aump.tab_hierarchy"
+  | "aump.search_placeholder"
+  | "aump.loading_hierarchy"
+  | "aump.no_matching_users"
+  | "aump.create_country_main_branch"
+  | "aump.no_direct_users"
+  | "aump.city_branches_under"
+  | "urw2.user_type_heading"
+  | "cashstyle.label"
+  | "cashstyle.standard"
+  | "cashstyle.titanium"
+  | "cashstyle.swiss"
+  | "cashstyle.executive"
+  | "cashstyle.hint"
+  | "acct.swipe_cols"
+  | "voice.insecure_title"
+  | "voice.insecure_context"
+  | "voice.unsupported"
+  | "voice.permission_denied"
+  | "voice.no_speech"
+  | "voice.network"
+  | "voice.retry"
+  | "ait.insecure_context"
+  | "ait.unsupported_voice"
+  | "ait.retry"
+  | "cmpinc.nature_label"
+  | "cmpinc.nature_clearing"
+  | "cmpinc.nature_import_export"
+  | "cmpinc.nature_shipping"
+  | "cmpinc.nature_other"
+  | "cmpinc.nature_other_ph"
+  | "cmf.nature_label"
+  | "cmf.nature_clearing"
+  | "cmf.nature_import_export"
+  | "cmf.nature_shipping"
+  | "cmf.nature_other"
+  | "cmf.nature_other_ph"
+  | "voice.permission_denied_ios"
+  | "cmf.tax_registrations"
+  | "cmf.add_tax_reg"
+  | "cmf.tax_reg_hint"
+  | "cmf.tax_reg_number_ph"
+  | "cmf.taxtype_other"
+  | "cmf.sec_contracts"
+  | "cmf.add_contract"
+  | "cmf.contracts_hint"
+  | "cmf.contract_type"
+  | "cmf.contract_ref"
+  | "cmf.contract_start"
+  | "cmf.contract_end"
+  | "cmf.contract_note"
+  | "cmf.ctype_service"
+  | "cmf.ctype_supply"
+  | "cmf.ctype_agency"
+  | "cmf.ctype_lease"
+  | "cmf.ctype_other"
+  | "cmf.live_summary"
+  | "cmf.sum_untitled"
+  | "cmf.sum_registrations"
+  | "cmf.sum_contracts"
+  | "cmf.sum_contacts"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -15551,6 +15632,18 @@ const en: Dict = {
   "nav.language": "Language",
   "nav.theme_mode": "Theme Mode",
   "nav.theme_night": "Night / Dark",
+  "nav.theme_system": "System (Auto Day / Night)",
+  "urw2.step_label": "Step",
+  "aump.admin_main_users": "Admin / Main Users",
+  "aump.all_system_users": "All System Users",
+  "aump.main_branches": "Main Branches",
+  "aump.total_users": "Total Users",
+  "aump.main_branch_code": "Main Branch Code",
+  "aump.currency": "Currency",
+  "aump.city_branches": "City Branches",
+  "aump.code": "Code",
+  "aump.registered_users": "Registered Users",
+  "aump.no_users_assigned": "No users assigned to {city} branch ({code}) yet.",
   "nav.theme_day": "Day / White",
   "nav.theme_soft": "Soft Light",
   "nav.theme_green_business": "Green / Business",
@@ -34344,6 +34437,75 @@ const en: Dict = {
   "bank.status_inactive": "Inactive",
   "bank.status_frozen": "Frozen",
   "bank.status_closed": "Closed",
+  "aump.page_title": "User Login Management & Branch Scope Directory",
+  "aump.page_subtitle": "Country Main Branches, City Branch Codes, Login IDs & Hierarchical Access Table",
+  "aump.add_branch_country": "Add Branch / Country",
+  "aump.live_users_work": "Live Users / Current Work",
+  "aump.register_new_user": "Register New User",
+  "aump.card_countries": "Countries",
+  "aump.card_main_branches": "Main Country Branches",
+  "aump.card_city_branches": "City / Sub Branches",
+  "aump.tab_hierarchy": "Country & Branch Hierarchy",
+  "aump.search_placeholder": "Search user, branch code, city...",
+  "aump.loading_hierarchy": "Loading Branch Codes & User Hierarchy...",
+  "aump.no_matching_users": "No matching users found for your search criteria.",
+  "aump.create_country_main_branch": "Create Country & Main Branch",
+  "aump.no_direct_users": "No direct users registered for this main branch yet.",
+  "aump.city_branches_under": "City Branches under {name}",
+  "urw2.user_type_heading": "2. User Category & Authority Tier",
+  "cashstyle.label": "Visual style",
+  "cashstyle.standard": "Standard",
+  "cashstyle.titanium": "Titanium Dark FinTech",
+  "cashstyle.swiss": "Swiss Minimalist",
+  "cashstyle.executive": "Executive Split Desk",
+  "cashstyle.hint": "Appearance only — your entries and data are not affected.",
+  "acct.swipe_cols": "Swipe sideways to see all columns",
+  "voice.insecure_title": "Secure connection required",
+  "voice.insecure_context": "Voice needs a secure (HTTPS) connection. Please open the ERP through the secure https link instead of the http IP address, then try again.",
+  "voice.unsupported": "Voice is not supported in this browser. Please try Chrome, Edge, or Safari.",
+  "voice.permission_denied": "Microphone access was denied. Click the microphone/lock icon in the address bar to allow it, then press Retry.",
+  "voice.no_speech": "No speech detected. Please speak clearly into your microphone and try again.",
+  "voice.network": "Speech recognition network error. Please check your connection and try again.",
+  "voice.retry": "Retry",
+  "ait.insecure_context": "Voice needs a secure (HTTPS) connection. Please open the ERP through the secure https link instead of the http IP address, then try again.",
+  "ait.unsupported_voice": "Voice capture is not supported in this browser. Try Chrome, Edge, or Safari, or switch to Text input.",
+  "ait.retry": "Retry",
+  "cmpinc.nature_label": "Company Type / Business Nature",
+  "cmpinc.nature_clearing": "Clearing Agent",
+  "cmpinc.nature_import_export": "Import / Export",
+  "cmpinc.nature_shipping": "Shipping Company",
+  "cmpinc.nature_other": "Other (specify)",
+  "cmpinc.nature_other_ph": "Describe the business nature",
+  "cmf.nature_label": "Company Type / Business Nature",
+  "cmf.nature_clearing": "Clearing Agent",
+  "cmf.nature_import_export": "Import / Export",
+  "cmf.nature_shipping": "Shipping Company",
+  "cmf.nature_other": "Other (specify)",
+  "cmf.nature_other_ph": "Describe the business nature",
+  "voice.permission_denied_ios": "Microphone access was denied. On iPhone/iPad, open this page in Safari (tap the compass icon at the bottom if it opened inside another app), then allow the microphone in Settings → Safari → Microphone and turn on Settings → General → Keyboard → Enable Dictation. Then press Retry.",
+  "cmf.tax_registrations": "Tax Registrations",
+  "cmf.add_tax_reg": "Add tax registration",
+  "cmf.tax_reg_hint": "Add NTN, TRN, VAT, GST or other tax registrations. Use “Add tax registration” for each one.",
+  "cmf.tax_reg_number_ph": "Registration number",
+  "cmf.taxtype_other": "Other",
+  "cmf.sec_contracts": "Contract Details",
+  "cmf.add_contract": "Add contract",
+  "cmf.contracts_hint": "Optional. Add one or more contracts (service, supply, agency, lease…). Tracking only — no accounting posting.",
+  "cmf.contract_type": "Type",
+  "cmf.contract_ref": "Reference / No.",
+  "cmf.contract_start": "Start Date",
+  "cmf.contract_end": "End Date",
+  "cmf.contract_note": "Note",
+  "cmf.ctype_service": "Service Agreement",
+  "cmf.ctype_supply": "Supply Contract",
+  "cmf.ctype_agency": "Agency Agreement",
+  "cmf.ctype_lease": "Lease / Tenancy",
+  "cmf.ctype_other": "Other",
+  "cmf.live_summary": "Live Summary",
+  "cmf.sum_untitled": "Untitled company",
+  "cmf.sum_registrations": "Tax registrations",
+  "cmf.sum_contracts": "Contracts",
+  "cmf.sum_contacts": "Contacts",
 };
 
 const ur: Dict = {
@@ -39660,6 +39822,18 @@ const ur: Dict = {
   "nav.language": "زبان",
   "nav.theme_mode": "تھیم موڈ",
   "nav.theme_night": "رات / ڈارک",
+  "nav.theme_system": "سسٹم (خودکار دن / رات)",
+  "urw2.step_label": "مرحلہ",
+  "aump.admin_main_users": "ایڈمن / مرکزی صارفین",
+  "aump.all_system_users": "تمام سسٹم صارفین",
+  "aump.main_branches": "مرکزی برانچیں",
+  "aump.total_users": "کل صارفین",
+  "aump.main_branch_code": "مرکزی برانچ کوڈ",
+  "aump.currency": "کرنسی",
+  "aump.city_branches": "شہری برانچیں",
+  "aump.code": "کوڈ",
+  "aump.registered_users": "رجسٹرڈ صارفین",
+  "aump.no_users_assigned": "{city} برانچ ({code}) میں ابھی کوئی صارف مقرر نہیں۔",
   "nav.theme_day": "دن / سفید",
   "nav.theme_soft": "نرم روشنی",
   "nav.theme_green_business": "گرین / بزنس",
@@ -57130,6 +57304,75 @@ const ur: Dict = {
   "bank.status_inactive": "غیر فعال",
   "bank.status_frozen": "منجمد",
   "bank.status_closed": "بند",
+  "aump.page_title": "یوزر لاگ اِن مینجمنٹ اور برانچ اسکوپ ڈائریکٹری",
+  "aump.page_subtitle": "ملکی مین برانچیں، سٹی برانچ کوڈز، لاگ اِن آئی ڈیز اور درجہ بندی رسائی ٹیبل",
+  "aump.add_branch_country": "برانچ / ملک شامل کریں",
+  "aump.live_users_work": "فعال صارفین / موجودہ کام",
+  "aump.register_new_user": "نیا صارف رجسٹر کریں",
+  "aump.card_countries": "ممالک",
+  "aump.card_main_branches": "ملکی مین برانچیں",
+  "aump.card_city_branches": "سٹی / ذیلی برانچیں",
+  "aump.tab_hierarchy": "ملک اور برانچ کا درجہ بندی ڈھانچہ",
+  "aump.search_placeholder": "صارف، برانچ کوڈ، شہر تلاش کریں...",
+  "aump.loading_hierarchy": "برانچ کوڈز اور صارف ڈھانچہ لوڈ ہو رہا ہے...",
+  "aump.no_matching_users": "آپ کی تلاش سے کوئی صارف نہیں ملا۔",
+  "aump.create_country_main_branch": "ملک اور مین برانچ بنائیں",
+  "aump.no_direct_users": "اس مین برانچ کے لیے ابھی کوئی براہِ راست صارف رجسٹر نہیں۔",
+  "aump.city_branches_under": "{name} کے تحت سٹی برانچیں",
+  "urw2.user_type_heading": "2. یوزر کیٹیگری اور اختیار کی سطح",
+  "cashstyle.label": "بصری انداز",
+  "cashstyle.standard": "معیاری",
+  "cashstyle.titanium": "ٹائٹینیم ڈارک فِن ٹیک",
+  "cashstyle.swiss": "سوئس مِنیملسٹ",
+  "cashstyle.executive": "ایگزیکٹو اسپلٹ ڈیسک",
+  "cashstyle.hint": "صرف ظاہری انداز — آپ کی اندراجات اور ڈیٹا پر کوئی اثر نہیں۔",
+  "acct.swipe_cols": "تمام کالم دیکھنے کے لیے دائیں بائیں سوائپ کریں",
+  "voice.insecure_title": "محفوظ کنکشن درکار ہے",
+  "voice.insecure_context": "صوتی ان پٹ کے لیے محفوظ (HTTPS) کنکشن ضروری ہے۔ براہِ کرم http IP ایڈریس کے بجائے محفوظ https لنک سے ERP کھولیں، پھر دوبارہ کوشش کریں۔",
+  "voice.unsupported": "اس براؤزر میں صوتی سہولت دستیاب نہیں۔ براہِ کرم Chrome، Edge یا Safari استعمال کریں۔",
+  "voice.permission_denied": "مائیکروفون تک رسائی مسترد کر دی گئی۔ ایڈریس بار میں مائیکروفون/لاک آئیکن پر کلک کر کے اجازت دیں، پھر دوبارہ کوشش کریں۔",
+  "voice.no_speech": "کوئی آواز محسوس نہیں ہوئی۔ براہِ کرم مائیکروفون میں واضح بولیں اور دوبارہ کوشش کریں۔",
+  "voice.network": "تقریری شناخت میں نیٹ ورک کی خرابی۔ براہِ کرم اپنا کنکشن چیک کریں اور دوبارہ کوشش کریں۔",
+  "voice.retry": "دوبارہ کوشش کریں",
+  "ait.insecure_context": "صوتی ان پٹ کے لیے محفوظ (HTTPS) کنکشن ضروری ہے۔ براہِ کرم http IP ایڈریس کے بجائے محفوظ https لنک سے ERP کھولیں، پھر دوبارہ کوشش کریں۔",
+  "ait.unsupported_voice": "اس براؤزر میں صوتی ریکارڈنگ دستیاب نہیں۔ Chrome، Edge یا Safari آزمائیں، یا ٹیکسٹ ان پٹ پر جائیں۔",
+  "ait.retry": "دوبارہ کوشش کریں",
+  "cmpinc.nature_label": "کمپنی کی قسم / کاروبار کی نوعیت",
+  "cmpinc.nature_clearing": "کلیئرنگ ایجنٹ",
+  "cmpinc.nature_import_export": "درآمد / برآمد",
+  "cmpinc.nature_shipping": "شپنگ کمپنی",
+  "cmpinc.nature_other": "دیگر (وضاحت کریں)",
+  "cmpinc.nature_other_ph": "کاروبار کی نوعیت بیان کریں",
+  "cmf.nature_label": "کمپنی کی قسم / کاروبار کی نوعیت",
+  "cmf.nature_clearing": "کلیئرنگ ایجنٹ",
+  "cmf.nature_import_export": "درآمد / برآمد",
+  "cmf.nature_shipping": "شپنگ کمپنی",
+  "cmf.nature_other": "دیگر (وضاحت کریں)",
+  "cmf.nature_other_ph": "کاروبار کی نوعیت بیان کریں",
+  "voice.permission_denied_ios": "مائیکروفون تک رسائی مسترد کر دی گئی۔ آئی فون/آئی پیڈ پر یہ صفحہ Safari میں کھولیں (اگر یہ کسی اور ایپ میں کھلا ہے تو نیچے کمپاس آئیکن پر ٹیپ کریں)، پھر Settings → Safari → Microphone سے مائیکروفون کی اجازت دیں اور Settings → General → Keyboard → Enable Dictation آن کریں۔ پھر Retry دبائیں۔",
+  "cmf.tax_registrations": "ٹیکس رجسٹریشنز",
+  "cmf.add_tax_reg": "ٹیکس رجسٹریشن شامل کریں",
+  "cmf.tax_reg_hint": "NTN، TRN، VAT، GST یا دیگر ٹیکس رجسٹریشنز شامل کریں۔ ہر ایک کے لیے «ٹیکس رجسٹریشن شامل کریں» استعمال کریں۔",
+  "cmf.tax_reg_number_ph": "رجسٹریشن نمبر",
+  "cmf.taxtype_other": "دیگر",
+  "cmf.sec_contracts": "معاہدے کی تفصیلات",
+  "cmf.add_contract": "معاہدہ شامل کریں",
+  "cmf.contracts_hint": "اختیاری۔ ایک یا زیادہ معاہدے شامل کریں (سروس، سپلائی، ایجنسی، کرایہ…)۔ صرف ریکارڈ کے لیے — کوئی اکاؤنٹنگ اندراج نہیں۔",
+  "cmf.contract_type": "قسم",
+  "cmf.contract_ref": "حوالہ / نمبر",
+  "cmf.contract_start": "آغاز کی تاریخ",
+  "cmf.contract_end": "اختتام کی تاریخ",
+  "cmf.contract_note": "نوٹ",
+  "cmf.ctype_service": "سروس معاہدہ",
+  "cmf.ctype_supply": "سپلائی معاہدہ",
+  "cmf.ctype_agency": "ایجنسی معاہدہ",
+  "cmf.ctype_lease": "کرایہ / لیز",
+  "cmf.ctype_other": "دیگر",
+  "cmf.live_summary": "فوری خلاصہ",
+  "cmf.sum_untitled": "بلا عنوان کمپنی",
+  "cmf.sum_registrations": "ٹیکس رجسٹریشنز",
+  "cmf.sum_contracts": "معاہدے",
+  "cmf.sum_contacts": "رابطے",
 };
 
 const ar: Dict = {
@@ -62394,6 +62637,18 @@ const ar: Dict = {
   "nav.template_cyan": "سماوي",
   "nav.theme_mode": "وضع المظهر",
   "nav.theme_night": "ليلي / داكن",
+  "nav.theme_system": "النظام (نهار / ليل تلقائي)",
+  "urw2.step_label": "الخطوة",
+  "aump.admin_main_users": "المسؤولون / المستخدمون الرئيسيون",
+  "aump.all_system_users": "جميع مستخدمي النظام",
+  "aump.main_branches": "الفروع الرئيسية",
+  "aump.total_users": "إجمالي المستخدمين",
+  "aump.main_branch_code": "رمز الفرع الرئيسي",
+  "aump.currency": "العملة",
+  "aump.city_branches": "فروع المدن",
+  "aump.code": "الرمز",
+  "aump.registered_users": "المستخدمون المسجلون",
+  "aump.no_users_assigned": "لا يوجد مستخدمون معيّنون لفرع {city} ({code}) بعد.",
   "nav.theme_day": "نهاري / أبيض",
   "nav.theme_soft": "إضاءة ناعمة",
   "nav.theme_green_business": "أخضر / أعمال",
@@ -79917,6 +80172,75 @@ const ar: Dict = {
   "bank.status_inactive": "غير نشط",
   "bank.status_frozen": "مجمد",
   "bank.status_closed": "مغلق",
+  "aump.page_title": "إدارة تسجيل دخول المستخدمين ودليل نطاق الفروع",
+  "aump.page_subtitle": "الفروع الرئيسية للدول، رموز فروع المدن، معرّفات الدخول وجدول الوصول الهرمي",
+  "aump.add_branch_country": "إضافة فرع / دولة",
+  "aump.live_users_work": "المستخدمون النشطون / العمل الحالي",
+  "aump.register_new_user": "تسجيل مستخدم جديد",
+  "aump.card_countries": "الدول",
+  "aump.card_main_branches": "الفروع الرئيسية للدول",
+  "aump.card_city_branches": "فروع المدن / الفروع الفرعية",
+  "aump.tab_hierarchy": "التسلسل الهرمي للدول والفروع",
+  "aump.search_placeholder": "ابحث عن مستخدم أو رمز فرع أو مدينة...",
+  "aump.loading_hierarchy": "جارٍ تحميل رموز الفروع وهرمية المستخدمين...",
+  "aump.no_matching_users": "لا يوجد مستخدمون مطابقون لمعايير البحث.",
+  "aump.create_country_main_branch": "إنشاء دولة وفرع رئيسي",
+  "aump.no_direct_users": "لا يوجد مستخدمون مسجّلون مباشرةً لهذا الفرع الرئيسي بعد.",
+  "aump.city_branches_under": "فروع المدينة التابعة لـ {name}",
+  "urw2.user_type_heading": "2. فئة المستخدم ومستوى الصلاحية",
+  "cashstyle.label": "النمط المرئي",
+  "cashstyle.standard": "قياسي",
+  "cashstyle.titanium": "تيتانيوم داكن للتقنية المالية",
+  "cashstyle.swiss": "سويسري بسيط",
+  "cashstyle.executive": "مكتب تنفيذي مقسّم",
+  "cashstyle.hint": "المظهر فقط — لا تتأثر إدخالاتك وبياناتك.",
+  "acct.swipe_cols": "اسحب جانبياً لعرض كل الأعمدة",
+  "voice.insecure_title": "مطلوب اتصال آمن",
+  "voice.insecure_context": "يتطلب الإدخال الصوتي اتصالاً آمناً (HTTPS). يرجى فتح النظام عبر رابط https الآمن بدلاً من عنوان http، ثم المحاولة مرة أخرى.",
+  "voice.unsupported": "الإدخال الصوتي غير مدعوم في هذا المتصفح. يرجى استخدام Chrome أو Edge أو Safari.",
+  "voice.permission_denied": "تم رفض الوصول إلى الميكروفون. انقر على أيقونة الميكروفون/القفل في شريط العنوان للسماح به، ثم اضغط على إعادة المحاولة.",
+  "voice.no_speech": "لم يتم اكتشاف أي كلام. يرجى التحدث بوضوح في الميكروفون والمحاولة مرة أخرى.",
+  "voice.network": "خطأ في شبكة التعرف على الكلام. يرجى التحقق من اتصالك والمحاولة مرة أخرى.",
+  "voice.retry": "إعادة المحاولة",
+  "ait.insecure_context": "يتطلب الإدخال الصوتي اتصالاً آمناً (HTTPS). يرجى فتح النظام عبر رابط https الآمن بدلاً من عنوان http، ثم المحاولة مرة أخرى.",
+  "ait.unsupported_voice": "التقاط الصوت غير مدعوم في هذا المتصفح. جرّب Chrome أو Edge أو Safari، أو انتقل إلى الإدخال النصي.",
+  "ait.retry": "إعادة المحاولة",
+  "cmpinc.nature_label": "نوع الشركة / طبيعة العمل",
+  "cmpinc.nature_clearing": "وكيل تخليص",
+  "cmpinc.nature_import_export": "استيراد / تصدير",
+  "cmpinc.nature_shipping": "شركة شحن",
+  "cmpinc.nature_other": "أخرى (حدد)",
+  "cmpinc.nature_other_ph": "صف طبيعة العمل",
+  "cmf.nature_label": "نوع الشركة / طبيعة العمل",
+  "cmf.nature_clearing": "وكيل تخليص",
+  "cmf.nature_import_export": "استيراد / تصدير",
+  "cmf.nature_shipping": "شركة شحن",
+  "cmf.nature_other": "أخرى (حدد)",
+  "cmf.nature_other_ph": "صف طبيعة العمل",
+  "voice.permission_denied_ios": "تم رفض الوصول إلى الميكروفون. على iPhone/iPad، افتح هذه الصفحة في Safari (اضغط رمز البوصلة بالأسفل إذا فُتحت داخل تطبيق آخر)، ثم اسمح بالميكروفون من Settings → Safari → Microphone وفعّل Settings → General → Keyboard → Enable Dictation. ثم اضغط Retry.",
+  "cmf.tax_registrations": "التسجيلات الضريبية",
+  "cmf.add_tax_reg": "إضافة تسجيل ضريبي",
+  "cmf.tax_reg_hint": "أضف NTN أو TRN أو VAT أو GST أو تسجيلات ضريبية أخرى. استخدم «إضافة تسجيل ضريبي» لكل واحد.",
+  "cmf.tax_reg_number_ph": "رقم التسجيل",
+  "cmf.taxtype_other": "أخرى",
+  "cmf.sec_contracts": "تفاصيل العقد",
+  "cmf.add_contract": "إضافة عقد",
+  "cmf.contracts_hint": "اختياري. أضف عقدًا واحدًا أو أكثر (خدمة، توريد، وكالة، إيجار…). للتتبع فقط — بدون قيد محاسبي.",
+  "cmf.contract_type": "النوع",
+  "cmf.contract_ref": "المرجع / الرقم",
+  "cmf.contract_start": "تاريخ البدء",
+  "cmf.contract_end": "تاريخ الانتهاء",
+  "cmf.contract_note": "ملاحظة",
+  "cmf.ctype_service": "اتفاقية خدمة",
+  "cmf.ctype_supply": "عقد توريد",
+  "cmf.ctype_agency": "اتفاقية وكالة",
+  "cmf.ctype_lease": "إيجار",
+  "cmf.ctype_other": "أخرى",
+  "cmf.live_summary": "ملخص مباشر",
+  "cmf.sum_untitled": "شركة بدون اسم",
+  "cmf.sum_registrations": "التسجيلات الضريبية",
+  "cmf.sum_contracts": "العقود",
+  "cmf.sum_contacts": "جهات الاتصال",
 };
 
 const fa: Dict = {
@@ -85128,6 +85452,18 @@ const fa: Dict = {
   "nav.template_color": "رنگ قالب",
   "nav.theme_mode": "حالت پوسته",
   "nav.theme_night": "شب / تیره",
+  "nav.theme_system": "سیستم (روز / شب خودکار)",
+  "urw2.step_label": "مرحله",
+  "aump.admin_main_users": "مدیران / کاربران اصلی",
+  "aump.all_system_users": "همه کاربران سیستم",
+  "aump.main_branches": "شعبه‌های اصلی",
+  "aump.total_users": "کل کاربران",
+  "aump.main_branch_code": "کد شعبه اصلی",
+  "aump.currency": "ارز",
+  "aump.city_branches": "شعبه‌های شهری",
+  "aump.code": "کد",
+  "aump.registered_users": "کاربران ثبت‌شده",
+  "aump.no_users_assigned": "هنوز کاربری به شعبه {city} ({code}) اختصاص داده نشده است.",
   "nav.theme_day": "روز / سفید",
   "nav.theme_soft": "نور ملایم",
   "nav.theme_green_business": "سبز / تجاری",
@@ -102703,6 +103039,75 @@ const fa: Dict = {
   "bank.status_inactive": "غیرفعال",
   "bank.status_frozen": "مسدود",
   "bank.status_closed": "بسته",
+  "aump.page_title": "مدیریت ورود کاربران و فهرست دامنه شعب",
+  "aump.page_subtitle": "شعب اصلی کشور، کدهای شعبه شهر، شناسه‌های ورود و جدول دسترسی سلسله‌مراتبی",
+  "aump.add_branch_country": "افزودن شعبه / کشور",
+  "aump.live_users_work": "کاربران فعال / کار جاری",
+  "aump.register_new_user": "ثبت کاربر جدید",
+  "aump.card_countries": "کشورها",
+  "aump.card_main_branches": "شعب اصلی کشورها",
+  "aump.card_city_branches": "شعب شهر / زیرشاخه",
+  "aump.tab_hierarchy": "سلسله‌مراتب کشور و شعبه",
+  "aump.search_placeholder": "جستجوی کاربر، کد شعبه، شهر...",
+  "aump.loading_hierarchy": "در حال بارگذاری کدهای شعب و سلسله‌مراتب کاربران...",
+  "aump.no_matching_users": "کاربری مطابق با جستجوی شما یافت نشد.",
+  "aump.create_country_main_branch": "ایجاد کشور و شعبه اصلی",
+  "aump.no_direct_users": "هنوز کاربری مستقیماً برای این شعبه اصلی ثبت نشده است.",
+  "aump.city_branches_under": "شعب شهر زیرمجموعه {name}",
+  "urw2.user_type_heading": "2. دسته‌بندی کاربر و سطح اختیار",
+  "cashstyle.label": "سبک بصری",
+  "cashstyle.standard": "استاندارد",
+  "cashstyle.titanium": "فین‌تک تیتانیومی تیره",
+  "cashstyle.swiss": "مینیمال سوئیسی",
+  "cashstyle.executive": "میز اجرایی دوبخشی",
+  "cashstyle.hint": "فقط ظاهر — ورودی‌ها و داده‌های شما تغییر نمی‌کند.",
+  "acct.swipe_cols": "برای دیدن همه ستون‌ها به طرفین بکشید",
+  "voice.insecure_title": "اتصال امن لازم است",
+  "voice.insecure_context": "ورودی صوتی به اتصال امن (HTTPS) نیاز دارد. لطفاً سیستم را به‌جای آدرس http با پیوند امن https باز کنید و سپس دوباره تلاش کنید.",
+  "voice.unsupported": "ورودی صوتی در این مرورگر پشتیبانی نمی‌شود. لطفاً از Chrome، Edge یا Safari استفاده کنید.",
+  "voice.permission_denied": "دسترسی به میکروفون رد شد. روی نماد میکروفون/قفل در نوار آدرس کلیک کنید تا اجازه دهید، سپس دوباره تلاش کنید.",
+  "voice.no_speech": "هیچ گفتاری تشخیص داده نشد. لطفاً واضح در میکروفون صحبت کنید و دوباره تلاش کنید.",
+  "voice.network": "خطای شبکه در تشخیص گفتار. لطفاً اتصال خود را بررسی کنید و دوباره تلاش کنید.",
+  "voice.retry": "تلاش مجدد",
+  "ait.insecure_context": "ورودی صوتی به اتصال امن (HTTPS) نیاز دارد. لطفاً سیستم را به‌جای آدرس http با پیوند امن https باز کنید و سپس دوباره تلاش کنید.",
+  "ait.unsupported_voice": "ضبط صدا در این مرورگر پشتیبانی نمی‌شود. از Chrome، Edge یا Safari استفاده کنید یا به ورودی متنی بروید.",
+  "ait.retry": "تلاش مجدد",
+  "cmpinc.nature_label": "نوع شرکت / ماهیت کسب‌وکار",
+  "cmpinc.nature_clearing": "کارگزار ترخیص",
+  "cmpinc.nature_import_export": "واردات / صادرات",
+  "cmpinc.nature_shipping": "شرکت کشتیرانی",
+  "cmpinc.nature_other": "سایر (مشخص کنید)",
+  "cmpinc.nature_other_ph": "ماهیت کسب‌وکار را شرح دهید",
+  "cmf.nature_label": "نوع شرکت / ماهیت کسب‌وکار",
+  "cmf.nature_clearing": "کارگزار ترخیص",
+  "cmf.nature_import_export": "واردات / صادرات",
+  "cmf.nature_shipping": "شرکت کشتیرانی",
+  "cmf.nature_other": "سایر (مشخص کنید)",
+  "cmf.nature_other_ph": "ماهیت کسب‌وکار را شرح دهید",
+  "voice.permission_denied_ios": "دسترسی به میکروفون رد شد. روی iPhone/iPad این صفحه را در Safari باز کنید (اگر داخل برنامهٔ دیگری باز شده، روی نماد قطب‌نما در پایین بزنید)، سپس از Settings → Safari → Microphone به میکروفون اجازه دهید و Settings → General → Keyboard → Enable Dictation را روشن کنید. سپس Retry را بزنید.",
+  "cmf.tax_registrations": "ثبت‌نام‌های مالیاتی",
+  "cmf.add_tax_reg": "افزودن ثبت‌نام مالیاتی",
+  "cmf.tax_reg_hint": "NTN، TRN، VAT، GST یا سایر ثبت‌نام‌های مالیاتی را اضافه کنید. برای هر کدام از «افزودن ثبت‌نام مالیاتی» استفاده کنید.",
+  "cmf.tax_reg_number_ph": "شماره ثبت‌نام",
+  "cmf.taxtype_other": "سایر",
+  "cmf.sec_contracts": "جزئیات قرارداد",
+  "cmf.add_contract": "افزودن قرارداد",
+  "cmf.contracts_hint": "اختیاری. یک یا چند قرارداد اضافه کنید (خدمات، تأمین، نمایندگی، اجاره…). فقط برای پیگیری — بدون ثبت حسابداری.",
+  "cmf.contract_type": "نوع",
+  "cmf.contract_ref": "مرجع / شماره",
+  "cmf.contract_start": "تاریخ شروع",
+  "cmf.contract_end": "تاریخ پایان",
+  "cmf.contract_note": "یادداشت",
+  "cmf.ctype_service": "قرارداد خدمات",
+  "cmf.ctype_supply": "قرارداد تأمین",
+  "cmf.ctype_agency": "قرارداد نمایندگی",
+  "cmf.ctype_lease": "اجاره",
+  "cmf.ctype_other": "سایر",
+  "cmf.live_summary": "خلاصه زنده",
+  "cmf.sum_untitled": "شرکت بدون نام",
+  "cmf.sum_registrations": "ثبت‌نام‌های مالیاتی",
+  "cmf.sum_contracts": "قراردادها",
+  "cmf.sum_contacts": "مخاطبین",
 };
 
 const ps: Dict = {
@@ -108470,6 +108875,18 @@ const ps: Dict = {
   "nav.template_purple": "بنفش",
   "nav.theme_mode": "د بڼې حالت",
   "nav.theme_night": "شپه / توره",
+  "nav.theme_system": "سیسټم (اتومات ورځ / شپه)",
+  "urw2.step_label": "پړاو",
+  "aump.admin_main_users": "اډمینان / اصلي کاروونکي",
+  "aump.all_system_users": "د سیسټم ټول کاروونکي",
+  "aump.main_branches": "اصلي څانګې",
+  "aump.total_users": "ټول کاروونکي",
+  "aump.main_branch_code": "د اصلي څانګې کوډ",
+  "aump.currency": "اسعار",
+  "aump.city_branches": "د ښار څانګې",
+  "aump.code": "کوډ",
+  "aump.registered_users": "ثبت شوي کاروونکي",
+  "aump.no_users_assigned": "تر اوسه {city} څانګې ({code}) ته هیڅ کاروونکی نه دی ټاکل شوی.",
   "nav.theme_day": "ورځ / سپینه",
   "nav.theme_soft": "نرمه رڼا",
   "nav.theme_green_business": "شنه / سوداګریز",
@@ -125496,6 +125913,75 @@ const ps: Dict = {
   "bank.status_inactive": "غیر فعال",
   "bank.status_frozen": "کنګل شوی",
   "bank.status_closed": "تړل شوی",
+  "aump.page_title": "د کاروونکو د ننوتلو مدیریت او د څانګو د پراخوالي لارښود",
+  "aump.page_subtitle": "د هېواد اصلي څانګې، د ښار د څانګې کوډونه، د ننوتلو پېژندنې او د درجه‌بندۍ د لاسرسي جدول",
+  "aump.add_branch_country": "څانګه / هېواد زیات کړئ",
+  "aump.live_users_work": "فعال کاروونکي / اوسنی کار",
+  "aump.register_new_user": "نوی کارن ثبت کړئ",
+  "aump.card_countries": "هېوادونه",
+  "aump.card_main_branches": "د هېوادونو اصلي څانګې",
+  "aump.card_city_branches": "د ښار / فرعي څانګې",
+  "aump.tab_hierarchy": "د هېواد او څانګو درجه‌بندي",
+  "aump.search_placeholder": "کارن، د څانګې کوډ، ښار ولټوئ...",
+  "aump.loading_hierarchy": "د څانګو کوډونه او د کاروونکو ترتیب بارېږي...",
+  "aump.no_matching_users": "ستاسو د لټون سره سم هیڅ کارن ونه موندل شو.",
+  "aump.create_country_main_branch": "هېواد او اصلي څانګه جوړ کړئ",
+  "aump.no_direct_users": "د دې اصلي څانګې لپاره تر اوسه مستقیم کارن نه دی ثبت شوی.",
+  "aump.city_branches_under": "د {name} لاندې د ښار څانګې",
+  "urw2.user_type_heading": "2. د کاروونکي کټګورۍ او د واک کچه",
+  "cashstyle.label": "لیدلوری سټایل",
+  "cashstyle.standard": "معیاري",
+  "cashstyle.titanium": "ټایټانیم ډارک فین‌ټیک",
+  "cashstyle.swiss": "سویسي مینیمالیسټ",
+  "cashstyle.executive": "اجرایوي ویشلې میز",
+  "cashstyle.hint": "یوازې بڼه — ستاسو ننوتنې او معلومات نه اغیزمن کیږي.",
+  "acct.swipe_cols": "د ټولو کالمونو لیدو لپاره څنګ ته سوایپ کړئ",
+  "voice.insecure_title": "خوندي اړیکه اړینه ده",
+  "voice.insecure_context": "غږیزه ننوتنه خوندي (HTTPS) اړیکې ته اړتیا لري. مهرباني وکړئ د http IP پتې پر ځای د خوندي https لینک له لارې ERP پرانیزئ، بیا هڅه وکړئ.",
+  "voice.unsupported": "په دې براوزر کې غږ نه ملاتړ کیږي. مهرباني وکړئ Chrome، Edge یا Safari وکاروئ.",
+  "voice.permission_denied": "مایکروفون ته لاسرسی رد شو. د پتې په بار کې د مایکروفون/تالا آیکون کلیک کړئ ترڅو اجازه ورکړئ، بیا هڅه وکړئ.",
+  "voice.no_speech": "هیڅ غږ ونه موندل شو. مهرباني وکړئ په مایکروفون کې په څرګنده خبرې وکړئ او بیا هڅه وکړئ.",
+  "voice.network": "د وینا پیژندنې د شبکې تېروتنه. مهرباني وکړئ خپله اړیکه وګورئ او بیا هڅه وکړئ.",
+  "voice.retry": "بیا هڅه وکړئ",
+  "ait.insecure_context": "غږیزه ننوتنه خوندي (HTTPS) اړیکې ته اړتیا لري. مهرباني وکړئ د http IP پتې پر ځای د خوندي https لینک له لارې ERP پرانیزئ، بیا هڅه وکړئ.",
+  "ait.unsupported_voice": "په دې براوزر کې د غږ ثبتول نه ملاتړ کیږي. Chrome، Edge یا Safari وآزمویئ، یا متن ننوتنې ته لاړ شئ.",
+  "ait.retry": "بیا هڅه وکړئ",
+  "cmpinc.nature_label": "د شرکت ډول / د سوداګرۍ ماهیت",
+  "cmpinc.nature_clearing": "د پاکولو اجنټ",
+  "cmpinc.nature_import_export": "واردات / صادرات",
+  "cmpinc.nature_shipping": "د بار وړلو شرکت",
+  "cmpinc.nature_other": "نور (مشخص کړئ)",
+  "cmpinc.nature_other_ph": "د سوداګرۍ ماهیت بیان کړئ",
+  "cmf.nature_label": "د شرکت ډول / د سوداګرۍ ماهیت",
+  "cmf.nature_clearing": "د پاکولو اجنټ",
+  "cmf.nature_import_export": "واردات / صادرات",
+  "cmf.nature_shipping": "د بار وړلو شرکت",
+  "cmf.nature_other": "نور (مشخص کړئ)",
+  "cmf.nature_other_ph": "د سوداګرۍ ماهیت بیان کړئ",
+  "voice.permission_denied_ios": "مایکروفون ته لاسرسی رد شو. په iPhone/iPad کې دا پاڼه په Safari کې پرانیزئ (که په بله اپلیکیشن کې پرانیستل شوې وي، لاندې د قطب‌نما آیکون کېکاږئ)، بیا د Settings → Safari → Microphone له لارې مایکروفون ته اجازه ورکړئ او Settings → General → Keyboard → Enable Dictation فعال کړئ. بیا Retry کېکاږئ.",
+  "cmf.tax_registrations": "مالیاتي راجستریشنونه",
+  "cmf.add_tax_reg": "مالیاتي راجستریشن اضافه کړئ",
+  "cmf.tax_reg_hint": "NTN، TRN، VAT، GST یا نور مالیاتي راجستریشنونه اضافه کړئ. د هر یو لپاره «مالیاتي راجستریشن اضافه کړئ» وکاروئ.",
+  "cmf.tax_reg_number_ph": "د راجستریشن شمیره",
+  "cmf.taxtype_other": "نور",
+  "cmf.sec_contracts": "د تړون جزئیات",
+  "cmf.add_contract": "تړون اضافه کړئ",
+  "cmf.contracts_hint": "اختیاري. یو یا ډیر تړونونه اضافه کړئ (خدمت، عرضه، اجنسي، کرایه…). یوازې د تعقیب لپاره — د حساب هیڅ ثبت نشته.",
+  "cmf.contract_type": "ډول",
+  "cmf.contract_ref": "حواله / شمیره",
+  "cmf.contract_start": "د پیل نیټه",
+  "cmf.contract_end": "د پای نیټه",
+  "cmf.contract_note": "یادښت",
+  "cmf.ctype_service": "د خدمت تړون",
+  "cmf.ctype_supply": "د عرضې تړون",
+  "cmf.ctype_agency": "د اجنسۍ تړون",
+  "cmf.ctype_lease": "کرایه / لیز",
+  "cmf.ctype_other": "نور",
+  "cmf.live_summary": "ژوندی لنډیز",
+  "cmf.sum_untitled": "بې نومه شرکت",
+  "cmf.sum_registrations": "مالیاتي راجستریشنونه",
+  "cmf.sum_contracts": "تړونونه",
+  "cmf.sum_contacts": "اړیکې",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

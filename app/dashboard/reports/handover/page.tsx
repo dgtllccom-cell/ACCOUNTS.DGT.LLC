@@ -30,6 +30,7 @@ import {
 import { Button } from "@/components/ui/button";
 import type { AccessRegisterEntry } from "@/lib/repositories/access-register-repository";
 import { openGenericErpReport } from "@/lib/reports/open-generic-erp-report";
+import { Th } from "@/components/ui/translated-th";
 
 interface DailyLog {
   date: string;
@@ -445,15 +446,15 @@ export default function HandoverReportPage() {
               <table className="w-full text-xs text-left">
                 <thead className="sticky top-0 z-10 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 uppercase font-semibold text-[11px] shadow-sm">
                   <tr>
-                    <th className="whitespace-nowrap p-3">{th("Country")}</th>
-                    <th className="whitespace-nowrap p-3">{th("Main Branch")}</th>
-                    <th className="whitespace-nowrap p-3">{th("City Branch")}</th>
-                    <th className="whitespace-nowrap p-3">{th("User / Person")}</th>
-                    <th className="whitespace-nowrap p-3">{th("Role")}</th>
-                    <th className="whitespace-nowrap p-3">{th("Username / Login ID")}</th>
-                    <th className="whitespace-nowrap p-3">{th("Assigned Permissions")}</th>
-                    <th className="whitespace-nowrap p-3">{th("Vault Ref ID")}</th>
-                    <th className="whitespace-nowrap p-3">{th("Status")}</th>
+                    <Th className="whitespace-nowrap p-3">{th("Country")}</Th>
+                    <Th className="whitespace-nowrap p-3">{th("Main Branch")}</Th>
+                    <Th className="whitespace-nowrap p-3">{th("City Branch")}</Th>
+                    <Th className="whitespace-nowrap p-3">{th("User / Person")}</Th>
+                    <Th className="whitespace-nowrap p-3">{th("Role")}</Th>
+                    <Th className="whitespace-nowrap p-3">{th("Username / Login ID")}</Th>
+                    <Th className="whitespace-nowrap p-3">{th("Assigned Permissions")}</Th>
+                    <Th className="whitespace-nowrap p-3">{th("Vault Ref ID")}</Th>
+                    <Th className="whitespace-nowrap p-3">{th("Status")}</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -619,11 +620,11 @@ export default function HandoverReportPage() {
             <table className="w-full text-xs text-left">
               <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 uppercase font-semibold">
                 <tr>
-                  <th className="p-2.5">{th("Module Name")}</th>
-                  <th className="p-2.5">{th("Database Table")}</th>
-                  <th className="p-2.5">{th("Local DB Rows")}</th>
-                  <th className="p-2.5">{th("VPS DB Rows")}</th>
-                  <th className="p-2.5">{th("Status")}</th>
+                  <Th className="p-2.5">{th("Module Name")}</Th>
+                  <Th className="p-2.5">{th("Database Table")}</Th>
+                  <Th className="p-2.5">{th("Local DB Rows")}</Th>
+                  <Th className="p-2.5">{th("VPS DB Rows")}</Th>
+                  <Th className="p-2.5">{th("Status")}</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -699,12 +700,12 @@ export default function HandoverReportPage() {
             <table className="w-full text-xs text-left">
               <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 uppercase font-semibold">
                 <tr>
-                  <th className="p-2.5">{th("Role")}</th>
-                  <th className="p-2.5">{th("Geographic Scope")}</th>
-                  <th className="p-2.5">{th("Master CRUD")}</th>
-                  <th className="p-2.5">{th("Ledger & Journal")}</th>
-                  <th className="p-2.5">{th("Stock & Inventory")}</th>
-                  <th className="p-2.5">{th("System Config")}</th>
+                  <Th className="p-2.5">{th("Role")}</Th>
+                  <Th className="p-2.5">{th("Geographic Scope")}</Th>
+                  <Th className="p-2.5">{th("Master CRUD")}</Th>
+                  <Th className="p-2.5">{th("Ledger & Journal")}</Th>
+                  <Th className="p-2.5">{th("Stock & Inventory")}</Th>
+                  <Th className="p-2.5">{th("System Config")}</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

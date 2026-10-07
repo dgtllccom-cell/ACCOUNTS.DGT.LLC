@@ -60,6 +60,7 @@ import {
   type TrackingEventCode,
   type CanonicalTrackingPayload,
 } from "@/lib/types/shipment-tracking";
+import { Th } from "@/components/ui/translated-th";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 interface TrackingSummary {
@@ -840,20 +841,20 @@ export function CanonicalShipmentTrackingView({
               <table className="w-full text-[11px]">
                 <thead>
                   <tr className="border-b border-border/60 bg-muted/30">
-                    <th className="w-8 px-3 py-2.5 text-center font-bold text-muted-foreground">#</th>
-                    <th className="px-3 py-2.5 text-left font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Shipment No</th>
-                    <th className="px-3 py-2.5 text-left font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">BL No</th>
-                    <th className="px-3 py-2.5 text-left font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Container No</th>
-                    <th className="px-3 py-2.5 text-left font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Truck No</th>
-                    <th className="px-3 py-2.5 text-left font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Shipping Line</th>
-                    <th className="px-3 py-2.5 text-left font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Vessel / Voyage</th>
-                    <th className="px-3 py-2.5 text-left font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">From</th>
-                    <th className="px-3 py-2.5 text-left font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">To</th>
-                    <th className="px-3 py-2.5 text-center font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Mode</th>
-                    <th className="px-3 py-2.5 text-left font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Current Location</th>
-                    <th className="px-3 py-2.5 text-left font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">ETA</th>
-                    <th className="px-3 py-2.5 text-center font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Status</th>
-                    <th className="px-3 py-2.5 text-center font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Actions</th>
+                    <Th className="w-8 px-3 py-2.5 text-center font-bold text-muted-foreground">#</Th>
+                    <Th className="px-3 py-2.5 text-left font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Shipment No</Th>
+                    <Th className="px-3 py-2.5 text-left font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">BL No</Th>
+                    <Th className="px-3 py-2.5 text-left font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Container No</Th>
+                    <Th className="px-3 py-2.5 text-left font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Truck No</Th>
+                    <Th className="px-3 py-2.5 text-left font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Shipping Line</Th>
+                    <Th className="px-3 py-2.5 text-left font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Vessel / Voyage</Th>
+                    <Th className="px-3 py-2.5 text-left font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">From</Th>
+                    <Th className="px-3 py-2.5 text-left font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">To</Th>
+                    <Th className="px-3 py-2.5 text-center font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Mode</Th>
+                    <Th className="px-3 py-2.5 text-left font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Current Location</Th>
+                    <Th className="px-3 py-2.5 text-left font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">ETA</Th>
+                    <Th className="px-3 py-2.5 text-center font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Status</Th>
+                    <Th className="px-3 py-2.5 text-center font-bold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Actions</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/40">

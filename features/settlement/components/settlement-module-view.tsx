@@ -12,6 +12,7 @@ import { translateHeader } from "@/lib/i18n/table-headers";
 import { useErpScope } from "@/lib/hooks/use-erp-scope";
 import { openScopedGenericReport, type GenericReportColumn } from "@/lib/reports/open-scoped-report";
 import { DataEmptyState } from "@/components/ui/data-empty-state";
+import { Th } from "@/components/ui/translated-th";
 
 interface SettlementModuleViewProps {
   /** Raw English fallback (translated via translateHeader if the string is in HEADER_TRANSLATIONS). */
@@ -264,13 +265,13 @@ export function SettlementModuleView({
             <table className="w-full text-left text-xs">
               <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 font-semibold border-b border-slate-200 dark:border-slate-800 uppercase tracking-wider text-[10px]">
                 <tr>
-                  <th className="py-3 px-3">{th("Date / Serial")}</th>
-                  <th className="py-3 px-3">{th("Party & Narration")}</th>
-                  <th className="py-3 px-2 text-center">{th("Dir")}</th>
-                  <th className="py-3 px-3 text-right">{th("Total")}</th>
-                  <th className="py-3 px-3 text-right">{th("Remaining")}</th>
-                  <th className="py-3 px-2 text-center">{th("Status")}</th>
-                  <th className="py-3 px-2 text-center">{th("Action")}</th>
+                  <Th className="py-3 px-3">{th("Date / Serial")}</Th>
+                  <Th className="py-3 px-3">{th("Party & Narration")}</Th>
+                  <Th className="py-3 px-2 text-center">{th("Dir")}</Th>
+                  <Th className="py-3 px-3 text-right">{th("Total")}</Th>
+                  <Th className="py-3 px-3 text-right">{th("Remaining")}</Th>
+                  <Th className="py-3 px-2 text-center">{th("Status")}</Th>
+                  <Th className="py-3 px-2 text-center">{th("Action")}</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

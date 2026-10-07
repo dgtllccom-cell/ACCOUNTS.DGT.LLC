@@ -17,6 +17,7 @@ import {
 } from "../lib/shared";
 import { TaskDetailModal } from "./task-detail-modal";
 import { AssignTaskForm } from "./assign-task-form";
+import { Th } from "@/components/ui/translated-th";
 
 type Scope = "my" | "team" | "overdue" | "completed";
 
@@ -225,14 +226,14 @@ export function UserTasksView({ scope, lang: langProp, autoAssign = false }: { s
             <table className="w-full text-start text-sm">
               <thead className="border-b bg-slate-50 text-[11px] uppercase text-slate-500">
                 <tr>
-                  <th className="px-3 py-2 font-semibold text-start">{s.t("col_task", "Task")}</th>
-                  <th className="px-3 py-2 font-semibold text-start">{s.t("col_assignee", "Assignee")}</th>
-                  <th className="px-3 py-2 font-semibold text-center">{s.t("col_priority", "Priority")}</th>
-                  <th className="px-3 py-2 font-semibold text-center">{s.t("col_due", "Due")}</th>
-                  <th className="px-3 py-2 font-semibold text-center">{s.t("col_status", "Status")}</th>
-                  <th className="px-3 py-2 font-semibold text-start">{s.t("col_module", "Module")}</th>
-                  <th className="px-3 py-2 font-semibold text-start">{s.t("col_branch", "Branch")}</th>
-                  <th className="px-3 py-2 font-semibold text-center">{s.t("col_actions", "Actions")}</th>
+                  <Th className="px-3 py-2 font-semibold text-start">{s.t("col_task", "Task")}</Th>
+                  <Th className="px-3 py-2 font-semibold text-start">{s.t("col_assignee", "Assignee")}</Th>
+                  <Th className="px-3 py-2 font-semibold text-center">{s.t("col_priority", "Priority")}</Th>
+                  <Th className="px-3 py-2 font-semibold text-center">{s.t("col_due", "Due")}</Th>
+                  <Th className="px-3 py-2 font-semibold text-center">{s.t("col_status", "Status")}</Th>
+                  <Th className="px-3 py-2 font-semibold text-start">{s.t("col_module", "Module")}</Th>
+                  <Th className="px-3 py-2 font-semibold text-start">{s.t("col_branch", "Branch")}</Th>
+                  <Th className="px-3 py-2 font-semibold text-center">{s.t("col_actions", "Actions")}</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">

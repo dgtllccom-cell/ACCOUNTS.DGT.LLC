@@ -7,6 +7,7 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { apiGet, apiPost } from "@/lib/api/client";
 import { UniversalPrintActionButton } from "@/components/reports/universal-print-action-button";
 import { FilterBar, fmtAed, useEntitiesAndPeriods } from "@/features/uae-tax/components/uae-tax-shared";
+import { Th } from "@/components/ui/translated-th";
 
 type Preview = {
   box1_amount: number; box1_vat: number;
@@ -181,10 +182,10 @@ export function UaeVatReturnView({ lang: langProp }: { lang?: SupportedLanguage 
               <table className="w-full text-xs">
                 <thead className="bg-slate-50 dark:bg-slate-800/60">
                   <tr className="text-left">
-                    <th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("vr_col_box", "Box")}</th>
-                    <th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("vr_col_desc", "Description")}</th>
-                    <th className="px-4 py-2.5 text-right font-bold uppercase tracking-wider text-slate-400">{s.t("vr_col_amount", "Amount (AED)")}</th>
-                    <th className="px-4 py-2.5 text-right font-bold uppercase tracking-wider text-slate-400">{s.t("vr_col_vat", "VAT (AED)")}</th>
+                    <Th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("vr_col_box", "Box")}</Th>
+                    <Th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("vr_col_desc", "Description")}</Th>
+                    <Th className="px-4 py-2.5 text-right font-bold uppercase tracking-wider text-slate-400">{s.t("vr_col_amount", "Amount (AED)")}</Th>
+                    <Th className="px-4 py-2.5 text-right font-bold uppercase tracking-wider text-slate-400">{s.t("vr_col_vat", "VAT (AED)")}</Th>
                   </tr>
                 </thead>
                 <tbody>
@@ -210,11 +211,11 @@ export function UaeVatReturnView({ lang: langProp }: { lang?: SupportedLanguage 
               <table className="w-full text-xs">
                 <thead className="bg-slate-50 dark:bg-slate-800/60">
                   <tr className="text-left">
-                    <th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("cc_period", "Tax Period")}</th>
-                    <th className="px-4 py-2.5 text-right font-bold uppercase tracking-wider text-slate-400">{s.t("vr_box12", "Net VAT payable")}</th>
-                    <th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("set_col_status", "Status")}</th>
-                    <th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("vr_fta_ref", "FTA Reference")}</th>
-                    <th className="px-4 py-2.5" />
+                    <Th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("cc_period", "Tax Period")}</Th>
+                    <Th className="px-4 py-2.5 text-right font-bold uppercase tracking-wider text-slate-400">{s.t("vr_box12", "Net VAT payable")}</Th>
+                    <Th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("set_col_status", "Status")}</Th>
+                    <Th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("vr_fta_ref", "FTA Reference")}</Th>
+                    <Th className="px-4 py-2.5" />
                   </tr>
                 </thead>
                 <tbody>

@@ -256,9 +256,10 @@ export function ExpensesBillEntryForm({
       })
       .catch(console.error);
 
-    apiGet<any>('/api/erp/locations/taxes').then(res => {
-      setTaxes(res?.taxes || []);
-    });
+    // Tax codes are loaded by fetchTaxes() below from /api/erp/master-data/taxes (the real endpoint).
+    // The earlier call to /api/erp/locations/taxes was a dead path — Next routed it to
+    // /api/erp/locations/[id] with id="taxes", which 404'd with "Location not found"
+    // (an unhandled promise rejection); removed so the page raises no error.
 
     // Fetch active ledgers for transfer dropdowns
     import("@/features/reports/ledger-report/ledger-report-api").then(({ listLedgerReportLedgers }) => {
@@ -1022,13 +1023,13 @@ export function ExpensesBillEntryForm({
                 {/* Date Row */}
                 <div className="flex justify-between items-center text-xs pb-2 border-b border-slate-100">
                   <span className="text-slate-500 font-medium">{tt("common.date", "Date")}</span>
-                  <span className="font-semibold text-slate-700">{new Date().toLocaleDateString()}</span>
+                  <span className="font-semibold text-slate-700" suppressHydrationWarning>{new Date().toLocaleDateString()}</span>
                 </div>
 
                 {/* Day Row */}
                 <div className="flex justify-between items-center text-xs pb-2 border-b border-slate-100">
                   <span className="text-slate-500 font-medium">{tt("exp.day_label", "Day")}</span>
-                  <span className="font-semibold text-slate-700">{new Date().toLocaleDateString(undefined, { weekday: 'long' })}</span>
+                  <span className="font-semibold text-slate-700" suppressHydrationWarning>{new Date().toLocaleDateString(undefined, { weekday: 'long' })}</span>
                 </div>
 
                 {/* Country Row */}
@@ -1091,7 +1092,7 @@ export function ExpensesBillEntryForm({
                 {/* Session Time */}
                 <div className="flex justify-between items-center text-xs pt-1 border-t border-slate-50">
                   <span className="text-slate-500 font-medium">{tt("exp.session_time", "Session Time")}</span>
-                  <span className="font-semibold text-slate-700">{new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}</span>
+                  <span className="font-semibold text-slate-700" suppressHydrationWarning>{new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}</span>
                 </div>
               </CardContent>
             </Card>
@@ -1143,11 +1144,11 @@ export function ExpensesBillEntryForm({
 
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-slate-500 font-medium">{tt("exp.super_admin_sr", "Super Admin Sr.")}</span>
-                  <span className="font-semibold text-slate-600">SA-{billSerial.split('-')[1]}-{Math.floor(Math.random() * 900) + 100}</span>
+                  <span suppressHydrationWarning className="font-semibold text-slate-600">SA-{billSerial.split('-')[1]}-{Math.floor(Math.random() * 900) + 100}</span>
                 </div>
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-slate-500 font-medium">{tt("exp.country_sr", "Country Sr.")}</span>
-                  <span className="font-semibold text-slate-600">CT-{billSerial.split('-')[1]}-{Math.floor(Math.random() * 90) + 10}</span>
+                  <span suppressHydrationWarning className="font-semibold text-slate-600">CT-{billSerial.split('-')[1]}-{Math.floor(Math.random() * 90) + 10}</span>
                 </div>
               </CardContent>
             </Card>
@@ -1764,7 +1765,7 @@ export function ExpensesBillEntryForm({
                     </div>
                     <div>
                       <span className="text-slate-500">{tt("exp.transfer_serial", "Transfer Serial:")}</span><br/>
-                      <span className="font-mono font-bold text-slate-800 bg-slate-100 px-1 rounded mt-0.5 inline-block">TR-{Math.floor(Math.random() * 90000) + 10000}</span>
+                      <span suppressHydrationWarning className="font-mono font-bold text-slate-800 bg-slate-100 px-1 rounded mt-0.5 inline-block">TR-{Math.floor(Math.random() * 90000) + 10000}</span>
                     </div>
                     <div>
                       <span className="text-slate-500">{tt("exp.country_serial", "Country Serial:")}</span><br/>
@@ -1779,7 +1780,7 @@ export function ExpensesBillEntryForm({
                   <div className="pt-2 border-t border-slate-100 mt-2 bg-slate-50 p-2 rounded">
                     <p className="flex justify-between items-center">
                       <span className="font-semibold text-slate-700">{tt("exp.transferred_on", "Transferred On:")}</span>
-                      <span>{new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}</span>
+                      <span suppressHydrationWarning>{new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}</span>
                     </p>
                     <p className="flex justify-between items-center mt-1.5">
                       <span className="font-semibold text-slate-700">{tt("exp.action_by_user", "Action By User:")}</span>

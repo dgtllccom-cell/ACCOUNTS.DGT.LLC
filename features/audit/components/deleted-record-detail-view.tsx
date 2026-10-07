@@ -33,6 +33,7 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { t } from "@/lib/i18n/ui";
 import { VersionComparisonModal } from "./version-comparison-modal";
+import { Th } from "@/components/ui/translated-th";
 
 export function DeletedRecordDetailView({ recordId }: { recordId: string }) {
   const lang = useActiveLanguage();
@@ -576,14 +577,14 @@ export function DeletedRecordDetailView({ recordId }: { recordId: string }) {
           <table className="w-full text-left text-xs border-collapse whitespace-nowrap">
             <thead>
               <tr className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                <th className="py-2.5 px-3.5">{t(lang, "audit.th_version", "Version")}</th>
-                <th className="py-2.5 px-3">{t(lang, "audit.th_action", "Action")}</th>
-                <th className="py-2.5 px-3">{t(lang, "audit.th_edited_at", "Edited At")}</th>
-                <th className="py-2.5 px-3">{t(lang, "audit.th_edited_by", "Edited By")}</th>
-                <th className="py-2.5 px-3">{t(lang, "audit.th_user_role", "User Role")}</th>
-                <th className="py-2.5 px-3">{t(lang, "audit.th_changes_summary", "Changes Summary")}</th>
-                <th className="py-2.5 px-3 text-center">{t(lang, "audit.th_changed_fields", "Changed Fields")}</th>
-                <th className="py-2.5 px-3.5 text-center">{t(lang, "audit.th_reference", "Reference")}</th>
+                <Th className="py-2.5 px-3.5">{t(lang, "audit.th_version", "Version")}</Th>
+                <Th className="py-2.5 px-3">{t(lang, "audit.th_action", "Action")}</Th>
+                <Th className="py-2.5 px-3">{t(lang, "audit.th_edited_at", "Edited At")}</Th>
+                <Th className="py-2.5 px-3">{t(lang, "audit.th_edited_by", "Edited By")}</Th>
+                <Th className="py-2.5 px-3">{t(lang, "audit.th_user_role", "User Role")}</Th>
+                <Th className="py-2.5 px-3">{t(lang, "audit.th_changes_summary", "Changes Summary")}</Th>
+                <Th className="py-2.5 px-3 text-center">{t(lang, "audit.th_changed_fields", "Changed Fields")}</Th>
+                <Th className="py-2.5 px-3.5 text-center">{t(lang, "audit.th_reference", "Reference")}</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11.5px]">

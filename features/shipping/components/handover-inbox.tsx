@@ -5,6 +5,7 @@ import { Loader2, Inbox, CheckCircle2, XCircle, RefreshCw, ChevronLeft, Ship, Pa
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { apiGet, apiPatch } from "@/lib/api/client";
+import { Th } from "@/components/ui/translated-th";
 
 type Row = Record<string, any>;
 
@@ -197,11 +198,11 @@ export function ShippingHandoverInbox({ lang }: { lang?: string }) {
           <table className="w-full text-xs">
             <thead className="bg-slate-50 dark:bg-slate-800/60">
               <tr className="text-start [&>th]:px-3 [&>th]:py-2.5 [&>th]:text-start [&>th]:font-bold [&>th]:text-slate-500">
-                <th>{s.t("hi_c_no", "Handover")}</th>
-                <th>{s.t("hi_c_action", "Action")}</th>
-                <th>{s.t("hi_c_ref", "Contract / B/L")}</th>
-                <th>{s.t("hi_c_containers", "Containers")}</th>
-                <th>{s.t("hi_c_status", "Status")}</th>
+                <Th>{s.t("hi_c_no", "Handover")}</Th>
+                <Th>{s.t("hi_c_action", "Action")}</Th>
+                <Th>{s.t("hi_c_ref", "Contract / B/L")}</Th>
+                <Th>{s.t("hi_c_containers", "Containers")}</Th>
+                <Th>{s.t("hi_c_status", "Status")}</Th>
               </tr>
             </thead>
             <tbody>

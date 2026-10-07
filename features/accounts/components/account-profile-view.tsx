@@ -49,6 +49,7 @@ import { t } from "@/lib/i18n/ui";
 import { openMasterProfile } from "@/lib/reports/master-profiles";
 import { getLabel } from "./translations";
 import { TaskHandoverModal } from "@/features/transfer-center/components/task-handover-modal";
+import { Th } from "@/components/ui/translated-th";
 
 type AccountGeneralReportRow = {
   accountId: string;
@@ -1151,11 +1152,11 @@ export function AccountProfileView({
                     <table className="w-full text-xs text-left">
                       <thead className="bg-slate-50 dark:bg-slate-850 text-slate-500 font-bold uppercase text-[10px] border-b border-slate-200 dark:border-slate-800">
                         <tr>
-                          <th className="py-2 px-3">Company Name</th>
-                          <th className="py-2 px-3">Code</th>
-                          <th className="py-2 px-3">Country</th>
-                          <th className="py-2 px-3">Role</th>
-                          <th className="py-2 px-3 text-right">Action</th>
+                          <Th className="py-2 px-3">Company Name</Th>
+                          <Th className="py-2 px-3">Code</Th>
+                          <Th className="py-2 px-3">Country</Th>
+                          <Th className="py-2 px-3">Role</Th>
+                          <Th className="py-2 px-3 text-right">Action</Th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -1256,12 +1257,12 @@ export function AccountProfileView({
                     <table className="w-full text-xs text-left">
                       <thead className="bg-slate-50 dark:bg-slate-850 text-slate-500 font-bold uppercase text-[10px] border-b border-slate-200 dark:border-slate-800">
                         <tr>
-                          <th className="py-2 px-3">Bank Name</th>
-                          <th className="py-2 px-3">Branch</th>
-                          <th className="py-2 px-3">Account Number / IBAN</th>
-                          <th className="py-2 px-3">Currency</th>
-                          <th className="py-2 px-3">Role</th>
-                          <th className="py-2 px-3 text-right">Action</th>
+                          <Th className="py-2 px-3">Bank Name</Th>
+                          <Th className="py-2 px-3">Branch</Th>
+                          <Th className="py-2 px-3">Account Number / IBAN</Th>
+                          <Th className="py-2 px-3">Currency</Th>
+                          <Th className="py-2 px-3">Role</Th>
+                          <Th className="py-2 px-3 text-right">Action</Th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -1366,11 +1367,11 @@ export function AccountProfileView({
                     <table className="w-full text-xs text-left">
                       <thead className="bg-slate-50 dark:bg-slate-850 text-slate-500 font-bold uppercase text-[10px] border-b border-slate-200 dark:border-slate-800">
                         <tr>
-                          <th className="py-2 px-3">Warehouse Name</th>
-                          <th className="py-2 px-3">Code</th>
-                          <th className="py-2 px-3">Address</th>
-                          <th className="py-2 px-3">Role</th>
-                          <th className="py-2 px-3 text-right">Action</th>
+                          <Th className="py-2 px-3">Warehouse Name</Th>
+                          <Th className="py-2 px-3">Code</Th>
+                          <Th className="py-2 px-3">Address</Th>
+                          <Th className="py-2 px-3">Role</Th>
+                          <Th className="py-2 px-3 text-right">Action</Th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -1611,10 +1612,10 @@ export function AccountProfileView({
                 <table className="w-full text-xs text-left">
                   <thead>
                     <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500 font-bold uppercase text-[10px]">
-                      <th className="pb-2.5 font-bold">{getLabel("documentName", lang)}</th>
-                      <th className="pb-2.5 font-bold">{getLabel("documentNumber", lang)}</th>
-                      <th className="pb-2.5 font-bold">{getLabel("expiryDate", lang)}</th>
-                      <th className="pb-2.5 font-bold text-right">{getLabel("status", lang)}</th>
+                      <Th className="pb-2.5 font-bold">{getLabel("documentName", lang)}</Th>
+                      <Th className="pb-2.5 font-bold">{getLabel("documentNumber", lang)}</Th>
+                      <Th className="pb-2.5 font-bold">{getLabel("expiryDate", lang)}</Th>
+                      <Th className="pb-2.5 font-bold text-right">{getLabel("status", lang)}</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">

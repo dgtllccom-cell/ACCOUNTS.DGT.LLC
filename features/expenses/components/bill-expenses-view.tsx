@@ -15,6 +15,7 @@ import { useErpScope } from "@/lib/hooks/use-erp-scope";
 import { useIntakeDraft } from "@/lib/document-intelligence/use-intake-draft";
 import { openScopedGenericReport, type GenericReportColumn } from "@/lib/reports/open-scoped-report";
 import { printStore } from "@/lib/store/print-store";
+import { Th } from "@/components/ui/translated-th";
 
 type SourceModule =
   | "purchase_booking"
@@ -327,16 +328,16 @@ export function BillExpensesView({ lang: langProp, section = "all" }: { lang?: s
             <table className="w-full text-left text-sm">
               <thead className="border-b bg-slate-50 text-xs uppercase text-slate-500 dark:bg-slate-900/60">
                 <tr>
-                  <th className={`px-4 py-3 font-semibold ${s.textStart}`}>{s.t("col_source", "Source Module")}</th>
-                  <th className={`px-4 py-3 font-semibold ${s.textStart}`}>{s.t("col_bill_no", "Bill No.")}</th>
-                  <th className={`px-4 py-3 font-semibold ${s.textStart}`}>{s.t("col_manual_bill", "Manual Bill / Contract")}</th>
-                  <th className={`px-4 py-3 font-semibold ${s.textStart}`}>{s.t("col_date", "Date")}</th>
-                  <th className={`px-4 py-3 font-semibold ${s.textStart}`}>{s.t("col_branch", "Branch")}</th>
-                  <th className={`px-4 py-3 font-semibold ${s.textStart}`}>{s.t("col_party", "Party / Account")}</th>
-                  <th className="px-4 py-3 text-right font-semibold">{s.t("col_original_amount", "Original Bill Amount")}</th>
-                  <th className="px-4 py-3 text-right font-black bg-slate-100 text-slate-800 dark:bg-slate-800">{s.t("col_expense_total", "Expense Total")}</th>
-                  <th className="px-4 py-3 text-center font-semibold">{s.t("col_status", "Status")}</th>
-                  <th className="px-4 py-3 text-center font-semibold w-24">{s.t("col_actions", "Actions")}</th>
+                  <Th className={`px-4 py-3 font-semibold ${s.textStart}`}>{s.t("col_source", "Source Module")}</Th>
+                  <Th className={`px-4 py-3 font-semibold ${s.textStart}`}>{s.t("col_bill_no", "Bill No.")}</Th>
+                  <Th className={`px-4 py-3 font-semibold ${s.textStart}`}>{s.t("col_manual_bill", "Manual Bill / Contract")}</Th>
+                  <Th className={`px-4 py-3 font-semibold ${s.textStart}`}>{s.t("col_date", "Date")}</Th>
+                  <Th className={`px-4 py-3 font-semibold ${s.textStart}`}>{s.t("col_branch", "Branch")}</Th>
+                  <Th className={`px-4 py-3 font-semibold ${s.textStart}`}>{s.t("col_party", "Party / Account")}</Th>
+                  <Th className="px-4 py-3 text-right font-semibold">{s.t("col_original_amount", "Original Bill Amount")}</Th>
+                  <Th className="px-4 py-3 text-right font-black bg-slate-100 text-slate-800 dark:bg-slate-800">{s.t("col_expense_total", "Expense Total")}</Th>
+                  <Th className="px-4 py-3 text-center font-semibold">{s.t("col_status", "Status")}</Th>
+                  <Th className="px-4 py-3 text-center font-semibold w-24">{s.t("col_actions", "Actions")}</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -397,13 +398,13 @@ export function BillExpensesView({ lang: langProp, section = "all" }: { lang?: s
               <table className="w-full text-left text-xs">
                 <thead className="border-b bg-slate-50 text-[10px] uppercase text-slate-500 dark:bg-slate-900/40">
                   <tr>
-                    <th className={`px-3 py-2 font-semibold ${s.textStart}`}>{s.t("col_bill_no", "Bill No.")}</th>
-                    <th className={`px-3 py-2 font-semibold ${s.textStart}`}>{s.t("f_details", "Details / Narration")}</th>
-                    <th className={`px-3 py-2 font-semibold ${s.textStart}`}>{s.t("col_date", "Date")}</th>
-                    <th className={`px-3 py-2 font-semibold ${s.textStart}`}>{s.t("col_branch", "Branch")}</th>
-                    <th className="px-3 py-2 text-right font-semibold">{s.t("f_grand_amount", "Grand Amount")}</th>
-                    <th className="px-3 py-2 text-center font-semibold">{s.t("f_posting", "Accounting")}</th>
-                    <th className="px-3 py-2 text-center font-semibold w-8" />
+                    <Th className={`px-3 py-2 font-semibold ${s.textStart}`}>{s.t("col_bill_no", "Bill No.")}</Th>
+                    <Th className={`px-3 py-2 font-semibold ${s.textStart}`}>{s.t("f_details", "Details / Narration")}</Th>
+                    <Th className={`px-3 py-2 font-semibold ${s.textStart}`}>{s.t("col_date", "Date")}</Th>
+                    <Th className={`px-3 py-2 font-semibold ${s.textStart}`}>{s.t("col_branch", "Branch")}</Th>
+                    <Th className="px-3 py-2 text-right font-semibold">{s.t("f_grand_amount", "Grand Amount")}</Th>
+                    <Th className="px-3 py-2 text-center font-semibold">{s.t("f_posting", "Accounting")}</Th>
+                    <Th className="px-3 py-2 text-center font-semibold w-8" />
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -841,15 +842,15 @@ function BillExpenseDetailModal({
                   <table className="w-full text-left text-xs">
                     <thead className="border-b bg-slate-50 text-[10px] uppercase text-slate-500 dark:bg-slate-900/40">
                       <tr>
-                        <th className="px-3 py-2 text-center font-semibold w-8">#</th>
-                        <th className={`px-3 py-2 font-semibold ${s.textStart}`}>{s.t("expense_type", "Expense Type")}</th>
-                        <th className={`px-3 py-2 font-semibold ${s.textStart}`}>{s.t("f_details", "Details / Narration")}</th>
-                        <th className="px-3 py-2 text-right font-semibold">{s.t("f_amount", "Amount")}</th>
-                        <th className="px-3 py-2 text-right font-semibold">{s.t("f_exchange_rate", "Exchange Rate")}</th>
-                        <th className="px-3 py-2 text-right font-semibold">{s.t("f_tax_pct", "Tax %")}</th>
-                        <th className="px-3 py-2 text-right font-black bg-slate-100 dark:bg-slate-800">{s.t("f_grand_amount", "Grand Amount")}</th>
-                        <th className="px-3 py-2 text-center font-semibold">{s.t("f_posting", "Accounting")}</th>
-                        <th className="px-3 py-2 text-center font-semibold w-8">{s.t("col_actions", "Actions")}</th>
+                        <Th className="px-3 py-2 text-center font-semibold w-8">#</Th>
+                        <Th className={`px-3 py-2 font-semibold ${s.textStart}`}>{s.t("expense_type", "Expense Type")}</Th>
+                        <Th className={`px-3 py-2 font-semibold ${s.textStart}`}>{s.t("f_details", "Details / Narration")}</Th>
+                        <Th className="px-3 py-2 text-right font-semibold">{s.t("f_amount", "Amount")}</Th>
+                        <Th className="px-3 py-2 text-right font-semibold">{s.t("f_exchange_rate", "Exchange Rate")}</Th>
+                        <Th className="px-3 py-2 text-right font-semibold">{s.t("f_tax_pct", "Tax %")}</Th>
+                        <Th className="px-3 py-2 text-right font-black bg-slate-100 dark:bg-slate-800">{s.t("f_grand_amount", "Grand Amount")}</Th>
+                        <Th className="px-3 py-2 text-center font-semibold">{s.t("f_posting", "Accounting")}</Th>
+                        <Th className="px-3 py-2 text-center font-semibold w-8">{s.t("col_actions", "Actions")}</Th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   TrendingUp, Save, RefreshCw, Globe,
   CheckCircle, AlertCircle, Clock, ArrowUpRight, ArrowDownLeft,
-  Search, Printer, User, ShieldCheck, History, Edit3, Info
+  Search, Printer, User, Building2, ChevronDown, Plus, Minus, Calendar
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { openGenericErpReport } from "@/lib/reports/open-generic-erp-report";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import { Th } from "@/components/ui/translated-th";
 
 type CountryRate = {
   id: string;
@@ -33,39 +34,6 @@ type CountryRate = {
   credit_rate: number;
   debit_rate: number;
   updated_at: string;
-  countries?: { id?: string; name: string; currency_code: string; iso2?: string | null };
-};
-
-type CountryStatus = {
-  countryId: string;
-  countryName: string;
-  currencyCode: string;
-  iso2: string | null;
-  rateDate: string;
-  status: "APPROVED" | "PENDING_MISSING";
-  creditRate: number | null;
-  debitRate: number | null;
-  rateTime: string | null;
-  enteredBy: string | null;
-  updatedAt: string | null;
-};
-
-type AuditRecord = {
-  id: string;
-  country_id: string;
-  from_currency: string;
-  to_currency: string;
-  old_rate?: number | null;
-  old_credit_rate?: number | null;
-  old_debit_rate?: number | null;
-  new_rate?: number | null;
-  new_credit_rate?: number | null;
-  new_debit_rate?: number | null;
-  effective_date: string;
-  changed_by?: string | null;
-  user_name?: string | null;
-  reason?: string | null;
-  created_at: string;
   countries?: { name: string; currency_code: string; iso2?: string | null };
 };
 
@@ -132,13 +100,10 @@ export function DailyExchangeRateManager() {
   const th = (label: string) => translateHeader(lang, label);
   const [rates, setRates] = useState<CountryRate[]>([]);
   const [countries, setCountries] = useState<CountryOption[]>([]);
-  const [countriesStatus, setCountriesStatus] = useState<CountryStatus[]>([]);
-  const [auditHistory, setAuditHistory] = useState<AuditRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null);
-  const [activeTab, setActiveTab] = useState<"rates" | "audit">("rates");
 
   // Form Fields State
   const [selectedCountryId, setSelectedCountryId] = useState<string>("");
@@ -146,11 +111,33 @@ export function DailyExchangeRateManager() {
   const [rateTime, setRateTime] = useState<string>(currentTimeString());
   const [creditPrice, setCreditPrice] = useState<string>("");
   const [debitPrice, setDebitPrice] = useState<string>("");
-  const [correctionReason, setCorrectionReason] = useState<string>("");
   const [operatorUser, setOperatorUser] = useState<string>("");
+  const [operatorBranch, setOperatorBranch] = useState<string>("");
 
   // Table Filter & Search State
   const [filterCountryId, setFilterCountryId] = useState<string>("all");
+
+  // Rates table is grouped by date: one summary row per date, tap "+" to reveal that day's full rate table (collapsed by default).
+  const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set());
+  const ratesByDate = useMemo(() => {
+    const groups = new Map<string, typeof rates>();
+    for (const r of rates) {
+      const d = r.rate_date || isoToday();
+      if (!groups.has(d)) groups.set(d, []);
+      groups.get(d)!.push(r);
+    }
+    return [...groups.entries()].sort((a, b) => String(b[0]).localeCompare(String(a[0])));
+  }, [rates]);
+  const didInitExpand = useRef(false);
+  useEffect(() => {
+    if (!didInitExpand.current && ratesByDate.length) {
+      setExpandedDates(new Set([ratesByDate[0][0]]));
+      didInitExpand.current = true;
+    }
+  }, [ratesByDate]);
+  const toggleDate = (d: string) =>
+    setExpandedDates((prev) => { const n = new Set(prev); n.has(d) ? n.delete(d) : n.add(d); return n; });
+  const [filterBranch, setFilterBranch] = useState<string>("all");
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -164,14 +151,12 @@ export function DailyExchangeRateManager() {
     setActionsSlot(document.getElementById("erp-page-actions-slot"));
   }, []);
 
-  const isSuperAdmin = Boolean(sessionInfo?.scopes?.isSuperAdmin);
-  const userCountryId = sessionInfo?.scopes?.summary?.countryId || sessionInfo?.scopes?.countryIds?.[0] || "";
-
   async function loadData() {
     setLoading(true);
     try {
       const params = new URLSearchParams();
       if (filterCountryId && filterCountryId !== "all") params.set("countryId", filterCountryId);
+      if (filterBranch && filterBranch !== "all") params.set("branchName", filterBranch);
       if (dateFrom) params.set("dateFrom", dateFrom);
       if (dateTo) params.set("dateTo", dateTo);
       if (searchQuery) params.set("query", searchQuery);
@@ -181,14 +166,12 @@ export function DailyExchangeRateManager() {
         apiGet<any>("/api/erp/locations/countries?all=true&limit=100"),
         apiGet<SessionInfo>("/api/erp/auth/session"),
       ]);
-
-      const ratesList: CountryRate[] = Array.isArray(ratesRes)
-        ? ratesRes
+      
+      const ratesList: CountryRate[] = Array.isArray(ratesRes) 
+        ? ratesRes 
         : ratesRes?.rates ?? ratesRes?.data ?? [];
-
+      
       setRates(ratesList);
-      if (ratesRes?.countriesStatus) setCountriesStatus(ratesRes.countriesStatus);
-      if (ratesRes?.auditHistory) setAuditHistory(ratesRes.auditHistory);
 
       const fetchedCountries: CountryOption[] = Array.isArray(countriesRes)
         ? countriesRes
@@ -197,7 +180,6 @@ export function DailyExchangeRateManager() {
         const n = (c.name || "").toUpperCase();
         return !n.startsWith("QA ") && !n.includes("QA COUNTRY") && !n.startsWith("DEVTEST") && !n.startsWith("DEV-DEMO");
       });
-
       const fallbackCountry =
         cleanCountries.length === 0 && sessionRes?.scopes?.summary?.countryId && sessionRes?.scopes?.summary?.countryName
           ? [{
@@ -207,24 +189,23 @@ export function DailyExchangeRateManager() {
               iso2: null
             }]
           : [];
-
-      const availableCountries = cleanCountries.length > 0 ? cleanCountries : fallbackCountry;
-      setCountries(availableCountries);
+      setCountries(cleanCountries.length > 0 ? cleanCountries : fallbackCountry);
       setSessionInfo(sessionRes);
 
       if (!operatorUser) {
-        setOperatorUser(sessionRes?.user?.fullName || sessionRes?.user?.email || "Country Admin");
+        setOperatorUser(sessionRes?.user?.fullName || sessionRes?.user?.email || "ERP USER");
+      }
+      if (!operatorBranch) {
+        setOperatorBranch(sessionRes?.scopes?.summary?.branchDisplayName || sessionRes?.scopes?.summary?.scopeLabel || "");
       }
 
-      // Lock country for Country Admin; allow Super Admin to select
-      const isSuper = Boolean(sessionRes?.scopes?.isSuperAdmin);
       const scopedCountryId = sessionRes?.scopes?.summary?.countryId || sessionRes?.scopes?.countryIds?.[0] || "";
-      const defaultId = isSuper
-        ? selectedCountryId || availableCountries[0]?.id || scopedCountryId
-        : scopedCountryId || availableCountries[0]?.id || "";
+      const defaultCountryId = sessionRes?.scopes?.isSuperAdmin
+        ? fetchedCountries[0]?.id || fallbackCountry[0]?.id || scopedCountryId
+        : scopedCountryId || fetchedCountries[0]?.id || fallbackCountry[0]?.id || "";
 
-      if (defaultId && (!selectedCountryId || !isSuper)) {
-        setSelectedCountryId(defaultId);
+      if (!selectedCountryId && defaultCountryId) {
+        setSelectedCountryId(defaultCountryId);
       }
     } catch (err) {
       console.error("Failed to load exchange rates:", err);
@@ -235,80 +216,107 @@ export function DailyExchangeRateManager() {
 
   useEffect(() => {
     void loadData();
-  }, [filterCountryId, dateFrom, dateTo, searchQuery]);
+  }, [filterCountryId, filterBranch, dateFrom, dateTo, searchQuery]);
 
-  // Selected Country Master Data
+  // Update form inputs when selected country changes
   const selectedCountry = useMemo(() => {
-    return countries.find((c) => c.id === selectedCountryId) || null;
+    return countries.find(c => c.id === selectedCountryId) || null;
   }, [countries, selectedCountryId]);
 
-  // Check if a rate ALREADY exists for the selected country on the selected date
-  const existingRateForTargetDate = useMemo(() => {
-    if (!selectedCountryId || !rateDate) return null;
-    return rates.find((r) => r.country_id === selectedCountryId && r.rate_date === rateDate && !r.superseded_at) || null;
-  }, [rates, selectedCountryId, rateDate]);
+  const branchOptions = useMemo(() => {
+    return [...new Set(rates.map((rate) => rate.branch_name).filter(Boolean) as string[])].sort((a, b) => a.localeCompare(b));
+  }, [rates]);
 
-  const isCorrectionMode = Boolean(existingRateForTargetDate);
-
-  // When selected country or date changes, prefill current rates if available
-  useEffect(() => {
-    if (existingRateForTargetDate) {
-      setCreditPrice(String(existingRateForTargetDate.credit_rate || existingRateForTargetDate.selling_rate));
-      setDebitPrice(String(existingRateForTargetDate.debit_rate || existingRateForTargetDate.buying_rate));
-      if (existingRateForTargetDate.rate_time) setRateTime(existingRateForTargetDate.rate_time);
-    } else {
-      setCreditPrice("");
-      setDebitPrice("");
-      setCorrectionReason("");
-      setRateTime(currentTimeString());
-    }
-  }, [existingRateForTargetDate, selectedCountryId, rateDate]);
-
-  // Countries missing today's rate
+  // Countries in this session's own scope that have NO active (non-superseded)
+  // rate dated today — these still need today's rate approved before any
+  // cross-currency posting against them is trustworthy.
   const countriesPendingTodayRate = useMemo(() => {
     const today = isoToday();
     const scopedCountryIds = sessionInfo?.scopes?.isSuperAdmin
       ? null
       : sessionInfo?.scopes?.countryIds ?? null;
-    const scoped = scopedCountryIds
+    const scopedCountries = scopedCountryIds
       ? countries.filter((c) => scopedCountryIds.includes(c.id))
       : countries;
     const haveTodayRate = new Set(
       rates.filter((r) => r.rate_date === today && !r.superseded_at).map((r) => r.country_id)
     );
-    return scoped.filter((c) => !haveTodayRate.has(c.id));
+    return scopedCountries.filter((c) => !haveTodayRate.has(c.id));
   }, [countries, rates, sessionInfo]);
+
+  useEffect(() => {
+    if (!selectedCountryId || !selectedCountry) return;
+    const existingRate = rates.find(r => r.country_id === selectedCountryId);
+    if (existingRate) {
+      setCreditPrice(String(existingRate.credit_rate || existingRate.selling_rate));
+      setDebitPrice(String(existingRate.debit_rate || existingRate.buying_rate));
+      if (existingRate.rate_date) setRateDate(existingRate.rate_date);
+      if (existingRate.rate_time) setRateTime(existingRate.rate_time);
+      if (existingRate.user_name) setOperatorUser(existingRate.user_name);
+      if (existingRate.branch_name) setOperatorBranch(existingRate.branch_name);
+    } else {
+      // No rate on file yet for this scope — the operator enters the real rate.
+      // Never pre-fill a hard-coded placeholder rate.
+      setCreditPrice("");
+      setDebitPrice("");
+      setRateTime(currentTimeString());
+    }
+  }, [rates, selectedCountry, selectedCountryId]);
 
   async function handleSaveRate(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedCountryId || !selectedCountry) {
-      setMessage({ type: "error", text: "Please select a valid country." });
+      setMessage({ type: "error", text: "Please select a valid country from the dropdown." });
       return;
     }
-
     const credit = Number(creditPrice);
     const debit = Number(debitPrice);
 
     if (!creditPrice || Number.isNaN(credit) || credit <= 0) {
-      setMessage({ type: "error", text: `Please enter a valid Credit (Selling) rate (> 0) in ${selectedCountry.currency_code} per USD.` });
+      setMessage({ type: "error", text: `Please enter a valid Credit rate (> 0) in ${selectedCountry.currency_code} per USD.` });
       return;
     }
 
     if (!debitPrice || Number.isNaN(debit) || debit <= 0) {
-      setMessage({ type: "error", text: `Please enter a valid Debit (Buying) rate (> 0) in ${selectedCountry.currency_code} per USD.` });
-      return;
-    }
-
-    if (isCorrectionMode && !correctionReason.trim()) {
-      setMessage({ type: "error", text: "Reason for rate correction is mandatory to maintain an authorized audit history." });
+      setMessage({ type: "error", text: `Please enter a valid Debit rate (> 0) in ${selectedCountry.currency_code} per USD.` });
       return;
     }
 
     setSaving(true);
     setMessage(null);
 
+    const newRateEntry: CountryRate = {
+      id: `rate-${Date.now()}`,
+      country_id: selectedCountryId,
+      user_name: operatorUser || sessionInfo?.user?.fullName || sessionInfo?.user?.email || "ERP USER",
+      branch_name: operatorBranch || sessionInfo?.scopes?.summary?.branchDisplayName || "",
+      rate_date: rateDate || isoToday(),
+      rate_time: rateTime || currentTimeString(),
+      buying_rate: debit,
+      selling_rate: credit,
+      credit_rate: credit,
+      debit_rate: debit,
+      updated_at: new Date().toISOString(),
+      countries: {
+        name: selectedCountry.name,
+        currency_code: selectedCountry.currency_code,
+        iso2: selectedCountry.iso2
+      }
+    };
+
+    // 1. Immediately show the new rate. Rates are APPENDED — an earlier same-day rate is
+    //    kept in the register (historical transactions were posted against it).
+    setRates(prev => [newRateEntry, ...prev]);
+    
+    // Clear search filters so nothing hides the new record
+    setFilterCountryId("all");
+    setFilterBranch("all");
+    setDateFrom("");
+    setDateTo("");
+    setSearchQuery("");
+
     try {
-      const res = await apiPost<any>("/api/erp/currency/daily-rates", {
+      await apiPost("/api/erp/currency/daily-rates", {
         countryId: selectedCountryId,
         rateDate: rateDate || isoToday(),
         rateTime: rateTime || currentTimeString(),
@@ -319,19 +327,15 @@ export function DailyExchangeRateManager() {
         countryName: selectedCountry.name,
         currencyCode: selectedCountry.currency_code,
         iso2: selectedCountry.iso2,
-        userName: operatorUser || sessionInfo?.user?.fullName || sessionInfo?.user?.email || "Country Admin",
-        reason: isCorrectionMode ? correctionReason.trim() : "Initial daily exchange rate entry",
-        action: isCorrectionMode ? "correct" : "create",
+        userName: operatorUser || sessionInfo?.user?.fullName || sessionInfo?.user?.email || "ERP USER",
+        branchName: operatorBranch || sessionInfo?.scopes?.summary?.branchDisplayName || ""
       });
 
       setMessage({
         type: "success",
-        text: isCorrectionMode
-          ? `Exchange rate for ${selectedCountry.name} corrected successfully with complete audit log (Credit: ${credit}, Debit: ${debit} ${selectedCountry.currency_code}/$).`
-          : `Today's exchange rate for ${selectedCountry.name} confirmed and published country-wide (Credit: ${credit}, Debit: ${debit} ${selectedCountry.currency_code}/$).`,
+        text: `Exchange Rate Saved & Accepted! (${selectedCountry.name}: Credit ${credit} ${selectedCountry.currency_code}/$ | Debit ${debit} ${selectedCountry.currency_code}/$ by ${operatorUser || "User"})`
       });
 
-      setCorrectionReason("");
       await loadData();
     } catch (err: any) {
       setMessage({ type: "error", text: err?.message || "Failed to save exchange rate." });
@@ -341,13 +345,13 @@ export function DailyExchangeRateManager() {
   }
 
   function handleSelectRow(rate: CountryRate) {
-    if (isSuperAdmin || rate.country_id === userCountryId) {
-      setSelectedCountryId(rate.country_id);
-      if (rate.rate_date) setRateDate(rate.rate_date);
-      if (rate.rate_time) setRateTime(rate.rate_time);
-      setCreditPrice(String(rate.credit_rate || rate.selling_rate));
-      setDebitPrice(String(rate.debit_rate || rate.buying_rate));
-    }
+    setSelectedCountryId(rate.country_id);
+    setCreditPrice(String(rate.credit_rate || rate.selling_rate));
+    setDebitPrice(String(rate.debit_rate || rate.buying_rate));
+    if (rate.rate_date) setRateDate(rate.rate_date);
+    if (rate.rate_time) setRateTime(rate.rate_time);
+    if (rate.user_name) setOperatorUser(rate.user_name);
+    if (rate.branch_name) setOperatorBranch(rate.branch_name);
   }
 
   function handlePrintTable() {
@@ -355,10 +359,10 @@ export function DailyExchangeRateManager() {
       date: rate.rate_date,
       effective: (rate as any).effective_from
         ? new Date((rate as any).effective_from).toLocaleString()
-        : `${rate.rate_date} ${rate.rate_time || ""}`,
+        : `${rate.rate_date}${rate.rate_time ? " " + rate.rate_time : ""}`,
       country: rate.countries?.name || countries.find((country) => country.id === rate.country_id)?.name || "-",
-      branch: "Country-wide (All Branches)",
-      currency: (rate as any).currency_code || rate.countries?.currency_code || "-",
+      branch: rate.branch_name || "-",
+      currency: (rate as any).currency_code || rate.countries?.currency_code || rate.countries?.iso2 || "-",
       user: rate.user_name || "-",
       debitRate: rate.debit_rate,
       creditRate: rate.credit_rate,
@@ -367,33 +371,38 @@ export function DailyExchangeRateManager() {
 
     openGenericErpReport({
       title: "DAILY EXCHANGE RATE — HISTORY & AUDIT",
-      subtitle: "Official ERP Country Exchange Rates. Historical transactions lock the rate effective at posting date.",
+      subtitle: "Every rate entered, with effective time and who entered it. Superseded rates are retained — historical transactions keep the rate they were posted against.",
       lang,
       columns: [
-        { key: "effective", label: "Date & Time" },
+        { key: "effective", label: "Effective From (Date / Time)" },
         { key: "country", label: "Country" },
+        { key: "branch", label: "Branch" },
         { key: "currency", label: "Currency", align: "center" },
-        { key: "debitRate", label: "Debit Rate (Buying)", format: "number", align: "right" },
-        { key: "creditRate", label: "Credit Rate (Selling)", format: "number", align: "right" },
-        { key: "user", label: "Entered / Approved By" },
+        { key: "debitRate", label: "Debit Rate (Local/$)", format: "number", align: "right" },
+        { key: "creditRate", label: "Credit Rate (Local/$)", format: "number", align: "right" },
+        { key: "user", label: "Entered By" },
         { key: "status", label: "Status", format: "status", align: "center" },
       ],
       rows: reportRows,
       summary: {
         totalEntries: reportRows.length,
         filteredCountries: filterCountryId === "all" ? countries.length : 1,
+        branchScope: filterBranch === "all" ? branchOptions.length : 1
       },
       filters: [
-        { label: "Country", value: filterCountryId === "all" ? "All Countries" : selectedCountry?.name || "Selected" },
+        { label: "Country", value: filterCountryId === "all" ? "All Countries" : selectedCountry?.name || countries.find((country) => country.id === filterCountryId)?.name || "Selected Country" },
+        { label: "Branch", value: filterBranch === "all" ? "All Branches" : filterBranch },
         { label: "From Date", value: dateFrom || "Start" },
         { label: "To Date", value: dateTo || "Today" },
+        { label: "Search", value: searchQuery || "No search filter" }
       ],
       companyInfo: {
-        name: "ACCOUNTS.DGT.LLC ERP",
-        printedBy: operatorUser || sessionInfo?.user?.fullName || "ERP User",
-        country: selectedCountry?.name || "All Countries",
-        reportPeriod: dateFrom || dateTo ? `${dateFrom || "Start"} To ${dateTo || "Today"}` : "Current Period",
-      },
+        name: "",
+        printedBy: operatorUser || sessionInfo?.user?.fullName || sessionInfo?.user?.email || "ERP User",
+        country: filterCountryId === "all" ? "All Countries" : selectedCountry?.name || countries.find((country) => country.id === filterCountryId)?.name || "Selected Country",
+        branch: filterBranch === "all" ? "All Branches" : filterBranch,
+        reportPeriod: dateFrom || dateTo ? `${dateFrom || "Start"} To ${dateTo || "Today"}` : "Current Period"
+      }
     });
   }
 
@@ -427,163 +436,48 @@ export function DailyExchangeRateManager() {
             variant="outline"
             className="h-8 text-[11px] font-black uppercase bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-xs"
           >
-            <RefreshCw className={cn("w-3.5 h-3.5 mr-1.5 text-emerald-600", loading && "animate-spin")} />
+            <RefreshCw className="w-3.5 h-3.5 mr-1.5 text-emerald-600" />
             {th("Refresh Rates")}
           </Button>
         </div>,
         actionsSlot
       )}
 
-      {/* ── Rule 5 & 6 Info Banner: No Double Conversion & Base Reporting Rule ── */}
-      <div className="flex items-start gap-3 rounded-2xl border border-blue-200 bg-blue-50/70 p-3.5 text-xs text-blue-900 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-200 shadow-xs">
-        <Info className="h-5 w-5 shrink-0 text-blue-600 dark:text-blue-400 mt-0.5" />
-        <div className="space-y-0.5">
-          <span className="font-black uppercase tracking-wide">
-            {th("ERP-WIDE EXCHANGE RATE POLICY & ZERO DOUBLE-CONVERSION GUARANTEE")}
+      {/* Today's-rate pending alert — prominent red until every scoped country has
+          an approved rate dated today, then it disappears (no banner = up to date). */}
+      {!loading && countriesPendingTodayRate.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 rounded-2xl border-2 border-red-400 bg-red-50 px-4 py-3 shadow-sm dark:border-red-800 dark:bg-red-950/40">
+          <AlertCircle className="h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
+          <span className="text-xs font-black uppercase tracking-wide text-red-700 dark:text-red-300">
+            {th("Today's Exchange Rate Pending")}
           </span>
-          <p className="text-[11px] text-blue-800/90 dark:text-blue-300/90">
-            Country Admin enters the authoritative Country Rate once daily. All branches, business operations, shipping lines, and Roznamcha automatically consume this approved rate. Operations remain in local currency, while Super Admin consolidated reporting automatically uses historical rate: <span className="font-mono font-bold">USD Base = Local Amount ÷ Daily Rate</span>.
-          </p>
+          <span className="text-[11px] font-semibold text-red-600/90 dark:text-red-400/90">
+            {countriesPendingTodayRate.map((c) => c.name).join(", ")}
+          </span>
         </div>
-      </div>
+      )}
 
-      {/* ── Rule 7: Country Status Board ── */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-xs space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-150 dark:border-slate-800 pb-2.5">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
-              {isSuperAdmin ? th("GLOBAL COUNTRY DAILY RATE STATUS BOARD") : th("TODAY'S COUNTRY RATE STATUS")}
-            </h3>
-            <span className="text-[10px] font-mono font-bold text-slate-500">
-              ({isoToday()})
-            </span>
-          </div>
-          {countriesPendingTodayRate.length > 0 ? (
-            <span className="text-[10px] font-black uppercase bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300 px-2.5 py-0.5 rounded-full border border-red-300 dark:border-red-800 flex items-center gap-1.5 animate-pulse">
-              <AlertCircle className="w-3 h-3" />
-              {countriesPendingTodayRate.length} {th("COUNTRY RATE(S) PENDING / MISSING")}
-            </span>
-          ) : (
-            <span className="text-[10px] font-black uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 px-2.5 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-800 flex items-center gap-1.5">
-              <CheckCircle className="w-3 h-3" />
-              {th("ALL SCOPED RATES APPROVED TODAY")}
-            </span>
-          )}
-        </div>
-
-        {/* Status Grid Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {countriesStatus.map((cs) => {
-            const isPending = cs.status === "PENDING_MISSING";
-            const isSelected = cs.countryId === selectedCountryId;
-            return (
-              <div
-                key={cs.countryId}
-                onClick={() => {
-                  if (isSuperAdmin || cs.countryId === userCountryId) {
-                    setSelectedCountryId(cs.countryId);
-                    setRateDate(isoToday());
-                  }
-                }}
-                className={cn(
-                  "p-3 rounded-xl border transition-all cursor-pointer relative",
-                  isSelected
-                    ? "border-blue-600 bg-blue-50/40 dark:border-blue-500 dark:bg-blue-950/20 ring-2 ring-blue-500/20"
-                    : "border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-850 hover:border-slate-300",
-                  isPending && "border-red-200 dark:border-red-900/50 bg-red-50/30 dark:bg-red-950/10"
-                )}
-              >
-                <div className="flex items-center justify-between gap-1 mb-1.5">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-base">{getFlag(cs.iso2)}</span>
-                    <span className="text-xs font-black uppercase text-slate-900 dark:text-white">
-                      {cs.countryName}
-                    </span>
-                  </div>
-                  <span className="font-mono text-[10px] font-extrabold bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-700 dark:text-slate-300">
-                    {cs.currencyCode}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between text-[11px] mb-1">
-                  <span className="text-[10px] font-semibold text-slate-500">
-                    {th("Status:")}
-                  </span>
-                  {isPending ? (
-                    <span className="font-black text-[9px] uppercase px-1.5 py-0.5 rounded bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300 border border-red-300 dark:border-red-800">
-                      {th("PENDING / MISSING")}
-                    </span>
-                  ) : (
-                    <span className="font-black text-[9px] uppercase px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
-                      {th("APPROVED / ACTIVE")}
-                    </span>
-                  )}
-                </div>
-
-                {!isPending && cs.creditRate && cs.debitRate ? (
-                  <div className="grid grid-cols-2 gap-1 text-[10px] font-mono pt-1 border-t border-slate-200 dark:border-slate-800">
-                    <div>
-                      <span className="text-slate-400 block text-[8px] uppercase">CR (Sell)</span>
-                      <span className="font-bold text-emerald-700 dark:text-emerald-400">{money(cs.creditRate, 2)}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-400 block text-[8px] uppercase">DR (Buy)</span>
-                      <span className="font-bold text-blue-700 dark:text-blue-400">{money(cs.debitRate, 2)}</span>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-[10px] text-red-600 font-semibold italic pt-1 border-t border-red-100 dark:border-red-950">
-                    {th("Waiting for Country Admin...")}
-                  </p>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Main 2-Column Split Workspace */}
+      {/* Main 2-Column Split Workspace (Left: 4 Cols Form | Right: 8 Cols Expanded Super Admin Table) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
-        {/* ── Left Column (4 Cols): Rate Entry & Controlled Correction Form ── */}
+        {/* ── Left Column (4 Cols): Rate Entry Form ── */}
         <div className="lg:col-span-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xs space-y-4">
           <div className="border-b border-slate-150 dark:border-slate-800 pb-3 flex items-center justify-between">
             <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
               <Globe className="w-4 h-4 text-blue-600" />
-              {isCorrectionMode ? th("CONTROLLED RATE CORRECTION") : th("EXCHANGE RATE ENTRY FORM")}
+              {th("EXCHANGE RATE ENTRY FORM")}
             </h3>
-            {isCorrectionMode ? (
-              <span className="text-[9px] font-black uppercase bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 px-2 py-0.5 rounded-md border border-amber-300 dark:border-amber-800 flex items-center gap-1">
-                <Edit3 className="w-3 h-3" />
-                {th("AUDITED CORRECTION")}
-              </span>
-            ) : (
-              <span className="text-[9px] font-black uppercase bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800">
-                {th("NEW DAILY RATE")}
-              </span>
-            )}
+            <span className="text-[9px] font-black uppercase bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 px-2 py-0.5 rounded-md border border-blue-200 dark:border-blue-800">
+              {th("INTRA-DAY LIVE ENTRY")}
+            </span>
           </div>
-
-          {/* Controlled Correction Notice */}
-          {isCorrectionMode && (
-            <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl space-y-1.5 text-xs text-amber-900 dark:text-amber-200">
-              <div className="flex items-center gap-1.5 font-black uppercase text-[10px]">
-                <Edit3 className="w-3.5 h-3.5 text-amber-600" />
-                {th("Rate already recorded for this date")}
-              </div>
-              <p className="text-[11px] text-amber-800 dark:text-amber-300">
-                Current active rates: <strong>Credit {money(existingRateForTargetDate?.credit_rate || 0, 2)}</strong> | <strong>Debit {money(existingRateForTargetDate?.debit_rate || 0, 2)}</strong>. Enter new values and a mandatory reason below.
-              </p>
-            </div>
-          )}
 
           <form onSubmit={handleSaveRate} className="space-y-3.5">
             
-            {/* 1. Country Selection (Locked for Country Admin; selectable for Super Admin) */}
+            {/* 1. Country Selection */}
             <div className="space-y-1">
               <Label className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 flex items-center justify-between">
-                <span>{th("1. COUNTRY")} {!isSuperAdmin && <span className="text-blue-600 font-bold">(Locked to your country)</span>}</span>
+                <span>{th("1. COUNTRY NAME")}</span>
                 {selectedCountry && (
                   <span className="text-[10px] font-mono font-bold text-blue-600 dark:text-blue-400">
                     Currency: {selectedCountry.currency_code}
@@ -592,9 +486,8 @@ export function DailyExchangeRateManager() {
               </Label>
               <select
                 value={selectedCountryId}
-                disabled={!isSuperAdmin && countries.length <= 1}
                 onChange={(e) => setSelectedCountryId(e.target.value)}
-                className="w-full h-10 px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-black text-slate-800 dark:text-slate-100 shadow-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all cursor-pointer uppercase disabled:opacity-85 disabled:cursor-not-allowed"
+                className="w-full h-10 px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-black text-slate-800 dark:text-slate-100 shadow-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all cursor-pointer uppercase"
               >
                 <option value="" disabled hidden>
                   {countries.length ? "-- SELECT COUNTRY --" : "NO COUNTRIES AVAILABLE"}
@@ -607,19 +500,11 @@ export function DailyExchangeRateManager() {
               </select>
             </div>
 
-            {/* Scope allocation indicator: Country-wide, no branch duplication */}
-            <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 flex items-center justify-between text-[10px]">
-              <span className="text-slate-500 font-bold uppercase">{th("Scope Allocation:")}</span>
-              <span className="font-extrabold text-blue-700 dark:text-blue-400 uppercase">
-                {th("Country-wide (All Branches)")}
-              </span>
-            </div>
-
             {/* 2. Date & Time 2-col Row */}
             <div className="grid grid-cols-2 gap-2.5">
               <div className="space-y-1">
                 <Label className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400">
-                  {th("2. TRANSACTION DATE")}
+                  {th("2. DATE")}
                 </Label>
                 <Input
                   type="date"
@@ -635,7 +520,7 @@ export function DailyExchangeRateManager() {
                 </Label>
                 <Input
                   type="text"
-                  placeholder="e.g. 10:49 AM"
+                  placeholder="e.g. 10:49 PM"
                   value={rateTime}
                   onChange={(e) => setRateTime(e.target.value)}
                   className="h-9 text-xs font-bold rounded-xl bg-slate-50 dark:bg-slate-850 border-slate-200 dark:border-slate-800"
@@ -643,18 +528,33 @@ export function DailyExchangeRateManager() {
               </div>
             </div>
 
-            {/* Operator User */}
-            <div className="space-y-1">
-              <Label className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 flex items-center gap-1">
-                <User className="w-3 h-3 text-slate-400" />
-                {th("OPERATOR / COUNTRY ADMIN")}
-              </Label>
-              <Input
-                type="text"
-                value={operatorUser}
-                onChange={(e) => setOperatorUser(e.target.value)}
-                className="h-9 text-xs font-bold rounded-xl bg-slate-50 dark:bg-slate-850 border-slate-200 dark:border-slate-800"
-              />
+            {/* User & Branch Info */}
+            <div className="grid grid-cols-2 gap-2.5">
+              <div className="space-y-1">
+                <Label className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 flex items-center gap-1">
+                  <User className="w-3 h-3 text-slate-400" />
+                  {th("OPERATOR USER")}
+                </Label>
+                <Input
+                  type="text"
+                  value={operatorUser}
+                  onChange={(e) => setOperatorUser(e.target.value)}
+                  className="h-9 text-xs font-bold rounded-xl bg-slate-50 dark:bg-slate-850 border-slate-200 dark:border-slate-800"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 flex items-center gap-1">
+                  <Building2 className="w-3 h-3 text-slate-400" />
+                  {th("BRANCH NAME")}
+                </Label>
+                <Input
+                  type="text"
+                  value={operatorBranch}
+                  onChange={(e) => setOperatorBranch(e.target.value)}
+                  className="h-9 text-xs font-bold rounded-xl bg-slate-50 dark:bg-slate-850 border-slate-200 dark:border-slate-800"
+                />
+              </div>
             </div>
 
             {/* 3. Credit Rate (Selling / Outflow) */}
@@ -684,7 +584,7 @@ export function DailyExchangeRateManager() {
               </div>
               {selectedCountry && creditPrice && Number(creditPrice) > 0 && (
                 <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">
-                  ⚡ 1.00 USD = {money(Number(creditPrice), 2)} {selectedCountry.currency_code} (Credit / Selling)
+                  ⚡ Conversion: 1.00 USD = {money(Number(creditPrice), 2)} {selectedCountry.currency_code} (Credit / Selling)
                 </p>
               )}
             </div>
@@ -716,45 +616,19 @@ export function DailyExchangeRateManager() {
               </div>
               {selectedCountry && debitPrice && Number(debitPrice) > 0 && (
                 <p className="text-[10px] font-bold text-blue-700 dark:text-blue-400">
-                  ⚡ 1.00 USD = {money(Number(debitPrice), 2)} {selectedCountry.currency_code} (Debit / Buying)
+                  ⚡ Conversion: 1.00 USD = {money(Number(debitPrice), 2)} {selectedCountry.currency_code} (Debit / Buying)
                 </p>
               )}
             </div>
 
-            {/* Mandatory Reason for Rate Correction */}
-            {isCorrectionMode && (
-              <div className="space-y-1 animate-in fade-in duration-200">
-                <Label className="text-[11px] font-black uppercase text-amber-700 dark:text-amber-400 flex items-center justify-between">
-                  <span>{th("REASON FOR CORRECTION (MANDATORY)")}</span>
-                  <span className="text-[9px] font-bold text-red-500">* Required for audit</span>
-                </Label>
-                <textarea
-                  rows={2}
-                  value={correctionReason}
-                  onChange={(e) => setCorrectionReason(e.target.value)}
-                  placeholder="e.g. Central Bank revised closing rate, or corrected entry typo..."
-                  className="w-full text-xs font-medium p-2.5 rounded-xl border border-amber-300 dark:border-amber-800 bg-amber-50/40 dark:bg-amber-950/20 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-amber-500/20"
-                />
-              </div>
-            )}
-
-            {/* Submit Button */}
+            {/* Save Button */}
             <Button
               type="submit"
               disabled={saving}
-              className={cn(
-                "w-full h-10 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition-all flex items-center justify-center gap-2 pt-1",
-                isCorrectionMode
-                  ? "bg-amber-600 hover:bg-amber-700"
-                  : "bg-emerald-600 hover:bg-emerald-700"
-              )}
+              className="w-full h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition-all flex items-center justify-center gap-2 pt-1"
             >
-              {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : isCorrectionMode ? <Edit3 className="w-4 h-4" /> : <Save className="w-4 h-4" />}
-              {saving
-                ? th("SAVING EXCHANGE RATE...")
-                : isCorrectionMode
-                ? th("SAVE AUTHORIZED CORRECTION")
-                : th("CONFIRM & PUBLISH TODAY'S RATE")}
+              {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              {saving ? th("SAVING EXCHANGE RATE...") : th("SAVE EXCHANGE RATE")}
             </Button>
           </form>
 
@@ -775,45 +649,28 @@ export function DailyExchangeRateManager() {
           )}
         </div>
 
-        {/* ── Right Column (8 Cols): Tables & Audit History Tabs ── */}
+        {/* ── Right Column (8 Cols): Expanded Super Admin Table with Header Search Filters ── */}
         <div className="lg:col-span-8 space-y-3">
           
-          {/* Header Controls Bar */}
+          {/* Header Filter Controls Bar */}
           <div className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-3">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2.5">
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  variant={activeTab === "rates" ? "default" : "outline"}
-                  onClick={() => setActiveTab("rates")}
-                  className={cn(
-                    "h-8 text-xs font-black uppercase rounded-lg",
-                    activeTab === "rates" ? "bg-emerald-600 text-white" : "text-slate-600"
-                  )}
-                >
-                  <Clock className="w-3.5 h-3.5 mr-1.5" />
-                  {th("Active Daily Rates")}
-                </Button>
-                <Button
-                  size="sm"
-                  variant={activeTab === "audit" ? "default" : "outline"}
-                  onClick={() => setActiveTab("audit")}
-                  className={cn(
-                    "h-8 text-xs font-black uppercase rounded-lg",
-                    activeTab === "audit" ? "bg-blue-600 text-white" : "text-slate-600"
-                  )}
-                >
-                  <History className="w-3.5 h-3.5 mr-1.5" />
-                  {th("Audit History")} ({auditHistory.length})
-                </Button>
+              <div>
+                <h3 className="text-xs font-black uppercase tracking-wide flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+                  <Clock className="w-4 h-4" />
+                  {th("SUPER ADMIN LIVE EXCHANGE RATES TABLE")}
+                </h3>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                  {th("Audited intra-day exchange rates recorded by users and branch terminals worldwide.")}
+                </p>
               </div>
               <span className="text-[10px] font-mono font-black bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-emerald-400 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 shadow-xs">
-                {activeTab === "rates" ? `${th("TOTAL ENTRIES:")} ${rates.length}` : `${th("AUDIT LOGS:")} ${auditHistory.length}`}
+                {th("TOTAL ENTRIES:")} {rates.length}
               </span>
             </div>
 
             {/* Filter Dropdowns Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-slate-800 dark:text-slate-100">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 text-slate-800 dark:text-slate-100">
               
               {/* Country Filter */}
               <div>
@@ -827,6 +684,20 @@ export function DailyExchangeRateManager() {
                     <option key={c.id} value={c.id} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-bold py-1">
                       {c.name} ({c.currency_code})
                     </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Branch Filter */}
+              <div>
+                <select
+                  value={filterBranch}
+                  onChange={(e) => setFilterBranch(e.target.value)}
+                  className="w-full h-8 px-2 rounded-lg bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 text-[11px] font-bold outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all cursor-pointer uppercase shadow-xs"
+                >
+                  <option value="all">{th("ALL BRANCHES")}</option>
+                  {branchOptions.map((branchName) => (
+                    <option key={branchName} value={branchName} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-bold py-1">{branchName}</option>
                   ))}
                 </select>
               </div>
@@ -847,10 +718,10 @@ export function DailyExchangeRateManager() {
 
               {/* Search Query */}
               <div className="relative">
-                <Search className="w-3.5 h-3.5 absolute left-2.5 top-2 text-slate-400" />
+                <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
                 <Input
                   type="text"
-                  placeholder={th("Search country, user...")}
+                  placeholder={th("Search user, branch...")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="h-8 text-[11px] font-bold pl-8 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border-slate-200 dark:border-slate-700 rounded-lg placeholder:text-slate-400 shadow-xs"
@@ -860,150 +731,117 @@ export function DailyExchangeRateManager() {
             </div>
           </div>
 
-          {/* Tab 1: Consolidated Rates Table */}
-          {activeTab === "rates" && (
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xs">
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs text-left border-collapse">
-                  <thead>
-                    <tr className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-black uppercase text-[9px] border-b border-slate-200 dark:border-slate-700 whitespace-nowrap">
-                      <th className="py-2.5 px-3 text-center">{th("SR NO")}</th>
-                      <th className="py-2.5 px-3">{th("COUNTRY")}</th>
-                      <th className="py-2.5 px-3 text-center">{th("CURRENCY")}</th>
-                      <th className="py-2.5 px-3">{th("DATE & TIME")}</th>
-                      <th className="py-2.5 px-3 text-right text-emerald-600 dark:text-emerald-400">{th("CREDIT RATE (SELLING)")}</th>
-                      <th className="py-2.5 px-3 text-right text-blue-600 dark:text-blue-400">{th("DEBIT RATE (BUYING)")}</th>
-                      <th className="py-2.5 px-3">{th("OPERATOR")}</th>
-                      <th className="py-2.5 px-3 text-center">{th("SCOPE")}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-150 dark:divide-slate-800 font-semibold text-slate-800 dark:text-slate-200">
-                    {rates.map((r, idx) => {
-                      const matchedCountry = countries.find((country) => country.id === r.country_id) || null;
-                      const countryName = r.countries?.name ?? matchedCountry?.name ?? "-";
-                      const currencyCode = r.countries?.currency_code ?? matchedCountry?.currency_code ?? "-";
-                      const iso2 = r.countries?.iso2 ?? matchedCountry?.iso2;
-                      const isSelected = r.country_id === selectedCountryId && r.rate_date === rateDate;
+          {/* Rates grouped by date: one summary row per date; tap "+" to reveal that day's complete rate table, tap again to collapse. */}
+          <div className="space-y-2">
+            {ratesByDate.length === 0 ? (
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl py-8 text-center text-slate-400 font-medium shadow-xs">
+                {th("NO EXCHANGE RATES RECORDED MATCHING YOUR SEARCH CRITERIA.")}
+              </div>
+            ) : (
+              ratesByDate.map(([date, dayRates]) => {
+                const open = expandedDates.has(date);
+                const dayCurrencies = [...new Set(dayRates.map((r) => {
+                  const mc = countries.find((c) => c.id === r.country_id) || null;
+                  return r.countries?.currency_code ?? mc?.currency_code;
+                }).filter(Boolean))];
+                return (
+                  <div key={date} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xs">
+                    <button
+                      type="button"
+                      onClick={() => toggleDate(date)}
+                      aria-expanded={open}
+                      className="w-full flex items-center justify-between gap-2 px-3 sm:px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-850 transition-colors"
+                    >
+                      <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+                        <span className={cn("h-6 w-6 shrink-0 rounded-md flex items-center justify-center text-white", open ? "bg-slate-500" : "bg-blue-600")}>
+                          {open ? <Minus className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+                        </span>
+                        <Calendar className="h-4 w-4 text-slate-400 shrink-0" />
+                        <span className="font-black text-xs sm:text-sm text-slate-900 dark:text-slate-100 whitespace-nowrap font-mono">{date}</span>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 whitespace-nowrap">
+                          {dayRates.length} {dayRates.length === 1 ? th("RATE") : th("RATES")}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="hidden sm:inline text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase truncate max-w-[220px]">{dayCurrencies.join(" / ")}</span>
+                        <ChevronDown className={cn("h-4 w-4 text-slate-400 transition-transform", open && "rotate-180")} />
+                      </div>
+                    </button>
+                    {open && (
+                      <div className="overflow-x-auto border-t border-slate-100 dark:border-slate-800">
+                        <table className="w-full text-xs text-left border-collapse">
+                          <thead>
+                            <tr className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-black uppercase text-[9px] border-b border-slate-200 dark:border-slate-700 whitespace-nowrap">
+                              <Th className="py-2.5 px-3 text-center">{th("SR NO")}</Th>
+                              <Th className="py-2.5 px-3">{th("COUNTRY NAME")}</Th>
+                              <Th className="py-2.5 px-3">{th("BRANCH NAME")}</Th>
+                              <Th className="py-2.5 px-3">{th("USER NAME")}</Th>
+                              <Th className="py-2.5 px-3 text-center">{th("CURRENCY")}</Th>
+                              <Th className="py-2.5 px-3">{th("DATE & TIME")}</Th>
+                              <Th className="py-2.5 px-3 text-right text-emerald-600 dark:text-emerald-400">{th("CREDIT RATE (LOCAL/$)")}</Th>
+                              <Th className="py-2.5 px-3 text-right text-blue-600 dark:text-blue-400">{th("DEBIT RATE (LOCAL/$)")}</Th>
+                              <Th className="py-2.5 px-3 text-right">{th("LAST UPDATED")}</Th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-150 dark:divide-slate-800 font-semibold text-slate-800 dark:text-slate-200">
+                            {dayRates.map((r, idx) => {
+                              const matchedCountry = countries.find((country) => country.id === r.country_id) || null;
+                              const countryName = r.countries?.name ?? matchedCountry?.name ?? "-";
+                              const currencyCode = r.countries?.currency_code ?? matchedCountry?.currency_code ?? "-";
+                              const iso2 = r.countries?.iso2 ?? matchedCountry?.iso2;
+                              const isSelected = r.country_id === selectedCountryId;
 
-                      return (
-                        <tr
-                          key={r.id || idx}
-                          onClick={() => handleSelectRow(r)}
-                          className={cn(
-                            "cursor-pointer transition-colors hover:bg-slate-50 dark:hover:bg-slate-850",
-                            isSelected && "bg-blue-50/50 dark:bg-blue-950/30"
-                          )}
-                        >
-                          <td className="py-2.5 px-3 text-center font-mono font-bold text-slate-400 text-[10px]">
-                            {idx + 1}
-                          </td>
-                          <td className="py-2.5 px-3 font-bold flex items-center gap-2 text-[11px]">
-                            <span className="text-base">{getFlag(iso2)}</span>
-                            <span className="uppercase">{countryName}</span>
-                          </td>
-                          <td className="py-2.5 px-3 text-center">
-                            <span className="font-mono font-black bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-[9px]">
-                              {currencyCode}
-                            </span>
-                          </td>
-                          <td className="py-2.5 px-3 font-mono text-[10px] text-slate-600 dark:text-slate-300">
-                            {r.rate_date || isoToday()} {r.rate_time || "09:00 AM"}
-                          </td>
-                          <td className="py-2.5 px-3 text-right font-mono font-extrabold text-emerald-600 dark:text-emerald-400 text-[11px]">
-                            {money(r.credit_rate || r.selling_rate, 2)} {currencyCode}
-                          </td>
-                          <td className="py-2.5 px-3 text-right font-mono font-extrabold text-blue-600 dark:text-blue-400 text-[11px]">
-                            {money(r.debit_rate || r.buying_rate, 2)} {currencyCode}
-                          </td>
-                          <td className="py-2.5 px-3 font-bold text-[10px] text-slate-700 dark:text-slate-300 uppercase">
-                            {r.user_name || "Country Admin"}
-                          </td>
-                          <td className="py-2.5 px-3 text-center">
-                            <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-                              Country-wide
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-
-                    {rates.length === 0 && (
-                      <tr>
-                        <td colSpan={8} className="py-8 text-center text-slate-400 font-medium">
-                          {th("NO EXCHANGE RATES RECORDED MATCHING YOUR SEARCH CRITERIA.")}
-                        </td>
-                      </tr>
+                              return (
+                                <tr
+                                  key={r.id || idx}
+                                  onClick={() => handleSelectRow(r)}
+                                  className={cn(
+                                    "cursor-pointer transition-colors hover:bg-slate-50 dark:hover:bg-slate-850",
+                                    isSelected && "bg-blue-50/50 dark:bg-blue-950/30"
+                                  )}
+                                >
+                                  <td className="py-2.5 px-3 text-center font-mono font-bold text-slate-400 text-[10px]">
+                                    {idx + 1}
+                                  </td>
+                                  <td className="py-2.5 px-3 font-bold flex items-center gap-2 text-[11px]">
+                                    <span className="text-base">{getFlag(iso2)}</span>
+                                    <span className="uppercase">{countryName}</span>
+                                  </td>
+                                  <td className="py-2.5 px-3 font-bold text-[10px] text-slate-600 dark:text-slate-300 uppercase">
+                                    {r.branch_name || "-"}
+                                  </td>
+                                  <td className="py-2.5 px-3 font-bold text-[10px] text-blue-700 dark:text-blue-400 uppercase">
+                                    {r.user_name || "-"}
+                                  </td>
+                                  <td className="py-2.5 px-3 text-center">
+                                    <span className="font-mono font-black bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-[9px]">
+                                      {currencyCode}
+                                    </span>
+                                  </td>
+                                  <td className="py-2.5 px-3 font-mono text-[10px] text-slate-600 dark:text-slate-300">
+                                    {r.rate_date || isoToday()} {r.rate_time || "09:00 AM"}
+                                  </td>
+                                  <td className="py-2.5 px-3 text-right font-mono font-extrabold text-emerald-600 dark:text-emerald-400 text-[11px]">
+                                    {money(r.credit_rate || r.selling_rate, 2)} {currencyCode}
+                                  </td>
+                                  <td className="py-2.5 px-3 text-right font-mono font-extrabold text-blue-600 dark:text-blue-400 text-[11px]">
+                                    {money(r.debit_rate || r.buying_rate, 2)} {currencyCode}
+                                  </td>
+                                  <td className="py-2.5 px-3 text-right text-[9px] text-slate-400 font-mono">
+                                    {new Date(r.updated_at || Date.now()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
                     )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* Tab 2: Controlled Audit History Table (Requirement 8) */}
-          {activeTab === "audit" && (
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xs">
-              <div className="p-3 bg-slate-50 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                  {th("CONTROLLED CORRECTION AUDIT TRAIL (OLD RATE → NEW RATE → REASON)")}
-                </span>
-                <span className="text-[10px] text-slate-500 font-medium">
-                  {th("All authorized changes are permanently logged.")}
-                </span>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs text-left border-collapse">
-                  <thead>
-                    <tr className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-black uppercase text-[9px] border-b border-slate-200 dark:border-slate-700 whitespace-nowrap">
-                      <th className="py-2.5 px-3 text-center">{th("DATE / TIME")}</th>
-                      <th className="py-2.5 px-3">{th("COUNTRY")}</th>
-                      <th className="py-2.5 px-3">{th("OPERATOR")}</th>
-                      <th className="py-2.5 px-3 text-right">{th("PREVIOUS RATE (CR / DR)")}</th>
-                      <th className="py-2.5 px-3 text-right text-emerald-600 dark:text-emerald-400">{th("REVISED RATE (CR / DR)")}</th>
-                      <th className="py-2.5 px-3">{th("REASON FOR CHANGE")}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-150 dark:divide-slate-800 font-semibold text-slate-800 dark:text-slate-200">
-                    {auditHistory.map((ah, idx) => (
-                      <tr key={ah.id || idx} className="hover:bg-slate-50 dark:hover:bg-slate-850 transition-colors">
-                        <td className="py-2.5 px-3 font-mono text-[10px] text-slate-500 whitespace-nowrap">
-                          {new Date(ah.created_at).toLocaleString()}
-                        </td>
-                        <td className="py-2.5 px-3 font-bold text-[11px] whitespace-nowrap">
-                          {ah.countries?.name || countries.find(c => c.id === ah.country_id)?.name || "-"} ({ah.from_currency})
-                        </td>
-                        <td className="py-2.5 px-3 text-[10px] font-bold uppercase text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                          {ah.user_name || "Country Admin"}
-                        </td>
-                        <td className="py-2.5 px-3 text-right font-mono text-[10px] text-slate-500 whitespace-nowrap">
-                          {ah.old_credit_rate != null
-                            ? `${money(ah.old_credit_rate, 2)} / ${money(ah.old_debit_rate || 0, 2)}`
-                            : ah.old_rate != null ? money(ah.old_rate, 2) : "Initial Entry"}
-                        </td>
-                        <td className="py-2.5 px-3 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400 text-[11px] whitespace-nowrap">
-                          {ah.new_credit_rate != null
-                            ? `${money(ah.new_credit_rate, 2)} / ${money(ah.new_debit_rate || 0, 2)}`
-                            : money(ah.new_rate || 0, 2)}
-                        </td>
-                        <td className="py-2.5 px-3 text-[11px] text-slate-800 dark:text-slate-200 max-w-xs truncate">
-                          {ah.reason || "-"}
-                        </td>
-                      </tr>
-                    ))}
-
-                    {auditHistory.length === 0 && (
-                      <tr>
-                        <td colSpan={6} className="py-8 text-center text-slate-400 font-medium">
-                          {th("NO AUDIT RECORDS FOUND.")}
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
+                  </div>
+                );
+              })
+            )}
+          </div>
 
         </div>
 

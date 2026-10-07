@@ -4664,18 +4664,18 @@ export function LocalPurchaseView({
                       <table className="w-full text-left text-[10px] whitespace-nowrap">
                         <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 text-[8.5px] font-extrabold uppercase border-b border-slate-200 dark:border-slate-700">
                           <tr>
-                            <th className="p-2 text-center">#</th>
-                            <th className="p-2">Goods Item</th>
-                            <th className="p-2">Size</th>
-                            <th className="p-2">Brand</th>
-                            <th className="p-2">Origin</th>
-                            <th className="p-2 text-right">Packages</th>
-                            <th className="p-2 text-right">Gross Wt</th>
-                            <th className="p-2 text-right">Net Wt</th>
-                            <th className="p-2 text-right">Rate</th>
-                            <th className="p-2 text-right">Amount ({purchaseCurrency})</th>
-                            <th className="p-2 text-center">Tax</th>
-                            <th className="p-2 text-right">Total ({purchaseCurrency})</th>
+                            <Th className="p-2 text-center">#</Th>
+                            <Th className="p-2">Goods Item</Th>
+                            <Th className="p-2">Size</Th>
+                            <Th className="p-2">Brand</Th>
+                            <Th className="p-2">Origin</Th>
+                            <Th className="p-2 text-right">Packages</Th>
+                            <Th className="p-2 text-right">Gross Wt</Th>
+                            <Th className="p-2 text-right">Net Wt</Th>
+                            <Th className="p-2 text-right">Rate</Th>
+                            <Th className="p-2 text-right">Amount ({purchaseCurrency})</Th>
+                            <Th className="p-2 text-center">Tax</Th>
+                            <Th className="p-2 text-right">Total ({purchaseCurrency})</Th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[9.5px]">
@@ -4756,11 +4756,11 @@ export function LocalPurchaseView({
                     <table className="w-full text-left text-[10px] whitespace-nowrap">
                       <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 text-[8.5px] font-extrabold uppercase border-b border-slate-200 dark:border-slate-700">
                         <tr>
-                          <th className="p-2">Account Code</th>
-                          <th className="p-2">Account Title</th>
-                          <th className="p-2">Posting Type</th>
-                          <th className="p-2 text-right">Debit (DR) {purchaseCurrency}</th>
-                          <th className="p-2 text-right">Credit (CR) {purchaseCurrency}</th>
+                          <Th className="p-2">Account Code</Th>
+                          <Th className="p-2">Account Title</Th>
+                          <Th className="p-2">Posting Type</Th>
+                          <Th className="p-2 text-right">Debit (DR) {purchaseCurrency}</Th>
+                          <Th className="p-2 text-right">Credit (CR) {purchaseCurrency}</Th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[9.5px]">
@@ -4956,16 +4956,16 @@ export function LocalPurchaseView({
                     <table className="w-full text-left text-xs whitespace-nowrap border-collapse">
                       <thead className="bg-slate-50/90 dark:bg-slate-800/80 text-[10.5px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700">
                         <tr>
-                          <th className="px-3 py-2.5 text-center w-10">#</th>
-                          <th className="px-3 py-2.5">{t(lang, "common.country", "COUNTRY")}</th>
-                          <th className="px-3 py-2.5 text-center">{t(lang, "common.code", "CODE")}</th>
-                          <th className="px-3 py-2.5 text-center">{th("TOTAL PURCHASES")}</th>
-                          <th className="px-3 py-2.5 text-right">{th("TOTAL AMOUNT (LOCAL)")}</th>
-                          <th className="px-3 py-2.5 text-right">{th("TOTAL AMOUNT (USD)")}</th>
-                          <th className="px-3 py-2.5 text-center">{th("POSTED")}</th>
-                          <th className="px-3 py-2.5 text-center">{th("DRAFT")}</th>
-                          <th className="px-3 py-2.5 text-center text-red-600">{th("PENDING")}</th>
-                          <th className="px-3 py-2.5 text-center w-16">{t(lang, "common.actions", "ACTIONS")}</th>
+                          <Th className="px-3 py-2.5 text-center w-10">#</Th>
+                          <Th className="px-3 py-2.5">{t(lang, "common.country", "COUNTRY")}</Th>
+                          <Th className="px-3 py-2.5 text-center">{t(lang, "common.code", "CODE")}</Th>
+                          <Th className="px-3 py-2.5 text-center">{th("TOTAL PURCHASES")}</Th>
+                          <Th className="px-3 py-2.5 text-right">{th("TOTAL AMOUNT (LOCAL)")}</Th>
+                          <Th className="px-3 py-2.5 text-right">{th("TOTAL AMOUNT (USD)")}</Th>
+                          <Th className="px-3 py-2.5 text-center">{th("POSTED")}</Th>
+                          <Th className="px-3 py-2.5 text-center">{th("DRAFT")}</Th>
+                          <Th className="px-3 py-2.5 text-center text-red-600">{th("PENDING")}</Th>
+                          <Th className="px-3 py-2.5 text-center w-16">{t(lang, "common.actions", "ACTIONS")}</Th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11px]">
@@ -5100,12 +5100,12 @@ export function LocalPurchaseView({
                                           <table className="w-full text-left text-xs whitespace-nowrap">
                                             <thead className="bg-slate-50 dark:bg-slate-800/80 text-[10px] font-black uppercase text-slate-500 border-b border-slate-200 dark:border-slate-700">
                                               <tr>
-                                                <th className="px-3 py-2">Branch Name</th>
-                                                <th className="px-3 py-2 text-center">Code</th>
-                                                <th className="px-3 py-2 text-center">Type</th>
-                                                <th className="px-3 py-2 text-center">Total Bills</th>
-                                                <th className="px-3 py-2 text-right">Total Purchase ({c.currency})</th>
-                                                <th className="px-3 py-2 text-center">Action</th>
+                                                <Th className="px-3 py-2">Branch Name</Th>
+                                                <Th className="px-3 py-2 text-center">Code</Th>
+                                                <Th className="px-3 py-2 text-center">Type</Th>
+                                                <Th className="px-3 py-2 text-center">Total Bills</Th>
+                                                <Th className="px-3 py-2 text-right">Total Purchase ({c.currency})</Th>
+                                                <Th className="px-3 py-2 text-center">Action</Th>
                                               </tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11px]">
@@ -5150,13 +5150,13 @@ export function LocalPurchaseView({
                                               <table className="w-full text-left text-xs whitespace-nowrap">
                                                 <thead className="bg-slate-50 dark:bg-slate-800/80 text-[10px] font-black uppercase text-slate-500 border-b border-slate-200 dark:border-slate-700">
                                                   <tr>
-                                                    <th className="px-3 py-2">City Branch Name</th>
-                                                    <th className="px-3 py-2">City</th>
-                                                    <th className="px-3 py-2 text-center">Code</th>
-                                                    <th className="px-3 py-2 text-center">Category</th>
-                                                    <th className="px-3 py-2 text-center">Total Bills</th>
-                                                    <th className="px-3 py-2 text-right">Total Purchase ({c.currency})</th>
-                                                    <th className="px-3 py-2 text-center">Action</th>
+                                                    <Th className="px-3 py-2">City Branch Name</Th>
+                                                    <Th className="px-3 py-2">City</Th>
+                                                    <Th className="px-3 py-2 text-center">Code</Th>
+                                                    <Th className="px-3 py-2 text-center">Category</Th>
+                                                    <Th className="px-3 py-2 text-center">Total Bills</Th>
+                                                    <Th className="px-3 py-2 text-right">Total Purchase ({c.currency})</Th>
+                                                    <Th className="px-3 py-2 text-center">Action</Th>
                                                   </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11px]">
@@ -5588,31 +5588,31 @@ export function LocalPurchaseView({
                   <table className="w-full text-left text-xs whitespace-nowrap border-collapse">
                     <thead className="bg-slate-50/90 dark:bg-slate-800/80 text-[10.5px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700">
                       <tr>
-                        <th className="px-2.5 py-2.5 text-center w-8">
+                        <Th className="px-2.5 py-2.5 text-center w-8">
                           <input
                             type="checkbox"
                             checked={allCurrentPageSelected}
                             onChange={toggleSelectAll}
                             className="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-1 focus:ring-blue-500 cursor-pointer accent-blue-600 transition"
                           />
-                        </th>
-                        <th className="px-2 py-2.5 text-center w-10">#</th>
-                        <th className="px-3 py-2.5">{t(lang, "common.country", "COUNTRY")}</th>
-                        <th className="px-3 py-2.5">{t(lang, "common.branch", "BRANCH")}</th>
-                        <th className="px-3 py-2.5">{t(lang, "lp.col_voucher_no", "VOUCHER NO")}</th>
-                        <th className="px-3 py-2.5">
+                        </Th>
+                        <Th className="px-2 py-2.5 text-center w-10">#</Th>
+                        <Th className="px-3 py-2.5">{t(lang, "common.country", "COUNTRY")}</Th>
+                        <Th className="px-3 py-2.5">{t(lang, "common.branch", "BRANCH")}</Th>
+                        <Th className="px-3 py-2.5">{t(lang, "lp.col_voucher_no", "VOUCHER NO")}</Th>
+                        <Th className="px-3 py-2.5">
                           <span className="inline-flex items-center gap-1">
                             {t(lang, "lp.col_date", "DATE")}
                             <span className="text-[10px] text-slate-400">⇅</span>
                           </span>
-                        </th>
-                        <th className="px-3 py-2.5">{t(lang, "lp.col_supplier_name", "SUPPLIER NAME")}</th>
-                        <th className="px-3 py-2.5">{t(lang, "lp.col_goods_name", "GOODS NAME")}</th>
-                        <th className="px-2.5 py-2.5 text-right">{t(lang, "lp.col_qty", "QTY")}</th>
-                        <th className="px-2.5 py-2.5 text-center">{t(lang, "lp.col_unit", "UNIT")}</th>
-                        <th className="px-3 py-2.5 text-right">{th("FINAL AMOUNT")}</th>
-                        <th className="px-3 py-2.5 text-center">{t(lang, "lp.col_status", "STATUS")}</th>
-                        <th className="px-3 py-2.5 text-center w-16">{t(lang, "common.actions", "ACTIONS")}</th>
+                        </Th>
+                        <Th className="px-3 py-2.5">{t(lang, "lp.col_supplier_name", "SUPPLIER NAME")}</Th>
+                        <Th className="px-3 py-2.5">{t(lang, "lp.col_goods_name", "GOODS NAME")}</Th>
+                        <Th className="px-2.5 py-2.5 text-right">{t(lang, "lp.col_qty", "QTY")}</Th>
+                        <Th className="px-2.5 py-2.5 text-center">{t(lang, "lp.col_unit", "UNIT")}</Th>
+                        <Th className="px-3 py-2.5 text-right">{th("FINAL AMOUNT")}</Th>
+                        <Th className="px-3 py-2.5 text-center">{t(lang, "lp.col_status", "STATUS")}</Th>
+                        <Th className="px-3 py-2.5 text-center w-16">{t(lang, "common.actions", "ACTIONS")}</Th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11px]">
@@ -5979,30 +5979,30 @@ export function LocalPurchaseView({
                 <table className="w-full text-left text-xs whitespace-nowrap border-collapse">
                   <thead className="bg-slate-50/90 dark:bg-slate-800/80 text-[10.5px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700">
                     <tr>
-                      <th className="px-2.5 py-2.5 text-center w-8">
+                      <Th className="px-2.5 py-2.5 text-center w-8">
                         <input
                           type="checkbox"
                           checked={allCurrentPageSelected}
                           onChange={toggleSelectAll}
                           className="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-1 focus:ring-blue-500 cursor-pointer accent-blue-600 transition"
                         />
-                      </th>
-                      <th className="px-2 py-2.5 text-center w-10">#</th>
-                      <th className="px-3 py-2.5">{t(lang, "lp.col_voucher_no", "VOUCHER NO")}</th>
-                      <th className="px-3 py-2.5">
+                      </Th>
+                      <Th className="px-2 py-2.5 text-center w-10">#</Th>
+                      <Th className="px-3 py-2.5">{t(lang, "lp.col_voucher_no", "VOUCHER NO")}</Th>
+                      <Th className="px-3 py-2.5">
                         <span className="inline-flex items-center gap-1">
                           {t(lang, "lp.col_date", "DATE")}
                           <span className="text-[10px] text-slate-400">⇅</span>
                         </span>
-                      </th>
-                      <th className="px-3 py-2.5">{t(lang, "lp.col_supplier_name", "SUPPLIER NAME")}</th>
-                      <th className="px-3 py-2.5">{t(lang, "lp.col_goods_name", "GOODS NAME")}</th>
-                      <th className="px-3 py-2.5">{t(lang, "lp.col_brand", "BRAND / SIZE")}</th>
-                      <th className="px-2.5 py-2.5 text-right">{t(lang, "lp.col_qty", "QTY")}</th>
-                      <th className="px-2.5 py-2.5 text-center">{t(lang, "lp.col_unit", "UNIT")}</th>
-                      <th className="px-3 py-2.5 text-right">{t(lang, "lp.col_final_amount", "FINAL AMOUNT")}</th>
-                      <th className="px-3 py-2.5 text-center">{t(lang, "lp.col_status", "STATUS")}</th>
-                      <th className="px-3 py-2.5 text-center w-16">{t(lang, "common.actions", "ACTIONS")}</th>
+                      </Th>
+                      <Th className="px-3 py-2.5">{t(lang, "lp.col_supplier_name", "SUPPLIER NAME")}</Th>
+                      <Th className="px-3 py-2.5">{t(lang, "lp.col_goods_name", "GOODS NAME")}</Th>
+                      <Th className="px-3 py-2.5">{t(lang, "lp.col_brand", "BRAND / SIZE")}</Th>
+                      <Th className="px-2.5 py-2.5 text-right">{t(lang, "lp.col_qty", "QTY")}</Th>
+                      <Th className="px-2.5 py-2.5 text-center">{t(lang, "lp.col_unit", "UNIT")}</Th>
+                      <Th className="px-3 py-2.5 text-right">{t(lang, "lp.col_final_amount", "FINAL AMOUNT")}</Th>
+                      <Th className="px-3 py-2.5 text-center">{t(lang, "lp.col_status", "STATUS")}</Th>
+                      <Th className="px-3 py-2.5 text-center w-16">{t(lang, "common.actions", "ACTIONS")}</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11px]">

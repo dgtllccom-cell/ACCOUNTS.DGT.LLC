@@ -6,6 +6,7 @@ import { apiGet } from "@/lib/api/client";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { runPrintPdfCheck } from "@/lib/health/print-check";
 import type { HealthReport, HealthFinding, HealthStatus, HealthCategory } from "@/lib/health/types";
+import { Th } from "@/components/ui/translated-th";
 
 const TABS: { key: HealthCategory | "overview"; label: string; fallback: string }[] = [
   { key: "overview", label: "tab_overview", fallback: "Overview" },
@@ -215,12 +216,12 @@ export function HealthCenterView({ lang: langProp }: { lang?: string }) {
                 <table className="w-full text-xs">
                   <thead className="text-muted-foreground">
                     <tr>
-                      <th className={s.textStart}>{st("category", "Category")}</th>
-                      <th>{st("checked", "Checked")}</th>
-                      <th className="text-emerald-600">{st("healthy", "Healthy")}</th>
-                      <th className="text-amber-600">{st("warning", "Warning")}</th>
-                      <th className="text-rose-600">{st("failed", "Failed")}</th>
-                      <th className="text-slate-500">{st("not_tested", "Not Tested")}</th>
+                      <Th className={s.textStart}>{st("category", "Category")}</Th>
+                      <Th>{st("checked", "Checked")}</Th>
+                      <Th className="text-emerald-600">{st("healthy", "Healthy")}</Th>
+                      <Th className="text-amber-600">{st("warning", "Warning")}</Th>
+                      <Th className="text-rose-600">{st("failed", "Failed")}</Th>
+                      <Th className="text-slate-500">{st("not_tested", "Not Tested")}</Th>
                     </tr>
                   </thead>
                   <tbody>
@@ -267,12 +268,12 @@ export function HealthCenterView({ lang: langProp }: { lang?: string }) {
                 <table className="w-full min-w-[720px] text-xs">
                   <thead className="bg-muted/60 uppercase text-muted-foreground">
                     <tr>
-                      <th className={`px-2.5 py-1.5 ${s.textStart}`}>{st("col_module", "Module")}</th>
-                      <th className={`px-2.5 py-1.5 ${s.textStart}`}>{st("col_target", "Route / Target")}</th>
-                      <th className={`px-2.5 py-1.5 ${s.textStart}`}>{st("col_issue", "Issue / Result")}</th>
-                      <th className="px-2.5 py-1.5 text-center">{st("col_status", "Status")}</th>
-                      <th className="px-2.5 py-1.5 text-center">{st("col_lang", "Lang")}</th>
-                      <th className="px-2.5 py-1.5" />
+                      <Th className={`px-2.5 py-1.5 ${s.textStart}`}>{st("col_module", "Module")}</Th>
+                      <Th className={`px-2.5 py-1.5 ${s.textStart}`}>{st("col_target", "Route / Target")}</Th>
+                      <Th className={`px-2.5 py-1.5 ${s.textStart}`}>{st("col_issue", "Issue / Result")}</Th>
+                      <Th className="px-2.5 py-1.5 text-center">{st("col_status", "Status")}</Th>
+                      <Th className="px-2.5 py-1.5 text-center">{st("col_lang", "Lang")}</Th>
+                      <Th className="px-2.5 py-1.5" />
                     </tr>
                   </thead>
                   <tbody>

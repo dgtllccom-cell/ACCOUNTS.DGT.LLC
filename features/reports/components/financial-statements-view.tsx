@@ -9,6 +9,7 @@ import { useErpScope } from "@/lib/hooks/use-erp-scope";
 import { openScopedGenericReport, type GenericReportColumn } from "@/lib/reports/open-scoped-report";
 import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { formatErpRange } from "@/lib/datetime/erp-date";
+import { Th } from "@/components/ui/translated-th";
 
 const STATEMENTS = ["profit_loss", "balance_sheet", "cash_flow"] as const;
 type Statement = (typeof STATEMENTS)[number];
@@ -286,10 +287,10 @@ export function FinancialStatementsView({ lang: langProp }: { lang?: string }) {
                     <table className="w-full text-xs">
                       <thead>
                         <tr className="border-b text-slate-500">
-                          <th className={s.textStart + " py-1.5"}>{s.t("col_code", "Code")}</th>
-                          <th className={s.textStart + " py-1.5"}>{s.t("col_name", "Ledger")}</th>
-                          <th className="text-center py-1.5">{s.t("col_currency", "Currency")}</th>
-                          <th className={s.textEnd + " py-1.5"}>{s.t("col_amount", "Amount")}</th>
+                          <Th className={s.textStart + " py-1.5"}>{s.t("col_code", "Code")}</Th>
+                          <Th className={s.textStart + " py-1.5"}>{s.t("col_name", "Ledger")}</Th>
+                          <Th className="text-center py-1.5">{s.t("col_currency", "Currency")}</Th>
+                          <Th className={s.textEnd + " py-1.5"}>{s.t("col_amount", "Amount")}</Th>
                         </tr>
                       </thead>
                       <tbody>

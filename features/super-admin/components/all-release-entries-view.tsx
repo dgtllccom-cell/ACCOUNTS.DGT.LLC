@@ -8,6 +8,7 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { t } from "@/lib/i18n/ui";
 import { openJournalReportWindow } from "@/lib/reports/open-journal-report-window";
+import { Th } from "@/components/ui/translated-th";
 
 type FeedEntry = {
   sr: number;
@@ -397,18 +398,18 @@ export function AllReleaseEntriesView({ lang: langProp = "en" }: { lang?: string
           <table className="w-full min-w-[1280px] text-xs">
             <thead className="bg-slate-50 dark:bg-slate-950/50">
               <tr className="text-[10px] uppercase text-slate-500">
-                <th className="p-2.5 text-start w-12">{tt("rozrep.sno", "Sr #")}</th>
-                <th className="p-2.5 text-start min-w-[140px]">{tt("bankroz.date_time", "Date / Time")}</th>
-                <th className="p-2.5 text-start min-w-[110px]">{tt("sae.module", "Module")}</th>
-                <th className="p-2.5 text-start min-w-[90px]">{tt("rozrep.country", "Country")}</th>
-                <th className="p-2.5 text-start min-w-[100px]">{tt("rozrep.branch", "Branch")}</th>
-                <th className="p-2.5 text-start min-w-[160px]">{tt("sae.entry_name", "Entry Name")}</th>
-                <th className="p-2.5 text-start min-w-[120px]">{tt("sae.party", "Party / Person")}</th>
-                <th className="p-2.5 text-start min-w-[130px]">{tt("acct.reference_no", "Reference")}</th>
-                <th className="p-2.5 text-start min-w-[70px]">{tt("rozrep.currency", "Currency")}</th>
-                <th className="p-2.5 text-end min-w-[90px]">{tt("rozrep.debit", "Debit")}</th>
-                <th className="p-2.5 text-end min-w-[90px]">{tt("rozrep.credit", "Credit")}</th>
-                <th className="p-2.5 text-center min-w-[110px]">{tt("acct.status", "Status")}</th>
+                <Th className="p-2.5 text-start w-12">{tt("rozrep.sno", "Sr #")}</Th>
+                <Th className="p-2.5 text-start min-w-[140px]">{tt("bankroz.date_time", "Date / Time")}</Th>
+                <Th className="p-2.5 text-start min-w-[110px]">{tt("sae.module", "Module")}</Th>
+                <Th className="p-2.5 text-start min-w-[90px]">{tt("rozrep.country", "Country")}</Th>
+                <Th className="p-2.5 text-start min-w-[100px]">{tt("rozrep.branch", "Branch")}</Th>
+                <Th className="p-2.5 text-start min-w-[160px]">{tt("sae.entry_name", "Entry Name")}</Th>
+                <Th className="p-2.5 text-start min-w-[120px]">{tt("sae.party", "Party / Person")}</Th>
+                <Th className="p-2.5 text-start min-w-[130px]">{tt("acct.reference_no", "Reference")}</Th>
+                <Th className="p-2.5 text-start min-w-[70px]">{tt("rozrep.currency", "Currency")}</Th>
+                <Th className="p-2.5 text-end min-w-[90px]">{tt("rozrep.debit", "Debit")}</Th>
+                <Th className="p-2.5 text-end min-w-[90px]">{tt("rozrep.credit", "Credit")}</Th>
+                <Th className="p-2.5 text-center min-w-[110px]">{tt("acct.status", "Status")}</Th>
               </tr>
             </thead>
             <tbody>

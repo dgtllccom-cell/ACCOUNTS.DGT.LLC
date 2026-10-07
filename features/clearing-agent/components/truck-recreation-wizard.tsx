@@ -36,6 +36,7 @@ import { openMasterProfileReportWindow } from "@/lib/reports/open-master-profile
 import { ReportActions } from "@/components/ui/report-actions";
 import { UnifiedActionMenu } from "@/components/ui/unified-action-menu";
 import { TruckAttachments } from "@/features/clearing-agent/components/truck-attachments";
+import { Th } from "@/components/ui/translated-th";
 
 /**
  * Clearing Truck Registration (Shipping & Clearing). Table: trucks.
@@ -205,7 +206,9 @@ export function TruckRecreationWizard({
     branch: false,
   });
 
-  const [nowStr] = useState(() => new Date().toLocaleString());
+  // set after mount: a clock string rendered on the server and again in the browser differs by seconds (React hydration error #418)
+  const [nowStr, setNowStr] = useState("");
+  useEffect(() => { setNowStr(new Date().toLocaleString()); }, []);
 
   type TruckOption = { id: string; category: string; code: string; name_en: string; name_ur: string; name_ar: string; name_fa: string; name_ps: string };
   const [truckOptions, setTruckOptions] = useState<TruckOption[]>([]);
@@ -991,18 +994,18 @@ export function TruckRecreationWizard({
         <table className="w-full text-start text-xs">
           <thead className="border-b border-slate-200 text-[10px] font-black uppercase text-slate-500 dark:border-slate-800 dark:text-slate-400">
             <tr>
-              <th className="px-2 py-2 text-start">#</th>
-              <th className="px-2 py-2 text-start">{tt("trk.col_truck_no", "Truck No.")}</th>
-              <th className="px-2 py-2 text-start">{tt("trk.col_owner", "Owner Name")}</th>
-              {visibleCols.truckName && <th className="px-2 py-2 text-start">{tt("trk.col_truck_name", "Truck Name")}</th>}
-              {visibleCols.model && <th className="px-2 py-2 text-start">{tt("trk.col_model", "Model")}</th>}
-              {visibleCols.company && <th className="px-2 py-2 text-start">{tt("trk.col_company", "Company")}</th>}
-              {visibleCols.transporter && <th className="px-2 py-2 text-start">{tt("trk.col_transporter", "Transporter")}</th>}
-              <th className="px-2 py-2 text-start">{tt("trk.col_driver", "Driver")}</th>
-              {visibleCols.mobile && <th className="px-2 py-2 text-start">{tt("common.mobile", "Mobile")}</th>}
-              {visibleCols.branch && <th className="px-2 py-2 text-start">{tt("trk.col_branch", "Branch")}</th>}
-              <th className="px-2 py-2 text-start">{tt("common.status", "Status")}</th>
-              <th className="px-2 py-2 text-end">{tt("common.actions", "Actions")}</th>
+              <Th className="px-2 py-2 text-start">#</Th>
+              <Th className="px-2 py-2 text-start">{tt("trk.col_truck_no", "Truck No.")}</Th>
+              <Th className="px-2 py-2 text-start">{tt("trk.col_owner", "Owner Name")}</Th>
+              {visibleCols.truckName && <Th className="px-2 py-2 text-start">{tt("trk.col_truck_name", "Truck Name")}</Th>}
+              {visibleCols.model && <Th className="px-2 py-2 text-start">{tt("trk.col_model", "Model")}</Th>}
+              {visibleCols.company && <Th className="px-2 py-2 text-start">{tt("trk.col_company", "Company")}</Th>}
+              {visibleCols.transporter && <Th className="px-2 py-2 text-start">{tt("trk.col_transporter", "Transporter")}</Th>}
+              <Th className="px-2 py-2 text-start">{tt("trk.col_driver", "Driver")}</Th>
+              {visibleCols.mobile && <Th className="px-2 py-2 text-start">{tt("common.mobile", "Mobile")}</Th>}
+              {visibleCols.branch && <Th className="px-2 py-2 text-start">{tt("trk.col_branch", "Branch")}</Th>}
+              <Th className="px-2 py-2 text-start">{tt("common.status", "Status")}</Th>
+              <Th className="px-2 py-2 text-end">{tt("common.actions", "Actions")}</Th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

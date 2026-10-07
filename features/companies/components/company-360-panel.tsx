@@ -17,6 +17,7 @@ import { openCompany360Report } from "@/lib/reports/open-company-360-report-wind
 import { COMPANY_STATUS_OPTIONS, COMPANY_TYPES, LEGAL_STRUCTURE_OPTIONS, REGISTRATION_TYPE_OPTIONS, STATUS_TONE, optionLabel } from "@/features/companies/company-labels";
 import { cn } from "@/lib/utils";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import { Th } from "@/components/ui/translated-th";
 
 type C360 = {
   company: any;
@@ -212,7 +213,7 @@ export function Company360Panel({
         <thead>
           <tr className="border-b border-slate-200 text-slate-500 dark:border-slate-700">
             {headers.map((h) => (
-              <th key={h} className={cn("px-2 py-1.5 font-semibold", s.textStart)}>{h}</th>
+              <Th key={h} className={cn("px-2 py-1.5 font-semibold", s.textStart)}>{h}</Th>
             ))}
           </tr>
         </thead>

@@ -29,6 +29,7 @@ import { apiGet, apiPost, apiPatch } from "@/lib/api/client";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { listCountries, type LocationCountry } from "@/features/locations/location-api";
 import { localizeTerm } from "@/lib/i18n/transliteration";
+import { Th } from "@/components/ui/translated-th";
 
 export type ShippingLineItem = {
   id: string;
@@ -361,13 +362,13 @@ export function ShippingLineMasterSetup() {
             <table className="w-full text-left text-xs">
               <thead className="border-b border-slate-100 bg-slate-50/80 font-bold uppercase tracking-wider text-slate-600 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-300">
                 <tr>
-                  <th className="px-4 py-3">Code</th>
-                  <th className="px-4 py-3">Shipping Line Name</th>
-                  <th className="px-4 py-3">Contact Person</th>
-                  <th className="px-4 py-3">Contact Info</th>
-                  <th className="px-4 py-3">Linked Operating Countries</th>
-                  <th className="px-4 py-3">Financial Account</th>
-                  <th className="px-4 py-3 text-right">Actions</th>
+                  <Th className="px-4 py-3">Code</Th>
+                  <Th className="px-4 py-3">Shipping Line Name</Th>
+                  <Th className="px-4 py-3">Contact Person</Th>
+                  <Th className="px-4 py-3">Contact Info</Th>
+                  <Th className="px-4 py-3">Linked Operating Countries</Th>
+                  <Th className="px-4 py-3">Financial Account</Th>
+                  <Th className="px-4 py-3 text-right">Actions</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

@@ -6,6 +6,7 @@ import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { apiGet, apiPost } from "@/lib/api/client";
 import { FilterBar, fmtAed, useEntitiesAndPeriods } from "@/features/uae-tax/components/uae-tax-shared";
+import { Th } from "@/components/ui/translated-th";
 
 type Mode = "invoices" | "credit_notes" | "asp_status";
 
@@ -123,13 +124,13 @@ export function UaeEInvoiceView({ lang: langProp, mode }: { lang?: SupportedLang
           <table className="w-full text-xs">
             <thead className="bg-slate-50 dark:bg-slate-800/60">
               <tr className="text-left">
-                <th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("ei_col_number", "Invoice No")}</th>
-                <th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("ei_col_type", "Type")}</th>
-                <th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("ei_col_buyer", "Buyer")}</th>
-                <th className="px-4 py-2.5 text-right font-bold uppercase tracking-wider text-slate-400">{s.t("ei_col_total", "Total (AED)")}</th>
-                <th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("set_col_status", "Status")}</th>
-                <th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("ei_col_asp", "ASP Ref")}</th>
-                <th className="px-4 py-2.5" />
+                <Th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("ei_col_number", "Invoice No")}</Th>
+                <Th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("ei_col_type", "Type")}</Th>
+                <Th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("ei_col_buyer", "Buyer")}</Th>
+                <Th className="px-4 py-2.5 text-right font-bold uppercase tracking-wider text-slate-400">{s.t("ei_col_total", "Total (AED)")}</Th>
+                <Th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("set_col_status", "Status")}</Th>
+                <Th className="px-4 py-2.5 font-bold uppercase tracking-wider text-slate-400">{s.t("ei_col_asp", "ASP Ref")}</Th>
+                <Th className="px-4 py-2.5" />
               </tr>
             </thead>
             <tbody>

@@ -5,7 +5,7 @@ import { supportedLanguages, type SupportedLanguage, rtlLanguages, getHtmlLangua
 import { getLanguageKeyboardMap } from "@/lib/i18n/keyboard-layouts";
 import { useRouter } from "next/navigation";
 import { t } from "@/lib/i18n/ui";
-import { applyThemeMode, legacyThemeMode, normalizeThemeMode, type ThemeMode } from "@/lib/ui/theme-modes";
+import { applyThemeMode, themeModeIsDark, legacyThemeMode, normalizeThemeMode, type ThemeMode } from "@/lib/ui/theme-modes";
 import { QuickPreferencesPopover } from "@/components/layout/quick-preferences-popover";
 
 function getInitialThemeMode(): ThemeMode {
@@ -175,7 +175,7 @@ export function PreferencesControls() {
     applyThemeMode(next);
     localStorage.setItem("erp_theme_mode", next);
     document.cookie = `erp_theme_mode=${encodeURIComponent(next)}; Path=/; Max-Age=${60 * 60 * 24 * 365}; SameSite=Lax`;
-    localStorage.setItem("erp_theme", next === "night" ? "dark" : "light");
+    localStorage.setItem("erp_theme", themeModeIsDark(next) ? "dark" : "light");
     setThemeMode(next);
   }
 

@@ -46,6 +46,7 @@ import { t } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { useBranchUserContext } from "@/lib/hooks/use-branch-user-context";
 import { TaskHandoverModal } from "@/features/transfer-center/components/task-handover-modal";
+import { Th } from "@/components/ui/translated-th";
 
 interface OrderLeg {
   id?: string;
@@ -673,13 +674,13 @@ export function CustomerOrderTransferView() {
             <table className="w-full text-left rtl:text-right text-xs">
               <thead className="bg-slate-50/70 border-b border-slate-200/80 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:bg-slate-800/40 dark:border-slate-800 dark:text-slate-400">
                 <tr>
-                  <th className="py-3 px-4">{tt("order_no", "Order No")}</th>
-                  <th className="py-3 px-4">{tt("customer", "Customer / Party")}</th>
-                  <th className="py-3 px-4">{tt("route", "Route (From → To)")}</th>
-                  <th className="py-3 px-4">{tt("cargo_manifest", "Cargo Manifest")}</th>
-                  <th className="py-3 px-4">{tt("fleet_driver", "Fleet / Driver")}</th>
-                  <th className="py-3 px-4">{tt("status_and_routing", "Status & Routing")}</th>
-                  <th className="py-3 px-4 text-center">{tt("actions", "Actions")}</th>
+                  <Th className="py-3 px-4">{tt("order_no", "Order No")}</Th>
+                  <Th className="py-3 px-4">{tt("customer", "Customer / Party")}</Th>
+                  <Th className="py-3 px-4">{tt("route", "Route (From → To)")}</Th>
+                  <Th className="py-3 px-4">{tt("cargo_manifest", "Cargo Manifest")}</Th>
+                  <Th className="py-3 px-4">{tt("fleet_driver", "Fleet / Driver")}</Th>
+                  <Th className="py-3 px-4">{tt("status_and_routing", "Status & Routing")}</Th>
+                  <Th className="py-3 px-4 text-center">{tt("actions", "Actions")}</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">

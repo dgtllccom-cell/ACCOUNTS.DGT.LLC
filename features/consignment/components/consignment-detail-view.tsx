@@ -24,6 +24,7 @@ import {
 import { openConsignmentReport } from "@/features/consignment/consignment-report";
 import { MasterCombo } from "@/components/ui/master-combo";
 import { HeadEditModal, EditRowModal } from "@/features/consignment/components/consignment-edit-modals";
+import { Th } from "@/components/ui/translated-th";
 
 const num = (v: unknown) => (Number.isFinite(Number(v)) ? Number(v) : 0);
 
@@ -557,9 +558,9 @@ function SimpleTable({
         <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
           <tr>
             {head.map((h, i) => (
-              <th key={i} className={`px-2.5 py-1.5 ${start}`}>
+              <Th key={i} className={`px-2.5 py-1.5 ${start}`}>
                 {h}
-              </th>
+              </Th>
             ))}
           </tr>
         </thead>

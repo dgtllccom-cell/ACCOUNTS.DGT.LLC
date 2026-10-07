@@ -9,6 +9,7 @@ import { useErpScope } from "@/lib/hooks/use-erp-scope";
 import { openScopedGenericReport, type GenericReportColumn } from "@/lib/reports/open-scoped-report";
 import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { formatErpRange } from "@/lib/datetime/erp-date";
+import { Th } from "@/components/ui/translated-th";
 
 const REPORT_KEYS = [
   "bill_wise_expense",
@@ -293,9 +294,9 @@ export function BillCostReportsView({ lang: langProp }: { lang?: string }) {
                 <thead>
                   <tr className="border-b text-slate-500">
                     {data.columns.map((c: any) => (
-                      <th key={c.key} className={c.align === "right" ? s.textEnd : c.align === "center" ? "text-center" : s.textStart + " py-1.5"}>
+                      <Th key={c.key} className={c.align === "right" ? s.textEnd : c.align === "center" ? "text-center" : s.textStart + " py-1.5"}>
                         {colLabel(c.key, c.label)}
-                      </th>
+                      </Th>
                     ))}
                   </tr>
                 </thead>

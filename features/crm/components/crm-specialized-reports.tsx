@@ -30,6 +30,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t as tUi } from "@/lib/i18n/ui";
+import { Th } from "@/components/ui/translated-th";
 
 interface SpecializedReportProps {
   reportType: "executive" | "pipeline" | "payments-recovery" | "city-branch" | "team-performance";
@@ -301,12 +302,12 @@ export function CrmSpecializedReportView({ reportType }: SpecializedReportProps)
                 <table className="w-full text-left text-xs">
                   <thead className="bg-slate-50 text-slate-600 font-bold border-b">
                     <tr>
-                      <th className="p-3">Customer ID</th>
-                      <th className="p-3">Company</th>
-                      <th className="p-3">Country</th>
-                      <th className="p-3">Branch</th>
-                      <th className="p-3">Assigned User</th>
-                      <th className="p-3 text-right">Health</th>
+                      <Th className="p-3">Customer ID</Th>
+                      <Th className="p-3">Company</Th>
+                      <Th className="p-3">Country</Th>
+                      <Th className="p-3">Branch</Th>
+                      <Th className="p-3">Assigned User</Th>
+                      <Th className="p-3 text-right">Health</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
