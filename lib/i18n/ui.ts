@@ -11608,6 +11608,39 @@ export type UiKey =
   | "cmf.sum_registrations"
   | "cmf.sum_contracts"
   | "cmf.sum_contacts"
+  | "cmf.step1"
+  | "cmf.step2"
+  | "cmf.step3"
+  | "cmf.step4"
+  | "cmf.step5"
+  | "cmf.tab_form"
+  | "cmf.tab_report"
+  | "cmf.account"
+  | "cmf.accounts_loading"
+  | "cmf.no_accounts"
+  | "cmf.select_account"
+  | "cmf.linked_account_number"
+  | "cmf.live_report"
+  | "cmf.updating_live"
+  | "cmf.view_full_report"
+  | "cmf.sel_account"
+  | "cmf.read_only"
+  | "cmf.account_number"
+  | "cmf.account_name"
+  | "cmf.account_type"
+  | "cmf.pick_account"
+  | "cmf.pick_customer_first"
+  | "cmf.sel_customer"
+  | "cmf.customer_code"
+  | "cmf.customer_name"
+  | "cmf.phone"
+  | "cmf.existing_linked"
+  | "cmf.view"
+  | "cmf.new_draft"
+  | "cmf.saved_badge"
+  | "cmf.draft_badge"
+  | "cmf.company_name_lbl"
+  | "cmf.location"
   | (string & {});
 
 type Dict = Record<string, string>;
@@ -34506,6 +34539,39 @@ const en: Dict = {
   "cmf.sum_registrations": "Tax registrations",
   "cmf.sum_contracts": "Contracts",
   "cmf.sum_contacts": "Contacts",
+  "cmf.step1": "Select Customer / Account",
+  "cmf.step2": "Company Details",
+  "cmf.step3": "Tax & Location",
+  "cmf.step4": "Contacts & Contracts",
+  "cmf.step5": "Review & Save",
+  "cmf.tab_form": "Form",
+  "cmf.tab_report": "Live Report",
+  "cmf.account": "Account",
+  "cmf.accounts_loading": "Loading accounts…",
+  "cmf.no_accounts": "This customer has no account in your scope. Accounts are opened in New Account.",
+  "cmf.select_account": "— Select the account —",
+  "cmf.linked_account_number": "Linked Account Number",
+  "cmf.live_report": "Live Registration Report",
+  "cmf.updating_live": "Updating in real time",
+  "cmf.view_full_report": "View Full Report",
+  "cmf.sel_account": "Selected Account Details",
+  "cmf.read_only": "Read-only",
+  "cmf.account_number": "Account Number",
+  "cmf.account_name": "Account Name",
+  "cmf.account_type": "Type",
+  "cmf.pick_account": "Select an account to see its details.",
+  "cmf.pick_customer_first": "Select a customer to begin.",
+  "cmf.sel_customer": "Selected Customer Details",
+  "cmf.customer_code": "Customer Code",
+  "cmf.customer_name": "Customer Name",
+  "cmf.phone": "Phone",
+  "cmf.existing_linked": "Existing Linked Companies",
+  "cmf.view": "View",
+  "cmf.new_draft": "New Company Draft",
+  "cmf.saved_badge": "Saved",
+  "cmf.draft_badge": "Will be created",
+  "cmf.company_name_lbl": "Company Name",
+  "cmf.location": "Location",
 };
 
 const ur: Dict = {
@@ -57373,6 +57439,39 @@ const ur: Dict = {
   "cmf.sum_registrations": "ٹیکس رجسٹریشنز",
   "cmf.sum_contracts": "معاہدے",
   "cmf.sum_contacts": "رابطے",
+  "cmf.step1": "کسٹمر / اکاؤنٹ منتخب کریں",
+  "cmf.step2": "کمپنی کی تفصیلات",
+  "cmf.step3": "ٹیکس اور مقام",
+  "cmf.step4": "رابطے اور معاہدے",
+  "cmf.step5": "جائزہ اور محفوظ کریں",
+  "cmf.tab_form": "فارم",
+  "cmf.tab_report": "لائیو رپورٹ",
+  "cmf.account": "اکاؤنٹ",
+  "cmf.accounts_loading": "اکاؤنٹس لوڈ ہو رہے ہیں…",
+  "cmf.no_accounts": "اس کسٹمر کا آپ کے دائرہ کار میں کوئی اکاؤنٹ نہیں۔ اکاؤنٹس نیو اکاؤنٹ میں کھولے جاتے ہیں۔",
+  "cmf.select_account": "— اکاؤنٹ منتخب کریں —",
+  "cmf.linked_account_number": "منسلک اکاؤنٹ نمبر",
+  "cmf.live_report": "لائیو رجسٹریشن رپورٹ",
+  "cmf.updating_live": "حقیقی وقت میں اپڈیٹ ہو رہا ہے",
+  "cmf.view_full_report": "مکمل رپورٹ دیکھیں",
+  "cmf.sel_account": "منتخب اکاؤنٹ کی تفصیلات",
+  "cmf.read_only": "صرف پڑھنے کے لیے",
+  "cmf.account_number": "اکاؤنٹ نمبر",
+  "cmf.account_name": "اکاؤنٹ کا نام",
+  "cmf.account_type": "قسم",
+  "cmf.pick_account": "تفصیلات دیکھنے کے لیے اکاؤنٹ منتخب کریں۔",
+  "cmf.pick_customer_first": "شروع کرنے کے لیے کسٹمر منتخب کریں۔",
+  "cmf.sel_customer": "منتخب کسٹمر کی تفصیلات",
+  "cmf.customer_code": "کسٹمر کوڈ",
+  "cmf.customer_name": "کسٹمر کا نام",
+  "cmf.phone": "فون",
+  "cmf.existing_linked": "موجودہ منسلک کمپنیاں",
+  "cmf.view": "دیکھیں",
+  "cmf.new_draft": "نئی کمپنی کا مسودہ",
+  "cmf.saved_badge": "محفوظ",
+  "cmf.draft_badge": "بنائی جائے گی",
+  "cmf.company_name_lbl": "کمپنی کا نام",
+  "cmf.location": "مقام",
 };
 
 const ar: Dict = {
@@ -80241,6 +80340,39 @@ const ar: Dict = {
   "cmf.sum_registrations": "التسجيلات الضريبية",
   "cmf.sum_contracts": "العقود",
   "cmf.sum_contacts": "جهات الاتصال",
+  "cmf.step1": "اختيار العميل / الحساب",
+  "cmf.step2": "تفاصيل الشركة",
+  "cmf.step3": "الضرائب والموقع",
+  "cmf.step4": "جهات الاتصال والعقود",
+  "cmf.step5": "مراجعة وحفظ",
+  "cmf.tab_form": "النموذج",
+  "cmf.tab_report": "التقرير المباشر",
+  "cmf.account": "الحساب",
+  "cmf.accounts_loading": "جارٍ تحميل الحسابات…",
+  "cmf.no_accounts": "لا يوجد لهذا العميل حساب ضمن نطاقك. تُفتح الحسابات في «حساب جديد».",
+  "cmf.select_account": "— اختر الحساب —",
+  "cmf.linked_account_number": "رقم الحساب المرتبط",
+  "cmf.live_report": "تقرير التسجيل المباشر",
+  "cmf.updating_live": "يُحدَّث في الوقت الفعلي",
+  "cmf.view_full_report": "عرض التقرير الكامل",
+  "cmf.sel_account": "تفاصيل الحساب المحدد",
+  "cmf.read_only": "للقراءة فقط",
+  "cmf.account_number": "رقم الحساب",
+  "cmf.account_name": "اسم الحساب",
+  "cmf.account_type": "النوع",
+  "cmf.pick_account": "اختر حسابًا لعرض تفاصيله.",
+  "cmf.pick_customer_first": "اختر عميلاً للبدء.",
+  "cmf.sel_customer": "تفاصيل العميل المحدد",
+  "cmf.customer_code": "رمز العميل",
+  "cmf.customer_name": "اسم العميل",
+  "cmf.phone": "الهاتف",
+  "cmf.existing_linked": "الشركات المرتبطة الحالية",
+  "cmf.view": "عرض",
+  "cmf.new_draft": "مسودة شركة جديدة",
+  "cmf.saved_badge": "محفوظ",
+  "cmf.draft_badge": "سيتم إنشاؤها",
+  "cmf.company_name_lbl": "اسم الشركة",
+  "cmf.location": "الموقع",
 };
 
 const fa: Dict = {
@@ -103108,6 +103240,39 @@ const fa: Dict = {
   "cmf.sum_registrations": "ثبت‌نام‌های مالیاتی",
   "cmf.sum_contracts": "قراردادها",
   "cmf.sum_contacts": "مخاطبین",
+  "cmf.step1": "انتخاب مشتری / حساب",
+  "cmf.step2": "جزئیات شرکت",
+  "cmf.step3": "مالیات و موقعیت",
+  "cmf.step4": "مخاطبین و قراردادها",
+  "cmf.step5": "بازبینی و ذخیره",
+  "cmf.tab_form": "فرم",
+  "cmf.tab_report": "گزارش زنده",
+  "cmf.account": "حساب",
+  "cmf.accounts_loading": "در حال بارگذاری حساب‌ها…",
+  "cmf.no_accounts": "این مشتری در محدودهٔ شما حسابی ندارد. حساب‌ها در «حساب جدید» باز می‌شوند.",
+  "cmf.select_account": "— حساب را انتخاب کنید —",
+  "cmf.linked_account_number": "شماره حساب مرتبط",
+  "cmf.live_report": "گزارش ثبت زنده",
+  "cmf.updating_live": "به‌صورت زنده به‌روزرسانی می‌شود",
+  "cmf.view_full_report": "مشاهده گزارش کامل",
+  "cmf.sel_account": "جزئیات حساب انتخاب‌شده",
+  "cmf.read_only": "فقط خواندنی",
+  "cmf.account_number": "شماره حساب",
+  "cmf.account_name": "نام حساب",
+  "cmf.account_type": "نوع",
+  "cmf.pick_account": "برای دیدن جزئیات، یک حساب انتخاب کنید.",
+  "cmf.pick_customer_first": "برای شروع، مشتری را انتخاب کنید.",
+  "cmf.sel_customer": "جزئیات مشتری انتخاب‌شده",
+  "cmf.customer_code": "کد مشتری",
+  "cmf.customer_name": "نام مشتری",
+  "cmf.phone": "تلفن",
+  "cmf.existing_linked": "شرکت‌های مرتبط موجود",
+  "cmf.view": "مشاهده",
+  "cmf.new_draft": "پیش‌نویس شرکت جدید",
+  "cmf.saved_badge": "ذخیره شد",
+  "cmf.draft_badge": "ایجاد خواهد شد",
+  "cmf.company_name_lbl": "نام شرکت",
+  "cmf.location": "موقعیت",
 };
 
 const ps: Dict = {
@@ -125982,6 +126147,39 @@ const ps: Dict = {
   "cmf.sum_registrations": "مالیاتي راجستریشنونه",
   "cmf.sum_contracts": "تړونونه",
   "cmf.sum_contacts": "اړیکې",
+  "cmf.step1": "پیرودونکی / حساب وټاکئ",
+  "cmf.step2": "د شرکت جزئیات",
+  "cmf.step3": "مالیه او موقعیت",
+  "cmf.step4": "اړیکې او تړونونه",
+  "cmf.step5": "کتنه او خوندي کول",
+  "cmf.tab_form": "فورمه",
+  "cmf.tab_report": "ژوندۍ راپور",
+  "cmf.account": "حساب",
+  "cmf.accounts_loading": "حسابونه بارېږي…",
+  "cmf.no_accounts": "دا پیرودونکی ستاسو په حدودو کې حساب نلري. حسابونه په «نوی حساب» کې پرانیستل کیږي.",
+  "cmf.select_account": "— حساب وټاکئ —",
+  "cmf.linked_account_number": "تړلی د حساب شمیره",
+  "cmf.live_report": "د راجستر ژوندۍ راپور",
+  "cmf.updating_live": "په ریښتیني وخت کې تازه کیږي",
+  "cmf.view_full_report": "بشپړ راپور وګورئ",
+  "cmf.sel_account": "د ټاکل شوي حساب جزئیات",
+  "cmf.read_only": "یوازې لوستل",
+  "cmf.account_number": "د حساب شمیره",
+  "cmf.account_name": "د حساب نوم",
+  "cmf.account_type": "ډول",
+  "cmf.pick_account": "د جزئیاتو لیدلو لپاره حساب وټاکئ.",
+  "cmf.pick_customer_first": "د پیل لپاره پیرودونکی وټاکئ.",
+  "cmf.sel_customer": "د ټاکل شوي پیرودونکي جزئیات",
+  "cmf.customer_code": "د پیرودونکي کوډ",
+  "cmf.customer_name": "د پیرودونکي نوم",
+  "cmf.phone": "تلیفون",
+  "cmf.existing_linked": "اوسني تړلي شرکتونه",
+  "cmf.view": "وګورئ",
+  "cmf.new_draft": "د نوي شرکت مسوده",
+  "cmf.saved_badge": "خوندي شو",
+  "cmf.draft_badge": "جوړ به شي",
+  "cmf.company_name_lbl": "د شرکت نوم",
+  "cmf.location": "موقعیت",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
