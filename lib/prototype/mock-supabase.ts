@@ -141,13 +141,38 @@ export function createPrototypeSupabaseClient(): any {
     email: "prototype@dgt.local",
     user_metadata: { full_name: "DGT ERP Prototype" },
   };
+  const makeChannel = (name: string) => {
+    const channel: any = {
+      topic: name,
+      on() { return channel; },
+      subscribe(callback?: (status: string) => void) {
+        try { callback?.("SUBSCRIBED"); } catch {}
+        return channel;
+      },
+      unsubscribe() { return Promise.resolve("ok"); },
+      send() { return Promise.resolve("ok"); },
+      track() { return Promise.resolve("ok"); },
+      untrack() { return Promise.resolve("ok"); },
+      presenceState() { return {}; },
+    };
+    return channel;
+  };
+
   return {
     from(table: string) { return builderFor(table); },
     rpc() { return builderFor("__rpc__"); },
+    channel(name: string) { return makeChannel(name); },
+    removeChannel() { return Promise.resolve("ok"); },
+    removeAllChannels() { return Promise.resolve([]); },
+    getChannels() { return []; },
     auth: {
       async getUser() { return { data: { user: prototypeUser }, error: null }; },
       async getSession() { return { data: { session: { user: prototypeUser } }, error: null }; },
       async signOut() { return { error: null }; },
+      onAuthStateChange(callback?: (event: string, session: any) => void) {
+        try { callback?.("INITIAL_SESSION", { user: prototypeUser }); } catch {}
+        return { data: { subscription: { unsubscribe() {} } } };
+      },
       admin: {
         async listUsers() { return { data: { users: [prototypeUser] }, error: null }; },
         async getUserById() { return { data: { user: prototypeUser }, error: null }; },
