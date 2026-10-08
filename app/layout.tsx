@@ -7,6 +7,7 @@ import { PdfPreviewModal } from "@/components/ui/pdf-preview-modal";
 import { legacyThemeMode, themeModes } from "@/lib/ui/theme-modes";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { getHtmlLanguage, getLanguageDirection } from "@/lib/i18n/languages";
+import { PrototypeNetworkGuard } from "@/components/prototype/prototype-network-guard";
 
 export const metadata: Metadata = {
   applicationName: "Damaan Business Group",
@@ -188,6 +189,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         />
       </head>
       <body suppressHydrationWarning>
+        <PrototypeNetworkGuard />
         <GoogleTranslateScript />
         {children}
         <PdfPreviewModal />
