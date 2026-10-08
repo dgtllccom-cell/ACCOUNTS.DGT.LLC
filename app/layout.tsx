@@ -51,6 +51,38 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang={getHtmlLanguage(lang)} dir={dir} suppressHydrationWarning>
       <head>
+        {process.env.NEXT_PUBLIC_DGT_PROTOTYPE_MODE === "1" ? (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+(() => {
+  try {
+    const originalFetch = window.fetch ? window.fetch.bind(window) : null;
+    if (!originalFetch) return;
+    window.fetch = async function(input, init) {
+      var raw = typeof input === 'string' ? input : (input && input.url) ? input.url : String(input || '');
+      var parsed = null;
+      try { parsed = new URL(raw, window.location.origin); } catch {}
+      var method = String((init && init.method) || (input && input.method) || 'GET').toUpperCase();
+      if (parsed && parsed.origin === window.location.origin && parsed.pathname.indexOf('/api/') === 0 && !['GET','HEAD','OPTIONS'].includes(method)) {
+        return new Response(JSON.stringify({ ok:true, data:{ success:true, prototype:true, noWrite:true } }), {
+          status:200, headers:{'content-type':'application/json','x-dgt-prototype':'1'}
+        });
+      }
+      if (parsed && parsed.origin !== window.location.origin) {
+        return new Response(JSON.stringify({ ok:true, data:{ success:true, prototype:true, blockedExternalRequest:true } }), {
+          status:200, headers:{'content-type':'application/json','x-dgt-prototype':'1'}
+        });
+      }
+      return originalFetch(input, init);
+    };
+    document.documentElement.dataset.dgtPrototype = 'true';
+  } catch {}
+})();
+              `.trim()
+            }}
+          />
+        ) : null}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
