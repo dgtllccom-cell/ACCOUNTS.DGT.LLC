@@ -10,6 +10,7 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { isDemoAuthEnabled, isSupabaseConfigured } from "@/lib/supabase/config";
 import { readTempSession } from "@/lib/auth/temp-session";
 import { type MobileProfile, normalizeMobileProfile } from "@/lib/permissions/mobile-profiles";
+import { buildPrototypeSession, isPrototypeMode } from "@/lib/prototype/mode";
 
 export { storedRoleScopeLevel };
 export type LedgerVisibility = "scoped" | "shipping_only" | "full";
@@ -646,6 +647,7 @@ async function resolveErpSessionFromDb(
 }
 
 export async function getCurrentErpSession(): Promise<ErpSession | null> {
+  if (isPrototypeMode()) return buildPrototypeSession() as unknown as ErpSession;
   try {
     // ── Custom login path (POST /api/erp/auth/login → signed temp-session JWT) ──
     const temp = await readTempSession();
