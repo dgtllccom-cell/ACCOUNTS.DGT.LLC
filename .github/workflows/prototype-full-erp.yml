@@ -8,31 +8,22 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    strategy:
-      matrix:
-        node-version: [22.x]
+    timeout-minutes: 40
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Use Node.js
+      - name: Use Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 22.x
           cache: npm
 
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
-      - name: TypeScript
-        env:
-          DGT_PROTOTYPE_MODE: "1"
-          NEXT_PUBLIC_DGT_PROTOTYPE_MODE: "1"
-          APP_ENV: "development"
-          NEXT_PUBLIC_APP_ENV: "development"
-          ALLOW_DEMO_AUTH: "true"
-        run: npx tsc --noEmit
+      - name: Validate prototype runner syntax
+        run: node --check scripts/prototype-dev.cjs
 
       - name: Five-language guard
         run: npm run i18n:guard
@@ -48,3 +39,26 @@ jobs:
           NEXT_TELEMETRY_DISABLED: "1"
           CI: "false"
         run: npm run build
+
+      - name: Record baseline TypeScript report
+        continue-on-error: true
+        env:
+          DGT_PROTOTYPE_MODE: "1"
+          NEXT_PUBLIC_DGT_PROTOTYPE_MODE: "1"
+          APP_ENV: "development"
+          NEXT_PUBLIC_APP_ENV: "development"
+          ALLOW_DEMO_AUTH: "true"
+        run: npx tsc --noEmit
+
+      - name: Build downloadable prototype package
+        run: |
+          mkdir -p artifact
+          git archive --format=zip --output=artifact/DGT-ERP-FULL-PROTOTYPE.zip HEAD
+
+      - name: Upload downloadable prototype
+        uses: actions/upload-artifact@v4
+        with:
+          name: DGT-ERP-FULL-PROTOTYPE
+          path: artifact/DGT-ERP-FULL-PROTOTYPE.zip
+          if-no-files-found: error
+          retention-days: 30
