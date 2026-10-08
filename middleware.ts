@@ -3,6 +3,7 @@ import { updateSession } from "@/lib/supabase/middleware";
 import { ERP_SESSION_COOKIE } from "@/lib/auth/session-cookie";
 import { readMobileProfileFromToken } from "@/lib/auth/edge-session";
 import { MOBILE_PROFILE_HOME, mobileProfileAllowsApi, mobileProfileAllowsPath } from "@/lib/permissions/mobile-profiles";
+import { isPrototypeMode } from "@/lib/prototype/mode";
 
 function resolveRedirectUrl(targetPath: string, request: NextRequest): URL {
   const forwardedHost = request.headers.get("x-forwarded-host") || request.headers.get("host");
@@ -18,6 +19,16 @@ export async function middleware(request: NextRequest) {
   // The dashboard layout (server) needs the requested path to apply the route access policy (see lib/navigation/route-policy).
   // Always overwrite: a client-supplied value must never be trusted.
   request.headers.set("x-erp-pathname", pathname);
+
+  if (isPrototypeMode()) {
+    if (pathname.startsWith("/api/") && !["GET", "HEAD", "OPTIONS"].includes(request.method.toUpperCase())) {
+      return NextResponse.json(
+        { ok: true, data: { success: true, prototype: true, noWrite: true } },
+        { status: 200, headers: { "x-dgt-prototype": "1" } },
+      );
+    }
+    return NextResponse.next({ request: { headers: request.headers } });
+  }
 
   // Enforce authentication for all dashboard routes.
   // This is a fast cookie-presence check (not a full session validation).
