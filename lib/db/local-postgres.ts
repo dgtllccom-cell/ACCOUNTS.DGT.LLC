@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import postgres from "postgres";
+import { isPrototypeMode } from "@/lib/prototype/mode";
 
 /**
  * Shared direct-Postgres connection helper (DATABASE_URL). This bypasses PostgREST/RLS
@@ -15,6 +16,7 @@ import postgres from "postgres";
  * the env var name / precedence ever changes).
  */
 export function getDbUrl(): string {
+  if (isPrototypeMode()) return "";
   if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
   try {
     const cwd = path.resolve(process.cwd());
