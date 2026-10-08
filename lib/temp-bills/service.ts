@@ -212,7 +212,13 @@ export async function tempBillSummary(session: ErpSession): Promise<{
   });
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function assertBillId(id: string): void {
+  if (!UUID_RE.test(id)) throw new ApiClientError("Bill not found.", { status: 404, code: "NOT_FOUND" });
+}
+
 export async function getTempBill(session: ErpSession, id: string, lang: SupportedLanguage = "en", raw = false): Promise<TempBillRow | null> {
+  if (!UUID_RE.test(id)) return null;
   const row = await pgRead(async (sql) => {
     const [r] = (await sql`
       SELECT t.* FROM public.temp_bill t
@@ -281,6 +287,7 @@ export async function createTempBill(session: ErpSession, input: TempBillInput, 
 }
 
 export async function updateTempBill(session: ErpSession, id: string, patch: Partial<TempBillInput>): Promise<void> {
+  assertBillId(id);
   await pgWrite(async (sql) => {
     const [existing] = (await sql`
       SELECT id, country_id FROM public.temp_bill t
@@ -315,6 +322,7 @@ export async function updateTempBill(session: ErpSession, id: string, patch: Par
 }
 
 export async function deleteTempBill(session: ErpSession, id: string): Promise<void> {
+  assertBillId(id);
   await pgWrite(async (sql) => {
     const res = await sql`
       UPDATE public.temp_bill SET deleted_at = now()

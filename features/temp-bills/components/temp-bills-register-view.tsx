@@ -82,6 +82,7 @@ export function TempBillsRegisterView({ lang: langProp, section = "all" }: { lan
     if (!confirm(s.t("confirm_delete", "Delete this temporary bill? This cannot be undone."))) return;
     try {
       await deleteTempBillReq(id);
+      setRows((prev) => prev.filter((r) => r.id !== id));
       await load();
     } catch (e) {
       alert(e instanceof Error ? e.message : String(e));
@@ -111,7 +112,10 @@ export function TempBillsRegisterView({ lang: langProp, section = "all" }: { lan
       subtitle: s.t("report_sub", "Historical tracking only — not connected to Ledger / Roznamcha / Journal / Stock"),
       lang: lang as any,
       columns,
-      rows: rows as any,
+      rows: rows.map((r) => ({
+        ...r,
+        bill_kind: r.bill_kind === "purchase" ? s.t("kind_purchase", "Purchase") : s.t("kind_sale", "Sale"),
+      })) as any,
       filters: [
         kindFilter ? { label: s.t("col_kind", "Type"), value: kindFilter } : null,
         fromDate ? { label: s.t("f_from", "From"), value: fromDate } : null,
@@ -124,7 +128,6 @@ export function TempBillsRegisterView({ lang: langProp, section = "all" }: { lan
         [s.t("kpi_total_amount", "Total Amount")]: totalAmt.toLocaleString(undefined, { maximumFractionDigits: 2 }),
       },
       totalsRow: {
-        goods_name: s.t("total", "TOTAL"),
         amount: totalAmt,
       } as any,
     });
