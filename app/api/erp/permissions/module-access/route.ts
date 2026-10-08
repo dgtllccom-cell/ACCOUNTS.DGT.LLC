@@ -58,8 +58,8 @@ export async function GET(request: NextRequest) {
       admin.from("user_role_assignments").select("user_id, role, country_id, country_branch_id, city_branch_id, is_active").is("deleted_at", null),
       admin.from("user_permission_sets").select("user_id, permissions"),
       admin.from("countries").select("id, name"),
-      admin.from("country_branches").select("id, name"),
-      admin.from("city_branches").select("id, name, city_name")
+      admin.from("country_branches").select("id, name").is("deleted_at", null),
+      admin.from("city_branches").select("id, name, city_name").is("deleted_at", null)
     ]);
 
     const profiles = profilesRes.data ?? [];

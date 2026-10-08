@@ -21,7 +21,7 @@ export async function GET() {
         session.cityBranchIds[0]
           ? sql`select cb.id, cb.name, cb.code, cb.country_id, cb.country_branch_id, co.name as country_name
                 from public.city_branches cb left join public.countries co on co.id = cb.country_id
-                where cb.id = ${session.cityBranchIds[0]}::uuid limit 1`
+                where cb.id = ${session.cityBranchIds[0]}::uuid and cb.deleted_at is null limit 1`
           : Promise.resolve([])
       ]);
       return [

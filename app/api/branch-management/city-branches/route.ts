@@ -284,6 +284,33 @@ export async function POST(request: Request) {
       );
     }
 
+    // Same country + city + operational domain may exist only once (Business and Shipping may share a city).
+    // The legacy is_business_branch flag is deliberately NOT part of the key: shipping branches carry false, new rows default true.
+    const dupScope = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        select id, name, code, operational_domain from public.city_branches
+        where country_id = ${parsed.data.countryId}
+          and lower(btrim(city_name)) = lower(${normCityName})
+          and coalesce(operational_domain, 'business') = ${parsed.data.operationalDomain}
+          and deleted_at is null
+        limit 1
+      `;
+      return (rows as any[])[0] ?? null;
+    });
+    if (dupScope) {
+      return NextResponse.json(
+        {
+          error: formatError(
+            `Duplicate branch: a ${parsed.data.operationalDomain === "shipping" ? "Shipping Line" : "Business"} branch for "${normCityName}" already exists ("${dupScope.name}", ${dupScope.code}). No new record was created.`,
+            session.isSuperAdmin
+          ),
+          code: "DUPLICATE_BRANCH",
+          existingBranchId: dupScope.id,
+        },
+        { status: 409 }
+      );
+    }
+
     let validCreatedBy: string | null = null;
     const actorUserId = session.userId;
     if (isUuid(actorUserId)) {
@@ -368,6 +395,9 @@ export async function POST(request: Request) {
       const supabase = createSupabaseAdminClient() as any;
       const { data, error } = await supabase.from("city_branches").insert(payload).select("id").single();
       if (error) {
+        if ((error as any).code === "23505") {
+          return NextResponse.json({ error: formatError("Duplicate branch: this country, city, code or operational domain already has a branch. No new record was created.", session.isSuperAdmin), code: "DUPLICATE_BRANCH" }, { status: 409 });
+        }
         return NextResponse.json({ error: formatError(error.message, session.isSuperAdmin) }, { status: 403 });
       }
       insertedId = data?.id ?? null;
@@ -562,6 +592,30 @@ export async function PUT(request: Request) {
     if (existingNameId) {
       return NextResponse.json(
         { error: formatError(`Branch Name "${normName}" already exists for this City. Please choose a distinct Branch Name.`, session.isSuperAdmin) },
+        { status: 409 }
+      );
+    }
+
+    // Same country + city + operational domain + branch type may exist only once (excluding this branch).
+    const dupScope = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        select o.id, o.name, o.code from public.city_branches o
+        where o.country_id = ${parsed.data.countryId}
+          and lower(btrim(o.city_name)) = lower(${normCityName})
+          and coalesce(o.operational_domain, 'business') = coalesce((select operational_domain from public.city_branches where id = ${id}), 'business')
+          and o.id <> ${id}
+          and o.deleted_at is null
+        limit 1
+      `;
+      return (rows as any[])[0] ?? null;
+    });
+    if (dupScope) {
+      return NextResponse.json(
+        {
+          error: formatError(`Duplicate branch: another branch for "${normCityName}" already exists in the same operational domain ("${dupScope.name}", ${dupScope.code}). Nothing was changed.`, session.isSuperAdmin),
+          code: "DUPLICATE_BRANCH",
+          existingBranchId: dupScope.id,
+        },
         { status: 409 }
       );
     }
@@ -766,11 +820,18 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "City branch not found or already deleted." }, { status: 404 });
     }
 
+    // The DB trigger trg_city_branch_soft_delete_cascade has already deactivated the role assignments bound to this
+    // branch (no user, profile, account, ledger or transaction is deleted). Record how many for the audit trail.
+    const deactivatedAssignments = await withLocalPg(async (sql) => {
+      const rows = await sql`select count(*)::int as n from public.user_role_assignments where city_branch_id = ${id} and is_active = false`;
+      return Number((rows as any[])[0]?.n ?? 0);
+    });
+
     await auditApiAction(request as any, {
       action: "city_branches.delete.api",
       entityTable: "city_branches",
       entityId: id,
-      after: { deleted_at: new Date().toISOString(), status: "inactive" }
+      after: { deleted_at: new Date().toISOString(), status: "inactive", deactivated_assignments: deactivatedAssignments ?? null }
     });
 
     return NextResponse.json({ success: true, message: "City branch deleted successfully", id });

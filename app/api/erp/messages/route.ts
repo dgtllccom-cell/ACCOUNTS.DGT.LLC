@@ -396,8 +396,8 @@ export async function GET(request: NextRequest) {
         admin.from("attachments").select("id, company_id, owner_table, owner_id, bucket, path, created_at").order("created_at", { ascending: false }).limit(100),
         admin.from("companies").select("id, name").order("name", { ascending: true }),
         admin.from("countries").select("id, name, iso2, official_email, admin_email, email_domain").order("name", { ascending: true }),
-        admin.from("country_branches").select("id, name, code, country_id, local_currency, status, email").order("name", { ascending: true }),
-        admin.from("city_branches").select("id, name, code, city_name, country_id, country_branch_id, local_currency, status, email").order("city_name", { ascending: true })
+        admin.from("country_branches").select("id, name, code, country_id, local_currency, status, email").is("deleted_at", null).order("name", { ascending: true }),
+        admin.from("city_branches").select("id, name, code, city_name, country_id, country_branch_id, local_currency, status, email").is("deleted_at", null).order("city_name", { ascending: true })
       ]);
 
     if (profileRes.error) throw new Error(profileRes.error.message);

@@ -84,8 +84,8 @@ export async function GET(_request: NextRequest) {
     // Fetch lookup tables
     const [countriesRes, countryBranchesRes, cityBranchesRes, companiesRes] = await Promise.all([
       admin.from("countries").select("id, name, iso2").order("name"),
-      admin.from("country_branches").select("id, name, code, country_id").order("name"),
-      admin.from("city_branches").select("id, name, code, city_name, country_id, country_branch_id").order("city_name"),
+      admin.from("country_branches").select("id, name, code, country_id").is("deleted_at", null).order("name"),
+      admin.from("city_branches").select("id, name, code, city_name, country_id, country_branch_id").is("deleted_at", null).order("city_name"),
       admin.from("companies").select("id, name").order("name")
     ]);
 

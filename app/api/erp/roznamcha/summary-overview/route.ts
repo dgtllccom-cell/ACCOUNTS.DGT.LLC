@@ -76,6 +76,7 @@ export async function GET(request: NextRequest) {
           let q = supabase
             .from("city_branches")
             .select("id, country_id, country_branch_id, name, code, local_currency")
+            .is("deleted_at", null)
             .order("name", { ascending: true });
           if (allowedBranchIds) q = q.in("id", allowedBranchIds);
           else if (allowedCountryIds) q = q.in("country_id", allowedCountryIds);

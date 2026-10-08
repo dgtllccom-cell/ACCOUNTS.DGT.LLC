@@ -315,7 +315,9 @@ export async function GET() {
           SELECT user_id, role, country_id, country_branch_id, city_branch_id, is_active, created_at, deleted_at
           FROM user_role_assignments
           WHERE is_active = true AND deleted_at IS NULL
-            and (${accessibleCountryIds && accessibleCountryIds.length > 0 ? sql`(country_id = any(${accessibleCountryIds}) or city_branch_id in (select id from city_branches where country_id = any(${accessibleCountryIds})))` : sql`true`})
+            and (city_branch_id is null or city_branch_id in (select id from city_branches where deleted_at is null))
+            and (city_branch_id is not null or country_branch_id is null or country_branch_id in (select id from country_branches where deleted_at is null))
+            and (${accessibleCountryIds && accessibleCountryIds.length > 0 ? sql`(country_id = any(${accessibleCountryIds}) or city_branch_id in (select id from city_branches where deleted_at is null and country_id = any(${accessibleCountryIds})))` : sql`true`})
             and (${!session.isSuperAdmin && session.countryBranchIds?.length ? sql`country_branch_id = any(${session.countryBranchIds})` : sql`true`})
             and (${!session.isSuperAdmin && session.cityBranchIds?.length ? sql`city_branch_id = any(${session.cityBranchIds})` : sql`true`})
         `;

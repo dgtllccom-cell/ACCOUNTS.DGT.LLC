@@ -16,6 +16,7 @@ import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordFields } from "@/lib/i18n/localize-records";
 import { SUPER_ADMIN_ONLY_ROLES, domainManagerTargetError, isUserManager, userInManagerScope } from "@/lib/permissions/user-management-scope";
 import { domainSuperAdminDomain } from "@/lib/permissions/enterprise-roles";
+import { assertNoDuplicateAssignment, assertNoDuplicateUser } from "@/lib/branch-network/duplicate-guard";
 
 function isUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
@@ -270,8 +271,26 @@ export async function POST(request: NextRequest) {
       throw new Error("No assignable permissions remain after applying parent scope limits.");
     }
 
-    let targetEmail = body.email;
+    const targetEmail = body.email;
     let createdUser: any = null;
+
+    // Duplicate protection BEFORE anything is created: same e-mail / username / employee, and an occupied admin scope.
+    await assertNoDuplicateUser(admin, {
+      email: targetEmail,
+      username: body.username ?? null,
+      employeeId: body.employeeId ?? null,
+      personMasterId: body.personMasterId ?? null
+    });
+    await assertNoDuplicateAssignment(
+      {
+        role: toAppRole(body.role),
+        countryId: body.countryId ?? null,
+        countryBranchId: body.countryBranchId ?? null,
+        cityBranchId: body.cityBranchId ?? null,
+        operationalDomain: domain
+      },
+      null
+    );
 
     let { data: created, error: createError } = await admin.auth.admin.createUser({
       email: targetEmail,
@@ -295,49 +314,11 @@ export async function POST(request: NextRequest) {
 
     if (createError) {
       const errMsg = createError.message || String(createError);
-      if (errMsg.includes("already been registered") || errMsg.includes("already exists")) {
-        const cleanCode = issuedUserCode.toLowerCase().replace(/[^a-z0-9]/g, "");
-        const parts = targetEmail.split("@");
-        targetEmail = `${parts[0]}.${cleanCode}@${parts[1] || "dgt.llc"}`;
-
-        const retryRes = await admin.auth.admin.createUser({
-          email: targetEmail,
-          password: body.password,
-          email_confirm: true,
-          user_metadata: {
-            user_code: issuedUserCode,
-            username: body.username ?? null,
-            phone: body.phone ?? null,
-            company_id: body.companyId ?? null,
-            id_type: body.idType ?? null,
-            id_value: body.idValue ?? null,
-          }
-        });
-
-        if (retryRes.error) {
-          targetEmail = `${cleanCode}@dgt.llc`;
-          const retry2Res = await admin.auth.admin.createUser({
-            email: targetEmail,
-            password: body.password,
-            email_confirm: true,
-            user_metadata: {
-              user_code: issuedUserCode,
-              username: body.username ?? null,
-              phone: body.phone ?? null,
-              company_id: body.companyId ?? null,
-              id_type: body.idType ?? null,
-              id_value: body.idValue ?? null,
-            }
-          });
-
-          if (retry2Res.error) throw new Error(retry2Res.error.message);
-          createdUser = retry2Res.data;
-        } else {
-          createdUser = retryRes.data;
-        }
-      } else {
-        throw new Error(errMsg);
+      if (/already been registered|already exists/i.test(errMsg)) {
+        // Never fabricate a different e-mail to dodge the collision — that silently creates a duplicate person.
+        throw new ApiClientError(`Duplicate user: a login with e-mail ${targetEmail} already exists. No new user was created.`, { status: 409, code: "DUPLICATE_USER" });
       }
+      throw new Error(errMsg);
     } else {
       createdUser = created;
     }
@@ -436,7 +417,16 @@ export async function POST(request: NextRequest) {
       delete assignmentPayload.mobile_profile;
       ({ error: assignmentError } = await admin.from("user_role_assignments").insert(assignmentPayload));
     }
-    if (assignmentError) throw new Error(assignmentError.message);
+    if (assignmentError) {
+      // Roll back the half-created login so a failed assignment never leaves an orphan (duplicate-prone) user behind.
+      await admin.from("user_permission_sets").delete().eq("user_id", newUserId);
+      await admin.from("profiles").delete().eq("id", newUserId);
+      await admin.auth.admin.deleteUser(newUserId);
+      if ((assignmentError as any).code === "23505" || /duplicate key|unique constraint/i.test(assignmentError.message)) {
+        throw new ApiClientError("Duplicate assignment: the same role already exists in this scope and domain. No new user was created.", { status: 409, code: "DUPLICATE_ASSIGNMENT" });
+      }
+      throw new Error(assignmentError.message);
+    }
 
     await auditApiAction(request, {
       action: "users.create.api",
@@ -864,7 +854,7 @@ export async function PATCH(request: NextRequest) {
       // Fetch latest assignment row
       const { data: currentAssign } = await admin
         .from("user_role_assignments")
-        .select("id, role, country_id, country_branch_id, city_branch_id, is_active")
+        .select("id, role, country_id, country_branch_id, city_branch_id, is_active, operational_domain")
         .eq("user_id", body.userId)
         .is("deleted_at", null)
         .order("created_at", { ascending: false })
@@ -872,6 +862,25 @@ export async function PATCH(request: NextRequest) {
         .maybeSingle();
 
       if (currentAssign) {
+        // A role / scope / domain change (or re-activation) must not collide with another live assignment.
+        const nextActive = body.isActive !== undefined ? !!body.isActive : currentAssign.is_active !== false;
+        const scopeTouched =
+          body.role !== undefined || body.countryId !== undefined || body.countryBranchId !== undefined ||
+          body.cityBranchId !== undefined || body.operationalDomain !== undefined ||
+          (body.isActive === true && currentAssign.is_active === false);
+        if (nextActive && scopeTouched) {
+          await assertNoDuplicateAssignment(
+            {
+              role: body.role !== undefined ? toAppRole(body.role as EnterpriseRole) : String(currentAssign.role),
+              countryId: body.countryId !== undefined ? body.countryId : currentAssign.country_id ?? null,
+              countryBranchId: body.countryBranchId !== undefined ? body.countryBranchId : currentAssign.country_branch_id ?? null,
+              cityBranchId: body.cityBranchId !== undefined ? body.cityBranchId : currentAssign.city_branch_id ?? null,
+              operationalDomain: body.operationalDomain !== undefined ? body.operationalDomain : currentAssign.operational_domain ?? null
+            },
+            body.userId,
+            currentAssign.id
+          );
+        }
         const assignmentUpdates: any = {
           updated_at: new Date().toISOString()
         };
@@ -906,6 +915,9 @@ export async function PATCH(request: NextRequest) {
 
         if (assignmentError && ACCESS_COLUMNS.test(assignmentError.message)) {
           throw new ApiClientError("This database does not yet support access profiles (migration 20261004_rbac_access_profiles).", { status: 409 });
+        }
+        if ((assignmentError as any)?.code === "23505") {
+          throw new ApiClientError("Duplicate assignment: the same role already exists in this scope and domain. Nothing was changed.", { status: 409, code: "DUPLICATE_ASSIGNMENT" });
         }
         if (assignmentError) throw new Error(assignmentError.message);
       }

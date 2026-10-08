@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Fragment, ReactNode, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { 
@@ -1705,7 +1706,15 @@ export function BranchGeneralReportView({
                                 onClick={() => setActiveProductPopup(activeProductPopup === country.id ? null : country.id)}
                                 className="inline-flex items-center gap-1 bg-indigo-50/60 border border-indigo-100/80 px-2 py-0.5 rounded-full font-bold text-indigo-700 cursor-pointer text-[9px] hover:bg-indigo-100 hover:text-indigo-800 transition-all"
                               >
-                                {country.name} <ChevronRight className="h-2 w-2 rotate-90" />
+                                <Link
+                                  href={`/dashboard/branch-management/country/${country.id}`}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="underline-offset-2 hover:underline"
+                                  title={tt("bgr.open_country_view", "Open full-screen country operations view")}
+                                >
+                                  {country.name}
+                                </Link>{" "}
+                                <ChevronRight className="h-2 w-2 rotate-90" />
                               </div>
                               {activeProductPopup === country.id && (
                                 <div className="absolute top-6 left-0 z-50 bg-white border border-slate-200 rounded-lg p-2.5 shadow-xl popup-content min-w-[150px] text-left">
@@ -1943,7 +1952,11 @@ export function BranchGeneralReportView({
                                             <tr className="border-b border-slate-100 text-[9px] text-slate-700 odd:bg-white even:bg-slate-50/50 hover:bg-sky-50/70">
                                               <td className="p-2 border-r border-slate-200 text-left font-semibold">{country.name}</td>
                                               <td className="p-2 border-r border-slate-200 text-left font-semibold text-slate-500">{mainBranch.name}</td>
-                                              <td className="p-2 border-r border-slate-200 text-left font-bold text-slate-800">{cityBranch.cityName} ({cityBranch.name})</td>
+                                              <td className="p-2 border-r border-slate-200 text-left font-bold text-slate-800">
+                                                <Link href={`/dashboard/branch-management/branch/${cityBranch.id}`} className="text-indigo-700 underline-offset-2 hover:underline" title={tt("bgr.open_branch_view", "Open full-screen branch detail view")}>
+                                                  {cityBranch.cityName} ({cityBranch.name})
+                                                </Link>
+                                              </td>
                                               <td className="p-2 border-r border-slate-200 text-left font-mono font-bold text-slate-900">{cityBranch.code}</td>
                                               <td className="p-2 border-r border-slate-200 text-center font-bold text-slate-600">{cityBranch.localCurrency}</td>
                                               <td className="p-2 border-r border-slate-200 text-left">

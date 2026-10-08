@@ -489,7 +489,33 @@ async function resolveErpSessionFromDb(
     throw new Error("session-db-unavailable: user_role_assignments " + assignmentsResult.error.message);
   }
 
+  // An assignment bound to a deleted / closed branch grants nothing (the branch no longer exists operationally).
+  // Best-effort: if the branch tables cannot be read, fall back to the unfiltered rows rather than locking users out.
+  let deadCityBranchIds = new Set<string>();
+  let deadCountryBranchIds = new Set<string>();
+  try {
+    const rows = (assignmentsResult.data ?? []) as AssignmentRow[];
+    const cityIds = [...new Set(rows.map((r) => r.city_branch_id).filter((v): v is string => Boolean(v)))];
+    const mainIds = [...new Set(rows.map((r) => r.country_branch_id).filter((v): v is string => Boolean(v)))];
+    if (cityIds.length) {
+      const r = (await db.from("city_branches").select("id, deleted_at, status").in("id", cityIds)) as { data: Array<{ id: string; deleted_at: string | null; status: string | null }> | null; error?: unknown };
+      if (!r.error) deadCityBranchIds = new Set((r.data ?? []).filter((b) => b.deleted_at || b.status === "inactive" || b.status === "closed").map((b) => b.id));
+    }
+    if (mainIds.length) {
+      const r = (await db.from("country_branches").select("id, deleted_at, status").in("id", mainIds)) as { data: Array<{ id: string; deleted_at: string | null; status: string | null }> | null; error?: unknown };
+      if (!r.error) deadCountryBranchIds = new Set((r.data ?? []).filter((b) => b.deleted_at || b.status === "inactive" || b.status === "closed").map((b) => b.id));
+    }
+  } catch {
+    /* tolerate — keep unfiltered */
+  }
+
   const assignments = (assignmentsResult.data ?? [])
+    .filter((assignment) => {
+      if (assignment.city_branch_id && deadCityBranchIds.has(assignment.city_branch_id)) return false;
+      // A city-level assignment lives or dies with its own branch; only main-level rows depend on the main branch.
+      if (!assignment.city_branch_id && assignment.country_branch_id && deadCountryBranchIds.has(assignment.country_branch_id)) return false;
+      return true;
+    })
     .map((assignment) => {
       const storedRole = normalizeRole(assignment.role);
       if (!storedRole) return null;

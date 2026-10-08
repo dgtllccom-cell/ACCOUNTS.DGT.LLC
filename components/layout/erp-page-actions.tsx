@@ -123,6 +123,10 @@ export function ErpPageActions({ children, backLink, title: titleOverride, subti
     // header / back / refresh / print — the generic bar would duplicate them
     // (and humanise the bill UUID into the title).
     pathname?.startsWith("/dashboard/bill-cost-profit/bill/") ||
+    // Branch & Network full-screen views (/country/<uuid>, /branch/<uuid>) own their header,
+    // back link and Print/PDF; the generic bar would humanise the UUID into the title.
+    pathname?.startsWith("/dashboard/branch-management/country/") ||
+    pathname?.startsWith("/dashboard/branch-management/branch/") ||
     pathname === "/dashboard/bill-cost-profit/reports" ||
     pathname?.startsWith("/dashboard/purchase/local-purchase") ||
     pathname?.startsWith("/dashboard/clearing-agent/customer-order") ||

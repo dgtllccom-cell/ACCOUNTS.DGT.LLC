@@ -1,6 +1,8 @@
 import { randomBytes } from "node:crypto";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { type EnterpriseRole } from "@/lib/permissions/enterprise-roles";
+import { ApiClientError } from "@/lib/api/response";
+import { assertNoDuplicateAssignment, assertNoDuplicateUser } from "@/lib/branch-network/duplicate-guard";
 
 /** Generate a strong one-time password. The operator must trigger a reset email
  * afterwards — this value is intentionally not returned or logged. */
@@ -38,7 +40,20 @@ export class HierarchyService {
     scope: { countryId?: string; countryBranchId?: string; cityBranchId?: string }
   ) {
     const supabase = createSupabaseAdminClient();
-    
+
+    // 0. Duplicate protection: never create a second login for the same e-mail or a second admin for the same scope.
+    await assertNoDuplicateUser(supabase, { email });
+    await assertNoDuplicateAssignment(
+      {
+        role,
+        countryId: scope.countryId ?? null,
+        countryBranchId: scope.countryBranchId ?? null,
+        cityBranchId: scope.cityBranchId ?? null,
+        operationalDomain: null
+      },
+      null
+    );
+
     // 1. Create Auth User
     const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
       email,
@@ -62,7 +77,7 @@ export class HierarchyService {
     });
 
     // 3. Assign Role and Scope
-    await (supabase.from("user_role_assignments") as any).insert({
+    const { error: assignError } = await (supabase.from("user_role_assignments") as any).insert({
       user_id: userId,
       role: role,
       country_id: scope.countryId || null,
@@ -70,6 +85,11 @@ export class HierarchyService {
       city_branch_id: scope.cityBranchId || null,
       is_active: true
     });
+    if (assignError) {
+      await (supabase.from("profiles") as any).delete().eq("id", userId);
+      await supabase.auth.admin.deleteUser(userId);
+      throw new Error(`Failed to assign admin role: ${assignError.message}`);
+    }
 
     return userId;
   }
@@ -136,6 +156,19 @@ export class HierarchyService {
    */
   static async createCityBranch(countryId: string, countryBranchId: string, cityName: string, name: string, code: string, localCurrency: string) {
     const supabase = createSupabaseAdminClient();
+
+    const { data: existingCity } = await (supabase.from("city_branches") as any)
+      .select("id, name, code")
+      .eq("country_id", countryId)
+      .ilike("city_name", cityName.trim())
+      .is("deleted_at", null)
+      .limit(1);
+    if (existingCity?.length) {
+      throw new ApiClientError(
+        `Duplicate branch: a branch for "${cityName}" already exists ("${existingCity[0].name}", ${existingCity[0].code}). No new record was created.`,
+        { status: 409, code: "DUPLICATE_BRANCH" }
+      );
+    }
 
     const { data: cityBranch, error } = await supabase
       .from("city_branches")
