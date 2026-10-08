@@ -95,7 +95,12 @@ export function PrototypeNetworkGuard() {
       try { parsed = new URL(raw, window.location.origin); } catch {}
       const method = String(init?.method || (typeof Request !== "undefined" && input instanceof Request ? input.method : "GET")).toUpperCase();
 
-      if (parsed && parsed.origin === window.location.origin && (parsed.pathname.startsWith("/api/") || parsed.pathname.startsWith("/mail/api/"))) {
+      if (
+        parsed &&
+        parsed.origin === window.location.origin &&
+        (parsed.pathname.startsWith("/api/") || parsed.pathname.startsWith("/mail/api/")) &&
+        !["GET", "HEAD", "OPTIONS"].includes(method)
+      ) {
         return toResponse(payloadFor(parsed.pathname + parsed.search, method));
       }
 
