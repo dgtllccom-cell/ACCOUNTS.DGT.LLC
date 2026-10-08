@@ -1,0 +1,50 @@
+name: Full ERP Prototype Validation
+
+on:
+  push:
+    branches: [ "prototype-full-erp-20261008" ]
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        node-version: [22.x]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: TypeScript
+        env:
+          DGT_PROTOTYPE_MODE: "1"
+          NEXT_PUBLIC_DGT_PROTOTYPE_MODE: "1"
+          APP_ENV: "development"
+          NEXT_PUBLIC_APP_ENV: "development"
+          ALLOW_DEMO_AUTH: "true"
+        run: npx tsc --noEmit
+
+      - name: Five-language guard
+        run: npm run i18n:guard
+
+      - name: Build full ERP prototype
+        env:
+          DGT_PROTOTYPE_MODE: "1"
+          NEXT_PUBLIC_DGT_PROTOTYPE_MODE: "1"
+          APP_ENV: "development"
+          NEXT_PUBLIC_APP_ENV: "development"
+          ALLOW_DEMO_AUTH: "true"
+          NODE_OPTIONS: "--max-old-space-size=4096"
+          NEXT_TELEMETRY_DISABLED: "1"
+          CI: "false"
+        run: npm run build
