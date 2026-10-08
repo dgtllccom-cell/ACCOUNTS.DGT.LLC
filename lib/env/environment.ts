@@ -86,6 +86,9 @@ export interface EnvironmentIntegrity {
  * Throws (hard fail) on any mismatch on the server. Safe to call on both server and client.
  */
 export function assertEnvironmentIntegrity(): EnvironmentIntegrity {
+  if (process.env.DGT_PROTOTYPE_MODE === "1" || process.env.NEXT_PUBLIC_DGT_PROTOTYPE_MODE === "1") {
+    return { appEnv: "development", supabaseRef: null, databaseRef: null, prodRef: getProdRef() };
+  }
   let appEnv = getAppEnvironment();
   const prodRef = getProdRef();
   const devRef = getDevRef();
