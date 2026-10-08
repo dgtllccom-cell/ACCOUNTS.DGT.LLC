@@ -38,7 +38,13 @@ try {
   $ArchiveUrl = "https://github.com/$RepoOwner/$RepoName/archive/refs/heads/$Branch.zip"
   Write-Info "Downloading latest prototype source..."
   Invoke-WebRequest -Uri $ArchiveUrl -Headers $Headers -OutFile $Zip -UseBasicParsing
-  Expand-Archive -Path $Zip -DestinationPath $Extract -Force
+  $Tar = Join-Path $env:SystemRoot "System32\tar.exe"
+  if (Test-Path $Tar) {
+    & $Tar -xf $Zip -C $Extract
+    if ($LASTEXITCODE -ne 0) { throw "tar extraction failed with exit code $LASTEXITCODE." }
+  } else {
+    Expand-Archive -Path $Zip -DestinationPath $Extract -Force
+  }
 
   $Source = Get-ChildItem -Path $Extract -Directory | Select-Object -First 1
   if (-not $Source) { throw "Downloaded prototype archive is empty." }
