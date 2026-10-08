@@ -2728,11 +2728,11 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_booking_date_colon", "Booking Date:")}</span> <span className="font-semibold text-foreground">{form.salesDate}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_fiscal_year_colon", "Fiscal Year:")}</span> <span className="font-semibold">2025-26</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground font-bold">{t(lang, "purchase.card_booking_branch_colon", "Booking Branch:")}</span> <span className="font-bold text-emerald-600 dark:text-emerald-450 truncate" title={loginBranchName}>{loginBranchName || "N/A"}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_status_colon", "Status:")}</span> <span className="inline-flex items-center rounded-full bg-yellow-500/10 px-1.5 py-0.2 text-[8px] font-bold text-yellow-600 dark:text-yellow-450 uppercase">{form.salesStatus}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_status_colon", "Status:")}</span> <span className="inline-flex items-center rounded-full bg-yellow-500/10 px-1.5 py-0.2 text-[8px] font-bold text-yellow-600 dark:text-yellow-450 uppercase">{translateOptionLabel(lang, form.salesStatus)}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_system_serial_colon", "System Serial:")}</span> <span className="font-bold text-foreground truncate font-mono" title={form.salesOrderNo}>{form.salesOrderNo}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground font-bold text-primary">{t(lang, "purchase.card_branch_serial_colon", "Branch Serial:")}</span> <span className="font-bold text-primary truncate font-mono" title={form.billNo}>{form.billNo}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_contract_no_colon", "Contract No:")}</span> <span className="font-semibold text-foreground truncate font-mono" title={form.salesContractNo}>{form.salesContractNo}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_loading_mode_colon", "Loading Mode:")}</span> <span className="font-semibold text-foreground truncate" title={form.shippingMode}>{form.shippingMode || "N/A"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_loading_mode_colon", "Loading Mode:")}</span> <span className="font-semibold text-foreground truncate" title={form.shippingMode}>{form.shippingMode ? translateOptionLabel(lang, form.shippingMode) : "N/A"}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_origin_country_colon", "Origin Country:")}</span> <span className="font-semibold text-foreground truncate" title={form.origin || form.branchCountry}>{form.origin || form.branchCountry || "N/A"}</span></div>
                 </div>
               </div>
@@ -2990,7 +2990,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   disabled={!form.countryId || !form.countryBranchId}
                   className="bg-[#0F172A] hover:bg-slate-800 text-white font-bold h-9 text-xs px-6 rounded-lg shadow-sm disabled:opacity-50 disabled:bg-slate-300 disabled:text-slate-500"
                 >
-                  Confirm Working Scope &rarr;
+                  {t(lang, "purchase.confirm_scope", "Confirm Scope")} <span className="rtl:rotate-180 inline-block">&rarr;</span>
                 </Button>
               </div>
             </div>
@@ -3017,15 +3017,15 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               )}
               {createPortal(
                 <div className="flex items-center gap-1.5 shrink-0 relative" ref={dropdownRef}>
-                  <div className="flex items-center gap-0.5 bg-muted/40 p-0.5 rounded border border-border/50 mr-2">
+                  <div className="flex items-center gap-0.5 bg-muted/40 p-0.5 rounded border border-border/50 me-2">
                     <button type="button" onClick={() => setActiveTab("booking")} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "booking" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_booking", "1 Booking")}</button>
                     <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("goods"); }} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "goods" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_goods", "2 Goods")}</button>
                     <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("shipping"); }} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${(activeTab === "shipping" || activeTab === "others") ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "purchase.tab3_shipping_payment", "3 Shipping & Payment")}</button>
                     <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("reports_tab"); }} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "reports_tab" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_reports", "4 Reports")}</button>
                     <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("report"); }} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "report" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_verify", "5 Verify")}</button>
                   </div>
-                  <div className="flex items-center gap-2 bg-muted/50 rounded-md p-1 border border-border/50 mr-1">
-                    <span className="relative flex h-2 w-2 ml-1">
+                  <div className="flex items-center gap-2 bg-muted/50 rounded-md p-1 border border-border/50 me-1">
+                    <span className="relative flex h-2 w-2 ms-1">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                     </span>
@@ -3199,15 +3199,15 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 </h2>
               </div>
               <div className="flex items-center gap-1.5 shrink-0 relative" ref={dropdownRef}>
-                <div className="flex items-center gap-0.5 bg-muted/40 p-0.5 rounded border border-border/50 mr-2">
+                <div className="flex items-center gap-0.5 bg-muted/40 p-0.5 rounded border border-border/50 me-2">
                   <button type="button" onClick={() => setActiveTab("booking")} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "booking" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_booking", "1 Booking")}</button>
                   <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("goods"); }} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "goods" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_goods", "2 Goods")}</button>
                   <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("shipping"); }} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${(activeTab === "shipping" || activeTab === "others") ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "purchase.tab3_shipping_payment", "3 Shipping & Payment")}</button>
                   <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("reports_tab"); }} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "reports_tab" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_reports", "4 Reports")}</button>
                   <button type="button" onClick={() => { if (activeTab === "booking" && !validateStep1Ownership()) return; setActiveTab("report"); }} className={`py-1 px-1.5 rounded-sm text-[9px] font-bold transition flex items-center gap-1 ${activeTab === "report" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>{t(lang, "sales.tab_verify", "5 Verify")}</button>
                 </div>
-                <div className="flex items-center gap-2 bg-muted/50 rounded-md p-1 border border-border/50 mr-1">
-                  <span className="relative flex h-2 w-2 ml-1">
+                <div className="flex items-center gap-2 bg-muted/50 rounded-md p-1 border border-border/50 me-1">
+                  <span className="relative flex h-2 w-2 ms-1">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                   </span>
@@ -3392,7 +3392,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     onClick={() => setActiveTab("shipping")}
                     className="font-bold text-xs h-10 px-8 border-slate-200 text-slate-700 hover:bg-slate-50"
                   >
-                    <ChevronLeft className="h-4 w-4 mr-1.5" /> {t(lang, "common.back", "Back")}
+                    <ChevronLeft className="h-4 w-4 me-1.5 rtl:rotate-180" /> {t(lang, "common.back", "Back")}
                   </Button>
                   <Button
                     type="button"
@@ -3404,7 +3404,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         : "bg-blue-600 hover:bg-blue-700"
                     )}
                   >
-                    {t(lang, "common.next", "Next")} <ChevronRight className="h-4 w-4 ml-1.5" />
+                    {t(lang, "common.next", "Next")} <ChevronRight className="h-4 w-4 ms-1.5 rtl:rotate-180" />
                   </Button>
                 </div>
               </div>
@@ -3442,7 +3442,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                             }}
                             className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-bold text-slate-900 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
                           >
-                            {LOADING_TYPES.map((type) => <option key={type} value={type}>{type}</option>)}
+                            {LOADING_TYPES.map((type) => <option key={type} value={type}>{translateOptionLabel(lang, type)}</option>)}
                           </select>
                         </label>
                       </div>
@@ -3471,7 +3471,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                 }}
                                 options={masterCountryOptions.map((c) => ({ label: `${c.name} ${c.iso2 ? `(${c.iso2})` : ""}`, value: c.name }))}
                                 placeholder={t(lang, "sales.select_country_ph", "Select Country")}
-                                addOptionLabel="Add New Country"
+                                addOptionLabel={t(lang, "purchase.add_new_country_label", "Add New Country")}
                               />
                             </label>
                             <label className="space-y-1">
@@ -3490,7 +3490,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                 }}
                                 options={currentLoadingPorts.map((p, idx) => ({ label: `${p.port_name} ${p.port_code ? `[${p.port_code}]` : ""}`, value: p.port_name }))}
                                 placeholder={t(lang, "sales.select_port_ph", "Select Port")}
-                                addOptionLabel="Add New Port"
+                                addOptionLabel={t(lang, "purchase.add_new_port_label", "Add New Port")}
                                 disabled={!form.loadingCountry && currentLoadingPorts.length === 0}
                               />
                             </label>
@@ -3530,7 +3530,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                 }}
                                 options={masterCountryOptions.map((c) => ({ label: `${c.name} ${c.iso2 ? `(${c.iso2})` : ""}`, value: c.name }))}
                                 placeholder={t(lang, "sales.select_country_ph", "Select Country")}
-                                addOptionLabel="Add New Country"
+                                addOptionLabel={t(lang, "purchase.add_new_country_label", "Add New Country")}
                               />
                             </label>
                             <label className="space-y-1">
@@ -3550,7 +3550,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                 }}
                                 options={currentReceivedPorts.map((p, idx) => ({ label: `${p.port_name} ${p.port_code ? `[${p.port_code}]` : ""}`, value: p.port_name }))}
                                 placeholder={t(lang, "sales.select_port_ph", "Select Port")}
-                                addOptionLabel="Add New Port"
+                                addOptionLabel={t(lang, "purchase.add_new_port_label", "Add New Port")}
                                 disabled={!(form.receivingCountry || form.destinationCountry || form.receivedCountry) && currentReceivedPorts.length === 0}
                               />
                             </label>
@@ -3744,7 +3744,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     onClick={() => setActiveTab("goods")}
                     className="font-bold text-xs h-10 px-8 border-slate-200 text-slate-700 hover:bg-slate-50"
                   >
-                    <ChevronLeft className="h-4 w-4 mr-1.5" /> {t(lang, "common.back", "Back")}
+                    <ChevronLeft className="h-4 w-4 me-1.5 rtl:rotate-180" /> {t(lang, "common.back", "Back")}
                   </Button>
                   <Button
                     type="button"
@@ -3756,7 +3756,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         : "bg-blue-600 hover:bg-blue-700"
                     )}
                   >
-                    {t(lang, "common.next", "Next")} <ChevronRight className="h-4 w-4 ml-1.5" />
+                    {t(lang, "common.next", "Next")} <ChevronRight className="h-4 w-4 ms-1.5 rtl:rotate-180" />
                   </Button>
                 </div>
               </fieldset>
@@ -4064,7 +4064,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       <div className="relative flex items-center">
                         <input
                           type="text"
-                          placeholder={form.customerAccountName ? formatAccountDisplayLabel(form.customerAccountName, form.customerAccountNo, form.customerAccountManualReferenceNumber) : "Search Code, Name, Branch, Manual A/C..."}
+                          placeholder={form.customerAccountName ? formatAccountDisplayLabel(form.customerAccountName, form.customerAccountNo, form.customerAccountManualReferenceNumber) : t(lang, "purchase.search_code_name_branch", "Search Code, Name, Branch, Manual A/C...")}
                           value={customerDropdownOpen ? customerSearch : (form.customerAccountName ? formatAccountDisplayLabel(form.customerAccountName, form.customerAccountNo, form.customerAccountManualReferenceNumber) : form.customerAccountNo || "")}
                           onChange={(e) => handleTextChange("purchase", e.target.value)}
                           onFocus={() => {
@@ -4145,7 +4145,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       <div className="relative flex items-center">
                         <input
                           type="text"
-                          placeholder={form.salesAccountName ? formatAccountDisplayLabel(form.salesAccountName, form.salesAccountNo, form.salesAccountManualReferenceNumber) : "Search Code, Name, Branch, Manual A/C..."}
+                          placeholder={form.salesAccountName ? formatAccountDisplayLabel(form.salesAccountName, form.salesAccountNo, form.salesAccountManualReferenceNumber) : t(lang, "purchase.search_code_name_branch", "Search Code, Name, Branch, Manual A/C...")}
                           value={salesDropdownOpen ? salesSearch : (form.salesAccountName ? formatAccountDisplayLabel(form.salesAccountName, form.salesAccountNo, form.salesAccountManualReferenceNumber) : form.salesAccountNo || "")}
                           onChange={(e) => handleTextChange("sales", e.target.value)}
                           onFocus={() => {
@@ -4269,7 +4269,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                           className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] h-8"
                         >
                           {LOADING_TYPES.map((type) => (
-                            <option key={type} value={type}>{type}</option>
+                            <option key={type} value={type}>{translateOptionLabel(lang, type)}</option>
                           ))}
                         </select>
                       </div>
@@ -4508,8 +4508,8 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                               <tr>
                                 <Th className="py-1.5 px-2 text-center w-10">Select</Th>
                                 <Th className="py-1.5 px-2">Branch</Th>
-                                <Th className="py-1.5 px-2">Warehouse / Loc</Th>
-                                <Th className="py-1.5 px-2">Lot Ref</Th>
+                                <Th className="py-1.5 px-2">{t(lang, "sales.th_warehouse_loc", "Warehouse / Loc")}</Th>
+                                <Th className="py-1.5 px-2">{t(lang, "sales.th_lot_ref", "Lot Ref")}</Th>
                                 <Th className="py-1.5 px-2 text-right">Available Qty</Th>
                                 <Th className="py-1.5 px-2 text-right">Net WT</Th>
                               </tr>
@@ -5187,7 +5187,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
           <div className={cn("flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between p-4 rounded-xl shadow-sm", isLocalSale ? "bg-gradient-to-r from-amber-100 to-amber-200 dark:from-amber-950/40 dark:to-amber-900/30 border border-amber-300 dark:border-amber-800" : "bg-white border border-slate-200 dark:bg-slate-950 dark:border-slate-800")}>
             <div>
               <h2 className={cn("text-base font-black uppercase tracking-wider", isLocalSale ? "text-amber-900 dark:text-amber-200" : "text-slate-900")}>{t(lang, "sales.final_review_title", "Sales Booking Order – Final Review & Approval")}</h2>
-              <p className={cn("text-[10px] font-semibold mt-0.5", isLocalSale ? "text-amber-800/80 dark:text-amber-300/70" : "text-slate-500")}>Please review all information carefully before final approval. You can approve, send back for edit, or request changes.</p>
+              <p className={cn("text-[10px] font-semibold mt-0.5", isLocalSale ? "text-amber-800/80 dark:text-amber-300/70" : "text-slate-500")}>{t(lang, "sales.review_hint", "Please review all information carefully before final approval. You can approve, send back for edit, or request changes.")}</p>
             </div>
             <div className="flex gap-2.5">
               <Button
@@ -5244,7 +5244,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 {t(lang, "sales.logistics_routing_title", "Logistics & Routing")}
               </h3>
               <div className="grid grid-cols-[90px_1fr] gap-x-2 gap-y-1.5">
-                <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_loading_mode_colon", "Loading Mode:")}</span><span className="font-bold text-slate-800">{form.salesLoadingMode || "By Sea"}</span>
+                <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_loading_mode_colon", "Loading Mode:")}</span><span className="font-bold text-slate-800">{translateOptionLabel(lang, form.salesLoadingMode || "By Sea")}</span>
                 <span className="text-slate-400 font-semibold">{t(lang, "purchase.card_contract_no_colon", "Contract No:")}</span><span className="font-bold text-slate-800">{form.salesContractNo || "N/A"}</span>
                 <span className="text-slate-400 font-semibold">{t(lang, "sales.port_of_loading_colon", "Port of Loading:")}</span><span className="font-bold text-slate-800">{form.salesPortOfLoading || "N/A"}</span>
                 <span className="text-slate-400 font-semibold">{t(lang, "sales.port_of_discharge_colon", "Port of Discharge:")}</span><span className="font-bold text-slate-800">{form.salesPortOfDischarge || "N/A"}</span>
@@ -5531,7 +5531,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
 
           {/* Information banner */}
           <div className="bg-slate-50 border border-slate-200 p-3 rounded-lg text-[9px] font-semibold text-slate-500 leading-relaxed">
-            Please review all information carefully before taking action. Once approved, the booking will be finalized and its postings posted permanently to the general ledger.
+            {t(lang, "sales.review_footer_note", "Please review all information carefully before taking action. Once approved, the booking will be finalized and its postings posted permanently to the general ledger.")}
           </div>
 
           {/* Bottom Navigation Buttons */}

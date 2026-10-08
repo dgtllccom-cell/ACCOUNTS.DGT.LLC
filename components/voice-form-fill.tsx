@@ -87,11 +87,11 @@ export function VoiceFormFill({
               <span>{s.t("speak_to_fill", "AI Voice Form Assistant")}</span>
               <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full bg-cyan-500/10 border border-cyan-400/20 text-[9px] font-black text-cyan-300">
                 <span className="h-1 w-1 rounded-full bg-cyan-400 animate-pulse" />
-                MIC READY
+                {s.t("mic_ready", "MIC READY")}
               </span>
             </span>
             <p className="text-[10px] text-slate-400">
-              Speak amounts, parties, accounts, and references in 5 languages
+              {s.t("speak_hint", "Speak amounts, parties, accounts, and references in 5 languages")}
             </p>
           </div>
         </div>

@@ -21,6 +21,11 @@ export const OPTION_LABEL_KEYS: Record<string, string> = {
   "By Sea": "purchase.opt_by_sea",
   "By Road": "purchase.opt_by_road",
   "By Air": "purchase.opt_by_air",
+  // document / order status
+  Draft: "purchase.opt_draft",
+  Pending: "purchase.opt_pending",
+  Confirmed: "purchase.opt_confirmed",
+  Transferred: "purchase.opt_transferred",
   // container types
   "20 FT": "purchase.opt_container_20ft",
   "40 FT": "purchase.opt_container_40ft",
