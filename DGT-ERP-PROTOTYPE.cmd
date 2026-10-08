@@ -1,15 +1,13 @@
 @echo off
 setlocal
-title DGT ERP Prototype
+title DGT ERP FULL PROTOTYPE
 cd /d "%~dp0"
 
 echo ============================================================
-echo DGT ERP FULL PROTOTYPE
-echo Auto-update check + safe design-only launch
+echo DGT ERP FULL UI PROTOTYPE
+echo SAFE START - NO UPDATE CHECK
 echo ============================================================
 echo.
-
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\prototype-self-update.ps1"
 
 if not exist "%~dp0node_modules\next\dist\bin\next" (
   call "%~dp0scripts\INSTALL-FULL-ERP-PROTOTYPE-WINDOWS.cmd"
