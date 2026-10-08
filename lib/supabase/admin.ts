@@ -1,8 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 import { assertSupabaseConfigured, getSupabasePublicKey, getSupabaseSecretKey, getSupabaseUrl } from "@/lib/supabase/config";
 import type { Database } from "@/lib/supabase/types";
+import { isPrototypeMode } from "@/lib/prototype/mode";
+import { createPrototypeSupabaseClient } from "@/lib/prototype/mock-supabase";
 
 export function createSupabaseAdminClient() {
+  if (isPrototypeMode()) return createPrototypeSupabaseClient();
   assertSupabaseConfigured();
 
   const secretKey = getSupabaseSecretKey();
