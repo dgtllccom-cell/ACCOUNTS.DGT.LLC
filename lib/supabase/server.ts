@@ -1,8 +1,11 @@
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import { assertSupabaseConfigured, getSupabasePublicKey, getSupabaseUrl } from "@/lib/supabase/config";
+import { isPrototypeMode } from "@/lib/prototype/mode";
+import { createPrototypeSupabaseClient } from "@/lib/prototype/mock-supabase";
 
 export async function createServerSupabaseClient() {
+  if (isPrototypeMode()) return createPrototypeSupabaseClient();
   assertSupabaseConfigured();
 
   const cookieStore = await cookies();
