@@ -41,6 +41,7 @@ import {
   SuperAdminDashboardSettingsProvider
 } from "@/features/dashboard/components/super-admin-dashboard-settings";
 import { SuperAdminDashboardLiveRefresh } from "@/features/dashboard/components/super-admin-dashboard-live-refresh";
+import { DashboardHeroBanner } from "@/features/dashboard/components/dashboard-hero-banner";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { t } from "@/lib/i18n/ui";
 
@@ -373,6 +374,8 @@ export default async function SuperAdminDashboardPage() {
             </div>
           </div>
         </div>
+
+        <DashboardHeroBanner variant="business" lang={lang} />
 
         {data.error && (
           <div
