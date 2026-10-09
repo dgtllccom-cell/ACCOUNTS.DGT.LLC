@@ -91,7 +91,7 @@ child.on("exit", (code) => process.exit(code ?? 0));
   console.log("Computer (Design Studio with device selector):", local);
   console.log("Direct ERP view (without design controls):", `http://127.0.0.1:${PORT}/dashboard`);
   if (ip) {
-    console.log("Phone / iPad / Samsung:", `http://${ip}:${PORT}/dashboard`);
+    console.log("Phone / iPad / Samsung:", `http://${ip}:${PORT}/prototype`);
     console.log("Use the SAME Wi-Fi. Keep this window open while testing.");
   } else {
     console.log("Phone link: no LAN IPv4 detected. Connect this computer to Wi-Fi/Ethernet and restart.");
