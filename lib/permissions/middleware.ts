@@ -122,9 +122,6 @@ export function canApprove(session: ErpSession, countryId?: string | null, cityB
 const RESOURCE_DOMAIN: Record<string, "business" | "shipping"> = {
   purchase_orders: "business", purchases: "business", purchase: "business",
   sales_orders: "business", sales: "business",
-  roznamcha: "business", cash_entry: "business", daily_payment: "business",
-  ledgers: "business", ledger: "business", accounting: "business", journal: "business",
-  expenses: "business", bill_expenses: "business", bank_roznamcha: "business",
   shipping_records: "shipping", shipping: "shipping", bl_records: "shipping",
   clearing_agents: "shipping", clearing_agent: "shipping", clearing: "shipping",
   clearing_agent_branches: "shipping", customs_entries: "shipping",

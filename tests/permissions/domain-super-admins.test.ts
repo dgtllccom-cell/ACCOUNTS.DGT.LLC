@@ -27,8 +27,9 @@ const businessSA = session({
   countryIds: [PK, UAE], countryBranchIds: [PK_MAIN, UAE_MAIN], cityBranchIds: [QUETTA, ALRAS], canViewFinancials: true,
 });
 const shippingSA = session({
-  roles: ["shipping_super_admin"], permissions: capPermissionsForRoles(["shipping_super_admin"], enterpriseRolePermissions.shipping_super_admin),
+  roles: ["shipping_super_admin"], permissions: enterpriseRolePermissions.shipping_super_admin,
   operationalDomains: ["shipping"], countryIds: [PK, UAE], countryBranchIds: [PK_MAIN, UAE_MAIN], cityBranchIds: [CHAMAN_SHIP],
+  canViewFinancials: true,
 });
 
 describe("three separated Super Admin profiles (stored role super_admin + operational domain)", () => {
@@ -57,15 +58,17 @@ describe("three separated Super Admin profiles (stored role super_admin + operat
     expect(enterpriseRolePermissions.business_super_admin).not.toContain("country_branches:create");
     expect(enterpriseRolePermissions.shipping_super_admin).not.toContain("country_branches:create");
   });
-  it("Shipping Line Super Admin never receives a Business / financial resource", () => {
-    const leaked = shippingSA.permissions.filter((p) => FINANCIAL_RESOURCES.includes(p.split(":")[0]));
-    expect(leaked).toEqual([]);
-    expect(deriveCanViewFinancials(shippingSA.roles, shippingSA.permissions, false)).toBe(false);
-    expect(shippingSA.permissions).toEqual(expect.arrayContaining(["shipping_records:create", "users:create", "city_branches:create"]));
+  it("Shipping Line Super Admin receives shipping operational accounting, never commercial trade", () => {
+    expect(shippingSA.permissions).toEqual(expect.arrayContaining([
+      "accounts:create", "accounts:read", "ledgers:read", "roznamcha:read", "expenses:read", "shipping_records:create", "users:create"
+    ]));
+    const commercialLeaked = shippingSA.permissions.filter((p) => ["purchases", "sales", "inventory", "warehouses", "payroll", "uae_tax"].includes(p.split(":")[0]));
+    expect(commercialLeaked).toEqual([]);
+    expect(deriveCanViewFinancials(shippingSA.roles, shippingSA.permissions, false)).toBe(true);
   });
-  it("API domain guard: Shipping SA is refused business resources", () => {
+  it("API domain guard: Shipping SA is refused commercial trade resources", () => {
     expect(() => assertResourceDomain(shippingSA, "purchase_orders")).toThrow();
-    expect(() => assertResourceDomain(shippingSA, "ledgers")).toThrow();
+    expect(() => assertResourceDomain(shippingSA, "sales_orders")).toThrow();
     expect(() => assertResourceDomain(shippingSA, "shipping_records")).not.toThrow();
   });
 });
@@ -84,13 +87,14 @@ describe("route policy per profile", () => {
     expect(can(businessSA, "/dashboard/shipping-clearing")).toBe(false);
     expect(can(businessSA, "/dashboard/logistics")).toBe(false);
   });
-  it("Shipping SA: shipping modules + user/branch management, never finance", () => {
+  it("Shipping SA: shipping modules + user/branch management + operational accounting, never commercial trade", () => {
     expect(can(shippingSA, "/dashboard/logistics")).toBe(true);
     expect(can(shippingSA, "/dashboard/new-entry/users/branch")).toBe(true);
     expect(can(shippingSA, "/dashboard/new-entry/branch-entry/city-branch")).toBe(true);
-    expect(can(shippingSA, "/dashboard/ledger/detailed")).toBe(false);
-    expect(can(shippingSA, "/dashboard/roznamcha")).toBe(false);
+    expect(can(shippingSA, "/dashboard/ledger/detailed")).toBe(true);
+    expect(can(shippingSA, "/dashboard/roznamcha/cash-entry")).toBe(true);
     expect(can(shippingSA, "/dashboard/purchase")).toBe(false);
+    expect(can(shippingSA, "/dashboard/sales")).toBe(false);
     expect(can(shippingSA, "/dashboard/new-entry/users/super-admin")).toBe(false);
   });
   it("landing dashboards", () => {

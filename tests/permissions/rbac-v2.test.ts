@@ -36,13 +36,18 @@ describe("deriveEffectiveRole — stored role + access profile", () => {
 });
 
 describe("operational templates never contain a financial resource", () => {
-  for (const role of ["global_operations_admin", "country_operations_admin", "city_operations_admin", "shipping_line_admin", "shipping_line_user"] as const) {
+  for (const role of ["global_operations_admin", "country_operations_admin", "city_operations_admin", "shipping_line_user"] as const) {
     it(role, () => {
       const fin = enterpriseRolePermissions[role].filter((p) => FINANCIAL_RESOURCES.includes(p.split(":")[0]));
       expect(fin).toEqual([]);
       expect(enterpriseRolePermissions[role]).not.toContain("*:*");
     });
   }
+  it("shipping_line_admin has operational accounting, never commercial trade", () => {
+    const commercial = enterpriseRolePermissions.shipping_line_admin.filter((p) => ["purchases", "sales", "inventory", "warehouses", "payroll", "uae_tax"].includes(p.split(":")[0]));
+    expect(commercial).toEqual([]);
+    expect(enterpriseRolePermissions.shipping_line_admin).toEqual(expect.arrayContaining(["accounts:create", "ledgers:read", "roznamcha:read", "expenses:read"]));
+  });
 });
 
 describe("capPermissionsForRoles — hard cap for operational logins", () => {

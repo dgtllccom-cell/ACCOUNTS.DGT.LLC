@@ -28,6 +28,7 @@ const BASE_ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/dashboard/new-entry/users/branch": ["users:create", "users:read", "route:/dashboard/new-entry/users/branch"],
   "/dashboard/new-entry/users/country": ["country_admin", "main_branch_admin", "city_branch_admin", "business_super_admin", "route:/dashboard/new-entry/users/country"],
   "/dashboard/new-entry/users/credentials-pdf": ["super_admin", "route:/dashboard/new-entry/users/credentials-pdf"],
+  "/dashboard/new-entry/users/super-admin": ["super_admin", "route:/dashboard/new-entry/users/super-admin"],
   "/dashboard/users/credentials-pdf": ["super_admin", "route:/dashboard/users/credentials-pdf"],
   "/dashboard/new-entry/branch-entry/country-branch": ["country_branches:create", "country_branches:read", "route:/dashboard/new-entry/branch-entry/country-branch"],
   "/dashboard/new-entry/branch-entry/city-branch": ["city_branches:create", "city_branches:read", "route:/dashboard/new-entry/branch-entry/city-branch"],
@@ -36,7 +37,7 @@ const BASE_ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/dashboard/accounts/setup": ["accounts:read", "accounts:create", "accounts:update", "accounts.setup", "accounts.new_entry", "route:/dashboard/accounts/setup"],
   "/dashboard/ledger/new": ["ledgers:read", "ledgers:create", "ledgers.new", "route:/dashboard/ledger/new"],
   "/dashboard/new-entry/accounts/general-report": ["accounts:read", "accounts.reports", "reports:read", "route:/dashboard/new-entry/accounts/general-report"],
-  "/dashboard/new-entry": ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "business_super_admin", "route:/dashboard/new-entry"],
+  "/dashboard/new-entry": ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "business_super_admin", "shipping_super_admin", "shipping_line_admin", "route:/dashboard/new-entry"],
   "/dashboard/business-edit-invoice": ["transactions:update", "purchases:update", "route:/dashboard/business-edit-invoice"],
   "/dashboard/super-admin/edit-history": ["transactions:read", "audit_logs:read", "super_admin", "route:/dashboard/super-admin/edit-history"],
   "/dashboard/super-admin/deleted-records": ["transactions:read", "audit_logs:read", "super_admin", "country_admin", "route:/dashboard/super-admin/deleted-records"],
@@ -310,6 +311,22 @@ export function evaluateRouteAccess(input: RouteAccessInput): RouteDecision {
   if (domains && domains.length > 0 && domains.includes("business") && !domains.includes("shipping") && !domains.includes("both")) {
     const BLOCKED = ["/dashboard/shipping-clearing", "/dashboard/shipping", "/dashboard/clearing", "/dashboard/bl-entry", "/dashboard/manifest", "/dashboard/customs-clearance", "/dashboard/shipping-lines", "/dashboard/logistics"];
     if (BLOCKED.some((b) => matchesPrefix(path, b))) return { allowed: false, reason: "domain_blocked" };
+  }
+
+  // a shipping-only login never opens commercial trade booking (purchases, sales, consignment, corporate tax)
+  if (domains && domains.length > 0 && domains.includes("shipping") && !domains.includes("business") && !domains.includes("both")) {
+    const COMMERCIAL_BLOCKED = [
+      "/dashboard/purchase",
+      "/dashboard/sales",
+      "/dashboard/temp-bills",
+      "/dashboard/consignment",
+      "/dashboard/tax-einvoicing",
+      "/dashboard/tax",
+      "/dashboard/general-office/payroll",
+      "/dashboard/general-office/wps-sif",
+      "/dashboard/general-office/gratuity"
+    ];
+    if (COMMERCIAL_BLOCKED.some((b) => matchesPrefix(path, b))) return { allowed: false, reason: "domain_blocked" };
   }
 
   const strict = isStrictLogin(input.roles);

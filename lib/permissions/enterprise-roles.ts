@@ -87,8 +87,7 @@ export const COUNTRY_LEVEL_ROLES: readonly string[] = ["country_admin", "country
 export const GLOBAL_SCOPE_ROLES: readonly string[] = ["super_admin", "super_admin_reports", "global_operations_admin"];
 /** Operational / shipping-line roles: financial modules are denied by construction. */
 export const NON_FINANCIAL_ROLES: readonly string[] = [
-  "global_operations_admin", "country_operations_admin", "city_operations_admin", "shipping_line_admin", "shipping_line_user",
-  "shipping_super_admin"
+  "global_operations_admin", "country_operations_admin", "city_operations_admin", "shipping_line_user"
 ];
 /**
  * Domain super admins (stored role super_admin + operational_domain business|shipping). NOT Super Admins: no wildcard, no
@@ -126,7 +125,7 @@ export const enterpriseRoleScopes: Record<EnterpriseRole, string> = {
   staff_user: "Assigned staff tasks",
   auditor_viewer: "Read-only assigned scope",
   business_super_admin: "Every Business branch of the network (no Shipping Line control)",
-  shipping_super_admin: "Every Shipping Line branch of the network (no Business / Finance)",
+  shipping_super_admin: "Every Shipping Line branch of the network (Shipping operational accounts & ledgers)",
   global_operations_admin: "Operational modules across all permitted countries (no Finance)",
   country_operations_admin: "Operational modules of the assigned country (no Finance)",
   city_operations_admin: "Operational modules of the assigned branch (no Finance)",
@@ -167,19 +166,30 @@ const OPERATIONS_PERMISSIONS: string[] = [
   "purchase_logistics:create", "purchase_logistics:read", "purchase_logistics:update"
 ];
 
-/** Shipping Line modules only: bookings, BL, containers, vessels/voyages, ports, tracking, documents, assigned tasks. */
+/** Shipping Line modules: bookings, BL, containers, vessels/voyages, ports, tracking, documents, assigned tasks, plus operational accounting (accounts, ledgers, roznamcha, expenses), messaging and reports. */
 const SHIPPING_LINE_ADMIN_PERMISSIONS: string[] = [
   "dashboard:read",
   "shipping_records:create", "shipping_records:read", "shipping_records:update",
-  "shipments:read", "shipments:update",
+  "shipments:create", "shipments:read", "shipments:update",
   "shipping_transfers:create", "shipping_transfers:read",
   "shipping:read", "shipping_reports:read",
+  "reports:read",
   "route_templates:read", "location_master:read",
   "record_transfers:create", "record_transfers:read",
   "assignments:read", "assignments:update",
   "tasks:read", "tasks:update",
   "documents:create", "documents:read", "documents:update", "documents:print",
-  "messages:create", "messages:read"
+  "messages:create", "messages:read", "messages:update",
+  "communication:read", "communication:create",
+  "email_management:read",
+  "whatsapp:read", "whatsapp:create",
+  "accounts:create", "accounts:read", "accounts:update",
+  "ledgers:create", "ledgers:read", "ledgers:update",
+  "roznamcha:create", "roznamcha:read", "roznamcha:post",
+  "expenses:create", "expenses:read", "expenses:update",
+  "transactions:create", "transactions:read",
+  "customers:create", "customers:read", "customers:update",
+  "settings:read"
 ];
 
 const SHIPPING_LINE_USER_PERMISSIONS: string[] = [
@@ -818,14 +828,25 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
   business_super_admin: [],
   shipping_super_admin: [
     ...SHIPPING_LINE_ADMIN_PERMISSIONS,
-    "shipments:create", "shipping_transfers:approve",
+    "shipments:create", "shipments:update", "shipments:delete",
+    "shipping_transfers:approve",
     "countries:read", "country_branches:read",
     "city_branches:create", "city_branches:read", "city_branches:update",
     "users:create", "users:read", "users:update", "users:delete",
-    "assignments:create",
-    "clearing_agents:read", "clearing_agent_branches:create", "clearing_agent_branches:read", "clearing_agent_branches:update",
+    "assignments:create", "assignments:update",
+    "clearing_agents:create", "clearing_agents:read", "clearing_agents:update",
+    "clearing_agent_branches:create", "clearing_agent_branches:read", "clearing_agent_branches:update",
     "route_templates:create", "route_templates:update",
-    "customers:read", "companies:read", "location_master:read", "tasks:create", "documents:export", "whatsapp:read"
+    "customers:create", "customers:read", "customers:update",
+    "companies:read", "location_master:read", "location_master:create", "location_master:update",
+    "tasks:create", "tasks:read", "tasks:update",
+    "documents:export",
+    "whatsapp:read", "whatsapp:create", "whatsapp:update", "whatsapp:delete",
+    "email_management:create", "email_management:read", "email_management:update",
+    "reports:export",
+    "roznamcha:post_cross_branch",
+    "accounts:delete",
+    "settings:read", "settings:update"
   ]
 };
 

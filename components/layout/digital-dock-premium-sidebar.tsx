@@ -868,20 +868,26 @@ function filterByRolesAndPermissions<T extends { key?: string; roles?: string[];
       .filter((c) => !c.children || c.href || c.children.length > 0);
 
   if (isShippingOnly) {
-    // A shipping line / clearing agent user sees ONLY their shipping ecosystem:
+    // Shipping Line ecosystem:
     // 1. Dashboard (Logistics Tracking / Agent dashboard)
-    // 2. Shipping & Clearing (All 10 modules)
-    // 3. Ledgers (Detailed Statement & General Report — already restricted by backend to their clearing agent)
-    // 4. Transfer & Handover Center
-    // 5. Daily Cash Entry (Roznamcha) if they have roznamcha permissions
+    // 2. New Entry (User Accounts, Accounts & Ledger Setup: New Account, New Ledger, General Report)
+    // 3. Daily Payment (Daily Cash Entry Roznamcha, Daily Expenses Bill, Office/Home Expenses)
+    // 4. Ledgers (Detailed Statement, General Report, Outstanding Ledgers)
+    // 5. Shipping & Clearing (All shipping modules)
+    // 6. Transfer & Handover Center
+    // 7. Communication (Email, WhatsApp, Communication Center Hub, SMS)
+    // 8. Reports & Settings (Shipping Reports, Document Center, Settings)
     const ALLOWED_SHIPPING_KEYS = new Set([
       "dashboard",
-      "shipping-cleaning",
-      "ledgers",
-      "transfer-handover-center",
+      "new-entry",
       "daily-payment",
-      // the Shipping Line Super Admin also manages its branches and their users (each entry still route-policy filtered)
-      ...(isShippingSuperAdmin ? ["new-entry"] : [])
+      "ledgers",
+      "shipping-cleaning",
+      "transfer-handover-center",
+      "all-messages",
+      "reports-all",
+      "settings-menu",
+      "ai-assistant"
     ]);
 
     return items
@@ -893,27 +899,63 @@ function filterByRolesAndPermissions<T extends { key?: string; roles?: string[];
         if (it.key === "shipping-cleaning") {
           return { ...it, defaultOpen: true, children: filterTree(it.children || []) };
         }
+        if (it.key === "new-entry") {
+          const kids = filterTree(it.children || []);
+          return kids.length > 0 ? { ...it, defaultOpen: false, children: kids } : null;
+        }
+        if (it.key === "daily-payment") {
+          const hasRoznamchaOrExpense =
+            userPermissions.has("roznamcha:read") ||
+            userPermissions.has("roznamcha:*") ||
+            userPermissions.has("expenses:read") ||
+            userPermissions.has("expenses:*");
+          if (!hasRoznamchaOrExpense) return null;
+          const allowedHrefs = new Set([
+            "/dashboard/roznamcha/cash-entry",
+            "/dashboard/roznamcha/daily-expenses-bill",
+            "/dashboard/roznamcha/expenses-bill"
+          ]);
+          const kids = filterTree((it.children || []).filter((c: any) => allowedHrefs.has(c.href)));
+          return kids.length > 0 ? { ...it, defaultOpen: false, children: kids } : null;
+        }
         if (it.key === "ledgers") {
-          // Shipping users must see their scoped ledgers (Detailed statement & General report)
           const allowedLedgerHrefs = new Set([
             "/dashboard/ledger/detailed",
-            "/dashboard/ledger/general-report"
+            "/dashboard/ledger/general-report",
+            "/dashboard/ledger/outstanding"
           ]);
           const kids = filterTree((it.children || []).filter((c: any) => allowedLedgerHrefs.has(c.href)));
-          return {
+          return kids.length > 0 ? {
             ...it,
             defaultOpen: false,
             children: kids
-          };
+          } : null;
         }
-        if (it.key === "daily-payment") {
-          // Keep only cash entry if the user has roznamcha:read, remove all purchase/sales payments
-          const hasRoznamcha = userPermissions.has("roznamcha:read") || userPermissions.has("roznamcha:*");
-          if (!hasRoznamcha) return null;
-          return {
-            ...it,
-            children: filterTree((it.children || []).filter((c: any) => c.href === "/dashboard/roznamcha/cash-entry"))
-          };
+        if (it.key === "all-messages") {
+          const allowedHrefs = new Set([
+            "/dashboard/messages/email",
+            "/dashboard/messages/whatsapp",
+            "/dashboard/communication-center",
+            "/dashboard/return-sms-reply",
+            "/dashboard/customer-inquiries"
+          ]);
+          const kids = filterTree((it.children || []).filter((c: any) => allowedHrefs.has(c.href)));
+          return kids.length > 0 ? { ...it, defaultOpen: false, children: kids } : null;
+        }
+        if (it.key === "reports-all") {
+          const kids = filterTree(it.children || []);
+          return kids.length > 0 ? { ...it, defaultOpen: false, children: kids } : null;
+        }
+        if (it.key === "settings-menu") {
+          const allowedSettingsHrefs = new Set([
+            "/dashboard/settings",
+            "/dashboard/settings/dashboard-settings",
+            "/dashboard/settings/locations",
+            "/dashboard/settings/email-accounts",
+            "/dashboard/settings/profile"
+          ]);
+          const kids = filterTree((it.children || []).filter((c: any) => allowedSettingsHrefs.has(c.href)));
+          return kids.length > 0 ? { ...it, defaultOpen: false, children: kids } : null;
         }
         return it.children ? { ...it, children: filterTree(it.children) } : it;
       })
