@@ -42,7 +42,9 @@ function waitForServer(url, attempts = 120) {
     const tick = () => {
       const req = http.get(url, (res) => {
         res.resume();
-        resolve(true);
+        if (res.statusCode >= 200 && res.statusCode < 400) return resolve(true);
+        if (--attempts <= 0) return resolve(false);
+        setTimeout(tick, 1000);
       });
       req.on("error", () => {
         if (--attempts <= 0) return resolve(false);
@@ -75,7 +77,7 @@ const child = spawn(process.execPath, [nextBin, "dev", "-H", HOST, "-p", String(
 child.on("exit", (code) => process.exit(code ?? 0));
 
 (async () => {
-  const local = `http://127.0.0.1:${PORT}/dashboard`;
+  const local = `http://127.0.0.1:${PORT}/prototype`;
   const ok = await waitForServer(local);
   if (!ok) {
     console.error("\n[Prototype] Server did not become ready. Keep this window open and review the error above.");
@@ -86,7 +88,8 @@ child.on("exit", (code) => process.exit(code ?? 0));
   console.log(" DGT ERP FULL UI PROTOTYPE IS READY");
   console.log(" DESIGN ONLY - NO LIVE DATABASE / LEDGER / STOCK WRITES");
   console.log("============================================================");
-  console.log("Computer:", local);
+  console.log("Computer (Design Studio with device selector):", local);
+  console.log("Direct ERP view (without design controls):", `http://127.0.0.1:${PORT}/dashboard`);
   if (ip) {
     console.log("Phone / iPad / Samsung:", `http://${ip}:${PORT}/dashboard`);
     console.log("Use the SAME Wi-Fi. Keep this window open while testing.");
