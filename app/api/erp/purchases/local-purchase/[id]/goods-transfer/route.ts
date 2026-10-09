@@ -8,7 +8,7 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { createTransfer, ensureLotsForPurchase, getJournal } from "@/lib/services/goods-transfer-service";
 import { getRequestLanguage } from "@/lib/i18n/server";
-import { localizeRecords } from "@/lib/i18n/localize-records";
+import { localizeRecordFields } from "@/lib/i18n/localize-records";
 
 const uuid = z.string().uuid();
 
@@ -86,8 +86,9 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       const branches = await sql`
         select cb.id, cb.name, cb.country_id from public.country_branches cb
         where cb.deleted_at is null and cb.country_id = ${p.country_id}::uuid order by cb.name`;
-      const locWarehouses = await localizeRecords(warehouses, "warehouses", lang);
-      const locBranches = await localizeRecords(branches, "country_branches", lang);
+      // Names are shown in the viewer's language (original value kept if no translation exists).
+      const locWarehouses = await localizeRecordFields(warehouses as any[], "warehouses", ["warehouse_name"], lang).catch(() => warehouses);
+      const locBranches = await localizeRecordFields(branches as any[], "country_branches", ["name"], lang).catch(() => branches);
       return { ...journal, notPosted: p.status !== "posted", lotsError, warehouses: locWarehouses, branches: locBranches };
     });
     return apiOk(out);
