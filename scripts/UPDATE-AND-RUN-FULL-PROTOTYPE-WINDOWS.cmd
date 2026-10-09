@@ -94,7 +94,7 @@ set "PORT=8765"
 set "HOSTNAME=0.0.0.0"
 set "NEXT_TELEMETRY_DISABLED=1"
 
-start "" powershell -NoProfile -WindowStyle Hidden -Command "$u='http://127.0.0.1:8765/dashboard'; for($i=0;$i -lt 90;$i++){ try { $r=Invoke-WebRequest -UseBasicParsing -Uri $u -TimeoutSec 2; if($r.StatusCode -ge 200 -and $r.StatusCode -lt 500){ Start-Process $u; exit } } catch {}; Start-Sleep -Seconds 2 }"
+start "" powershell -NoProfile -WindowStyle Hidden -Command "$u='http://127.0.0.1:8765/prototype'; for($i=0;$i -lt 90;$i++){ try { $r=Invoke-WebRequest -UseBasicParsing -Uri $u -TimeoutSec 2; if($r.StatusCode -ge 200 -and $r.StatusCode -lt 500){ Start-Process $u; exit } } catch {}; Start-Sleep -Seconds 2 }"
 
 call npm run dev
 goto :end
