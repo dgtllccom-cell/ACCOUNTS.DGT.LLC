@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       ok: true,
-      data: result,
+      data: result ?? { total: 0, rows: [] },
     });
   } catch (err: any) {
     rethrowIfNextControlFlow(err);

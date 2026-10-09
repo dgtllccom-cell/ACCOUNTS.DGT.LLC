@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { rethrowIfNextControlFlow, handleApiError } from "@/lib/api/response";
 import { authorizeTrackingRead } from "@/lib/api/tracking-access";
+import { hasRolePermission } from "@/lib/permissions/middleware";
 import { sessionSqlScope, sqlScopeCondition } from "@/lib/api/scope-middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { normalizeTrackingMode } from "@/lib/services/shipment-tracking-service";
 
 export async function GET(req: NextRequest) {
   try {
@@ -95,7 +97,8 @@ export async function GET(req: NextRequest) {
 
       const modeMap: Record<string, number> = {};
       for (const r of modeRows) {
-        modeMap[r.mode as string] = (modeMap[r.mode as string] ?? 0) + parseInt(r.cnt ?? "0");
+        const m = normalizeTrackingMode(r.mode);
+        modeMap[m] = (modeMap[m] ?? 0) + parseInt(r.cnt ?? "0");
       }
 
       // ── Tracking Status Summary ────────────────────────────────────────
@@ -142,6 +145,7 @@ export async function GET(req: NextRequest) {
           cityName: branchInfo?.city_name ?? null,
           userName: session.fullName ?? session.email ?? "Unknown",
           roleLabel,
+          roleKey: session.isSuperAdmin ? "super_admin" : (session.roles?.[0] ?? null),
           isSuperAdmin: session.isSuperAdmin,
         },
         shipmentSummary: {
@@ -170,7 +174,8 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    return NextResponse.json({ ok: true, data });
+    // the UI hides "Add Event" for logins that may not record milestones (the API enforces it regardless)
+    return NextResponse.json({ ok: true, data: { ...data, canRecord: hasRolePermission(session, "shipping_records", "update") } });
   } catch (err: any) {
     rethrowIfNextControlFlow(err);
     return handleApiError(err);

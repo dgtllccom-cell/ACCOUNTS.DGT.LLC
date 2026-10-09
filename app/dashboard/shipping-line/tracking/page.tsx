@@ -16,8 +16,6 @@ export default async function ShippingLineTrackingPage({
         initialStatus={params.status || "all"}
         initialTab={(params.tab as any) || "all"}
         initialQuery={params.q || ""}
-        title="Container & Vessel Tracking"
-        description="Track shipments, containers and vessels in real-time with complete journey details."
       />
     </div>
   );

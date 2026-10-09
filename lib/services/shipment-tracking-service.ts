@@ -23,6 +23,22 @@ export const TRACKING_SEARCH_FIELDS = ["all", "shipment", "bl", "container", "ve
 export type TrackingSearchField = (typeof TRACKING_SEARCH_FIELDS)[number];
 export const TRACKING_MODES = ["by_sea", "by_road", "by_air", "by_rail"] as const;
 
+/** Older orders store "Road" / "road" / "train"; every screen works with the canonical by_* values. */
+export function normalizeTrackingMode(value: unknown): (typeof TRACKING_MODES)[number] {
+  const v = String(value ?? "").toLowerCase().replace(/^by[_\s-]*/, "");
+  if (v === "road" || v === "truck") return "by_road";
+  if (v === "air" || v === "flight") return "by_air";
+  if (v === "rail" || v === "train" || v === "railway") return "by_rail";
+  return "by_sea";
+}
+
+const LEGACY_MODE_VALUES: Record<string, string[]> = {
+  by_sea: ["by_sea", "sea"],
+  by_road: ["by_road", "road", "truck"],
+  by_air: ["by_air", "air"],
+  by_rail: ["by_rail", "rail", "train"],
+};
+
 /** Case-, space- and punctuation-insensitive form used on BOTH sides of a match ("DG-26 104w" ≡ "dg26104W"). */
 export function normalizeTrackingKey(value: string): string {
   return String(value ?? "").toLowerCase().replace(/[\s\-_/.,]+/g, "");
@@ -89,7 +105,7 @@ export type TrackingListFilter = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function whereClause(sql: any, session: ErpSession, f: TrackingListFilter) {
   const scope = sqlScopeCondition(sql, sessionSqlScope(session), "o");
-  const mode = f.mode && f.mode !== "all" && (TRACKING_MODES as readonly string[]).includes(f.mode) ? sql`AND al.transport_mode = ${f.mode}` : sql``;
+  const mode = f.mode && f.mode !== "all" && (TRACKING_MODES as readonly string[]).includes(f.mode) ? sql`AND (al.transport_mode = ${f.mode} OR (al.id IS NULL AND lower(coalesce(o.transport_mode, '')) IN ${sql(LEGACY_MODE_VALUES[f.mode])}))` : sql``;
   let status = sql``;
   if (f.status && f.status !== "all") {
     status =
@@ -115,7 +131,7 @@ export class ShipmentTrackingService {
    */
   async searchTracking(query: string, domain: "business" | "shipping" | "both", session: ErpSession, limit = 50, field: TrackingSearchField = "all") {
     const r = await this.searchTrackingList(query, domain, session, Math.min(limit, 100), 0, undefined, undefined, field);
-    return r.rows.map((row) => ({
+    return (r?.rows ?? []).map((row) => ({
       id: row.id,
       orderNo: row.orderNo,
       customerName: row.customerName,
@@ -427,7 +443,7 @@ export class ShipmentTrackingService {
       return {
         total,
         rows: rows.map((r) => {
-          const mode = r.leg_transport_mode || r.order_transport_mode || "by_sea";
+          const mode = normalizeTrackingMode(r.leg_transport_mode || r.order_transport_mode);
           const vessel = r.vessel_name || r.bl_rec_vessel;
           const voyage = r.voyage_number || r.bl_rec_voyage || r.flight_number;
           return {
@@ -450,7 +466,7 @@ export class ShipmentTrackingService {
             to: r.to_location_text || r.port_of_discharge || r.bl_rec_pod || r.destination_port_name || r.receiving_country_name || DASH,
             transportMode: mode as string,
             legCount: Number(r.leg_count ?? 1) || 1,
-            legModes: (r.leg_modes as string[] | null) ?? [mode],
+            legModes: Array.from(new Set(((r.leg_modes as string[] | null) ?? [mode]).map(normalizeTrackingMode))),
             currentLocation: r.current_location || r.latest_event_name || r.from_location_text || r.port_of_loading || r.loading_port_name || DASH,
             eta: r.eta || r.bl_rec_eta || null,
             etd: r.etd || null,
