@@ -8,7 +8,7 @@ export const metadata = { title: "Sales — New Sales Booking Order" };
 export default async function NewSalesBookingOrderPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ salesOrderId?: string; salesId?: string; orderId?: string; id?: string; salesOrderNo?: string }>;
+  searchParams?: Promise<{ lotId?: string; salesOrderId?: string; salesId?: string; orderId?: string; id?: string; salesOrderNo?: string }>;
 }) {
   const session = await requireErpSession();
   const sp = searchParams ? await searchParams : {};
@@ -19,7 +19,7 @@ export default async function NewSalesBookingOrderPage({
         targetModule="sales_orders"
         domain="business"
         lang={session.preferredLanguage ?? "en"}
-        skipGate={Boolean(orderId)}
+        skipGate={Boolean(orderId) || Boolean(sp.lotId)}
       >
         <SalesOrderWizard session={session} />
       </EntryMethodSelector>

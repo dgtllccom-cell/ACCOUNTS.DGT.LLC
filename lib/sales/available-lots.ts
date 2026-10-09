@@ -16,8 +16,8 @@ import { withLocalPg } from "@/lib/db/local-postgres";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
-export type SaleSource = "booking" | "in_transit" | "local" | "warehouse" | "endorse" | "stock";
-export const SALE_SOURCES: SaleSource[] = ["booking", "in_transit", "local", "warehouse", "endorse", "stock"];
+export type SaleSource = "booking" | "in_transit" | "local" | "warehouse" | "endorse" | "stock" | "lot";
+export const SALE_SOURCES: SaleSource[] = ["booking", "in_transit", "local", "warehouse", "endorse", "stock", "lot"];
 
 export interface AvailableLot {
   id?: string;
@@ -46,6 +46,15 @@ export interface AvailableLot {
   exchangeRate: number;
   coursePrice: number;
   status: string;
+  /** Set for lots managed by the Goods Transfer Journal: the permanent lot identity + the exact stock place. */
+  lotId?: string;
+  lotRef?: string;
+  rackBin?: string;
+  placeLabel?: string;
+  purchaseId?: string;
+  unitCost?: number;
+  landedUnitCost?: number;
+  costCurrency?: string;
 }
 
 const n = (v: unknown) => {
@@ -66,6 +75,20 @@ function scopeClause(sql: any, session: ErpSession) {
   )`;
 }
 
+function scopeClauseFor(sql: any, session: ErpSession, alias: string) {
+  if (session.isSuperAdmin) return sql`true`;
+  const co = session.countryIds ?? [];
+  const cb = session.countryBranchIds ?? [];
+  const ci = session.cityBranchIds ?? [];
+  const a = sql.unsafe(alias);
+  return sql`(
+    (${a}.country_id IS NULL AND ${a}.country_branch_id IS NULL AND ${a}.city_branch_id IS NULL)
+    OR ${a}.country_id = ANY(${co}::uuid[])
+    OR ${a}.country_branch_id = ANY(${cb}::uuid[])
+    OR ${a}.city_branch_id = ANY(${ci}::uuid[])
+  )`;
+}
+
 export async function listAvailableLots(
   session: ErpSession,
   opts: {
@@ -73,6 +96,7 @@ export async function listAvailableLots(
     q?: string | null;
     goodsName?: string | null;
     goodsId?: string | null;
+    lotId?: string | null;
     lang?: SupportedLanguage;
     limit?: number;
   },
@@ -91,12 +115,18 @@ export async function listAvailableLots(
         SELECT pib.id, pib.product_id AS goods_id, pib.quantity_available, pib.quantity_on_hand,
                pib.warehouse_id, pib.city_branch_id, pib.country_id,
                g.goods_name, g.chs_code, w.warehouse_name, w.warehouse_code,
-               cb.name as branch_name
+               cb.name as branch_name,
+               GREATEST(0, coalesce(pib.quantity_available, pib.quantity_on_hand, 0) - coalesce((
+                 SELECT sum(ls.qty) FROM public.lot_stock ls JOIN public.purchase_lots pl ON pl.id = ls.lot_id
+                 WHERE pl.goods_id = pib.product_id AND ls.warehouse_id = pib.warehouse_id AND ls.state = 'available'), 0)) AS legacy_available
         FROM public.product_inventory_balances pib
         LEFT JOIN public.goods g ON g.id = pib.product_id
         LEFT JOIN public.warehouses w ON w.id = pib.warehouse_id
         LEFT JOIN public.city_branches cb ON cb.id = pib.city_branch_id
-        WHERE ${scope} AND (coalesce(pib.quantity_available, pib.quantity_on_hand, 0) > 0) AND g.deleted_at IS NULL
+        WHERE ${scopeClauseFor(sql, session, "pib")} AND g.deleted_at IS NULL
+          AND GREATEST(0, coalesce(pib.quantity_available, pib.quantity_on_hand, 0) - coalesce((
+                 SELECT sum(ls.qty) FROM public.lot_stock ls JOIN public.purchase_lots pl ON pl.id = ls.lot_id
+                 WHERE pl.goods_id = pib.product_id AND ls.warehouse_id = pib.warehouse_id AND ls.state = 'available'), 0)) > 0
         ORDER BY pib.updated_at DESC
         LIMIT ${limit}
       `) as unknown as any[];
@@ -112,7 +142,7 @@ export async function listAvailableLots(
           origin: "",
           hsCode: r.chs_code ?? "",
           qtyName: "BAGS",
-          availableQty: n(r.quantity_available || r.quantity_on_hand),
+          availableQty: n(r.legacy_available),
           qtyKgs: 0,
           emptyKgs: 0,
           netWeight: 0,
@@ -141,9 +171,10 @@ export async function listAvailableLots(
                cb.name as branch_name
         FROM public.local_purchases lp
         LEFT JOIN public.city_branches cb ON cb.id = lp.city_branch_id
-        WHERE ${scope} AND lp.deleted_at IS NULL
+        WHERE ${scopeClauseFor(sql, session, "lp")} AND lp.deleted_at IS NULL
           AND coalesce(lp.status,'') NOT IN ('sold','consumed','cancelled')
           AND coalesce(lp.numbers, 0) > 0
+          AND NOT EXISTS (SELECT 1 FROM public.purchase_lots pl WHERE pl.local_purchase_id = lp.id)
         ORDER BY lp.created_at DESC
         LIMIT ${limit}
       `) as unknown as any[];
@@ -261,7 +292,69 @@ export async function listAvailableLots(
       }
     };
 
-    if (source === "stock") {
+    const fetchManagedLots = async () => {
+      const rows = (await sql`
+        SELECT l.id AS lot_id, l.lot_ref, l.goods_id, l.goods_name, l.brand, l.size, l.origin, l.unit_name, l.net_weight_kg, l.qty_purchased,
+               l.original_cost, l.unit_cost, l.currency_code, l.country_id, l.city_branch_id, l.local_purchase_id,
+               s.warehouse_id, s.location_label, s.rack_bin, s.qty,
+               w.warehouse_name, w.warehouse_code, cb.name AS branch_name, g.chs_code
+        FROM public.purchase_lots l
+        JOIN public.lot_stock s ON s.lot_id = l.id AND s.state = 'available' AND s.qty > 0
+        LEFT JOIN public.warehouses w ON w.id = s.warehouse_id
+        LEFT JOIN public.city_branches cb ON cb.id = l.city_branch_id
+        LEFT JOIN public.goods g ON g.id = l.goods_id
+        WHERE ${scopeClauseFor(sql, session, "l")} AND l.status = 'active'
+          ${opts.lotId ? sql`AND l.id = ${opts.lotId}::uuid` : sql``}
+        ORDER BY l.created_at DESC, l.lot_ref
+        LIMIT ${limit}
+      `) as unknown as any[];
+      for (const r of rows) {
+        const whLabel = r.warehouse_name || r.location_label || "Purchase location";
+        const place = [r.warehouse_code || r.location_label || "", r.rack_bin ? `/${r.rack_bin}` : ""].join("");
+        const qty = n(r.qty_purchased) || 1;
+        out.push({
+          id: `${r.lot_id}|${r.warehouse_id ?? "-"}|${r.rack_bin ?? ""}|${r.location_label ?? ""}`,
+          lotNo: place ? `${r.lot_ref}@${place}` : r.lot_ref,
+          source: "lot",
+          goodsId: r.goods_id ?? null,
+          goodsName: r.goods_name ?? "",
+          brand: r.brand ?? "",
+          size: r.size ?? "",
+          origin: r.origin ?? "",
+          hsCode: r.chs_code ?? "",
+          qtyName: r.unit_name ?? "BAGS",
+          availableQty: n(r.qty),
+          qtyKgs: n(r.net_weight_kg) / qty,
+          emptyKgs: 0,
+          netWeight: (n(r.net_weight_kg) / qty) * n(r.qty),
+          location: whLabel + (r.rack_bin ? ` / ${r.rack_bin}` : ""),
+          branchName: r.branch_name || "",
+          branchId: r.city_branch_id ?? null,
+          warehouseName: whLabel,
+          warehouseId: r.warehouse_id ?? null,
+          countryId: r.country_id ?? null,
+          stockRef: r.lot_ref,
+          containerNo: null,
+          currencyType: r.currency_code ?? "USD",
+          exchangeRate: 1,
+          coursePrice: 0,
+          status: "Lot available",
+          lotId: r.lot_id,
+          lotRef: r.lot_ref,
+          rackBin: r.rack_bin ?? "",
+          placeLabel: r.location_label ?? "",
+          purchaseId: r.local_purchase_id,
+          unitCost: n(r.original_cost) / qty,
+          landedUnitCost: n(r.unit_cost),
+          costCurrency: r.currency_code ?? "",
+        });
+      }
+    };
+
+    if (source === "lot") {
+      await fetchManagedLots();
+    } else if (source === "stock") {
+      await fetchManagedLots();
       await fetchWarehouseLots();
       await fetchLocalLots();
       await fetchTransitLots();

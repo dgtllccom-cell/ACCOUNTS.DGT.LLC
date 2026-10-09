@@ -43,7 +43,8 @@ import {
   Users,
   Send,
   Repeat2,
-  CheckCheck
+  CheckCheck,
+  Sparkles
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -219,6 +220,17 @@ const DEFAULT_FORM = {
   saleSource: "stock",
   stockLotNo: "",
   selectedLotId: "",
+  // Goods Transfer Journal lot picked for this line (permanent lot identity + the exact stock place)
+  managedLotId: "",
+  managedWarehouseId: "",
+  managedRack: "",
+  managedLabel: "",
+  lotRef: "",
+  lotAvailableQty: 0,
+  lotUnitCost: 0,
+  lotCostCurrency: "",
+  lotPurchaseId: "",
+  saleMode: "local", // "local" | "export"
   warehouseId: "",
   warehouseName: "",
   branchName: "",
@@ -422,7 +434,7 @@ export function SalesOrderWizard({ session }) {
   // color tokens to match the approved Local Purchase prototype's gold
   // GRADIENT header strip on an otherwise plain card (not a full-card wash);
   // it changes no calculation, field, validation, or save behavior.
-  const isLocalSale = form.saleSource === "local";
+  const isLocalSale = form.saleSource === "local" || (form.saleSource === "lot" && form.saleMode !== "export");
   const sectionPanelCls = "rounded-2xl border border-border bg-card p-4 shadow-sm";
   const sectionPanelHeaderCls = isLocalSale
     ? "flex items-center justify-between rounded-xl bg-gradient-to-r from-amber-100 to-amber-200 dark:from-amber-950/40 dark:to-amber-900/30 border border-amber-300 dark:border-amber-800 px-3 py-2 mb-3"
@@ -495,8 +507,18 @@ export function SalesOrderWizard({ session }) {
   };
 
   const applySaleLot = (lot) => {
+    const managed = Boolean(lot.lotId);
     setForm((prev) => ({
       ...prev,
+      managedLotId: lot.lotId || "",
+      managedWarehouseId: managed ? (lot.warehouseId || "") : "",
+      managedRack: managed ? (lot.rackBin || "") : "",
+      managedLabel: managed ? (lot.placeLabel || "") : "",
+      lotRef: lot.lotRef || "",
+      lotAvailableQty: managed ? Number(lot.availableQty || 0) : 0,
+      lotUnitCost: managed ? Number(lot.unitCost || 0) : 0,
+      lotCostCurrency: managed ? (lot.costCurrency || "") : "",
+      lotPurchaseId: lot.purchaseId || "",
       saleType: "stock",
       saleSource: lot.source || "stock",
       stockLotNo: lot.lotNo,
@@ -512,14 +534,15 @@ export function SalesOrderWizard({ session }) {
       origin: lot.origin || prev.origin,
       hsCode: lot.hsCode || prev.hsCode,
       qtyName: lot.qtyName || prev.qtyName || "BAGS",
-      qtyNo: prev.qtyNo > 0 ? prev.qtyNo : Math.min(100, lot.availableQty || 100),
+      qtyNo: managed ? Math.min(Number(lot.availableQty || 0), prev.qtyNo > 0 ? prev.qtyNo : Number(lot.availableQty || 0)) : (prev.qtyNo > 0 ? prev.qtyNo : Math.min(100, lot.availableQty || 100)),
       qtyKgs: lot.qtyKgs || prev.qtyKgs,
       emptyKgs: lot.emptyKgs || prev.emptyKgs,
       netWeight: lot.netWeight || prev.netWeight,
-      currencyType: lot.currencyType || prev.currencyType,
-      salesCurrency: lot.currencyType || prev.salesCurrency,
-      exchangeRate: lot.exchangeRate || prev.exchangeRate,
-      coursePrice: lot.coursePrice || prev.coursePrice,
+      // A sale never inherits the lot's PURCHASE rate/currency: the user enters the sale rate and currency.
+      currencyType: managed ? prev.currencyType : (lot.currencyType || prev.currencyType),
+      salesCurrency: managed ? prev.salesCurrency : (lot.currencyType || prev.salesCurrency),
+      exchangeRate: managed ? prev.exchangeRate : (lot.exchangeRate || prev.exchangeRate),
+      coursePrice: managed ? 0 : (lot.coursePrice || prev.coursePrice),
       manualTotalAmount: "",
       manualFinalAmount: ""
     }));
@@ -611,6 +634,38 @@ export function SalesOrderWizard({ session }) {
     setForm((prev) => (prev.saleSource === "local" ? prev : { ...prev, saleSource: "local" }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sourceParam]);
+
+  // "Local Market Sale" / "Export to Customer" in the Goods Transfer Journal open this wizard pre-filled with the
+  // original lot. Nothing is posted or deducted by opening it; the user still picks the customer, qty, rate, etc.
+  const lotIdParam = searchParams.get("lotId");
+  useEffect(() => {
+    if (!lotIdParam) return;
+    if (searchParams.get("id") || searchParams.get("salesOrderNo") || searchParams.get("transferId")) return;
+    const wh = searchParams.get("wh") || "";
+    const rack = searchParams.get("rack") || "";
+    const label = searchParams.get("label") || "";
+    const mode = searchParams.get("mode") === "export" ? "export" : "local";
+    let cancelled = false;
+    fetch(`/api/erp/sales/available-lots?source=lot&lotId=${encodeURIComponent(lotIdParam)}&lang=${lang}`, { credentials: "same-origin" })
+      .then((r) => r.json())
+      .then((j) => {
+        if (cancelled) return;
+        const lots = Array.isArray(j?.data?.lots) ? j.data.lots : [];
+        const lot = lots.find((l) => (l.warehouseId || "") === wh && (l.rackBin || "") === rack && (l.placeLabel || "") === label) || lots[0];
+        if (!lot) {
+          setSaveMessage(t(lang, "gtj.err_lot_not_available", "This lot has no available quantity to sell."));
+          return;
+        }
+        applySaleLot(lot);
+        setForm((prev) => ({ ...prev, saleMode: mode }));
+        setIsFormOpen(true);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lotIdParam]);
 
   const transferIdParam = searchParams.get("transferId");
   useEffect(() => {
@@ -1904,7 +1959,27 @@ export function SalesOrderWizard({ session }) {
     const sizeStr = (form.size || "").trim();
     const brandStr = (form.brand || "").trim();
 
-    if (selectedGood && sizeStr && brandStr) {
+    if (form.managedLotId) {
+      const qtyWanted = Number(form.qtyNo || 0);
+      const alreadyInList = goodsEntries
+        .filter((g) => g.managedLotId === form.managedLotId && (g.managedWarehouseId || "") === (form.managedWarehouseId || "") && (g.managedRack || "") === (form.managedRack || "") && (g.managedLabel || "") === (form.managedLabel || ""))
+        .reduce((sum, g) => sum + Number(g.qtyNo || 0), 0);
+      if (!(qtyWanted > 0)) {
+        alert(t(lang, "gtj.err_sale_qty", "Enter the sale quantity."));
+        return;
+      }
+      if (qtyWanted + alreadyInList > Number(form.lotAvailableQty || 0) + 0.00005) {
+        alert(t(lang, "gtj.err_sale_over", "The sale quantity is more than the quantity available in this lot at this place."));
+        return;
+      }
+      if (!(Number(form.coursePrice || 0) > 0)) {
+        alert(t(lang, "gtj.err_sale_rate", "Enter the sale rate."));
+        return;
+      }
+    }
+
+    // A managed lot is an existing goods record: never create a goods variation from a lot's own size/brand.
+    if (selectedGood && sizeStr && brandStr && !form.managedLotId) {
       const hasVar = (selectedGood.variations || []).some(v => 
         (v.size || "").trim().toUpperCase() === sizeStr.toUpperCase() &&
         (v.brand || "").trim().toUpperCase() === brandStr.toUpperCase()
@@ -1937,6 +2012,14 @@ export function SalesOrderWizard({ session }) {
       ...prev,
       {
         allotName: form.allotName || `ALT-${Math.floor(1000 + Math.random() * 9000)}`,
+        managedLotId: form.managedLotId || "",
+        managedWarehouseId: form.managedWarehouseId || "",
+        managedRack: form.managedRack || "",
+        managedLabel: form.managedLabel || "",
+        lotRef: form.lotRef || "",
+        lotPurchaseId: form.lotPurchaseId || "",
+        lotUnitCost: Number(form.lotUnitCost || 0),
+        lotCostCurrency: form.lotCostCurrency || "",
         goodsName: form.goodsName,
         size: form.size || "-",
         brand: form.brand || "-",
@@ -1976,7 +2059,18 @@ export function SalesOrderWizard({ session }) {
       coursePrice: 0,
       allotName: `ALT-${Math.floor(4424 + Math.random() * 1000)}`,
       manualTotalAmount: "",
-      manualFinalAmount: ""
+      manualFinalAmount: "",
+      managedLotId: "",
+      managedWarehouseId: "",
+      managedRack: "",
+      managedLabel: "",
+      lotRef: "",
+      lotAvailableQty: 0,
+      lotUnitCost: 0,
+      lotCostCurrency: "",
+      lotPurchaseId: "",
+      stockLotNo: "",
+      selectedLotId: ""
     }));
   };
 
@@ -2017,7 +2111,15 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
       operator: row.op,
       allotName: row.allotName,
       manualTotalAmount: row.totalAmount,
-      manualFinalAmount: row.finalAmount
+      manualFinalAmount: row.finalAmount,
+      managedLotId: row.managedLotId || "",
+      managedWarehouseId: row.managedWarehouseId || "",
+      managedRack: row.managedRack || "",
+      managedLabel: row.managedLabel || "",
+      lotRef: row.lotRef || "",
+      lotPurchaseId: row.lotPurchaseId || "",
+      lotUnitCost: Number(row.lotUnitCost || 0),
+      lotCostCurrency: row.lotCostCurrency || ""
     }));
     setGoodsEntries((prev) => prev.filter((_, idx) => idx !== index));
     setActiveTab("goods");
@@ -3942,6 +4044,15 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 {/* GOODS LIST TABLE */}
                 {activeTab === "goods" && (
                   <div className="mt-4">
+                    {form.managedLotId && (
+                      <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-[11px] text-indigo-900 dark:border-indigo-900 dark:bg-indigo-950/30 dark:text-indigo-200">
+                        <span className="font-black uppercase tracking-wide">{form.saleMode === "export" ? t(lang, "gtj.wiz_mode_export", "Export order") : t(lang, "gtj.wiz_mode_local", "Local sale")}</span>
+                        <span>{t(lang, "gtj.wiz_from_lot", "Selling from lot")}: <b className="font-mono">{form.lotRef}</b></span>
+                        <span>{t(lang, "gtj.q_available", "Available")}: <b>{Number(form.lotAvailableQty || 0).toLocaleString()}</b></span>
+                        <span>{t(lang, "gtj.wiz_unit_cost", "Cost per unit")}: <b>{form.lotCostCurrency} {Number(form.lotUnitCost || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}</b></span>
+                        <span>{t(lang, "gtj.wiz_reserve_note", "The draft only reserves this quantity; it is deducted once at final posting.")}</span>
+                      </div>
+                    )}
                     {isLocalSale && (
                       <div className="flex items-center justify-between rounded-t-lg bg-gradient-to-r from-amber-100 to-amber-200 dark:from-amber-950/40 dark:to-amber-900/30 border border-b-0 border-amber-300 dark:border-amber-800 px-3.5 py-2">
                         <span className="text-xs font-black uppercase tracking-wider text-amber-900 dark:text-amber-200 flex items-center gap-2">

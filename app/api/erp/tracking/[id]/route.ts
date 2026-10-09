@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
-import { rethrowIfNextControlFlow } from "@/lib/api/response";
+import { rethrowIfNextControlFlow, handleApiError } from "@/lib/api/response";
+import { authorizeTrackingRead } from "@/lib/api/tracking-access";
 import { shipmentTrackingService } from "@/lib/services/shipment-tracking-service";
 
 export async function GET(
@@ -9,6 +10,7 @@ export async function GET(
 ) {
   try {
     const session = await requireErpSession();
+    authorizeTrackingRead(session);
     const { id } = await params;
     const { searchParams } = new URL(req.url);
     const domainParam = searchParams.get("domain") || "both";
@@ -29,10 +31,6 @@ export async function GET(
     });
   } catch (err: any) {
     rethrowIfNextControlFlow(err);
-    console.error("Tracking details error:", err);
-    return NextResponse.json(
-      { ok: false, error: { message: err?.message || "Failed to fetch tracking details" } },
-      { status: err?.status || 500 }
-    );
+    return handleApiError(err);
   }
 }

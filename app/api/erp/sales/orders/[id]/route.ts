@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { releaseForOrder, reserveForOrder } from "@/lib/sales/managed-lot-sales";
 import { z } from "zod";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { uuidSchema } from "@/lib/api/erp-validation";
@@ -239,6 +240,19 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       };
     }
 
+    // Keep the stock reservation in step with the committed goods lines BEFORE saving the new form data, so a
+    // line that cannot be reserved (not enough available quantity) rejects the save instead of overselling.
+    if (patch.form_data !== undefined && Array.isArray((patch.form_data as any)?.goodsEntries)) {
+      await reserveForOrder({
+        salesOrderId: params.id,
+        salesOrderNo: (patch.sales_order_no as string | undefined) ?? (before as any).sales_order_no ?? null,
+        formData: patch.form_data,
+        previousFormData: (before as any).form_data,
+        countryId: (patch.country_id as string | undefined) ?? (before as any).country_id ?? null,
+        userId: session.userId,
+      });
+    }
+
     // Direct-pg fast path first (same technique already used for Purchase's
     // equivalent save endpoint — measured 56-60s through the Supabase client
     // in this environment vs a few seconds direct; RETURNING * preserves the
@@ -344,6 +358,9 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
     if (error) {
       throw error;
     }
+
+    // A deleted draft gives its reserved goods back to the lot.
+    await releaseForOrder({ salesOrderId: params.id, formData: (before as any).form_data, userId: session.userId, reason: "Sales order deleted" });
 
     await writeAuditLog({
       action: "delete",

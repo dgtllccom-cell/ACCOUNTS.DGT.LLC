@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { assertReservationsReady, finalizeForOrder, usesManagedLots } from "@/lib/sales/managed-lot-sales";
 import { z } from "zod";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { uuidSchema } from "@/lib/api/erp-validation";
@@ -256,6 +257,10 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       throw new Error("Sales Account Ledger ID is required before transfer to payment.");
     }
 
+    // Managed lots: the full quantity must be reserved BEFORE any money is posted, so a short reservation
+    // fails cleanly instead of posting a sale whose stock cannot be deducted.
+    await assertReservationsReady(params.id, formData);
+
     const goodsAuditRemark = buildSalesGoodsAuditRemark(orderRow, referenceNo);
     const postingNarration = [
       goodsAuditRemark,
@@ -368,7 +373,20 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
 
     let stockDeductionAudit: any = null;
 
-    if (isStockSale && !alreadyDeducted) {
+    // Goods picked from managed lots: the reservation is deducted exactly once here (reserved -> sold / exported).
+    const managedDeduction = usesManagedLots(formData);
+    if (managedDeduction) {
+      const finalized = await finalizeForOrder({ salesOrderId: params.id, salesOrderNo: orderRow.sales_order_no ?? null, userId: session.userId });
+      stockDeductionAudit = {
+        deducted: true,
+        managedLots: true,
+        deductedAt: now,
+        deductedBy: session.userId,
+        transfers: finalized.map((f: any) => ({ transferNo: f.transfer_no, lotId: f.lot_id, qty: Number(f.qty), purpose: f.purpose })),
+      };
+    }
+
+    if (isStockSale && !alreadyDeducted && !managedDeduction) {
       const soldQty = Number(form.qtyNo || form.quantity || 1);
       const lotNo = String(form.stockLotNo || form.allotName || "").trim();
       const lotId = form.selectedLotId ? String(form.selectedLotId).trim() : null;
@@ -479,7 +497,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       updated_at: now,
       form_data: {
         ...updatedFormData,
-        stockDeducted: isStockSale ? true : (alreadyDeducted ? true : false),
+        stockDeducted: (isStockSale || managedDeduction) ? true : (alreadyDeducted ? true : false),
         isEndorseSale: isEndorse,
         stockDeductionAudit: stockDeductionAudit || formData.stockDeductionAudit || null,
         endorseFulfillment: isEndorse ? {

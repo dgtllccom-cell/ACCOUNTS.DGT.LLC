@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { reserveForOrder } from "@/lib/sales/managed-lot-sales";
 import { z } from "zod";
 import { apiCreated, apiOk, handleApiError } from "@/lib/api/response";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
@@ -452,6 +453,21 @@ export async function POST(request: NextRequest) {
       return rows[0] as { id: string; sales_order_no: string };
     });
     const row = viaPgInsert ?? await requireSupabaseData(supabase.from("sales_orders").insert(payload).select("id, sales_order_no").single());
+
+    // Goods picked from managed lots are RESERVED by the draft (never deducted until final billing). If the
+    // reservation cannot be made (e.g. not enough available quantity) the just-created draft is withdrawn.
+    try {
+      await reserveForOrder({
+        salesOrderId: (row as any).id,
+        salesOrderNo: (row as any).sales_order_no,
+        formData: payload.form_data,
+        countryId: effective.countryId,
+        userId: session.userId,
+      });
+    } catch (reserveError) {
+      await withLocalPg((sql) => sql`UPDATE public.sales_orders SET deleted_at = now() WHERE id = ${(row as any).id}::uuid`);
+      throw reserveError;
+    }
 
     let translationStatus: { status: "complete" | "pending"; fields: Record<string, unknown> } = { status: "pending", fields: {} };
     try {

@@ -1869,6 +1869,8 @@ export function LocalPurchaseView({
       setExtraCharges([]);
       setCurrentStep(1);
       await loadHistory();
+      // Financial posting is done. Where the goods physically go is a separate decision in the Goods Transfer Journal.
+      if (savedPurchase?.id) router.push(`/dashboard/purchase/local-purchase/${savedPurchase.id}/goods-transfer`);
     } catch (err: any) {
       alert(err.message || "Failed to transfer and post to General Ledger.");
     } finally {
@@ -5847,7 +5849,7 @@ export function LocalPurchaseView({
                               <td className="px-3 py-2 font-mono font-bold">
                                 <button
                                   type="button"
-                                  onClick={() => setSelectedRowForVoucher(row.raw)}
+                                  onClick={() => (row.raw?.id ? router.push(`/dashboard/purchase/local-purchase/${row.raw.id}`) : setSelectedRowForVoucher(row.raw))}
                                   className="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
                                 >
                                   {row.voucherNo}
@@ -5900,6 +5902,28 @@ export function LocalPurchaseView({
                                       >
                                         <Eye className="h-3.5 w-3.5 text-blue-500" />
                                         <span>{tr("View Voucher")}</span>
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setOpenActionRowId(null);
+                                          if (row.raw?.id) router.push(`/dashboard/purchase/local-purchase/${row.raw.id}/goods-transfer`);
+                                        }}
+                                        className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-950/40 text-slate-700 dark:text-slate-200 hover:text-indigo-600 text-xs font-medium transition cursor-pointer"
+                                      >
+                                        <Package className="h-3.5 w-3.5 text-indigo-500" />
+                                        <span>{t(lang, "gtj.menu_journal", "Goods Transfer Journal")}</span>
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setOpenActionRowId(null);
+                                          if (row.raw?.id) router.push(`/dashboard/purchase/local-purchase/${row.raw.id}`);
+                                        }}
+                                        className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-medium transition cursor-pointer"
+                                      >
+                                        <FileText className="h-3.5 w-3.5 text-slate-500" />
+                                        <span>{t(lang, "gtj.menu_lifecycle", "Lifecycle report")}</span>
                                       </button>
                                       <button
                                         type="button"
@@ -6226,7 +6250,7 @@ export function LocalPurchaseView({
                             <td className="px-3 py-2 font-mono font-bold">
                               <button
                                 type="button"
-                                onClick={() => setSelectedRowForVoucher(row.raw)}
+                                onClick={() => (row.raw?.id ? router.push(`/dashboard/purchase/local-purchase/${row.raw.id}`) : setSelectedRowForVoucher(row.raw))}
                                 className="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
                               >
                                 {row.voucherNo}
@@ -6280,6 +6304,28 @@ export function LocalPurchaseView({
                                     >
                                       <Eye className="h-3.5 w-3.5 text-blue-500" />
                                       <span>{tr("View Voucher")}</span>
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setOpenActionRowId(null);
+                                        if (row.raw?.id) router.push(`/dashboard/purchase/local-purchase/${row.raw.id}/goods-transfer`);
+                                      }}
+                                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-950/40 text-slate-700 dark:text-slate-200 hover:text-indigo-600 text-xs font-medium transition cursor-pointer"
+                                    >
+                                      <Package className="h-3.5 w-3.5 text-indigo-500" />
+                                      <span>{t(lang, "gtj.menu_journal", "Goods Transfer Journal")}</span>
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setOpenActionRowId(null);
+                                        if (row.raw?.id) router.push(`/dashboard/purchase/local-purchase/${row.raw.id}`);
+                                      }}
+                                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-medium transition cursor-pointer"
+                                    >
+                                      <FileText className="h-3.5 w-3.5 text-slate-500" />
+                                      <span>{t(lang, "gtj.menu_lifecycle", "Lifecycle report")}</span>
                                     </button>
                                     <button
                                       type="button"
@@ -6761,6 +6807,7 @@ export function LocalPurchaseView({
                         // Update local row status and reload registry
                         setSelectedRowForVoucher((prev: any | null) => prev ? { ...prev, status: "posted" } : null);
                         await loadHistory();
+                        router.push(`/dashboard/purchase/local-purchase/${selectedRowForVoucher.id}/goods-transfer`);
                       } catch (err: any) {
                         alert(err.message || "An error occurred during transfer.");
                       }

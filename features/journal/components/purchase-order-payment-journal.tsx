@@ -86,12 +86,13 @@ import { CurrencyTotalsGrid } from "@/components/payment-report/currency-totals-
 import { PaymentJournalV2Header } from "./payment-journal-v2-header";
 import { PaymentJournalV2FilterModal } from "./payment-journal-v2-filter-modal";
 import { PurchasePaymentJournalRemainingView } from "./purchase-payment-journal-remaining-view";
+import { StandardizedDailyPaymentForm } from "@/components/daily-payments/standardized-daily-payment-form";
 function isUuid(value: any): boolean {
   if (!value || typeof value !== "string") return false;
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value.trim());
 }
 
-type PaymentMode = "advance" | "advance_completed" | "remaining" | "credit" | "charges" | "history" | "final";
+type PaymentMode = "advance" | "advance_completed" | "remaining" | "credit" | "charges" | "history" | "final" | "endorsement";
 
 type PurchaseOrderRow = {
   id: string;
@@ -341,6 +342,7 @@ type KpiCard = {
 
 const modeLabels: Record<PaymentMode, string> = {
   advance: "Advance Payment",
+  endorsement: "Endorsement Payment",
   remaining: "Remaining Payment",
   credit: "Credit Payment",
   charges: "Credit Payment",
@@ -3157,11 +3159,64 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
     setLoading(true);
     setError("");
     try {
-      const response = await fetch("/api/erp/purchases/orders?limit=200", { cache: "no-store", credentials: "include" });
-      const body = await response.json();
-      if (!response.ok || body?.ok === false) throw new Error(body?.error?.message ?? body?.message ?? "Unable to load purchase orders.");
-      const payload = (body?.data ?? body) as OrdersPayload | PurchaseOrderRow[];
-      const rows = Array.isArray(payload) ? payload : payload.orders ?? [];
+      const [poRes, lpRes] = await Promise.allSettled([
+        fetch("/api/erp/purchases/orders?limit=200", { cache: "no-store", credentials: "include" }),
+        fetch("/api/erp/purchases/local-purchase", { cache: "no-store", credentials: "include" })
+      ]);
+
+      let poRows: PurchaseOrderRow[] = [];
+      if (poRes.status === "fulfilled" && poRes.value.ok) {
+        const body = await poRes.value.json();
+        const payload = (body?.data ?? body) as OrdersPayload | PurchaseOrderRow[];
+        poRows = Array.isArray(payload) ? payload : payload.orders ?? [];
+      }
+
+      let lpRows: any[] = [];
+      if (lpRes.status === "fulfilled" && lpRes.value.ok) {
+        const lpBody = await lpRes.value.json();
+        const rawLp = Array.isArray(lpBody?.data) ? lpBody.data : (Array.isArray(lpBody) ? lpBody : (lpBody?.records || []));
+        lpRows = rawLp.map((lp: any) => ({
+          ...lp,
+          order_type: "local_purchase",
+          purchase_order_no: lp.contract_no ? `LP-${lp.contract_no}` : `LP-${lp.id?.slice(0, 8)}`,
+          order_total: Number(lp.final_cost || lp.purchase_cost || 0),
+          advance_paid: Number(lp.advance_amount || 0),
+          remaining_paid: 0,
+          credit_amount: 0,
+          remaining_due: Number(lp.remaining_balance ?? Math.max(0, Number(lp.final_cost || lp.purchase_cost || 0) - Number(lp.advance_amount || 0))),
+          currency_code: lp.purchase_currency || lp.local_currency || "AED",
+          supplier_name: lp.supplier_name || lp.party_name || "Local Supplier",
+          purchase_account_name: lp.supplier_name || lp.purchase_account_no || "Local Supplier",
+          sales_account_name: lp.purchase_account_no || "Purchase Account",
+          status: lp.posting_status || lp.status || "active",
+          payment_status: Number(lp.remaining_balance || 0) <= 0 && Number(lp.advance_amount || 0) > 0 ? "Paid" : (Number(lp.advance_amount || 0) > 0 ? "Partial" : "Pending"),
+          form_data: {
+            form: {
+              supplierName: lp.supplier_name,
+              purchaseAccountName: lp.purchase_account_no,
+              purchaseAccountNo: lp.purchase_account_no,
+              supplierAccountNo: lp.sales_account_no || lp.broker_account_no,
+              goodsName: lp.goods_name,
+              totalAmount: Number(lp.final_cost || lp.purchase_cost || 0),
+              exchangeRate: Number(lp.exchange_rate || 1),
+            },
+            goodsEntries: [{
+              goodsName: lp.goods_name,
+              qtyNo: lp.quantity_kgs,
+              qtyName: lp.quantity_name,
+              netWeight: lp.total_gross_weight,
+              coursePrice: lp.purchase_price,
+              totalAmount: Number(lp.purchase_cost || 0)
+            }],
+            totals: {
+              totalAmount: Number(lp.final_cost || lp.purchase_cost || 0),
+              subTotal: Number(lp.purchase_cost || 0),
+            }
+          }
+        }));
+      }
+
+      const rows = [...poRows, ...lpRows];
       setOrders(rows);
       // Auto-select by URL param
       const urlOrderNo = urlParamPurchaseOrderNo || (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("purchaseOrderNo") || "" : "");
@@ -5872,399 +5927,39 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
 
                   {/* Form Inputs Grid (Only shown when + Add Payment Entry is expanded) */}
                   {isDoubleEntryExpanded && (
-                    <div className="space-y-4 animate-in fade-in duration-200">
-                      {/* 1. ACCOUNTS DISPLAY & SELECTION: DR (AUTO-ASSIGNED) & CR (USER-SELECTED) */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-blue-50/40 dark:bg-blue-950/20 p-3.5 rounded-xl border border-blue-200 dark:border-blue-900/50">
-                        <FieldBlock label={t("dr_account_label", currentLanguage)} required>
-                          <div className="relative">
-                            <Input
-                              disabled
-                              className="h-8 bg-white/80 dark:bg-slate-900/90 border-slate-300 dark:border-slate-700 font-bold text-xs text-blue-800 dark:text-blue-300 pl-3 pr-24 shadow-xs"
-                              value={`${doubleEntry.debitName} (${doubleEntry.debitCode})`}
-                            />
-                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800 pointer-events-none">
-                              {translateHeader(currentLanguage, "Auto Party")}
-                            </span>
-                          </div>
-                        </FieldBlock>
-
-                        <FieldBlock label={t("cr_account_label", currentLanguage)} required>
-                          <SearchSelect
-                            label=""
-                            value={paymentSourceLedgerId}
-                            placeholder={t("search_credit_account_cash_bank", currentLanguage)}
-                            options={ledgerOptions}
-                            disabled={loading}
-                            onValueChange={(val) => {
-                              setPaymentSourceLedgerId(val);
-                              const led = ledgers.find((l) => ledgerId(l) === val);
-                              if (led) {
-                                const name = ledgerName(led).toLowerCase();
-                                const code = ledgerCode(led).toLowerCase();
-                                if (name.includes("cash") || code.includes("cash")) {
-                                  setPaymentType("cash");
-                                  setRoznamchaType("Cash Book No.");
-                                } else {
-                                  setPaymentType("bank");
-                                  setRoznamchaType("Bank Book No.");
-                                }
-                              }
-                            }}
-                          />
-                        </FieldBlock>
-                      </div>
-
-                      {/* 2. ROZNAMCHA / VOUCHER CONTROLS */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-slate-50 dark:bg-slate-900/40 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
-                        <FieldBlock label={translateHeader(currentLanguage, "Roznamcha Type")} required>
-                          <select
-                            className="flex h-8 w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 text-xs font-semibold text-slate-900 dark:text-slate-100 focus-visible:outline-none"
-                            value={roznamchaType}
-                            onChange={(e) => setRoznamchaType(e.target.value)}
-                          >
-                            <option value="Cash Book No.">{t("cash_book_no", currentLanguage)}</option>
-                            <option value="Roznamcha Book No.">{t("roznamcha_book_no", currentLanguage)}</option>
-                            <option value="Bank Book No.">{t("bank_book_no", currentLanguage)}</option>
-                            <option value="Journal Voucher No.">{t("journal_voucher_no", currentLanguage)}</option>
-                          </select>
-                        </FieldBlock>
-
-                        <FieldBlock label={t("roznamcha_voucher_no", currentLanguage)} required>
-                          <Input
-                            className="h-8 font-mono text-xs font-bold bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100"
-                            value={roznamchaNumber}
-                            onChange={(e) => setRoznamchaNumber(e.target.value)}
-                            placeholder="e.g. 000123"
-                          />
-                        </FieldBlock>
-
-                        <FieldBlock label={t("payment_condition", currentLanguage)} required>
-                          <select
-                            className="flex h-8 w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 text-xs font-semibold text-slate-900 dark:text-slate-100 focus-visible:outline-none"
-                            value={typeDetails.condition || (activeMode === "advance" ? "Advance Payment" : "Remaining Payment")}
-                            onChange={(e) => setTypeDetails((prev) => ({ ...prev, condition: e.target.value }))}
-                          >
-                            <option value="Advance Payment">{t("pc_advance", currentLanguage)}</option>
-                            <option value="Remaining Payment">{t("pc_remaining_balance", currentLanguage)}</option>
-                            <option value="Full Payment">{t("pc_full_clearance", currentLanguage)}</option>
-                            <option value="Part Payment">{t("pc_part_installment", currentLanguage)}</option>
-                            <option value="Credit Payment">{t("pc_credit", currentLanguage)}</option>
-                          </select>
-                        </FieldBlock>
-
-                        <FieldBlock label={t("payment_type_channel", currentLanguage)} required>
-                          <select
-                            className="flex h-8 w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 text-xs font-semibold text-slate-900 dark:text-slate-100 focus-visible:outline-none"
-                            value={paymentType}
-                            onChange={(e) => setPaymentType(e.target.value as any)}
-                          >
-                            <option value="">{translateHeader(currentLanguage, "- Select Type -")}</option>
-                            <option value="bank">{translateHeader(currentLanguage, "Bank Transfer / TT")}</option>
-                            <option value="cash">{translateHeader(currentLanguage, "Cash in Hand")}</option>
-                            <option value="business">{translateHeader(currentLanguage, "Business / Custom Method")}</option>
-                            <option value="transfer">{translateHeader(currentLanguage, "Inter-branch Transfer")}</option>
-                          </select>
-                        </FieldBlock>
-                      </div>
-
-                      {/* Dynamic Bank / Method Details */}
-                      {paymentType === "bank" && (
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-xl">
-                          <FieldBlock label={translateHeader(currentLanguage, "Select Bank Name")} required>
-                            <BankPicker
-                              label=""
-                              value={typeDetails.bankId || ""}
-                              onValueChange={async (bankId) => {
-                                setTypeDetails((prev) => ({ ...prev, bankId }));
-                                if (!bankId) return;
-                                try {
-                                  const bank = await getBankById(bankId);
-                                  setTypeDetails((prev) => ({
-                                    ...prev,
-                                    bankName: bank?.bank_name || prev.bankName
-                                  }));
-                                } catch {
-                                  // ignore
-                                }
-                              }}
-                            />
-                          </FieldBlock>
-
-                          <FieldBlock label={translateHeader(currentLanguage, "Bank Account / IBAN / Ref No.")}>
-                            <Input
-                              className="h-8 text-xs font-mono bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100"
-                              placeholder={translateHeader(currentLanguage, "Account / IBAN...")}
-                              value={typeDetails.refNo || ""}
-                              onChange={(e) => setTypeDetails((p) => ({ ...p, refNo: e.target.value }))}
-                            />
-                          </FieldBlock>
-
-                          <FieldBlock label={translateHeader(currentLanguage, "Cheque / Transaction ID")}>
-                            <Input
-                              className="h-8 text-xs font-mono bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100"
-                              placeholder={translateHeader(currentLanguage, "Cheque No. / TT Slip ID...")}
-                              value={typeDetails.chequeNo || ""}
-                              onChange={(e) => setTypeDetails((p) => ({ ...p, chequeNo: e.target.value }))}
-                            />
-                          </FieldBlock>
-                        </div>
-                      )}
-
-                      {paymentType === "business" && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-purple-50/60 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-900/40 rounded-xl">
-                          <FieldBlock label={translateHeader(currentLanguage, "Custom Payment Method")} required>
-                            <div className="flex gap-1.5">
-                              <select
-                                className="flex h-8 w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 text-xs font-semibold text-slate-900 dark:text-slate-100"
-                                value={typeDetails.method || ""}
-                                onChange={(e) => setTypeDetails((p) => ({ ...p, method: e.target.value }))}
-                              >
-                                <option value="">{translateHeader(currentLanguage, "- Select Method -")}</option>
-                                <option value="EasyPaisa">{translateHeader(currentLanguage, "EasyPaisa")}</option>
-                                <option value="JazzCash">{translateHeader(currentLanguage, "JazzCash")}</option>
-                                <option value="Hawala / Hundi">{translateHeader(currentLanguage, "Hawala / Hundi")}</option>
-                                {savedMethods.map((m) => <option key={m} value={m}>{m}</option>)}
-                              </select>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => openAddOption("method")}
-                                className="h-8 px-2 text-xs text-purple-700 dark:text-purple-300 font-bold shrink-0"
-                              >
-                                {translateHeader(currentLanguage, "+ Add Method")}
-                              </Button>
-                            </div>
-                          </FieldBlock>
-
-                          <FieldBlock label={translateHeader(currentLanguage, "Channel Reference / Agent Name")}>
-                            <Input
-                              className="h-8 text-xs bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100"
-                              placeholder={translateHeader(currentLanguage, "Agent name / Reference...")}
-                              value={typeDetails.agentName || ""}
-                              onChange={(e) => setTypeDetails((p) => ({ ...p, agentName: e.target.value }))}
-                            />
-                          </FieldBlock>
-                        </div>
-                      )}
-
-                      {/* 3. FINANCIAL AMOUNTS, CURRENCY & LIVE CONVERSION HELPER */}
-                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-                        {/* Left Column (Inputs): 7 cols */}
-                        <div className="lg:col-span-7 space-y-3">
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <FieldBlock label={t("payment_date", currentLanguage)} required>
-                              <Input
-                                type="date"
-                                className="h-8 text-xs font-semibold bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-800 text-slate-900 dark:text-slate-100"
-                                value={paymentDate}
-                                onChange={(e) => setPaymentDate(e.target.value)}
-                              />
-                            </FieldBlock>
-
-                            <FieldBlock label={t("exchange_rate", currentLanguage)} required>
-                              <Input
-                                type="number"
-                                step="0.0001"
-                                min="0"
-                                className="h-8 font-mono text-xs font-bold bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-800 text-slate-900 dark:text-slate-100"
-                                value={exchangeRate}
-                                onChange={(e) => setExchangeRate(e.target.value)}
-                                placeholder={String(exRate || 1)}
-                              />
-                            </FieldBlock>
-
-                            <FieldBlock label={`${t("payment_amount_usd", currentLanguage)} (${poCurrencyHeader})`}>
-                              <div className="relative">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400">
-                                  {poCurrencyHeader}
-                                </span>
-                                <Input
-                                  className="h-8 pl-12 text-right text-xs font-black font-mono text-blue-600 dark:text-blue-400 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-800"
-                                  value={calcAmount}
-                                  onChange={(e) => setCalcAmount(e.target.value)}
-                                  placeholder={amount > 0 ? (amount / Number(exchangeRate || 1)).toFixed(2) : "0.00"}
-                                  type="number"
-                                />
-                              </div>
-                            </FieldBlock>
-                          </div>
-
-                          {/* Conversion Calculator Helper */}
-                          <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-2.5 space-y-2">
-                            <div className="flex items-center gap-1.5 text-[11px] font-bold text-blue-600 dark:text-blue-400">
-                              <Calculator className="h-3.5 w-3.5" />
-                              <span>{translateHeader(currentLanguage, "Currency Rate & Conversion Helper")}</span>
-                            </div>
-                            <div className="grid grid-cols-3 gap-2">
-                              <FieldBlock label={translateHeader(currentLanguage, "Foreign Amount")}>
-                                <Input
-                                  className="h-7 text-xs font-mono bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700"
-                                  value={calcAmount}
-                                  onChange={(e) => setCalcAmount(e.target.value)}
-                                  placeholder="0.00"
-                                  type="number"
-                                />
-                              </FieldBlock>
-                              <FieldBlock label={translateHeader(currentLanguage, "Conversion Rate")}>
-                                <Input
-                                  className="h-7 text-xs font-mono bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700"
-                                  value={exchangeRate}
-                                  onChange={(e) => setExchangeRate(e.target.value)}
-                                  placeholder="3.6725"
-                                  type="number"
-                                />
-                              </FieldBlock>
-                              <FieldBlock label={translateHeader(currentLanguage, "Operation")}>
-                                <select
-                                  className="flex h-7 w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 text-xs font-semibold"
-                                  value={calcOp}
-                                  onChange={(e) => setCalcOp(e.target.value as any)}
-                                >
-                                  <option value="mul">Multiply (*)</option>
-                                  <option value="div">{translateHeader(currentLanguage, "Divide (/)")}</option>
-                                </select>
-                              </FieldBlock>
-                            </div>
-                          </div>
-
-                          <FieldBlock label={`${t("final_local_amount", currentLanguage)} (${baseCurrency})`} required>
-                            <div className="relative">
-                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400">
-                                {baseCurrency}
-                              </span>
-                              <Input
-                                className="h-8 pl-12 text-right text-xs font-black font-mono bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-800 text-slate-900 dark:text-slate-100"
-                                value={showCalcPanel && calcFinal !== null ? calcFinal.toFixed(2) : finalPayment}
-                                onChange={(e) => setFinalPayment(e.target.value)}
-                                placeholder="0.00"
-                                type="number"
-                                step="0.01"
-                                min="0"
-                              />
-                            </div>
-                          </FieldBlock>
-
-                          <FieldBlock
-                            label={t("comments_label", currentLanguage)}
-                            action={<VoiceDictateButton context="accounts" lang={currentLanguage} value={remarks} onChange={setRemarks} />}
-                          >
-                            <textarea
-                              rows={2}
-                              className="flex w-full rounded-md border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs font-semibold text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500"
-                              value={remarks}
-                              onChange={(e) => setRemarks(e.target.value)}
-                              placeholder={t("add_transaction_narration_example", currentLanguage)}
-                            />
-                          </FieldBlock>
-                        </div>
-
-                        {/* Right Column: DR & CR Live Double Entry Cards (5 cols) */}
-                        <div className="lg:col-span-5 space-y-3">
-                          {/* DR Card */}
-                          <div className="rounded-xl border border-blue-200 dark:border-blue-900/60 bg-blue-50/40 dark:bg-[#091022] p-3.5 shadow-sm">
-                            <div className="flex items-center justify-between pb-2 border-b border-blue-200 dark:border-blue-900/40">
-                              <div className="flex items-center gap-1.5">
-                                <span className="inline-flex rounded bg-blue-600 px-1.5 py-0.5 text-[9px] font-black text-white">{translateHeader(currentLanguage, "DR")}</span>
-                                <span className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">
-                                  {translateHeader(currentLanguage, "DR ACCOUNTS")}
-                                </span>
-                              </div>
-                              <span className="text-[9.5px] font-bold text-blue-700 dark:text-blue-400 bg-white dark:bg-blue-950 px-2 py-0.5 rounded-full border border-blue-300 dark:border-blue-800">
-                                {translateHeader(currentLanguage, "Settlement Target")}
-                              </span>
-                            </div>
-                            <div className="mt-2.5 space-y-1 text-xs">
-                              <div className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">{translateHeader(currentLanguage, "Account Name")}</div>
-                              <div className="font-extrabold text-slate-900 dark:text-white text-sm">{doubleEntry.debitName}</div>
-                              <div className="flex justify-between text-[11px] pt-1">
-                                <span className="text-slate-600 dark:text-slate-400">{translateHeader(currentLanguage, "Account No")}: {doubleEntry.debitCode}</span>
-                                <span className="text-slate-700 dark:text-slate-300 font-semibold">{doubleEntry.debitBranch}</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* CR Card */}
-                          <div className="rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50/40 dark:bg-[#091022] p-3.5 shadow-sm">
-                            <div className="flex items-center justify-between pb-2 border-b border-rose-200 dark:border-rose-900/40">
-                              <div className="flex items-center gap-1.5">
-                                <span className="inline-flex rounded bg-rose-600 px-1.5 py-0.5 text-[9px] font-black text-white">{translateHeader(currentLanguage, "CR")}</span>
-                                <span className="text-xs font-black uppercase tracking-wider text-rose-800 dark:text-rose-400">
-                                  {translateHeader(currentLanguage, "CR ACCOUNT'S")}
-                                </span>
-                              </div>
-                              <span className="text-[9.5px] font-bold text-rose-700 dark:text-rose-400 bg-white dark:bg-rose-950 px-2 py-0.5 rounded-full border border-rose-300 dark:border-rose-800">
-                                {translateHeader(currentLanguage, "Payment Source")}
-                              </span>
-                            </div>
-                            <div className="mt-2.5 space-y-1 text-xs">
-                              <div className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">{translateHeader(currentLanguage, "Selected Source Account")}</div>
-                              <div className="font-extrabold text-slate-900 dark:text-white text-sm">{doubleEntry.creditName}</div>
-                              <div className="flex justify-between text-[11px] pt-1">
-                                <span className="text-slate-600 dark:text-slate-400">{translateHeader(currentLanguage, "Account No")}: {doubleEntry.creditCode}</span>
-                                <span className="text-emerald-700 dark:text-emerald-400 font-bold">{sourceBalanceText}</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Balanced Live Status Pill */}
-                          <div className="rounded-xl border border-indigo-200 dark:border-indigo-900/40 bg-indigo-50/60 dark:bg-indigo-950/30 p-3 text-indigo-900 dark:text-indigo-200 text-xs">
-                            <div className="font-bold flex items-center justify-between">
-                              <span>{translateHeader(currentLanguage, "Double-Entry Live Status")}</span>
-                              <span className="font-black text-[10px] bg-indigo-600 text-white px-2 py-0.5 rounded-full">{translateHeader(currentLanguage, "BALANCED")}</span>
-                            </div>
-                            <div className="text-[10.5px] mt-1 font-semibold text-indigo-700 dark:text-indigo-300 truncate">
-                              DR: {doubleEntry.debitCode} â CR: {doubleEntry.creditCode}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Submit Action Button */}
-                      {(() => {
-                        const missing: string[] = [];
-                        if (!paymentDebitLedgerId) missing.push(t("debit_account_party_supplier", currentLanguage));
-                        if (!paymentSourceLedgerId) missing.push(t("payment_source_account", currentLanguage));
-                        if (!roznamchaNumber) missing.push(t("roznamcha_voucher_number", currentLanguage));
-                        if (!paymentType) missing.push(t("payment_type_label", currentLanguage));
-                        if (!(amount > 0)) missing.push(t("payment_amount_label", currentLanguage));
-
-                        return (
-                          <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4">
-                            <div className="text-xs text-slate-600 dark:text-slate-400">
-                              Posting: <span className="text-blue-600 dark:text-blue-400 font-bold">DR {doubleEntry.debitName} ({doubleEntry.debitCode})</span> â <span className="text-rose-600 dark:text-rose-400 font-bold">CR {doubleEntry.creditName} ({doubleEntry.creditCode})</span>
-                            </div>
-                            <Button
-                              type="button"
-                              onClick={handleProcessPayment}
-                              disabled={processingPayment || missing.length > 0}
-                              className="h-10 px-6 font-bold text-xs uppercase shadow-md transition bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
-                            >
-                              {processingPayment ? "Processing..." : `Post ${activeMode === "advance" ? "Advance" : isCredit ? "Credit" : "Remaining"} Payment Voucher`}
-                            </Button>
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  )}
-
-                  {paymentSuccess && (
-                    <div className="flex items-start gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-800 dark:text-emerald-300 animate-in fade-in duration-300">
-                      <CheckCircle2 className="h-5 w-5 shrink-0 mt-0.5" />
-                      <div>
-                        <div className="font-bold mb-0.5">{t("payment_posted_successfully", currentLanguage)}</div>
-                        <div className="text-xs">{paymentSuccess}</div>
-                      </div>
-                    </div>
-                  )}
-                  {paymentError && (
-                    <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
-                      â {paymentError}
+                    <div className="pt-2 animate-in fade-in duration-200">
+                      <StandardizedDailyPaymentForm
+                        scope="purchase"
+                        orderType={(selected as any)?.order_type === "local_purchase" ? "local_purchase" : "purchase_booking"}
+                        order={selected}
+                        condition={
+                          activeMode === "advance"
+                            ? "advance"
+                            : activeMode === "endorsement"
+                            ? "endorsement"
+                            : activeMode === "credit"
+                            ? "credit"
+                            : activeMode === "final"
+                            ? "final"
+                            : "remaining"
+                        }
+                        ledgers={ledgers}
+                        countryId={selected.country_id || (erpScope as any)?.countryId || (erpScope as any)?.lockedCountryId || null}
+                        countryName={countryName}
+                        branchId={(selected as any)?.branch_id || selected.city_branch_id || selected.country_branch_id || (erpScope as any)?.branchId || (erpScope as any)?.lockedCityBranchId || null}
+                        branchName={branchName}
+                        baseCurrency={baseCurrency}
+                        onSuccess={() => {
+                          window.dispatchEvent(new CustomEvent("refresh-payments"));
+                          router.refresh();
+                        }}
+                        onCancel={() => setIsDoubleEntryExpanded(false)}
+                      />
                     </div>
                   )}
                 </div>
-                    </div>
-                  )}
+              </div>
+            )}
 
                   {/* TAB 4: TRANSPORT & BATCHES */}
                   {modalTab === "transport" && (

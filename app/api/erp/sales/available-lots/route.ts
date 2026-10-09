@@ -46,6 +46,7 @@ export async function GET(request: NextRequest) {
       q: p.get("q"),
       goodsName,
       goodsId,
+      lotId: p.get("lotId"),
       lang,
       limit: p.get("limit") ? Number(p.get("limit")) : undefined,
     });

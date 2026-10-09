@@ -8,6 +8,7 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { acquireIdempotencyLock, buildReplayedResponse, commitIdempotencySuccess, releaseIdempotencyLock } from "@/lib/api/idempotency";
 import { deriveLocalPurchasePostingState } from "@/lib/services/local-purchase-posting-state";
+import { ensureLotsForPurchase } from "@/lib/services/goods-transfer-service";
 
 const transferSchema = z.object({
   purchaseId: z.string().uuid(),
@@ -240,6 +241,12 @@ export async function POST(request: NextRequest) {
         // must never be re-processed as if it were a fresh transfer.
         if (purchase.status === "posted" && purchase.roznamcha_entry_id) {
           throw new ApiClientError("This bill has already been transferred and posted to Roznamcha/GL. No further action is needed.", { status: 409, code: "ALREADY_POSTED" });
+        }
+
+        // A destination-country purchase created by an Inter-Country Trade is posted only by an authorized
+        // receipt (it also brings the stock in); posting it here would book it without the goods.
+        if (purchase.inter_country_trade_id && purchase.status !== "posted") {
+          throw new ApiClientError("This purchase belongs to an Inter-Country Trade. It is posted automatically when the destination receives the goods.", { status: 409, code: "USE_TRADE_RECEIPT" });
         }
 
         const finalAmount = money(purchase.final_cost);
@@ -561,6 +568,17 @@ export async function POST(request: NextRequest) {
         const updated = updatedRows[0];
         if (!updated) {
           throw new Error("Failed to update the local purchase after posting.");
+        }
+
+        // The permanent lot identity is created with the posting so the Goods Transfer Journal starts from
+        // the real posted quantities. Savepoint: a lot problem must never roll back the financial posting
+        // (the Journal retries lazily when opened).
+        try {
+          await tx.savepoint(async (sp: any) => {
+            await ensureLotsForPurchase(sp, purchase.id, session.userId);
+          });
+        } catch (lotError) {
+          console.error("LOCAL_PURCHASE_LOTS_CREATE_FAILED:", lotError);
         }
 
         const proofState = deriveLocalPurchasePostingState(updated);

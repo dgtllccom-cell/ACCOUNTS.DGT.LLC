@@ -236,6 +236,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         icon: Receipt,
         children: [
           { label: nt("Advance Payment"), href: "/dashboard/journal/purchase-order-payment/advance", icon: Receipt },
+          { label: nt("Endorsement Payment"), href: "/dashboard/journal/purchase-order-payment/endorsement", icon: FileCheck2 },
           { label: nt("Credit Payment"), href: "/dashboard/journal/purchase-order-payment/charges", icon: CreditCard },
           { label: nt("Remaining Payment"), href: "/dashboard/journal/purchase-order-payment/remaining", icon: CreditCard },
           { label: nt("Purchase Payment History"), href: "/dashboard/journal/purchase-order-payment/history", icon: Clock },

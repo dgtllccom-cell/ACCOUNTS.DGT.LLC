@@ -1,18 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
-import { rethrowIfNextControlFlow } from "@/lib/api/response";
-import { shipmentTrackingService } from "@/lib/services/shipment-tracking-service";
+import { rethrowIfNextControlFlow, handleApiError } from "@/lib/api/response";
+import { authorizeTrackingRead } from "@/lib/api/tracking-access";
+import { shipmentTrackingService, TRACKING_SEARCH_FIELDS, type TrackingSearchField } from "@/lib/services/shipment-tracking-service";
 
 export async function GET(req: NextRequest) {
   try {
     const session = await requireErpSession();
+    authorizeTrackingRead(session);
     const { searchParams } = new URL(req.url);
     const q = searchParams.get("q") || "";
     const domainParam = searchParams.get("domain") || "both";
     const domain = (["business", "shipping", "both"].includes(domainParam) ? domainParam : "both") as "business" | "shipping" | "both";
-    const limit = parseInt(searchParams.get("limit") || "50", 10);
+    const limit = Math.max(1, Math.min(parseInt(searchParams.get("limit") || "50", 10) || 50, 100));
+    const fieldParam = searchParams.get("field") || "all";
+    const field = ((TRACKING_SEARCH_FIELDS as readonly string[]).includes(fieldParam) ? fieldParam : "all") as TrackingSearchField;
 
-    const results = await shipmentTrackingService.searchTracking(q, domain, session, limit);
+    const results = await shipmentTrackingService.searchTracking(q, domain, session, limit, field);
 
     return NextResponse.json({
       ok: true,
@@ -23,10 +27,6 @@ export async function GET(req: NextRequest) {
     });
   } catch (err: any) {
     rethrowIfNextControlFlow(err);
-    console.error("Tracking search error:", err);
-    return NextResponse.json(
-      { ok: false, error: { message: err?.message || "Failed to search tracking records" } },
-      { status: err?.status || 500 }
-    );
+    return handleApiError(err);
   }
 }

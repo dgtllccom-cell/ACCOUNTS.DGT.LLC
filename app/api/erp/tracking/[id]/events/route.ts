@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
-import { rethrowIfNextControlFlow } from "@/lib/api/response";
+import { rethrowIfNextControlFlow, handleApiError } from "@/lib/api/response";
+import { authorizeTrackingWrite } from "@/lib/api/tracking-access";
 import { shipmentTrackingService, TRACKING_EVENT_CODES } from "@/lib/services/shipment-tracking-service";
 
 export async function POST(
@@ -9,6 +10,7 @@ export async function POST(
 ) {
   try {
     const session = await requireErpSession();
+    authorizeTrackingWrite(session);
     const { id } = await params;
     const body = await req.json();
 
@@ -59,10 +61,6 @@ export async function POST(
     });
   } catch (err: any) {
     rethrowIfNextControlFlow(err);
-    console.error("Tracking event record error:", err);
-    return NextResponse.json(
-      { ok: false, error: { message: err?.message || "Failed to record tracking event" } },
-      { status: err?.status || 500 }
-    );
+    return handleApiError(err);
   }
 }
