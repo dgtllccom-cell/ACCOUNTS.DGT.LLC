@@ -85,6 +85,11 @@ const SALE_SOURCE_OPTIONS = [
 // NOTE: COUNTRY_OPTIONS and ORIGIN_OPTIONS removed — countries now come from Location Master.
 
 // API Helpers
+// Module-level helpers run outside the component, so they read the active ERP language directly.
+function readUiLang() {
+  return (typeof document !== "undefined" ? document.documentElement.lang : "en") || "en";
+}
+
 async function lookupAccountMaster(query, countryId, countryBranchId, cityBranchId, isSuperAdmin) {
   const needle = String(query || "").trim();
   if (!needle) return null;
@@ -101,7 +106,7 @@ async function lookupAccountMaster(query, countryId, countryBranchId, cityBranch
   });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok || !payload.ok) {
-    throw new Error(payload?.error?.message || payload?.error || t(lang, "purchase.wiz_err_account_lookup", "Account lookup failed."));
+    throw new Error(payload?.error?.message || payload?.error || t(readUiLang(), "purchase.wiz_err_account_lookup", "Account lookup failed."));
   }
   return payload.data?.found ? payload.data.account : null;
 }
@@ -124,7 +129,7 @@ async function lookupSalesBookingReport(query, countryId, countryBranchId, cityB
   });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok || !payload.ok) {
-    throw new Error(payload?.error?.message || payload?.error || t(lang, "sales.err_sales_booking_lookup", "Sales Booking lookup failed."));
+    throw new Error(payload?.error?.message || payload?.error || t(readUiLang(), "sales.err_sales_booking_lookup", "Sales Booking lookup failed."));
   }
   return payload.data?.reports?.[0] ?? null;
 }
@@ -2303,7 +2308,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
     } catch (err) {
       setCreateAccountError(err instanceof Error ? err.message : t(lang, "purchase.wiz_err_create_account", "Failed to create account."));
     } finally {
-      setCreateAccountSaving(false);
+      setCreateAccountLoading(false);
     }
   };
 
@@ -2689,6 +2694,53 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
     } finally {
       setSavingOrder(false);
       setTimeout(() => setSaveMessage(""), 3000);
+    }
+  };
+
+  // Create-port modal (same endpoints and form fields as the inline "port" create above)
+  const handleCreatePort = async (portName, countryName, transportType, side) => {
+    const name = (portName || "").trim();
+    if (!name) return;
+    const targetCountryName = (countryName || "").trim();
+    const country = allCountries.find(c => c.name?.toLowerCase() === targetCountryName.toLowerCase());
+    setNewPortLoading(true);
+    setNewPortError("");
+    try {
+      const endpoint = side === "loading" ? "/api/erp/ports/loading" : "/api/erp/ports/received";
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ portName: name, countryId: country?.id || null, portCode: null, transportType, isActive: true })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.ok) {
+        throw new Error(payload?.error?.message || payload?.error || t(lang, "purchase.wiz_err_create_port", "Failed to create port."));
+      }
+      const [loadRes, recRes] = await Promise.all([
+        fetch("/api/erp/ports/loading?all=true&limit=500").then(r => r.json()).catch(() => ({})),
+        fetch("/api/erp/ports/received?all=true&limit=500").then(r => r.json()).catch(() => ({}))
+      ]);
+      const loadPorts = loadRes?.data?.ports || loadRes?.ports;
+      const recPorts = recRes?.data?.ports || recRes?.ports;
+      if (loadPorts) setDbLoadingPorts(loadPorts);
+      if (recPorts) setDbReceivedPorts(recPorts);
+      if (side === "loading") {
+        setValue("loadingPort", name);
+        setValue("loadingLocation", name);
+        if (targetCountryName) setValue("loadingCountry", targetCountryName);
+      } else {
+        setValue("receivingPort", name);
+        setValue("destinationPort", name);
+        setValue("receivedPort", name);
+        if (targetCountryName) setValue("receivingCountry", targetCountryName);
+      }
+      setNewPortForm(p => ({ ...p, portName: "" }));
+    } catch (err) {
+      // the callers close the modal immediately; reopen it so the error is seen
+      setNewPortError(err instanceof Error ? err.message : t(lang, "purchase.wiz_err_create_port", "Failed to create port."));
+      setNewPortModal(true);
+    } finally {
+      setNewPortLoading(false);
     }
   };
 
