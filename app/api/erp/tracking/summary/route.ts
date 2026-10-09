@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
-import { rethrowIfNextControlFlow } from "@/lib/api/response";
+import { rethrowIfNextControlFlow, handleApiError } from "@/lib/api/response";
+import { authorizeTrackingRead } from "@/lib/api/tracking-access";
+import { sessionSqlScope, sqlScopeCondition } from "@/lib/api/scope-middleware";
 import { withLocalPg } from "@/lib/db/local-postgres";
 
 export async function GET(req: NextRequest) {
   try {
     const session = await requireErpSession();
+    authorizeTrackingRead(session);
     const { searchParams } = new URL(req.url);
     const _domain = searchParams.get("domain") || "shipping";
 
@@ -43,15 +46,8 @@ export async function GET(req: NextRequest) {
       }
 
       // ── Build scope filter ─────────────────────────────────────────────
-      const scopeFilter = session.isSuperAdmin
-        ? sql``
-        : session.cityBranchIds?.length
-        ? sql`AND o.city_branch_id = ANY(${session.cityBranchIds})`
-        : session.countryBranchIds?.length
-        ? sql`AND o.country_branch_id = ANY(${session.countryBranchIds})`
-        : session.countryIds?.length
-        ? sql`AND o.country_id = ANY(${session.countryIds})`
-        : sql``;
+      // Same strict scope rule as the list and the detail (one rule, no widening).
+      const scopeFilter = sql`AND ${sqlScopeCondition(sql, sessionSqlScope(session), "o")}`;
 
       // ── Shipment & Container Summary ───────────────────────────────────
       const summaryRows = (await sql`
@@ -177,13 +173,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: true, data });
   } catch (err: any) {
     rethrowIfNextControlFlow(err);
-    console.error("Tracking summary error:", err);
-    return NextResponse.json(
-      {
-        ok: false,
-        error: { message: err?.message || "Failed to load tracking summary" },
-      },
-      { status: err?.status || 500 }
-    );
+    return handleApiError(err);
   }
 }
