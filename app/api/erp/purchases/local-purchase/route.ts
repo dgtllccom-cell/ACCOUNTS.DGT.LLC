@@ -72,6 +72,11 @@ const localPurchaseCreateSchema = z.object({
   taxPercentage: z.coerce.number().default(0),
   taxAmount: z.coerce.number().default(0),
   finalCost: z.coerce.number().min(0),
+  lineItems: z.array(z.record(z.string(), z.any())).max(200).default([]),
+  extraCharges: z.array(z.record(z.string(), z.any())).max(100).default([]),
+  loadingDetails: z.record(z.string(), z.any()).default({}),
+  loadingDate: z.string().nullable().optional(),
+  remarks: z.string().nullable().optional(),
 }).refine(
   (value) => Boolean(value.salesAccountNo?.trim() || value.brokerAccountNo?.trim()),
   { path: ["salesAccountNo"], message: "A credit sales/payable ledger is required." },
@@ -253,6 +258,7 @@ export async function POST(request: NextRequest) {
           quantity_kgs, total_gross_weight, empty_kgs, net_weight, divide_kgs, numbers,
           rate_type, purchase_rate, purchase_currency, exchange_rate, local_currency,
           purchase_cost, apply_tax, tax_type, tax_percentage, tax_amount, final_cost,
+          line_items, extra_charges, loading_details, loading_date, remarks,
           status, created_by
         ) values (
           ${branchCompany}, ${payload.countryId}, ${payload.countryBranchId},
@@ -274,6 +280,8 @@ export async function POST(request: NextRequest) {
           ${payload.exchangeRate}, ${payload.localCurrency}, ${payload.purchaseCost},
           ${payload.applyTax || "No"}, ${payload.taxType || "VAT"},
           ${payload.taxPercentage || 0}, ${payload.taxAmount || 0}, ${payload.finalCost},
+          ${sql.json(payload.lineItems as any)}, ${sql.json(payload.extraCharges as any)}, ${sql.json(payload.loadingDetails as any)},
+          ${payload.loadingDate || null}, ${payload.remarks || null},
           'draft', ${session.userId}
         )
         returning *
@@ -307,7 +315,10 @@ export async function POST(request: NextRequest) {
         local_currency: payload.localCurrency, purchase_cost: payload.purchaseCost,
         apply_tax: payload.applyTax || "No", tax_type: payload.taxType || "VAT",
         tax_percentage: payload.taxPercentage || 0, tax_amount: payload.taxAmount || 0,
-        final_cost: payload.finalCost, status: "draft", created_by: session.userId,
+        final_cost: payload.finalCost,
+        line_items: payload.lineItems, extra_charges: payload.extraCharges, loading_details: payload.loadingDetails,
+        loading_date: payload.loadingDate || null, remarks: payload.remarks || null,
+        status: "draft", created_by: session.userId,
       }).select().single();
       if (error) throw error;
       inserted = data;

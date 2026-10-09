@@ -63,6 +63,11 @@ const localPurchaseUpdateSchema = z.object({
   taxPercentage: z.coerce.number().default(0),
   taxAmount: z.coerce.number().default(0),
   finalCost: z.coerce.number().min(0),
+  lineItems: z.array(z.record(z.string(), z.any())).max(200).default([]),
+  extraCharges: z.array(z.record(z.string(), z.any())).max(100).default([]),
+  loadingDetails: z.record(z.string(), z.any()).default({}),
+  loadingDate: z.string().nullable().optional(),
+  remarks: z.string().nullable().optional(),
 }).refine(
   (value) => Boolean(value.salesAccountNo?.trim() || value.brokerAccountNo?.trim()),
   { path: ["salesAccountNo"], message: "A credit sales/payable ledger is required." },
@@ -139,7 +144,11 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
           local_currency = ${payload.localCurrency}, purchase_cost = ${payload.purchaseCost},
           apply_tax = ${payload.applyTax || "No"}, tax_type = ${payload.taxType || "VAT"},
           tax_percentage = ${payload.taxPercentage || 0}, tax_amount = ${payload.taxAmount || 0},
-          final_cost = ${payload.finalCost}, updated_at = now()
+          final_cost = ${payload.finalCost},
+          line_items = ${sql.json(payload.lineItems as any)}, extra_charges = ${sql.json(payload.extraCharges as any)},
+          loading_details = ${sql.json(payload.loadingDetails as any)},
+          loading_date = ${payload.loadingDate || null}, remarks = ${payload.remarks || null},
+          updated_at = now()
         where id = ${id}::uuid and deleted_at is null ${statusFilter}
         returning *
       `;
@@ -171,7 +180,10 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
         local_currency: payload.localCurrency, purchase_cost: payload.purchaseCost,
         apply_tax: payload.applyTax || "No", tax_type: payload.taxType || "VAT",
         tax_percentage: payload.taxPercentage || 0, tax_amount: payload.taxAmount || 0,
-        final_cost: payload.finalCost, updated_at: new Date().toISOString(),
+        final_cost: payload.finalCost,
+        line_items: payload.lineItems, extra_charges: payload.extraCharges, loading_details: payload.loadingDetails,
+        loading_date: payload.loadingDate || null, remarks: payload.remarks || null,
+        updated_at: new Date().toISOString(),
       }).eq("id", id).is("deleted_at", null);
 
       if (!isSuperAdmin) {

@@ -406,6 +406,14 @@ export function LocalPurchaseView({
 
   // Draft Bill Items List & Action Menu State
   const [draftItems, setDraftItems] = useState<any[]>([]);
+  // Step 3 "+ Add Charge" rows. Informational only: never posted to the ledger and never
+  // allocated into landed cost unless the user explicitly ticks "Allocate to landed cost".
+  const [extraCharges, setExtraCharges] = useState<{ id: string; label: string; amount: string; allocate: boolean }[]>([]);
+  const [showPostConfirm, setShowPostConfirm] = useState(false);
+  // Synchronous double-submit lock (React state updates are async, so a fast double click
+  // could otherwise fire two POSTs before `saving` re-renders the button disabled).
+  const submitLockRef = useRef(false);
+  const globalScopeInitRef = useRef(false);
   const [activeActionMenuId, setActiveActionMenuId] = useState<string | null>(null);
   const [activeStatusDropdownId, setActiveStatusDropdownId] = useState<string | null>(null);
   const [actionMenuAnchor, setActionMenuAnchor] = useState<{ id: string; top: number; bottom: number; right: number } | null>(null);
@@ -653,6 +661,15 @@ export function LocalPurchaseView({
     }
   }, []);
 
+  // Closing the form discards the unsaved goods list and charges, so a new bill never
+  // starts with the previous bill's lines.
+  useEffect(() => {
+    if (!isFormOpen) {
+      setDraftItems([]);
+      setExtraCharges([]);
+    }
+  }, [isFormOpen]);
+
   // Sync initialGoodsList
   useEffect(() => {
     setGoodsList(initialGoodsList);
@@ -789,9 +806,21 @@ export function LocalPurchaseView({
     return countryBranches.find(b => b.id === selectedBranchId) || filteredCountryBranches[0] || countryBranches[0];
   }, [countryBranches, filteredCountryBranches, selectedBranchId, selectedCountryId, isGlobalUser]);
 
+  // Country / city shown on the bill come from the confirmed scope, never from a fixed fallback
+  // (a bill booked in Afghanistan must not print "UAE, Dubai").
+  const scopeLabels = useMemo(() => {
+    const cid = String(selectedCountryId || activeBranch?.countryId || activeBranch?.country_id || "");
+    const country = countryOptions.find((c: any) => String(c.id) === cid);
+    const city = cityBranches.find((c: any) => String(c.id) === String(selectedCityBranchId));
+    return {
+      country: String(activeBranch?.countryName || activeBranch?.country_name || country?.name || ""),
+      city: String(city?.city_name || city?.cityName || city?.city || city?.name || activeBranch?.cityName || ""),
+    };
+  }, [selectedCountryId, selectedCityBranchId, activeBranch, countryOptions, cityBranches]);
+
   // Auto-lock purchase currency to branch / country currency
   useEffect(() => {
-    const cName = String(activeBranch?.countryName || activeBranch?.country_name || "").toUpperCase();
+    const cName = String(activeBranch?.countryName || activeBranch?.country_name || scopeLabels.country || "").toUpperCase();
     let autoCurr = activeBranch?.currency || activeBranch?.countryCurrency || activeBranch?.country_currency;
     if (!autoCurr) {
       if (cName.includes("EMIRATES") || cName.includes("UAE") || cName.includes("DUBAI")) autoCurr = "AED";
@@ -805,11 +834,11 @@ export function LocalPurchaseView({
     if (autoCurr) {
       setPurchaseCurrency(autoCurr);
     }
-  }, [activeBranch, selectedCountryId]);
+  }, [activeBranch, selectedCountryId, scopeLabels.country]);
 
   const activeCityBranches = useMemo(() => {
     if (!selectedBranchId) return [];
-    return cityBranches.filter(c => c.countryBranchId === selectedBranchId || c.country_branch_id === selectedBranchId);
+    return cityBranches.filter(c => (c.countryBranchId === selectedBranchId || c.country_branch_id === selectedBranchId) && (c.isBusinessBranch ?? c.is_business_branch ?? true) !== false);
   }, [cityBranches, selectedBranchId]);
 
   // Scope modal-local filtered lists (independent of global selectedCountryId / selectedBranchId)
@@ -821,7 +850,8 @@ export function LocalPurchaseView({
 
   const scopeCityBranches = useMemo(() => {
     if (!scopeBranchId) return [];
-    return cityBranches.filter(c => String(c.countryBranchId || c.country_branch_id) === String(scopeBranchId));
+    // Local Purchase is a business transaction: shipping/clearing/agent branches are never offered.
+    return cityBranches.filter(c => String(c.countryBranchId || c.country_branch_id) === String(scopeBranchId) && (c.isBusinessBranch ?? c.is_business_branch ?? true) !== false);
   }, [cityBranches, scopeBranchId]);
 
   // Default selection based on user scope
@@ -830,9 +860,14 @@ export function LocalPurchaseView({
     // cards include every authorized country/branch. They can still choose a
     // specific hierarchy node from the shared dropdown when needed.
     if (isGlobalUser) {
-      setSelectedCountryId("");
-      setSelectedBranchId("");
-      setSelectedCityBranchId("");
+      // Only on first load: a later re-run (session / branch list identity change) must not wipe
+      // the scope the user just confirmed in the scope dialog, or the bill loses its branch.
+      if (!globalScopeInitRef.current) {
+        globalScopeInitRef.current = true;
+        setSelectedCountryId("");
+        setSelectedBranchId("");
+        setSelectedCityBranchId("");
+      }
       return;
     }
     if (countryBranches.length > 0) {
@@ -889,14 +924,14 @@ export function LocalPurchaseView({
   }, [originCountryId, customOriginCountryName, countries]);
 
   const localCurrency = useMemo(() => {
-    const cName = (activeBranch?.countryName || activeBranch?.country_name || "").toUpperCase();
+    const cName = (activeBranch?.countryName || activeBranch?.country_name || scopeLabels.country || "").toUpperCase();
     if (cName.includes("UNITED ARAB") || cName === "UAE") return "AED";
     if (cName.includes("AFGHANISTAN") || cName === "AF") return "AFN";
     if (cName.includes("INDIA") || cName === "IN") return "INR";
     if (cName.includes("IRAN") || cName === "IR") return "IRR";
     if (cName.includes("PAKISTAN") || cName === "PK") return "PKR";
     return activeBranch?.localCurrency || activeBranch?.local_currency || activeBranch?.currency || "PKR";
-  }, [activeBranch]);
+  }, [activeBranch, scopeLabels.country]);
 
   useEffect(() => {
     // Don't override a currency the user actually chose. "Edit Draft" restores
@@ -1226,12 +1261,27 @@ export function LocalPurchaseView({
   }, [purchaseCost, taxAmount]);
 
   const combinedBillCost = useMemo(() => {
-    // When draft items exist, use their total only (the current form values
-    // still reflect the last-added item and would double-count otherwise).
-    // When no items have been added yet, use the live form's finalCost.
-    const draftTotal = draftItems.reduce((acc, item) => acc + (item.finalCost || 0), 0);
-    return draftTotal > 0 ? draftTotal : finalCost;
-  }, [draftItems, finalCost]);
+    // The committed goods lines are the single source of truth for every total, table,
+    // report and voucher. The live (not yet added) form never leaks into a total.
+    return draftItems.reduce((acc, item) => acc + (item.finalCost || 0), 0);
+  }, [draftItems]);
+
+  // "+ Add Charge" rows are informational: they are shown on the report and voucher, never
+  // posted to the ledger on their own. A charge ticked "allocate" is only DISPLAYED as part
+  // of the landed cost (pro-rata by net weight); it never changes the posted bill amount.
+  const chargesTotal = extraCharges.reduce((a, c) => a + (Number(c.amount) || 0), 0);
+  const allocatedChargesTotal = extraCharges.filter(c => c.allocate).reduce((a, c) => a + (Number(c.amount) || 0), 0);
+  const grandTotalWithCharges = combinedBillCost + chargesTotal;
+  const landedLines = useMemo(() => {
+    const totalNet = draftItems.reduce((a, i) => a + Number(i.netWeight || 0), 0);
+    return draftItems.map(i => {
+      const share = totalNet > 0 ? Number(i.netWeight || 0) / totalNet : (draftItems.length ? 1 / draftItems.length : 0);
+      const base = Number(i.finalCost || 0);
+      const alloc = allocatedChargesTotal * share;
+      return { item: i, base, alloc, landed: base + alloc };
+    });
+  }, [draftItems, allocatedChargesTotal]);
+  const fmtMoney = (n: number) => n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   // Final Amount (AED) — combinedBillCost converted at the booking-level exchange
   // rate. Same purchaseCurrency for the whole booking (no per-line rate).
@@ -1250,23 +1300,151 @@ export function LocalPurchaseView({
     return Math.max(0, combinedBillCost - calculatedAdvanceAmount);
   }, [combinedBillCost, calculatedAdvanceAmount]);
 
-  function handleAddLineItem() {
-    let selectedGoodsName = "";
-    if (goodsId === "custom") {
-      selectedGoodsName = customGoodsName.trim();
-    } else {
-      selectedGoodsName = selectedGood ? (selectedGood.goodsName || selectedGood.goods_name || "") : (customGoodsName.trim() || "");
+  // The "custom product" sentinel is always the lowercase "custom". The goods selector,
+  // the validators and the line builder all go through this one helper so a stale
+  // "CUSTOM" can never leak into a goods id or name.
+  const isCustomGoods = (id: string) => String(id || "").toLowerCase() === "custom";
+
+  // Clears every per-item input so nothing from the previous goods leaks into the next line.
+  function resetItemFields() {
+    setHsCode("");
+    setChassisCode("");
+    setLotNo("");
+    setBrand("");
+    setCustomBrand("");
+    setSize("");
+    setCustomSize("");
+    setVariety("");
+    setQualityDetails("");
+    setQuantityCount("");
+    setWeightPerPkg("");
+    setManualGrossWeight("");
+    setEmptyKgs("");
+    setPurchaseRate("");
+    setQualityReportRef("Passed");
+    setApplyTax("No");
+    setTaxPercentage("0");
+  }
+
+  // Loads a saved purchase row (snake_case from the API or camelCase) into the form. The goods
+  // lines come from the saved line_items; an older single-row bill gets one synthesized line
+  // from its header columns, so a reopened bill always shows the same goods it was saved with.
+  function loadRowIntoForm(row: any) {
+    if (!row) return;
+    const g = (a: string, b: string, d: any = "") => row[a] ?? row[b] ?? d;
+    setEditingPurchaseId(row.id || null);
+    let lines: any[] = Array.isArray(row.line_items) ? row.line_items : Array.isArray(row.lineItems) ? row.lineItems : [];
+    if (lines.length === 0 && (g("goods_name", "goodsName") || Number(g("quantity_kgs", "quantityKgs", 0)) > 0)) {
+      const qty = Number(g("numbers", "numbers", 0)) || Number(g("quantity_kgs", "quantityKgs", 0));
+      lines = [{
+        id: `draft-legacy-${row.id}`,
+        goodsId: g("goods_id", "goodsId", null),
+        goodsName: g("goods_name", "goodsName"),
+        hsCode: g("hs_code", "hsCode"),
+        brand: g("brand", "brand", "-") || "-",
+        size: g("size", "size", "-") || "-",
+        lotNo: g("lot_no", "lotNo"),
+        chassisCode: g("chassis_code", "chassisCode"),
+        variety: g("variety", "variety", "-") || "-",
+        qualityDetails: g("quality_details", "qualityDetails", "-") || "-",
+        quantityName: g("quantity_name", "quantityName", "Bags"),
+        quantityCount: qty,
+        quantityKgs: qty,
+        numbers: qty,
+        oneQtyKg: Number(g("one_qty_kg", "oneQtyKg", 0)),
+        weightPerPkg: Number(g("one_qty_kg", "oneQtyKg", 0)),
+        emptyKgs: Number(g("empty_kgs", "emptyKgs", 0)),
+        totalGrossWeight: Number(g("total_gross_weight", "totalGrossWeight", 0)),
+        netWeight: Number(g("net_weight", "netWeight", 0)),
+        divideType: g("divide_type", "divideType", "Divide / Kg"),
+        divideKgs: Number(g("divide_kgs", "divideKgs", 1)) || 1,
+        priceType: "Price / Kg",
+        rateType: g("rate_type", "rateType", "per_kg"),
+        purchaseRate: Number(g("purchase_rate", "purchaseRate", 0)),
+        currency: g("purchase_currency", "purchaseCurrency", purchaseCurrency),
+        exchangeRate: 1,
+        amount: Number(g("purchase_cost", "purchaseCost", 0)),
+        purchaseCost: Number(g("purchase_cost", "purchaseCost", 0)),
+        applyTax: g("apply_tax", "applyTax", "No"),
+        taxType: g("tax_type", "taxType", "No Tax"),
+        taxPercentage: Number(g("tax_percentage", "taxPercentage", 0)),
+        taxAmount: Number(g("tax_amount", "taxAmount", 0)),
+        finalCost: Number(g("final_cost", "finalCost", 0)),
+        finalAed: Number(g("final_cost", "finalCost", 0)),
+        qualityReportRef: g("quality_report_ref", "qualityReportRef", "Passed"),
+        origin: "—",
+      }];
     }
+    setDraftItems(lines);
+    const ch = Array.isArray(row.extra_charges) ? row.extra_charges : Array.isArray(row.extraCharges) ? row.extraCharges : [];
+    setExtraCharges(ch.map((c: any, i: number) => ({
+      id: String(c.id || `chg-${i}`),
+      label: String(c.label || ""),
+      amount: String(c.amount ?? ""),
+      allocate: Boolean(c.allocate),
+    })));
+    // The goods form itself starts empty: the goods live in the committed list above it.
+    setGoodsId("");
+    setCustomGoodsName("");
+    resetItemFields();
+    const ld = (row.loading_details && typeof row.loading_details === "object") ? row.loading_details : (row.loadingDetails || {});
+    setSupplierName(g("supplier_name", "supplierName"));
+    setSupplierPersonId(g("supplier_person_id", "supplierPersonId"));
+    setPurchaseAccountNo(g("purchase_account_no", "purchaseAccountNo"));
+    setSalesAccountNo(g("sales_account_no", "salesAccountNo"));
+    setBrokerAccountNo(g("broker_account_no", "brokerAccountNo"));
+    setContractNo(g("contract_no", "contractNo"));
+    setPaymentMode(g("payment_mode", "paymentMode", "Cash"));
+    const sm = g("shipping_mode", "shippingMode", ld.shippingMode || "Loading");
+    setShippingMode(sm);
+    setShipmentType(ld.shipmentType || SHIPPING_MODE_TO_SHIPMENT_TYPE[sm] || "Loading by Truck");
+    setOriginCountryId(g("origin_country_id", "originCountryId"));
+    setAdvancePercentage(String(g("advance_percentage", "advancePercentage", "20")));
+    setWarehouseName(g("warehouse_name", "warehouseName", ld.warehouseName || ""));
+    setSelectedWarehouseId(g("warehouse_id", "warehouseId"));
+    setWarehouseAccountNo(g("purchase_account_no", "purchaseAccountNo"));
+    setWarehousePlotNo(g("warehouse_plot_no", "warehousePlotNo", ld.warehousePlotNo || ""));
+    setTransferDate(g("transfer_date", "transferDate", new Date().toISOString().slice(0, 10)));
+    setLoadingDate(g("loading_date", "loadingDate", ld.loadingDate || new Date().toISOString().slice(0, 10)));
+    setTruckNo(g("truck_no", "truckNo", ld.truckNo || ""));
+    setDriverName(g("driver_name", "driverName", ld.driverName || ""));
+    setRemarks(row.remarks || "");
+    setPurchaseCurrency(g("purchase_currency", "purchaseCurrency", "USD"));
+    setExchangeRateToAed(String(g("exchange_rate", "exchangeRate", "1")));
+    if (row.country_branch_id || row.countryBranchId) setSelectedBranchId(row.country_branch_id || row.countryBranchId);
+    if (row.city_branch_id || row.cityBranchId) setSelectedCityBranchId(row.city_branch_id || row.cityBranchId);
+    setIsFormOpen(true);
+    setCurrentStep(1);
+  }
+
+  function lineKey(item: { goodsId?: string | null; goodsName?: string; brand?: string; size?: string; lotNo?: string }) {
+    return [
+      item.goodsId || String(item.goodsName || "").trim().toLowerCase(),
+      String(item.brand || "-").trim().toLowerCase(),
+      String(item.size || "-").trim().toLowerCase(),
+      String(item.lotNo || "").trim().toLowerCase(),
+    ].join("|");
+  }
+
+  // Builds the line from the live form and appends it to the committed list. Returns the
+  // NEW committed list (so callers can use it synchronously), or null when the line is
+  // incomplete / rejected. A line whose Goods ID + variant (brand/size) + lot already
+  // exists is merged into that line when rate and package weight match, else rejected.
+  function addLineItem(): any[] | null {
+    const custom = isCustomGoods(goodsId);
+    const selectedGoodsName = custom
+      ? customGoodsName.trim()
+      : (selectedGood ? (selectedGood.goodsName || selectedGood.goods_name || "") : "");
 
     if (!selectedGoodsName) {
-      alert("Please select or enter a Goods Name.");
-      return;
+      alert(t(lang, "lp.err_select_goods", "Please select or enter a Goods Name."));
+      return null;
     }
 
     const qtyNo = Number(quantityCount || 0);
     if (qtyNo <= 0) {
-      alert("Please enter a valid packages count.");
-      return;
+      alert(t(lang, "lp.err_valid_qty", "Please enter a valid packages count."));
+      return null;
     }
 
     const oneKgVal = Number(weightPerPkg || divideKgs || 0);
@@ -1276,7 +1454,6 @@ export function LocalPurchaseView({
     const calculatedNet = Math.max(grossKg - packagingKg, 0);
     const netKg = calculatedNet > 0 ? calculatedNet : grossKg;
     const rateVal = Number(purchaseRate || 0);
-    const exVal = Number(exchangeRateToAed || 1);
 
     const isPerUnit = priceType === "Price / Box" || priceType === "Price / Bag" || priceType === "Price / Unit" || rateType === "Per Bag / Package";
     const calcAmount = isPerUnit ? qtyNo * rateVal : (netKg > 0 ? netKg * rateVal : grossKg * rateVal);
@@ -1289,15 +1466,17 @@ export function LocalPurchaseView({
 
     const itemObj = {
       id: `draft-${Date.now()}-${Math.random()}`,
-      goodsId: goodsId === "custom" ? null : (goodsId || null),
+      goodsId: custom ? null : (goodsId || null),
       goodsName: selectedGoodsName,
       hsCode: hsCode || (selectedGood?.hs_code || selectedGood?.hsCode || ""),
       allotId: allotId || "ALT-5239",
       brand: brand === "custom" ? customBrand.trim() : (brand || "-"),
       size: size === "custom" ? customSize.trim() : (size || "-"),
+      lotNo: lotNo.trim(),
+      chassisCode: chassisCode.trim(),
       variety: variety || "-",
       qualityDetails: qualityDetails || "-",
-      quantityName: quantityName || "Box",
+      quantityName: quantityName === "Custom" ? (customQuantityName.trim() || "Box") : (quantityName || "Box"),
       quantityCount: qtyNo,
       quantityKgs: qtyNo,
       oneQtyKg: oneKgVal,
@@ -1325,151 +1504,152 @@ export function LocalPurchaseView({
       finalCost: itemFinalAmount
     };
 
-    setDraftItems(prev => [...prev, itemObj]);
+    const existingIdx = draftItems.findIndex(d => lineKey(d) === lineKey(itemObj));
+    let next: any[];
+    if (existingIdx >= 0) {
+      const ex = draftItems[existingIdx];
+      if (Number(ex.purchaseRate) !== rateVal || Number(ex.weightPerPkg) !== oneKgVal || Number(ex.emptyKgs) !== emptyKgVal) {
+        alert(t(lang, "lp.err_duplicate_line", "This Goods + Size/Brand + Lot is already in the list with a different rate or package weight. Edit that line or use a different lot number."));
+        return null;
+      }
+      if (!window.confirm(t(lang, "lp.confirm_merge_line", "This Goods + Size/Brand + Lot is already in the list. Merge the quantities into that line?"))) {
+        return null;
+      }
+      const mQty = Number(ex.quantityCount) + qtyNo;
+      next = draftItems.map((d, i) => i !== existingIdx ? d : {
+        ...d,
+        quantityCount: mQty, quantityKgs: mQty, numbers: mQty,
+        totalGrossWeight: Number(d.totalGrossWeight) + grossKg,
+        netWeight: Number(d.netWeight) + netKg,
+        amount: Number(d.amount) + calcAmount,
+        purchaseCost: Number(d.purchaseCost) + calcAmount,
+        taxAmount: Number(d.taxAmount) + itemTaxAmount,
+        finalCost: Number(d.finalCost) + itemFinalAmount,
+        finalAed: Number(d.finalAed) + itemFinalAmount,
+      });
+    } else {
+      next = [...draftItems, itemObj];
+    }
 
-    // Reset item input fields
+    setDraftItems(next);
     setGoodsId("");
     setCustomGoodsName("");
-    setHsCode("");
-    setQualityDetails("");
-    setApplyTax("No");
-    setTaxPercentage("0");
+    resetItemFields();
+    return next;
   }
 
-  async function handleSubmit(e: React.SyntheticEvent, options?: { draftOnly?: boolean }) {
-    e.preventDefault();
+  function handleAddLineItem() {
+    addLineItem();
+  }
 
+  // True when the live form holds a started-but-uncommitted line.
+  function hasPendingLine(): boolean {
+    return Boolean(goodsId) || Boolean(customGoodsName.trim()) || Number(quantityCount || 0) > 0;
+  }
+
+  // Returns the committed goods list to save/post. A valid pending line is committed first;
+  // an incomplete pending line blocks the save so nothing is silently dropped or half-saved.
+  function ensureLineItems(): any[] | null {
+    if (hasPendingLine()) return addLineItem();
+    if (draftItems.length === 0) {
+      alert(t(lang, "lp.validation_goods_item", "Please select or enter at least one Goods Item before continuing."));
+      return null;
+    }
+    return draftItems;
+  }
+
+  // Aggregates the committed lines into the header row the existing table stores, and
+  // carries the full line list / charges / loading details alongside it.
+  function buildPayload(items: any[]) {
     const resolvedShippingMode = shippingMode === "Custom" ? customShippingMode.trim() : shippingMode;
-    
-    // Construct descriptive Payment Mode summary with dates
     let resolvedPaymentMode = paymentMode;
     if (paymentMode === "Advance") {
       resolvedPaymentMode = `Advance (${advancePercentage}% Paid: ${advancePaymentDate}, Bal Due: ${remainingDueDate})`;
-    } else if (paymentMode === "Cash" || paymentMode === "Bank Transfer") {
+    } else if (paymentMode === "Cash" || paymentMode === "Bank Transfer" || paymentMode === "Hawala / Transfer") {
       resolvedPaymentMode = `${paymentMode} (${cashPaymentType} on ${cashPaymentDate})`;
     } else if (paymentMode === "Credit") {
       resolvedPaymentMode = `Credit (Due: ${creditDueDate})`;
     }
+    const first = items[0];
+    const uniq = (xs: string[]) => Array.from(new Set(xs.map(x => String(x || "").trim()).filter(x => x && x !== "-")));
+    const sum = (k: string) => items.reduce((acc, i) => acc + (Number(i[k]) || 0), 0);
+    const goodsFinal = sum("finalCost");
+    const advanceAmt = paymentMode === "Advance"
+      ? (manualAdvanceAmount !== "" ? Number(manualAdvanceAmount) : (goodsFinal * Number(advancePercentage || 0)) / 100)
+      : 0;
+    return {
+      // Server resolves the branch legal company; never fall back to an arbitrary company.
+      companyId: activeBranch?.companyId || activeBranch?.company_id || null,
+      countryId: activeBranch?.countryId || activeBranch?.country_id,
+      countryBranchId: selectedBranchId,
+      cityBranchId: selectedCityBranchId || null,
+      goodsId: first.goodsId || null,
+      goodsName: items.map(i => i.goodsName).join(" + "),
+      purchaseAccountNo: shipmentType === "Warehouse Transfer" ? (warehouseAccountNo || null) : (purchaseAccountNo || null),
+      salesAccountNo: salesAccountNo || null,
+      brokerAccountNo: brokerAccountNo || null,
+      contractNo: contractNo.trim() || null,
+      brand: uniq(items.map(i => i.brand)).join(" / ") || null,
+      size: uniq(items.map(i => i.size)).join(" / ") || null,
+      chassisCode: (first.chassisCode || "").trim() || null,
+      lotNo: uniq(items.map(i => i.lotNo)).join(" / ") || null,
+      supplierName: supplierName.trim(),
+      supplierPersonId: supplierPersonId || null,
+      paymentMode: resolvedPaymentMode,
+      shippingMode: resolvedShippingMode,
+      originCountryId: originCountryId === "custom" ? null : (originCountryId || null),
+      originCountryName: selectedOriginCountryName,
+      advancePercentage: paymentMode === "Advance" ? Number(advancePercentage || 0) : 0,
+      advanceAmount: advanceAmt,
+      remainingBalance: paymentMode === "Advance" ? Math.max(0, goodsFinal - advanceAmt) : 0,
+      warehouseName: warehouseName.trim() || null,
+      warehouseId: selectedWarehouseId && selectedWarehouseId.toLowerCase() !== "custom" ? selectedWarehouseId : null,
+      warehousePlotNo: warehousePlotNo.trim() || null,
+      transferDate: transferDate || null,
+      loadingDate: loadingDate || null,
+      truckNo: truckNo.trim() || null,
+      driverName: driverName.trim() || null,
+      remarks: remarks.trim() || null,
+      quantityName: first.quantityName || (quantityName === "Custom" ? customQuantityName.trim() : quantityName),
+      quantityKgs: sum("quantityKgs"),
+      totalGrossWeight: sum("totalGrossWeight"),
+      emptyKgs: sum("emptyKgs"),
+      netWeight: sum("netWeight"),
+      divideKgs: first.divideKgs,
+      numbers: sum("numbers"),
+      rateType: first.rateType,
+      purchaseRate: first.purchaseRate,
+      purchaseCurrency: purchaseCurrency,
+      exchangeRate: Number(exchangeRateToAed) || 1,
+      localCurrency: purchaseCurrency,
+      purchaseCost: sum("purchaseCost"),
+      applyTax: first.applyTax || "No",
+      taxType: first.taxType || "VAT",
+      taxPercentage: first.taxPercentage || 0,
+      taxAmount: sum("taxAmount"),
+      finalCost: goodsFinal,
+      // Full detail persisted so a reopened record shows exactly what was entered.
+      lineItems: items,
+      extraCharges: extraCharges
+        .filter(c => c.label.trim() || Number(c.amount) > 0)
+        .map(c => ({ id: c.id, label: c.label.trim(), amount: Number(c.amount) || 0, allocate: Boolean(c.allocate) })),
+      loadingDetails: {
+        shipmentType, shippingMode: resolvedShippingMode, truckNo: truckNo.trim(), driverName: driverName.trim(),
+        loadingDate, warehouseName: warehouseName.trim(), warehousePlotNo: warehousePlotNo.trim(),
+      },
+    };
+  }
 
-    let primaryGoodsName = "";
-    let primaryGoodsId = null;
-    let primaryQuantityKgs = 0;
-    let primaryGrossWeight = 0;
-    let primaryEmptyKgs = 0;
-    let primaryNetWeight = 0;
-    let primaryDivideKgs = 50;
-    let primaryNumbers = 0;
-    let primaryRateType = "per_kg";
-    let primaryPurchaseRate = 0;
-    let primaryPurchaseCost = 0;
-    let primaryFinalCost = 0;
-    let primaryApplyTax = "No";
-    let primaryTaxType = "VAT";
-    let primaryTaxPercentage = 0;
-    let primaryTaxAmount = 0;
-    let primaryBrand = brand === "custom" ? customBrand.trim() : brand;
-    let primarySize = size === "custom" ? customSize.trim() : size;
+  async function handleSubmit(e: React.SyntheticEvent, options?: { draftOnly?: boolean }) {
+    e.preventDefault();
+    if (submitLockRef.current) return;
+    const items = ensureLineItems();
+    if (!items) return;
 
-    if (draftItems.length > 0) {
-      const first = draftItems[0];
-      primaryGoodsName = draftItems.map(i => i.goodsName).join(" + ");
-      primaryGoodsId = first.goodsId;
-      primaryQuantityKgs = draftItems.reduce((acc, i) => acc + i.quantityKgs, 0);
-      primaryGrossWeight = draftItems.reduce((acc, i) => acc + i.totalGrossWeight, 0);
-      primaryEmptyKgs = draftItems.reduce((acc, i) => acc + i.emptyKgs, 0);
-      primaryNetWeight = draftItems.reduce((acc, i) => acc + i.netWeight, 0);
-      primaryDivideKgs = first.divideKgs;
-      primaryNumbers = draftItems.reduce((acc, i) => acc + i.numbers, 0);
-      primaryRateType = first.rateType;
-      primaryPurchaseRate = first.purchaseRate;
-      primaryPurchaseCost = draftItems.reduce((acc, i) => acc + (i.purchaseCost || 0), 0);
-      primaryTaxAmount = draftItems.reduce((acc, i) => acc + (i.taxAmount || 0), 0);
-      primaryFinalCost = draftItems.reduce((acc, i) => acc + (i.finalCost || 0), 0);
-      primaryApplyTax = first.applyTax || "No";
-      primaryTaxType = first.taxType || "VAT";
-      primaryTaxPercentage = first.taxPercentage || 0;
-    } else {
-      if (goodsId === "custom") {
-        primaryGoodsName = customGoodsName.trim();
-      } else {
-        primaryGoodsName = selectedGood ? (selectedGood.goodsName || selectedGood.goods_name || "") : "";
-      }
-      primaryGoodsId = goodsId === "custom" ? null : goodsId;
-      primaryQuantityKgs = Number(quantityCount || 0);
-      primaryGrossWeight = totalGrossWeight;
-      primaryEmptyKgs = Number(emptyKgs || 0);
-      primaryNetWeight = netWeight;
-      primaryDivideKgs = Number(divideKgs || 0);
-      primaryNumbers = numbers;
-      primaryRateType = rateType;
-      primaryPurchaseRate = Number(purchaseRate || 0);
-      primaryPurchaseCost = purchaseCost;
-      primaryTaxAmount = taxAmount;
-      primaryFinalCost = finalCost;
-      primaryApplyTax = applyTax;
-      primaryTaxType = taxType;
-      primaryTaxPercentage = Number(taxPercentage || 0);
-    }
-
-    if (!primaryGoodsName) {
-      alert("Please select or enter at least one Goods Item.");
-      return;
-    }
-
+    submitLockRef.current = true;
     setSaving(true);
     try {
-      const payload = {
-        // Server resolves the branch's legal company; never fall back to an arbitrary company.
-        companyId: activeBranch?.companyId || activeBranch?.company_id || null,
-        countryId: activeBranch?.countryId || activeBranch?.country_id,
-        countryBranchId: selectedBranchId,
-        cityBranchId: selectedCityBranchId || null,
-        goodsId: primaryGoodsId,
-        goodsName: primaryGoodsName,
-        purchaseAccountNo: shipmentType === "Warehouse Transfer" ? (warehouseAccountNo || null) : (purchaseAccountNo || null),
-        salesAccountNo: salesAccountNo || null,
-        brokerAccountNo: brokerAccountNo || null,
-        contractNo: contractNo.trim() || null,
-        brand: primaryBrand || null,
-        size: primarySize || null,
-        chassisCode: chassisCode.trim() || null,
-        lotNo: lotNo.trim() || null,
-        supplierName: supplierName.trim(),
-        supplierPersonId: supplierPersonId || null,
-        paymentMode: resolvedPaymentMode,
-        shippingMode: resolvedShippingMode,
-        originCountryId: originCountryId === "custom" ? null : (originCountryId || null),
-        originCountryName: selectedOriginCountryName,
-        advancePercentage: paymentMode === "Advance" ? Number(advancePercentage || 0) : 0,
-        advanceAmount: paymentMode === "Advance" ? calculatedAdvanceAmount : 0,
-        remainingBalance: paymentMode === "Advance" ? remainingBalance : 0,
-        warehouseName: warehouseName.trim() || null,
-        warehouseId: selectedWarehouseId && selectedWarehouseId !== "CUSTOM" ? selectedWarehouseId : null,
-        warehousePlotNo: warehousePlotNo.trim() || null,
-        transferDate: transferDate || null,
-        loadingDate: loadingDate || null,
-        truckNo: truckNo.trim() || null,
-        driverName: driverName.trim() || null,
-        remarks: remarks.trim() || null,
-        quantityName: quantityName === "Custom" ? customQuantityName.trim() : quantityName,
-        quantityKgs: primaryQuantityKgs,
-        totalGrossWeight: primaryGrossWeight,
-        emptyKgs: primaryEmptyKgs,
-        netWeight: primaryNetWeight,
-        divideKgs: primaryDivideKgs,
-        numbers: primaryNumbers,
-        rateType: primaryRateType,
-        purchaseRate: primaryPurchaseRate,
-        purchaseCurrency: purchaseCurrency,
-        exchangeRate: Number(exchangeRateToAed) || 1,
-        localCurrency: purchaseCurrency,
-        purchaseCost: primaryPurchaseCost,
-        applyTax: primaryApplyTax || "No",
-        taxType: primaryTaxType || "VAT",
-        taxPercentage: primaryTaxPercentage || 0,
-        taxAmount: primaryTaxAmount || 0,
-        finalCost: primaryFinalCost
-      };
+      const payload = buildPayload(items);
 
       // editingPurchaseId is set only via "Edit Draft" — update that SAME row
       // by id instead of POSTing, which would otherwise create a brand-new
@@ -1570,6 +1750,7 @@ export function LocalPurchaseView({
       setWarehouseAccountNo("");
       setSelectedTruckId("");
       
+      setExtraCharges([]);
       // Reload logs and automatically redirect/open the saved voucher
       await loadHistory();
       if (draftOnly) {
@@ -1590,6 +1771,7 @@ export function LocalPurchaseView({
     } catch (err: any) {
       alert(err.message || "An error occurred while saving.");
     } finally {
+      submitLockRef.current = false;
       setSaving(false);
     }
   }
@@ -1614,12 +1796,9 @@ export function LocalPurchaseView({
   // save time — surfaced here too so the "3 Final" tab can't be used to skip
   // straight past Goods Entry from Step 1 with nothing entered.
   function validateGoodsStep(): boolean {
-    const hasGoodsItem = draftItems.length > 0 || Boolean(goodsId) || Boolean(customGoodsName.trim());
-    if (!hasGoodsItem) {
-      alert(t(lang, "lp.validation_goods_item", "Please select or enter at least one Goods Item before continuing."));
-      return false;
-    }
-    return true;
+    // A started line must be completed (or cleared) before leaving Goods Entry; a complete
+    // pending line is committed automatically so it is never lost.
+    return ensureLineItems() !== null;
   }
 
   function validatePaymentLoadingStep(): boolean {
@@ -1632,130 +1811,17 @@ export function LocalPurchaseView({
 
   async function handleSaveAndPostGL(e?: React.SyntheticEvent) {
     if (e && typeof e.preventDefault === "function") e.preventDefault();
+    if (submitLockRef.current) return;
     if (!validateBookingStep()) { setCurrentStep(1); return; }
-    if (!validateGoodsStep()) { setCurrentStep(2); return; }
     if (!validatePaymentLoadingStep()) { setCurrentStep(3); return; }
+    const items = ensureLineItems();
+    if (!items) { setCurrentStep(2); return; }
 
+    submitLockRef.current = true;
     setSaving(true);
+    setShowPostConfirm(false);
     try {
-      const resolvedShippingMode = shippingMode === "Custom" ? customShippingMode.trim() : shippingMode;
-      let resolvedPaymentMode = paymentMode;
-      if (paymentMode === "Advance") {
-        resolvedPaymentMode = `Advance (${advancePercentage}% Paid: ${advancePaymentDate}, Bal Due: ${remainingDueDate})`;
-      } else if (paymentMode === "Cash" || paymentMode === "Bank Transfer" || paymentMode === "Hawala / Transfer") {
-        resolvedPaymentMode = `${paymentMode} (${cashPaymentType} on ${cashPaymentDate})`;
-      } else if (paymentMode === "Credit") {
-        resolvedPaymentMode = `Credit (Due: ${creditDueDate})`;
-      }
-
-      let primaryGoodsName = "";
-      let primaryGoodsId = null;
-      let primaryQuantityKgs = 0;
-      let primaryGrossWeight = 0;
-      let primaryEmptyKgs = 0;
-      let primaryNetWeight = 0;
-      let primaryDivideKgs = 50;
-      let primaryNumbers = 0;
-      let primaryRateType = "per_kg";
-      let primaryPurchaseRate = 0;
-      let primaryPurchaseCost = 0;
-      let primaryFinalCost = 0;
-      let primaryApplyTax = "No";
-      let primaryTaxType = "VAT";
-      let primaryTaxPercentage = 0;
-      let primaryTaxAmount = 0;
-      let primaryBrand = brand === "custom" ? customBrand.trim() : brand;
-      let primarySize = size === "custom" ? customSize.trim() : size;
-
-      if (draftItems.length > 0) {
-        const first = draftItems[0];
-        primaryGoodsName = draftItems.map(i => i.goodsName).join(" + ");
-        primaryGoodsId = first.goodsId;
-        primaryQuantityKgs = draftItems.reduce((acc, i) => acc + i.quantityKgs, 0);
-        primaryGrossWeight = draftItems.reduce((acc, i) => acc + i.totalGrossWeight, 0);
-        primaryEmptyKgs = draftItems.reduce((acc, i) => acc + i.emptyKgs, 0);
-        primaryNetWeight = draftItems.reduce((acc, i) => acc + i.netWeight, 0);
-        primaryDivideKgs = first.divideKgs;
-        primaryNumbers = draftItems.reduce((acc, i) => acc + i.numbers, 0);
-        primaryRateType = first.rateType;
-        primaryPurchaseRate = first.purchaseRate;
-        primaryPurchaseCost = draftItems.reduce((acc, i) => acc + (i.purchaseCost || 0), 0);
-        primaryTaxAmount = draftItems.reduce((acc, i) => acc + (i.taxAmount || 0), 0);
-        primaryFinalCost = draftItems.reduce((acc, i) => acc + (i.finalCost || 0), 0);
-        primaryApplyTax = first.applyTax || "No";
-        primaryTaxType = first.taxType || "VAT";
-        primaryTaxPercentage = first.taxPercentage || 0;
-      } else {
-        primaryGoodsName = goodsId === "custom" ? customGoodsName.trim() : (selectedGood?.goodsName || selectedGood?.goods_name || "");
-        primaryGoodsId = goodsId === "custom" ? null : goodsId;
-        primaryQuantityKgs = Number(quantityCount || 0);
-        primaryGrossWeight = totalGrossWeight;
-        primaryEmptyKgs = Number(emptyKgs || 0);
-        primaryNetWeight = netWeight;
-        primaryDivideKgs = Number(divideKgs || 0);
-        primaryNumbers = numbers;
-        primaryRateType = rateType;
-        primaryPurchaseRate = Number(purchaseRate || 0);
-        primaryPurchaseCost = purchaseCost;
-        primaryTaxAmount = taxAmount;
-        primaryFinalCost = finalCost;
-        primaryApplyTax = applyTax;
-        primaryTaxType = taxType;
-        primaryTaxPercentage = Number(taxPercentage || 0);
-      }
-
-      const payload = {
-        // Server resolves the branch's legal company; never fall back to an arbitrary company.
-        companyId: activeBranch?.companyId || activeBranch?.company_id || null,
-        countryId: activeBranch?.countryId || activeBranch?.country_id,
-        countryBranchId: selectedBranchId,
-        cityBranchId: selectedCityBranchId || null,
-        goodsId: primaryGoodsId,
-        goodsName: primaryGoodsName,
-        purchaseAccountNo: shipmentType === "Warehouse Transfer" ? (warehouseAccountNo || null) : (purchaseAccountNo || null),
-        salesAccountNo: salesAccountNo || null,
-        brokerAccountNo: brokerAccountNo || null,
-        contractNo: contractNo.trim() || null,
-        brand: primaryBrand || null,
-        size: primarySize || null,
-        chassisCode: chassisCode.trim() || null,
-        lotNo: lotNo.trim() || null,
-        supplierName: supplierName.trim(),
-        supplierPersonId: supplierPersonId || null,
-        paymentMode: resolvedPaymentMode,
-        shippingMode: resolvedShippingMode,
-        originCountryId: originCountryId === "custom" ? null : (originCountryId || null),
-        originCountryName: selectedOriginCountryName,
-        advancePercentage: paymentMode === "Advance" ? Number(advancePercentage || 0) : 0,
-        advanceAmount: paymentMode === "Advance" ? calculatedAdvanceAmount : 0,
-        remainingBalance: paymentMode === "Advance" ? remainingBalance : 0,
-        warehouseName: warehouseName.trim() || null,
-        warehouseId: selectedWarehouseId && selectedWarehouseId !== "CUSTOM" ? selectedWarehouseId : null,
-        warehousePlotNo: warehousePlotNo.trim() || null,
-        transferDate: transferDate || null,
-        loadingDate: loadingDate || null,
-        truckNo: truckNo.trim() || null,
-        driverName: driverName.trim() || null,
-        remarks: remarks.trim() || null,
-        quantityName: quantityName === "Custom" ? customQuantityName.trim() : quantityName,
-        quantityKgs: primaryQuantityKgs,
-        totalGrossWeight: primaryGrossWeight,
-        emptyKgs: primaryEmptyKgs,
-        netWeight: primaryNetWeight,
-        divideKgs: primaryDivideKgs,
-        numbers: primaryNumbers,
-        rateType: primaryRateType,
-        purchaseRate: primaryPurchaseRate,
-        purchaseCurrency: purchaseCurrency,
-        exchangeRate: Number(exchangeRateToAed) || 1,
-        localCurrency: purchaseCurrency,
-        purchaseCost: primaryPurchaseCost,
-        applyTax: primaryApplyTax || "No",
-        taxType: primaryTaxType || "VAT",
-        taxPercentage: primaryTaxPercentage || 0,
-        taxAmount: primaryTaxAmount || 0,
-        finalCost: primaryFinalCost
-      };
+      const payload = buildPayload(items);
 
       const isEditingDraft = Boolean(editingPurchaseId);
       const res = await fetch(
@@ -1769,6 +1835,9 @@ export function LocalPurchaseView({
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.error?.message || "Failed to save purchase.");
       const savedPurchase = data.data?.purchase || data.purchase;
+      // From here on every retry updates THIS row; a failed post step can never make the next
+      // click create a second purchase record (and a second payment/expense/journal chain).
+      if (savedPurchase?.id) setEditingPurchaseId(savedPurchase.id);
 
       // 2. Accept the bill
       try {
@@ -1796,11 +1865,14 @@ export function LocalPurchaseView({
 
       setIsFormOpen(false);
       setEditingPurchaseId(null);
+      setDraftItems([]);
+      setExtraCharges([]);
       setCurrentStep(1);
       await loadHistory();
     } catch (err: any) {
       alert(err.message || "Failed to transfer and post to General Ledger.");
     } finally {
+      submitLockRef.current = false;
       setSaving(false);
     }
   }
@@ -2276,7 +2348,7 @@ export function LocalPurchaseView({
                   </span>
                 </div>
                 <p className="hidden md:block truncate text-[9.5px] font-medium text-slate-400">
-                  {activeBranch?.companyName || "Damaan Business Group"} &mdash; {activeBranch?.name || "UAE Main Branch"} ({activeBranch?.countryName || "UAE"}, {activeBranch?.cityName || "Dubai"})
+                  {activeBranch?.companyName || "Damaan Business Group"} &mdash; {activeBranch?.name || "—"} ({[scopeLabels.country, scopeLabels.city].filter(Boolean).join(", ") || "—"})
                 </p>
               </div>
             </div>
@@ -2700,7 +2772,7 @@ export function LocalPurchaseView({
                   <div className="flex justify-between items-center gap-2">
                     <span className="text-slate-400 font-medium">{t(lang, "lp.reg_country_city", "Country / City")} :</span>
                     <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[150px]">
-                      {activeBranch?.countryName || "Afghanistan"}, {activeBranch?.cityName || "Kabul"}
+                      {[scopeLabels.country, scopeLabels.city].filter(Boolean).join(", ") || "—"}
                     </span>
                   </div>
                   <div className="flex justify-between items-center gap-2">
@@ -3262,16 +3334,21 @@ export function LocalPurchaseView({
                       <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.goods_selection", "Goods Selection (Goods Name) *")}</label>
                       <select
                         value={goodsId}
-                        onChange={e => setGoodsId(e.target.value)}
+                        onChange={e => {
+                          // A new goods choice always starts a clean line (no brand/size/lot/rate carry-over).
+                          setGoodsId(e.target.value);
+                          setCustomGoodsName("");
+                          resetItemFields();
+                        }}
                         className="w-full h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs font-semibold outline-none"
                       >
                         <option value="">{t(lang, "lp.select_goods", "Select Goods Master...")}</option>
                         {goodsOptions.map(g => (
                           <option key={g.id} value={g.id}>{g.name}</option>
                         ))}
-                        <option value="CUSTOM">{t(lang, "lp.custom_entry", "+ Custom Product Entry")}</option>
+                        <option value="custom">{t(lang, "lp.custom_entry", "+ Custom Product Entry")}</option>
                       </select>
-                      {goodsId === "CUSTOM" && (
+                      {isCustomGoods(goodsId) && (
                         <input
                           value={customGoodsName}
                           onChange={e => setCustomGoodsName(e.target.value)}
@@ -3918,6 +3995,67 @@ export function LocalPurchaseView({
                     )}
                   </div>
 
+                  {/* + Add Charge — informational rows, never posted silently */}
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-2.5 space-y-2 bg-slate-50/60 dark:bg-slate-800/30">
+                    <div className="flex items-center justify-between">
+                      <p className="text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
+                        {t(lang, "lp.charges_title", "Additional Charges")}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setExtraCharges(prev => [...prev, { id: `chg-${Date.now()}-${prev.length}`, label: "", amount: "", allocate: false }])}
+                        className="h-7 px-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black"
+                      >
+                        + {t(lang, "lp.add_charge", "Add Charge")}
+                      </button>
+                    </div>
+                    {extraCharges.length === 0 && (
+                      <p className="text-[9.5px] text-slate-400">{t(lang, "lp.charges_empty", "No additional charges. Add freight, unloading or any other cost for this bill.")}</p>
+                    )}
+                    {extraCharges.map((c) => (
+                      <div key={c.id} className="grid grid-cols-[minmax(0,1fr)_96px_32px] items-center gap-1.5">
+                        <input
+                          value={c.label}
+                          onChange={e => setExtraCharges(prev => prev.map(x => x.id === c.id ? { ...x, label: e.target.value } : x))}
+                          placeholder={t(lang, "lp.charge_label_ph", "Charge name (e.g. Freight)")}
+                          className="h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs outline-none min-w-0"
+                        />
+                        <input
+                          type="number"
+                          min="0"
+                          step="any"
+                          value={c.amount}
+                          onChange={e => setExtraCharges(prev => prev.map(x => x.id === c.id ? { ...x, amount: e.target.value } : x))}
+                          placeholder="0.00"
+                          className="h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs font-mono outline-none text-end min-w-0"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setExtraCharges(prev => prev.filter(x => x.id !== c.id))}
+                          aria-label={t(lang, "common.remove", "Remove")}
+                          className="h-8 w-8 rounded-lg text-red-500 hover:bg-red-50 text-sm font-black"
+                        >
+                          &times;
+                        </button>
+                        <label className="col-span-3 flex items-center gap-1.5 text-[9.5px] font-bold text-slate-500 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            className="shrink-0 accent-blue-600"
+                            style={{ width: 18, height: 18, minWidth: 18, minHeight: 18 }}
+                            checked={c.allocate}
+                            onChange={e => setExtraCharges(prev => prev.map(x => x.id === c.id ? { ...x, allocate: e.target.checked } : x))}
+                          />
+                          {t(lang, "lp.charge_allocate", "Add to landed cost")}
+                        </label>
+                      </div>
+                    ))}
+                    {extraCharges.length > 0 && (
+                      <p className="text-[9px] text-slate-400 leading-relaxed">
+                        {t(lang, "lp.charges_info_note", "Charges are recorded on the bill for reference. They are not posted to the ledger and do not change the supplier payable.")}
+                      </p>
+                    )}
+                  </div>
+
                   {/* Navigation Buttons */}
                   <div className="grid grid-cols-2 gap-2 pt-2">
                     <Button
@@ -3967,7 +4105,7 @@ export function LocalPurchaseView({
                       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2">
                         <span className="block text-slate-400 font-bold">2. Country Admin Serial</span>
                         <span className="font-mono font-black text-emerald-700 dark:text-emerald-400">
-                          {`CA-${(activeBranch?.countryName || "UAE").slice(0, 3).toUpperCase()}-2026-${String(purchases.filter(p => p.country_id === activeBranch?.countryId).length + 1).padStart(5, "0")}`}
+                          {`CA-${(scopeLabels.country || "LOC").slice(0, 3).toUpperCase()}-2026-${String(purchases.filter(p => p.country_id === activeBranch?.countryId).length + 1).padStart(5, "0")}`}
                         </span>
                       </div>
                       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2">
@@ -4018,7 +4156,7 @@ export function LocalPurchaseView({
                   <Button
                     type="button"
                     disabled={saving}
-                    onClick={handleSaveAndPostGL}
+                    onClick={() => setShowPostConfirm(true)}
                     className="w-full h-11 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black text-xs uppercase rounded-xl shadow-md flex items-center justify-center gap-2 tracking-wider"
                   >
                     {saving ? (
@@ -4036,7 +4174,7 @@ export function LocalPurchaseView({
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => window.print()}
+                      onClick={() => printDomFragmentViaModal("printable-lp-voucher", t(lang, "lp.print_voucher", "Print Voucher"))}
                       className="h-8.5 rounded-lg text-xs font-bold border-slate-200 dark:border-slate-700 hover:bg-slate-50 flex items-center justify-center gap-1.5"
                     >
                       <Printer className="h-3.5 w-3.5 text-slate-500" />
@@ -4080,19 +4218,19 @@ export function LocalPurchaseView({
                 <div className="p-2 space-y-1 text-[8.5px]">
                   <div className="grid grid-cols-2 gap-2">
                     <span className="text-slate-400">{t(lang, "lp.branch_name", "Branch Name")}</span>
-                    <span className="font-bold text-right truncate text-slate-800 dark:text-slate-100">{activeBranch?.name || "Global System"}</span>
+                    <span className="font-bold text-right truncate text-slate-800 dark:text-slate-100">{activeBranch?.name || "—"}</span>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <span className="text-slate-400">{t(lang, "lp.branch_code", "Branch Code")}</span>
-                    <span className="font-mono font-bold text-right text-slate-800 dark:text-slate-100">{activeBranch?.code || "GLOBAL-00"}</span>
+                    <span className="font-mono font-bold text-right text-slate-800 dark:text-slate-100">{activeBranch?.code || "—"}</span>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <span className="text-slate-400">{t(lang, "lp.country", "Country")}</span>
-                    <span className="font-bold text-right truncate text-slate-800 dark:text-slate-100">{activeBranch?.countryName || "UAE"}</span>
+                    <span className="font-bold text-right truncate text-slate-800 dark:text-slate-100">{scopeLabels.country || "—"}</span>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <span className="text-slate-400">{t(lang, "lp.city", "City")}</span>
-                    <span className="font-bold text-right truncate text-slate-800 dark:text-slate-100">{activeBranch?.cityName || "Dubai"}</span>
+                    <span className="font-bold text-right truncate text-slate-800 dark:text-slate-100">{scopeLabels.city || "—"}</span>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <span className="text-slate-400">{t(lang, "lp.user_label", "User")}</span>
@@ -4336,7 +4474,7 @@ export function LocalPurchaseView({
                       {t(lang, "lp.goods_report_head", "GOODS REPORT")}
                     </span>
                     <span className="text-[9.5px] font-bold text-[#6b4f00]">
-                      {draftItems.length > 0 ? draftItems.length : 1} {t(lang, "lp.items_confirmed", "Items Confirmed")}
+                      {draftItems.length} {t(lang, "lp.items_confirmed", "Items Confirmed")}
                     </span>
                   </div>
                   <div className="overflow-x-auto max-h-[340px]">
@@ -4392,34 +4530,29 @@ export function LocalPurchaseView({
                             </tr>
                           ))
                         ) : (
-                          <tr className="hover:bg-slate-50">
-                            <td className="p-2 font-mono font-bold text-slate-500 text-center">1</td>
-                            <td className="p-2 font-bold text-slate-900">{selectedGood?.goodsName || customGoodsName || "Goods Item"}</td>
-                            <td className="p-2 text-slate-600">{size || "-"}</td>
-                            <td className="p-2 text-slate-600">{brand || "-"}</td>
-                            <td className="p-2 font-semibold text-slate-600">{selectedOriginCountryName || "—"}</td>
-                            <td className="p-2 text-right font-mono font-bold text-slate-800">{quantityCount || 0}</td>
-                            <td className="p-2 text-slate-600">{quantityName}</td>
-                            <td className="p-2 text-right font-mono text-slate-600">{totalGrossWeight.toLocaleString()} kg</td>
-                            <td className="p-2 text-right font-mono font-bold text-blue-700">{netWeight.toLocaleString()} kg</td>
-                            <td className="p-2 text-right font-mono font-bold text-slate-700">{purchaseRate || 0}</td>
-                            <td className="p-2 text-right font-mono font-bold text-slate-700">{purchaseCost.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                            <td className="p-2 text-center">
-                              {applyTax === "Yes" && taxAmount > 0 ? (
-                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                                  {taxPercentage}% ({taxAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })})
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-500 border border-slate-200">
-                                  {t(lang, "common.no", "No")}
-                                </span>
-                              )}
+                          <tr>
+                            <td colSpan={14} className="p-3 text-center text-[10px] text-slate-400">
+                              {t(lang, "lp.no_goods_lines", "No goods lines added yet.")}
                             </td>
-                            <td className="p-2 text-right font-mono font-black text-emerald-600">{combinedBillCost.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                           </tr>
                         )}
                       </tbody>
                     </table>
+                  </div>
+
+                  {extraCharges.length > 0 && (
+                    <div className="border-t border-slate-100 px-3 py-2 space-y-1">
+                      {extraCharges.map(c => (
+                        <div key={c.id} className="flex justify-between text-[10px]">
+                          <span className="text-slate-600">{c.label || t(lang, "lp.charge_unnamed", "Charge")}{c.allocate ? ` · ${t(lang, "lp.charge_allocate", "Add to landed cost")}` : ""}</span>
+                          <span className="font-mono font-bold text-slate-700">{purchaseCurrency} {fmtMoney(Number(c.amount) || 0)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="border-t border-slate-200 bg-emerald-50/60 px-3 py-2 flex justify-between items-center">
+                    <span className="text-[10px] font-black uppercase tracking-wide text-emerald-800">{t(lang, "lp.grand_total", "Grand Total")}</span>
+                    <span className="font-mono font-black text-emerald-700 text-sm">{purchaseCurrency} {fmtMoney(grandTotalWithCharges)}</span>
                   </div>
 
                   {/* 4-stat totals grid */}
@@ -4427,24 +4560,24 @@ export function LocalPurchaseView({
                     <div className="grid grid-cols-5 divide-x divide-slate-100">
                       <div className="px-3 py-2 min-w-0">
                         <span className="block text-[7.5px] text-slate-400 uppercase font-bold tracking-wide">{t(lang, "lp.total_goods_lines", "Goods Items")}</span>
-                        <strong className="block text-[11px] font-black text-slate-800 truncate">{draftItems.length > 0 ? draftItems.length : 1}</strong>
+                        <strong className="block text-[11px] font-black text-slate-800 truncate">{draftItems.length}</strong>
                       </div>
                       <div className="px-3 py-2 min-w-0">
                         <span className="block text-[7.5px] text-slate-400 uppercase font-bold tracking-wide">{t(lang, "lp.col_packages", "Total Qty")}</span>
                         <strong className="block text-[11px] font-black text-slate-800 truncate">
-                          {draftItems.length > 0 ? draftItems.reduce((a,i)=>a+i.quantityKgs, 0).toLocaleString() : (quantityCount || 0)}
+                          {draftItems.reduce((a,i)=>a+i.quantityKgs, 0).toLocaleString()}
                         </strong>
                       </div>
                       <div className="px-3 py-2 min-w-0">
                         <span className="block text-[7.5px] text-slate-400 uppercase font-bold tracking-wide">{t(lang, "lp.net_weight", "Net Weight")}</span>
                         <strong className="block text-[11px] font-black text-blue-700 truncate">
-                          {(draftItems.length > 0 ? draftItems.reduce((a,i)=>a+i.netWeight, 0) : netWeight).toLocaleString()} kg
+                          {(draftItems.reduce((a,i)=>a+i.netWeight, 0)).toLocaleString()} kg
                         </strong>
                       </div>
                       <div className="px-3 py-2 min-w-0">
                         <span className="block text-[7.5px] text-slate-400 uppercase font-bold tracking-wide">{t(lang, "lp.col_tax_amt", "Total Tax")}</span>
                         <strong className="block text-[11px] font-black text-amber-700 truncate">
-                          {purchaseCurrency} {(draftItems.length > 0 ? draftItems.reduce((a,i)=>a+(i.taxAmount || 0), 0) : taxAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          {purchaseCurrency} {(draftItems.reduce((a,i)=>a+(i.taxAmount || 0), 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </strong>
                       </div>
                       <div className="px-3 py-2 min-w-0">
@@ -4516,24 +4649,24 @@ export function LocalPurchaseView({
                     <div className="p-2 space-y-1 text-[8.5px]">
                       <div className="grid grid-cols-2 gap-2">
                         <span className="text-slate-400">{t(lang, "lp.total_goods_lines", "Total Goods")}</span>
-                        <span className="font-bold text-right text-slate-800 dark:text-slate-100">{draftItems.length > 0 ? draftItems.length : (goodsId || customGoodsName ? 1 : 0)}</span>
+                        <span className="font-bold text-right text-slate-800 dark:text-slate-100">{draftItems.length}</span>
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                         <span className="text-slate-400">{t(lang, "lp.col_packages", "Total Quantity")}</span>
                         <span className="font-bold text-right text-slate-800 dark:text-slate-100">
-                          {draftItems.length > 0 ? draftItems.reduce((a,i)=>a+i.quantityKgs, 0).toLocaleString() : (quantityCount || 0)}
+                          {draftItems.reduce((a,i)=>a+i.quantityKgs, 0).toLocaleString()}
                         </span>
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                         <span className="text-slate-400">{t(lang, "lp.total_gross_wt", "Total Gross Wt")}</span>
                         <span className="font-bold text-right text-slate-800 dark:text-slate-100">
-                          {(draftItems.length > 0 ? draftItems.reduce((a,i)=>a+i.totalGrossWeight, 0) : totalGrossWeight).toLocaleString()} kg
+                          {(draftItems.reduce((a,i)=>a+i.totalGrossWeight, 0)).toLocaleString()} kg
                         </span>
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                         <span className="text-slate-400">{t(lang, "lp.net_weight", "Total Net Wt")}</span>
                         <span className="font-bold text-right text-blue-700">
-                          {(draftItems.length > 0 ? draftItems.reduce((a,i)=>a+i.netWeight, 0) : netWeight).toLocaleString()} kg
+                          {(draftItems.reduce((a,i)=>a+i.netWeight, 0)).toLocaleString()} kg
                         </span>
                       </div>
                     </div>
@@ -4571,7 +4704,7 @@ export function LocalPurchaseView({
             {/* ── STEP 4: FULL OFFICIAL A4 ERP VOUCHER PREVIEW ── */}
             {currentStep === 4 && (
               <div className="space-y-4 animate-in fade-in duration-200">
-                <div className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-2xl p-6 shadow-sm space-y-5 text-slate-800 dark:text-slate-100">
+                <div id="printable-lp-voucher" className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-2xl p-6 shadow-sm space-y-5 text-slate-800 dark:text-slate-100">
                   {/* Voucher Header Bar */}
                   <div className="flex flex-wrap items-center justify-between gap-4 border-b-2 border-slate-900 dark:border-slate-100 pb-4">
                     <div className="flex items-center gap-3">
@@ -4580,10 +4713,10 @@ export function LocalPurchaseView({
                       </div>
                       <div>
                         <h2 className="text-base font-black uppercase tracking-tight text-slate-900 dark:text-slate-50">
-                          {activeBranch?.companyName || "DAMAAN BUSINESS GROUP LLC"}
+                          {activeBranch?.companyName || activeBranch?.name || "—"}
                         </h2>
                         <p className="text-[10.5px] font-semibold text-slate-500 dark:text-slate-400">
-                          {activeBranch?.name || "United Arab Emirates Main Branch"} &bull; {activeBranch?.cityName || "Dubai"}, {activeBranch?.countryName || "UAE"}
+                          {activeBranch?.name || "—"} &bull; {[scopeLabels.city, scopeLabels.country].filter(Boolean).join(", ") || "—"}
                         </p>
                       </div>
                     </div>
@@ -4612,7 +4745,7 @@ export function LocalPurchaseView({
                       <div className="bg-white dark:bg-slate-900 p-2 rounded-lg border border-slate-200 dark:border-slate-800">
                         <span className="block text-[8px] uppercase font-bold text-slate-400">2. Country Admin Serial</span>
                         <strong className="block font-mono text-emerald-700 dark:text-emerald-400 truncate">
-                          {`CA-${(activeBranch?.countryName || "UAE").slice(0, 3).toUpperCase()}-2026-${String(purchases.filter(p => p.country_id === activeBranch?.countryId).length + 1).padStart(5, "0")}`}
+                          {`CA-${(scopeLabels.country || "LOC").slice(0, 3).toUpperCase()}-2026-${String(purchases.filter(p => p.country_id === activeBranch?.countryId).length + 1).padStart(5, "0")}`}
                         </strong>
                       </div>
                       <div className="bg-white dark:bg-slate-900 p-2 rounded-lg border border-slate-200 dark:border-slate-800">
@@ -4658,7 +4791,7 @@ export function LocalPurchaseView({
                   <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
                     <div className="bg-slate-100 dark:bg-slate-800 px-3 py-2 text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 flex justify-between">
                       <span>{t(lang, "lp.goods_manifest", "Itemized Goods Manifest")}</span>
-                      <span>{draftItems.length > 0 ? draftItems.length : 1} Line(s)</span>
+                      <span>{draftItems.length} Line(s)</span>
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full text-left text-[10px] whitespace-nowrap">
@@ -4704,18 +4837,9 @@ export function LocalPurchaseView({
                             ))
                           ) : (
                             <tr>
-                              <td className="p-2 text-center font-mono font-bold">1</td>
-                              <td className="p-2 font-bold text-slate-900 dark:text-slate-100">{selectedGood?.goodsName || customGoodsName || "Goods Item"}</td>
-                              <td className="p-2 text-slate-600 dark:text-slate-400">{size || "—"}</td>
-                              <td className="p-2 text-slate-600 dark:text-slate-400">{brand || "—"}</td>
-                              <td className="p-2 text-slate-600 dark:text-slate-400">{selectedOriginCountryName || "—"}</td>
-                              <td className="p-2 text-right font-mono font-bold">{quantityCount || 0} {quantityName}</td>
-                              <td className="p-2 text-right font-mono">{totalGrossWeight.toLocaleString()} kg</td>
-                              <td className="p-2 text-right font-mono font-bold text-blue-700 dark:text-blue-400">{netWeight.toLocaleString()} kg</td>
-                              <td className="p-2 text-right font-mono">{purchaseRate || 0}</td>
-                              <td className="p-2 text-right font-mono font-bold">{purchaseCost.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                              <td className="p-2 text-center">{taxAmount > 0 ? `${taxPercentage}%` : "—"}</td>
-                              <td className="p-2 text-right font-mono font-black text-emerald-600 dark:text-emerald-400">{combinedBillCost.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                              <td colSpan={14} className="p-3 text-center text-[10px] text-slate-400">
+                                {t(lang, "lp.no_goods_lines", "No goods lines added yet.")}
+                              </td>
                             </tr>
                           )}
                         </tbody>
@@ -4723,20 +4847,20 @@ export function LocalPurchaseView({
                           <tr>
                             <td colSpan={5} className="p-2 uppercase text-slate-600 dark:text-slate-300">Total Goods Manifest</td>
                             <td className="p-2 text-right font-mono">
-                              {(draftItems.length > 0 ? draftItems.reduce((a,i)=>a+i.quantityKgs, 0) : (quantityCount || 0)).toLocaleString()}
+                              {(draftItems.reduce((a,i)=>a+i.quantityKgs, 0)).toLocaleString()}
                             </td>
                             <td className="p-2 text-right font-mono">
-                              {(draftItems.length > 0 ? draftItems.reduce((a,i)=>a+i.totalGrossWeight, 0) : totalGrossWeight).toLocaleString()} kg
+                              {(draftItems.reduce((a,i)=>a+i.totalGrossWeight, 0)).toLocaleString()} kg
                             </td>
                             <td className="p-2 text-right font-mono text-blue-700 dark:text-blue-400">
-                              {(draftItems.length > 0 ? draftItems.reduce((a,i)=>a+i.netWeight, 0) : netWeight).toLocaleString()} kg
+                              {(draftItems.reduce((a,i)=>a+i.netWeight, 0)).toLocaleString()} kg
                             </td>
                             <td className="p-2 text-right">—</td>
                             <td className="p-2 text-right font-mono">
-                              {purchaseCurrency} {(draftItems.length > 0 ? draftItems.reduce((a,i)=>a+(i.purchaseCost||0), 0) : purchaseCost).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              {purchaseCurrency} {(draftItems.reduce((a,i)=>a+(i.purchaseCost||0), 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </td>
                             <td className="p-2 text-center font-mono">
-                              {purchaseCurrency} {(draftItems.length > 0 ? draftItems.reduce((a,i)=>a+(i.taxAmount||0), 0) : taxAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              {purchaseCurrency} {(draftItems.reduce((a,i)=>a+(i.taxAmount||0), 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </td>
                             <td className="p-2 text-right font-mono text-emerald-700 dark:text-emerald-400">
                               {purchaseCurrency} {combinedBillCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -4746,6 +4870,52 @@ export function LocalPurchaseView({
                       </table>
                     </div>
                   </div>
+
+                  {/* Additional charges + landed-cost allocation (display only; posting is unchanged) */}
+                  {(extraCharges.length > 0 || landedLines.length > 0) && (
+                    <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+                      <div className="bg-slate-100 dark:bg-slate-800 px-3 py-2 text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200">
+                        {t(lang, "lp.landed_title", "Charges & Landed Cost")}
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-[10px]">
+                          <thead className="bg-slate-50 dark:bg-slate-800/60 text-[8.5px] font-extrabold uppercase text-slate-600 border-b border-slate-200">
+                            <tr>
+                              <Th className="p-2 text-start">{t(lang, "lp.col_goods_item", "Goods Item")}</Th>
+                              <Th className="p-2 text-end">{t(lang, "lp.landed_base", "Bill Amount")}</Th>
+                              <Th className="p-2 text-end">{t(lang, "lp.landed_alloc", "Allocated Charges")}</Th>
+                              <Th className="p-2 text-end">{t(lang, "lp.landed_cost", "Landed Cost")}</Th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                            {landedLines.map(l => (
+                              <tr key={l.item.id}>
+                                <td className="p-2 font-semibold">{l.item.goodsName}</td>
+                                <td className="p-2 text-end font-mono">{fmtMoney(l.base)}</td>
+                                <td className="p-2 text-end font-mono">{fmtMoney(l.alloc)}</td>
+                                <td className="p-2 text-end font-mono font-black text-emerald-700">{fmtMoney(l.landed)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                          <tfoot className="bg-slate-50 dark:bg-slate-800/60 font-black border-t border-slate-200">
+                            {extraCharges.map(c => (
+                              <tr key={c.id}>
+                                <td colSpan={3} className="p-2 font-semibold text-slate-600">{c.label || t(lang, "lp.charge_unnamed", "Charge")}{c.allocate ? ` · ${t(lang, "lp.charge_allocate", "Add to landed cost")}` : ""}</td>
+                                <td className="p-2 text-end font-mono">{fmtMoney(Number(c.amount) || 0)}</td>
+                              </tr>
+                            ))}
+                            <tr>
+                              <td colSpan={3} className="p-2 uppercase text-slate-700">{t(lang, "lp.grand_total", "Grand Total")}</td>
+                              <td className="p-2 text-end font-mono text-emerald-700">{purchaseCurrency} {fmtMoney(grandTotalWithCharges)}</td>
+                            </tr>
+                          </tfoot>
+                        </table>
+                      </div>
+                      <p className="px-3 py-2 text-[9px] text-slate-400">
+                        {t(lang, "lp.landed_note", "Landed cost is a costing view only. The posted journal below uses the goods bill amount.")}
+                      </p>
+                    </div>
+                  )}
 
                   {/* Double-Entry Ledger Posting Table */}
                   <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
@@ -5735,14 +5905,7 @@ export function LocalPurchaseView({
                                         type="button"
                                         onClick={() => {
                                           setOpenActionRowId(null);
-                                          setIsFormOpen(true);
-                                          setCurrentStep(1);
-                                          if (row.raw?.id) setEditingPurchaseId(row.raw.id);
-                                          setCustomGoodsName(row.goods || "");
-                                          setSupplierName(row.supplier || "");
-                                          setQuantityCount(String(row.qty || ""));
-                                          setQuantityName(row.unit || "Bags");
-                                          setPurchaseCurrency(row.raw?.purchase_currency || "USD");
+                                          loadRowIntoForm(row.raw);
                                         }}
                                         className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-sky-50 dark:hover:bg-sky-950/40 text-slate-700 dark:text-slate-200 hover:text-sky-600 text-xs font-medium transition cursor-pointer"
                                       >
@@ -6122,14 +6285,7 @@ export function LocalPurchaseView({
                                       type="button"
                                       onClick={() => {
                                         setOpenActionRowId(null);
-                                        setIsFormOpen(true);
-                                        setCurrentStep(1);
-                                        if (row.raw?.id) setEditingPurchaseId(row.raw.id);
-                                        setCustomGoodsName(row.goods || "");
-                                        setSupplierName(row.supplier || "");
-                                        setQuantityCount(String(row.qty || ""));
-                                        setQuantityName(row.unit || "Bags");
-                                        setPurchaseCurrency(row.raw?.purchase_currency || localCurrency || "AFN");
+                                        loadRowIntoForm(row.raw);
                                       }}
                                       className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-sky-50 dark:hover:bg-sky-950/40 text-slate-700 dark:text-slate-200 hover:text-sky-600 text-xs font-medium transition cursor-pointer"
                                     >
@@ -6341,6 +6497,29 @@ export function LocalPurchaseView({
                 className="w-1/2 h-9 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-black uppercase tracking-wider shadow-md shadow-blue-100"
               >
                 {t(lang, "lp.btn_confirm_scope", "Confirm Scope")}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showPostConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" role="dialog" aria-modal="true">
+          <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-slate-900 p-5 shadow-2xl border border-slate-200 dark:border-slate-700 space-y-3">
+            <h3 className="text-sm font-black text-slate-900 dark:text-slate-100">{t(lang, "lp.confirm_post_title", "Post this bill?")}</h3>
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              {t(lang, "lp.confirm_post_body", "This transfers the bill to Roznamcha and the General Ledger. Check the goods, amounts and accounts first.")}
+            </p>
+            <div className="rounded-lg bg-slate-50 dark:bg-slate-800 p-2.5 text-xs space-y-1">
+              <div className="flex justify-between"><span className="text-slate-500">{t(lang, "lp.total_goods_lines", "Goods Items")}</span><strong>{draftItems.length}</strong></div>
+              <div className="flex justify-between"><span className="text-slate-500">{t(lang, "lp.final_amount_auto", "Final Amount")}</span><strong className="font-mono">{purchaseCurrency} {fmtMoney(combinedBillCost)}</strong></div>
+            </div>
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <Button type="button" variant="outline" onClick={() => setShowPostConfirm(false)} className="h-9 text-xs font-bold">
+                {t(lang, "common.cancel", "Cancel")}
+              </Button>
+              <Button type="button" disabled={saving} onClick={() => handleSaveAndPostGL()} className="h-9 text-xs font-black bg-emerald-600 hover:bg-emerald-700 text-white">
+                {t(lang, "lp.confirm_post_btn", "Confirm & Post")}
               </Button>
             </div>
           </div>
@@ -6597,46 +6776,7 @@ export function LocalPurchaseView({
                     onClick={() => {
                       const row = selectedRowForVoucher;
                       setSelectedRowForVoucher(null);
-                      setIsFormOpen(true);
-                      setCurrentStep(1);
-                      setEditingPurchaseId(row.id || null);
-                      setGoodsId(row.goods_id || row.goodsId || "");
-                      setCustomGoodsName(row.goods_name || row.goodsName || "");
-                      setSupplierName(row.supplier_name || row.supplierName || "");
-                      setSupplierPersonId(row.supplier_person_id || row.supplierPersonId || "");
-                      setPurchaseAccountNo(row.purchase_account_no || row.purchaseAccountNo || "");
-                      setSalesAccountNo(row.sales_account_no || row.salesAccountNo || "");
-                      setBrokerAccountNo(row.broker_account_no || row.brokerAccountNo || "");
-                      setContractNo(row.contract_no || row.contractNo || "");
-                      setChassisCode(row.chassis_code || row.chassisCode || "");
-                      setLotNo(row.lot_no || row.lotNo || "");
-                      setPaymentMode(row.payment_mode || row.paymentMode || "Cash");
-                      setShippingMode(row.shipping_mode || row.shippingMode || "Loading");
-                      setShipmentType(SHIPPING_MODE_TO_SHIPMENT_TYPE[row.shipping_mode || row.shippingMode || "Loading"] || "Loading by Truck");
-                      setOriginCountryId(row.origin_country_id || row.originCountryId || "");
-                      setAdvancePercentage(String(row.advance_percentage ?? row.advancePercentage ?? "20"));
-                      setWarehouseName(row.warehouse_name || row.warehouseName || "");
-                      setSelectedWarehouseId(row.warehouse_id || row.warehouseId || "");
-                      setWarehouseAccountNo(row.purchase_account_no || row.purchaseAccountNo || "");
-                      setWarehousePlotNo(row.warehouse_plot_no || row.warehousePlotNo || "");
-                      setTransferDate(row.transfer_date || row.transferDate || new Date().toISOString().slice(0, 10));
-                      setLoadingDate(row.loading_date || row.loadingDate || new Date().toISOString().slice(0, 10));
-                      setTruckNo(row.truck_no || row.truckNo || "");
-                      setDriverName(row.driver_name || row.driverName || "");
-                      setRemarks(row.remarks || "");
-                      setQuantityName(row.quantity_name || row.quantityName || "Bags");
-                      setQuantityCount(String(row.quantity_kgs ?? row.quantityKgs ?? ""));
-                      setEmptyKgs(String(row.empty_kgs ?? row.emptyKgs ?? ""));
-                      setDivideKgs(String(row.divide_kgs ?? row.divideKgs ?? "50"));
-                      setRateType(row.rate_type || row.rateType || "per_kg");
-                      setPurchaseRate(String(row.purchase_rate ?? row.purchaseRate ?? ""));
-                      setPurchaseCurrency(row.purchase_currency || row.purchaseCurrency || "USD");
-                      setExchangeRateToAed(String(row.exchange_rate ?? row.exchangeRate ?? "1"));
-                      setApplyTax(row.apply_tax || row.applyTax || "No");
-                      setTaxType(row.tax_type || row.taxType || "VAT");
-                      setTaxPercentage(String(row.tax_percentage ?? row.taxPercentage ?? "0"));
-                      if (row.country_branch_id || row.countryBranchId) setSelectedBranchId(row.country_branch_id || row.countryBranchId);
-                      if (row.city_branch_id || row.cityBranchId) setSelectedCityBranchId(row.city_branch_id || row.cityBranchId);
+                      loadRowIntoForm(row);
                     }}
                     className="h-8 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1 shadow-sm"
                   >

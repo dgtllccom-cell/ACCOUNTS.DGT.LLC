@@ -48,6 +48,9 @@ export async function GET(request: NextRequest) {
         left join public.country_branches cb on cb.id = ura.country_branch_id and cb.deleted_at is null
         left join public.city_branches cib on cib.id = ura.city_branch_id and cib.deleted_at is null
         where p.deleted_at is null
+          -- an assignment pointing at a deleted branch is not a live assignee
+          and (ura.country_branch_id is null or cb.id is not null)
+          and (ura.city_branch_id is null or cib.id is not null)
         order by p.id, ura.created_at desc
       `;
       return result as unknown as any[];

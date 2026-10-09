@@ -212,7 +212,13 @@ async function loadViaPg(lang: Awaited<ReturnType<typeof getRequestLanguage>>, s
     const authUsers = authUserRowsRaw as Array<{ id: string; email: string }>;
     // A non-Super-Admin manager lists only the users it may manage (same rule as the users API); a Business / Shipping
     // Super Admin additionally sees only its own domain's city branches.
-    const assignmentRows = (assignmentRowsRaw as AssignmentRow[]).filter((a) => !session || session.isSuperAdmin || userInManagerScope(session, a));
+    // An assignment pointing at a deleted branch is not shown as a live assignment.
+    const liveBranchIds = new Set((branchRowsRaw as CountryBranchRow[]).map((b) => b.id));
+    const liveCityIds = new Set((cityRowsRaw as CityBranchRow[]).map((c) => c.id));
+    const assignmentRows = (assignmentRowsRaw as AssignmentRow[])
+      .filter((a) => !a.country_branch_id || liveBranchIds.has(a.country_branch_id))
+      .filter((a) => !a.city_branch_id || liveCityIds.has(a.city_branch_id))
+      .filter((a) => !session || session.isSuperAdmin || userInManagerScope(session, a));
     if (session && !session.isSuperAdmin && domainSuperAdminDomain(session.roles)) {
       const allowedCities = new Set(session.cityBranchIds);
       cityRows = cityRows.filter((cb) => allowedCities.has(cb.id));
