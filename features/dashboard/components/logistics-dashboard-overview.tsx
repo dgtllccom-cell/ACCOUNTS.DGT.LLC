@@ -51,6 +51,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { DashboardHeroBanner } from "@/features/dashboard/components/dashboard-hero-banner";
 import { Th } from "@/components/ui/translated-th";
 
 export type LogisticsShipment = {
@@ -227,6 +228,8 @@ export function LogisticsDashboardOverview({
 
   return (
     <div className="space-y-6 text-slate-800 dark:text-slate-100 p-2 sm:p-4 lg:p-6" dir={isRtl ? "rtl" : "ltr"}>
+      <DashboardHeroBanner variant="shipping" lang={lang} />
+
       {/* ── Sub-header Banner & Actions ─────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-slate-200/80 dark:border-slate-800">
         <div className="flex items-center gap-3">
