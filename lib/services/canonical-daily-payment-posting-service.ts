@@ -125,11 +125,26 @@ export async function postCanonicalDailyPayment(
     // Sales Payment: Selected Receiving = DR, Customer = CR
     assertDistinctBookingLedgers(debitLedger.id, creditLedger.id, `${direction} (${condition})`);
 
-    // 4. Duplicate TT Reference Check
+    // 4. Duplicate TT Reference & Bank Account + TT Reference Check
     const effectiveTtRef = String(methodDetails?.ttReference || (method === "tt_swift" ? referenceNo : "") || "").trim();
-    const effectiveBankId = methodDetails?.bankId ? String(methodDetails.bankId).trim() : null;
+    const effectiveBankId = methodDetails?.bankId && isValidUuid(methodDetails.bankId) ? String(methodDetails.bankId).trim() : null;
 
     if (effectiveTtRef && effectiveTtRef.length > 2) {
+      // Check duplicate Bank Account + TT Reference in roznamcha_entries
+      if (effectiveBankId) {
+        const dupBankTt = await sql`
+          select id, reference_no, bank_id, created_at, entry_date
+          from roznamcha_entries
+          where lower(trim(reference_no)) = lower(${effectiveTtRef})
+            and bank_id = ${effectiveBankId}::uuid
+            and status = 'posted'
+          limit 1
+        `;
+        if (dupBankTt.length) {
+          throw new Error(`Duplicate Bank Account + TT Reference: Reference '${effectiveTtRef}' has already been processed for this Bank Account on ${new Date(dupBankTt[0].created_at || dupBankTt[0].entry_date).toLocaleDateString()}. Duplicate submission is rejected.`);
+        }
+      }
+
       // Check if duplicate TT reference exists in purchase_order_payments
       const dupPurchase = await sql`
         select id, reference_no, created_at

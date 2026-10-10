@@ -40,6 +40,7 @@ import { getBankById, type BankRecord } from "@/features/banks/bank-api";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { rtlLanguages } from "@/lib/i18n/languages";
+import { openPaymentVoucherPrintReport } from "@/lib/reports/open-payment-voucher-print";
 import { cn } from "@/lib/utils";
 
 export type PaymentScopeType = "purchase" | "sales";
@@ -261,10 +262,31 @@ export function StandardizedDailyPaymentForm({
       });
   }, [ledgers, paymentMethod, resolvedPartyAccount.ledgerId]);
 
-  // Auto-default currency when source ledger changes
+  // Auto-default currency and smart method detection when source ledger changes
   useEffect(() => {
     if (selectedSourceLedger?.currency) {
       setCurrency(String(selectedSourceLedger.currency).toUpperCase());
+    }
+    if (!selectedSourceLedger) return;
+    const name = String(selectedSourceLedger.name || "").toLowerCase();
+    const code = String(selectedSourceLedger.code || "").toLowerCase();
+    const type = String(selectedSourceLedger.account_type || selectedSourceLedger.type || "").toLowerCase();
+
+    if (name.includes("cash") || type.includes("cash") || code.includes("cash")) {
+      if (paymentMethod !== "cash" && paymentMethod !== "internal_transfer") {
+        setPaymentMethod("cash");
+      }
+    } else if (name.includes("bank") || type.includes("bank") || code.includes("bank") || selectedSourceLedger.bank_id != null) {
+      if (paymentMethod !== "bank_transfer" && paymentMethod !== "tt_swift" && paymentMethod !== "cheque" && paymentMethod !== "internal_transfer") {
+        setPaymentMethod("bank_transfer");
+      }
+      if (selectedSourceLedger.bank_id && isUuid(selectedSourceLedger.bank_id) && !bankId) {
+        setBankId(selectedSourceLedger.bank_id);
+      }
+    } else if (name.includes("wallet") || name.includes("easypaisa") || name.includes("jazzcash") || type.includes("wallet")) {
+      if (paymentMethod !== "mobile_wallet" && paymentMethod !== "internal_transfer") {
+        setPaymentMethod("mobile_wallet");
+      }
     }
   }, [selectedSourceLedger]);
 
@@ -874,7 +896,40 @@ export function StandardizedDailyPaymentForm({
             {lastPaymentResult && (
               <button
                 type="button"
-                onClick={() => window.print()}
+                onClick={() => {
+                  try {
+                    openPaymentVoucherPrintReport({
+                      data: {
+                        id: lastPaymentResult.paymentId || lastPaymentResult.roznamchaEntryId || "VOUCHER",
+                        refNo: referenceNo || ttReference || lastPaymentResult.serialNumber || billNumber,
+                        orderNo: billNumber,
+                        date: paymentDate,
+                        flow: scope === "purchase" ? "supplier_payment" : "customer_receipt",
+                        module: scope === "purchase" ? "purchase" : "sales",
+                        country: countryName || "United Arab Emirates",
+                        branch: branchName || "Main Branch",
+                        party: `${resolvedPartyAccount.name} (${resolvedPartyAccount.code})`,
+                        paymentKind: condition,
+                        currency: currency,
+                        amount: numericAmount,
+                        exchangeRate: numericRate,
+                        baseAmount: baseCurrencyAmount,
+                        debitLedgerName: scope === "purchase" ? resolvedPartyAccount.name : (selectedSourceLedger?.name || "Cash/Bank Account"),
+                        creditLedgerName: scope === "purchase" ? (selectedSourceLedger?.name || "Cash/Bank Account") : resolvedPartyAccount.name,
+                        narration: narration || `Daily ${condition.toUpperCase()} Payment via ${paymentMethod.toUpperCase()}`,
+                        superAdminSerial: lastPaymentResult.serialNumber?.split(" | ")[0] || null,
+                        countrySerial: lastPaymentResult.serialNumber?.split(" | ")[1] || null,
+                        branchSerial: lastPaymentResult.serialNumber?.split(" | ")[2] || null,
+                        status: "posted",
+                        createdBy: "Authorized User",
+                        createdAt: new Date().toISOString()
+                      },
+                      lang: currentLang
+                    });
+                  } catch {
+                    window.print();
+                  }
+                }}
                 className="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] cursor-pointer shadow-xs"
               >
                 <Printer className="h-3 w-3" />
