@@ -35272,6 +35272,11 @@ const en: Dict = {
   "shtrk.ev_closed": "Closed",
   "shtrk.all_branches": "All Branches (Global)",
   "shtrk.all_countries": "All Countries",
+  "appch.title": "This login belongs to the other DGT.llc app",
+  "appch.body_b": "You opened DGT.llc B (Business). This account is for shipping and clearing work — please use the DGT.llc BS app.",
+  "appch.body_bs": "You opened DGT.llc BS (Business Shipping). This account is for business modules — please use the DGT.llc B app.",
+  "appch.contact": "If you think this is a mistake, contact your administrator.",
+  "appch.sign_out": "Sign out",
 };
 
 const ur: Dict = {
@@ -58819,6 +58824,11 @@ const ur: Dict = {
   "shtrk.ev_closed": "بند",
   "shtrk.all_branches": "تمام برانچیں (عالمی)",
   "shtrk.all_countries": "تمام ممالک",
+  "appch.title": "یہ لاگ اِن DGT.llc کی دوسری ایپ کے لیے ہے",
+  "appch.body_b": "آپ نے DGT.llc B (بزنس) کھولی ہے۔ یہ اکاؤنٹ شپنگ اور کلیئرنگ کے کام کے لیے ہے — براہِ کرم DGT.llc BS ایپ استعمال کریں۔",
+  "appch.body_bs": "آپ نے DGT.llc BS (بزنس شپنگ) کھولی ہے۔ یہ اکاؤنٹ بزنس ماڈیولز کے لیے ہے — براہِ کرم DGT.llc B ایپ استعمال کریں۔",
+  "appch.contact": "اگر آپ کو لگتا ہے کہ یہ غلطی ہے تو اپنے ایڈمنسٹریٹر سے رابطہ کریں۔",
+  "appch.sign_out": "سائن آؤٹ",
 };
 
 const ar: Dict = {
@@ -82367,6 +82377,11 @@ const ar: Dict = {
   "shtrk.ev_closed": "مغلق",
   "shtrk.all_branches": "جميع الفروع (عالمي)",
   "shtrk.all_countries": "جميع الدول",
+  "appch.title": "حساب الدخول هذا يخص تطبيق DGT.llc الآخر",
+  "appch.body_b": "لقد فتحت DGT.llc B (الأعمال). هذا الحساب مخصص لأعمال الشحن والتخليص — يرجى استخدام تطبيق DGT.llc BS.",
+  "appch.body_bs": "لقد فتحت DGT.llc BS (شحن الأعمال). هذا الحساب مخصص لوحدات الأعمال — يرجى استخدام تطبيق DGT.llc B.",
+  "appch.contact": "إذا كنت تعتقد أن هذا خطأ، تواصل مع المسؤول.",
+  "appch.sign_out": "تسجيل الخروج",
 };
 
 const fa: Dict = {
@@ -105914,6 +105929,11 @@ const fa: Dict = {
   "shtrk.ev_closed": "بسته",
   "shtrk.all_branches": "همه شعبه‌ها (جهانی)",
   "shtrk.all_countries": "همه کشورها",
+  "appch.title": "این حساب کاربری مربوط به برنامه دیگر DGT.llc است",
+  "appch.body_b": "شما DGT.llc B (تجاری) را باز کرده‌اید. این حساب برای کارهای حمل و ترخیص است — لطفاً از برنامه DGT.llc BS استفاده کنید.",
+  "appch.body_bs": "شما DGT.llc BS (حمل‌ونقل تجاری) را باز کرده‌اید. این حساب برای بخش‌های تجاری است — لطفاً از برنامه DGT.llc B استفاده کنید.",
+  "appch.contact": "اگر فکر می‌کنید اشتباه است، با مدیر سیستم تماس بگیرید.",
+  "appch.sign_out": "خروج",
 };
 
 const ps: Dict = {
@@ -129468,6 +129488,11 @@ const ps: Dict = {
   "shtrk.ev_closed": "تړل شوی",
   "shtrk.all_branches": "ټولې څانګې (نړیوال)",
   "shtrk.all_countries": "ټول هیوادونه",
+  "appch.title": "دا ننوتل د DGT.llc بلې اپلیکیشن لپاره دی",
+  "appch.body_b": "تاسو DGT.llc B (سوداګري) پرانیستې ده. دا حساب د بار وړلو او ترخیص کارونو لپاره دی — مهرباني وکړئ د DGT.llc BS اپلیکیشن وکاروئ.",
+  "appch.body_bs": "تاسو DGT.llc BS (سوداګریز بار وړل) پرانیستې ده. دا حساب د سوداګرۍ برخو لپاره دی — مهرباني وکړئ د DGT.llc B اپلیکیشن وکاروئ.",
+  "appch.contact": "که فکر کوئ چې دا تېروتنه ده، له خپل مدیر سره اړیکه ونیسئ.",
+  "appch.sign_out": "وتل",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

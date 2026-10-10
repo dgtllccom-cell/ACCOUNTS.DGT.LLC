@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
 import type { Route } from "next";
 import { getCurrentErpSession } from "@/lib/auth/session";
-import { dashboardForRoles } from "@/lib/permissions/enterprise-roles";
+import { headers } from "next/headers";
+import { appChannelFromUserAgent, landingForChannel } from "@/lib/mobile/app-channel";
 
 export const metadata = { title: "Dashboard" };
 export const dynamic = "force-dynamic";
@@ -14,6 +15,7 @@ export const dynamic = "force-dynamic";
 export default async function DashboardPage() {
   const session = await getCurrentErpSession();
   if (!session) redirect("/auth/login" as Route);
-  const target = dashboardForRoles(session.roles, { isSuperAdmin: session.isSuperAdmin, isShippingScoped: session.isShippingScoped });
+  const channel = appChannelFromUserAgent((await headers()).get("user-agent"));
+  const target = landingForChannel(channel, session);
   redirect(target as Route);
 }

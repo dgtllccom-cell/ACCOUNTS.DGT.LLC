@@ -4,6 +4,7 @@ import { evaluateRouteAccess } from "@/lib/navigation/route-policy";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { getCurrentErpSession } from "@/lib/auth/session";
 import { MOBILE_PROFILE_HOME } from "@/lib/permissions/mobile-profiles";
+import { appChannelFromUserAgent, channelAllowsSession } from "@/lib/mobile/app-channel";
 import { supportedLanguages, type SupportedLanguage } from "@/lib/i18n/languages";
 
 function normalizeLanguage(value: string | undefined): SupportedLanguage | null {
@@ -20,6 +21,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const session = await getCurrentErpSession();
   if (!session) {
     redirect("/auth/login");
+  }
+
+  // Store apps: "DGT.llc B" (Business) and "DGT.llc BS" (Business Shipping) share this ERP; a login that belongs to the OTHER app
+  // is told which app to use instead of landing in modules it can never open. (Channel only — permissions are enforced below / by the APIs.)
+  const channel = appChannelFromUserAgent((await headers()).get("user-agent"));
+  if (channel && !channelAllowsSession(channel, session)) {
+    redirect(`/auth/app-access?app=${channel}`);
   }
 
   // A user on a simplified mobile profile never sees the full ERP dashboard —
