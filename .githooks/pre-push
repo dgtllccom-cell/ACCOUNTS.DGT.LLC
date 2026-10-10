@@ -1,0 +1,22 @@
+#!/bin/sh
+# DGT ERP — PRODUCTION GATE.
+# Pushing to `main` deploys to the live server (https://api.dgt.llc follows origin/main; observed 2026-10-10: three pushes were each
+# built on the VPS within ~1 minute). So a push to main is a PRODUCTION DEPLOYMENT and needs the owner's separate approval.
+#
+# Blocked unless the owner approved this exact deployment:   DGT_PROD_PUSH_APPROVED=1 git push origin main
+# Pushes to any other branch are unaffected (work on a feature branch, merge to main only on approval).
+# Remove this gate only on the owner's instruction (delete this file or `git config core.hooksPath ""`).
+zero=0000000000000000000000000000000000000000
+while read -r local_ref local_sha remote_ref remote_sha; do
+  if [ "$remote_ref" = "refs/heads/main" ] || [ "$remote_ref" = "refs/heads/master" ]; then
+    if [ "$DGT_PROD_PUSH_APPROVED" != "1" ]; then
+      echo ""
+      echo "✗ push to $remote_ref blocked: main is PRODUCTION (it auto-deploys)."
+      echo "  Push your work to a branch instead:  git push origin HEAD:refs/heads/<your-branch>"
+      echo "  Owner-approved production deployment: DGT_PROD_PUSH_APPROVED=1 git push origin main"
+      echo "  (see docs/store/production-deployment-plan.md)"
+      exit 1
+    fi
+  fi
+done
+exit 0
