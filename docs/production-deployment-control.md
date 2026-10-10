@@ -29,3 +29,47 @@ On 2026-10-10 the live server moved to a new version three times by itself (05:2
 
 ## What stays untouched
 The live site keeps running throughout; no business data, user, customer, shipping or accounting record is read or changed by any of these steps. Database migrations are never applied by the gate — they remain a separate, reviewed step.
+
+---
+## Status update — 2026-10-10 (owner approved the security preparation; live changes verified first)
+
+### Backup taken and verified before any change (on the VPS, mode 600, never downloaded because it contains `.env`)
+| File | What | Check |
+|---|---|---|
+| `/root/backups/prod-before-security-20261010-133830.dump` | full `public` schema, custom format, 16.6 MB | `pg_restore --list` = 340 table-data entries; full SQL generated without error (340 COPY blocks, 9,770 rows seen in the first tables, exit 0); sha256 `c16ff25a…8295e` |
+| `/root/backups/prod-server-config-20261010-133830.tar.gz` | `/etc/ssh`, `authorized_keys`, nginx, app tree without `node_modules/.next/.git` (incl. `.env`), pm2 dump, cron | gzip integrity OK, 5,531 files; sha256 `9d19f5d4…1b1d` |
+| `/root/backups/authorized_keys.before-hardening` | copy of root's `authorized_keys` | — |
+The older snapshot `B:\accounts.dgt.llc.code_project\prod-backups\prod-full-before-tracking-gt-20261009-192247.dump` still exists on the laptop.
+
+### SSH keys that can log in as root — identified from 28 days of `auth.log` (13 Sep – 10 Oct)
+| Key (fingerprint) | Comment | Logins in 28 days | Attribution |
+|---|---|---|---|
+| `SHA256:Y1NYd1Fl…ke4` (RSA 4096, listed twice) | `dgtll@LAPTOP-MAA3ASID` | **23,136** from 11 networks (office `92.97.54.171` + UAE mobile networks) — including the three deployments of 10 Oct 05:23 / 05:56 / 06:20 | the owner's laptop. **Every program on that laptop shares this key** (Claude, Codex, other IDE agents, deploy scripts) — which is why key clean-up alone cannot stop unapproved deploys |
+| `SHA256:fGk8zllJ…hfV0` (ED25519) | `claude-deploy-20260803` | **0** | created 3 Aug by an AI session; its private key is **not** on this laptop |
+| `SHA256:DxrH6gof…ldg` (ED25519) | `codex-vps-cleanup-temporary` | **0** | created by a Codex session as a temporary key; private key **not** on this laptop |
+No other user can log in (`ubuntu` has no keys). The provider's web console logins (`169.254.0.1`) are a separate path. **Accepted password logins in 28 days: 0** — the 1,802+ password attempts seen came from outside addresses and were all refused.
+**No key was removed.** Because I cannot prove who holds the two unused keys, removal is your decision (see "Needs you" below).
+
+### Applied on the live server today (reversible; the app, database and PM2 were not touched; restarts still 1)
+1. **Deploy gate installed** (`dgt-deploy`, `dgt-approve-deploy`, `/etc/dgt-deploy`). Verified on the live checkout: with no approval → REFUSED; with an approval for the current commit → `--dry-run` passes all checks and changes nothing. The approval file was deleted again afterwards. Audit log: `/var/log/dgt-deploy.log`.
+2. **SSH hardening** (`/etc/ssh/sshd_config.d/00-dgt-hardening.conf`): password login off, keyboard-interactive off, root login by key only. Done with a safety net: a second key login stayed open, an auto-revert timer was armed, a new key login was tested, a password login was shown to be refused, and the **rollback was tested for real** (revert → password login allowed again, key login fine → re-applied). The site stayed up (login page 200 throughout).
+
+### Rollback procedures (tested where marked)
+| Change | How to undo |
+|---|---|
+| SSH hardening (tested) | `dgt-ssh-harden revert` (or delete `/etc/ssh/sshd_config.d/00-dgt-hardening.conf` and `systemctl reload ssh`). If you are ever locked out: provider web console → same command |
+| `authorized_keys` | `cp /root/backups/authorized_keys.before-hardening /root/.ssh/authorized_keys` |
+| Deploy gate | `rm /usr/local/sbin/dgt-deploy /usr/local/sbin/dgt-approve-deploy; rm -r /usr/local/lib/dgt /etc/dgt-deploy` — the old deploy paths are unaffected by the gate until they are closed |
+| App version after a future gated deploy (sandbox-tested) | `dgt-deploy --rollback` (previous build is kept in `.next.rollback`) |
+| Branch switch | `scripts/production/switch-vps-to-production-branch.sh --revert` |
+| Database | restore from the dump above only on your instruction: `pg_restore --clean --if-exists -d "$DATABASE_URL" <dump>` |
+
+### Prepared, NOT done (needs your separate final approval)
+* **Switch the live checkout from `main` to `production`**: `scripts/production/switch-vps-to-production-branch.sh` (dry-run run on the server: live HEAD = origin/production = origin/main = `5d60151`, it would only rename the tracked branch, no rebuild, no restart).
+* Remove the two unused agent keys; GitHub protection of `production`; separate key for agents (see below).
+
+### Needs you
+1. **Approve the branch switch** (one command, reversible).
+2. **Decide the two unused keys** (`claude-deploy-20260803`, `codex-vps-cleanup-temporary`): tell me whether you know their holders; if not, I recommend disabling them (kept in a backup file, restorable).
+3. **GitHub:** protect branch `production` (steps in section "Steps", item 2).
+4. **Stop unattended agents from deploying:** they all use the laptop key. Recommended: create a second key with a **passphrase** for you (kept off this laptop, e.g. another PC/phone), and give the laptop key a restricted role (status/logs/dry-run only). I did not change the laptop key because that could interrupt tools you use today.
