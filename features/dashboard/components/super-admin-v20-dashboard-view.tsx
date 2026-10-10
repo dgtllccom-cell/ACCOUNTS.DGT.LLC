@@ -1,11 +1,10 @@
 "use client";
 
 import React, { useState, useMemo, useCallback } from "react";
-import Link from "next/link";
 import {
   Globe, Building2, Users2, Users, Building, Activity,
   ShoppingCart, ShoppingBag, Wallet, CreditCard, TrendingUp, Coins,
-  ChevronDown, X, SlidersHorizontal, ArrowUpRight, History
+  ChevronDown, X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
@@ -443,56 +442,6 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
           countrySummaries={data.countries}
           monthlyFinancials={data.monthly}
         />
-      </section>
-
-      {/* 6. DAILY OPERATIONS / QUICK ACCESS */}
-      <section className="space-y-2.5">
-        <div className="flex items-center justify-between px-1">
-          <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-            DAILY OPERATIONS
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-5">
-          <Link
-            href="/dashboard/purchases"
-            className="flex items-center justify-between rounded-xl border border-slate-200/90 bg-white p-3 text-xs font-bold text-slate-700 transition hover:border-blue-300 hover:bg-blue-50/50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
-          >
-            <span>{tt("nav.purchases", "Purchases")}</span>
-            <ArrowUpRight className="h-4 w-4 text-slate-400" />
-          </Link>
-          <Link
-            href="/dashboard/sales"
-            className="flex items-center justify-between rounded-xl border border-slate-200/90 bg-white p-3 text-xs font-bold text-slate-700 transition hover:border-blue-300 hover:bg-blue-50/50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
-          >
-            <span>{tt("nav.sales", "Sales")}</span>
-            <ArrowUpRight className="h-4 w-4 text-slate-400" />
-          </Link>
-          <Link
-            href="/dashboard/shipping-clearing"
-            className="flex items-center justify-between rounded-xl border border-slate-200/90 bg-white p-3 text-xs font-bold text-slate-700 transition hover:border-blue-300 hover:bg-blue-50/50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
-          >
-            <span>{tt("nav.shipping_clearing", "Shipping & Clearing")}</span>
-            <ArrowUpRight className="h-4 w-4 text-slate-400" />
-          </Link>
-          <Link
-            href="/dashboard/reports/daybook"
-            className="flex items-center justify-between rounded-xl border border-slate-200/90 bg-white p-3 text-xs font-bold text-slate-700 transition hover:border-blue-300 hover:bg-blue-50/50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
-          >
-            <span>{tt("nav.ledgers", "Ledgers")}</span>
-            <ArrowUpRight className="h-4 w-4 text-slate-400" />
-          </Link>
-          <Link
-            href="/dashboard/super-admin/edit-history"
-            className="flex items-center justify-between rounded-xl border border-blue-200 bg-blue-50/70 p-3 text-xs font-bold text-blue-700 transition hover:bg-blue-100/70 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-300"
-          >
-            <span className="flex items-center gap-1.5">
-              <History className="h-3.5 w-3.5" />
-              <span>Edit History (V21)</span>
-            </span>
-            <ArrowUpRight className="h-4 w-4 text-blue-500" />
-          </Link>
-        </div>
       </section>
     </div>
   );
