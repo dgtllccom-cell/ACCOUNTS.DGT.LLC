@@ -2,14 +2,15 @@
   "appId": "com.dgtllc.bs",
   "appName": "DGT.llc BS",
   "webDir": "mobile-shell",
-  "appendUserAgent": "DGTllc-BS/1",
   "android": {
     "allowMixedContent": false,
-    "captureInput": true
+    "captureInput": true,
+    "appendUserAgent": "DGTllc-BS/1"
   },
   "ios": {
     "contentInset": "always",
-    "limitsNavigationsToAppBoundDomains": false
+    "limitsNavigationsToAppBoundDomains": false,
+    "appendUserAgent": "DGTllc-BS/1"
   },
   "plugins": {
     "SplashScreen": {
