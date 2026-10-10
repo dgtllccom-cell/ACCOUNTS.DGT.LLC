@@ -36,7 +36,6 @@ for (const [key, app] of Object.entries(apps)) {
     appId: app.androidId,
     appName: app.name,
     webDir: "mobile-shell",
-    appendUserAgent: app.userAgent,
     ...base,
     server: {
       url: e.url.replace(/\/$/, "") + app.startPath,
@@ -47,6 +46,9 @@ for (const [key, app] of Object.entries(apps)) {
       ...(e.cleartext ? { cleartext: true } : {}),
     },
   };
+  // the User-Agent tag is a PLATFORM option in Capacitor (top-level appendUserAgent is ignored) — the server reads it to know which store app is calling
+  cfg.android = { ...cfg.android, appendUserAgent: app.userAgent };
+  cfg.ios = { ...cfg.ios, appendUserAgent: app.userAgent };
   write(`mobile/generated/capacitor.${key}.json`, cfg);
   write(`android/app/src/${app.androidFlavor}/assets/capacitor.config.json`, cfg);
   if (key === "b") write("capacitor.config.json", cfg); // what `cap sync` / `cap copy` reads by default

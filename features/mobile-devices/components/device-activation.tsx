@@ -9,6 +9,20 @@ import { useErpScreen } from "@/lib/i18n/use-erp-screen";
 
 type Summary = { status: "none" | "pending" | "approved" | "active" | "rejected" | "revoked"; app?: "b" | "bs"; name?: string; attemptsLeft?: number };
 
+// Defined at module level on purpose: a component declared inside DeviceActivation would get a new identity on every render,
+// remount its inputs and drop focus after each keystroke.
+function Card({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
+  return (
+    <div className="w-full max-w-md space-y-4 rounded-2xl border border-white/15 bg-white/10 p-6 shadow-xl">
+      <div className="flex items-center gap-3">
+        {icon}
+        <h1 className="text-lg font-black">{title}</h1>
+      </div>
+      {children}
+    </div>
+  );
+}
+
 /** First screen of the DGT.llc B / BS store apps: request activation, wait for the Super Admin, type the one-time code, then sign in. */
 export function DeviceActivation() {
   const s = useErpScreen("mdev");
@@ -61,16 +75,6 @@ export function DeviceActivation() {
   const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
   const platform = /android/i.test(ua) ? "android" : /iphone|ipad|ipod/i.test(ua) ? "ios" : "";
   const model = (ua.match(/;\s*([^;)]*?)\s+Build\//)?.[1] ?? "").slice(0, 60);
-
-  const Card = ({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) => (
-    <div className="w-full max-w-md space-y-4 rounded-2xl border border-white/15 bg-white/10 p-6 shadow-xl">
-      <div className="flex items-center gap-3">
-        {icon}
-        <h1 className="text-lg font-black">{title}</h1>
-      </div>
-      {children}
-    </div>
-  );
 
   const needsForm = state.status === "none" || state.status === "rejected" || state.status === "revoked";
 
