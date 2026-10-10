@@ -74,7 +74,7 @@ export function DashboardWidget({ id, children }: { id: WidgetId; children: Reac
   return <>{children}</>;
 }
 
-export function SuperAdminDashboardSettingsPanel() {
+export function SuperAdminDashboardSettingsPanel({ className }: { className?: string } = {}) {
   const { visible, toggle, reset } = useDashboardSettings();
   const [open, setOpen] = useState(false);
   const lang = useActiveLanguage();
@@ -84,7 +84,7 @@ export function SuperAdminDashboardSettingsPanel() {
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-border bg-card px-3 text-xs font-bold text-card-foreground shadow-sm transition hover:bg-muted"
+        className={className || "inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-border bg-card px-3 text-xs font-bold text-card-foreground shadow-sm transition hover:bg-muted"}
       >
         <SlidersHorizontal className="h-4 w-4" />
         {t(lang, "dash.dashboard_settings", "Dashboard Settings")}

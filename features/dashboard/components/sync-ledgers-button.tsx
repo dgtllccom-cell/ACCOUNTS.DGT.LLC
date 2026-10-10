@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
-export function SyncLedgersButton() {
+export function SyncLedgersButton({ className }: { className?: string } = {}) {
   const router = useRouter();
   const lang = useActiveLanguage();
   const [isPending, startTransition] = useTransition();
@@ -30,7 +30,7 @@ export function SyncLedgersButton() {
     <Button
       size="sm"
       variant="default"
-      className="shadow-md shadow-primary/10"
+      className={className || "shadow-md shadow-primary/10"}
       onClick={handleSync}
       disabled={isSyncing}
     >

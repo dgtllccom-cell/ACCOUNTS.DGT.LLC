@@ -197,18 +197,11 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
 
   return (
     <div className="min-h-screen space-y-4 pb-12 text-[#123a61] dark:text-slate-100" dir={rtl ? "rtl" : "ltr"}>
-      {/* 1. TOP BREADCRUMB & TOOLBAR */}
-      <div className="flex flex-wrap items-center justify-between gap-2.5 pt-1 px-1">
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
-          <span>{tt("nav.dashboard", "Dashboard")}</span>
-          <span className="text-slate-300">›</span>
-          <span className="font-bold text-slate-800 dark:text-slate-100">{tt("nav.super_admin_menu", "Super Admin Dashboard")}</span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <SuperAdminDashboardSettingsPanel />
-          <SyncLedgersButton />
-        </div>
+      {/* 1. TOP BREADCRUMB */}
+      <div className="flex items-center gap-1.5 pt-1 px-1 text-xs font-semibold text-slate-500 dark:text-slate-400">
+        <span>{tt("nav.dashboard", "Dashboard")}</span>
+        <span className="text-slate-300">›</span>
+        <span className="font-bold text-slate-800 dark:text-slate-100">{tt("nav.super_admin_menu", "Super Admin Dashboard")}</span>
       </div>
 
       {/* 2. V20 APPROVED MARITIME HERO BANNER */}
@@ -221,27 +214,26 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
             backgroundSize: "cover"
           }}
         >
-          {/* Top Tools: Date Badge & Yellow Business / Admin Dropdown */}
-          <div className="flex items-center justify-end gap-2.5 self-end">
-            <div className="rounded-lg bg-[#f2f7fc]/95 px-3 py-1.5 text-[10.5px] font-extrabold text-[#1a558a] shadow-xs backdrop-blur-xs">
-              {todayStr}
-            </div>
-
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setFlyoutOpen(!flyoutOpen)}
-                aria-expanded={flyoutOpen}
-                className="flex items-center gap-2 rounded-lg border border-[#ffe9a1] bg-gradient-to-r from-[#ffe184] to-[#ffc64b] px-3 py-1.5 text-xs font-extrabold text-[#443418] shadow-md transition hover:from-[#ffe697] hover:to-[#ffd064]"
-              >
-                <span className="grid h-4 w-4 place-items-center rounded bg-white/60 text-[11px]">☷</span>
-                <span className="truncate max-w-[130px] sm:max-w-none">
-                  {appliedCountry !== "all"
-                    ? data.countries.find((c) => c.id === appliedCountry)?.name || "Country Scoped"
-                    : "Business / Admin"}
-                </span>
-                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${flyoutOpen ? "rotate-180" : ""}`} />
-              </button>
+          {/* Top Tools: Action Buttons & Enclosed Date/Time */}
+          <div className="flex flex-col items-end gap-2 self-end z-20">
+            {/* The 3 action buttons in a row */}
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              {/* 1. Business / Admin Scope Flyout */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setFlyoutOpen(!flyoutOpen)}
+                  aria-expanded={flyoutOpen}
+                  className="flex items-center gap-2 rounded-lg border border-[#ffe9a1] bg-gradient-to-r from-[#ffe184] to-[#ffc64b] px-3 py-1.5 text-xs font-extrabold text-[#443418] shadow-md transition hover:from-[#ffe697] hover:to-[#ffd064] cursor-pointer"
+                >
+                  <span className="grid h-4 w-4 place-items-center rounded bg-white/60 text-[11px]">☷</span>
+                  <span className="truncate max-w-[130px] sm:max-w-none">
+                    {appliedCountry !== "all"
+                      ? data.countries.find((c) => c.id === appliedCountry)?.name || "Country Scoped"
+                      : "Business / Admin"}
+                  </span>
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform ${flyoutOpen ? "rotate-180" : ""}`} />
+                </button>
 
               {/* Flyout Dialog */}
               {flyoutOpen && (
@@ -339,7 +331,29 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
                 </div>
               )}
             </div>
+
+            {/* 2. Dashboard Settings Button */}
+            <SuperAdminDashboardSettingsPanel
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200/40 bg-white/95 px-3 py-1.5 text-xs font-extrabold text-slate-800 shadow-sm backdrop-blur-xs transition hover:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-white cursor-pointer"
+            />
+
+            {/* 3. Reloading / Sync Ledgers Button */}
+            <SyncLedgersButton
+              className="inline-flex items-center gap-1.5 rounded-lg border border-blue-400/40 bg-blue-600 px-3 py-1.5 text-xs font-extrabold text-white shadow-sm transition hover:bg-blue-700 cursor-pointer"
+            />
           </div>
+
+          {/* Enclosed Date & Time Badge right below the 3 buttons */}
+          <div className="flex items-center gap-2 rounded-lg border border-white/25 bg-black/40 px-3 py-1 text-[11px] font-bold text-white shadow-inner backdrop-blur-md">
+            <span className="text-[#ffd66a]">📅</span>
+            <span>{todayStr}</span>
+            <span className="text-white/40">•</span>
+            <span className="text-[10px] text-emerald-300 font-semibold tracking-wide flex items-center gap-1">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              Live Sync
+            </span>
+          </div>
+        </div>
 
           {/* Title with yellow vertical accent bar */}
           <div className="mt-4 max-w-xl rounded-r-2xl border-l-[3.5px] border-[#ffd66a] bg-gradient-to-r from-[#01132d]/40 via-[#01132d]/20 to-transparent p-3 sm:p-4 rtl:border-l-0 rtl:border-r-[3.5px] rtl:rounded-r-none rtl:rounded-l-2xl">

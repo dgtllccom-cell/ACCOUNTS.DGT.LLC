@@ -112,6 +112,11 @@ export function ErpPageActions({ children, backLink, title: titleOverride, subti
   // (Rules of Hooks). ErpPageActions renders on every dashboard route, so that crash hit ~every
   // navigation between a report and a non-report page.
   const isReportPage =
+    pathname === "/dashboard" ||
+    pathname === "/dashboard/super-admin" ||
+    pathname?.startsWith("/dashboard/super-admin") ||
+    pathname?.startsWith("/dashboard/admin") ||
+    pathname?.startsWith("/dashboard/agent") ||
     pathname?.startsWith("/dashboard/reports") ||
     pathname?.startsWith("/dashboard/roznamcha/reports") ||
     pathname?.startsWith("/dashboard/ledger") ||
