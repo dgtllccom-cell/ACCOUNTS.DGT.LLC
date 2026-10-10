@@ -1,6 +1,8 @@
 # Production deployment plan — mobile apps support + security fixes (needs the owner's separate final approval)
 
-**Nothing here has been run.** Production (`https://api.dgt.llc`, VPS `72.60.209.121`, `/var/www/dgt-nextjs`, PM2 `dgt-nextjs`) is unchanged since commit `82c5a2a`.
+**IMPORTANT — Production follows `origin/main`.** On 2026-10-10 the VPS moved by itself to `5d60151` (build `IDoVBSSuZQPZIDkMp6GUd`, the V20 Super Admin dashboard commit) within minutes of that commit being pushed by the owner's own tooling; I did not do that deployment. The mobile / device-approval commits (`5a5d14e` … `830f2fc`) are **local and unpushed**. **Do not push `main` (and stop the auto-push tooling) until the migration in Step 0 is applied and you have approved**; a push will deploy automatically.
+
+**Nothing here has been run by me for this plan.** Production (`https://api.dgt.llc`, VPS `72.60.209.121`, `/var/www/dgt-nextjs`, PM2 `dgt-nextjs`) is unchanged since commit `82c5a2a`.
 
 ## What would go live
 **One additive database migration** (`20261232_mobile_device_activation.sql`: two NEW tables `mobile_devices`, `mobile_device_events`; nothing existing is touched) plus code. Apply the migration to Production **before** the code (it is applied to DEV only so far). Commits on `main` after `82c5a2a`:
