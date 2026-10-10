@@ -56,4 +56,57 @@ await png(mark(true, 1024), `${S}/digitic-icon-1024.png`, 1024);
 await png(mark(true, 1024), `${S}/digitic-play-icon-512.png`, 512);
 const feature = `<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="500"><defs><linearGradient id="f" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${NAVY}"/><stop offset="1" stop-color="${BLUE}"/></linearGradient></defs><rect width="1024" height="500" fill="url(#f)"/><g transform="translate(70 90) scale(0.32)">${mark(false).replace(/<\/?svg[^>]*>/g, "")}</g><text x="470" y="255" font-family="Segoe UI, Arial, sans-serif" font-size="110" font-weight="700" fill="#fff">DigiTic</text><text x="474" y="320" font-family="Segoe UI, Arial, sans-serif" font-size="34" fill="#cfe0ff">DGT ERP in your pocket</text></svg>`;
 await png(feature, `${S}/digitic-feature-graphic-1024x500.png`, 1024, 500);
+// ---- the two store apps: "DGT.llc B" (Business) and "DGT.llc BS" (Business Shipping) ---------------------------------------------
+// Android: one product flavor each (android/app/src/<flavor>/res). iOS: AppIcon (B) and AppIcon-BS appiconsets.
+const APPS = [
+  { key: "b", flavor: "business", name: "DGT.llc B", letters: "B", c1: "#1d4ed8", c2: NAVY },
+  { key: "bs", flavor: "shipping", name: "DGT.llc BS", letters: "BS", c1: "#0e7490", c2: NAVY },
+];
+const letterMark = (a, bg, size = 1024, scale = 1) => `
+<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 1024 1024">
+  <defs><linearGradient id="g${a.key}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a.c1}"/><stop offset="1" stop-color="${a.c2}"/></linearGradient></defs>
+  ${bg ? `<rect width="1024" height="1024" fill="url(#g${a.key})"/>` : ""}
+  <g transform="translate(512 512) scale(${scale}) translate(-512 -512)">
+    <text x="512" y="${a.letters.length > 1 ? 590 : 600}" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-weight="800" font-size="${a.letters.length > 1 ? 400 : 520}" fill="#fff">${a.letters}</text>
+    <path d="M300 700Q406 640 512 700T724 700" fill="none" stroke="${TEAL}" stroke-width="36" stroke-linecap="round"/>
+  </g>
+</svg>`;
+const appSplash = (a, w, h) => `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><rect width="${w}" height="${h}" fill="${a.c2}"/><g transform="translate(${(w - Math.min(w, h) * 0.34) / 2} ${(h - Math.min(w, h) * 0.34) / 2}) scale(${(Math.min(w, h) * 0.34) / 1024})">${letterMark(a, true).replace(/<\/?svg[^>]*>/g, "")}</g></svg>`;
+for (const a of APPS) {
+  const FR = `android/app/src/${a.flavor}/res`;
+  for (const [d, sz] of Object.entries(dens)) {
+    await png(letterMark(a, true), `${FR}/mipmap-${d}/ic_launcher.png`, sz);
+    const rnd = `<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024"><defs><clipPath id="c${a.key}"><circle cx="512" cy="512" r="512"/></clipPath></defs><g clip-path="url(#c${a.key})">${letterMark(a, true).replace(/<\/?svg[^>]*>/g, "")}</g></svg>`;
+    await png(rnd, `${FR}/mipmap-${d}/ic_launcher_round.png`, sz);
+    await png(letterMark(a, false, 1024, 0.62), `${FR}/mipmap-${d}/ic_launcher_foreground.png`, fg[d]);
+  }
+  fs.mkdirSync(`${FR}/drawable`, { recursive: true });
+  fs.writeFileSync(`${FR}/drawable/ic_launcher_background.xml`, `<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="${a.c2}" android:pathData="M0,0h108v108h-108z" />
+</vector>
+`);
+  for (const dir of fs.readdirSync(R).filter((x) => /^drawable(-(port|land)-.*)?$/.test(x))) {
+    const p0 = `${R}/${dir}/splash.png`;
+    if (!fs.existsSync(p0)) continue;
+    const m = await sharp(p0).metadata();
+    await png(appSplash(a, m.width, m.height), `${FR}/${dir}/splash.png`, m.width, m.height);
+  }
+  // store graphics per app
+  const SA = `docs/store/assets/${a.key}`;
+  await sharp(Buffer.from(letterMark(a, true))).flatten({ background: a.c2 }).png().toFile((fs.mkdirSync(SA, { recursive: true }), `${SA}/icon-1024.png`));
+  await png(letterMark(a, true), `${SA}/play-icon-512.png`, 512);
+  const feat = `<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="500"><defs><linearGradient id="f${a.key}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a.c2}"/><stop offset="1" stop-color="${a.c1}"/></linearGradient></defs><rect width="1024" height="500" fill="url(#f${a.key})"/><g transform="translate(70 90) scale(0.32)">${letterMark(a, false).replace(/<\/?svg[^>]*>/g, "")}</g><text x="440" y="250" font-family="Segoe UI, Arial, sans-serif" font-size="96" font-weight="700" fill="#fff">${a.name}</text><text x="444" y="318" font-family="Segoe UI, Arial, sans-serif" font-size="34" fill="#cfe0ff">${a.key === "b" ? "Your DGT business ERP" : "Shipping Line &amp; Clearing Agent ERP"}</text></svg>`;
+  await png(feat, `${SA}/feature-graphic-1024x500.png`, 1024, 500);
+}
+// iOS: B uses the default AppIcon set; BS gets its own set (selected with ASSETCATALOG_COMPILER_APPICON_NAME=AppIcon-BS when archiving)
+{
+  const a = APPS[0];
+  await sharp(Buffer.from(letterMark(a, true))).flatten({ background: a.c2 }).png().toFile(`${I}/AppIcon.appiconset/AppIcon-512@2x.png`);
+  const b = APPS[1];
+  fs.mkdirSync(`${I}/AppIcon-BS.appiconset`, { recursive: true });
+  await sharp(Buffer.from(letterMark(b, true))).flatten({ background: b.c2 }).png().toFile(`${I}/AppIcon-BS.appiconset/AppIcon-512@2x.png`);
+  fs.copyFileSync(`${I}/AppIcon.appiconset/Contents.json`, `${I}/AppIcon-BS.appiconset/Contents.json`);
+  for (const f of fs.readdirSync(`${I}/Splash.imageset`).filter((x) => x.endsWith(".png"))) await png(appSplash(a, 2732, 2732), `${I}/Splash.imageset/${f}`, 2732);
+}
 console.log("DigiTic brand assets generated");

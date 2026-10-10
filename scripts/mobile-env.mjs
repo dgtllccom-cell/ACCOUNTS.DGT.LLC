@@ -1,46 +1,49 @@
 #!/usr/bin/env node
 /**
- * DigiTic mobile app — choose which ERP the app talks to. ONE ERP, three separately configured connections:
- *   production (default; the only target a store release may use) → https://api.dgt.llc
- *   eps        → the EPS test server, URL supplied by the developer in DIGITIC_EPS_URL (https only)
- *   local      → the developer's own ERP (http://10.0.2.2:3000 = the PC's localhost:3000 seen from an Android emulator);
- *                plain http is allowed ONLY in debug builds (android/app/src/debug network security config)
+ * DGT.llc mobile apps — which ERP they talk to. TWO store apps ("DGT.llc B" = Business, "DGT.llc BS" = Business Shipping),
+ * ONE ERP (same backend, database, login, permissions). Two connections, kept separate:
+ *   production → https://api.dgt.llc  (EPS Production, live) — the only target a store release may use
+ *   local      → http://10.0.2.2:3000 (the developer PC's localhost:3000 seen from an Android emulator); plain http is accepted
+ *                ONLY by debug builds (android/app/src/debug network security config). Never reachable from a release build.
  *
- *   node scripts/mobile-env.mjs production            writes capacitor.config.json
- *   node scripts/mobile-env.mjs eps|local             developer / tester builds (debug only)
- *   node scripts/mobile-env.mjs production --release  refuses anything but production (used before bundleRelease / archive)
- * then: npx cap sync android   (or: npx cap copy ios on a Mac)
+ *   node scripts/mobile-env.mjs production            writes every app's capacitor.config.json
+ *   node scripts/mobile-env.mjs local                 developer / tester builds (debug only)
+ *   node scripts/mobile-env.mjs production --release  refuses anything but production (run before bundleRelease / iOS archive)
+ * then: npx cap sync android   (iOS, on a Mac: scripts/ios-build-apps.sh)
  */
 import fs from "node:fs";
+import path from "node:path";
 
 const envName = (process.argv[2] || "production").toLowerCase();
 const release = process.argv.includes("--release");
 const envs = JSON.parse(fs.readFileSync("mobile/environments.json", "utf8"));
+const apps = JSON.parse(fs.readFileSync("mobile/apps.json", "utf8"));
 const e = envs[envName];
 if (!e) { console.error(`Unknown environment "${envName}". Use: ${Object.keys(envs).join(", ")}`); process.exit(2); }
 if (release && envName !== "production") { console.error("A store release must be built against production only."); process.exit(2); }
+if (envName === "production" && e.url !== "https://api.dgt.llc") { console.error("production URL is fixed to https://api.dgt.llc"); process.exit(2); }
 
-let url = e.url;
-if (e.urlEnv) {
-  url = process.env[e.urlEnv];
-  if (!url) { console.error(`Set ${e.urlEnv} to the ${envName} ERP URL first.`); process.exit(2); }
+const base = JSON.parse(fs.readFileSync("mobile/capacitor.base.json", "utf8"));
+const write = (file, obj) => { fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, JSON.stringify(obj, null, 2) + "\n"); };
+
+for (const [key, app] of Object.entries(apps)) {
+  const cfg = {
+    appId: app.androidId,
+    appName: app.name,
+    webDir: "mobile-shell",
+    appendUserAgent: app.userAgent,
+    ...base,
+    server: {
+      url: e.url.replace(/\/$/, "") + app.startPath,
+      androidScheme: "https",
+      iosScheme: "https",
+      allowNavigation: e.allowNavigation,
+      errorPath: "offline.html",
+      ...(e.cleartext ? { cleartext: true } : {}),
+    },
+  };
+  write(`mobile/generated/capacitor.${key}.json`, cfg);
+  write(`android/app/src/${app.androidFlavor}/assets/capacitor.config.json`, cfg);
+  if (key === "b") write("capacitor.config.json", cfg); // what `cap sync` / `cap copy` reads by default
 }
-if (e.requireHttps && !/^https:\/\//i.test(url)) { console.error(`${envName} must use https://`); process.exit(2); }
-if (envName === "production" && url !== "https://api.dgt.llc") { console.error("production URL is fixed to https://api.dgt.llc"); process.exit(2); }
-const host = new URL(url).hostname;
-
-const cfg = JSON.parse(fs.readFileSync("capacitor.config.json", "utf8"));
-cfg.appId = "com.dgt.digitic";
-cfg.appName = "DigiTic";
-cfg.webDir = "mobile-shell";
-cfg.server = {
-  url,
-  androidScheme: "https",
-  iosScheme: "https",
-  allowNavigation: e.allowNavigation || [host],
-  errorPath: "offline.html",
-  ...(e.cleartext ? { cleartext: true } : {}),
-};
-cfg.android = { ...cfg.android, allowMixedContent: false, captureInput: true };
-fs.writeFileSync("capacitor.config.json", JSON.stringify(cfg, null, 2) + "\n");
-console.log(`DigiTic → ${envName}: ${url}`);
+console.log(`DGT.llc B + BS → ${envName}: ${e.url}`);

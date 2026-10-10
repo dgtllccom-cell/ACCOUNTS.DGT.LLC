@@ -1,17 +1,8 @@
 {
-	"appId": "com.digitaldock.erp",
-	"appName": "Digital Dock ERP",
+	"appId": "com.dgtllc.b",
+	"appName": "DGT.llc B",
 	"webDir": "mobile-shell",
-	"server": {
-		"url": "https://api.dgt.llc",
-		"androidScheme": "https",
-		"iosScheme": "https",
-		"allowNavigation": [
-			"api.dgt.llc",
-			"*.dgt.llc"
-		],
-		"errorPath": "offline.html"
-	},
+	"appendUserAgent": "DGTllc-B/1",
 	"android": {
 		"allowMixedContent": false,
 		"captureInput": true
@@ -45,5 +36,14 @@
 				"alert"
 			]
 		}
+	},
+	"server": {
+		"url": "https://api.dgt.llc/auth/login",
+		"androidScheme": "https",
+		"iosScheme": "https",
+		"allowNavigation": [
+			"api.dgt.llc"
+		],
+		"errorPath": "offline.html"
 	}
 }

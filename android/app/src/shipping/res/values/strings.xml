@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">DGT.llc BS</string>
+    <string name="title_activity_main">DGT.llc BS</string>
+    <string name="package_name">com.dgtllc.bs</string>
+    <string name="custom_url_scheme">com.dgtllc.bs</string>
+</resources>

@@ -31,6 +31,10 @@ const LANGUAGES: { code: SupportedLanguage; name: string; nativeName: string; fl
   { code: "ps", name: "Pashto", nativeName: "پښتو", flag: "🇦🇫" },
 ];
 
+// The "Preview / Sandbox Mode" drawer lists real-looking account ids (Super Admin, Country Admin …). It must never reach a public
+// login page or a store-review build, so it exists only when a developer sets NEXT_PUBLIC_ENABLE_SANDBOX_LOGIN=true in .env.local.
+const SANDBOX_LOGIN_ENABLED = process.env.NEXT_PUBLIC_ENABLE_SANDBOX_LOGIN === "true";
+
 const DEMO_PRESETS = [
   { presetName: "Super Admin", id: "superadmin@dgt.llc", scopeName: "Global Root" },
   { presetName: "UAE Admin", id: "uae.admin@dgt.llc", scopeName: "Country Admin" },
@@ -333,8 +337,8 @@ export function LoginForm({
         )}
       </div>
 
-      {/* ── 7. Preview / Sandbox Mode Divider ── */}
-      <div className="mt-7 flex items-center gap-3">
+      {/* ── 7. Preview / Sandbox Mode Divider (developer-only, see SANDBOX_LOGIN_ENABLED) ── */}
+      {SANDBOX_LOGIN_ENABLED && (<div className="mt-7 flex items-center gap-3">
         <div className="flex-1 h-px bg-slate-200 dark:bg-slate-800" />
         <button
           type="button"
@@ -344,10 +348,10 @@ export function LoginForm({
           {t.sandboxMode}
         </button>
         <div className="flex-1 h-px bg-slate-200 dark:bg-slate-800" />
-      </div>
+      </div>)}
 
       {/* ── Sandbox Preset Credentials Drawer ── */}
-      {showSandbox && (
+      {SANDBOX_LOGIN_ENABLED && showSandbox && (
         <div className="mt-4 p-3.5 rounded-2xl border border-blue-200/70 bg-blue-50/50 dark:border-blue-900/40 dark:bg-blue-950/20 text-xs animate-in fade-in duration-200">
           <div className="flex items-center justify-between mb-2">
             <span className="font-extrabold text-[11px] text-blue-900 dark:text-blue-300 flex items-center gap-1.5">

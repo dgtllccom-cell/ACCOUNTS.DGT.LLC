@@ -1,5 +1,4 @@
 {
-  "production": { "url": "https://api.dgt.llc", "allowNavigation": ["api.dgt.llc"], "cleartext": false },
-  "eps": { "urlEnv": "DIGITIC_EPS_URL", "requireHttps": true, "cleartext": false },
-  "local": { "url": "http://10.0.2.2:3000", "allowNavigation": ["10.0.2.2", "localhost"], "cleartext": true }
+  "production": { "url": "https://api.dgt.llc", "allowNavigation": ["api.dgt.llc"], "cleartext": false, "note": "EPS Production server (live operations) — the only target a store release may use" },
+  "local": { "url": "http://10.0.2.2:3000", "allowNavigation": ["10.0.2.2", "localhost"], "cleartext": true, "note": "Developer PC (localhost:3000) as seen from an Android emulator; debug builds only" }
 }

@@ -4,7 +4,6 @@ android {
     namespace = "com.digitaldock.erp"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.dgt.digitic"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
@@ -21,6 +20,14 @@ android {
     def ksPath = System.getenv("DIGITIC_KEYSTORE_PROPERTIES")
     def ksProps = new Properties()
     if (ksPath && file(ksPath).exists()) { file(ksPath).withInputStream { ksProps.load(it) } }
+    // Two store apps from ONE code base and ONE ERP: "DGT.llc B" (Business) and "DGT.llc BS" (Business Shipping).
+    // Each flavor has its own applicationId, name (src/<flavor>/res/values/strings.xml), icons and capacitor.config.json
+    // (the web view's User-Agent tag tells the ERP which app is calling — see lib/mobile/app-channel.ts).
+    flavorDimensions "app"
+    productFlavors {
+        business { dimension "app"; applicationId "com.dgtllc.b" }
+        shipping { dimension "app"; applicationId "com.dgtllc.bs" }
+    }
     signingConfigs {
         if (ksProps.getProperty("storeFile")) {
             release {

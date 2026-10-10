@@ -1,0 +1,4 @@
+{
+  "b":  { "name": "DGT.llc B",  "section": "Business", "androidFlavor": "business", "androidId": "com.dgtllc.b",  "iosBundleId": "com.dgtllc.b",  "userAgent": "DGTllc-B/1",  "startPath": "/auth/login" },
+  "bs": { "name": "DGT.llc BS", "section": "Shipping Line & Clearing Agent", "androidFlavor": "shipping", "androidId": "com.dgtllc.bs", "iosBundleId": "com.dgtllc.bs", "userAgent": "DGTllc-BS/1", "startPath": "/auth/login" }
+}
