@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+[ -n "$DGT_ALLOW_LEGACY_DEPLOY" ] || { echo "DISABLED: this script can change the LIVE server. Production is deployed only through the controlled gate (scripts/production/dgt-deploy-gate.sh) from the protected 'production' branch, with the owner's approval. See docs/production-deployment-control.md. (Owner-approved legacy use: set DGT_ALLOW_LEGACY_DEPLOY=1.)" >&2; exit 1; }
 # Production deploy for the Digital Dock ERP VPS (72.60.209.121:/var/www/dgt-nextjs).
 #
 # Goal: cut the "502 Bad Gateway" + "ChunkLoadError / 404 _next/static" window that
