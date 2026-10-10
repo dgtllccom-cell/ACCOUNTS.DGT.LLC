@@ -3,12 +3,13 @@
 **Nothing here has been run.** Production (`https://api.dgt.llc`, VPS `72.60.209.121`, `/var/www/dgt-nextjs`, PM2 `dgt-nextjs`) is unchanged since commit `82c5a2a`.
 
 ## What would go live
-Code only — **no database migration**. Commits on `main` after `82c5a2a`:
+**One additive database migration** (`20261232_mobile_device_activation.sql`: two NEW tables `mobile_devices`, `mobile_device_events`; nothing existing is touched) plus code. Apply the migration to Production **before** the code (it is applied to DEV only so far). Commits on `main` after `82c5a2a`:
 | Commit | What | Risk |
 |---|---|---|
 | `5fdc4af`, mobile commits | Android shell config files (not used by the web server) | none for the web |
 | mobile-app commit (`5a5d14e` and later) | app-channel guard (only active when the User-Agent carries `DGTllc-B/` or `DGTllc-BS/`), `/auth/app-access`, public `/legal/privacy`, middleware `/legal` public path, login "Sandbox" drawer removed unless `NEXT_PUBLIC_ENABLE_SANDBOX_LOGIN=true`, install-banner hidden inside the store apps, table-token guard improvement | low; plain browsers behave as before except the removed sandbox drawer |
 | `82378db`, `5d60151`, `8950cb7` | **made by another session / the auto-commit bot, not reviewed by me**: ledger-lp workflow, Super Admin V20 dashboard, V21 edit-history | unknown — owner must confirm these are approved before they ship |
+| mobile device approval system (`lib/mobile/device-service.ts`, `/api/erp/auth/device/*`, `/api/erp/mobile-devices/*`, `/auth/device`, Super Admin page Mobile Devices) | active **only** for requests carrying the store-app User-Agent tag; plain browsers and the web ERP are unchanged. Per-request session check adds one cached DB lookup for tagged requests | low; DEV e2e 35/35 |
 | purchase/sales wizard fixes | undefined-name crashes fixed | low |
 
 `git pull --ff-only` on the VPS takes **everything on main up to HEAD**. If only part should ship, the owner chooses the commit to deploy (`git checkout <sha>` is not used; instead hold the other work on a branch first).
@@ -22,6 +23,9 @@ Code only — **no database migration**. Commits on `main` after `82c5a2a`:
 1. `npx tsc --noEmit` clean for touched files; `npm run i18n:guard`; `npm run build` exit 0.
 2. `BASE=http://localhost:3260 node scripts/e2e-app-channel.mjs` → 12/12; `node scripts/e2e-shipment-tracking.mjs` → 67/67.
 3. Mobile/tablet sweep of the 191 menu routes (see report) — all failures fixed or listed.
+
+## Step 0 — apply the migration (after the backup in step 1)
+Use the Supabase migration tool on project `inmayhrxucimxqhgseqi` with the contents of `supabase/migrations/20261232_mobile_device_activation.sql`; verify with `select count(*) from mobile_devices` (0 rows). Production gets no test devices — the first real device is the owner's own.
 
 ## Step 1 — backup (read-only, takes ~1 minute)
 ```

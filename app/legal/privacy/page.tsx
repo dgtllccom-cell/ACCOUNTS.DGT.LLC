@@ -22,7 +22,7 @@ export default async function PrivacyPolicyPage() {
       <h1 className="text-2xl font-black">{T("title", "Privacy Policy — DGT.llc B and DGT.llc BS")}</h1>
       <p className="mt-1 text-sm text-slate-500">{T("updated", "Last updated")}: <span dir="ltr">{UPDATED}</span></p>
       <div className="mt-6 space-y-5 text-sm leading-relaxed">
-        <Section h={T("s1_h", "Who we are")}><p>{T("s1_b", "DGT.llc B (Business) and DGT.llc BS (Business Shipping) are the mobile apps of the DGT ERP operated by Digital Dock Group LLC (“DGT”). They are used by staff, shipping-line and clearing-agent users and customers whose accounts were issued by DGT. There is no public sign-up.")}</p></Section>
+        <Section h={T("s1_h", "Who we are")}><p>{T("s1_b", "DGT.llc B (Business) and DGT.llc BS (Business Shipping) are the mobile apps of the DGT ERP operated by DAMAAN GENERAL TRADING LLC (“DGT”). They are used by staff, shipping-line and clearing-agent users and customers whose accounts were issued by DGT. There is no public sign-up.")}</p></Section>
         <Section h={T("s2_h", "What the apps do with data")}><p>{T("s2_b", "The apps display the DGT ERP over a secure HTTPS connection. Business records stay on DGT’s servers; the apps do not keep a copy on your device other than normal temporary web-view caching and your sign-in session.")}</p></Section>
         <Section h={T("s3_h", "Information we process")}>
           <ul className="list-disc ps-5">

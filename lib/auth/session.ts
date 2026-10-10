@@ -671,7 +671,35 @@ async function resolveErpSessionFromDb(
   };
 }
 
+/**
+ * The session for this request. Inside the DGT.llc B / BS store apps (tagged User-Agent) it is only returned when the device
+ * itself is approved + activated and the signed-in user is the one the device is bound to — revoking a device ends access on the
+ * next request. Plain browsers are unaffected.
+ */
 export async function getCurrentErpSession(): Promise<ErpSession | null> {
+  const session = await getCurrentErpSessionUnchecked();
+  if (!session) return session;
+  let channel: import("@/lib/mobile/app-channel").AppChannel | null = null;
+  let token: string | undefined;
+  try {
+    const { headers, cookies } = await import("next/headers");
+    const { appChannelFromUserAgent } = await import("@/lib/mobile/app-channel");
+    channel = appChannelFromUserAgent((await headers()).get("user-agent"));
+    token = (await cookies()).get((await import("@/lib/mobile/device-service")).DEVICE_COOKIE)?.value;
+  } catch {
+    return session; // outside a request scope (scripts / background jobs): there is no device to check
+  }
+  if (!channel) return session;
+  try {
+    const { checkDeviceForUser } = await import("@/lib/mobile/device-service");
+    const check = await checkDeviceForUser({ app: channel, token, userId: session.userId });
+    return check.ok ? session : null;
+  } catch {
+    return null; // inside a store app, anything we cannot verify is a denial
+  }
+}
+
+async function getCurrentErpSessionUnchecked(): Promise<ErpSession | null> {
   try {
     // ── Custom login path (POST /api/erp/auth/login → signed temp-session JWT) ──
     const temp = await readTempSession();

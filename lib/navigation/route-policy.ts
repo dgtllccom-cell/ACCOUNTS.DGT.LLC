@@ -39,6 +39,7 @@ const BASE_ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/dashboard/new-entry/accounts/general-report": ["accounts:read", "accounts.reports", "reports:read", "route:/dashboard/new-entry/accounts/general-report"],
   "/dashboard/new-entry": ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "business_super_admin", "shipping_super_admin", "shipping_line_admin", "route:/dashboard/new-entry"],
   "/dashboard/business-edit-invoice": ["transactions:update", "purchases:update", "route:/dashboard/business-edit-invoice"],
+  "/dashboard/super-admin/mobile-devices": ["super_admin", "route:/dashboard/super-admin/mobile-devices"],
   "/dashboard/super-admin/edit-history": ["transactions:read", "audit_logs:read", "super_admin", "route:/dashboard/super-admin/edit-history"],
   "/dashboard/super-admin/deleted-records": ["transactions:read", "audit_logs:read", "super_admin", "country_admin", "route:/dashboard/super-admin/deleted-records"],
   "/dashboard/ledger/detailed": ["ledgers:read", "route:/dashboard/ledger/detailed"],

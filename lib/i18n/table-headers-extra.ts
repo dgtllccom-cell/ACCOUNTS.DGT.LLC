@@ -10,6 +10,7 @@ type Row = { ur: string; ar: string; fa: string; ps: string };
 const r = (ur: string, ar: string, fa: string, ps: string): Row => ({ ur, ar, fa, ps });
 
 export const HEADER_EXTRA: Record<string, Row> = {
+  "MOBILE DEVICES": r("موبائل ڈیوائسز", "الأجهزة المحمولة", "دستگاه‌های موبایل", "موبایل وسایل"),
   // accounts / finance
   "OPENING DEBIT": r("ابتدائی ڈیبٹ", "مدين افتتاحي", "بدهکار افتتاحیه", "پیل ډیبیټ"),
   "OPENING CREDIT": r("ابتدائی کریڈٹ", "دائن افتتاحي", "بستانکار افتتاحیه", "پیل کریډیټ"),

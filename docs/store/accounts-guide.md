@@ -1,7 +1,7 @@
 # Creating the three store accounts (company-owned)
 
 All three need the SAME company facts — prepare them once:
-* Legal company name **exactly** as on the trade licence (e.g. "Digital Dock Group LLC") and registered address
+* Legal company name **exactly** as on the trade licence (e.g. "DAMAAN GENERAL TRADING LLC") and registered address
 * **D-U-N-S number** of that legal entity (free from Dun & Bradstreet; can take days to ~30 days). Check first if one already exists: https://www.dnb.com/duns-number/lookup.html and Apple's own lookup https://developer.apple.com/enroll/duns-lookup/
 * Trade licence / certificate of incorporation (PDF), passport or Emirates ID of the person who will own the account (must have authority to bind the company)
 * A **company-domain e-mail** (not Gmail/Yahoo), a company **phone**, and a public company **website**

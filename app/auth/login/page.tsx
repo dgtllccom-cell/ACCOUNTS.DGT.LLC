@@ -5,9 +5,20 @@ import { AuthPortalShell } from "@/features/auth/components/auth-portal-shell";
 import { LoginScopeProvider } from "@/features/auth/components/login-scope-context";
 import { LoginShowcasePanel } from "@/features/auth/components/login-showcase-panel";
 import { t } from "@/lib/i18n/ui";
+import { cookies, headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { appChannelFromUserAgent } from "@/lib/mobile/app-channel";
+import { DEVICE_COOKIE, checkDeviceForUser } from "@/lib/mobile/device-service";
 
 export async function generateMetadata() {
   const lang = await getRequestLanguage();
+
+  // Store apps: the login screen is only for a device the Super Admin approved and the user activated.
+  const appChannel = appChannelFromUserAgent((await headers()).get("user-agent"));
+  if (appChannel) {
+    const dev = await checkDeviceForUser({ app: appChannel, token: (await cookies()).get(DEVICE_COOKIE)?.value, userId: null }).catch(() => ({ ok: false as const }));
+    if (!dev.ok) redirect("/auth/device");
+  }
   return {
     title: t(lang, "login.meta_title", "ERP Access Portal | Damaan Business Group"),
     description: t(lang, "login.meta_description", "Secure Enterprise Login Portal for Damaan Business Group (DGT.LLC)."),

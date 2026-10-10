@@ -10,6 +10,8 @@ import { normalizeUserCode } from "@/lib/services/user-identity-service";
 import { setTempSuperAdminSession, setDirectUserSession } from "@/lib/auth/temp-session";
 
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { appChannelFromUserAgent } from "@/lib/mobile/app-channel";
+import { DEVICE_COOKIE, checkDeviceForUser, recordLoginBlocked, verifyDeviceToken } from "@/lib/mobile/device-service";
 
 function toEnterpriseRole(role: string): EnterpriseRole {
   if (role === "staff") return "staff_user";
@@ -107,6 +109,18 @@ export async function POST(request: NextRequest) {
       const form = await request.formData().catch(() => new FormData());
       rawIdentifier = String(form.get("identifier") ?? form.get("email") ?? form.get("user_id") ?? "").trim();
       rawPassword = String(form.get("password") ?? "").trim();
+    }
+
+    // Store apps (DGT.llc B / BS): no ERP login unless THIS device was approved by the Super Admin, activated with its one-time code,
+    // and the account being signed in is the one the device was approved for.
+    const appChannel = appChannelFromUserAgent(request.headers.get("user-agent"));
+    if (appChannel) {
+      const token = request.cookies.get(DEVICE_COOKIE)?.value;
+      const dev = await checkDeviceForUser({ app: appChannel, token, userId: null, identifier: rawIdentifier });
+      if (!dev.ok) {
+        await recordLoginBlocked(verifyDeviceToken(token), dev.reason, (request.headers.get("x-forwarded-for") ?? "").split(",")[0].trim() || null);
+        return NextResponse.json({ ok: false, error: { code: "DEVICE_NOT_ACTIVATED", message: dev.reason === "wrong_user" ? "This device was approved for a different account." : "This device is not activated. Request activation from the administrator." } }, { status: 403 });
+      }
     }
 
     const getRedirectBase = () => {

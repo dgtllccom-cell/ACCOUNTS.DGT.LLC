@@ -69,6 +69,7 @@ import {
   Scale,
   Settings,
   ShieldAlert,
+  Smartphone,
   ShieldCheck,
   Ship,
   ShoppingCart,
@@ -497,6 +498,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
           { label: nt("Compliance & Audit Monitoring"), href: "/dashboard/audit-monitoring", icon: ShieldAlert },
           { label: nt("All Edit / Version History"), href: "/dashboard/super-admin/edit-history?view=all", icon: History, roles: ["super_admin"] },
           { label: nt("Deleted Entries Audit"), href: "/dashboard/super-admin/deleted-records?view=all", icon: Trash2, roles: ["super_admin"] },
+          { label: nt("Mobile Devices"), href: "/dashboard/super-admin/mobile-devices", icon: Smartphone, roles: ["super_admin"] },
         ],
       },
       {
