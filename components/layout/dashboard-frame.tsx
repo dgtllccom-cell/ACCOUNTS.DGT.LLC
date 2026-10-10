@@ -367,15 +367,23 @@ export function DashboardFrame({
     const home = dashboardForRoles(roleList, { isSuperAdmin: isSuper });
     const routeOk = (href: string) =>
       isSuper || Boolean(permissions?.length && evaluateRouteAccess({ pathname: href, permissions, roles, operationalDomains, canViewFinancials }).allowed);
-    const manager = isUserManager({ isSuperAdmin: isSuper, roles: roleList, countryIds: [], countryBranchIds: [], cityBranchIds: [] });
-    const items = [
-      { key: "home", href: home, icon: Home, label: t(lang, "nav.dashboard", "Dashboard"), active: pathname === "/dashboard" || pathname === home, show: true },
-      { key: "users", href: "/dashboard/users", icon: Users, label: t(lang, "nav.users", "Users"), active: pathname.startsWith("/dashboard/users"), show: manager && routeOk("/dashboard/users") },
-      { key: "ledgers", href: "/dashboard/ledger/detailed", icon: FileSpreadsheet, label: t(lang, "nav.ledgers", "Ledgers"), active: pathname.startsWith("/dashboard/ledger"), show: routeOk("/dashboard/ledger/detailed") },
-      { key: "settings", href: "/dashboard/settings/profile", icon: Settings, label: t(lang, "nav.settings", "Settings"), active: pathname.startsWith("/dashboard/settings"), show: true },
+    const items: Array<{
+      key: string;
+      href?: string;
+      icon: typeof Home;
+      label: string;
+      active: boolean;
+      show: boolean;
+      isDrawerTrigger?: boolean;
+    }> = [
+      { key: "home", href: home, icon: LayoutDashboard, label: t(lang, "nav.dashboard", "Dashboard"), active: pathname === "/dashboard" || pathname === home, show: true },
+      { key: "customers", href: "/dashboard/customers", icon: Users, label: t(lang, "dash.total_customers", "Customers"), active: pathname.startsWith("/dashboard/customers"), show: routeOk("/dashboard/customers") },
+      { key: "shipping", href: "/dashboard/shipping-clearing", icon: Truck, label: t(lang, "nav.shipping_clearing", "Shipments"), active: pathname.startsWith("/dashboard/shipping"), show: routeOk("/dashboard/shipping-clearing") },
+      { key: "ledgers", href: "/dashboard/ledger/detailed", icon: Coins, label: t(lang, "nav.ledgers", "Finance"), active: pathname.startsWith("/dashboard/ledger"), show: routeOk("/dashboard/ledger/detailed") },
+      { key: "menu", icon: Menu, label: t(lang, "nav.open_navigation", "Menu"), active: mobileOpen || drawerOpen, show: true, isDrawerTrigger: true },
     ];
     return items.filter((i) => i.show);
-  }, [roles, permissions, operationalDomains, canViewFinancials, pathname, lang]);
+  }, [roles, permissions, operationalDomains, canViewFinancials, pathname, lang, mobileOpen, drawerOpen]);
 
   const roleLabel = useMemo(() => {
     if (!roles || roles.length === 0) return null;
@@ -820,15 +828,32 @@ export function DashboardFrame({
 
         {/* Mobile bottom navigation (phones / tablets). Every entry passes the same route policy as the sidebar and the
             server gate, so it never offers a page the login would be refused; Dashboard goes to the login's OWN home. */}
-        <nav className="fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-border/80 px-4 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] flex items-center justify-around lg:hidden shadow-lg">
+        <nav className="fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-border/80 px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] flex items-center justify-around lg:hidden shadow-lg">
           {mobileNavItems.map((item) => {
             const Icon = item.icon;
+            if (item.isDrawerTrigger) {
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => setMobileOpen((prev) => !prev)}
+                  className={cn(
+                    "flex min-h-11 min-w-12 flex-col items-center justify-center gap-1 text-[10px] font-bold transition-colors",
+                    item.active ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground hover:text-foreground"
+                  )}
+                  aria-label={item.label}
+                >
+                  <Icon className="h-5 w-5" />
+                  <span>{item.label}</span>
+                </button>
+              );
+            }
             return (
               <Link
                 key={item.key}
                 href={item.href as never}
                 className={cn(
-                  "flex min-h-11 min-w-14 flex-col items-center justify-center gap-1 text-[10px] font-bold transition-colors",
+                  "flex min-h-11 min-w-12 flex-col items-center justify-center gap-1 text-[10px] font-bold transition-colors",
                   item.active ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground hover:text-foreground"
                 )}
               >

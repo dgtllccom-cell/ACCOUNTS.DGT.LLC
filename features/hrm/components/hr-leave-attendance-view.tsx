@@ -358,7 +358,7 @@ export function HrLeaveAttendanceView({ lang }: { lang?: string }) {
                   ) : (
                     filtered.map((r) => (
                       <tr key={r.id} data-testid="att-row" data-status={r.status} className="border-t border-slate-100 dark:border-slate-800">
-                        <td className="px-3 py-2 font-mono font-semibold">{r.code}</td>
+                        <td className="px-3 py-2 font-mono font-semibold whitespace-nowrap">{r.code}</td>
                         <td className="px-3 py-2 font-semibold text-slate-900 dark:text-slate-100">{r.name}</td>
                         <td className="px-3 py-2">{r.department}</td>
                         <td className="px-3 py-2">{r.branch}</td>

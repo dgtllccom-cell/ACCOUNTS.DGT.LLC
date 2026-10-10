@@ -520,7 +520,7 @@ export function TransferHandoverCenter({ lang: langProp }: { lang?: string | nul
                     )}
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="flex items-center gap-1.5 text-xs font-black text-slate-900 dark:text-slate-100">
+                      <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap text-xs font-black text-slate-900 dark:text-slate-100">
                         <Icon className="h-3.5 w-3.5 text-blue-600" /> {it.transfer_no}
                       </span>
                       <Badge variant={statusBadgeVariant(it.status)} className="text-[9px] capitalize">

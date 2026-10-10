@@ -598,7 +598,7 @@ export function AccountSetupReport({
                 type="date"
                 value={dateFrom}
                 onChange={(e) => setDateFrom(e.target.value)}
-                className="bg-transparent outline-none w-[8.5rem] min-w-0 text-xs font-medium cursor-pointer text-slate-700 dark:text-slate-200"
+                className="bg-transparent outline-none w-[8.25rem] shrink-0 text-xs font-medium cursor-pointer text-slate-700 dark:text-slate-200"
                 title={tr("From Date")}
               />
               <span className="text-slate-400 font-bold">–</span>
@@ -606,7 +606,7 @@ export function AccountSetupReport({
                 type="date"
                 value={dateTo}
                 onChange={(e) => setDateTo(e.target.value)}
-                className="bg-transparent outline-none w-[8.5rem] min-w-0 text-xs font-medium cursor-pointer text-slate-700 dark:text-slate-200"
+                className="bg-transparent outline-none w-[8.25rem] shrink-0 text-xs font-medium cursor-pointer text-slate-700 dark:text-slate-200"
                 title={tr("To Date")}
               />
               {(dateFrom || dateTo) && (

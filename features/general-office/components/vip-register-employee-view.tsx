@@ -744,12 +744,12 @@ export function VipRegisterEmployeeView() {
                       </td>
 
                       {/* Number */}
-                      <td className="py-3.5 px-3 text-slate-400 font-mono text-[11px]">
+                      <td className="py-3.5 px-3 text-slate-400 font-mono text-[11px] whitespace-nowrap">
                         {(currentPage - 1) * pageSize + idx + 1}
                       </td>
 
                       {/* Employee Code */}
-                      <td className="py-3.5 px-3 font-mono font-bold text-slate-700 dark:text-slate-300">
+                      <td className="py-3.5 px-3 font-mono font-bold whitespace-nowrap text-slate-700 dark:text-slate-300">
                         {emp.empCode}
                       </td>
 

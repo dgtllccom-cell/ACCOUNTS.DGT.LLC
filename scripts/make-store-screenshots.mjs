@@ -1,6 +1,8 @@
 /**
  * Store screenshots for DGT.llc B and DGT.llc BS — real screens of the ERP on a DEV server (never Production), exact store pixel sizes.
  *   BASE=http://localhost:3250 node scripts/make-store-screenshots.mjs [lang]      (DEV server with ALLOW_DEV_SESSION=true)
+
+ * Screens are chosen to show counts and structure only: no customer/company names, no test records, no money figures.
  * Output: docs/store/screenshots/<app>/<size>/<n>-<name>.png
  */
 import fs from "node:fs";
@@ -24,10 +26,10 @@ const APPS = {
   ],
   bs: [
     ["shipment-tracking", "/dashboard/shipping-line/tracking"],
-    ["bl-entry", "/dashboard/shipping-line/bl-entry"],
-    ["clearing-workspace", "/dashboard/clearing-agent/clearing-workspace"],
-    ["customer-orders", "/dashboard/clearing-agent/customer-order"],
-    ["tracking-reports", "/dashboard/shipping-line/shipment-report"],
+    ["shipping-dashboard", "/dashboard/shipping-line"],
+    ["handover-inbox", "/dashboard/shipping-line/handover-inbox"],
+    ["clearing-dashboard", "/dashboard/clearing-agent"],
+    ["shipment-report", "/dashboard/shipping-line/shipment-report"],
   ],
 };
 const r = await fetch(BASE + "/api/erp/auth/dev-session", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ role: "super_admin" }) });
@@ -52,6 +54,7 @@ for (const [size, S] of Object.entries(SIZES)) {
         for (let i = 0; i < 20; i++) { const spin = await page.evaluate(() => !![...document.querySelectorAll("[data-erp-content] .animate-spin")].find((e) => e.getBoundingClientRect().width > 14)).catch(() => false); if (!spin) break; await page.waitForTimeout(2000); }
         await page.addStyleTag({ content: "[data-dgt-connect]{display:none!important}" }).catch(() => {});
         await page.evaluate(() => { const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT); const hits = []; while (w.nextNode()) { if (/^\s*0{8}-0{3}/.test(w.currentNode.nodeValue || "")) hits.push(w.currentNode); } hits.forEach((n) => { n.nodeValue = "—"; }); }).catch(() => {});
+        await page.evaluate(() => { document.querySelectorAll("tr, li, [role=row]").forEach((el) => { if (/RBAC-TEST|(^|[^a-z])(test|demo|dummy)([^a-z]|$)/i.test(el.textContent || "")) el.style.display = "none"; }); }).catch(() => {});
         await page.waitForTimeout(2500);
         await page.screenshot({ path: `${dir}/${n}-${name}.png` });
         console.log("ok", dir, name);

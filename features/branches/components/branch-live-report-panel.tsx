@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { ClipboardList, Check, X, ShieldAlert, Building2, User2, MapPin } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { BranchReportData } from "@/lib/reports/open-a4-report-window";
@@ -99,9 +99,18 @@ export function BranchLiveReportPanel({
   const rv = (value: string | null | undefined, prefix: string = "") => renderValue(value, prefix, notConfiguredLabel);
   const hasLiveReport = Boolean(branchData);
 
-  const now = new Date();
-  const stampDate = now.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
-  const stampTime = now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
+  // The "generated" stamp is client-only: rendering new Date() during SSR makes the server HTML differ from the first client render
+  // (React hydration error #418). It is filled in after mount instead.
+  const [stamp, setStamp] = useState<{ date: string; time: string } | null>(null);
+  useEffect(() => {
+    const now = new Date();
+    setStamp({
+      date: now.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
+      time: now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })
+    });
+  }, []);
+  const stampDate = stamp?.date ?? "";
+  const stampTime = stamp?.time ?? "";
 
   if (hasLiveReport && branchData) {
     const b = branchData;
