@@ -44,7 +44,14 @@ const measure = () => {
     .slice(0, 6).map((el) => `${el.tagName.toLowerCase()}:${(el.textContent || el.placeholder || el.name || "").trim().slice(0, 24)}`);
   // a single word / code broken across lines (letter-by-letter wrapping) — wrapping BETWEEN words is normal and not flagged
   const stacks = [...document.querySelectorAll("[data-erp-content] *")]
-    .filter((el) => { if (el.children.length) return false; const t = (el.textContent || "").trim(); if (t.length < 6 || t.length > 60 || /\s/.test(t) || !vis(el)) return false; const cs = getComputedStyle(el); const pad = (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0) + (parseFloat(cs.borderTopWidth) || 0) + (parseFloat(cs.borderBottomWidth) || 0); const lh = parseFloat(cs.lineHeight) || (parseFloat(cs.fontSize) || 14) * 1.25; return el.getBoundingClientRect().height - pad > lh * 2.2; })
+    .filter((el) => {
+      if (el.children.length) return false; const t = (el.textContent || "").trim();
+      if (t.length < 6 || t.length > 60 || /\s/.test(t) || !vis(el)) return false;
+      // count the real LINES the text occupies (a tall table cell next to a wrapping neighbour is not a stacked word)
+      const rg = document.createRange(); rg.selectNodeContents(el);
+      const tops = new Set([...rg.getClientRects()].filter((r) => r.width > 0).map((r) => Math.round(r.top / 4)));
+      return tops.size >= 3;
+    })
     .map((el) => el.textContent.trim().slice(0, 24)).slice(0, 5);
   const tables = [...document.querySelectorAll("table")].filter(vis);
   const nav = document.querySelector("nav.fixed.bottom-0"), fab = document.querySelector("[data-dgt-connect] button");
