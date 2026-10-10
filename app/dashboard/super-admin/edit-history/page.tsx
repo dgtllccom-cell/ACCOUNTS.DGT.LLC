@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentErpSession } from "@/lib/auth/session";
-import { AllEditVersionHistoryView } from "@/features/audit/components/all-edit-version-history-view";
+import { EditHistoryV21LocalView } from "@/features/audit/components/edit-history-v21-local-view";
 
 export const metadata: Metadata = {
   title: "All Edit & Version History",
@@ -12,5 +12,5 @@ export default async function SuperAdminEditHistoryPage() {
   const session = await getCurrentErpSession();
   if (!session) redirect("/auth/login?redirectTo=/dashboard/super-admin/edit-history");
   if (!session.isSuperAdmin) redirect("/dashboard");
-  return <AllEditVersionHistoryView />;
+  return <EditHistoryV21LocalView />;
 }
