@@ -1,47 +1,38 @@
-# DGT ERP — install on iPhone, Android and tablets
+# DGT ERP on phones and tablets — DGT.llc B and DGT.llc BS
 
-There is ONE ERP. Every phone, tablet and PC uses the same website (`https://api.dgt.llc`), the same login, the same
-permissions and the same database. Installing the app only puts an icon on the device; it never copies business data to it.
-Updates reach every device the moment the ERP is deployed — nobody downloads anything again.
+There is ONE ERP. Both store apps, the web site and the installable web app use the same server (`https://api.dgt.llc`, EPS Production),
+the same login, the same permissions and the same database. Installing an app only puts an icon on the device; business data stays on the server.
 
-## iPhone / iPad (installable web app — no App Store needed)
+| App | For | Android id | iOS bundle id |
+|---|---|---|---|
+| **DGT.llc B** | Business users | `com.dgtllc.b` | `com.dgtllc.b` |
+| **DGT.llc BS** | Shipping Line and Clearing Agent users | `com.dgtllc.bs` | `com.dgtllc.bs` |
 
-1. Open **Safari** (it must be Safari, not Chrome) and go to `https://api.dgt.llc`.
-2. Sign in once.
-3. Tap the **Share** button (square with an arrow) → **Add to Home Screen** → **Add**.
-4. Open the "DGT Group" icon from the Home Screen. It opens full-screen like an app and stays signed in until you sign out.
-5. Language and RTL follow the ERP language you choose in Settings.
+A login opened in the wrong app is shown a short notice (in the user's language) saying which app to use. Super Admin and logins with
+both domains may use either app. What a login can see is always decided by its role, permissions and country/branch — never by the app.
+
+## iPhone / iPad now — installable web app (no App Store needed)
+1. Open **Safari** and go to `https://api.dgt.llc`, sign in once.
+2. **Share** → **Add to Home Screen** → **Add**. Open the "DGT Group" icon: full-screen, stays signed in.
+(The store apps for iPhone need a Mac + Apple Developer account: see `docs/store/README.md`.)
 
 ## Android phones and tablets (Samsung and others)
+* **Test build:** copy `DGTllc-B-debug.apk` or `DGTllc-BS-debug.apk` to the phone, open it, allow "Install unknown apps" if asked. Debug-signed, for testing only.
+* **Store build:** signed bundles `DGTllc-B-release.aab` / `DGTllc-BS-release.aab` are uploaded to Google Play and Samsung Galaxy Store by the company account.
+* Or install the web app: Chrome → `https://api.dgt.llc` → ⋮ → **Install app**.
+* No internet → a short offline page (English / Urdu / Arabic / Persian / Pashto) with Retry.
 
-Option A — install the web app: open `https://api.dgt.llc` in Chrome → ⋮ menu → **Install app**.
-
-Option B — install the test APK (`DGT-ERP-debug-….apk`, package `com.digitaldock.erp`):
-1. Copy the APK to the phone and open it. Allow "Install unknown apps" for the app you opened it from, if asked.
-2. Open **Digital Dock ERP**. It loads the live ERP login page; sign in with your normal ERP account.
-3. If the phone has no internet the app shows a short offline page with a Retry button (English / Urdu / Arabic / Persian / Pashto).
-
-The APK is a *debug-signed test build*. A store (Google Play) release needs your own signing key — see below.
-
-## iPhone app for TestFlight / App Store (needs a Mac)
-
-The Xcode project already exists in `ios/`. It cannot be built on Windows. When a Mac with Xcode and an Apple Developer
-account are available:
-
-```bash
-npm install
-npx cap sync ios        # on the Mac (installs the iOS plugins)
-npx cap open ios        # Xcode: set Team, Bundle ID com.digitaldock.erp, add Push Notifications capability
-# Product → Archive → Distribute App → App Store Connect → TestFlight
+## For developers
 ```
+node scripts/mobile-env.mjs production --release     # EPS Production, https only (the only target a store build may use)
+node scripts/mobile-env.mjs local                    # developer PC localhost:3000 → debug builds only
+npx cap sync android
+set JAVA_HOME=...  set ANDROID_HOME=...  set DIGITIC_KEYSTORE_PROPERTIES=<keystore.properties outside the repo>
+cd android && gradlew assembleBusinessDebug assembleShippingDebug bundleBusinessRelease bundleShippingRelease
+```
+macOS / iOS: `APPLE_TEAM_ID=… bash scripts/ios-build-apps.sh all`. Store pack, accounts and declarations: `docs/store/`.
+Brand assets: `node scripts/generate-digitic-icons.mjs`. Channel check: `BASE=http://localhost:3260 node scripts/e2e-app-channel.mjs` (DEV server with `ALLOW_DEV_SESSION=true`).
 
-## Android store release (when you want Google Play)
-
-Create an upload keystore (keep it private), then `cd android && ./gradlew bundleRelease` and sign the `.aab`.
-Runbook: `docs/mobile-app-readiness.md`.
-
-## Remote access (working outside the office)
-
-The ERP is already served over HTTPS at `api.dgt.llc`; the database stays on Supabase and nothing on the office network is
-exposed. Staff only need the app + their login. Every request is checked on the server against the user's role, country and
-branch, exactly as on a PC.
+## Remote access
+The ERP is served over HTTPS at `api.dgt.llc`; the database stays on Supabase and no office or development service is exposed.
+Local development (`localhost:3000`) is reachable only from the developer's own emulator/PC; a release build refuses it.

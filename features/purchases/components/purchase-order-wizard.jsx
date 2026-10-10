@@ -89,6 +89,11 @@ const QTY_TYPE_OPTIONS = ["BAGS", "CARTONS", "Loose", "KGS", "Ton", "PCS", "Doze
 
 
 // API Helpers
+// Module-level helpers run outside the component, so they read the active ERP language directly.
+function readUiLang() {
+  return (typeof document !== "undefined" ? document.documentElement.lang : "en") || "en";
+}
+
 async function lookupAccountMaster(query, countryId, countryBranchId, cityBranchId, isSuperAdmin) {
   const needle = String(query || "").trim();
   if (!needle) return null;
@@ -105,7 +110,7 @@ async function lookupAccountMaster(query, countryId, countryBranchId, cityBranch
   });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok || !payload.ok) {
-    throw new Error(payload?.error?.message || payload?.error || t(lang, "purchase.wiz_err_account_lookup", "Account lookup failed."));
+    throw new Error(payload?.error?.message || payload?.error || t(readUiLang(), "purchase.wiz_err_account_lookup", "Account lookup failed."));
   }
   return payload.data?.found ? payload.data.account : null;
 }
@@ -128,7 +133,7 @@ async function lookupPurchaseBookingReport(query, countryId, countryBranchId, ci
   });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok || !payload.ok) {
-    throw new Error(payload?.error?.message || payload?.error || t(lang, "purchase.wiz_err_booking_lookup", "Purchase booking lookup failed."));
+    throw new Error(payload?.error?.message || payload?.error || t(readUiLang(), "purchase.wiz_err_booking_lookup", "Purchase booking lookup failed."));
   }
   return payload.data?.reports?.[0] ?? null;
 }
@@ -600,7 +605,9 @@ export function PurchaseOrderWizard({ session }) {
     }
   }, []);
 
-  const [savingOrder, setSavingOrder] = useState(false);
+  const [savingOrder, setSavingOrder] = useState(false);
+  // "View company" buttons call setViewCompanyModal; the state was never declared (ReferenceError on click).
+  const [, setViewCompanyModal] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
   const [savedOrderId, setSavedOrderId] = useState("");
   const [savedOrderNo, setSavedOrderNo] = useState("");

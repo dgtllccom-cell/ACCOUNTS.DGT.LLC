@@ -30,7 +30,9 @@ export function InstallAppBanner() {
       (window.matchMedia("(display-mode: standalone)").matches ||
         (window.navigator as any).standalone === true);
 
-    setIsStandalone(isAppStandalone);
+    // inside the DGT.llc B / BS store apps there is nothing to install (stores also forbid steering users elsewhere)
+    const inStoreApp = typeof navigator !== "undefined" && /DGTllc-(B|BS)\/\d/i.test(navigator.userAgent);
+    setIsStandalone(isAppStandalone || inStoreApp);
 
     // Detect iOS
     const userAgent = typeof window !== "undefined" ? window.navigator.userAgent.toLowerCase() : "";

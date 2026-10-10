@@ -1,0 +1,59 @@
+# Production deployment plan — mobile apps support + security fixes (needs the owner's separate final approval)
+
+**Nothing here has been run.** Production (`https://api.dgt.llc`, VPS `72.60.209.121`, `/var/www/dgt-nextjs`, PM2 `dgt-nextjs`) is unchanged since commit `82c5a2a`.
+
+## What would go live
+Code only — **no database migration**. Commits on `main` after `82c5a2a`:
+| Commit | What | Risk |
+|---|---|---|
+| `5fdc4af`, mobile commits | Android shell config files (not used by the web server) | none for the web |
+| mobile-app commit (`5a5d14e` and later) | app-channel guard (only active when the User-Agent carries `DGTllc-B/` or `DGTllc-BS/`), `/auth/app-access`, public `/legal/privacy`, middleware `/legal` public path, login "Sandbox" drawer removed unless `NEXT_PUBLIC_ENABLE_SANDBOX_LOGIN=true`, install-banner hidden inside the store apps, table-token guard improvement | low; plain browsers behave as before except the removed sandbox drawer |
+| `82378db`, `5d60151`, `8950cb7` | **made by another session / the auto-commit bot, not reviewed by me**: ledger-lp workflow, Super Admin V20 dashboard, V21 edit-history | unknown — owner must confirm these are approved before they ship |
+| purchase/sales wizard fixes | undefined-name crashes fixed | low |
+
+`git pull --ff-only` on the VPS takes **everything on main up to HEAD**. If only part should ship, the owner chooses the commit to deploy (`git checkout <sha>` is not used; instead hold the other work on a branch first).
+
+## Security fixes included
+* Public login page no longer offers the Sandbox drawer that listed real account ids (Super Admin, Country Admin, …).
+* The install-app banner / "download installer" prompt is not shown inside the store apps.
+* Unchanged but worth the owner's attention: the production error log shows a missing table `ai_assistant_audit_logs` and a missing column `enterprise_accounts.linked_companies` (pre-existing, unrelated to the apps).
+
+## Before deploying (all on DEV, already green unless noted)
+1. `npx tsc --noEmit` clean for touched files; `npm run i18n:guard`; `npm run build` exit 0.
+2. `BASE=http://localhost:3260 node scripts/e2e-app-channel.mjs` → 12/12; `node scripts/e2e-shipment-tracking.mjs` → 67/67.
+3. Mobile/tablet sweep of the 191 menu routes (see report) — all failures fixed or listed.
+
+## Step 1 — backup (read-only, takes ~1 minute)
+```
+ssh root@72.60.209.121
+cd /var/www/dgt-nextjs && set -a && . ./.env && set +a
+F=/root/backups/prod-before-mobile-$(date +%Y%m%d-%H%M%S).dump
+pg_dump "$DATABASE_URL" --schema=public --no-owner --no-privileges -Fc -f "$F"
+pg_restore --list "$F" | grep -c "TABLE DATA"     # expect ~340
+sha256sum "$F"   # then copy the file off the server (scp) and keep the checksum
+```
+The last backup (before tracking/goods-transfer) is `B:\accounts.dgt.llc.code_project\prod-backups\prod-full-before-tracking-gt-20261009-192247.dump`.
+Also record the current state for rollback: `git rev-parse --short HEAD` and `cat .next/BUILD_ID` (now `82c5a2a7` / `E3Rqh7b7MShWC4rAG4dDk`).
+
+## Step 2 — deploy (atomic, zero-downtime reload)
+```
+cd /var/www/dgt-nextjs && git fetch -q origin && git pull --ff-only origin main
+nohup bash scripts/safe-build-deploy.sh > /tmp/deploy.log 2>&1 &      # builds into .next.building, swaps, pm2 reload
+```
+The script keeps the previous build in `.next.rollback`.
+
+## Step 3 — verify
+1. `git rev-parse --short HEAD`, `cat .next/BUILD_ID`, `pm2 describe dgt-nextjs` (online, restarts +1 only).
+2. Unauthenticated: `/auth/login` 200, `/legal/privacy` 200 (privacy text in all 5 languages), `/api/erp/tracking/list` → redirect to login, `/dashboard` → redirect to login.
+3. **Owner / authorised user, authenticated:** sign in on desktop + in each Android app: Business login in DGT.llc B lands on its dashboard; a shipping-only login in DGT.llc B shows the "use DGT.llc BS" notice; Shipping login in DGT.llc BS lands on the shipping home; Super Admin works in both; the Login page shows no Sandbox drawer.
+4. `pm2 logs dgt-nextjs --lines 100` — no new errors.
+
+## Rollback (code only; the database is not touched by this deployment)
+```
+cd /var/www/dgt-nextjs && bash scripts/safe-build-deploy.sh --rollback       # swaps .next.rollback back in, reloads PM2 (about 10 seconds)
+git reset --hard 82c5a2a7 is NOT needed for the running site; only if a rebuild is required later: git checkout --detach 82c5a2a7
+```
+If the data were ever damaged (not expected: no migration, no data writes): restore from the dump with `pg_restore --clean --if-exists -d "$DATABASE_URL"` only after the owner confirms.
+
+## After the deploy
+Submit the apps to the stores (they already point at `https://api.dgt.llc`); the store listings can reference `https://api.dgt.llc/legal/privacy`.
