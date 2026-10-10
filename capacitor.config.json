@@ -1,12 +1,16 @@
 {
   "appId": "com.digitaldock.erp",
   "appName": "Digital Dock ERP",
-  "webDir": "public",
+  "webDir": "mobile-shell",
   "server": {
     "url": "https://api.dgt.llc",
     "androidScheme": "https",
     "iosScheme": "https",
-    "allowNavigation": ["api.dgt.llc", "*.dgt.llc"]
+    "allowNavigation": [
+      "api.dgt.llc",
+      "*.dgt.llc"
+    ],
+    "errorPath": "offline.html"
   },
   "android": {
     "allowMixedContent": false,
@@ -35,7 +39,11 @@
       "resizeOnFullScreen": true
     },
     "PushNotifications": {
-      "presentationOptions": ["badge", "sound", "alert"]
+      "presentationOptions": [
+        "badge",
+        "sound",
+        "alert"
+      ]
     }
   }
 }
