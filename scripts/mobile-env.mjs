@@ -21,7 +21,7 @@ const apps = JSON.parse(fs.readFileSync("mobile/apps.json", "utf8"));
 const e = envs[envName];
 // local only: DGTLLC_LOCAL_URL=http://10.0.2.2:3260 points an emulator build at a DEV server on another port (http, loopback alias only)
 if (envName === "local" && process.env.DGTLLC_LOCAL_URL) {
-  if (!/^http:\/\/(10\.0\.2\.2|localhost)(:\d+)?$/.test(process.env.DGTLLC_LOCAL_URL)) { console.error("DGTLLC_LOCAL_URL must be http://10.0.2.2:<port> or http://localhost:<port>"); process.exit(2); }
+  if (!/^http:\/\/(10\.0\.2\.2|localhost|192\.168\.\d{1,3}\.\d{1,3})(:\d+)?$/.test(process.env.DGTLLC_LOCAL_URL)) { console.error("DGTLLC_LOCAL_URL must be http://10.0.2.2:<port>, http://localhost:<port> or a 192.168.x.x LAN address (developer phone tests)"); process.exit(2); }
   e.url = process.env.DGTLLC_LOCAL_URL;
 }
 if (!e) { console.error(`Unknown environment "${envName}". Use: ${Object.keys(envs).join(", ")}`); process.exit(2); }
