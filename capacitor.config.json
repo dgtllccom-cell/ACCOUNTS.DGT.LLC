@@ -1,14 +1,13 @@
 {
-  "appId": "com.digitaldock.erp",
-  "appName": "Digital Dock ERP",
+  "appId": "com.dgt.digitic",
+  "appName": "DigiTic",
   "webDir": "mobile-shell",
   "server": {
     "url": "https://api.dgt.llc",
     "androidScheme": "https",
     "iosScheme": "https",
     "allowNavigation": [
-      "api.dgt.llc",
-      "*.dgt.llc"
+      "api.dgt.llc"
     ],
     "errorPath": "offline.html"
   },

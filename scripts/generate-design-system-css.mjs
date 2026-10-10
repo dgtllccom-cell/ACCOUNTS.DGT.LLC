@@ -136,7 +136,7 @@ const css = `/*
     background-attachment: local, local, scroll, scroll;
   }
   /* a cell holding ONE token (a code, a date, a one-word name) never splits it across lines — marked by components/layout/table-token-guard.tsx */
-  ${C} table :is(td, th)[data-token] { white-space: nowrap; overflow-wrap: normal; word-break: normal; }
+  ${C} table [data-token] { white-space: nowrap; overflow-wrap: normal; word-break: normal; }
   /* chips / codes / badges inside table cells stay on one line (the table scrolls instead of stacking letters) */
   ${C} table :is(td, th) :is(.inline-flex, .font-mono, .rounded, .rounded-md, .rounded-full) { white-space: nowrap; }
   /* dialogs (pickers, confirmations, print previews) fit the screen and scroll */

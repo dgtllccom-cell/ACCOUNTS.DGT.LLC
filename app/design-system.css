@@ -64,7 +64,7 @@
     background-attachment: local, local, scroll, scroll;
   }
   /* a cell holding ONE token (a code, a date, a one-word name) never splits it across lines — marked by components/layout/table-token-guard.tsx */
-  [data-erp-content] table :is(td, th)[data-token] { white-space: nowrap; overflow-wrap: normal; word-break: normal; }
+  [data-erp-content] table [data-token] { white-space: nowrap; overflow-wrap: normal; word-break: normal; }
   /* chips / codes / badges inside table cells stay on one line (the table scrolls instead of stacking letters) */
   [data-erp-content] table :is(td, th) :is(.inline-flex, .font-mono, .rounded, .rounded-md, .rounded-full) { white-space: nowrap; }
   /* dialogs (pickers, confirmations, print previews) fit the screen and scroll */

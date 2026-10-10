@@ -4,11 +4,11 @@ android {
     namespace = "com.digitaldock.erp"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.digitaldock.erp"
+        applicationId "com.dgt.digitic"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
-        versionName "1.0"
+        versionName "1.0.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,8 +16,24 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    // Release signing: keys live OUTSIDE the repository. Point DIGITIC_KEYSTORE_PROPERTIES at a keystore.properties file
+    // (storeFile, storePassword, keyAlias, keyPassword). Without it the release build is produced unsigned.
+    def ksPath = System.getenv("DIGITIC_KEYSTORE_PROPERTIES")
+    def ksProps = new Properties()
+    if (ksPath && file(ksPath).exists()) { file(ksPath).withInputStream { ksProps.load(it) } }
+    signingConfigs {
+        if (ksProps.getProperty("storeFile")) {
+            release {
+                storeFile file(ksProps.getProperty("storeFile"))
+                storePassword ksProps.getProperty("storePassword")
+                keyAlias ksProps.getProperty("keyAlias")
+                keyPassword ksProps.getProperty("keyPassword")
+            }
+        }
+    }
     buildTypes {
         release {
+            if (ksProps.getProperty("storeFile")) { signingConfig signingConfigs.release }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

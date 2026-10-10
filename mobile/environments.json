@@ -1,0 +1,5 @@
+{
+  "production": { "url": "https://api.dgt.llc", "allowNavigation": ["api.dgt.llc"], "cleartext": false },
+  "eps": { "urlEnv": "DIGITIC_EPS_URL", "requireHttps": true, "cleartext": false },
+  "local": { "url": "http://10.0.2.2:3000", "allowNavigation": ["10.0.2.2", "localhost"], "cleartext": true }
+}

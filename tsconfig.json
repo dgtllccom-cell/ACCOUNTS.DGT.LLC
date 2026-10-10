@@ -33,9 +33,10 @@
     "**/*.ts",
     "**/*.tsx",
     "..\\..\\..\\AppData\\Local\\Temp\\dgt-nextjs\\.next/types/**/*.ts",
+    ".next-dev/types/**/*.ts",
     ".next/types/**/*.ts",
     "next-env.d.ts",
-    ".next-dev/types/**/*.ts"
+    ".next-sweep/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

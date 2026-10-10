@@ -4,7 +4,7 @@ import { useEffect } from "react";
 
 /**
  * TableTokenGuard — on phones and tablets a narrow table cell used to split a code, date or one-word name across lines
- * ("LP-CTY-" / "00000491", "22/09/" / "2026", "Pakis-" / "tan"). This marks every table cell whose text is ONE token
+ * ("LP-CTY-" / "00000491", "22/09/" / "2026", "Pakis-" / "tan"). This marks every table cell (or innermost element in it) whose text is ONE token
  * (no spaces) with `data-token`; app/design-system.css keeps such cells on a single line (the table then scrolls inside its own
  * container instead). Presentation only: it reads cell text, never changes it. Idle, throttled, and only active below the desktop
  * breakpoint, so desktop computers pay nothing.
@@ -12,6 +12,9 @@ import { useEffect } from "react";
 const TOUCH = "(max-width: 1023.98px), (pointer: coarse) and (max-width: 1399.98px)";
 
 function mark(cell: Element) {
+  // a cell, or the innermost element inside a cell (<td><div><span>CODE</span></div></td> wraps at the span, not the td)
+  const isCell = cell.tagName === "TD" || cell.tagName === "TH";
+  if (!isCell && cell.children.length) return;
   const t = (cell.textContent || "").trim();
   const single = t.length > 0 && t.length <= 48 && !/\s/.test(t);
   if (single) { if (!cell.hasAttribute("data-token")) cell.setAttribute("data-token", ""); }
@@ -19,7 +22,7 @@ function mark(cell: Element) {
 }
 
 function scan(root: ParentNode) {
-  root.querySelectorAll("td, th").forEach(mark);
+  root.querySelectorAll("td, th, td *, th *").forEach(mark);
 }
 
 export function TableTokenGuard() {
@@ -34,7 +37,7 @@ export function TableTokenGuard() {
         const el = n.nodeType === 1 ? (n as Element) : n.parentElement;
         if (!el || !el.isConnected) continue;
         const cell = el.closest("td, th");
-        if (cell) mark(cell);
+        if (cell) { mark(cell); if (el !== cell) mark(el); }
         if (el.querySelector) scan(el);
       }
       pending.clear();
