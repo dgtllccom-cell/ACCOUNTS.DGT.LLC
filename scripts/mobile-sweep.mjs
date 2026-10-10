@@ -70,7 +70,8 @@ const measure = () => {
   };
 };
 
-const browser = await webkit.launch();
+let browser = await webkit.launch();
+const ensureBrowser = async () => { if (!browser.isConnected()) { try { await browser.close(); } catch {} browser = await webkit.launch(); } };
 const log = (o) => fs.appendFileSync(RESULTS, JSON.stringify(o) + "\n");
 const myRoutes = ROUTES.filter((_, i) => i % SHARDS === SHARD);
 for (const route of myRoutes) for (const lang of LANGS) for (const theme of THEMES) for (const [cls, C] of Object.entries(CLASSES).filter(([k]) => (process.env.CLASSES || "phone,tablet").split(",").includes(k))) {

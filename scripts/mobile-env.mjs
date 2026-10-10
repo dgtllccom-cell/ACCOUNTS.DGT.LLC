@@ -19,6 +19,11 @@ const release = process.argv.includes("--release");
 const envs = JSON.parse(fs.readFileSync("mobile/environments.json", "utf8"));
 const apps = JSON.parse(fs.readFileSync("mobile/apps.json", "utf8"));
 const e = envs[envName];
+// local only: DGTLLC_LOCAL_URL=http://10.0.2.2:3260 points an emulator build at a DEV server on another port (http, loopback alias only)
+if (envName === "local" && process.env.DGTLLC_LOCAL_URL) {
+  if (!/^http:\/\/(10\.0\.2\.2|localhost)(:\d+)?$/.test(process.env.DGTLLC_LOCAL_URL)) { console.error("DGTLLC_LOCAL_URL must be http://10.0.2.2:<port> or http://localhost:<port>"); process.exit(2); }
+  e.url = process.env.DGTLLC_LOCAL_URL;
+}
 if (!e) { console.error(`Unknown environment "${envName}". Use: ${Object.keys(envs).join(", ")}`); process.exit(2); }
 if (release && envName !== "production") { console.error("A store release must be built against production only."); process.exit(2); }
 if (envName === "production" && e.url !== "https://api.dgt.llc") { console.error("production URL is fixed to https://api.dgt.llc"); process.exit(2); }

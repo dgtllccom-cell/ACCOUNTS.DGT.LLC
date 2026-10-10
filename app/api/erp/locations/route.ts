@@ -28,13 +28,13 @@ export async function GET(request: NextRequest) {
     const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang"));
 
     const query = querySchema.parse({
-      limit: request.nextUrl.searchParams.get("limit"),
-      offset: request.nextUrl.searchParams.get("offset"),
-      search: request.nextUrl.searchParams.get("search"),
-      countryId: request.nextUrl.searchParams.get("countryId"),
-      status: request.nextUrl.searchParams.get("status"),
-      fromDate: request.nextUrl.searchParams.get("fromDate"),
-      toDate: request.nextUrl.searchParams.get("toDate"),
+      limit: request.nextUrl.searchParams.get("limit") ?? undefined,
+      offset: request.nextUrl.searchParams.get("offset") ?? undefined,
+      search: request.nextUrl.searchParams.get("search") ?? undefined,
+      countryId: request.nextUrl.searchParams.get("countryId") ?? undefined,
+      status: request.nextUrl.searchParams.get("status") ?? undefined,
+      fromDate: request.nextUrl.searchParams.get("fromDate") ?? undefined,
+      toDate: request.nextUrl.searchParams.get("toDate") ?? undefined,
     });
 
     const db = createSupabaseAdminClient() as any;
