@@ -27,7 +27,7 @@ Android (Windows/macOS/Linux, JDK 21 + Android SDK 36):
 ```
 node scripts/mobile-env.mjs production --release
 npx cap sync android
-set DIGITIC_KEYSTORE_PROPERTIES=<path to keystore.properties>   # keep OUTSIDE the repository
+set DGTLLC_KEYSTORE_PROPERTIES=<path to keystore.properties>   # keep OUTSIDE the repository
 cd android && gradlew bundleBusinessRelease bundleShippingRelease    # → app/build/outputs/bundle/{business,shipping}Release/*.aab
 ```
 iOS (macOS + Xcode only): `APPLE_TEAM_ID=… bash scripts/ios-build-apps.sh all`

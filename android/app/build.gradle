@@ -15,9 +15,9 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
-    // Release signing: keys live OUTSIDE the repository. Point DIGITIC_KEYSTORE_PROPERTIES at a keystore.properties file
+    // Release signing: keys live OUTSIDE the repository. Point DGTLLC_KEYSTORE_PROPERTIES at a keystore.properties file
     // (storeFile, storePassword, keyAlias, keyPassword). Without it the release build is produced unsigned.
-    def ksPath = System.getenv("DIGITIC_KEYSTORE_PROPERTIES")
+    def ksPath = System.getenv("DGTLLC_KEYSTORE_PROPERTIES")
     def ksProps = new Properties()
     if (ksPath && file(ksPath).exists()) { file(ksPath).withInputStream { ksProps.load(it) } }
     // Two store apps from ONE code base and ONE ERP: "DGT.llc B" (Business) and "DGT.llc BS" (Business Shipping).

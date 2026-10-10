@@ -27,7 +27,7 @@ both domains may use either app. What a login can see is always decided by its r
 node scripts/mobile-env.mjs production --release     # EPS Production, https only (the only target a store build may use)
 node scripts/mobile-env.mjs local                    # developer PC localhost:3000 → debug builds only
 npx cap sync android
-set JAVA_HOME=...  set ANDROID_HOME=...  set DIGITIC_KEYSTORE_PROPERTIES=<keystore.properties outside the repo>
+set JAVA_HOME=...  set ANDROID_HOME=...  set DGTLLC_KEYSTORE_PROPERTIES=<keystore.properties outside the repo>
 cd android && gradlew assembleBusinessDebug assembleShippingDebug bundleBusinessRelease bundleShippingRelease
 ```
 macOS / iOS: `APPLE_TEAM_ID=… bash scripts/ios-build-apps.sh all`. Store pack, accounts and declarations: `docs/store/`.
