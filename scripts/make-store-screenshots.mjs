@@ -50,6 +50,8 @@ for (const [size, S] of Object.entries(SIZES)) {
         await page.goto(BASE + route, { waitUntil: "load", timeout: 120000 });
         await page.waitForLoadState("networkidle", { timeout: 20000 }).catch(() => {});
         for (let i = 0; i < 20; i++) { const spin = await page.evaluate(() => !![...document.querySelectorAll("[data-erp-content] .animate-spin")].find((e) => e.getBoundingClientRect().width > 14)).catch(() => false); if (!spin) break; await page.waitForTimeout(2000); }
+        await page.addStyleTag({ content: "[data-dgt-connect]{display:none!important}" }).catch(() => {});
+        await page.evaluate(() => { const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT); const hits = []; while (w.nextNode()) { if (/^\s*0{8}-0{3}/.test(w.currentNode.nodeValue || "")) hits.push(w.currentNode); } hits.forEach((n) => { n.nodeValue = "—"; }); }).catch(() => {});
         await page.waitForTimeout(2500);
         await page.screenshot({ path: `${dir}/${n}-${name}.png` });
         console.log("ok", dir, name);

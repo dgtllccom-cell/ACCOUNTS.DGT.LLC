@@ -1187,7 +1187,7 @@ async function postRoznamchaWithErpSessionSupabase(input: {
 
     if (isCrossBranchLine) {
       try {
-        const transferNo = await nextEntitySerialSupabase(admin, "global", "global", "inter_branch_transfer", "IBT");
+        const transferNo = await nextEntitySerial(admin, "global", "global", "inter_branch_transfer", "IBT");
         const sourceLedgerId = body.lines.find((l) => l.ledgerId !== ledgerId)?.ledgerId ?? ledgerId;
         const transferAmount = debit > 0 ? debit : credit;
 

@@ -1,5 +1,13 @@
+import fs from "node:fs";
 import { createClient } from "@supabase/supabase-js";
 import postgres from "postgres";
+
+if (fs.existsSync(".env.local")) {
+  for (const line of fs.readFileSync(".env.local", "utf8").split(/\r?\n/)) {
+    const m = line.match(/^([A-Z_0-9]+)\s*=\s*(.*)$/);
+    if (m && !process.env[m[1]]) process.env[m[1]] = m[2].trim().replace(/^['"]|['"]$/g, "");
+  }
+}
 
 const DEV_REF = "csesvyxxjivnkkozgopt";
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || `https://${DEV_REF}.supabase.co`;

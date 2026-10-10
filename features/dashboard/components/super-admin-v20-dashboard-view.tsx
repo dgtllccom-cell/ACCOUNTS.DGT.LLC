@@ -395,11 +395,8 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
         <section className="space-y-2.5">
           <div className="flex items-center justify-between px-1">
             <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-              FINANCIAL OVERVIEW
+              {tt("dash.financial_overview_live", "Financial Overview (Live Records)")}
             </h2>
-            <span className="text-[10px] font-bold text-slate-400 uppercase">
-              {tt("dash.financial_overview_live", "Live Overview")}
-            </span>
           </div>
 
           <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 xl:grid-cols-6">
@@ -416,9 +413,9 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
                     {fin.value}
                   </div>
                 </div>
-                <div className="mt-2 text-[9px] font-semibold text-[#06b580] flex items-center gap-1">
-                  <span>↑</span>
-                  <span>sample overview</span>
+                {/* These totals are real ledger/order records — no "sample" wording and no growth arrow (there is no period comparison here). */}
+                <div className="mt-2 text-[9px] font-semibold text-slate-400 flex items-center gap-1">
+                  <span>{tt("dash.live_records", "Live records")}</span>
                 </div>
               </div>
             ))}

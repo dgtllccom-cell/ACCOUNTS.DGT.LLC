@@ -2706,6 +2706,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
       }
     }, 250);
   };
+  const [sourceFilter, setSourceFilter] = useState<"all" | "sales_booking" | "local_sales">("all");
   const [query, setQuery] = useState("");
   const [draftFilter, setDraftFilter] = useState("");
   const [countryFilter, setCountryFilter] = useState("");
@@ -2717,6 +2718,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
   const [partyFilter, setPartyFilter] = useState("");
 
   const reset = () => {
+    setSourceFilter("all");
     setQuery("");
     setDraftFilter("");
     setCountryFilter("");
@@ -3076,9 +3078,17 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
       // route.ts) â this previously read payload.orders, a key that has never existed on the
       // sales response, so `rows` silently resolved to [] on every load and every mode
       // (Advance/Remaining/Credit/History) always rendered "0 records" regardless of real data.
-      const rows: PurchaseOrderRow[] = Array.isArray(payload)
+      const rawRows: PurchaseOrderRow[] = Array.isArray(payload)
         ? payload
         : (payload as any).salesOrders ?? (payload as any).orders ?? [];
+      const rows: PurchaseOrderRow[] = rawRows.map((r: any) => {
+        const form = r.form_data?.form || {};
+        const isLocal = form.saleSource === "local" || form.saleMode === "local" || r.order_type === "local_sales" || r.sale_source === "local";
+        return {
+          ...r,
+          order_type: isLocal ? "local_sales" : "sales_booking"
+        };
+      });
       setOrders(rows);
       // Auto-select by URL param
       const urlOrderNo = getInitialPurchaseOrderNo();
@@ -3131,6 +3141,10 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
         || (row as any).journalStatus?.toLowerCase() === "posted";
       const isEligibleForPayment = isPosted;
       if (!isEligibleForPayment) return false;
+      if (sourceFilter !== "all") {
+        const rowSource = (row as any).order_type === "local_sales" ? "local_sales" : "sales_booking";
+        if (rowSource !== sourceFilter) return false;
+      }
       if (draft && !(row.payment_status ?? "").toLowerCase().includes(draft)) return false;
       if (countryFilter && rowCountryName(row) !== countryFilter) return false;
       if (branchFilter && rowBranchName(row) !== branchFilter) return false;
@@ -4096,6 +4110,17 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
               >
                 {billNo}
               </button>
+              <div className="flex items-center gap-1 mt-0.5">
+                {(row as any).order_type === "local_sales" ? (
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                    Local Sales
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-300 dark:border-blue-800">
+                    Sales Booking
+                  </span>
+                )}
+              </div>
               <span className="text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400">
                 {row.super_admin_serial_number || `PAY-${String(index + 1).padStart(4, "0")}`}
               </span>
@@ -4103,7 +4128,9 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
           </td>
 
           {/* 2. TYPE */}
-          <td className="py-2.5 px-2 text-center font-bold text-xs">{type}</td>
+          <td className="py-2.5 px-2 text-center font-bold text-xs">
+            {(row as any).order_type === "local_sales" ? "Local" : (type || "Booking")}
+          </td>
 
           {/* 3. BRANCH CODE */}
           <td className="py-2.5 px-2 font-mono font-bold whitespace-nowrap text-xs">{branchCode}</td>
@@ -4445,10 +4472,49 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
       <div className="mx-6 mb-6 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
         {/* Table Title Bar (Matching Reference Screenshot: SALES ORDER PAYMENTS (18)) */}
         <div className="px-6 py-4 border-b border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#091020] flex flex-wrap justify-between items-center gap-3">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <h3 className="text-sm font-black tracking-wider text-slate-900 dark:text-slate-100 uppercase">
               SALES ORDER PAYMENTS ({filtered.length})
             </h3>
+            {/* Source Segmented Control */}
+            <div className="flex items-center rounded-lg border border-slate-200 dark:border-slate-800 p-0.5 bg-slate-100/60 dark:bg-slate-950/60 text-xs">
+              <button
+                type="button"
+                onClick={() => { setSourceFilter("all"); setPageIndex(0); }}
+                className={cn(
+                  "px-3 py-1 rounded-md font-bold transition-all text-[11px] cursor-pointer",
+                  sourceFilter === "all"
+                    ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
+                )}
+              >
+                All Sources ({orders.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => { setSourceFilter("sales_booking"); setPageIndex(0); }}
+                className={cn(
+                  "px-3 py-1 rounded-md font-bold transition-all text-[11px] cursor-pointer",
+                  sourceFilter === "sales_booking"
+                    ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
+                )}
+              >
+                Sales Booking ({orders.filter((o: any) => o.order_type !== "local_sales").length})
+              </button>
+              <button
+                type="button"
+                onClick={() => { setSourceFilter("local_sales"); setPageIndex(0); }}
+                className={cn(
+                  "px-3 py-1 rounded-md font-bold transition-all text-[11px] cursor-pointer",
+                  sourceFilter === "local_sales"
+                    ? "bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-xs"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
+                )}
+              >
+                Local Sales ({orders.filter((o: any) => o.order_type === "local_sales").length})
+              </button>
+            </div>
             {activeFiltersCount > 0 && (
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-[#2563eb] border border-blue-200/80 dark:bg-blue-950/50 dark:text-blue-400">
                 {activeFiltersCount} Active
