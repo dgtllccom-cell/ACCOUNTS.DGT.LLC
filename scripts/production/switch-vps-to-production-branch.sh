@@ -15,6 +15,7 @@ want="$(git rev-parse "origin/$target")"
 [ "$head" = "$want" ] || { echo "REFUSED: the live checkout is not at origin/$target, so switching would change the running code. Deploy through dgt-deploy first."; exit 1; }
 echo "current branch: $(git rev-parse --abbrev-ref HEAD)  ->  $target (same commit; nothing is rebuilt or restarted)"
 [ "$mode" = "--dry-run" ] && { echo "dry-run: nothing changed"; exit 0; }
+export DGT_DEPLOY_GATE=1
 git checkout -q -B "$target" "origin/$target"
 git branch -q --set-upstream-to="origin/$target" "$target"
 echo "now on $(git rev-parse --abbrev-ref HEAD) tracking origin/$target at $(git rev-parse --short HEAD)"

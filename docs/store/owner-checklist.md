@@ -5,7 +5,7 @@ Prepared 2026-10-10. Everything marked **OWNER** needs a person with authority f
 ## 1. Company details we already have
 | Item | Value | Source |
 |---|---|---|
-| Legal name | DAMAAN GENERAL TRADING LLC (ERP record: "DAMAAN GENERAL TRADING L.L.C") | your message + ERP company master |
+| Legal name | DAMAAN GENERAL TRADING L.L.C (ERP record: "DAMAAN GENERAL TRADING L.L.C") | your message + ERP company master |
 | Country / emirate / area | United Arab Emirates · Dubai · Al Ras, Deira | your message |
 | Office address | Al Hathoor Building, Office 2-01, Al Ras, Deira, Dubai (ERP record: "Al **Hathboor** Building, Office No. **201**, Al Ras, Dubai – UAE") | your message + ERP |
 | Trade licence no. | **1099620** — the ERP shows the same number, expiry **15 Sep 2027** | ERP company master |

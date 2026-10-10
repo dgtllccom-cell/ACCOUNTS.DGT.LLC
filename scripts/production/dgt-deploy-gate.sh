@@ -70,7 +70,7 @@ fi
 # consume the approval BEFORE building, so a crash can never allow a silent second run
 tmp="$(mktemp)"; sed 's/^used=.*/used=yes/' "$APPROVAL_FILE" > "$tmp"; grep -q '^used=' "$tmp" || echo "used=yes" >> "$tmp"; cat "$tmp" > "$APPROVAL_FILE"; rm -f "$tmp"
 
-git reset --hard "$sha" >/dev/null
+DGT_DEPLOY_GATE=1 git reset --hard "$sha" >/dev/null   # DGT_DEPLOY_GATE lets the live-checkout ref lock (ref-lock-hook.sh) accept this one move
 log "building $sha"
 eval "$BUILD_CMD" || { log "BUILD FAILED — live site unchanged (safe-build-deploy keeps the old build). Tree is at $sha; run dgt-deploy --rollback if needed."; exit 1; }
 log "DEPLOYED $sha"

@@ -90,3 +90,6 @@ android/capacitor-cordova-android-plugins/build/
 .next-sweep/
 .next-dev3000/
 .next-dev3260/
+
+# generated store screenshots (kept in the owner folder, not in git)
+docs/store/screenshots/
