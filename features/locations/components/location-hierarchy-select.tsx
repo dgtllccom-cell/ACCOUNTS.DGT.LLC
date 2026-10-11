@@ -111,14 +111,10 @@ export function LocationHierarchySelect({
   allowManageLink?: boolean;
   disabled?: boolean;
 }) {
-  const activeLang = useMemo<SupportedLanguage>(() => {
-    if (lang) return lang;
-    if (typeof document !== "undefined") {
-      const docLang = document.documentElement.lang as SupportedLanguage;
-      if (["en", "ur", "ar", "fa", "ps"].includes(docLang)) return docLang;
-    }
-    return "en";
-  }, [lang]);
+  // useActiveLanguage() is "en" during SSR and on the first client render, then switches — reading document.documentElement.lang here
+  // made the first client render differ from the server HTML for ar/fa/ps (React hydration error #418).
+  const storeLang = useActiveLanguage();
+  const activeLang: SupportedLanguage = lang ?? storeLang;
 
   const loc = (key: string) => t(activeLang, ("lochier." + key) as never, locationLabelFallback[key] ?? key);
 

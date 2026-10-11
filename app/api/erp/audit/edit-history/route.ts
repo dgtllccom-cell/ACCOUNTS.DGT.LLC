@@ -162,7 +162,8 @@ export async function GET(request: NextRequest) {
       totalUsers: new Set(records.map((r: any) => r.user_name)).size
     };
 
-    return NextResponse.json({ success: true, records: paged, total, kpis, timelineByRecord: result.report.history });
+    // (timelineByRecord — the full history, up to 5,000 rows / ~800 KB — was returned here on every call but no client reads it)
+    return NextResponse.json({ success: true, records: paged, total, kpis });
   } catch (error: any) {
     rethrowIfNextControlFlow(error);
     return NextResponse.json({ error: error.message || "Failed to fetch edit history." }, { status: 500 });
