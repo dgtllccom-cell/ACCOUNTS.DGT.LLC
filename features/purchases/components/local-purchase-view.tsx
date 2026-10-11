@@ -34,6 +34,52 @@ import { cn } from "@/lib/utils";
 import { TaskHandoverModal } from "@/features/transfer-center/components/task-handover-modal";
 import { useSetActiveRecord } from "@/lib/support/active-record-context";
 import { VoiceFormFill } from "@/components/voice-form-fill";
+import { LocalPurchaseApprovedHeader } from "@/features/purchases/components/local-purchase-approved-header";
+import "@/components/purchase-ui/purchase-table-skin.css";
+
+function downloadLocalPurchasesCsv(rows: any[], lang: string) {
+  const headers = [
+    "#",
+    "Country",
+    "Branch",
+    "Voucher No",
+    "Date",
+    "Supplier Name",
+    "Goods Name",
+    "Quantity",
+    "Unit",
+    "Currency",
+    "Amount",
+    "Status"
+  ];
+  const csvRows = rows.map((r, i) => {
+    const curr = r.purchase_currency || r.local_currency || "AED";
+    const amt = Number(r.final_cost || r.purchase_cost || 0);
+    return [
+      i + 1,
+      `"${(r.country_name || r.countryName || "").replace(/"/g, '""')}"`,
+      `"${(r.branch_name || r.branchName || "").replace(/"/g, '""')}"`,
+      `"${(r.journal_serial_no || r.serial_no || r.bill_no || "").replace(/"/g, '""')}"`,
+      `"${r.created_at ? new Date(r.created_at).toLocaleDateString("en-GB") : ""}"`,
+      `"${(r.supplier_name || r.supplierName || "").replace(/"/g, '""')}"`,
+      `"${(r.goods_name || r.goodsName || "").replace(/"/g, '""')}"`,
+      Number(r.quantity_kgs || r.quantityKgs || 0),
+      `"${(r.quantity_name || r.quantityName || "KG").replace(/"/g, '""')}"`,
+      `"${curr}"`,
+      amt.toFixed(2),
+      `"${(r.status || "DRAFT").toUpperCase()}"`,
+    ].join(",");
+  });
+  const blob = new Blob([[headers.join(","), ...csvRows].join("\n")], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `local-purchases-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
 
 const CURRENCIES = ["USD", "AED", "PKR", "AFN", "INR", "IRR"];
 const QUANTITY_NAMES = ["Bags", "Cartons", "Boxes", "Crates", "Bales", "Drums", "Pieces", "Custom"];
@@ -319,6 +365,18 @@ export function LocalPurchaseView({
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedSupplier, setSelectedSupplier] = useState("");
+  const [selectedGoodsFilterId, setSelectedGoodsFilterId] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [usdRates, setUsdRates] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    fetch("/api/erp/purchases/usd-rates")
+      .then((r) => r.ok ? r.json() : null)
+      .then((j) => { if (j?.ok && j.data?.rates) setUsdRates(j.data.rates); })
+      .catch(() => {});
+  }, []);
 
   // Stepper state: 4-Step canonical workflow:
   // Step 1: Booking (Bill, branch, accounts, supplier, broker)
@@ -1962,9 +2020,32 @@ export function LocalPurchaseView({
         if (!match) return false;
       }
 
+      // 5. Supplier filter
+      if (selectedSupplier) {
+        const sName = (p.supplier_name || p.supplierName || "").toLowerCase();
+        if (!sName.includes(selectedSupplier.toLowerCase())) return false;
+      }
+
+      // 6. Goods filter
+      if (selectedGoodsFilterId) {
+        const gId = String(p.goods_id || p.goodsId || "");
+        const gName = (p.goods_name || p.goodsName || "").toLowerCase();
+        if (gId !== String(selectedGoodsFilterId) && !gName.includes(String(selectedGoodsFilterId).toLowerCase())) return false;
+      }
+
+      // 7. Date range filter
+      if (dateFrom) {
+        const rowDate = (p.created_at || p.createdAt || "").slice(0, 10);
+        if (rowDate && rowDate < dateFrom) return false;
+      }
+      if (dateTo) {
+        const rowDate = (p.created_at || p.createdAt || "").slice(0, 10);
+        if (rowDate && rowDate > dateTo) return false;
+      }
+
       return true;
     });
-  }, [purchases, searchQuery, registryFilter, activeTab, selectedCountryId, selectedBranchId, selectedCityBranchId, dateFilter]);
+  }, [purchases, searchQuery, registryFilter, activeTab, selectedCountryId, selectedBranchId, selectedCityBranchId, dateFilter, selectedSupplier, selectedGoodsFilterId, dateFrom, dateTo]);
 
   const acceptedCount = useMemo(
     () => purchases.filter(p => (p.status || p.bill_status || p.billStatus) === "accepted").length,
@@ -2447,645 +2528,93 @@ export function LocalPurchaseView({
           </div>
         </section>
       ) : (
-        /* Registry Mode Header & Smart Filter Bar Matching Reference Design */
-        <div className="space-y-4">
-          {/* 1. Breadcrumbs */}
-          <div className="flex flex-wrap items-center gap-1.5 text-xs text-slate-500 font-semibold px-1">
-            <span>{t(lang, "nav.dashboard", "Dashboard")}</span>
-            <span className="text-slate-300 dark:text-slate-700">&gt;</span>
-            <span>{t(lang, "nav.purchase", "Purchase")}</span>
-            <span className="text-slate-300 dark:text-slate-700">&gt;</span>
-            <span className="text-slate-800 dark:text-slate-200 font-bold">{t(lang, "lp.title", "Local Purchase Registry")}</span>
-          </div>
-
-          {/* 2. Top Banner Header */}
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3.5 py-1">
-            <div className="flex min-w-0 items-center gap-3">
-              <div className={cn(
-                "h-11 w-11 sm:h-12 sm:w-12 rounded-2xl flex items-center justify-center shadow-xs shrink-0 border transition-colors",
-                isSuperAdminView
-                  ? "bg-amber-100 dark:bg-amber-950/70 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800"
-                  : "bg-blue-100 dark:bg-blue-950/70 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800"
-              )}>
-                {isSuperAdminView ? (
-                  <Globe className="h-6 w-6" />
-                ) : (
-                  <ShoppingCart className="h-6 w-6" />
-                )}
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2.5 flex-wrap">
-                  <h1 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
-                    {t(lang, "lp.title", "Local Purchase Registry")}
-                  </h1>
-                  <span className="px-2.5 py-0.5 rounded-full text-[9.5px] font-black uppercase tracking-wider bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
-                    {t(lang, "lp.reg_badge", "Local Purchase")}
-                  </span>
-                </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                  {t(lang, "lp.subtitle", "Record market purchases with custom empty weights and automated ledger postings.")}
-                </p>
-              </div>
-            </div>
-
-            {/* Right: View Switcher pills & Search/Filters/New Purchase */}
-            <div className="flex w-full flex-wrap items-center gap-2.5 lg:w-auto">
-              {/* Dual View Toggle Pills */}
-              <div className="flex w-full items-stretch p-1 sm:w-auto sm:inline-flex rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 shadow-2xs">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setViewScopeMode("single_country");
-                    if (!selectedCountryId) {
-                      const afg = countryOptions.find((c) => c.name.toLowerCase().includes("afghan")) || countryOptions[0];
-                      if (afg) setSelectedCountryId(afg.id);
-                    }
-                  }}
-                  className={cn(
-                    "flex-1 sm:flex-none justify-center text-center min-h-8 px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-bold transition flex items-center gap-1.5 cursor-pointer",
-                    !isSuperAdminView
-                      ? "bg-white dark:bg-slate-900 text-blue-600 shadow-xs border border-slate-200/80 dark:border-slate-700 font-extrabold"
-                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-                  )}
-                >
-                  <Building2 className="h-3.5 w-3.5" />
-                  <span>{t(lang, "lp.reg_view_branch", "1. Country / Branch View")}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setViewScopeMode("super_admin");
-                    setSelectedCountryId("");
-                  }}
-                  className={cn(
-                    "flex-1 sm:flex-none justify-center text-center min-h-8 px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-bold transition flex items-center gap-1.5 cursor-pointer",
-                    isSuperAdminView
-                      ? "bg-white dark:bg-slate-900 text-amber-600 shadow-xs border border-slate-200/80 dark:border-slate-700 font-extrabold"
-                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-                  )}
-                >
-                  <Globe className="h-3.5 w-3.5 text-amber-500" />
-                  <span>{t(lang, "lp.reg_view_super", "2. Super Admin View (USD)")}</span>
-                </button>
-              </div>
-
-              {/* + New Purchase Split Button */}
-              <div className="relative flex w-full items-center shadow-md shadow-blue-500/20 rounded-xl overflow-hidden shrink-0 sm:inline-flex sm:w-auto">
-                <Button
-                  type="button"
-                  onClick={() => {
-                    setScopeCountryId(selectedCountryId || countryOptions[0]?.id || "");
-                    setScopeBranchId(selectedBranchId || filteredCountryBranches[0]?.id || "");
-                    setScopeCityBranchId(selectedCityBranchId || activeCityBranches[0]?.id || "");
-                    setIsScopeModalOpen(true);
-                  }}
-                  className="h-10 sm:h-9 flex-1 sm:flex-none justify-center rounded-none bg-blue-600 hover:bg-blue-700 text-white font-black text-xs px-3.5 flex items-center gap-1.5 transition active:scale-95 cursor-pointer"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>{t(lang, "lp.create_button", "New Purchase")}</span>
-                </Button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setScopeCountryId(selectedCountryId || countryOptions[0]?.id || "");
-                    setScopeBranchId(selectedBranchId || filteredCountryBranches[0]?.id || "");
-                    setScopeCityBranchId(selectedCityBranchId || activeCityBranches[0]?.id || "");
-                    setIsScopeModalOpen(true);
-                  }}
-                  className="h-10 sm:h-9 px-3 sm:px-2 bg-blue-700 hover:bg-blue-800 text-white border-s border-blue-500/40 flex items-center justify-center transition cursor-pointer"
-                  title={t(lang, "lp.booking_posting_bill", "New Purchase Options")}
-                >
-                  <ChevronDown className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* 3. Smart Filter Bar Matching Reference Design */}
-          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 shadow-xs">
-            <div className="grid grid-cols-2 gap-3 lg:flex lg:flex-wrap lg:items-end">
-              {/* Country Searchable Dropdown */}
-              <div className="flex flex-col gap-1 min-w-0 lg:min-w-[150px]">
-                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                  {t(lang, "lp.country", "Country")}
-                </span>
-                <select
-                  value={selectedCountryId}
-                  onChange={(e) => {
-                    setSelectedCountryId(e.target.value);
-                    setSelectedBranchId("");
-                    setSelectedCityBranchId("");
-                  }}
-                  className="h-10 sm:h-9 w-full min-w-0 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none focus:border-blue-500"
-                >
-                  <option value="">🌐 {t(lang, "lp.all_purchases", "All Countries")}</option>
-                  {countryOptions.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {getCountryFlag(c.name)} {c.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Branch / City Dropdown (Country -> Main Branch -> City Branch) */}
-              <div className="flex flex-col gap-1 min-w-0 lg:min-w-[170px]">
-                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                  {t(lang, "lp.branch_name", "Branch / City")}
-                </span>
-                <select
-                  value={selectedBranchId}
-                  onChange={(e) => {
-                    setSelectedBranchId(e.target.value);
-                    setSelectedCityBranchId("");
-                  }}
-                  className="h-10 sm:h-9 w-full min-w-0 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none focus:border-blue-500"
-                >
-                  <option value="">🏢 {t(lang, "lp.all_branches", "All Branches")}</option>
-                  {filteredCountryBranches.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.name || b.code}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Search Bar */}
-              <div className="col-span-2 flex flex-col gap-1 min-w-0 lg:col-span-1 lg:flex-1 lg:min-w-[220px]">
-                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                  {t(lang, "common.search", "Search")}
-                </span>
-                <div className="relative">
-                  <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder={t(lang, "lp.search_placeholder", "Search by bill no, supplier, goods, voucher...")}
-                    className="h-10 sm:h-9 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/80 ps-9 pe-3 text-xs font-medium text-slate-800 dark:text-slate-200 outline-none focus:bg-white dark:focus:bg-slate-800 focus:border-blue-500 transition"
-                  />
-                </div>
-              </div>
-
-              {/* Registry Filter Dropdown */}
-              <div className="col-span-2 flex flex-col gap-1 min-w-0 lg:col-span-1 lg:min-w-[150px]">
-                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                  {t(lang, "lp.title", "Registry")}
-                </span>
-                <select
-                  value={registryFilter}
-                  onChange={(e) => setRegistryFilter(e.target.value)}
-                  className="h-10 sm:h-9 w-full min-w-0 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none focus:border-blue-500"
-                >
-                  <option value="all">{t(lang, "lp.all_purchases", "All Purchases")}</option>
-                  <option value="draft">{t(lang, "lp.draft_bills", "Draft")}</option>
-                  <option value="pending">{t(lang, "lp.pending_bills", "Pending")}</option>
-                  <option value="posted">{t(lang, "lp.col_posted", "Posted")}</option>
-                  <option value="accepted">{t(lang, "lp.posted_accepted", "Accepted")}</option>
-                  <option value="transferred">{t(lang, "lp.col_posted", "Transferred")}</option>
-                  <option value="not_transferred">{t(lang, "lp.pending_bills", "Not Transferred")}</option>
-                </select>
-              </div>
-
-              {/* More Filters Toggle */}
-              <div className="flex items-end">
-                <button
-                  type="button"
-                  onClick={() => setMoreFiltersOpen((prev) => !prev)}
-                  className={cn(
-                    "h-10 sm:h-9 w-full lg:w-auto justify-center px-3 rounded-xl border text-xs font-bold flex items-center gap-1.5 shadow-2xs transition",
-                    moreFiltersOpen
-                      ? "bg-blue-50 border-blue-300 text-blue-700 dark:bg-blue-950/50 dark:border-blue-800 dark:text-blue-300"
-                      : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50"
-                  )}
-                >
-                  <SlidersHorizontal className="h-3.5 w-3.5 text-slate-500" />
-                  <span>{t(lang, "common.filter", "More Filters")}</span>
-                </button>
-              </div>
-
-              {/* Reset Button */}
-              <div className="flex items-end">
-                <button
-                  type="button"
-                  title={t(lang, "common.reset", "Reset Filters")}
-                  onClick={() => {
-                    setSelectedCountryId("");
-                    setSelectedBranchId("");
-                    setSelectedCityBranchId("");
-                    setSearchQuery("");
-                    setRegistryFilter("all");
-                    setDateFilter("");
-                    setCurrentPage(1);
-                  }}
-                  className="h-10 w-full sm:h-9 lg:w-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center shadow-2xs hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-blue-600 transition"
-                >
-                  <RotateCcw className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            </div>
-
-            {/* Collapsible Extra Filters Panel */}
-            {moreFiltersOpen && (
-              <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-3 animate-in fade-in text-xs">
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500 mb-1">
-                    {t(lang, "lp.city_branch", "City Branch")}
-                  </label>
-                  <select
-                    value={selectedCityBranchId}
-                    onChange={(e) => setSelectedCityBranchId(e.target.value)}
-                    className="w-full h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 font-semibold text-slate-800 dark:text-slate-200 outline-none"
-                  >
-                    <option value="">{t(lang, "lp.all_branches", "All City Branches")}</option>
-                    {activeCityBranches.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500 mb-1">
-                    {t(lang, "common.currency", "Currency")}
-                  </label>
-                  <select
-                    value={purchaseCurrency}
-                    onChange={(e) => setPurchaseCurrency(e.target.value)}
-                    className="w-full h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 font-semibold text-slate-800 dark:text-slate-200 outline-none"
-                  >
-                    {CURRENCIES.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500 mb-1">
-                    {t(lang, "lp.reg_payment_mode", "Payment Mode")}
-                  </label>
-                  <select
-                    value={paymentMode}
-                    onChange={(e) => setPaymentMode(e.target.value)}
-                    className="w-full h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 font-semibold text-slate-800 dark:text-slate-200 outline-none"
-                  >
-                    {PAYMENT_MODES.map((m) => (
-                      <option key={m.value} value={m.value}>
-                        {m.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+        /* Approved Local Purchase Header: Toolbar (FILTERS + ACTIONS) + 3 Cards (Yellow, Blue, Green) */
+        <LocalPurchaseApprovedHeader
+          purchases={purchases}
+          filteredPurchases={filteredPurchases}
+          activeBranch={activeBranch}
+          session={session}
+          scopeCountryName={activeCountryObj?.name || (scopeLabels?.country !== "All Countries" ? scopeLabels?.country : undefined)}
+          scopeBranchName={activeBranch?.name}
+          usdRates={usdRates}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          selectedSupplier={selectedSupplier}
+          onSupplierChange={setSelectedSupplier}
+          selectedGoodsId={selectedGoodsFilterId}
+          onGoodsChange={setSelectedGoodsFilterId}
+          selectedCountryId={selectedCountryId}
+          onCountryChange={(cid) => {
+            setSelectedCountryId(cid);
+            setSelectedBranchId("");
+            setSelectedCityBranchId("");
+            setCurrentPage(1);
+          }}
+          selectedBranchId={selectedBranchId}
+          onBranchChange={(bid) => {
+            setSelectedBranchId(bid);
+            setSelectedCityBranchId("");
+            setCurrentPage(1);
+          }}
+          selectedStatus={registryFilter}
+          onStatusChange={(st) => {
+            setRegistryFilter(st);
+            setCurrentPage(1);
+          }}
+          selectedPaymentMode={paymentMode}
+          onPaymentModeChange={(pm) => {
+            setPaymentMode(pm);
+            setCurrentPage(1);
+          }}
+          dateFrom={dateFrom}
+          onDateFromChange={(d) => {
+            setDateFrom(d);
+            setCurrentPage(1);
+          }}
+          dateTo={dateTo}
+          onDateToChange={(d) => {
+            setDateTo(d);
+            setCurrentPage(1);
+          }}
+          onResetFilters={() => {
+            setSearchQuery("");
+            setSelectedSupplier("");
+            setSelectedGoodsFilterId("");
+            setSelectedCountryId("");
+            setSelectedBranchId("");
+            setSelectedCityBranchId("");
+            setRegistryFilter("all");
+            setPaymentMode("all");
+            setDateFrom("");
+            setDateTo("");
+            setDateFilter("");
+            setCurrentPage(1);
+          }}
+          goodsList={goodsList}
+          countryOptions={countryOptions}
+          countryBranches={filteredCountryBranches}
+          onNewPurchase={() => {
+            setIsFormOpen(true);
+            setEditingPurchaseId(null);
+            setDraftItems([]);
+            resetItemFields();
+            setCurrentStep(1);
+          }}
+          onPrint={() => {
+            printDomFragmentViaModal("local-purchase-register-table-wrapper", t(lang, "lp.title", "Local Purchase Registry"));
+          }}
+          onExportCsv={() => {
+            downloadLocalPurchasesCsv(filteredPurchases, lang);
+          }}
+          onExportPdf={() => {
+            printDomFragmentViaModal("local-purchase-register-table-wrapper", t(lang, "lp.title", "Local Purchase Registry"));
+          }}
+        />
       )}
 
 
 
-      {!isFormOpen && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5">
-          {/* Card 1: Branch & User Details */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 shadow-2xs flex flex-col justify-between h-full min-h-[175px] hover:shadow-xs transition">
-            <div className="flex items-center gap-2.5 pb-2.5 border-b border-slate-100 dark:border-slate-800">
-              <div className="h-7 w-7 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
-                <Building2 className="h-4 w-4" />
-              </div>
-              <p className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                {t(lang, "lp.branch_user_details", "BRANCH & USER DETAILS")}
-              </p>
-            </div>
-            <div className="py-2 space-y-1.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
-              {!isSuperAdminView ? (
-                <>
-                  <div className="flex justify-between items-center gap-2">
-                    <span className="text-slate-400 font-medium">{t(lang, "lp.branch_name", "Branch Name")} :</span>
-                    <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[150px]">
-                      {activeBranch?.name || "Afghanistan Main Branch"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center gap-2">
-                    <span className="text-slate-400 font-medium">{t(lang, "lp.branch_code", "Branch Code")} :</span>
-                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                      {activeBranch?.code || "AFG-MAIN-001"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center gap-2">
-                    <span className="text-slate-400 font-medium">{t(lang, "lp.reg_country_city", "Country / City")} :</span>
-                    <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[150px]">
-                      {[scopeLabels.country, scopeLabels.city].filter(Boolean).join(", ") || "—"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center gap-2">
-                    <span className="text-slate-400 font-medium">{t(lang, "lp.user_name", "User")} :</span>
-                    <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[150px]">
-                      {session.fullName || session.email || "Super Admin (Global Group)"}
-                    </span>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="flex justify-between items-center gap-2">
-                    <span className="text-slate-400 font-medium">{t(lang, "lp.user_name", "User")} :</span>
-                    <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[150px]">
-                      {session.fullName || session.email || "Super Admin (Global Group)"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center gap-2">
-                    <span className="text-slate-400 font-medium">{t(lang, "lp.reg_access", "Access")} :</span>
-                    <span className="font-bold text-blue-600 dark:text-blue-400">{t(lang, "lp.reg_all_countries", "All Countries")}</span>
-                  </div>
-                  <div className="flex justify-between items-center gap-2">
-                    <span className="text-slate-400 font-medium">{t(lang, "dash.total_branches", "Total Branches")} :</span>
-                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                      {countryBranches.length > 0 ? countryBranches.length : 4}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center gap-2">
-                    <span className="text-slate-400 font-medium">{t(lang, "dash.total_users", "Total Users")} :</span>
-                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">28</span>
-                  </div>
-                </>
-              )}
-            </div>
-            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-[10px]">
-              <span className="text-slate-400 font-medium">{t(lang, "lp.date_time", "Date & Time")} :</span>
-              <span suppressHydrationWarning className="font-mono font-bold text-slate-700 dark:text-slate-300">
-                {currentTimeFormatted}
-              </span>
-            </div>
-          </div>
 
-          {/* Card 2: Purchase Summary */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 shadow-2xs flex flex-col justify-between h-full min-h-[175px] hover:shadow-xs transition">
-            <div className="flex items-center gap-2.5 pb-2.5 border-b border-slate-100 dark:border-slate-800">
-              <div className="h-7 w-7 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
-                <TrendingUp className="h-4 w-4" />
-              </div>
-              <p className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 truncate">
-                {activeCountryObj ? `${activeCountryObj.name} · ${t(lang, "lp.reg_fin_summary", "Financial Summary")}` : t(lang, "lp.financial_summary", "PURCHASE SUMMARY")}
-              </p>
-            </div>
-            <div className="py-2 space-y-1.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
-              {!isSuperAdminView ? (
-                <>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-400 font-medium">{t(lang, "lp.reg_total_purchases", "Total Purchases")} :</span>
-                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                      {localPurchaseDashboard.totalBills}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-400 font-medium">{t(lang, "lp.reg_total_amount", "Total Amount")} :</span>
-                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                      {localCurrency} {localPurchaseDashboard.totalPurchase.toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-400 font-medium">{t(lang, "lp.reg_total_tax", "Total Tax")} :</span>
-                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                      {localCurrency} {localPurchaseDashboard.totalTax.toLocaleString()}
-                    </span>
-                  </div>
-                </>
-              ) : activeCountrySummary ? (
-                <>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-400 font-medium">{t(lang, "lp.reg_total_purchases", "Total Purchases")} :</span>
-                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                      {activeCountrySummary.totalPurchases}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-400 font-medium">{t(lang, "lp.reg_total_amount", "Total Amount")} ({activeCountrySummary.currency}) :</span>
-                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                      {activeCountrySummary.currency} {activeCountrySummary.totalAmountLocal.toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-400 font-medium">{t(lang, "lp.reg_total_amount_usd", "Total Amount (USD)")} :</span>
-                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                      $ {activeCountrySummary.totalAmountUsd.toLocaleString()}
-                    </span>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-400 font-medium">{t(lang, "lp.reg_total_purchases", "Total Purchases")} :</span>
-                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                      {superAdminStats.totalPurchasesCount}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-400 font-medium">{t(lang, "lp.reg_total_amount_usd", "Total Amount (USD)")} :</span>
-                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                      $ {superAdminStats.totalUsdAmount.toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-400 font-medium">{t(lang, "lp.reg_total_tax_usd", "Total Tax (USD)")} :</span>
-                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                      $ {superAdminStats.totalUsdTax.toLocaleString()}
-                    </span>
-                  </div>
-                </>
-              )}
-            </div>
-            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-xs">
-              <span className="text-slate-400 font-bold">{t(lang, "lp.total_final_amount", "Total Final Amount")} :</span>
-              <span className="font-mono font-black text-emerald-600 dark:text-emerald-400">
-                {!isSuperAdminView
-                  ? `${localCurrency} ${localPurchaseDashboard.totalFinal.toLocaleString()}`
-                  : activeCountrySummary
-                    ? `${activeCountrySummary.currency} ${activeCountrySummary.totalAmountLocal.toLocaleString()}`
-                    : `$ ${superAdminStats.totalUsdFinal.toLocaleString()}`}
-              </span>
-            </div>
-          </div>
-
-          {/* Card 3: Bill Entry Summary */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 shadow-2xs flex flex-col justify-between h-full min-h-[175px] hover:shadow-xs transition">
-            <div className="flex items-center gap-2.5 pb-2.5 border-b border-slate-100 dark:border-slate-800">
-              <div className="h-7 w-7 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-2xs">
-                <Receipt className="h-4 w-4" />
-              </div>
-              <p className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 truncate">
-                {activeCountryObj ? `${activeCountryObj.name} · ${t(lang, "lp.reg_entry_summary", "Entry Summary")}` : t(lang, "lp.bill_entry_summary", "BILL ENTRY SUMMARY")}
-              </p>
-            </div>
-            <div className="py-2 space-y-1.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
-              <div className="flex justify-between items-center">
-                <span className="text-slate-400 font-medium">{t(lang, "lp.total_bills", "Total Bills")} :</span>
-                <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                  {!isSuperAdminView
-                    ? localPurchaseDashboard.totalBills
-                    : activeCountrySummary
-                      ? activeCountrySummary.totalPurchases
-                      : superAdminStats.totalPurchasesCount}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-400 font-medium">{t(lang, "lp.posted_accepted", "Posted / Accepted")} :</span>
-                <span className="font-mono font-bold text-emerald-600">
-                  {!isSuperAdminView
-                    ? localPurchaseDashboard.postedBills
-                    : activeCountrySummary
-                      ? activeCountrySummary.posted
-                      : superAdminStats.posted}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-400 font-medium">{t(lang, "lp.draft_bills", "Draft Bills")} :</span>
-                <span className="font-mono font-bold text-amber-600">
-                  {!isSuperAdminView
-                    ? localPurchaseDashboard.draftBills
-                    : activeCountrySummary
-                      ? activeCountrySummary.draft
-                      : superAdminStats.draft}
-                </span>
-              </div>
-            </div>
-            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-[11px]">
-              <span className="text-slate-400 font-medium">{t(lang, "lp.pending_bills", "Pending Bills")} :</span>
-              <span className="font-mono font-black text-rose-600">
-                {!isSuperAdminView
-                  ? localPurchaseDashboard.pendingBills
-                  : activeCountrySummary
-                    ? activeCountrySummary.pending
-                    : superAdminStats.pending}
-              </span>
-            </div>
-          </div>
-
-          {/* Card 4: Country / Branch Report */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 shadow-2xs flex flex-col justify-between h-full min-h-[175px] hover:shadow-xs transition">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
-              <div className="flex items-center gap-2">
-                <div className="h-7 w-7 rounded-xl bg-rose-500 text-white flex items-center justify-center shrink-0 shadow-2xs">
-                  <Globe className="h-4 w-4" />
-                </div>
-                <div>
-                  <p className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                    {!isSuperAdminView ? t(lang, "lp.reg_branch_breakdown", "Branch Breakdown") : t(lang, "lp.all_countries_report", "ALL COUNTRIES REPORT")}
-                  </p>
-                  <p className="text-[9.5px] text-slate-400 font-medium">
-                    {selectedCountryId ? t(lang, "lp.reg_hint_filtered", "1 Country Filtered (Click to reset)") : t(lang, "lp.reg_hint_click", "Click a country to view bills")}
-                  </p>
-                </div>
-              </div>
-              {selectedCountryId && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedCountryId("");
-                    setSelectedBranchId("");
-                  }}
-                  className="px-2 py-0.5 text-[9.5px] font-bold rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 transition cursor-pointer"
-                  title={tr("Show all countries")}
-                >
-                  ✕ {t(lang, "lp.reg_show_all", "Show All")}
-                </button>
-              )}
-            </div>
-
-            <div className="py-1 space-y-1 text-xs max-h-[120px] overflow-y-auto">
-              {!isSuperAdminView ? (
-                filteredCountryBranches.slice(0, 5).map((b) => {
-                  const bPurchases = purchases.filter(p => String(p.country_branch_id || p.countryBranchId) === String(b.id));
-                  const isSelected = selectedBranchId === b.id;
-                  return (
-                    <button
-                      key={b.id}
-                      type="button"
-                      onClick={() => setSelectedBranchId(prev => prev === b.id ? "" : b.id)}
-                      className={cn(
-                        "w-full flex justify-between items-center py-1 px-1.5 rounded-lg border transition text-start cursor-pointer",
-                        isSelected
-                          ? "bg-blue-50 border-blue-300 dark:bg-blue-950/60 dark:border-blue-700 text-blue-700 dark:text-blue-300 font-bold"
-                          : "border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-600 dark:text-slate-400 font-medium"
-                      )}
-                    >
-                      <span className="truncate max-w-[140px] text-[11px]">{b.name || b.code}</span>
-                      <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-[11px]">{bPurchases.length}</span>
-                    </button>
-                  );
-                })
-              ) : (
-                <>
-                  {/* All Countries Toggle */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedCountryId("");
-                      setSelectedBranchId("");
-                    }}
-                    className={cn(
-                      "w-full flex justify-between items-center py-1 px-2 rounded-lg border transition text-start cursor-pointer",
-                      !selectedCountryId
-                        ? "bg-blue-600 border-blue-600 text-white font-bold shadow-2xs"
-                        : "border-transparent hover:bg-blue-50/70 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-300 font-medium"
-                    )}
-                  >
-                    <span className="flex items-center gap-1.5 text-[11px]">
-                      <span>🌐</span>
-                      <span>{tr("All Countries")}</span>
-                    </span>
-                    <span className={cn(
-                      "font-mono font-bold text-[10.5px] px-1.5 py-0.5 rounded",
-                      !selectedCountryId ? "bg-white/20 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
-                    )}>
-                      {superAdminStats.totalPurchasesCount}
-                    </span>
-                  </button>
-
-                  {/* Individual Countries */}
-                  {superAdminCountrySummary.map((c) => {
-                    const isSelected = selectedCountryId === c.id || (activeCountryObj && normalizeCountryKey(activeCountryObj.name) === normalizeCountryKey(c.country));
-                    return (
-                      <button
-                        key={c.country}
-                        type="button"
-                        onClick={() => {
-                          if (isSelected) {
-                            setSelectedCountryId("");
-                            setSelectedBranchId("");
-                          } else {
-                            setSelectedCountryId(c.id);
-                            setSelectedBranchId("");
-                          }
-                        }}
-                        className={cn(
-                          "w-full flex justify-between items-center py-1 px-2 rounded-lg border transition text-start cursor-pointer",
-                          isSelected
-                            ? "bg-blue-600 border-blue-600 text-white font-bold shadow-2xs"
-                            : "border-transparent hover:bg-blue-50/70 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-300 font-medium"
-                        )}
-                        title={t(lang, "lp.reg_click_show_bills", "Click to show {country} bills below").replace("{country}", c.country)}
-                      >
-                        <span className="flex items-center gap-1.5 text-[11px] truncate">
-                          <span>{getCountryFlag(c.country)}</span>
-                          <span className="truncate">{c.country}</span>
-                        </span>
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <span className={cn(
-                            "font-mono font-bold text-[10.5px] px-1.5 py-0.5 rounded",
-                            isSelected ? "bg-white/20 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
-                          )}>
-                            {c.totalPurchases}
-                          </span>
-                          {isSelected && <Check className="h-3 w-3 text-white" />}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
       {/* Conditional Content: Form Wizard vs Full-Width Registry Log Table */}
       {isFormOpen ? (
         <form onSubmit={handleSubmit} className="w-full space-y-5 animate-in fade-in duration-200">
@@ -5610,7 +5139,7 @@ export function LocalPurchaseView({
             </div>
 
               {/* TABLE 2: ALL COUNTRIES LOCAL PURCHASE LIST */}
-              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xs overflow-hidden">
+              <div id="local-purchase-register-table-wrapper" className="dgt-purchase-table-skin bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xs overflow-hidden">
                 <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
                   <div className="flex items-center gap-2.5 flex-wrap">
                     <div className="h-7 w-7 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
@@ -6038,7 +5567,7 @@ export function LocalPurchaseView({
             /* ========================================================================= */
             /* 1. COUNTRY / BRANCH ADMIN VIEW (SINGLE COUNTRY): LOCAL PURCHASE LIST      */
             /* ========================================================================= */
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xs overflow-hidden">
+            <div id="local-purchase-register-table-wrapper" className="dgt-purchase-table-skin bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xs overflow-hidden">
               <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
                 <div className="flex items-center gap-2.5">
                   <div className="h-7 w-7 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
