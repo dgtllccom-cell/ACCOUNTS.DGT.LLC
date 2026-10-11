@@ -30,7 +30,7 @@ export function DeviceActivation() {
   const [loaded, setLoaded] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [form, setForm] = useState({ name: "", phone: "", identifier: "", note: "" });
+  const [form, setForm] = useState({ name: "", phone: "", identifier: "", note: "", reviewCode: "" });
   const [code, setCode] = useState("");
 
   const refresh = useCallback(async () => {
@@ -115,6 +115,11 @@ export function DeviceActivation() {
             <div className="space-y-1">
               <Label className="text-white/90">{s.t("note", "Note for the administrator (optional)")}</Label>
               <Input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} className="bg-white" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-white/90">{s.t("review_code", "Store review code (optional)")}</Label>
+              <Input dir="ltr" autoCapitalize="characters" autoCorrect="off" spellCheck={false} maxLength={20} value={form.reviewCode} onChange={(e) => setForm({ ...form, reviewCode: e.target.value })} className="bg-white font-mono tracking-widest" />
+              <p className="text-[11px] text-white/60">{s.t("review_code_hint", "Only for Apple, Google or Samsung store reviewers. Leave empty if you are a normal user.")}</p>
             </div>
             {error && <p role="alert" className="text-xs font-semibold text-amber-300">{error}</p>}
             <Button type="submit" disabled={busy} className="w-full">

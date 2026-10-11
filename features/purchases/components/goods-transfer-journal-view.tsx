@@ -46,13 +46,13 @@ const PURPOSES = [
 type PurposeId = (typeof PURPOSES)[number]["id"];
 
 const PURPOSE_DEFAULTS: Record<PurposeId, string> = {
-  own_warehouse: "Own Warehouse",
-  dgt_warehouse: "Another DGT Warehouse",
-  third_party_warehouse: "Third-Party Warehouse",
+  export_customer: "A. Export Shipment (Customer)",
+  export_dgt_branch: "A. Export Shipment (DGT Country Branch)",
+  own_warehouse: "B. Warehouse (Own Facility)",
+  third_party_warehouse: "B. Warehouse (Third-Party Facility)",
+  dgt_warehouse: "C. Branch Transfer (Another DGT Branch)",
+  hold: "D. Confirm & Hold (Current Location)",
   local_sale: "Local Market Sale",
-  export_customer: "Export to Customer",
-  export_dgt_branch: "Export to Another DGT Country Branch",
-  hold: "Hold at Current Location",
 };
 
 const STATE_DEFAULTS: Record<string, string> = {

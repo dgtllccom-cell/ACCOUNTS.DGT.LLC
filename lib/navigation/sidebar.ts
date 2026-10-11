@@ -701,65 +701,30 @@ export const sidebarTree: SidebarNode[] = [
     ]
   },
   {
-    key: "inter-country-trade",
-    labelKey: "nav.inter_country_trade",
+    key: "local-purchase-menu",
+    labelKey: "nav.local_purchase_management",
     iconKey: "globe",
     roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"],
     children: [
       {
-        key: "inter-country-booking",
-        labelKey: "nav.inter_country_purchase_booking",
+        key: "local-purchase-bills",
+        labelKey: "nav.local_purchase_bills",
         iconKey: "clipboard-list",
         href: "/dashboard/purchase/local-purchase" as Route,
         roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
       },
       {
-        key: "inter-country-transfer-payment",
-        labelKey: "nav.inter_country_transfer_payment",
+        key: "local-purchase-transfer-loading",
+        labelKey: "nav.local_purchase_transfer_loading",
         iconKey: "send",
         href: "/dashboard/purchase/local-purchase-transfer-payment" as Route,
         roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
       },
       {
-        key: "local-purchase-warehouse-transfer",
-        labelKey: "nav.lp_warehouse_transfer_queue",
-        iconKey: "warehouse",
-        href: "/dashboard/purchase/local-purchase-warehouse-transfer" as Route,
-        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
-      },
-      {
-        key: "purchase-transit-lane",
-        labelKey: "nav.purchase_transit_lane",
-        iconKey: "truck",
-        href: "/dashboard/purchase/purchase-transit-lane" as Route,
-        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
-      },
-      {
-        key: "local-purchase-loading",
-        labelKey: "nav.lp_loading_queue",
-        iconKey: "truck",
-        href: "/dashboard/purchase/local-purchase-loading" as Route,
-        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
-      },
-      {
-        key: "local-purchase-export",
-        labelKey: "nav.lp_export_queue",
-        iconKey: "flag",
-        href: "/dashboard/purchase/local-purchase-export" as Route,
-        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
-      },
-      {
-        key: "inter-country-verification",
-        labelKey: "nav.inter_country_transfer_verification",
-        iconKey: "shield-check",
-        href: "/dashboard/purchase/purchase-transfer-verification" as Route,
-        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
-      },
-      {
-        key: "receiving-country-workflow",
-        labelKey: "nav.receiving_country_workflow",
-        iconKey: "package",
-        href: "/dashboard/purchase/local-goods-received" as Route,
+        key: "local-purchase-journal-report",
+        labelKey: "nav.local_purchase_journal_report",
+        iconKey: "file-text",
+        href: "/dashboard/purchase/local-purchase-journal-report" as Route,
         roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
       }
     ]

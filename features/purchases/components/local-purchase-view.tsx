@@ -3749,20 +3749,16 @@ export function LocalPurchaseView({
 
                       <div>
                         <label className="block text-[9.5px] font-bold text-slate-500 uppercase mb-1">
-                          {t(lang, "lp.paying_account", "Paying Ledger Account")}
+                          {t(lang, "lp.paying_account", "Purchase & Supplier Ledgers")}
                         </label>
-                        <select
-                          value={paymentAccountNo}
-                          onChange={e => setPaymentAccountNo(e.target.value)}
-                          className="w-full h-8.5 rounded-lg border border-slate-200 bg-white px-2 text-xs font-semibold text-blue-700 outline-none"
-                        >
-                          <option value="">{t(lang, "lp.select_paying_account", "Default (Auto by Mode)")}</option>
-                          {accountsList.map(acc => (
-                            <option key={acc.id} value={acc.code}>
-                              {acc.code} - {acc.name} ({acc.currency})
-                            </option>
-                          ))}
-                        </select>
+                        <div className="w-full h-8.5 rounded-lg border border-slate-200 bg-slate-50 dark:bg-slate-800/60 px-2.5 flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-300">
+                          <span className="truncate">
+                            <span className="text-blue-600 dark:text-blue-400 font-bold">DR:</span> {purchaseAccountNo || "—"} &bull; <span className="text-emerald-600 dark:text-emerald-400 font-bold">CR:</span> {salesAccountNo || brokerAccountNo || "—"}
+                          </span>
+                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider ml-1 shrink-0">
+                            {t(lang, "lp.select_paying_account", "From Step 1")}
+                          </span>
+                        </div>
                       </div>
                     </div>
 
@@ -4149,7 +4145,7 @@ export function LocalPurchaseView({
 
                       <div className="flex justify-between items-center p-2 rounded-lg bg-slate-50 border border-slate-200 dark:bg-slate-800/40 dark:border-slate-700 text-[8.5px]">
                         <span className="text-slate-500 font-bold">Payment Condition / Route:</span>
-                        <span className="font-black text-slate-800 dark:text-slate-200">{paymentMode} ({paymentAccountNo || "Cash Account"})</span>
+                        <span className="font-black text-slate-800 dark:text-slate-200">{paymentMode} &bull; Daily Payments Integration</span>
                       </div>
                     </div>
                   </div>
@@ -4780,7 +4776,7 @@ export function LocalPurchaseView({
                     <div>
                       <span className="block text-slate-400 font-bold uppercase text-[8.5px]">Payment Condition</span>
                       <strong className="text-blue-700 dark:text-blue-400">{paymentMode}</strong>
-                      <p className="text-[9px] text-slate-500 truncate">Account: {paymentAccountNo || "Cash Account"}</p>
+                      <p className="text-[9px] text-slate-500 truncate">Source: Daily Payments</p>
                     </div>
                     <div>
                       <span className="block text-slate-400 font-bold uppercase text-[8.5px]">{t(lang, "lp.payment_logistics_s", "Transport & Loading")}</span>
@@ -6815,6 +6811,19 @@ export function LocalPurchaseView({
                     className="h-8 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black flex items-center gap-1 shadow-sm"
                   >
                     <Send className="h-3.5 w-3.5" /> {th("Transfer & Post to GL")}
+                  </Button>
+                )}
+                {selectedRowForVoucher.status !== "draft" && (
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      const id = selectedRowForVoucher.id;
+                      setSelectedRowForVoucher(null);
+                      router.push(`/dashboard/purchase/local-purchase/${id}/goods-transfer`);
+                    }}
+                    className="h-8 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center gap-1 shadow-sm"
+                  >
+                    <Package className="h-3.5 w-3.5" /> {th("Transfer & Loading (4 Actions)")}
                   </Button>
                 )}
                 {(selectedRowForVoucher.status === "draft" || isSuperAdmin) && (

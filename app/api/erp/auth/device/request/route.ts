@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
     const app = requestApp(req, b?.app);
     if (!app) throw new ApiClientError("Activation can only be requested from the DGT.llc B / BS apps.", { status: 400, code: "NOT_APP" });
     const { device, token } = await createDeviceRequest(
-      { app, name: b?.name, phone: b?.phone, identifier: b?.identifier, note: b?.note, platform: b?.platform, model: b?.model, osVersion: b?.osVersion, appVersion: b?.appVersion },
+      { app, name: b?.name, phone: b?.phone, identifier: b?.identifier, note: b?.note, platform: b?.platform, model: b?.model, osVersion: b?.osVersion, appVersion: b?.appVersion, reviewCode: typeof b?.reviewCode === "string" ? b.reviewCode.slice(0, 40) : undefined },
       clientIp(req)
     );
     const res = apiOk(summarize(device));

@@ -3,10 +3,14 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { openTransferPaymentPrintReport } from "@/lib/reports/open-transfer-payment-print-report";
+import { fetchWarehouses } from "@/features/warehouses/warehouse-api";
+import { LocalGoodsReceivedView } from "@/features/purchases/components/local-goods-received-view";
 import {
   Building2, FileText, Search, RefreshCw,
   Coins, Loader2, CheckCircle2, Send, Printer,
-  Scale, CreditCard, ArrowDownLeft
+  Scale, CreditCard, ArrowDownLeft, Ship, Warehouse,
+  PauseCircle, Package, Truck, ArrowRight, Check, X,
+  MapPin, User, Clock, AlertTriangle, Layers
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
@@ -88,6 +92,7 @@ interface LocalPurchaseRecord {
   lot_no?: string;
   quantityKgs?: number;
   quantity_kgs?: number;
+  numbers?: number;
   quantityName?: string;
   quantity_name?: string;
   totalGrossWeight?: number;
@@ -125,8 +130,14 @@ interface LocalPurchaseRecord {
   shipping_mode?: string;
   warehouseName?: string;
   warehouse_name?: string;
+  warehouseId?: string;
+  warehouse_id?: string;
+  warehousePlotNo?: string;
+  warehouse_plot_no?: string;
   truckNo?: string;
   truck_no?: string;
+  driverName?: string;
+  driver_name?: string;
   size?: string;
   applyTax?: string;
   apply_tax?: string;
@@ -136,18 +147,75 @@ interface LocalPurchaseRecord {
   tax_percentage?: number;
   remainingBalance?: number;
   remaining_balance?: number;
+  loadingDate?: string;
+  loading_date?: string;
+  goods_receipt_type?: string;
+  goods_receipt_status?: string;
+  goods_receipt_details?: any;
+  goods_received_at?: string;
+  created_by_name?: string;
 }
 
-export function LocalPurchaseTransferPaymentView({ session }: { session: any }) {
+type ActionModalType = "export" | "warehouse" | "branch" | "hold";
+
+export function LocalPurchaseTransferPaymentView({
+  session,
+  countryBranches = [],
+  cityBranches = [],
+}: {
+  session: any;
+  countryBranches?: any[];
+  cityBranches?: any[];
+}) {
   const router = useRouter();
   const activeLang = useActiveLanguage();
   const isRtl = ["ur","ar","fa","ps"].includes(activeLang);
   const tt = (key: string, fb: string) => t(activeLang, key as never, fb);
-  const [purchases, setPurchases] = useState<LocalPurchaseRecord[]>([]);
+
+  const loc = (en: string, ur: string, ar: string, fa: string, ps: string) => {
+    if (activeLang === "ur") return ur;
+    if (activeLang === "ar") return ar;
+    if (activeLang === "fa") return fa;
+    if (activeLang === "ps") return ps;
+    return en;
+  };
+
+  const [activeWorkflowTab, setActiveWorkflowTab] = useState<"operations" | "goods_received" | "pending_gl">("operations");
+  const [allConfirmedPurchases, setAllConfirmedPurchases] = useState<LocalPurchaseRecord[]>([]);
+  const [pendingGlPurchases, setPendingGlPurchases] = useState<LocalPurchaseRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRowForVoucher, setSelectedRowForVoucher] = useState<LocalPurchaseRecord | null>(null);
   const [transferringId, setTransferringId] = useState<string | null>(null);
+
+  // 4 Actions Modal state
+  const [actionTargetRow, setActionTargetRow] = useState<LocalPurchaseRecord | null>(null);
+  const [actionType, setActionType] = useState<ActionModalType>("warehouse");
+  const [actionQty, setActionQty] = useState<number>(0);
+  const [selectedWarehouseId, setSelectedWarehouseId] = useState<string>("");
+  const [warehousePlotNo, setWarehousePlotNo] = useState<string>("");
+  const [destCountryBranchId, setDestCountryBranchId] = useState<string>("");
+  const [exportDestination, setExportDestination] = useState<string>("");
+  const [truckNo, setTruckNo] = useState<string>("");
+  const [driverName, setDriverName] = useState<string>("");
+  const [actionNotes, setActionNotes] = useState<string>("");
+  const [confirmReceiptImmediate, setConfirmReceiptImmediate] = useState<boolean>(true);
+  const [savingAction, setSavingAction] = useState<boolean>(false);
+
+  // Warehouses list
+  const [warehousesList, setWarehousesList] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function loadWhs() {
+      try {
+        const whs = await fetchWarehouses();
+        setWarehousesList(whs || []);
+      } catch (err) {
+        console.warn("Failed to load warehouses list:", err);
+      }
+    }
+    void loadWhs();
+  }, []);
 
   // Fetch local purchases
   const loadReports = async () => {
@@ -157,16 +225,21 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
       const payload = await res.json();
       if (payload.ok && payload.data?.purchases) {
         const raw = payload.data.purchases as LocalPurchaseRecord[];
-        // Filter in memory: keep only accepted status entries for transfer payments.
-        // Credit bills have no immediate cash outflow to review here — they still post
-        // to Roznamcha/GL exactly the same way via "Transfer & Post" in the main
-        // registry, they just don't need to sit in this Payment queue.
-        const filtered = raw.filter(p => {
+
+        // 1. All confirmed / accepted / posted bills available for transfer & loading
+        const confirmed = raw.filter(p => {
+          const st = String(p.status || "").toLowerCase();
+          return ["accepted", "posted", "transferred", "approved", "completed"].includes(st);
+        });
+        setAllConfirmedPurchases(confirmed);
+
+        // 2. Pending GL transfers: accepted bills awaiting GL posting
+        const pending = raw.filter(p => {
           if (p.status !== "accepted") return false;
           const mode = String(p.paymentMode || p.payment_mode || "").trim().toLowerCase().split("(")[0].trim();
           return mode !== "credit";
         });
-        setPurchases(filtered);
+        setPendingGlPurchases(pending);
       }
     } catch (err) {
       console.error("Failed to load local purchase transfers:", err);
@@ -179,9 +252,29 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
     void loadReports();
   }, []);
 
-  // Filter purchases by search query
-  const filteredPurchases = useMemo(() => {
-    let result = purchases;
+  // Filter confirmed purchases by search query
+  const filteredOperations = useMemo(() => {
+    let result = allConfirmedPurchases;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(p =>
+        (p.goodsName || p.goods_name || "").toLowerCase().includes(q) ||
+        (p.brand || "").toLowerCase().includes(q) ||
+        (p.serialNo || p.serial_no || p.billNo || "").toLowerCase().includes(q) ||
+        (p.branchName || p.branch_name || "").toLowerCase().includes(q) ||
+        (p.countryName || p.country_name || "").toLowerCase().includes(q) ||
+        (p.supplierName || p.supplier_name || "").toLowerCase().includes(q) ||
+        (p.warehouseName || p.warehouse_name || "").toLowerCase().includes(q) ||
+        (p.shippingMode || p.shipping_mode || "").toLowerCase().includes(q) ||
+        (p.goods_receipt_status || "").toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [allConfirmedPurchases, searchQuery]);
+
+  // Filter pending GL purchases
+  const filteredPendingGl = useMemo(() => {
+    let result = pendingGlPurchases;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter(p =>
@@ -194,12 +287,96 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
       );
     }
     return result;
-  }, [purchases, searchQuery]);
+  }, [pendingGlPurchases, searchQuery]);
 
   // Financial KPI totals
   const totalPendingAmount = useMemo(() => {
-    return filteredPurchases.reduce((acc, p) => acc + Number(p.finalCost || p.final_cost || p.purchaseCost || p.purchase_cost || 0), 0);
-  }, [filteredPurchases]);
+    return filteredPendingGl.reduce((acc, p) => acc + Number(p.finalCost || p.final_cost || p.purchaseCost || p.purchase_cost || 0), 0);
+  }, [filteredPendingGl]);
+
+  // Open 4 Actions Modal
+  const openActionModal = (row: LocalPurchaseRecord, type: ActionModalType) => {
+    setActionTargetRow(row);
+    setActionType(type);
+    const totalQty = Number(row.numbers || row.quantityKgs || row.quantity_kgs || 0);
+    const transferred = Number(row.goods_receipt_details?.transferQty || 0);
+    const remaining = Math.max(0, totalQty - transferred);
+    setActionQty(remaining > 0 ? remaining : totalQty);
+    setSelectedWarehouseId(row.warehouseId || row.warehouse_id || warehousesList[0]?.id || "");
+    setWarehousePlotNo(row.warehousePlotNo || row.warehouse_plot_no || "");
+    setDestCountryBranchId(countryBranches[0]?.id || "");
+    setExportDestination(row.originCountryName || row.origin_country_name || "Overseas Port");
+    setTruckNo(row.truckNo || row.truck_no || "");
+    setDriverName(row.driverName || row.driver_name || "");
+    setActionNotes("");
+    setConfirmReceiptImmediate(true);
+  };
+
+  // Submit 4 Actions Modal
+  const handleExecuteAction = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!actionTargetRow) return;
+
+    setSavingAction(true);
+    try {
+      let receiptType: "warehouse" | "loading" | "export" = "warehouse";
+      let statusLabel = "Confirmed";
+      const details: Record<string, any> = {
+        action: actionType,
+        transferQty: actionQty,
+        loadingDate: new Date().toISOString().slice(0, 10),
+        notes: actionNotes,
+        truckNo,
+        driverName,
+      };
+
+      if (actionType === "export") {
+        receiptType = "export";
+        statusLabel = "Export Shipment Dispatched";
+        details.exportDestination = exportDestination;
+      } else if (actionType === "warehouse") {
+        receiptType = "warehouse";
+        const matchedWh = warehousesList.find(w => w.id === selectedWarehouseId);
+        statusLabel = confirmReceiptImmediate ? "Warehouse Received" : "Warehouse Dispatched";
+        details.warehouseId = selectedWarehouseId;
+        details.warehouseName = matchedWh?.warehouse_name || matchedWh?.name || "Warehouse";
+        details.warehousePlotNo = warehousePlotNo;
+        details.receivingConfirmed = confirmReceiptImmediate;
+      } else if (actionType === "branch") {
+        receiptType = "loading";
+        const matchedBr = countryBranches.find(b => b.id === destCountryBranchId);
+        statusLabel = "Branch Transfer Dispatched";
+        details.destCountryBranchId = destCountryBranchId;
+        details.destBranchName = matchedBr?.name || "Authorized Branch";
+      } else if (actionType === "hold") {
+        receiptType = "warehouse";
+        statusLabel = "Confirmed & Held at Current Location";
+        details.holdLocation = actionTargetRow.warehouseName || actionTargetRow.warehouse_name || "Purchase Location";
+      }
+
+      const res = await fetch("/api/erp/purchases/local-purchase", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          purchaseId: actionTargetRow.id,
+          receiptType,
+          status: statusLabel,
+          details,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error?.message || "Failed to record transfer action.");
+
+      alert(`Success: ${statusLabel} recorded successfully!`);
+      setActionTargetRow(null);
+      await loadReports();
+    } catch (err: any) {
+      alert(err.message || "An error occurred.");
+    } finally {
+      setSavingAction(false);
+    }
+  };
+
 
   return (
     <div className="space-y-6 p-4 sm:p-6 text-slate-900 dark:text-slate-100 bg-slate-50/50 dark:bg-slate-950 min-h-screen" dir={isRtl ? "rtl" : "ltr"}>
@@ -224,14 +401,14 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl shadow-xs">
         <div>
           <div className="flex items-center gap-2">
-            <Send className="h-5 w-5 text-amber-600" />
+            <Truck className="h-5 w-5 text-blue-600" />
             <h1 className="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tight flex items-center gap-2">
-              {tt("lptpv.page_title","Inter-Country / Local Purchase Transfer Payment")}
-              <span className="bg-amber-400 text-amber-950 text-[10px] font-black px-2 py-0.5 rounded-full shadow-xs uppercase tracking-wider">NEW</span>
+              {tt("lptpv.page_title","Local Purchase Transfer & Loading")}
+              <span className="bg-blue-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-xs uppercase tracking-wider">UNIFIED</span>
             </h1>
           </div>
           <p className="text-xs text-slate-500 font-medium mt-0.5">
-            {tt("lptpv.page_subtitle","Verify and post accepted local purchases to the General Ledger & Roznamcha")}
+            {tt("lptpv.page_subtitle","Manage Goods Receipt, Warehouse & Branch Transfers, Export Handover, and Loading Confirmation")}
           </p>
         </div>
 
@@ -258,176 +435,723 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
             {tt("lptp.sync_pending", "Sync Pending")}
           </Button>
         </div>
-      </div>
-
-      {/* KPI Cards Section */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs rounded-2xl">
-          <CardHeader className="p-4 border-b border-slate-100 dark:border-slate-800/60 flex flex-row items-center gap-2">
-            <Send className="h-4 w-4 text-amber-600" />
-            <CardTitle className="text-xs font-black uppercase text-slate-800 dark:text-slate-200">
-              {tt("lptp.pending_gl_transfers", "Pending GL Transfers")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4">
-            <div className="text-2xl font-extrabold text-amber-600 font-mono">
-              {filteredPurchases.length}
-            </div>
-            <p className="text-[10px] text-slate-400 font-medium mt-1 uppercase">
-              {tt("lptp.accepted_bills_awaiting", "Accepted bills awaiting verification")}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs rounded-2xl">
-          <CardHeader className="p-4 border-b border-slate-100 dark:border-slate-800/60 flex flex-row items-center gap-2">
-            <Coins className="h-4 w-4 text-emerald-600" />
-            <CardTitle className="text-xs font-black uppercase text-slate-800 dark:text-slate-200">
-              {tt("lptp.total_pending_value", "Total Pending Value")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4">
-            <div className="text-2xl font-extrabold text-emerald-600 font-mono">
-              {totalPendingAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </div>
-            <p className="text-[10px] text-slate-400 font-medium mt-1 uppercase">
-              {tt("lptp.aggregate_unposted_cost", "Aggregate unposted purchase cost")}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs rounded-2xl">
-          <CardHeader className="p-4 border-b border-slate-100 dark:border-slate-800/60 flex flex-row items-center gap-2">
-            <Building2 className="h-4 w-4 text-blue-600" />
-            <CardTitle className="text-xs font-black uppercase text-slate-800 dark:text-slate-200">
-              {tt("lptp.authorized_branch", "Authorized Branch")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 flex flex-col justify-center">
-            <div className="text-sm font-black text-slate-700 dark:text-slate-350 uppercase">
-              {session.branchName || "—"}
-            </div>
-            <p className="text-[10px] text-slate-400 font-medium mt-1 uppercase">
-              {tt("lptpv.kpi_posting_role","Posting role")}: <span className="text-blue-500 font-bold">{session.role || "Administrator"}</span>
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Main Table Card */}
-      <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm rounded-2xl overflow-hidden animate-in fade-in">
-        <CardHeader className="bg-amber-500/10 border-b border-slate-200 dark:border-slate-800 p-4 flex flex-row items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Send className="h-4 w-4 text-amber-600" />
-            <CardTitle className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-              {tt("lptpv.table_title","PENDING GENERAL LEDGER TRANSFERS")}
-            </CardTitle>
-          </div>
-          <span className="text-[10px] font-mono font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded">
-            {tt("lptpv.ready_to_post","Ready to Post")}: {filteredPurchases.length}
+      </div>      {/* Workflow Navigation Tabs */}
+      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+        <button
+          type="button"
+          onClick={() => setActiveWorkflowTab("operations")}
+          className={`px-4 py-2 text-xs font-black uppercase rounded-xl transition-all flex items-center gap-2 ${
+            activeWorkflowTab === "operations"
+              ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
+              : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+          }`}
+        >
+          <Truck className="h-4 w-4" />
+          <span>{loc("1. Transfer & Loading (4 Actions)", "1. ٹرانسفر اور لوڈنگ (4 اقدامات)", "1. التحويل والتحميل (4 إجراءات)", "۱. انتقال و بارگیری (۴ اقدام)", "1. لېږد او بارول (4 کړنې)")}</span>
+          <span className="ms-1.5 px-2 py-0.5 rounded-full text-[10px] bg-white/20 text-white font-mono">
+            {filteredOperations.length}
           </span>
-        </CardHeader>
+        </button>
 
-        <CardContent className="p-0">
-          <div className="overflow-x-auto overflow-y-auto max-h-[500px]">
-            <table className="w-full text-left text-xs whitespace-nowrap border-collapse">
-              <thead className="sticky top-0 z-10 bg-slate-900 text-white text-[9px] font-extrabold uppercase tracking-wider border-b border-slate-700">
-                <tr>
-                  <Th className="p-2.5 border-r border-slate-700 text-center">{tt("lptpv.col_voucher_no","VOUCHER NO")}</Th>
-                  <Th className="p-2.5 border-r border-slate-700">{tt("common.date","DATE")}</Th>
-                  <Th className="p-2.5 border-r border-slate-700">{tt("common.branch","BRANCH NAME")}</Th>
-                  <Th className="p-2.5 border-r border-slate-700">{tt("lptpv.col_purchase_acc","PURCHASE ACC (DR)")}</Th>
-                  <Th className="p-2.5 border-r border-slate-700">{tt("lptpv.col_sales_acc","SALES ACC (CR)")}</Th>
-                  <Th className="p-2.5 border-r border-slate-700">{tt("lpjr.inv_goods_name","GOODS NAME")}</Th>
-                  <Th className="p-2.5 border-r border-slate-700">{tt("lpjr.inv_brand","BRAND")}</Th>
-                  <Th className="p-2.5 border-r border-slate-700 text-right">{tt("lptpv.col_qty","QTY")}</Th>
-                  <Th className="p-2.5 border-r border-slate-700 text-right font-black">{tt("lptpv.col_total_cost","TOTAL COST")}</Th>
-                  <Th className="p-2.5 border-r border-slate-700 text-center">{tt("lptpv.col_pay_mode","PAY MODE")}</Th>
-                  <Th className="p-2.5 text-center">{tt("lptpv.col_actions","ACTIONS")}</Th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-[10px]">
-                {loading ? (
-                  <tr>
-                    <td colSpan={11} className="p-10 text-center text-slate-400 font-sans">
-                      <Loader2 className="h-6 w-6 animate-spin mx-auto text-amber-600 mb-2" />
-                      {tt("lptpv.loading","Fetching pending GL transfers...")}
-                    </td>
-                  </tr>
-                ) : filteredPurchases.length === 0 ? (
-                  <tr>
-                    <td colSpan={11} className="p-10 text-center text-slate-400 font-sans">
-                      <CheckCircle2 className="h-8 w-8 mx-auto text-emerald-500 mb-2" />
-                      <p className="font-bold text-slate-700">{tt("lptpv.all_posted","All accepted purchases have been successfully posted to Ledger")}</p>
-                    </td>
-                  </tr>
-                ) : (
-                  filteredPurchases.map(row => {
-                    const totalCost = Number(row.finalCost || row.final_cost || row.purchaseCost || row.purchase_cost || 0);
-                    const curr = row.localCurrency || row.local_currency || "PKR";
-                    const voucherCode = row.serialNo || row.serial_no || row.billNo || row.bill_no || row.journal_serial_no || "—";
+        <button
+          type="button"
+          onClick={() => setActiveWorkflowTab("goods_received")}
+          className={`px-4 py-2 text-xs font-black uppercase rounded-xl transition-all flex items-center gap-2 ${
+            activeWorkflowTab === "goods_received"
+              ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/20"
+              : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+          }`}
+        >
+          <Package className="h-4 w-4" />
+          <span>{loc("2. Goods Received Workflow", "2. مال وصولی ورک فلو", "2. سير عمل استلام البضائع", "۲. جریان کار دریافت کالا", "2. د توکو ترلاسه کولو جریان")}</span>
+        </button>
 
-                    return (
-                      <tr key={row.id} className="hover:bg-amber-50/20 dark:hover:bg-amber-950/10 transition-colors">
-                        <td className="p-2 font-mono font-bold text-blue-600 dark:text-blue-400 border-r border-slate-150 dark:border-slate-800">{voucherCode}</td>
-                        <td className="p-2 font-mono text-slate-500 border-r border-slate-150 dark:border-slate-800">{new Date(row.createdAt || row.created_at || "").toLocaleDateString("en-GB")}</td>
-                        <td className="p-2 font-semibold border-r border-slate-150 dark:border-slate-800">{row.branchName || row.branch_name || "-"}</td>
-                        <td className="p-2 font-mono text-[9px] font-bold text-blue-600 border-r border-slate-150 dark:border-slate-800">{row.purchaseAccountNo || row.purchase_account_no || "—"}</td>
-                        <td className="p-2 font-mono text-[9px] font-bold text-purple-600 border-r border-slate-150 dark:border-slate-800">{row.salesAccountNo || row.sales_account_no || row.brokerAccountNo || row.broker_account_no || "—"}</td>
-                        <td className="p-2 font-bold text-slate-900 border-r border-slate-150 dark:border-slate-800">{row.goodsName || row.goods_name || "-"}</td>
-                        <td className="p-2 text-slate-500 border-r border-slate-150 dark:border-slate-800">{row.brand || "-"}</td>
-                        <td className="p-2 text-right font-mono font-bold border-r border-slate-150 dark:border-slate-800">{Number(row.quantityKgs || row.quantity_kgs || 0).toLocaleString()} {row.quantityName || row.quantity_name}</td>
-                        <td className="p-2 text-right font-mono font-black text-emerald-600 border-r border-slate-150 dark:border-slate-800">{curr} {totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td className="p-2 text-center font-bold border-r border-slate-150 dark:border-slate-800">{row.paymentMode || row.payment_mode || "Cash"}</td>
-                        <td className="p-2 text-center space-x-2">
-                          <Button
-                            size="sm"
-                            disabled={transferringId === row.id}
-                            onClick={async () => {
-                              if (!confirm(`Are you sure you want to verify and post local purchase ${voucherCode} to General Ledger?`)) return;
-                              setTransferringId(row.id);
-                              try {
-                                const res = await fetch("/api/erp/purchases/local-purchase/transfer", {
-                                  method: "POST",
-                                  headers: { "Content-Type": "application/json" },
-                                  body: JSON.stringify({ purchaseId: row.id })
-                                });
-                                const data = await res.json();
-                                if (!res.ok || !data.ok) throw new Error(data.error?.message || "Transfer failed.");
-                                alert("Success: Posted to general ledger & roznamcha successfully!");
-                                await loadReports();
-                              } catch (err: any) {
-                                alert(err.message || "An error occurred.");
-                              } finally {
-                                setTransferringId(null);
-                              }
-                            }}
-                            className="h-6 px-2 text-[9px] font-black bg-emerald-600 hover:bg-emerald-700 text-white rounded-md"
-                          >
-                            {transferringId === row.id ? (
-                              <Loader2 className="h-3 w-3 animate-spin" />
-                            ) : (
-                              tt("lptpv.verify_post","Verify & Post to GL")
-                            )}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setSelectedRowForVoucher(row)}
-                            className="h-6 px-2 text-[9px] font-bold text-blue-600 border-blue-200 hover:bg-blue-50 rounded-md"
-                          >
-                            {tt("lptp.view_voucher", "View Voucher")}
-                          </Button>
+        <button
+          type="button"
+          onClick={() => setActiveWorkflowTab("pending_gl")}
+          className={`px-4 py-2 text-xs font-black uppercase rounded-xl transition-all flex items-center gap-2 ${
+            activeWorkflowTab === "pending_gl"
+              ? "bg-amber-600 text-white shadow-md shadow-amber-500/20"
+              : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+          }`}
+        >
+          <Send className="h-4 w-4" />
+          <span>{loc("3. Pending GL Transfers", "3. زیر التوا جی ایل ٹرانسفرز", "3. تحويلات دفتر الأستاذ العام المعلّقة", "۳. انتقال‌های معلق دفتر کل", "3. د عمومي لیجر پاتې لېږدونې")}</span>
+          <span className="ms-1.5 px-2 py-0.5 rounded-full text-[10px] bg-amber-100 text-amber-800 font-mono">
+            {filteredPendingGl.length}
+          </span>
+        </button>
+      </div>
+
+      {/* ───────────────────────────────────────────────────────────────────────────── */}
+      {/* TAB 1: TRANSFER & LOADING OPERATIONS (FOUR ACTIONS)                          */}
+      {/* ───────────────────────────────────────────────────────────────────────────── */}
+      {activeWorkflowTab === "operations" && (
+        <div className="space-y-6 animate-in fade-in">
+          {/* KPI Cards Section */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs rounded-2xl">
+              <CardHeader className="p-4 border-b border-slate-100 dark:border-slate-800/60 flex flex-row items-center gap-2">
+                <Truck className="h-4 w-4 text-blue-600" />
+                <CardTitle className="text-xs font-black uppercase text-slate-800 dark:text-slate-200">
+                  {loc("Confirmed Bills for Dispatch", "روانگی کے لیے تصدیق شدہ بلز", "فواتير مؤكدة للإرسال", "صورتحساب‌های تأیید شده برای ارسال", "د لېږلو لپاره تایید شوي بلونه")}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="text-2xl font-extrabold text-blue-600 font-mono">
+                  {filteredOperations.length}
+                </div>
+                <p className="text-[10px] text-slate-400 font-medium mt-1 uppercase">
+                  {loc("Confirmed bills ready for transfer or hold", "منظور شدہ بلز ٹرانسفر یا روک تھام کے لیے تیار ہیں", "فواتير مؤكدة جاهزة للتحويل أو الاحتجاز", "صورتحساب‌های تأیید شده آماده انتقال یا نگهداری", "تایید شوي بلونه د لېږد یا ساتلو لپاره چمتو دي")}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs rounded-2xl">
+              <CardHeader className="p-4 border-b border-slate-100 dark:border-slate-800/60 flex flex-row items-center gap-2">
+                <Package className="h-4 w-4 text-emerald-600" />
+                <CardTitle className="text-xs font-black uppercase text-slate-800 dark:text-slate-200">
+                  {loc("Total Purchase Quantity", "کل خریداری مقدار", "إجمالي كمية الشراء", "کل مقدار خرید", "د پېرلو ټوله اندازه")}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="text-2xl font-extrabold text-emerald-600 font-mono">
+                  {filteredOperations.reduce((sum, p) => sum + Number(p.numbers || p.quantityKgs || p.quantity_kgs || 0), 0).toLocaleString()}
+                </div>
+                <p className="text-[10px] text-slate-400 font-medium mt-1 uppercase">
+                  {loc("Aggregate quantity across active bills", "فعال بلز پر مجموعی مقدار", "الكمية الإجمالية عبر الفواتير النشطة", "مقدار کل در صورتحساب‌های فعال", "په فعالو بلونو کې ټوله اندازه")}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs rounded-2xl">
+              <CardHeader className="p-4 border-b border-slate-100 dark:border-slate-800/60 flex flex-row items-center gap-2">
+                <Building2 className="h-4 w-4 text-purple-600" />
+                <CardTitle className="text-xs font-black uppercase text-slate-800 dark:text-slate-200">
+                  {tt("lptp.authorized_branch", "Authorized Branch")}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 flex flex-col justify-center">
+                <div className="text-sm font-black text-slate-700 dark:text-slate-350 uppercase">
+                  {session.branchName || "—"}
+                </div>
+                <p className="text-[10px] text-slate-400 font-medium mt-1 uppercase">
+                  {tt("lptpv.kpi_posting_role","Posting role")}: <span className="text-blue-500 font-bold">{session.role || "Administrator"}</span>
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Confirmed Bills Table with Four Actions */}
+          <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm rounded-2xl overflow-hidden">
+            <CardHeader className="bg-blue-500/10 border-b border-slate-200 dark:border-slate-800 p-4 flex flex-row items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Truck className="h-4 w-4 text-blue-600" />
+                <CardTitle className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                  {loc("LOCAL PURCHASE TRANSFER & LOADING REGISTRY", "لوکل پرچیز ٹرانسفر اور لوڈنگ رجسٹری", "سجل تحويل وتحميل المشتريات المحلية", "دفتر ثبت انتقال و بارگیری خرید محلی", "د محلي پېرلو لېږد او بارولو راجستر")}
+                </CardTitle>
+              </div>
+              <span className="text-[10px] font-mono font-bold text-blue-700 bg-blue-100 dark:bg-blue-950 dark:text-blue-300 px-2 py-0.5 rounded">
+                {loc("Total Records", "کل ریکارڈز", "إجمالي السجلات", "کل رکوردها", "ټول ریکارډونه")}: {filteredOperations.length}
+              </span>
+            </CardHeader>
+
+            <CardContent className="p-0">
+              <div className="overflow-x-auto overflow-y-auto max-h-[600px]">
+                <table className="w-full text-left text-xs whitespace-nowrap border-collapse">
+                  <thead className="sticky top-0 z-10 bg-slate-900 text-white text-[9px] font-extrabold uppercase tracking-wider border-b border-slate-700">
+                    <tr>
+                      <Th className="p-2.5 border-r border-slate-700 text-center">{tt("lptpv.col_voucher_no","VOUCHER NO")}</Th>
+                      <Th className="p-2.5 border-r border-slate-700">{tt("common.date","DATE")}</Th>
+                      <Th className="p-2.5 border-r border-slate-700">{tt("common.branch","BRANCH NAME")}</Th>
+                      <Th className="p-2.5 border-r border-slate-700">{tt("lpjr.inv_goods_name","GOODS NAME")}</Th>
+                      <Th className="p-2.5 border-r border-slate-700 text-right">{loc("TOTAL QTY", "کل مقدار", "إجمالي الكمية", "مقدار کل", "ټوله اندازه")}</Th>
+                      <Th className="p-2.5 border-r border-slate-700 text-right font-black text-amber-300">{loc("TRANSFERRED", "منتقل شدہ", "المحوّل", "انتقال یافته", "لېږدول شوی")}</Th>
+                      <Th className="p-2.5 border-r border-slate-700 text-right font-black text-emerald-300">{loc("REMAINING", "بقیہ", "المتبقي", "باقی‌مانده", "پاتې")}</Th>
+                      <Th className="p-2.5 border-r border-slate-700">{loc("CURRENT LOCATION", "موجودہ مقام", "الموقع الحالي", "موقعیت فعلی", "اوسنی ځای")}</Th>
+                      <Th className="p-2.5 border-r border-slate-700">{loc("TRANSFER DESTINATION", "منتقلی منزل", "وجهة التحويل", "مقصد انتقال", "د لېږد ځای")}</Th>
+                      <Th className="p-2.5 border-r border-slate-700 text-center">{loc("LOADING DATE", "لوڈنگ کی تاریخ", "تاريخ التحميل", "تاریخ بارگیری", "د بارولو نېټه")}</Th>
+                      <Th className="p-2.5 border-r border-slate-700 text-center">{loc("RECEIVING STATUS", "وصولی کی صورتحال", "حالة الاستلام", "وضعیت دریافت", "د ترلاسه کولو حالت")}</Th>
+                      <Th className="p-2.5 text-center font-black text-amber-300">{loc("4 TRANSFER ACTIONS", "4 منتقلی کے اقدامات", "4 إجراءات تحويل", "۴ اقدام انتقال", "د لېږد ۴ کړنې")}</Th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-[10px]">
+                    {loading ? (
+                      <tr>
+                        <td colSpan={12} className="p-10 text-center text-slate-400 font-sans">
+                          <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-600 mb-2" />
+                          {loc("Fetching transfer & loading records...", "منتقلی اور لوڈنگ ریکارڈز حاصل کیے جا رہے ہیں...", "جارٍ جلب سجلات التحويل والتحميل...", "در حال دریافت سوابق انتقال و بارگیری...", "د لېږد او بارولو ریکارډونه راوړل کیږي...")}
                         </td>
                       </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+                    ) : filteredOperations.length === 0 ? (
+                      <tr>
+                        <td colSpan={12} className="p-10 text-center text-slate-400 font-sans">
+                          <CheckCircle2 className="h-8 w-8 mx-auto text-blue-500 mb-2" />
+                          <p className="font-bold text-slate-700">{loc("No confirmed purchases found.", "کوئی تصدیق شدہ خریداری نہیں ملی۔", "لم يتم العثور على مشتريات مؤكدة.", "هیچ خرید تأیید شده‌ای یافت نشد.", "هیڅ تایید شوی پېر ونه موندل شو.")}</p>
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredOperations.map(row => {
+                        const totalQty = Number(row.numbers || row.quantityKgs || row.quantity_kgs || 0);
+                        const transferredQty = Number(row.goods_receipt_details?.transferQty || 0);
+                        const remainingQty = Math.max(0, totalQty - transferredQty);
+                        const unitName = row.quantityName || row.quantity_name || "Bags";
+                        const voucherCode = row.serialNo || row.serial_no || row.billNo || row.bill_no || row.journal_serial_no || `LP-${row.id.slice(0, 6).toUpperCase()}`;
+                        const currentLocation = row.warehouseName || row.warehouse_name || "Purchase Location";
+                        const destination = row.goods_receipt_details?.destBranchName || row.goods_receipt_details?.exportDestination || row.shippingMode || row.shipping_mode || "Local Market";
+                        const loadingDate = row.goods_receipt_details?.loadingDate || row.loadingDate || row.loading_date || "—";
+                        const receivingStatus = row.goods_receipt_status || "Pending";
+
+                        return (
+                          <tr key={row.id} className="hover:bg-blue-50/20 dark:hover:bg-blue-950/10 transition-colors">
+                            <td className="p-2 font-mono font-bold text-blue-600 dark:text-blue-400 border-r border-slate-150 dark:border-slate-800">{voucherCode}</td>
+                            <td className="p-2 font-mono text-slate-500 border-r border-slate-150 dark:border-slate-800">{new Date(row.createdAt || row.created_at || "").toLocaleDateString("en-GB")}</td>
+                            <td className="p-2 font-semibold border-r border-slate-150 dark:border-slate-800">{row.branchName || row.branch_name || "-"}</td>
+                            <td className="p-2 font-bold text-slate-900 border-r border-slate-150 dark:border-slate-800">{row.goodsName || row.goods_name || "-"}</td>
+                            <td className="p-2 text-right font-mono font-bold border-r border-slate-150 dark:border-slate-800">{totalQty.toLocaleString()} {unitName}</td>
+                            <td className="p-2 text-right font-mono font-black text-amber-600 border-r border-slate-150 dark:border-slate-800">{transferredQty.toLocaleString()} {unitName}</td>
+                            <td className="p-2 text-right font-mono font-black text-emerald-600 border-r border-slate-150 dark:border-slate-800">{remainingQty.toLocaleString()} {unitName}</td>
+                            <td className="p-2 font-semibold text-slate-700 dark:text-slate-300 border-r border-slate-150 dark:border-slate-800">{currentLocation}</td>
+                            <td className="p-2 font-semibold text-slate-700 dark:text-slate-300 border-r border-slate-150 dark:border-slate-800">{destination}</td>
+                            <td className="p-2 text-center font-mono text-slate-500 border-r border-slate-150 dark:border-slate-800">{loadingDate}</td>
+                            <td className="p-2 text-center border-r border-slate-150 dark:border-slate-800">
+                              <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                                receivingStatus.toLowerCase().includes("received") || receivingStatus.toLowerCase().includes("completed")
+                                  ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+                                  : receivingStatus.toLowerCase().includes("held")
+                                  ? "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300"
+                                  : "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
+                              }`}>
+                                {receivingStatus}
+                              </span>
+                            </td>
+                            <td className="p-2 text-center">
+                              <div className="flex items-center justify-center gap-1">
+                                <Button
+                                  size="sm"
+                                  title="A. Export Shipment"
+                                  onClick={() => openActionModal(row, "export")}
+                                  className="h-6 px-1.5 text-[9px] font-black bg-amber-600 hover:bg-amber-700 text-white rounded-md flex items-center gap-0.5"
+                                >
+                                  <Ship className="h-3 w-3" />
+                                  <span>{loc("Export", "ایکسپورٹ", "تصدير", "صادرات", "صادرات")}</span>
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  title="B. Warehouse Transfer"
+                                  onClick={() => openActionModal(row, "warehouse")}
+                                  className="h-6 px-1.5 text-[9px] font-black bg-blue-600 hover:bg-blue-700 text-white rounded-md flex items-center gap-0.5"
+                                >
+                                  <Warehouse className="h-3 w-3" />
+                                  <span>{loc("Warehouse", "گودام", "مستودع", "انبار", "ګودام")}</span>
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  title="C. Branch Transfer"
+                                  onClick={() => openActionModal(row, "branch")}
+                                  className="h-6 px-1.5 text-[9px] font-black bg-purple-600 hover:bg-purple-700 text-white rounded-md flex items-center gap-0.5"
+                                >
+                                  <Building2 className="h-3 w-3" />
+                                  <span>{loc("Branch", "برانچ", "فرع", "شعبه", "څانګه")}</span>
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  title="D. Confirm & Hold"
+                                  onClick={() => openActionModal(row, "hold")}
+                                  className="h-6 px-1.5 text-[9px] font-black bg-slate-600 hover:bg-slate-700 text-white rounded-md flex items-center gap-0.5"
+                                >
+                                  <PauseCircle className="h-3 w-3" />
+                                  <span>{loc("Hold", "روکیں", "احتجاز", "نگهداری", "ساتل")}</span>
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  title={loc("Full Lot Journal", "مکمل لاٹ جرنل", "دفتر يومية الحصة الكاملة", "دفتر روزنامه کامل بهر", "د بشپړ لاټ ورځنۍ")}
+                                  onClick={() => router.push(`/dashboard/purchase/local-purchase/${row.id}/goods-transfer`)}
+                                  className="h-6 px-1 text-[9px] font-bold text-slate-600 border-slate-300 hover:bg-slate-100 rounded-md"
+                                >
+                                  <Package className="h-3 w-3 text-indigo-600" />
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* ───────────────────────────────────────────────────────────────────────────── */}
+      {/* TAB 2: EXISTING LOCAL GOODS RECEIVED WORKFLOW                                */}
+      {/* ───────────────────────────────────────────────────────────────────────────── */}
+      {activeWorkflowTab === "goods_received" && (
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-2 sm:p-4 shadow-xs animate-in fade-in">
+          <LocalGoodsReceivedView
+            session={session}
+            countryBranches={countryBranches}
+            cityBranches={cityBranches}
+          />
+        </div>
+      )}
+
+      {/* ───────────────────────────────────────────────────────────────────────────── */}
+      {/* TAB 3: PENDING GENERAL LEDGER TRANSFERS                                       */}
+      {/* ───────────────────────────────────────────────────────────────────────────── */}
+      {activeWorkflowTab === "pending_gl" && (
+        <div className="space-y-6 animate-in fade-in">
+          {/* KPI Cards Section */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs rounded-2xl">
+              <CardHeader className="p-4 border-b border-slate-100 dark:border-slate-800/60 flex flex-row items-center gap-2">
+                <Send className="h-4 w-4 text-amber-600" />
+                <CardTitle className="text-xs font-black uppercase text-slate-800 dark:text-slate-200">
+                  {tt("lptp.pending_gl_transfers", "Pending GL Transfers")}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="text-2xl font-extrabold text-amber-600 font-mono">
+                  {filteredPendingGl.length}
+                </div>
+                <p className="text-[10px] text-slate-400 font-medium mt-1 uppercase">
+                  {tt("lptp.accepted_bills_awaiting", "Accepted bills awaiting verification")}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs rounded-2xl">
+              <CardHeader className="p-4 border-b border-slate-100 dark:border-slate-800/60 flex flex-row items-center gap-2">
+                <Coins className="h-4 w-4 text-emerald-600" />
+                <CardTitle className="text-xs font-black uppercase text-slate-800 dark:text-slate-200">
+                  {tt("lptp.total_pending_value", "Total Pending Value")}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="text-2xl font-extrabold text-emerald-600 font-mono">
+                  {totalPendingAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </div>
+                <p className="text-[10px] text-slate-400 font-medium mt-1 uppercase">
+                  {tt("lptp.aggregate_unposted_cost", "Aggregate unposted purchase cost")}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs rounded-2xl">
+              <CardHeader className="p-4 border-b border-slate-100 dark:border-slate-800/60 flex flex-row items-center gap-2">
+                <Building2 className="h-4 w-4 text-blue-600" />
+                <CardTitle className="text-xs font-black uppercase text-slate-800 dark:text-slate-200">
+                  {tt("lptp.authorized_branch", "Authorized Branch")}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 flex flex-col justify-center">
+                <div className="text-sm font-black text-slate-700 dark:text-slate-350 uppercase">
+                  {session.branchName || "—"}
+                </div>
+                <p className="text-[10px] text-slate-400 font-medium mt-1 uppercase">
+                  {tt("lptpv.kpi_posting_role","Posting role")}: <span className="text-blue-500 font-bold">{session.role || "Administrator"}</span>
+                </p>
+              </CardContent>
+            </Card>
           </div>
-        </CardContent>
-      </Card>
+
+          {/* Main Table Card */}
+          <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm rounded-2xl overflow-hidden animate-in fade-in">
+            <CardHeader className="bg-amber-500/10 border-b border-slate-200 dark:border-slate-800 p-4 flex flex-row items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Send className="h-4 w-4 text-amber-600" />
+                <CardTitle className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                  {tt("lptpv.table_title","PENDING GENERAL LEDGER TRANSFERS")}
+                </CardTitle>
+              </div>
+              <span className="text-[10px] font-mono font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded">
+                {tt("lptpv.ready_to_post","Ready to Post")}: {filteredPendingGl.length}
+              </span>
+            </CardHeader>
+
+            <CardContent className="p-0">
+              <div className="overflow-x-auto overflow-y-auto max-h-[500px]">
+                <table className="w-full text-left text-xs whitespace-nowrap border-collapse">
+                  <thead className="sticky top-0 z-10 bg-slate-900 text-white text-[9px] font-extrabold uppercase tracking-wider border-b border-slate-700">
+                    <tr>
+                      <Th className="p-2.5 border-r border-slate-700 text-center">{tt("lptpv.col_voucher_no","VOUCHER NO")}</Th>
+                      <Th className="p-2.5 border-r border-slate-700">{tt("common.date","DATE")}</Th>
+                      <Th className="p-2.5 border-r border-slate-700">{tt("common.branch","BRANCH NAME")}</Th>
+                      <Th className="p-2.5 border-r border-slate-700">{tt("lptpv.col_purchase_acc","PURCHASE ACC (DR)")}</Th>
+                      <Th className="p-2.5 border-r border-slate-700">{tt("lptpv.col_sales_acc","SALES ACC (CR)")}</Th>
+                      <Th className="p-2.5 border-r border-slate-700">{tt("lpjr.inv_goods_name","GOODS NAME")}</Th>
+                      <Th className="p-2.5 border-r border-slate-700">{tt("lpjr.inv_brand","BRAND")}</Th>
+                      <Th className="p-2.5 border-r border-slate-700 text-right">{tt("lptpv.col_qty","QTY")}</Th>
+                      <Th className="p-2.5 border-r border-slate-700 text-right font-black">{tt("lptpv.col_total_cost","TOTAL COST")}</Th>
+                      <Th className="p-2.5 border-r border-slate-700 text-center">{tt("lptpv.col_pay_mode","PAY MODE")}</Th>
+                      <Th className="p-2.5 text-center">{tt("lptpv.col_actions","ACTIONS")}</Th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-[10px]">
+                    {loading ? (
+                      <tr>
+                        <td colSpan={11} className="p-10 text-center text-slate-400 font-sans">
+                          <Loader2 className="h-6 w-6 animate-spin mx-auto text-amber-600 mb-2" />
+                          {tt("lptpv.loading","Fetching pending GL transfers...")}
+                        </td>
+                      </tr>
+                    ) : filteredPendingGl.length === 0 ? (
+                      <tr>
+                        <td colSpan={11} className="p-10 text-center text-slate-400 font-sans">
+                          <CheckCircle2 className="h-8 w-8 mx-auto text-emerald-500 mb-2" />
+                          <p className="font-bold text-slate-700">{tt("lptpv.all_posted","All accepted purchases have been successfully posted to Ledger")}</p>
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredPendingGl.map(row => {
+                        const totalCost = Number(row.finalCost || row.final_cost || row.purchaseCost || row.purchase_cost || 0);
+                        const curr = row.localCurrency || row.local_currency || "PKR";
+                        const voucherCode = row.serialNo || row.serial_no || row.billNo || row.bill_no || row.journal_serial_no || "—";
+
+                        return (
+                          <tr key={row.id} className="hover:bg-amber-50/20 dark:hover:bg-amber-950/10 transition-colors">
+                            <td className="p-2 font-mono font-bold text-blue-600 dark:text-blue-400 border-r border-slate-150 dark:border-slate-800">{voucherCode}</td>
+                            <td className="p-2 font-mono text-slate-500 border-r border-slate-150 dark:border-slate-800">{new Date(row.createdAt || row.created_at || "").toLocaleDateString("en-GB")}</td>
+                            <td className="p-2 font-semibold border-r border-slate-150 dark:border-slate-800">{row.branchName || row.branch_name || "-"}</td>
+                            <td className="p-2 font-mono text-[9px] font-bold text-blue-600 border-r border-slate-150 dark:border-slate-800">{row.purchaseAccountNo || row.purchase_account_no || "—"}</td>
+                            <td className="p-2 font-mono text-[9px] font-bold text-purple-600 border-r border-slate-150 dark:border-slate-800">{row.salesAccountNo || row.sales_account_no || row.brokerAccountNo || row.broker_account_no || "—"}</td>
+                            <td className="p-2 font-bold text-slate-900 border-r border-slate-150 dark:border-slate-800">{row.goodsName || row.goods_name || "-"}</td>
+                            <td className="p-2 text-slate-500 border-r border-slate-150 dark:border-slate-800">{row.brand || "-"}</td>
+                            <td className="p-2 text-right font-mono font-bold border-r border-slate-150 dark:border-slate-800">{Number(row.quantityKgs || row.quantity_kgs || 0).toLocaleString()} {row.quantityName || row.quantity_name}</td>
+                            <td className="p-2 text-right font-mono font-black text-emerald-600 border-r border-slate-150 dark:border-slate-800">{curr} {totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                            <td className="p-2 text-center font-bold border-r border-slate-150 dark:border-slate-800">{row.paymentMode || row.payment_mode || "Cash"}</td>
+                            <td className="p-2 text-center space-x-2">
+                              <Button
+                                size="sm"
+                                disabled={transferringId === row.id}
+                                onClick={async () => {
+                                  if (!confirm(`Are you sure you want to verify and post local purchase ${voucherCode} to General Ledger?`)) return;
+                                  setTransferringId(row.id);
+                                  try {
+                                    const res = await fetch("/api/erp/purchases/local-purchase/transfer", {
+                                      method: "POST",
+                                      headers: { "Content-Type": "application/json" },
+                                      body: JSON.stringify({ purchaseId: row.id })
+                                    });
+                                    const data = await res.json();
+                                    if (!res.ok || !data.ok) throw new Error(data.error?.message || "Transfer failed.");
+                                    alert("Success: Posted to general ledger & roznamcha successfully!");
+                                    await loadReports();
+                                  } catch (err: any) {
+                                    alert(err.message || "An error occurred.");
+                                  } finally {
+                                    setTransferringId(null);
+                                  }
+                                }}
+                                className="h-6 px-2 text-[9px] font-black bg-emerald-600 hover:bg-emerald-700 text-white rounded-md"
+                              >
+                                {transferringId === row.id ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                  tt("lptpv.verify_post","Verify & Post to GL")
+                                )}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setSelectedRowForVoucher(row)}
+                                className="h-6 px-2 text-[9px] font-bold text-blue-600 border-blue-200 hover:bg-blue-50 rounded-md"
+                              >
+                                {tt("lptp.view_voucher", "View Voucher")}
+                              </Button>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* ───────────────────────────────────────────────────────────────────────────── */}
+      {/* FOUR ACTIONS MODAL (A: Export, B: Warehouse, C: Branch, D: Hold)             */}
+      {/* ───────────────────────────────────────────────────────────────────────────── */}
+      {actionTargetRow && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs overflow-y-auto animate-in fade-in">
+          <div className="w-full max-w-2xl rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 max-h-[92vh] overflow-y-auto relative">
+            <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div>
+                <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase flex items-center gap-2">
+                  <Truck className="h-4 w-4 text-blue-600" />
+                  <span>{loc("EXECUTE TRANSFER & LOADING ACTION", "ٹرانسفر اور لوڈنگ کارروائی انجام دیں", "تنفيذ إجراء التحويل والتحميل", "انجام اقدام انتقال و بارگیری", "د انتقال او بارولو عمل ترسره کړئ")}</span>
+                </h3>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  {actionTargetRow.serialNo || actionTargetRow.billNo || `LP-${actionTargetRow.id.slice(0, 6).toUpperCase()}`} · {actionTargetRow.goodsName || actionTargetRow.goods_name} · Total: {Number(actionTargetRow.numbers || actionTargetRow.quantityKgs || actionTargetRow.quantity_kgs || 0).toLocaleString()} {actionTargetRow.quantityName || actionTargetRow.quantity_name || "Bags"}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActionTargetRow(null)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* 4 Action Chooser Tabs */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <button
+                type="button"
+                onClick={() => setActionType("export")}
+                className={`p-3 rounded-xl border text-center font-bold text-xs flex flex-col items-center gap-1.5 transition-all ${
+                  actionType === "export"
+                    ? "border-amber-500 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 shadow-xs"
+                    : "border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50"
+                }`}
+              >
+                <Ship className="h-5 w-5 text-amber-600" />
+                <span>A. {loc("Export Shipment", "برآمدی شپمنٹ", "شحنة التصدير", "محموله صادراتی", "د صادراتو بار وړل")}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActionType("warehouse")}
+                className={`p-3 rounded-xl border text-center font-bold text-xs flex flex-col items-center gap-1.5 transition-all ${
+                  actionType === "warehouse"
+                    ? "border-blue-500 bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-200 shadow-xs"
+                    : "border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50"
+                }`}
+              >
+                <Warehouse className="h-5 w-5 text-blue-600" />
+                <span>B. {loc("Warehouse", "گودام", "المستودع", "انبار", "ګودام")}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActionType("branch")}
+                className={`p-3 rounded-xl border text-center font-bold text-xs flex flex-col items-center gap-1.5 transition-all ${
+                  actionType === "branch"
+                    ? "border-purple-500 bg-purple-50 dark:bg-purple-950/40 text-purple-800 dark:text-purple-200 shadow-xs"
+                    : "border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50"
+                }`}
+              >
+                <Building2 className="h-5 w-5 text-purple-600" />
+                <span>C. {loc("Branch Transfer", "برانچ ٹرانسفر", "تحويل الفرع", "انتقال شعبه", "د څانګې انتقال")}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActionType("hold")}
+                className={`p-3 rounded-xl border text-center font-bold text-xs flex flex-col items-center gap-1.5 transition-all ${
+                  actionType === "hold"
+                    ? "border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs"
+                    : "border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50"
+                }`}
+              >
+                <PauseCircle className="h-5 w-5 text-slate-600" />
+                <span>D. {loc("Confirm & Hold", "تصدیق اور ہولڈ", "تأكيد والاحتفاظ", "تأیید و نگهداری", "تایید او ساتل")}</span>
+              </button>
+            </div>
+
+            {/* Action Form */}
+            <form onSubmit={handleExecuteAction} className="space-y-4 pt-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Quantity */}
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                    {loc("Quantity to Transfer / Load / Hold", "منتقل / لوڈ / ہولڈ کرنے کی مقدار", "الكمية للتحويل / التحميل / الاحتفاظ", "مقدار جهت انتقال / بارگیری / نگهداری", "د انتقال / بارولو / ساتلو مقدار")}
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    required
+                    value={actionQty}
+                    onChange={e => setActionQty(Number(e.target.value))}
+                    className="w-full h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 text-xs font-bold outline-none"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-0.5">
+                    {loc("Partial transfer allowed — remaining quantity stays on bill.", "جزوی ٹرانسفر کی اجازت ہے — باقی مقدار بل پر رہے گی۔", "يسمح بالتحويل الجزئي - تبقى الكمية المتبقية في الفاتورة.", "انتقال جزئی مجاز است — باقیمانده در صورتحساب باقی می‌ماند.", "جزوي انتقال ته اجازه شته — پاتې مقدار په بل کې پاتې کیږي.")}
+                  </p>
+                </div>
+
+                {/* Conditional Fields based on action */}
+                {actionType === "export" && (
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                      {loc("Export Destination (Port / Country)", "برآمدی منزل (بندرگاہ / ملک)", "وجهة التصدير (الميناء / البلد)", "مقصد صادرات (بندر / کشور)", "د صادراتو منزل (بندر / هیواد)")}
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={exportDestination}
+                      onChange={e => setExportDestination(e.target.value)}
+                      placeholder="e.g. Jebel Ali Port / Destination Country"
+                      className="w-full h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 text-xs font-bold outline-none"
+                    />
+                  </div>
+                )}
+
+                {actionType === "warehouse" && (
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                      {loc("Target Warehouse", "ہدف گودام", "المستودع المستهدف", "انبار مقصد", "هدف ګودام")}
+                    </label>
+                    <select
+                      value={selectedWarehouseId}
+                      onChange={e => setSelectedWarehouseId(e.target.value)}
+                      required
+                      className="w-full h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 text-xs font-bold outline-none uppercase"
+                    >
+                      <option value="">{tt("common.select", "Select Warehouse")}</option>
+                      {warehousesList.map(w => (
+                        <option key={w.id} value={w.id}>{w.warehouse_name || w.name} ({w.warehouse_code || "WH"})</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {actionType === "branch" && (
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                      {loc("Destination Branch", "منزل برانچ", "فرع الوجهة", "شعبه مقصد", "د منزل څانګه")}
+                    </label>
+                    <select
+                      value={destCountryBranchId}
+                      onChange={e => setDestCountryBranchId(e.target.value)}
+                      required
+                      className="w-full h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 text-xs font-bold outline-none uppercase"
+                    >
+                      <option value="">{tt("common.select", "Select Branch")}</option>
+                      {countryBranches.map(b => (
+                        <option key={b.id} value={b.id}>{b.name} ({b.code})</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {actionType === "hold" && (
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                      {loc("Current Hold Location", "موجودہ ہولڈ مقام", "موقع الاحتفاظ الحالي", "محل نگهداری فعلی", "د اوسني ساتلو ځای")}
+                    </label>
+                    <input
+                      type="text"
+                      disabled
+                      value={actionTargetRow.warehouseName || actionTargetRow.warehouse_name || "Purchase Location"}
+                      className="w-full h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/50 px-3 text-xs font-semibold outline-none text-slate-500"
+                    />
+                  </div>
+                )}
+
+                {/* Warehouse Plot/Rack if warehouse */}
+                {actionType === "warehouse" && (
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                      {loc("Plot / Rack / Bin No", "پلاٹ / ریک / بن نمبر", "رقم القطعة / الرف / الصندوق", "شماره پلات / قفسه / بین", "د پلاټ / ریک / بن شمیره")}
+                    </label>
+                    <input
+                      type="text"
+                      value={warehousePlotNo}
+                      onChange={e => setWarehousePlotNo(e.target.value)}
+                      placeholder="e.g. Rack A-12 / Plot 4"
+                      className="w-full h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 text-xs font-bold outline-none"
+                    />
+                  </div>
+                )}
+
+                {/* Truck / Driver if not hold */}
+                {actionType !== "hold" && (
+                  <>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                        {loc("Truck / Vehicle No", "ٹرک / گاڑی نمبر", "رقم الشاحنة / المركبة", "شماره موتر / موټر", "د لارۍ / ګاډي شمیره")}
+                      </label>
+                      <input
+                        type="text"
+                        value={truckNo}
+                        onChange={e => setTruckNo(e.target.value)}
+                        placeholder="e.g. T-8492-DXB"
+                        className="w-full h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 text-xs font-bold outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                        {loc("Driver Name / Contact", "ڈرائیور کا نام / رابطہ", "اسم السائق / جهة الاتصال", "نام راننده / تماس", "د موټر چلوونکي نوم / اړیکه")}
+                      </label>
+                      <input
+                        type="text"
+                        value={driverName}
+                        onChange={e => setDriverName(e.target.value)}
+                        placeholder="e.g. Muhammad Tariq"
+                        className="w-full h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 text-xs font-bold outline-none"
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Warehouse Immediate Confirmation Toggle */}
+              {actionType === "warehouse" && (
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800">
+                  <input
+                    type="checkbox"
+                    id="confirmReceiptImmediate"
+                    checked={confirmReceiptImmediate}
+                    onChange={e => setConfirmReceiptImmediate(e.target.checked)}
+                    className="h-4 w-4 rounded text-blue-600"
+                  />
+                  <label htmlFor="confirmReceiptImmediate" className="text-xs font-bold text-blue-900 dark:text-blue-200">
+                    {loc("Confirm actual goods receipt into warehouse immediately", "گودام میں فوری طور پر اصل مال کی وصولی کی تصدیق کریں", "تأكيد استلام البضائع الفعلي في المستودع فوراً", "تأیید فوری دریافت واقعی کالا در انبار", "سمدستي ګودام ته د اصلي مال رسید تایید کړئ")}
+                  </label>
+                </div>
+              )}
+
+              {/* Notes */}
+              <div>
+                <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                  {tt("common.remarks", "Notes / Handover Remarks")}
+                </label>
+                <textarea
+                  rows={2}
+                  value={actionNotes}
+                  onChange={e => setActionNotes(e.target.value)}
+                  placeholder={loc("Additional transfer, dispatch, or hold instructions...", "اضافی ٹرانسفر، ڈسپیچ، یا ہولڈ ہدایات...", "تعليمات إضافية للتحويل أو الإرسال أو الاحتفاظ...", "دستورالعمل‌های اضافی انتقال، ارسال یا نگهداری...", "د اضافي انتقال، لیږلو، یا ساتلو لارښوونې...")}
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-2 text-xs outline-none"
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setActionTargetRow(null)}
+                  className="h-9 px-4 text-xs font-bold"
+                >
+                  {tt("common.cancel", "Cancel")}
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={savingAction}
+                  className="h-9 px-5 text-xs font-black bg-blue-600 hover:bg-blue-700 text-white rounded-xl flex items-center gap-1.5"
+                >
+                  {savingAction ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Check className="h-4 w-4" />
+                      <span>{loc("Execute Transfer Action", "ٹرانسفر کارروائی مکمل کریں", "تنفيذ إجراء التحويل", "اجرای اقدام انتقال", "د انتقال عمل ترسره کړئ")}</span>
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
 
       {/* Printable A4 Voucher Modal */}
       {selectedRowForVoucher && (

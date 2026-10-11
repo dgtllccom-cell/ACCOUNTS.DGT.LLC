@@ -3181,45 +3181,84 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
       if (lpRes.status === "fulfilled" && lpRes.value.ok) {
         const lpBody = await lpRes.value.json();
         const rawLp = Array.isArray(lpBody?.data) ? lpBody.data : (Array.isArray(lpBody) ? lpBody : (lpBody?.records || []));
-        lpRows = rawLp.map((lp: any) => ({
-          ...lp,
-          order_type: "local_purchase",
-          purchase_order_no: lp.contract_no ? `LP-${lp.contract_no}` : `LP-${lp.id?.slice(0, 8)}`,
-          order_total: Number(lp.final_cost || lp.purchase_cost || 0),
-          advance_paid: Number(lp.advance_amount || 0),
-          remaining_paid: 0,
-          credit_amount: 0,
-          remaining_due: Number(lp.remaining_balance ?? Math.max(0, Number(lp.final_cost || lp.purchase_cost || 0) - Number(lp.advance_amount || 0))),
-          currency_code: lp.purchase_currency || lp.local_currency || "AED",
-          supplier_name: lp.supplier_name || lp.party_name || "Local Supplier",
-          purchase_account_name: lp.supplier_name || lp.purchase_account_no || "Local Supplier",
-          sales_account_name: lp.purchase_account_no || "Purchase Account",
-          status: lp.posting_status || lp.status || "active",
-          payment_status: Number(lp.remaining_balance || 0) <= 0 && Number(lp.advance_amount || 0) > 0 ? "Paid" : (Number(lp.advance_amount || 0) > 0 ? "Partial" : "Pending"),
-          form_data: {
-            form: {
-              supplierName: lp.supplier_name,
-              purchaseAccountName: lp.purchase_account_no,
-              purchaseAccountNo: lp.purchase_account_no,
-              supplierAccountNo: lp.sales_account_no || lp.broker_account_no,
-              goodsName: lp.goods_name,
-              totalAmount: Number(lp.final_cost || lp.purchase_cost || 0),
-              exchangeRate: Number(lp.exchange_rate || 1),
-            },
-            goodsEntries: [{
-              goodsName: lp.goods_name,
-              qtyNo: lp.quantity_kgs,
-              qtyName: lp.quantity_name,
-              netWeight: lp.total_gross_weight,
-              coursePrice: lp.purchase_price,
-              totalAmount: Number(lp.purchase_cost || 0)
-            }],
-            totals: {
-              totalAmount: Number(lp.final_cost || lp.purchase_cost || 0),
-              subTotal: Number(lp.purchase_cost || 0),
+        lpRows = rawLp.map((lp: any) => {
+          const rawTotal = Number(lp.final_cost || lp.purchase_cost || 0);
+          const rawAdvance = Number(lp.advance_amount || 0);
+          const rawRemaining = Number(lp.remaining_balance ?? Math.max(0, rawTotal - rawAdvance));
+          const pMode = String(lp.payment_mode || "Credit").trim();
+          const pModeLower = pMode.toLowerCase();
+          const isCredit = pModeLower.includes("credit");
+          const isAdvance = pModeLower.includes("advance") || Number(lp.advance_percentage || 0) > 0;
+          const pType = isAdvance ? "Advance" : (isCredit ? "Credit" : pMode);
+          const billNo = lp.contract_no ? `LP-${lp.contract_no}` : (lp.manual_bill_no || `LP-${lp.id?.slice(0, 8)}`);
+
+          return {
+            ...lp,
+            order_type: "local_purchase",
+            source_type: "Local Purchase",
+            purchase_order_no: billNo,
+            order_total: rawTotal,
+            total_goods_original: rawTotal,
+            total_goods_usd: rawTotal,
+            advance_paid: rawAdvance,
+            remaining_paid: 0,
+            credit_amount: isCredit ? rawTotal : 0,
+            remaining_due: rawRemaining,
+            currency_code: lp.purchase_currency || lp.local_currency || "AED",
+            exchange_rate: Number(lp.exchange_rate || 1),
+            country_name: lp.country_name || lp.origin_country_name || "United Arab Emirates",
+            branch_name: lp.branch_name || "Main Branch",
+            supplier_name: lp.supplier_name || lp.party_name || "Local Supplier",
+            purchase_account_name: lp.purchase_account_no ? `Purchase (${lp.purchase_account_no})` : "Purchase Account",
+            sales_account_name: lp.supplier_name || lp.sales_account_no || "Supplier Payable",
+            status: lp.posting_status || lp.status || "active",
+            payment_status: rawRemaining <= 0.01 && (rawAdvance > 0 || rawTotal > 0) ? "Paid" : (rawAdvance > 0 ? "Partial" : "Pending"),
+            form_data: {
+              form: {
+                orderType: "local_purchase",
+                sourceType: "Local Purchase",
+                paymentType: pType,
+                paymentCondition: pType,
+                advancePercent: Number(lp.advance_percentage || 0),
+                advanceAmount: rawAdvance,
+                remainingBalance: rawRemaining,
+                supplierName: lp.supplier_name || "Local Supplier",
+                purchaseAccountName: lp.purchase_account_no,
+                purchaseAccountNo: lp.purchase_account_no,
+                supplierAccountNo: lp.sales_account_no || lp.broker_account_no,
+                salesAccountName: lp.supplier_name || lp.sales_account_no,
+                salesAccountNo: lp.sales_account_no || lp.broker_account_no,
+                goodsName: lp.goods_name,
+                totalAmount: rawTotal,
+                exchangeRate: Number(lp.exchange_rate || 1),
+                currency: lp.purchase_currency || lp.local_currency || "AED",
+                pricingCurrency: lp.purchase_currency || lp.local_currency || "AED",
+                manualBillNumber: lp.manual_bill_no || lp.contract_no || billNo,
+                purchaseOrderNo: billNo,
+                branchCountry: lp.country_name || "United Arab Emirates",
+                branchName: lp.branch_name || "Main Branch",
+              },
+              workflow: {
+                transferStatus: lp.warehouse_transfer_status || lp.status || "transferred",
+                transferredToRemaining: true,
+                loadedQuantity: lp.quantity_kgs || 1,
+              },
+              goodsEntries: [{
+                goodsName: lp.goods_name,
+                qtyNo: lp.quantity_kgs,
+                qtyName: lp.quantity_name,
+                netWeight: lp.net_weight || lp.total_gross_weight,
+                grossWeight: lp.total_gross_weight,
+                coursePrice: lp.purchase_rate,
+                totalAmount: rawTotal
+              }],
+              totals: {
+                totalAmount: rawTotal,
+                subTotal: Number(lp.purchase_cost || 0),
+              }
             }
-          }
-        }));
+          };
+        });
       }
 
       const rows = [...poRows, ...lpRows];
@@ -5198,9 +5237,15 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                       <span className="font-semibold text-slate-700 dark:text-slate-300">{branchName} ({countryName})</span>
                     </div>
                     <div>
-                      <span className="inline-flex items-center rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-700/60 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider">
-                        {translateHeader(currentLanguage, "BOOKING")}
-                      </span>
+                      {(selected as any).order_type === "local_purchase" ? (
+                        <span className="inline-flex items-center rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-700/60 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider">
+                          LOCAL PURCHASE
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center rounded bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-400 border border-blue-300 dark:border-blue-700/60 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider">
+                          {translateHeader(currentLanguage, "BOOKING")}
+                        </span>
+                      )}
                     </div>
                   </div>
 

@@ -24,6 +24,8 @@ export type DeviceRow = {
   requested_name: string; requested_phone: string | null; requested_identifier: string; request_note: string | null;
   status: DeviceStatus; code_expires_at: string | null; code_attempts: number; approved_by: string | null; approved_at: string | null;
   activated_at: string | null; bound_user_id: string | null; last_seen_at: string | null; decision_note: string | null; requested_at: string;
+  /** set when the device was activated with a store-review pass; `review_ok` is false once that pass expired or was revoked */
+  review_pass_id?: string | null; review_ok?: boolean | null;
 };
 
 let warned = false;
@@ -62,8 +64,87 @@ async function log(sql: any, deviceId: string, event: string, actorId: string | 
   await sql`INSERT INTO public.mobile_device_events (device_id, event, actor_id, detail, ip) VALUES (${deviceId}::uuid, ${event}, ${actorId}, ${detail}, ${ip})`;
 }
 
+// ── store-review passes ──────────────────────────────────────────────────────────────────────────────────────────
+// A reviewer from Apple / Google / Samsung cannot wait for a Super Admin to approve their phone. The Super Admin issues a pass that is
+// valid for ONE limited reviewer login, for a limited time and number of devices. It only replaces the "approve this phone" step: the
+// reviewer must still sign in with that login, and that login's own (read-only, empty-scope) permissions decide what is visible.
+const PASS_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; // no 0/O/1/I/L
+const PASS_LEN = 12;
+const MAX_PASS_FAILURES = 10;
+const hashPass = (passId: string, code: string) => mac(`pass:${passId}:${code}`);
+const cleanPassCode = (v: unknown) => String(v ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+const formatPassCode = (c: string) => c.match(/.{1,4}/g)!.join("-");
+const INVALID_PASS = () => new ApiClientError("This review code is not valid or has expired.", { status: 401, code: "REVIEW_CODE_INVALID" });
+
+export type ReviewPassRow = {
+  id: string; app: AppChannel; label: string; identifier: string; max_devices: number; used_devices: number; failed_attempts: number;
+  expires_at: string; revoked_at: string | null; created_at: string;
+};
+
+export async function createReviewPass(
+  input: { app: AppChannel; label: string; identifier: string; days?: number; maxDevices?: number },
+  actorId: string
+): Promise<{ id: string; code: string; expiresAt: string }> {
+  const label = String(input.label ?? "").trim().slice(0, 80);
+  const identifier = normalizeIdentifier(input.identifier);
+  if (input.app !== "b" && input.app !== "bs") throw new ApiClientError("Unknown app.", { status: 422, code: "VALIDATION" });
+  if (label.length < 2) throw new ApiClientError("Give the pass a name, for example “Apple App Review”.", { status: 422, code: "VALIDATION" });
+  if (identifier.length < 3 || identifier.length > 160) throw new ApiClientError("Enter the reviewer’s ERP login.", { status: 422, code: "VALIDATION" });
+  const days = Math.min(90, Math.max(1, Math.round(Number(input.days ?? 30)) || 30));
+  const maxDevices = Math.min(20, Math.max(1, Math.round(Number(input.maxDevices ?? 6)) || 6));
+  const code = Array.from({ length: PASS_LEN }, () => PASS_ALPHABET[randomInt(0, PASS_ALPHABET.length)]).join("");
+  const id = (await import("node:crypto")).randomUUID();
+  const rows = (await withLocalPg(
+    (sql: any) => sql`
+      INSERT INTO public.mobile_review_passes (id, app, label, identifier, code_hash, max_devices, expires_at, created_by)
+      VALUES (${id}::uuid, ${input.app}, ${label}, ${identifier}, ${hashPass(id, code)}, ${maxDevices}, now() + (${days} || ' days')::interval, ${actorId}::uuid)
+      RETURNING expires_at`
+  )) as { expires_at: string }[] | null;
+  if (!rows?.length) throw new ApiClientError("Could not create the review pass.", { status: 500, code: "DB" });
+  return { id, code: formatPassCode(code), expiresAt: String(rows[0].expires_at) };
+}
+
+export async function listReviewPasses(): Promise<ReviewPassRow[]> {
+  return ((await withLocalPg((sql: any) => sql`
+    SELECT id, app, label, identifier, max_devices, used_devices, failed_attempts, expires_at, revoked_at, created_at
+    FROM public.mobile_review_passes ORDER BY created_at DESC LIMIT 100`)) ?? []) as ReviewPassRow[];
+}
+
+/** Revoking a pass also blocks every device that was activated with it. */
+export async function revokeReviewPass(passId: string, actorId: string): Promise<number> {
+  const blocked = await withLocalPg(async (sql: any) => {
+    const n = (await sql`UPDATE public.mobile_review_passes SET revoked_at = now() WHERE id = ${passId}::uuid AND revoked_at IS NULL RETURNING id`) as any[];
+    if (!n.length) throw new ApiClientError("Review pass not found or already revoked.", { status: 409, code: "BAD_STATE" });
+    const devs = (await sql`UPDATE public.mobile_devices SET status = 'revoked', decision_note = 'review pass revoked', updated_at = now()
+                            WHERE review_pass_id = ${passId}::uuid AND status <> 'revoked' RETURNING id`) as { id: string }[];
+    for (const d of devs) { await log(sql, d.id, "revoked", actorId, "review pass revoked", null); statusCache.delete(d.id); }
+    return devs.length;
+  });
+  return blocked ?? 0;
+}
+
+/** Consumes one device slot of a valid pass for (app, identifier) and returns the pass, or throws one generic error for every failure. */
+async function redeemReviewPass(app: AppChannel, identifier: string, rawCode: unknown, ip: string | null): Promise<{ id: string; label: string; created_by: string | null }> {
+  throttle(`rp:${ip ?? "?"}`, 8, 60 * 60 * 1000);
+  const code = cleanPassCode(rawCode);
+  if (code.length !== PASS_LEN) throw INVALID_PASS();
+  const passes = ((await withLocalPg((sql: any) => sql`
+    SELECT * FROM public.mobile_review_passes WHERE app = ${app} AND identifier = ${identifier} AND revoked_at IS NULL AND expires_at > now()`)) ?? []) as (ReviewPassRow & { code_hash: string; created_by: string | null })[];
+  const match = passes.find((p) => p.failed_attempts < MAX_PASS_FAILURES && safeEq(p.code_hash, hashPass(p.id, code)));
+  if (!match) {
+    if (passes.length) await withLocalPg((sql: any) => sql`UPDATE public.mobile_review_passes SET failed_attempts = failed_attempts + 1 WHERE app = ${app} AND identifier = ${identifier} AND revoked_at IS NULL`);
+    throw INVALID_PASS();
+  }
+  const used = (await withLocalPg((sql: any) => sql`
+    UPDATE public.mobile_review_passes SET used_devices = used_devices + 1
+    WHERE id = ${match.id}::uuid AND used_devices < max_devices AND failed_attempts < ${MAX_PASS_FAILURES} AND revoked_at IS NULL AND expires_at > now()
+    RETURNING id`)) as any[] | null;
+  if (!used?.length) throw new ApiClientError("This review code has no devices left. Ask the administrator for a new one.", { status: 409, code: "REVIEW_CODE_FULL" });
+  return { id: match.id, label: match.label, created_by: match.created_by };
+}
+
 export async function createDeviceRequest(
-  input: { app: AppChannel; name: string; phone?: string; identifier: string; note?: string; platform?: string; model?: string; osVersion?: string; appVersion?: string },
+  input: { app: AppChannel; name: string; phone?: string; identifier: string; note?: string; platform?: string; model?: string; osVersion?: string; appVersion?: string; reviewCode?: string },
   ip: string | null
 ): Promise<{ device: DeviceRow; token: string }> {
   const name = String(input.name ?? "").trim();
@@ -72,23 +153,39 @@ export async function createDeviceRequest(
   if (identifier.length < 3 || identifier.length > 160) throw new ApiClientError("Enter your ERP e-mail or user code.", { status: 422, code: "VALIDATION" });
   if (input.app !== "b" && input.app !== "bs") throw new ApiClientError("Unknown app.", { status: 422, code: "VALIDATION" });
   throttle(`req:${ip ?? "?"}`, 10, 60 * 60 * 1000);
-  const rows = await withLocalPg(async (sql: any) => {
-    const open = (await sql`SELECT count(*)::int AS n FROM public.mobile_devices WHERE requested_identifier = ${identifier} AND status IN ('pending','approved')`)[0].n;
-    if (open >= MAX_OPEN_PER_IDENTIFIER) throw new ApiClientError("There are already pending requests for this account. Ask the administrator.", { status: 429, code: "TOO_MANY_OPEN" });
-    const ins = (await sql`
-      INSERT INTO public.mobile_devices (app, platform, device_model, os_version, app_version, requested_name, requested_phone, requested_identifier, request_note, last_ip)
-      VALUES (${input.app}, ${(input.platform ?? "").slice(0, 20) || null}, ${(input.model ?? "").slice(0, 80) || null}, ${(input.osVersion ?? "").slice(0, 40) || null},
-              ${(input.appVersion ?? "").slice(0, 20) || null}, ${name}, ${(input.phone ?? "").trim().slice(0, 40) || null}, ${identifier}, ${(input.note ?? "").trim().slice(0, 300) || null}, ${ip})
-      RETURNING *`) as DeviceRow[];
-    await log(sql, ins[0].id, "requested", null, `${input.app} ${input.platform ?? ""} ${input.model ?? ""}`.trim(), ip);
-    return ins;
-  });
+  // A valid store-review pass activates the device immediately (still limited to the reviewer login + the pass's device/time limits).
+  const pass = String(input.reviewCode ?? "").trim() ? await redeemReviewPass(input.app, identifier, input.reviewCode, ip) : null;
+  let rows: DeviceRow[] | null;
+  try {
+    rows = (await withLocalPg(async (sql: any) => {
+      if (!pass) {
+        const open = (await sql`SELECT count(*)::int AS n FROM public.mobile_devices WHERE requested_identifier = ${identifier} AND status IN ('pending','approved')`)[0].n;
+        if (open >= MAX_OPEN_PER_IDENTIFIER) throw new ApiClientError("There are already pending requests for this account. Ask the administrator.", { status: 429, code: "TOO_MANY_OPEN" });
+      }
+      const ins = (await sql`
+        INSERT INTO public.mobile_devices (app, platform, device_model, os_version, app_version, requested_name, requested_phone, requested_identifier, request_note, last_ip,
+                                           status, approved_by, approved_at, activated_at, review_pass_id, decision_note)
+        VALUES (${input.app}, ${(input.platform ?? "").slice(0, 20) || null}, ${(input.model ?? "").slice(0, 80) || null}, ${(input.osVersion ?? "").slice(0, 40) || null},
+                ${(input.appVersion ?? "").slice(0, 20) || null}, ${name}, ${(input.phone ?? "").trim().slice(0, 40) || null}, ${identifier}, ${(input.note ?? "").trim().slice(0, 300) || null}, ${ip},
+                ${pass ? "active" : "pending"}, ${pass?.created_by ?? null}, ${pass ? sql`now()` : null}, ${pass ? sql`now()` : null}, ${pass?.id ?? null}, ${pass ? "review pass: " + pass.label : null})
+        RETURNING *`) as DeviceRow[];
+      await log(sql, ins[0].id, "requested", null, `${input.app} ${input.platform ?? ""} ${input.model ?? ""}`.trim(), ip);
+      if (pass) await log(sql, ins[0].id, "review_pass_activated", pass.created_by, pass.label, ip);
+      return ins;
+    })) as DeviceRow[] | null;
+  } catch (e) {
+    if (pass) await withLocalPg((sql: any) => sql`UPDATE public.mobile_review_passes SET used_devices = GREATEST(0, used_devices - 1) WHERE id = ${pass.id}::uuid`).catch(() => {});
+    throw e;
+  }
   const device = (rows as DeviceRow[])[0];
   return { device, token: signDeviceToken(device.id) };
 }
 
 export async function getDevice(deviceId: string): Promise<DeviceRow | null> {
-  const r = (await withLocalPg((sql: any) => sql`SELECT * FROM public.mobile_devices WHERE id = ${deviceId}::uuid`)) as DeviceRow[] | null;
+  const r = (await withLocalPg((sql: any) => sql`
+    SELECT d.*, (d.review_pass_id IS NULL OR (p.revoked_at IS NULL AND p.expires_at > now())) AS review_ok
+    FROM public.mobile_devices d LEFT JOIN public.mobile_review_passes p ON p.id = d.review_pass_id
+    WHERE d.id = ${deviceId}::uuid`)) as DeviceRow[] | null;
   return r?.[0] ?? null;
 }
 
@@ -172,7 +269,7 @@ export async function checkDeviceForUser(opts: { app: AppChannel; token: string 
   const deviceId = verifyDeviceToken(opts.token);
   if (!deviceId) return { ok: false, reason: "no_device" };
   const d = await getDeviceCached(deviceId);
-  if (!d || d.status !== "active") return { ok: false, reason: "not_active" };
+  if (!d || d.status !== "active" || d.review_ok === false) return { ok: false, reason: "not_active" };
   if (d.app !== opts.app) return { ok: false, reason: "wrong_app" };
   if (opts.identifier && normalizeIdentifier(opts.identifier) !== d.requested_identifier) return { ok: false, reason: "wrong_user" };
   if (opts.userId) {

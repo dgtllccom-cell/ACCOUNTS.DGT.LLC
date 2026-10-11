@@ -556,7 +556,8 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                         const voucherCode = row.serialNo || row.serial_no || row.billNo || row.bill_no || row.journal_serial_no || "—";
 
                         return (
-                          <tr key={row.id} className="hover:bg-blue-50/30 dark:hover:bg-blue-950/20 transition-colors">
+                          <Fragment key={row.id}>
+                            <tr className="hover:bg-blue-50/30 dark:hover:bg-blue-950/20 transition-colors">
                             <td className="p-2 text-center border-r border-slate-150 dark:border-slate-800">
                               <button
                                 type="button"
@@ -604,7 +605,93 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                                </Button>
                              </td>
                           </tr>
-                        );
+                          {expandedRows[row.id] && (
+                            <tr className="bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
+                              <td colSpan={21} className="p-3 text-[11px]">
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
+                                  {/* 1. Account & Posting Status */}
+                                  <div className="space-y-1">
+                                    <div className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+                                      {th("ACCOUNTING & POSTING")}
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-slate-400">Debit (Purch Acc):</span>
+                                      <span className="font-mono font-bold text-blue-600">{row.purchaseAccountNo || "—"}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-slate-400">Credit (Sales/Payable):</span>
+                                      <span className="font-mono font-bold text-purple-600">{row.salesAccountNo || row.brokerAccountNo || "—"}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-slate-400">Posting Status:</span>
+                                      <span className={`font-bold ${row.status === "posted" ? "text-emerald-600" : "text-amber-600"}`}>
+                                        {row.status === "posted" ? "Posted to GL & Roznamcha" : row.status === "accepted" ? "Confirmed / Ready for GL" : "Draft / Pending"}
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  {/* 2. Payment Condition & Balances */}
+                                  <div className="space-y-1">
+                                    <div className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+                                      {th("PAYMENT & BALANCES")}
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-slate-400">Payment Condition:</span>
+                                      <span className="font-bold text-slate-800 dark:text-slate-200">{row.paymentMode || "Cash"}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-slate-400">Total Bill Amount:</span>
+                                      <span className="font-mono font-bold">{curr} {totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-slate-400">Outstanding Balance:</span>
+                                      <span className="font-mono font-bold text-red-500">{curr} {Number(row.remainingBalance ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                    </div>
+                                  </div>
+
+                                  {/* 3. Transfer & Goods Location */}
+                                  <div className="space-y-1">
+                                    <div className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+                                      {th("TRANSFER & LOCATION")}
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-slate-400">Current / Target:</span>
+                                      <span className="font-bold text-slate-800 dark:text-slate-200">{row.warehouseName || "Purchase Location"}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-slate-400">Shipping Mode:</span>
+                                      <span className="font-semibold text-slate-600 dark:text-slate-400">{row.shippingMode || "Local Market"}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-slate-400">Vehicle / Truck No:</span>
+                                      <span className="font-mono font-semibold">{row.truckNo || "—"}</span>
+                                    </div>
+                                  </div>
+
+                                  {/* 4. Loading & Receiving Confirmation */}
+                                  <div className="space-y-1">
+                                    <div className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+                                      {th("LOADING & CONFIRMATION")}
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-slate-400">Driver / Contact:</span>
+                                      <span className="font-semibold">{row.driverName || "—"}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-slate-400">Receiving Status:</span>
+                                      <span className="font-bold text-emerald-600">{row.status === "posted" ? "Confirmed Received" : "Awaiting Confirmation"}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-slate-400">Lot / Chassis No:</span>
+                                      <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{row.lotNo || row.lot_no || row.chassisCode || "—"}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </Fragment>
+                      );
                       })}
                     </Fragment>
                   ))

@@ -122,16 +122,39 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
 
     // withLocalPg, not the RLS-gated Supabase client — see the POST handler below for why.
     const { order, rows } = (await withLocalPg(async (sql) => {
-      const orderRows = await sql`
+      let orderRows = await sql`
         select id, purchase_order_no, purchase_contract_no, country_id, country_branch_id, city_branch_id,
                currency_code, exchange_rate, order_total, advance_paid, remaining_paid, credit_amount,
-               remaining_due, form_data, ledger_posting_status, payment_status
+               remaining_due, form_data, ledger_posting_status, payment_status, 'purchase_booking' as order_type
         from purchase_orders where id = ${params.id}::uuid and deleted_at is null
         limit 1
       `;
+      if (!orderRows[0]) {
+        orderRows = await sql`
+          select id, coalesce(manual_bill_no, 'LP-' || substring(id::text, 1, 8)) as purchase_order_no,
+                 contract_no as purchase_contract_no,
+                 country_id, country_branch_id, city_branch_id,
+                 purchase_currency as currency_code, exchange_rate,
+                 coalesce(final_cost, purchase_cost, 0) as order_total,
+                 coalesce(advance_amount, 0) as advance_paid,
+                 0 as remaining_paid,
+                 0 as credit_amount,
+                 coalesce(remaining_balance, 0) as remaining_due,
+                 'posted' as ledger_posting_status,
+                 case when coalesce(remaining_balance, 0) <= 0 and coalesce(advance_amount, 0) > 0 then 'Paid'
+                      when coalesce(advance_amount, 0) > 0 then 'Partial'
+                      else 'Pending' end as payment_status,
+                 'local_purchase' as order_type,
+                 supplier_name, purchase_account_no, sales_account_no, broker_account_no,
+                 goods_name, payment_mode, advance_percentage
+          from local_purchases where id = ${params.id}::uuid and deleted_at is null
+          limit 1
+        `;
+      }
       const paymentRows = await sql`
         select
-          p.id, p.purchase_order_id, p.kind, p.entry_date, p.amount, p.currency_code, p.exchange_rate,
+          p.id, coalesce(p.purchase_order_id, p.local_purchase_id) as purchase_order_id, p.local_purchase_id,
+          p.kind, p.entry_date, p.amount, p.currency_code, p.exchange_rate,
           p.debit_ledger_id, p.credit_ledger_id, p.roznamcha_entry_id, p.status, p.reference_no,
           p.narration, p.source_module, p.source_transaction_type, p.source_reference_no,
           p.original_currency_code, p.currency_name, p.base_currency_amount, p.created_at,
@@ -145,7 +168,8 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
         from purchase_order_payments p
         left join roznamcha_entries re on re.id = p.roznamcha_entry_id
         left join profiles pr on pr.id = re.created_by
-        where p.purchase_order_id = ${params.id}::uuid and p.deleted_at is null
+        where (p.purchase_order_id = ${params.id}::uuid or p.local_purchase_id = ${params.id}::uuid)
+          and p.deleted_at is null
         order by p.created_at desc
         limit 200
       `;
@@ -230,11 +254,30 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       const rows = await sql`
         select id, purchase_order_no, purchase_contract_no, country_id, country_branch_id, city_branch_id,
                currency_code, exchange_rate, order_total, advance_paid, remaining_paid, credit_amount,
-               remaining_due, form_data, ledger_posting_status, payment_status
+               remaining_due, form_data, ledger_posting_status, payment_status, 'purchase_booking' as order_type
         from purchase_orders where id = ${params.id}::uuid and deleted_at is null
         limit 1
       `;
-      return rows[0] ?? null;
+      if (rows[0]) return rows[0];
+
+      const lpRows = await sql`
+        select id, coalesce(manual_bill_no, 'LP-' || substring(id::text, 1, 8)) as purchase_order_no,
+               contract_no as purchase_contract_no,
+               country_id, country_branch_id, city_branch_id, company_id,
+               purchase_currency as currency_code, exchange_rate,
+               coalesce(final_cost, purchase_cost, 0) as order_total,
+               coalesce(advance_amount, 0) as advance_paid,
+               0 as remaining_paid,
+               0 as credit_amount,
+               coalesce(remaining_balance, 0) as remaining_due,
+               'posted' as ledger_posting_status,
+               supplier_name, purchase_account_no, sales_account_no, broker_account_no,
+               goods_name, payment_mode, advance_percentage,
+               'local_purchase' as order_type
+        from local_purchases where id = ${params.id}::uuid and deleted_at is null
+        limit 1
+      `;
+      return lpRows[0] ?? null;
     });
 
     authorizeApiScope(session, {
@@ -246,7 +289,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     });
 
     if (!order) {
-      return apiError("NOT_FOUND", "Purchase order not found.", 404);
+      return apiError("NOT_FOUND", "Purchase bill or order not found.", 404);
     }
 
     const orderRow = order as any;
@@ -343,6 +386,143 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     // owns all the currency logic (transaction ccy vs base ccy vs order ccy) and
     // freezes the real historical rate on the payment row.
     const effectiveRoznamchaExchangeRate = bodyRate;
+
+    if (orderRow.order_type === "local_purchase") {
+      const { paymentId } = (await withLocalPg(async (sql) => {
+        let rozType = "super_admin";
+        if (orderRow.city_branch_id) rozType = "branch";
+        else if (orderRow.country_branch_id || orderRow.country_id) rozType = "country";
+
+        const baseAmount = Number(body.amount) * effectiveRoznamchaExchangeRate;
+        const lines = [
+          {
+            ledgerId: resolvedDebitLedgerId,
+            paymentEntryType: "debit",
+            description: `DR: Supplier Payable - ${orderRow.supplier_name || "Supplier"}`,
+            debit: Number(body.amount),
+            credit: 0,
+            currency: bodyCcy,
+            exchangeRate: effectiveRoznamchaExchangeRate
+          },
+          {
+            ledgerId: resolvedCreditLedgerId,
+            paymentEntryType: "credit",
+            description: `CR: Payment Source - ${creditLedger.name || "Cash/Bank"}`,
+            debit: 0,
+            credit: Number(body.amount),
+            currency: bodyCcy,
+            exchangeRate: effectiveRoznamchaExchangeRate
+          }
+        ];
+
+        const createdRozRows = await sql`
+          select post_roznamcha_entry(
+            ${rozType}::roznamcha_type,
+            ${orderRow.country_id || null}::uuid,
+            ${orderRow.country_branch_id || null}::uuid,
+            ${orderRow.city_branch_id || null}::uuid,
+            ${'JV-PAY-LP-' + Date.now().toString().slice(-6)},
+            ${'LP-PAY-' + Date.now().toString().slice(-6)},
+            ${body.entryDate}::date,
+            ${null},
+            ${postingReferenceNo},
+            ${postingNarration || null},
+            ${sql.json(lines)},
+            true
+          ) as id
+        `;
+        const roznamchaEntryId = createdRozRows[0]?.id;
+
+        const idRows = await sql`
+          insert into purchase_order_payments (
+            local_purchase_id,
+            kind,
+            entry_date,
+            amount,
+            currency_code,
+            exchange_rate,
+            debit_ledger_id,
+            credit_ledger_id,
+            roznamcha_entry_id,
+            status,
+            reference_no,
+            narration,
+            source_module,
+            source_transaction_type,
+            source_reference_no,
+            original_currency_code,
+            currency_name,
+            base_currency_amount,
+            posted_to_journal,
+            created_by
+          ) values (
+            ${params.id}::uuid,
+            ${body.kind}::purchase_order_payment_kind,
+            ${body.entryDate}::date,
+            ${body.amount},
+            ${body.currencyCode},
+            ${effectiveRoznamchaExchangeRate},
+            ${resolvedDebitLedgerId}::uuid,
+            ${resolvedCreditLedgerId}::uuid,
+            ${roznamchaEntryId}::uuid,
+            'posted'::purchase_order_payment_status,
+            ${postingReferenceNo},
+            ${postingNarration},
+            'local_purchase',
+            'local_purchase_payment',
+            ${postingReferenceNo},
+            ${body.currencyCode},
+            ${body.currencyCode},
+            ${baseAmount},
+            true,
+            ${session.userId}::uuid
+          )
+          returning id;
+        `;
+        const paymentId = idRows[0]?.id;
+
+        try {
+          const s = await allocateFormSerials("payment_purchase", { countryId: orderRow.country_id, branchKey: orderRow.country_branch_id ?? orderRow.city_branch_id ?? null });
+          await sql`update purchase_order_payments set super_admin_serial = ${s.superAdminSerial}, country_serial = ${s.countrySerial}, branch_serial = ${s.branchSerial}, entry_serial = ${s.entrySerial} where id = ${paymentId}::uuid`;
+        } catch { /* non-fatal */ }
+
+        const paidAmt = Number(body.amount);
+        const isAdvance = body.kind === "advance";
+        await sql`
+          update local_purchases
+          set
+            advance_amount = case when ${isAdvance} then coalesce(advance_amount, 0) + ${paidAmt} else advance_amount end,
+            remaining_balance = greatest(0, coalesce(remaining_balance, final_cost, purchase_cost, 0) - ${paidAmt}),
+            updated_at = now()
+          where id = ${params.id}::uuid;
+        `;
+
+        return { paymentId };
+      })) as { paymentId: string };
+
+      await writeAuditLog({
+        action: "create",
+        entityTable: "purchase_order_payments",
+        entityId: paymentId,
+        before: null,
+        after: {
+          localPurchaseId: params.id,
+          kind: body.kind,
+          amount: body.amount,
+          currency: body.currencyCode,
+          referenceNo: postingReferenceNo
+        }
+      });
+
+      if (idempotencyKey) {
+        await commitIdempotencySuccess(idempotencyKey, tenantHash, 201, {
+          paymentId,
+          status: "posted"
+        });
+      }
+
+      return apiCreated({ paymentId, status: "posted" });
+    }
 
     // Transaction-safe posting via the security definer wrapper post_purchase_booking_transfer —
     // calling it directly over the raw Postgres connection is equivalent to (and more reliable

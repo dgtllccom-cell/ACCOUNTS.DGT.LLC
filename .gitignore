@@ -12,6 +12,7 @@ node_modules/
 out/
 build/
 dist/
+design-prototypes/
 
 # Android build cache & assets cache
 android/app/src/main/assets/public/cache/

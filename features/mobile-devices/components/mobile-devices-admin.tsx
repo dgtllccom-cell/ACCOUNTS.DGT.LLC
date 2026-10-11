@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useErpScreen } from "@/lib/i18n/use-erp-screen";
+import { ReviewPassesPanel } from "./review-passes-panel";
 
 type Device = {
   id: string; app: "b" | "bs"; platform: string | null; device_model: string | null; requested_name: string; requested_phone: string | null;
@@ -144,6 +145,8 @@ export function MobileDevicesAdmin() {
           </li>
         ))}
       </ul>
+
+      <ReviewPassesPanel />
 
       {codeShown &&
         typeof document !== "undefined" &&
