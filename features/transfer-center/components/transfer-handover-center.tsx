@@ -593,8 +593,8 @@ export function TransferHandoverCenter({ lang: langProp }: { lang?: string | nul
                       <Repeat2 className="h-5 w-5" />
                     </span>
                     <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-base font-black text-slate-900 dark:text-white">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="whitespace-nowrap text-base font-black text-slate-900 dark:text-white">
                           {selected.transfer_no}
                         </h3>
                         <Badge variant={statusBadgeVariant(selected.status)} className="capitalize text-[10px]">
@@ -665,7 +665,7 @@ export function TransferHandoverCenter({ lang: langProp }: { lang?: string | nul
                 </div>
 
                 {/* Sender & Receiver Summary Grid */}
-                <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4 text-xs">
+                <div className="mt-3 grid grid-cols-[repeat(auto-fit,minmax(8rem,1fr))] gap-3 text-xs">
                   <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-2.5 dark:border-slate-800 dark:bg-slate-800/40">
                     <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
                       {s.t("sender", "Sender User")}
