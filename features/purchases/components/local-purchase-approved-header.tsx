@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useRef, useEffect, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import {
   FileText, ChevronRight, Filter, MoreVertical, Search,
   ShoppingCart, Layers, Building2, Globe2, Printer, Download,
@@ -132,12 +133,17 @@ export function LocalPurchaseApprovedHeader({
     session?.role === "super_admin"
   );
 
+  const [mounted, setMounted] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
   const [drilldown, setDrilldown] = useState<DrilldownState | null>(null);
 
   const filtersRef = useRef<HTMLDivElement>(null);
   const actionsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Close popups on outside click
   useEffect(() => {
@@ -419,45 +425,47 @@ export function LocalPurchaseApprovedHeader({
 
   // Current scope type: "branch" | "country" | "super_admin"
   const currentScopeType = useMemo(() => {
-    if (selectedBranchId || (scopeBranchName && scopeBranchName !== "All Branches")) {
-      return "branch";
-    }
-    if (selectedCountryId || (scopeCountryName && scopeCountryName !== "All Countries")) {
-      return "country";
-    }
+    if (selectedBranchId) return "branch";
+    if (selectedCountryId) return "country";
+    if (scopeBranchName && scopeBranchName !== "All Branches") return "branch";
+    if (scopeCountryName && scopeCountryName !== "All Countries") return "country";
     return isSuperAdmin ? "super_admin" : "country";
-  }, [selectedBranchId, scopeBranchName, selectedCountryId, scopeCountryName, isSuperAdmin]);
+  }, [selectedBranchId, selectedCountryId, scopeBranchName, scopeCountryName, isSuperAdmin]);
 
   // Dynamic scope label
   const scopeLabel = useMemo(() => {
-    if (scopeBranchName && scopeBranchName !== "All Branches") return scopeBranchName;
-    if (scopeCountryName && scopeCountryName !== "All Countries") return countryLabel(scopeCountryName, (k, d) => tx( k as any, d));
-    if (activeBranch?.name) return activeBranch.name;
-    return isSuperAdmin ? tx( "pap.allCountries", "All Countries") : "Main Branch";
-  }, [scopeBranchName, scopeCountryName, activeBranch, isSuperAdmin, lang]);
+    if (currentScopeType === "branch") {
+      const bname = countryBranches.find((b) => String(b.id) === String(selectedBranchId))?.name || scopeBranchName || activeBranch?.name;
+      return bname || "Branch";
+    }
+    if (currentScopeType === "country") {
+      const cname = countryOptions.find((c) => String(c.id) === String(selectedCountryId))?.name || scopeCountryName;
+      return countryLabel(cname, (k, d) => tx(k as any, d));
+    }
+    return tx("pap.allCountries", "All Countries");
+  }, [currentScopeType, countryBranches, selectedBranchId, scopeBranchName, activeBranch, countryOptions, selectedCountryId, scopeCountryName, lang]);
 
   const scopeBadgeText = useMemo(() => {
     if (currentScopeType === "branch") {
-      return `${tx("common.branch", "Branch")}: ${scopeBranchName || "Selected Branch"}`;
+      return `${tx("common.branch", "Branch")}: ${scopeLabel}`;
     }
     if (currentScopeType === "country") {
-      const cname = countryOptions.find((c) => c.id === selectedCountryId)?.name || scopeCountryName || "Selected Country";
-      return `${tx("common.country", "Country")}: ${countryLabel(cname, (k, d) => tx(k as any, d))}`;
+      return `${tx("common.country", "Country")}: ${scopeLabel}`;
     }
     return `${tx("pap.allCountries", "All Countries")} (${isSuperAdmin ? "Super Admin" : "Global"})`;
-  }, [currentScopeType, scopeBranchName, countryOptions, selectedCountryId, scopeCountryName, isSuperAdmin, lang]);
+  }, [currentScopeType, scopeLabel, isSuperAdmin, lang]);
 
   const pageTitle = useMemo(() => {
-    if (scopeBranchName && scopeBranchName !== "All Branches") {
-      return `${tx( "nav.local_purchase", "Local Purchase")} - ${scopeBranchName}`;
+    if (currentScopeType === "branch") {
+      return `${tx("nav.local_purchase", "Local Purchase")} - ${scopeLabel}`;
     }
-    if (scopeCountryName && scopeCountryName !== "All Countries") {
-      return `${tx( "nav.local_purchase", "Local Purchase")} - ${countryLabel(scopeCountryName, (k, d) => tx( k as any, d))}`;
+    if (currentScopeType === "country") {
+      return `${tx("nav.local_purchase", "Local Purchase")} - ${scopeLabel}`;
     }
-    return tx( "nav.local_purchase", "Local Purchase");
-  }, [scopeBranchName, scopeCountryName, lang]);
+    return tx("nav.local_purchase", "Local Purchase");
+  }, [currentScopeType, scopeLabel, lang]);
 
-  const currentPeriodText = tx( "pap.currentPeriod", "Current Period");
+  const currentPeriodText = tx("pap.currentPeriod", "Current Period");
 
   // Mini chips in Card 1 for instant sub-breakdown
   const scopeChips = useMemo(() => {
@@ -512,10 +520,10 @@ export function LocalPurchaseApprovedHeader({
     return (
       <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-200/70 text-amber-950 dark:bg-amber-900/40 dark:text-amber-200 text-[10px] font-bold">
         <Building2 className="h-2.5 w-2.5 opacity-70" />
-        <span>{scopeBranchName || "Branch"}</span>
+        <span>{scopeLabel}</span>
       </span>
     );
-  }, [selectedCountryId, isSuperAdmin, countryBreakdownSummary, branchBreakdownSummary, selectedBranchId, scopeBranchName, onCountryChange, onBranchChange]);
+  }, [selectedCountryId, isSuperAdmin, countryBreakdownSummary, branchBreakdownSummary, selectedBranchId, scopeLabel, onCountryChange, onBranchChange]);
 
   // ── Drilldown Openers ──
   const handleOpenBillsDrilldown = () => {
@@ -970,11 +978,11 @@ export function LocalPurchaseApprovedHeader({
         <div className="dgt-pa-titles">
           <h1>{pageTitle}</h1>
           <div className="dgt-pa-crumbs">
-            <span>{tx( "nav.dashboard", "Dashboard")}</span>
+            <span>{tx("nav.dashboard", "Dashboard")}</span>
             <ChevronRight aria-hidden="true" />
-            <span>{tx( "nav.purchase", "Purchase")}</span>
+            <span>{tx("nav.purchase", "Purchase")}</span>
             <ChevronRight aria-hidden="true" />
-            <span>{tx( "nav.local_purchase", "Local Purchase")}</span>
+            <span>{tx("nav.local_purchase", "Local Purchase")}</span>
           </div>
         </div>
 
@@ -987,8 +995,8 @@ export function LocalPurchaseApprovedHeader({
               type="search"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              placeholder={tx( "lp.search_placeholder", "Search PO#, Supplier, Goods...")}
-              aria-label={tx( "common.search", "Search")}
+              placeholder={tx("lp.search_placeholder", "Search PO#, Supplier, Goods...")}
+              aria-label={tx("common.search", "Search")}
             />
           </div>
 
@@ -1005,10 +1013,10 @@ export function LocalPurchaseApprovedHeader({
                 activeFiltersCount > 0 && "border-blue-600 bg-blue-50/50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300"
               )}
               aria-expanded={filtersOpen}
-              aria-label={tx( "common.filter", "Filters")}
+              aria-label={tx("common.filter", "Filters")}
             >
               <Filter aria-hidden="true" />
-              <span>{tx( "common.filter", "Filters")}</span>
+              <span>{tx("common.filter", "Filters")}</span>
               {activeFiltersCount > 0 && (
                 <span className="ms-1 px-1.5 py-0.5 rounded-full text-[10px] font-black bg-blue-600 text-white" dir="ltr">
                   {activeFiltersCount}
@@ -1024,7 +1032,7 @@ export function LocalPurchaseApprovedHeader({
                 <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
                   <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                     <Filter className="h-3.5 w-3.5 text-blue-600" />
-                    {tx( "common.filter", "Filters")}
+                    {tx("common.filter", "Filters")}
                   </span>
                   <div className="flex items-center gap-2">
                     {activeFiltersCount > 0 && (
@@ -1034,7 +1042,7 @@ export function LocalPurchaseApprovedHeader({
                         className="text-[11px] font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1"
                       >
                         <RotateCcw className="h-3 w-3" />
-                        {tx( "common.reset", "Reset")}
+                        <span>{tx("common.reset", "Reset")}</span>
                       </button>
                     )}
                     <button
@@ -1051,14 +1059,14 @@ export function LocalPurchaseApprovedHeader({
                   {/* Supplier filter */}
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 mb-1">
-                      {tx( "lp.col_supplier_name", "Supplier")}
+                      {tx("lp.col_supplier_name", "Supplier")}
                     </label>
                     <select
                       value={selectedSupplier}
                       onChange={(e) => onSupplierChange(e.target.value)}
                       className="w-full"
                     >
-                      <option value="">{tx( "lp.all_suppliers", "All Suppliers")}</option>
+                      <option value="">{tx("lp.all_suppliers", "All Suppliers")}</option>
                       {uniqueSuppliers.map((s) => (
                         <option key={s} value={s}>{s}</option>
                       ))}
@@ -1068,14 +1076,14 @@ export function LocalPurchaseApprovedHeader({
                   {/* Goods filter */}
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 mb-1">
-                      {tx( "lp.col_goods_name", "Goods")}
+                      {tx("lp.col_goods_name", "Goods")}
                     </label>
                     <select
                       value={selectedGoodsId}
                       onChange={(e) => onGoodsChange(e.target.value)}
                       className="w-full"
                     >
-                      <option value="">{tx( "lp.all_goods", "All Goods")}</option>
+                      <option value="">{tx("lp.all_goods", "All Goods")}</option>
                       {goodsList.map((g: any) => (
                         <option key={g.id} value={g.id}>
                           {g.goods_name || g.goodsName || g.name}
@@ -1088,14 +1096,14 @@ export function LocalPurchaseApprovedHeader({
                   {isSuperAdmin && (
                     <div>
                       <label className="block text-[10px] font-bold text-slate-500 mb-1">
-                        {tx( "common.country", "Country")}
+                        {tx("common.country", "Country")}
                       </label>
                       <select
                         value={selectedCountryId}
                         onChange={(e) => onCountryChange(e.target.value)}
                         className="w-full"
                       >
-                        <option value="">{tx( "lp.all_purchases", "All Countries")}</option>
+                        <option value="">{tx("lp.all_purchases", "All Countries")}</option>
                         {countryOptions.map((c) => (
                           <option key={c.id} value={c.id}>
                             {c.name}
@@ -1108,14 +1116,14 @@ export function LocalPurchaseApprovedHeader({
                   {/* Branch filter */}
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 mb-1">
-                      {tx( "common.branch", "Branch")}
+                      {tx("common.branch", "Branch")}
                     </label>
                     <select
                       value={selectedBranchId}
                       onChange={(e) => onBranchChange(e.target.value)}
                       className="w-full"
                     >
-                      <option value="">{tx( "lp.all_branches", "All Branches")}</option>
+                      <option value="">{tx("lp.all_branches", "All Branches")}</option>
                       {countryBranches.map((b) => (
                         <option key={b.id} value={b.id}>
                           {b.name || b.branchName || b.branch_name}
@@ -1127,36 +1135,36 @@ export function LocalPurchaseApprovedHeader({
                   {/* Status filter */}
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 mb-1">
-                      {tx( "lp.col_status", "Status")}
+                      {tx("lp.col_status", "Status")}
                     </label>
                     <select
                       value={selectedStatus}
                       onChange={(e) => onStatusChange(e.target.value)}
                       className="w-full"
                     >
-                      <option value="all">{tx( "lp.all_purchases", "All Statuses")}</option>
-                      <option value="draft">{tx( "lp.draft_bills", "Draft")}</option>
-                      <option value="pending">{tx( "lp.pending_bills", "Pending")}</option>
-                      <option value="posted">{tx( "lp.col_posted", "Posted")}</option>
-                      <option value="accepted">{tx( "lp.posted_accepted", "Accepted")}</option>
+                      <option value="all">{tx("lp.all_purchases", "All Statuses")}</option>
+                      <option value="draft">{tx("lp.draft_bills", "Draft")}</option>
+                      <option value="pending">{tx("lp.pending_bills", "Pending")}</option>
+                      <option value="posted">{tx("lp.col_posted", "Posted")}</option>
+                      <option value="accepted">{tx("lp.posted_accepted", "Accepted")}</option>
                     </select>
                   </div>
 
                   {/* Payment Mode filter */}
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 mb-1">
-                      {tx( "lp.reg_payment_mode", "Payment Mode")}
+                      {tx("lp.reg_payment_mode", "Payment Mode")}
                     </label>
                     <select
                       value={selectedPaymentMode}
                       onChange={(e) => onPaymentModeChange(e.target.value)}
                       className="w-full"
                     >
-                      <option value="all">{tx( "lp.all_payment_modes", "All Payment Modes")}</option>
-                      <option value="Cash">{tx( "lp.cash", "Cash")}</option>
-                      <option value="Bank Transfer">{tx( "lp.bank_transfer", "Bank Transfer")}</option>
-                      <option value="Advance">{tx( "lp.advance", "Advance")}</option>
-                      <option value="Credit">{tx( "lp.credit", "Credit")}</option>
+                      <option value="all">{tx("lp.all_payment_modes", "All Payment Modes")}</option>
+                      <option value="Cash">{tx("lp.cash", "Cash")}</option>
+                      <option value="Bank Transfer">{tx("lp.bank_transfer", "Bank Transfer")}</option>
+                      <option value="Advance">{tx("lp.advance", "Advance")}</option>
+                      <option value="Credit">{tx("lp.credit", "Credit")}</option>
                     </select>
                   </div>
 
@@ -1164,7 +1172,7 @@ export function LocalPurchaseApprovedHeader({
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <label className="block text-[10px] font-bold text-slate-500 mb-1">
-                        {tx( "common.date_from", "From Date")}
+                        {tx("common.date_from", "From Date")}
                       </label>
                       <input
                         type="date"
@@ -1174,7 +1182,7 @@ export function LocalPurchaseApprovedHeader({
                     </div>
                     <div>
                       <label className="block text-[10px] font-bold text-slate-500 mb-1">
-                        {tx( "common.date_to", "To Date")}
+                        {tx("common.date_to", "To Date")}
                       </label>
                       <input
                         type="date"
@@ -1190,7 +1198,7 @@ export function LocalPurchaseApprovedHeader({
                       onClick={() => setFiltersOpen(false)}
                       className="dgt-pa-primary rounded-lg px-3 py-1.5 text-xs font-bold"
                     >
-                      {tx( "common.apply", "Apply")}
+                      {tx("common.apply", "Apply")}
                     </button>
                   </div>
                 </div>
@@ -1208,10 +1216,10 @@ export function LocalPurchaseApprovedHeader({
               }}
               className="dgt-pa-ctrl"
               aria-expanded={actionsOpen}
-              aria-label={tx( "pa.actions", "Actions")}
+              aria-label={tx("pa.actions", "Actions")}
             >
               <MoreVertical aria-hidden="true" />
-              <span>{tx( "pa.actions", "Actions")}</span>
+              <span>{tx("pa.actions", "Actions")}</span>
             </button>
 
             {actionsOpen && (
@@ -1229,7 +1237,7 @@ export function LocalPurchaseApprovedHeader({
                   className="dgt-pa-menu-item text-blue-600 font-black hover:bg-blue-50 dark:hover:bg-blue-950/40"
                 >
                   <Plus className="h-4 w-4" />
-                  <span>{tx( "lp.create_button", "New Local Purchase")}</span>
+                  <span>{tx("lp.create_button", "New Local Purchase")}</span>
                 </button>
 
                 <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
@@ -1244,7 +1252,7 @@ export function LocalPurchaseApprovedHeader({
                   className="dgt-pa-menu-item"
                 >
                   <Printer className="h-4 w-4 text-slate-500" />
-                  <span>{tx( "common.print", "Print Register")}</span>
+                  <span>{tx("common.print", "Print Register")}</span>
                 </button>
 
                 {/* Export Excel / CSV */}
@@ -1257,7 +1265,7 @@ export function LocalPurchaseApprovedHeader({
                   className="dgt-pa-menu-item"
                 >
                   <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
-                  <span>{tx( "pap.exportExcel", "Export to Excel / CSV")}</span>
+                  <span>{tx("pap.exportExcel", "Export to Excel / CSV")}</span>
                 </button>
 
                 {/* Download PDF */}
@@ -1270,7 +1278,7 @@ export function LocalPurchaseApprovedHeader({
                   className="dgt-pa-menu-item"
                 >
                   <FileText className="h-4 w-4 text-rose-600" />
-                  <span>{tx( "pap.printPdf", "Download PDF Report")}</span>
+                  <span>{tx("pap.printPdf", "Download PDF Report")}</span>
                 </button>
               </div>
             )}
@@ -1283,7 +1291,7 @@ export function LocalPurchaseApprovedHeader({
         {/* ── Card 1 (Gold / Yellow): Total Local Purchase ── */}
         <section
           className="dgt-pa-card gold"
-          aria-label={tx( "lp.total_local_purchase_bills", "Total Local Purchase")}
+          aria-label={tx("lp.total_local_purchase_bills", "Total Local Purchase")}
         >
           <div className="dgt-pa-card-head">
             <div className="dgt-pa-symbol" aria-hidden="true">
@@ -1291,7 +1299,7 @@ export function LocalPurchaseApprovedHeader({
             </div>
             <div className="min-w-0 flex-1">
               <div className="dgt-pa-headname">
-                {tx( "lp.total_local_purchase_bills", "Total Local Purchase")}
+                {tx("lp.total_local_purchase_bills", "Total Local Purchase")}
               </div>
               <div className="dgt-pa-sub">{scopeLabel} &mdash; {currentPeriodText}</div>
             </div>
@@ -1303,14 +1311,21 @@ export function LocalPurchaseApprovedHeader({
           <div className="dgt-pa-kps">
             {/* 1. Total Bills */}
             <div className="dgt-pa-kp">
-              <button
-                type="button"
+              <div
+                role="button"
+                tabIndex={0}
                 className="dgt-pa-kp-interactive"
                 onClick={handleOpenBillsDrilldown}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleOpenBillsDrilldown();
+                  }
+                }}
                 title={tx("common.view", "View")}
               >
                 <div className="dgt-pa-kp-name flex items-center justify-between w-full">
-                  <span>{tx( "lp.total_bills", "Total Bills")}</span>
+                  <span>{tx("lp.total_bills", "Total Bills")}</span>
                   <ChevronRight className="h-3.5 w-3.5 text-amber-700 opacity-60 flex-none" />
                 </div>
                 <div className="dgt-pa-kp-value t-dark flex items-baseline gap-1.5" dir="ltr">
@@ -1323,19 +1338,26 @@ export function LocalPurchaseApprovedHeader({
                 <div className="flex items-center gap-1 flex-wrap pt-0.5" onClick={(e) => e.stopPropagation()}>
                   {scopeChips}
                 </div>
-              </button>
+              </div>
             </div>
 
             {/* 2. Total Final Purchase Amount */}
             <div className="dgt-pa-kp">
-              <button
-                type="button"
+              <div
+                role="button"
+                tabIndex={0}
                 className="dgt-pa-kp-interactive"
                 onClick={handleOpenAmountDrilldown}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleOpenAmountDrilldown();
+                  }
+                }}
                 title={tx("common.view", "View")}
               >
                 <div className="dgt-pa-kp-name flex items-center justify-between w-full">
-                  <span>{tx( "lp.total_final_amount", "Total Final Amount")}</span>
+                  <span>{tx("lp.total_final_amount", "Total Final Amount")}</span>
                   <ChevronRight className="h-3.5 w-3.5 text-amber-700 opacity-60 flex-none" />
                 </div>
                 <div className="dgt-pa-kp-value t-dark" dir="ltr">
@@ -1346,13 +1368,13 @@ export function LocalPurchaseApprovedHeader({
                     ? `${tx("lp.avg_invoice_amount", "Avg")}: ${fmtMoney(metrics.unit, metrics.avgInvoiceAmount)}`
                     : "—"}
                 </div>
-              </button>
+              </div>
             </div>
 
             {/* 3. Bill Lifecycle Status: Posted, Draft, Pending */}
             <div className="dgt-pa-kp">
               <div className="dgt-pa-kp-name">
-                {tx( "lp.col_posting_status", "Bill Status Lifecycle")}
+                {tx("lp.col_posting_status", "Bill Status Lifecycle")}
               </div>
               <div className="dgt-pa-status-pills">
                 {/* Posted */}
@@ -1419,14 +1441,14 @@ export function LocalPurchaseApprovedHeader({
         {/* ── Card 2 (Sky / Blue): Payment Type Breakdown ── */}
         <section
           className="dgt-pa-card sky"
-          aria-label={tx( "pap.paymentType", "Payment Type")}
+          aria-label={tx("pap.paymentType", "Payment Type")}
         >
           <div className="dgt-pa-card-head">
             <div className="dgt-pa-symbol" aria-hidden="true">
               <Layers />
             </div>
             <div>
-              <div className="dgt-pa-headname">{tx( "pap.paymentType", "Payment Type")}</div>
+              <div className="dgt-pa-headname">{tx("pap.paymentType", "Payment Type")}</div>
               <div className="dgt-pa-sub">{scopeLabel} &mdash; {currentPeriodText}</div>
             </div>
             <span className="dgt-pa-bars" aria-hidden="true">
@@ -1442,7 +1464,7 @@ export function LocalPurchaseApprovedHeader({
               className="dgt-pa-row"
             >
               <span className="dgt-pa-row-icon purple" aria-hidden="true">☰</span>
-              <span className="dgt-pa-row-label">{tx( "pap.invoicePayment", "Invoices Payment")}</span>
+              <span className="dgt-pa-row-label">{tx("pap.invoicePayment", "Invoices Payment")}</span>
               <span className="dgt-pa-row-amt t-blue" dir="ltr">{fmtMoney(metrics.unit, metrics.invoicePaymentsVal)}</span>
               <span className="dgt-pa-row-count" dir="ltr">
                 {fmtPct(metrics.invoicePaymentsVal, metrics.totalAmount) || "—"}
@@ -1457,7 +1479,7 @@ export function LocalPurchaseApprovedHeader({
               className="dgt-pa-row"
             >
               <span className="dgt-pa-row-icon blue" aria-hidden="true">▵</span>
-              <span className="dgt-pa-row-label">{tx( "pap.remaining", "Remaining")}</span>
+              <span className="dgt-pa-row-label">{tx("pap.remaining", "Remaining")}</span>
               <span className="dgt-pa-row-amt t-blue" dir="ltr">{fmtMoney(metrics.unit, metrics.remainingVal)}</span>
               <span className="dgt-pa-row-count" dir="ltr">
                 {fmtPct(metrics.remainingVal, metrics.totalAmount) || "—"}
@@ -1472,7 +1494,7 @@ export function LocalPurchaseApprovedHeader({
               className="dgt-pa-row"
             >
               <span className="dgt-pa-row-icon red" aria-hidden="true">◎</span>
-              <span className="dgt-pa-row-label">{tx( "pap.credit", "Credit")}</span>
+              <span className="dgt-pa-row-label">{tx("pap.credit", "Credit")}</span>
               <span className="dgt-pa-row-amt t-red" dir="ltr">{fmtMoney(metrics.unit, metrics.creditVal)}</span>
               <span className="dgt-pa-row-count" dir="ltr">
                 {fmtPct(metrics.creditVal, metrics.totalAmount) || "—"}
@@ -1487,7 +1509,7 @@ export function LocalPurchaseApprovedHeader({
               className="dgt-pa-row"
             >
               <span className="dgt-pa-row-icon green" aria-hidden="true">✓</span>
-              <span className="dgt-pa-row-label">{tx( "pap.paid", "Paid Payment")}</span>
+              <span className="dgt-pa-row-label">{tx("pap.paid", "Paid Payment")}</span>
               <span className="dgt-pa-row-amt t-green" dir="ltr">{fmtMoney(metrics.unit, metrics.paidVal)}</span>
               <span className="dgt-pa-row-count" dir="ltr">
                 {fmtPct(metrics.paidVal, metrics.totalAmount) || "—"}
@@ -1500,7 +1522,7 @@ export function LocalPurchaseApprovedHeader({
         {/* ── Card 3 (Mint / Green): Branch Summary / Country Summary ── */}
         <section
           className="dgt-pa-card mint"
-          aria-label={currentScopeType === "super_admin" ? tx( "lp.countries_label", "Country Summary") : tx( "common.branch", "Branch Summary")}
+          aria-label={currentScopeType === "super_admin" ? tx("lp.countries_label", "Country Summary") : tx("common.branch", "Branch Summary")}
         >
           <div className="dgt-pa-card-head">
             <div className="dgt-pa-symbol" aria-hidden="true">
@@ -1527,7 +1549,7 @@ export function LocalPurchaseApprovedHeader({
               className="dgt-pa-row"
             >
               <Users className="h-4 w-4 text-emerald-600 flex-none" />
-              <span className="dgt-pa-row-label">{tx( "lp.total_suppliers", "Total Suppliers")}</span>
+              <span className="dgt-pa-row-label">{tx("lp.total_suppliers", "Total Suppliers")}</span>
               <span className="dgt-pa-row-amt t-dark font-mono font-bold" dir="ltr">
                 {fmtInt(metrics.totalSuppliers)}
               </span>
@@ -1541,7 +1563,7 @@ export function LocalPurchaseApprovedHeader({
               className="dgt-pa-row"
             >
               <Package className="h-4 w-4 text-emerald-600 flex-none" />
-              <span className="dgt-pa-row-label">{tx( "lp.total_goods_items", "Total Goods Items")}</span>
+              <span className="dgt-pa-row-label">{tx("lp.total_goods_items", "Total Goods Items")}</span>
               <span className="dgt-pa-row-amt t-dark font-mono font-bold" dir="ltr">
                 {fmtInt(metrics.totalGoodsItems)}
               </span>
@@ -1555,7 +1577,7 @@ export function LocalPurchaseApprovedHeader({
               className="dgt-pa-row"
             >
               <Receipt className="h-4 w-4 text-emerald-600 flex-none" />
-              <span className="dgt-pa-row-label">{tx( "lp.avg_invoice_amount", "Avg. Invoice Amount")}</span>
+              <span className="dgt-pa-row-label">{tx("lp.avg_invoice_amount", "Avg. Invoice Amount")}</span>
               <span className="dgt-pa-row-amt t-dark font-mono font-bold" dir="ltr">
                 {metrics.avgInvoiceAmount !== null ? fmtMoney(metrics.unit, metrics.avgInvoiceAmount) : "—"}
               </span>
@@ -1569,7 +1591,7 @@ export function LocalPurchaseApprovedHeader({
               className="dgt-pa-row"
             >
               <Scale className="h-4 w-4 text-emerald-600 flex-none" />
-              <span className="dgt-pa-row-label">{tx( "lp.total_qty", "Total Quantity")}</span>
+              <span className="dgt-pa-row-label">{tx("lp.total_qty", "Total Quantity")}</span>
               <span className="dgt-pa-row-amt t-dark font-mono font-bold" dir="ltr">
                 {fmtInt(metrics.totalQtyKgs)} KG
               </span>
@@ -1583,7 +1605,7 @@ export function LocalPurchaseApprovedHeader({
               className="dgt-pa-row"
             >
               <Scale className="h-4 w-4 text-emerald-600 flex-none" />
-              <span className="dgt-pa-row-label">{tx( "lp.total_net_weight", "Total Net Weight")}</span>
+              <span className="dgt-pa-row-label">{tx("lp.total_net_weight", "Total Net Weight")}</span>
               <span className="dgt-pa-row-amt t-dark font-mono font-bold" dir="ltr">
                 {fmtInt(metrics.totalNetWeightKgs)} KG
               </span>
@@ -1593,8 +1615,8 @@ export function LocalPurchaseApprovedHeader({
         </section>
       </div>
 
-      {/* ── Slide-over Drill-Down Drawer ("پردہ") ── */}
-      {drilldown && (
+      {/* ── Slide-over Drill-Down Drawer ("پردہ") rendered via Portal to document.body ── */}
+      {mounted && drilldown && createPortal(
         <>
           <div
             className="dgt-pa-drawer-backdrop"
@@ -1718,7 +1740,8 @@ export function LocalPurchaseApprovedHeader({
               </button>
             </div>
           </aside>
-        </>
+        </>,
+        document.body
       )}
     </section>
   );

@@ -2534,8 +2534,8 @@ export function LocalPurchaseView({
           filteredPurchases={filteredPurchases}
           activeBranch={activeBranch}
           session={session}
-          scopeCountryName={activeCountryObj?.name || (scopeLabels?.country !== "All Countries" ? scopeLabels?.country : undefined)}
-          scopeBranchName={activeBranch?.name}
+          scopeCountryName={selectedCountryId ? (countryOptions.find(c => String(c.id) === String(selectedCountryId))?.name || activeCountryObj?.name) : (isSuperAdmin ? undefined : activeCountryObj?.name)}
+          scopeBranchName={selectedBranchId ? (countryBranches.find(b => String(b.id) === String(selectedBranchId))?.name || activeBranch?.name) : (isSuperAdmin ? undefined : activeBranch?.name)}
           usdRates={usdRates}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}

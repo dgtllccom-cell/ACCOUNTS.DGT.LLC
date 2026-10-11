@@ -97,8 +97,55 @@ async function captureVps() {
     await ctx.close();
   }
 
+  // 4. VPS Desktop Urdu with Drill-Down Drawer ("پردہ") OPEN
+  {
+    console.log("Capturing VPS Desktop Urdu with Drilldown Drawer ('پردہ') OPEN...");
+    const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    await ctx.addCookies([
+      { name: "erp_session", value: token, domain: "72.60.209.121", path: "/" },
+      { name: "erp_lang", value: "ur", domain: "72.60.209.121", path: "/" }
+    ]);
+    const page = await ctx.newPage();
+    await page.goto(`${TARGET_HOST}/dashboard/purchase/local-purchase`, { waitUntil: "domcontentloaded", timeout: 45000 });
+    await page.waitForTimeout(4000);
+    // Click on Total Bills button in Card 1 to open drawer
+    const totalBillsBtn = page.locator(".dgt-pa-card.gold .dgt-pa-kp button").first();
+    if (await totalBillsBtn.count() > 0) {
+      await totalBillsBtn.click();
+      await page.waitForTimeout(1000);
+    }
+    const shotPath = path.join(SHOTS_DIR, "vps-live-local-purchase-drawer-ur.png");
+    await page.screenshot({ path: shotPath, fullPage: false });
+    console.log("Saved VPS Drawer Urdu screenshot:", shotPath);
+    await ctx.close();
+  }
+
+  // 5. VPS Country Scope (UAE selected) Urdu
+  {
+    console.log("Capturing VPS Country Scope Urdu (RTL)...");
+    const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    await ctx.addCookies([
+      { name: "erp_session", value: token, domain: "72.60.209.121", path: "/" },
+      { name: "erp_lang", value: "ur", domain: "72.60.209.121", path: "/" }
+    ]);
+    const page = await ctx.newPage();
+    await page.goto(`${TARGET_HOST}/dashboard/purchase/local-purchase`, { waitUntil: "domcontentloaded", timeout: 45000 });
+    await page.waitForTimeout(4000);
+    // Click on the first country chip in Card 1
+    const countryChip = page.locator(".dgt-pa-card.gold .dgt-pa-kp button span:text('🇦🇪')").first();
+    if (await countryChip.count() > 0) {
+      await countryChip.click();
+      await page.waitForTimeout(1500);
+    }
+    const shotPath = path.join(SHOTS_DIR, "vps-live-local-purchase-country-scope-ur.png");
+    await page.screenshot({ path: shotPath, fullPage: false });
+    console.log("Saved VPS Country Scope screenshot:", shotPath);
+    await ctx.close();
+  }
+
   await browser.close();
   console.log("VPS live captures completed!");
 }
 
 captureVps().catch(console.error);
+
