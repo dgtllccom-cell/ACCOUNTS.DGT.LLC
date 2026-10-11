@@ -17,7 +17,7 @@ export default async function PurchasePaymentsPage() {
         </div>
       }
     >
-      <PurchaseOrderPaymentJournal mode="remaining" />
+      <PurchaseOrderPaymentJournal mode="remaining" approvedLayout />
     </Suspense>
   );
 }

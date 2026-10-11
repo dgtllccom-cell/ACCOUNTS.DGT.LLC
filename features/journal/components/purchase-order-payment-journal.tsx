@@ -2733,7 +2733,7 @@ function getPurchaseOrderTableHeader(h: string, currentLanguage: LanguageCode): 
   return PURCHASE_ORDER_TABLE_HEADERS[h]?.[currentLanguage] || h;
 }
 
-export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentMode }) {
+export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout = false }: { mode?: PaymentMode; approvedLayout?: boolean }) {
   const router = useRouter();
   const activeMode: PaymentMode = mode === "charges" ? "credit" : mode;
   const logClientError = (msg: string) => {
@@ -4729,6 +4729,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
         // which table UI is showing, so "View Full Details" still opens the real,
         // unchanged detail modal.
         <PurchasePaymentJournalRemainingView
+          layout={approvedLayout ? "approved" : "legacy"}
           lang={currentLanguage}
           session={session}
           isSuperAdmin={isSuperAdmin}

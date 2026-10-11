@@ -14,6 +14,7 @@ const PAGES = {
   orders: "/dashboard/purchase/purchase-order",
   country: "/dashboard/purchase/completed-purchase-bills",
   loading: "/dashboard/purchase/purchase-loading-records",
+  journalrem: "/dashboard/journal/purchase-order-payment/remaining", // NOT one of the five approved pages: must keep its original layout
 };
 const DEVICES = {
   desktop: { w: 1440, h: 900, dpr: 1, mobile: false },
