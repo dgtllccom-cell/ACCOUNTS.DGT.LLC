@@ -1543,75 +1543,131 @@ export function LocalPurchaseApprovedHeader({
           </div>
 
           <div className="dgt-pa-rows">
-            {/* 1. Total Suppliers */}
-            <button
-              type="button"
-              onClick={handleOpenSuppliersDrilldown}
-              className="dgt-pa-row"
-            >
-              <Users className="h-4 w-4 text-emerald-600 flex-none" />
-              <span className="dgt-pa-row-label">{tx("lp.total_suppliers", "Total Suppliers")}</span>
-              <span className="dgt-pa-row-amt t-dark font-mono font-bold" dir="ltr">
-                {fmtInt(metrics.totalSuppliers)}
-              </span>
-              <span className="dgt-pa-go" aria-hidden="true"><ChevronRight /></span>
-            </button>
+            {currentScopeType === "super_admin" ? (
+              countryBreakdownSummary.slice(0, 4).map((c) => {
+                const isSelected = selectedCountryId === c.id;
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => {
+                      if (isSelected) {
+                        onCountryChange("");
+                        onBranchChange("");
+                      } else {
+                        onCountryChange(c.id);
+                        onBranchChange("");
+                      }
+                    }}
+                    className={cn(
+                      "dgt-pa-row",
+                      isSelected && "bg-emerald-100/70 dark:bg-emerald-950/50 font-bold"
+                    )}
+                    title={c.name}
+                  >
+                    <span className="text-base flex-none leading-none">{c.flag}</span>
+                    <span className="dgt-pa-row-label">{c.name}</span>
+                    <span className="dgt-pa-row-amt t-green font-mono font-bold" dir="ltr">
+                      {c.totalAmount > 0 ? fmtMoney(metrics.unit, c.totalAmount) : "—"}
+                    </span>
+                    <span className="dgt-pa-row-count" dir="ltr">
+                      {c.count} {tx("lp.bills_label", "Bills")}
+                    </span>
+                    <span className="dgt-pa-go" aria-hidden="true"><ChevronRight /></span>
+                  </button>
+                );
+              })
+            ) : currentScopeType === "country" ? (
+              branchBreakdownSummary.slice(0, 4).map((b) => {
+                const isSelected = selectedBranchId === b.id;
+                return (
+                  <button
+                    key={b.id}
+                    type="button"
+                    onClick={() => {
+                      if (isSelected) {
+                        onBranchChange("");
+                      } else {
+                        onBranchChange(b.id);
+                      }
+                    }}
+                    className={cn(
+                      "dgt-pa-row",
+                      isSelected && "bg-emerald-100/70 dark:bg-emerald-950/50 font-bold"
+                    )}
+                    title={b.name}
+                  >
+                    <Building2 className="h-4 w-4 text-emerald-600 flex-none" />
+                    <span className="dgt-pa-row-label">{b.name}</span>
+                    <span className="dgt-pa-row-amt t-green font-mono font-bold" dir="ltr">
+                      {b.totalAmount > 0 ? fmtMoney(metrics.unit, b.totalAmount) : "—"}
+                    </span>
+                    <span className="dgt-pa-row-count" dir="ltr">
+                      {b.count} {tx("lp.bills_label", "Bills")}
+                    </span>
+                    <span className="dgt-pa-go" aria-hidden="true"><ChevronRight /></span>
+                  </button>
+                );
+              })
+            ) : (
+              <>
+                {/* 1. Total Suppliers */}
+                <button
+                  type="button"
+                  onClick={handleOpenSuppliersDrilldown}
+                  className="dgt-pa-row"
+                >
+                  <Users className="h-4 w-4 text-emerald-600 flex-none" />
+                  <span className="dgt-pa-row-label">{tx("lp.total_suppliers", "Total Suppliers")}</span>
+                  <span className="dgt-pa-row-amt t-dark font-mono font-bold" dir="ltr">
+                    {fmtInt(metrics.totalSuppliers)}
+                  </span>
+                  <span className="dgt-pa-go" aria-hidden="true"><ChevronRight /></span>
+                </button>
 
-            {/* 2. Total Goods Items */}
-            <button
-              type="button"
-              onClick={handleOpenGoodsDrilldown}
-              className="dgt-pa-row"
-            >
-              <Package className="h-4 w-4 text-emerald-600 flex-none" />
-              <span className="dgt-pa-row-label">{tx("lp.total_goods_items", "Total Goods Items")}</span>
-              <span className="dgt-pa-row-amt t-dark font-mono font-bold" dir="ltr">
-                {fmtInt(metrics.totalGoodsItems)}
-              </span>
-              <span className="dgt-pa-go" aria-hidden="true"><ChevronRight /></span>
-            </button>
+                {/* 2. Total Goods Items */}
+                <button
+                  type="button"
+                  onClick={handleOpenGoodsDrilldown}
+                  className="dgt-pa-row"
+                >
+                  <Package className="h-4 w-4 text-emerald-600 flex-none" />
+                  <span className="dgt-pa-row-label">{tx("lp.total_goods_items", "Total Goods Items")}</span>
+                  <span className="dgt-pa-row-amt t-dark font-mono font-bold" dir="ltr">
+                    {fmtInt(metrics.totalGoodsItems)}
+                  </span>
+                  <span className="dgt-pa-go" aria-hidden="true"><ChevronRight /></span>
+                </button>
 
-            {/* 3. Avg. Invoice Amount */}
-            <button
-              type="button"
-              onClick={handleOpenAmountDrilldown}
-              className="dgt-pa-row"
-            >
-              <Receipt className="h-4 w-4 text-emerald-600 flex-none" />
-              <span className="dgt-pa-row-label">{tx("lp.avg_invoice_amount", "Avg. Invoice Amount")}</span>
-              <span className="dgt-pa-row-amt t-dark font-mono font-bold" dir="ltr">
-                {metrics.avgInvoiceAmount !== null ? fmtMoney(metrics.unit, metrics.avgInvoiceAmount) : "—"}
-              </span>
-              <span className="dgt-pa-go" aria-hidden="true"><ChevronRight /></span>
-            </button>
+                {/* 3. Avg. Invoice Amount */}
+                <button
+                  type="button"
+                  onClick={handleOpenAmountDrilldown}
+                  className="dgt-pa-row"
+                >
+                  <Receipt className="h-4 w-4 text-emerald-600 flex-none" />
+                  <span className="dgt-pa-row-label">{tx("lp.avg_invoice_amount", "Avg. Invoice Amount")}</span>
+                  <span className="dgt-pa-row-amt t-dark font-mono font-bold" dir="ltr">
+                    {metrics.avgInvoiceAmount !== null ? fmtMoney(metrics.unit, metrics.avgInvoiceAmount) : "—"}
+                  </span>
+                  <span className="dgt-pa-go" aria-hidden="true"><ChevronRight /></span>
+                </button>
 
-            {/* 4. Total Quantity */}
-            <button
-              type="button"
-              onClick={handleOpenQtyDrilldown}
-              className="dgt-pa-row"
-            >
-              <Scale className="h-4 w-4 text-emerald-600 flex-none" />
-              <span className="dgt-pa-row-label">{tx("lp.total_qty", "Total Quantity")}</span>
-              <span className="dgt-pa-row-amt t-dark font-mono font-bold" dir="ltr">
-                {fmtInt(metrics.totalQtyKgs)} KG
-              </span>
-              <span className="dgt-pa-go" aria-hidden="true"><ChevronRight /></span>
-            </button>
-
-            {/* 5. Total Net Weight */}
-            <button
-              type="button"
-              onClick={handleOpenWeightDrilldown}
-              className="dgt-pa-row"
-            >
-              <Scale className="h-4 w-4 text-emerald-600 flex-none" />
-              <span className="dgt-pa-row-label">{tx("lp.total_net_weight", "Total Net Weight")}</span>
-              <span className="dgt-pa-row-amt t-dark font-mono font-bold" dir="ltr">
-                {fmtInt(metrics.totalNetWeightKgs)} KG
-              </span>
-              <span className="dgt-pa-go" aria-hidden="true"><ChevronRight /></span>
-            </button>
+                {/* 4. Total Quantity */}
+                <button
+                  type="button"
+                  onClick={handleOpenQtyDrilldown}
+                  className="dgt-pa-row"
+                >
+                  <Scale className="h-4 w-4 text-emerald-600 flex-none" />
+                  <span className="dgt-pa-row-label">{tx("lp.total_qty", "Total Quantity")}</span>
+                  <span className="dgt-pa-row-amt t-dark font-mono font-bold" dir="ltr">
+                    {fmtInt(metrics.totalQtyKgs)} KG
+                  </span>
+                  <span className="dgt-pa-go" aria-hidden="true"><ChevronRight /></span>
+                </button>
+              </>
+            )}
           </div>
         </section>
       </div>
