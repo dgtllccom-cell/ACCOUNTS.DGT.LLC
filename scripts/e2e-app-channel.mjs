@@ -4,11 +4,31 @@
  * where each kind of login is sent. The channel is only a front door; permissions are enforced separately (see lib/mobile/app-channel.ts).
  *   BASE=http://localhost:3260 node scripts/e2e-app-channel.mjs
  */
+import fs from "node:fs";
+import { createHmac } from "node:crypto";
+import postgres from "postgres";
+
 const BASE = process.env.BASE || "http://localhost:3260";
 if (!/localhost|127\.0\.0\.1/.test(BASE)) { console.error("DEV only"); process.exit(2); }
 const UA_B = "Mozilla/5.0 (Linux; Android 16) AppleWebKit/537.36 Chrome/130 Mobile Safari/537.36 DGTllc-B/1";
 const UA_BS = "Mozilla/5.0 (Linux; Android 16) AppleWebKit/537.36 Chrome/130 Mobile Safari/537.36 DGTllc-BS/1";
 const UA_WEB = "Mozilla/5.0 (Linux; Android 16) AppleWebKit/537.36 Chrome/130 Mobile Safari/537.36";
+// Since the device-approval system exists, a tagged (store-app) request only reaches the ERP from an ACTIVE device. This test is about the
+// app-channel routing, not about activation (scripts/e2e-mobile-device.mjs covers that), so every tagged request carries a fresh DEV device
+// that is already active (rows are tagged and removed at the end).
+const envVal = (k) => process.env[k] || fs.readFileSync(".env.local", "utf8").match(new RegExp("^" + k + "\\s*=\\s*(.+)$", "m"))?.[1].trim().replace(/^['"]|['"]$/g, "");
+const DB_URL = envVal("DATABASE_URL");
+if (!/csesvyxxjivnkkozgopt/.test(DB_URL)) { console.error("REFUSING: DATABASE_URL is not the DEV project"); process.exit(2); }
+const SECRET = envVal("ERP_SESSION_SECRET") || envVal("AUTH_SECRET") || envVal("NEXTAUTH_SECRET");
+const sql = postgres(DB_URL, { max: 1, prepare: false, ssl: "require" });
+const tagOf = (ua) => (ua.includes("DGTllc-BS/1") ? "bs" : ua.includes("DGTllc-B/1") ? "b" : null);
+async function deviceCookie(ua) {
+  const app = tagOf(ua);
+  if (!app) return "";
+  const id = (await sql`insert into mobile_devices (app, requested_name, requested_identifier, request_note, status, activated_at) values (${app}, 'e2e app-channel', 'e2e-app-channel@dev.local', 'e2e-app-channel', 'active', now()) returning id`)[0].id;
+  return `dgt_device=${id}.${createHmac("sha256", SECRET).update("device:" + id).digest("base64url")}`;
+}
+
 const COUNTRY = "fb021716-a2e7-4141-9c1a-bd1ddd92eb14";
 
 const results = [];
@@ -20,7 +40,8 @@ async function session(body) {
   return (r.headers.getSetCookie?.() ?? []).map((c) => c.split(";")[0]).join("; ");
 }
 const get = async (cookie, ua, path) => {
-  const r = await fetch(`${BASE}${path}`, { redirect: "manual", headers: { cookie, "user-agent": ua } });
+  const dev = await deviceCookie(ua);
+  const r = await fetch(`${BASE}${path}`, { redirect: "manual", headers: { cookie: dev ? cookie + "; " + dev : cookie, "user-agent": ua } });
   return { status: r.status, loc: r.headers.get("location") || "" };
 };
 
@@ -59,6 +80,8 @@ check("Wrong-app page renders without a session (200, names the right app)", r.s
 r = await fetch(`${BASE}/legal/privacy`, { redirect: "manual" });
 check("Privacy policy page is public (200)", r.status === 200, `status ${r.status} ${r.headers.get("location") || ""}`);
 
+await sql`delete from mobile_devices where request_note = 'e2e-app-channel'`;
+await sql.end();
 const bad = results.filter((x) => !x).length;
 console.log(`\n==== ${results.length - bad} PASS / ${bad} FAIL ====`);
 process.exit(bad ? 1 : 0);
