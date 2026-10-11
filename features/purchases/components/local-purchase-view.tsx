@@ -350,13 +350,21 @@ export function LocalPurchaseView({
   const router = useRouter();
   const lang = useActiveLanguage();
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
-  const isGlobalUser = Boolean(session?.isSuperAdmin || session?.isSuperAdmin === true || session?.roles?.includes?.("super_admin"));
+  const isGlobalUser = Boolean(
+    session?.isSuperAdmin ||
+    session?.isSuperAdmin === true ||
+    session?.isGlobalScope ||
+    session?.scopes?.isSuperAdmin ||
+    session?.roles?.some?.((r: string) => String(r).toLowerCase().includes("super_admin") || String(r).toLowerCase().includes("global")) ||
+    String(session?.role || "").toLowerCase().includes("super_admin")
+  );
   const isSuperAdmin = Boolean(
     session?.isSuperAdmin ||
     session?.isSuperAdmin === true ||
     session?.scopes?.isSuperAdmin ||
-    session?.roles?.includes?.("super_admin") ||
-    session?.role === "super_admin"
+    session?.isGlobalScope ||
+    session?.roles?.some?.((r: string) => String(r).toLowerCase().includes("super_admin") || String(r).toLowerCase().includes("global")) ||
+    String(session?.role || "").toLowerCase().includes("super_admin")
   );
   const th = (x: string) => translateHeader(lang, x);
   const tr = (x: string) => translateHeader(lang, x);
@@ -5578,7 +5586,7 @@ export function LocalPurchaseView({
                       {t(lang, "lp.reg_list_title", "Local Purchase List")}
                     </h3>
                     <p className="text-[11px] text-slate-500 font-medium mt-0.5">
-                      All local purchase bills for {activeBranch?.name || activeBranch?.branch_name || "Afghanistan Main Branch"}
+                      All local purchase bills for {activeBranch?.name || activeBranch?.branch_name || (selectedCountryId ? (countryOptions.find(c => String(c.id) === String(selectedCountryId))?.name || "Selected Country") : t(lang, "pap.allCountries", "All Countries"))}
                     </p>
                   </div>
                 </div>

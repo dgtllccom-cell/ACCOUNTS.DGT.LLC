@@ -129,8 +129,9 @@ export function LocalPurchaseApprovedHeader({
     session?.isSuperAdmin ||
     session?.isSuperAdmin === true ||
     session?.scopes?.isSuperAdmin ||
-    session?.roles?.includes?.("super_admin") ||
-    session?.role === "super_admin"
+    session?.isGlobalScope ||
+    session?.roles?.some?.((r: string) => String(r).toLowerCase().includes("super_admin") || String(r).toLowerCase().includes("global")) ||
+    String(session?.role || "").toLowerCase().includes("super_admin")
   );
 
   const [mounted, setMounted] = useState(false);

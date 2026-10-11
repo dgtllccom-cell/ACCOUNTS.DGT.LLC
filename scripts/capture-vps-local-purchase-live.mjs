@@ -108,11 +108,11 @@ async function captureVps() {
     const page = await ctx.newPage();
     await page.goto(`${TARGET_HOST}/dashboard/purchase/local-purchase`, { waitUntil: "domcontentloaded", timeout: 45000 });
     await page.waitForTimeout(4000);
-    // Click on Total Bills button in Card 1 to open drawer
-    const totalBillsBtn = page.locator(".dgt-pa-card.gold .dgt-pa-kp button").first();
+    // Click on Total Bills in Card 1 to open drawer
+    const totalBillsBtn = page.locator(".dgt-pa-card.gold .dgt-pa-kp-interactive, .dgt-pa-card.gold [role='button']").first();
     if (await totalBillsBtn.count() > 0) {
       await totalBillsBtn.click();
-      await page.waitForTimeout(1000);
+      await page.waitForTimeout(1500);
     }
     const shotPath = path.join(SHOTS_DIR, "vps-live-local-purchase-drawer-ur.png");
     await page.screenshot({ path: shotPath, fullPage: false });
@@ -132,10 +132,10 @@ async function captureVps() {
     await page.goto(`${TARGET_HOST}/dashboard/purchase/local-purchase`, { waitUntil: "domcontentloaded", timeout: 45000 });
     await page.waitForTimeout(4000);
     // Click on the first country chip in Card 1
-    const countryChip = page.locator(".dgt-pa-card.gold .dgt-pa-kp button span:text('🇦🇪')").first();
+    const countryChip = page.locator(".dgt-pa-scope-chip, .dgt-pa-card.gold button:has-text('UAE'), .dgt-pa-card.gold button:has-text('🇦🇪')").first();
     if (await countryChip.count() > 0) {
       await countryChip.click();
-      await page.waitForTimeout(1500);
+      await page.waitForTimeout(2000);
     }
     const shotPath = path.join(SHOTS_DIR, "vps-live-local-purchase-country-scope-ur.png");
     await page.screenshot({ path: shotPath, fullPage: false });
