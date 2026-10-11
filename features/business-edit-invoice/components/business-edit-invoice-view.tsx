@@ -281,7 +281,7 @@ export function BusinessEditInvoiceView({ lang: langProp }: { lang?: string }) {
                 <span className="text-xs font-bold text-emerald-950 dark:text-emerald-200">{s.t("edit_invoice_summary", "Edit Invoice Summary")}</span>
               </div>
             </div>
-            <div className="mt-3 grid grid-cols-4 gap-2 text-center text-xs">
+            <div className="mt-3 grid grid-cols-[repeat(auto-fit,minmax(5.5rem,1fr))] gap-2 text-center text-xs">
               <div className="rounded-xl bg-slate-50/80 p-2 dark:bg-slate-800/60">
                 <div className="text-lg font-black text-slate-900 dark:text-slate-100">{rows.length}</div>
                 <div className="text-[10px] font-bold text-slate-500 uppercase">{s.t("total_edit_invoices", "Total Edit Invoices")}</div>
@@ -311,7 +311,7 @@ export function BusinessEditInvoiceView({ lang: langProp }: { lang?: string }) {
                 <span className="text-xs font-bold text-purple-950 dark:text-purple-200">{s.t("source_document_summary", "Source Document Summary")}</span>
               </div>
             </div>
-            <div className="mt-3 grid grid-cols-4 gap-2 text-center text-xs">
+            <div className="mt-3 grid grid-cols-[repeat(auto-fit,minmax(5.5rem,1fr))] gap-2 text-center text-xs">
               <div className="rounded-xl bg-slate-50/80 p-2 dark:bg-slate-800/60">
                 <div className="text-lg font-black text-purple-700 dark:text-purple-300">{stats.bySource("purchase_booking")}</div>
                 <div className="text-[10px] font-bold text-slate-500 uppercase">{s.t("m_purchase_booking", "Purchase")}</div>
