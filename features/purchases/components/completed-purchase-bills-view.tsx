@@ -13,10 +13,15 @@ import { printStore } from "@/lib/store/print-store";
 import { Th } from "@/components/ui/translated-th";
 import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { t } from "@/lib/i18n/ui";
+import { PapMenu, PapRefresh, PapSearch } from "@/components/purchase-ui/purchase-approved-header";
+import "@/components/purchase-ui/purchase-table-skin.css";
+import { useUsdRates } from "@/lib/purchase-ui/use-usd-rates";
+import { PaymentApprovedHeader, ordersToPayRows } from "./purchase-payments-approved-header";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
 export function CompletedPurchaseBillsView({ sessionInfo }: { sessionInfo?: { userId: string; userName: string; role: string } } = {}) {
   const lang = useActiveLanguage();
+  const usdRates = useUsdRates();
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const sessionUserId = sessionInfo?.userId || "";
   const sessionUserName = sessionInfo?.userName || "";
@@ -33,7 +38,8 @@ export function CompletedPurchaseBillsView({ sessionInfo }: { sessionInfo?: { us
     setLoading(true);
     try {
       const [poRes, lrRes] = await Promise.all([
-        fetch("/api/erp/purchases/orders?limit=1000", { cache: "no-store" }),
+        // the orders API rejects limit > 500 (422) — 1000 used to leave this register permanently empty
+        fetch("/api/erp/purchases/orders?limit=500", { cache: "no-store" }),
         fetch("/api/erp/purchases/loading-records?limit=1000", { cache: "no-store" })
       ]);
       const poPayload = await poRes.json().catch(() => ({}));
@@ -260,42 +266,18 @@ export function CompletedPurchaseBillsView({ sessionInfo }: { sessionInfo?: { us
 
   return (
     <div dir={isRtl ? "rtl" : "ltr"} className="mx-auto w-full max-w-[1650px] px-3 py-4 space-y-4 font-sans text-slate-800 dark:text-slate-100">
-      {/* SINGLE CLEAN ACTION / CONTROL HEADER BAR (No duplicate back buttons!) */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
-        <div className="flex items-center gap-3">
-          <Button onClick={() => window.history.back()} variant="ghost" size="sm" className="h-8 px-2 text-xs font-bold text-slate-600 hover:text-slate-900">
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            {tt("plr.back", "Back")}
-          </Button>
-
-          <div className="h-4 w-px bg-slate-200 dark:bg-slate-800" />
-
-          <div>
-            <h1 className="text-base font-black uppercase tracking-tight text-slate-800 dark:text-slate-100 flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-              {tt("cpb.title", "Completed Purchase Bills Register")}
-              <span className="text-[11px] font-medium text-slate-400 normal-case ml-2">{tt("cpb.subtitle", "Final archive of completed purchase contracts.")}</span>
-            </h1>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={tt("cpb.search_ph", "Search PO / Manual Bill / Supplier...")}
-              className="h-8 w-60 rounded-lg border border-slate-200 bg-white pl-8 pr-3 text-xs outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
-            />
-          </div>
-
-          <Button onClick={() => void loadData()} variant="outline" size="sm" className="h-8 font-bold text-xs">
-            <RefreshCw className={`h-3.5 w-3.5 mr-1 text-slate-500 ${loading ? "animate-spin" : ""}`} />
-            {tt("common.refresh", "Refresh")}
-          </Button>
-
-          <JournalPrintButton
+      {/* Approved Purchase header (title, page toolbar, yellow / blue / green cards). Toolbar = this page's EXISTING search, refresh and
+          print handlers; the completed-bills table below keeps every column, row and action — only a CSS skin is added. */}
+      <PaymentApprovedHeader
+        variant="country-bill"
+        rows={ordersToPayRows(completedBills)}
+        rates={usdRates}
+        toolbar={
+          <>
+            <PapSearch value={query} onChange={setQuery} placeholder={tt("cpb.search_ph", "Search PO / Manual Bill / Supplier...")} />
+            <PapRefresh title={tt("common.refresh", "Refresh")} spinning={loading} onClick={() => void loadData()} />
+            <PapMenu label={tt("common.actions", "Actions")}>
+              <JournalPrintButton
             title={tt("cpb.print_title", "COMPLETED PURCHASE BILLS REGISTER")}
             subtitle={tt("cpb.print_subtitle", "Official A4 ERP Journal Report - Zero Remaining Balance Archive")}
             columns={[
@@ -321,135 +303,16 @@ export function CompletedPurchaseBillsView({ sessionInfo }: { sessionInfo?: { us
                 completionDate: d.completedAt
               };
             })}
-            variant="default"
-            className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold h-8 text-xs gap-1.5 shadow-sm"
+            variant="ghost"
+            className="dgt-pa-menu-item h-auto w-full justify-start gap-2 rounded-lg px-2 text-xs font-bold"
           />
-        </div>
-      </div>
-
-      {/* EXECUTIVE 4-CARD REPORT SUMMARY HEADER (EXACT MATCH FOR IMAGE 1) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
-        {/* CARD 1: BRANCH & USER DETAILS */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-100 dark:border-slate-800">
-            <div className="h-7 w-7 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs">
-              1
-            </div>
-            <h3 className="text-xs font-black uppercase text-blue-900 dark:text-blue-300 tracking-wider">{t(lang, "cpb.card1_title", "1. Branch & User Details")}</h3>
-          </div>
-
-          <div className="space-y-1.5 text-[11px]">
-            <div className="flex justify-between">
-              <span className="text-slate-500">{t(lang, "cpb.f_country", "Country:")}</span>
-              <span className="font-bold text-slate-700 dark:text-slate-300">{orders[0]?.countryName || orders[0]?.country_name || "—"}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500">{t(lang, "cpb.f_branch_name", "Branch Name:")}</span>
-              <span className="font-extrabold text-slate-800 dark:text-slate-200">{orders[0]?.branchName || orders[0]?.branch_name || "—"}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500">{t(lang, "cpb.f_user_id", "User ID:")}</span>
-              <span className="font-mono text-[10px] text-slate-600 dark:text-slate-400 truncate max-w-[140px]">{sessionUserId || "—"}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500">{t(lang, "cpb.f_user_name", "User Name:")}</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200">{sessionUserName || "—"}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500">{t(lang, "cpb.f_role", "Role:")}</span>
-              <span className="font-bold text-slate-700 dark:text-slate-300">{sessionRole || "—"}</span>
-            </div>
-            <div className="flex justify-between items-center pt-1 border-t border-slate-100 dark:border-slate-800">
-              <span className="text-slate-500">{t(lang, "cpb.f_status", "Status:")}</span>
-              <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase">{t(lang, "god.active", "Active")}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* CARD 2: GLOBAL FINANCIAL SUMMARY (USD) */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-100 dark:border-slate-800">
-            <div className="h-7 w-7 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
-              2
-            </div>
-            <h3 className="text-xs font-black uppercase text-emerald-900 dark:text-emerald-300 tracking-wider">{t(lang, "cpb.card2_title", "2. Global Financial Summary (USD)")}</h3>
-          </div>
-
-          <div className="space-y-1.5 text-[11px]">
-            <div className="flex justify-between">
-              <span className="text-slate-500">{t(lang, "cpb.f_total_completed_bills", "Total Completed Bills:")}</span>
-              <span className="font-black text-slate-800 dark:text-slate-100">{summaryMetrics.totalCount}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500">{t(lang, "cpb.f_contract_loaded_qty", "Contract / Loaded Qty:")}</span>
-              <span className="font-bold text-slate-700 dark:text-slate-300">{summaryMetrics.totalContractQty.toLocaleString()} {orders[0]?.unitLabel || orders[0]?.quantity_name || ""}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500">{tt("cpb.total_credit_paid", "Total Credit (Paid):")}</span>
-              <span className="font-black text-emerald-600 dark:text-emerald-400">${summaryMetrics.totalPaidUSD.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500">{tt("cpb.total_debit_purchases", "Total Debit (Purchases):")}</span>
-              <span className="font-black text-emerald-600 dark:text-emerald-400">${summaryMetrics.totalPurchaseUSD.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-            </div>
-            <div className="flex justify-between items-center pt-1.5 border-t border-slate-200 dark:border-slate-800">
-              <span className="font-black uppercase text-slate-700 dark:text-slate-300">BALANCE:</span>
-              <span className="font-black text-sm text-slate-900 dark:text-slate-100">$0.00</span>
-            </div>
-          </div>
-        </div>
-
-        {/* CARD 3: ACTIVE OPERATIONS SUMMARY */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-100 dark:border-slate-800">
-            <div className="h-7 w-7 rounded-full bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold text-xs">
-              3
-            </div>
-            <h3 className="text-xs font-black uppercase text-purple-900 dark:text-purple-300 tracking-wider">{t(lang, "cpb.card3_title", "3. Completed Operations Summary")}</h3>
-          </div>
-
-          <div className="space-y-2 text-[11px]">
-            <div className="flex items-center justify-between">
-              <span className="text-slate-500">{t(lang, "cpb.f_purchase_booking", "Purchase Booking:")}</span>
-              <span className="font-bold text-emerald-600">✓ {t(lang, "cpb.completed_check", "Completed")}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-slate-500">{t(lang, "cpb.f_loading_module", "Loading Module:")}</span>
-              <span className="font-bold text-emerald-600">✓ {t(lang, "cpb.completed_check", "Completed")}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-slate-500">{t(lang, "cpb.f_payments_balance", "Payments & Balance:")}</span>
-              <span className="font-bold text-emerald-600">✓ {t(lang, "cpb.fully_paid_100pct", "100% Paid")}</span>
-            </div>
-            <div className="mt-2 text-[10px] text-center py-1.5 bg-slate-50 dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 text-slate-500">
-              {t(lang, "cpb.archived_note", "Archived for permanent record audit")}
-            </div>
-          </div>
-        </div>
-
-        {/* CARD 4: ALL COUNTRIES REPORT DETAILS */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-100 dark:border-slate-800">
-            <div className="h-7 w-7 rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-xs">
-              4
-            </div>
-            <h3 className="text-xs font-black uppercase text-amber-900 dark:text-amber-300 tracking-wider">4. {tt("cpb.all_countries_report_details", "ALL COUNTRIES REPORT DETAILS")}</h3>
-          </div>
-
-          <div className="space-y-2 text-[11px]">
-            <p className="text-slate-500 text-[10.5px]">
-              Displaying fully cleared & completed purchase bills across all active country operations (UAE, PAKISTAN).
-            </p>
-            <div className="flex items-center gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800 text-[10px] font-bold text-emerald-600">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              {tt("cpb.live_updating", "LIVE UPDATING")}
-            </div>
-          </div>
-        </div>
-      </div>
+            </PapMenu>
+          </>
+        }
+      />
 
       {/* COMPLETED BILLS TABLE */}
-      <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden dark:border-slate-800 dark:bg-slate-900">
+      <div className="dgt-purchase-table-skin rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden dark:border-slate-800 dark:bg-slate-900">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs whitespace-nowrap">
             <thead className="bg-slate-50 border-b border-slate-200 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:bg-slate-900/60 dark:border-slate-800">

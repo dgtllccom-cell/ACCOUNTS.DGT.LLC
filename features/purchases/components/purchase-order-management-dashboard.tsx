@@ -4,6 +4,10 @@ import { DownloadActionIcon, PdfActionIcon } from "@/components/ui/download-acti
 import { DocumentAttachmentIcon } from "@/components/documents/document-attachment-icon";
 import { useCallback, useEffect, useMemo, useState, Fragment } from "react";
 import { createPortal } from "react-dom";
+import { PapMenu, PapRefresh, PapSearch } from "@/components/purchase-ui/purchase-approved-header";
+import "@/components/purchase-ui/purchase-table-skin.css";
+import { useUsdRates } from "@/lib/purchase-ui/use-usd-rates";
+import { PaymentApprovedHeader, reportsToPayRows } from "./purchase-payments-approved-header";
 import {
   BadgeDollarSign,
   Boxes,
@@ -636,27 +640,19 @@ function printPurchaseRegister(rows: PurchaseReport[], lang: SupportedLanguage) 
 
 function PurchaseReportActionsMenu({ lang, rows, onExport }: { lang: SupportedLanguage; rows: PurchaseReport[]; onExport: () => void }) {
   const tr = (label: string) => translateHeader(lang, label);
+  // Same download / Excel / PDF / print handlers as before — only the menu shell changed to the approved toolbar style.
   return (
-    <ViewportActionMenu
-      ariaLabel={tr("Report actions")}
-      buttonClassName="flex h-9 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:hover:bg-slate-900"
-      trigger={<MoreVertical className="h-4 w-4" />}
-      menuClassName="border-slate-200 bg-white text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
-    >
-      {(close) => (
-        <>
-          <ActionItem icon={<Eye />} label={tr("Plate View")} onClick={() => close()} />
-          <ActionItem icon={<DownloadActionIcon />} label={tr("Download")} onClick={() => { close(); onExport(); }} />
-          <ActionItem icon={<FileSpreadsheet />} label={tr("Export Excel")} onClick={() => { close(); onExport(); }} />
-          <ActionItem icon={<PdfActionIcon />} label={tr("Export PDF")} onClick={() => { close(); printPurchaseRegister(rows, lang); }} />
-          <ActionItem icon={<Printer />} label={tr("Print")} onClick={() => { close(); printPurchaseRegister(rows, lang); }} />
-          <div className="border-t border-slate-200 px-3 py-2 text-[11px] text-slate-500 dark:border-slate-800">{rows.length} {tr("Records")}</div>
-        </>
-      )}
-    </ViewportActionMenu>
+    <PapMenu
+      label={tr("Report actions")}
+      items={[
+        { key: "dl", label: tr("Download"), icon: <DownloadActionIcon />, onClick: onExport },
+        { key: "xls", label: tr("Export Excel"), icon: <FileSpreadsheet />, onClick: onExport },
+        { key: "pdf", label: tr("Export PDF"), icon: <PdfActionIcon />, onClick: () => printPurchaseRegister(rows, lang) },
+        { key: "print", label: tr("Print"), icon: <Printer />, onClick: () => printPurchaseRegister(rows, lang) },
+      ]}
+    />
   );
 }
-
 
 function PurchaseRowActionsMenu({ lang, onSelect, onEdit, onPrint, onExportPdf }: { lang: SupportedLanguage; onSelect: () => void; onEdit: () => void; onPrint: () => void; onExportPdf: () => void }) {
   const tr = (label: string) => translateHeader(lang, label);
@@ -1604,6 +1600,7 @@ function DashboardSummaryHeader({
 export function PurchaseOrderManagementDashboard() {
   const router = useRouter();
   const activeLang = useActiveLanguage();
+  const usdRates = useUsdRates();
   const isRtl = ["ur", "ar", "fa", "ps"].includes(activeLang);
   const tr = useCallback((label: string) => translateHeader(activeLang, label), [activeLang]);
   // Universal, session-RBAC-scoped Branch & User context for the reusable summary header.
@@ -2024,24 +2021,13 @@ export function PurchaseOrderManagementDashboard() {
     }));
   }, [filtered]);
 
-  const pageHeaderContent = (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-4">
-      <DashboardPageHeader
-        titleKey="nav.purchase_order_management"
-        titleFallback="Purchase Order Management"
-        descKey="pom.subtitle"
-        descFallback="Real-time purchase order tracking across every country and branch."
-      />
-    </div>
-  );
-
-  const pageActionsContent = (
-    <div className="flex flex-wrap items-center gap-2">
-      {/* Dropdown Selector */}
+  const approvedToolbar = (
+    <>
+      {/* Stage selector: the page's existing lifecycle tabs */}
       <select
         value={activeTab}
         onChange={(event) => setActiveTab(event.target.value as LifecycleTab)}
-        className="h-9 min-w-[150px] rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-350 cursor-pointer"
+        className="dgt-pa-ctrl"
         aria-label={tr("Select Stage")}
       >
         {lifecycleTabs.map((tab) => {
@@ -2057,121 +2043,32 @@ export function PurchaseOrderManagementDashboard() {
           );
         })}
       </select>
-
-      {/* Search Input */}
-      <div className="relative min-w-[200px]">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-450" />
-        <input
-          value={searchText}
-          onChange={(event) => setSearchText(event.target.value)}
-          placeholder={tr("Search PO#, Supplier...")}
-          className="h-9 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-xs text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
-        />
-      </div>
-
-      {/* Filter Toggle */}
-      <Button
-        type="button"
-        size="sm"
-        variant="outline"
-        onClick={() => setFiltersOpen((open) => !open)}
-        className="h-9 rounded-xl border-slate-200 font-bold text-xs"
-      >
-        <SlidersHorizontal className="mr-1.5 h-3.5 w-3.5" />
+      <PapSearch value={searchText} onChange={setSearchText} placeholder={tr("Search PO#, Supplier...")} />
+      <button type="button" className="dgt-pa-ctrl" onClick={() => setFiltersOpen((open) => !open)} aria-expanded={filtersOpen}>
+        <SlidersHorizontal aria-hidden="true" />
         {tr("Filter")}
-      </Button>
-
-      {/* Reset Button */}
-      <Button
-        type="button"
-        size="sm"
-        variant="outline"
-        onClick={resetFilters}
-        className="h-9 rounded-xl border-slate-200 font-bold text-xs"
-      >
-        <RefreshCw className={loading ? "mr-1.5 h-3.5 w-3.5 animate-spin" : "mr-1.5 h-3.5 w-3.5"} />
-        {tr("Reset")}
-      </Button>
-
-      {/* Three-dots menu (ReportActions) */}
+      </button>
+      <PapRefresh title={tr("Reset")} spinning={loading} onClick={resetFilters} />
+      {/* Print / PDF / Excel / CSV: the page's existing three-dot menu */}
       <PurchaseReportActionsMenu lang={activeLang} rows={filtered} onExport={() => downloadCsv(filtered, activeLang)} />
-
-      {/* Calendar Date/Time Indicator */}
-      <div className="flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400">
-        <CalendarDays className="h-4 w-4 text-slate-400" />
-        <span suppressHydrationWarning>{new Date().toLocaleString(undefined, { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
-      </div>
-
-      {/* New Booking Button */}
-      <Button
-        type="button"
-        size="sm"
-        onClick={() => router.push("/dashboard/purchase/local-purchase?create=true")}
-        className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 h-9 rounded-xl shadow-md shadow-blue-100 flex items-center gap-1.5"
-      >
-        <Plus className="h-4 w-4" />
+      <button type="button" className="dgt-pa-ctrl dgt-pa-primary" onClick={() => router.push("/dashboard/purchase/local-purchase?create=true")}>
+        <Plus aria-hidden="true" />
         {tr("New")}
-      </Button>
-    </div>
+      </button>
+    </>
   );
 
   return (
     <div dir={isRtl ? "rtl" : "ltr"} className="w-full max-w-none space-y-4 px-2 py-3 text-slate-900 dark:text-slate-100 sm:px-4">
-      {titlePortal && createPortal(pageHeaderContent, titlePortal)}
-      {actionsPortal && createPortal(pageActionsContent, actionsPortal)}
-
-      {(!titlePortal || !actionsPortal) && (
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b pb-4">
-          {pageHeaderContent}
-          {pageActionsContent}
-        </div>
-      )}
-
-      {/* Unified Executive & Operations Summary Box (For Super Admin) */}
-      {isSuperAdmin && (
-        <div className="border border-slate-200/60 rounded-2xl bg-white/80 backdrop-blur-xl dark:border-slate-800/60 dark:bg-slate-950/60 p-5 shadow-sm text-xs font-semibold text-slate-500 uppercase flex flex-col gap-4 transition-all hover:shadow-md">
-          {/* Row 1: Session Info */}
-          <div className="flex flex-wrap items-center justify-between border-b border-slate-100 dark:border-slate-850 pb-2.5">
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-              <div className="flex items-center gap-2">
-                <span className="text-slate-400">{tr("Branch Name")}:</span>
-                <span className="text-slate-800 dark:text-slate-200 font-bold uppercase">{lockedBranchName && lockedBranchName !== "QUETTA MAIN BRANCH" && lockedBranchName !== "Quetta" ? lockedBranchName : (session?.branchName && session.branchName !== "QUETTA MAIN BRANCH" && session.branchName !== "Quetta" ? session.branchName : (session?.countryName ? session.countryName + " MAIN BRANCH" : "UNITED ARAB EMIRATES MAIN BRANCH"))}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-slate-400">{tr("User Name")}:</span>
-                <span className="text-slate-800 dark:text-slate-200 font-bold">{session?.user?.fullName || "—"}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-slate-400">{tr("Date")}:</span>
-                <span className="text-slate-800 dark:text-slate-200 font-bold" suppressHydrationWarning>
-                  {sessionNow
-                    ? new Intl.DateTimeFormat(`${activeLang}-u-ca-gregory-nu-latn`, { calendar: "gregory", numberingSystem: "latn", day: "2-digit", month: "short", year: "numeric" }).format(sessionNow)
-                    : "—"}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-slate-400">{tr("Time")}:</span>
-                <span className="text-slate-800 dark:text-slate-200 font-bold" suppressHydrationWarning>
-                  {sessionNow
-                    ? new Intl.DateTimeFormat(`${activeLang}-u-nu-latn`, { numberingSystem: "latn", hour: "2-digit", minute: "2-digit", hour12: true }).format(sessionNow)
-                    : "—"}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Universal reusable Branch & User summary (session-RBAC-scoped context + page metrics).
-              Replaces the old per-page hardcoded DashboardSummaryHeader. */}
-          <BranchUserSummary
-            moduleTitle="Purchase Order"
-            context={branchContext}
-            loading={branchContextLoading}
-            metrics={summaryMetrics}
-            entries={summaryEntries}
-            breakdown={orgBreakdown}
-          />
-        </div>
-      )}
+      {/* Approved Purchase header (title, page toolbar, yellow / blue / green cards). Figures are sums of the rows this page already
+          loaded; the toolbar wraps the page's EXISTING stage selector, search, filter panel, reset and report-actions handlers. */}
+      <PaymentApprovedHeader
+        variant="orders"
+        rows={reportsToPayRows(filtered)}
+        rates={usdRates}
+        scopeCountry={lockedCountryName || (filters.country !== "all" ? filters.country : undefined)}
+        toolbar={approvedToolbar}
+      />
 
       {/* Branch Scope Header Bar (For Country Admin & Branch Admin) */}
       {!isSuperAdmin && (
@@ -2247,7 +2144,7 @@ export function PurchaseOrderManagementDashboard() {
         {warning ? <div className="rounded border border-amber-300 bg-amber-50 px-4 py-3 text-xs text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/20 dark:text-amber-200">{warning}</div> : null}
 
         {/* 37-Column ERP Table */}
-        <div className="overflow-hidden rounded border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
+        <div className="dgt-purchase-table-skin overflow-hidden rounded border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
           <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-300px)] min-h-[420px]">
             <table className="w-max min-w-full text-xs text-left border-collapse">
               <thead className="sticky top-0 z-10 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">

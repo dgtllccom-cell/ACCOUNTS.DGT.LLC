@@ -58,6 +58,10 @@ import { UnifiedActionMenu } from "@/components/ui/unified-action-menu";
 import { ReportPagination } from "@/features/reports/components/report-pagination";
 import { ReportStatusLegend } from "@/features/reports/components/report-status-legend";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { PapFilters, PapMenu, PapRefresh, PapSearch } from "@/components/purchase-ui/purchase-approved-header";
+import "@/components/purchase-ui/purchase-table-skin.css";
+import { useUsdRates } from "@/lib/purchase-ui/use-usd-rates";
+import { BookingApprovedHeader } from "./purchase-booking-approved-header";
 import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
@@ -1050,39 +1054,16 @@ function ReportActions({ rows }: { rows: PurchaseReport[] }) {
   const lang = useActiveLanguage();
   const erpScope = useErpScope();
   const tt = (k: string, f: string) => t(lang, ("pbjr." + k) as never, f);
+  // Same three handlers as before (CSV, Excel, Print) — only the menu shell changed to the approved toolbar style.
   return (
-    <details className="relative">
-      <summary className="flex h-9 w-10 cursor-pointer list-none items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:hover:bg-slate-900 [&::-webkit-details-marker]:hidden" aria-label={tt("sec_actions", "Report actions")} title={tt("sec_actions", "Report actions")}>
-        <MoreVertical className="h-4 w-4" />
-      </summary>
-      <div className="absolute right-0 z-30 mt-2 w-52 rounded-xl border border-slate-200 bg-white p-1 text-sm text-slate-900 shadow-xl dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100">
-        <button
-          type="button"
-          onClick={() => exportCsv(rows, "purchase-booking-register.csv")}
-          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-900"
-        >
-          <Download className="h-4 w-4 text-blue-600 dark:text-blue-450" />
-          {tt("download_csv", "Download CSV")}
-        </button>
-        <button
-          type="button"
-          onClick={() => exportCsv(rows, "purchase-booking-register.csv")}
-          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-900"
-        >
-          <FileSpreadsheet className="h-4 w-4 text-emerald-600 dark:text-emerald-450" />
-          {tt("export_excel", "Export Excel")}
-        </button>
-        <button
-          type="button"
-          onClick={() => void printPurchaseBookingRegister(rows, lang, { countryId: erpScope.lockedCountryId, countryBranchId: erpScope.lockedCountryBranchId, cityBranchId: erpScope.lockedCityBranchId, countryName: erpScope.countryName, branchName: erpScope.branchDisplayName, userName: erpScope.userName })}
-          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-900"
-        >
-          <Printer className="h-4 w-4 text-slate-650" />
-          {tt("print", "Print")}
-        </button>
-
-      </div>
-    </details>
+    <PapMenu
+      label={tt("sec_actions", "Report actions")}
+      items={[
+        { key: "csv", label: tt("download_csv", "Download CSV"), icon: <Download className="text-blue-600" />, onClick: () => exportCsv(rows, "purchase-booking-register.csv") },
+        { key: "xls", label: tt("export_excel", "Export Excel"), icon: <FileSpreadsheet className="text-emerald-600" />, onClick: () => exportCsv(rows, "purchase-booking-register.csv") },
+        { key: "print", label: tt("print", "Print"), icon: <Printer />, onClick: () => void printPurchaseBookingRegister(rows, lang, { countryId: erpScope.lockedCountryId, countryBranchId: erpScope.lockedCountryBranchId, cityBranchId: erpScope.lockedCityBranchId, countryName: erpScope.countryName, branchName: erpScope.branchDisplayName, userName: erpScope.userName }) },
+      ]}
+    />
   );
 }
 const getFlag = (country: string) => {
@@ -1418,6 +1399,7 @@ export function PurchaseBookingJournalReportView({
   lang?: string;
 }) {
   const router = useRouter();
+  const dailyUsdRates = useUsdRates(); // active daily rates for the approved header (the report API's own usdRates query reads columns that do not exist)
   const [reports, setReports] = useState<PurchaseReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
@@ -1837,6 +1819,24 @@ export function PurchaseBookingJournalReportView({
     });
   }, [filters.branch, filters.country, filters.currency, filters.draftStatus, filters.status, filters.supplier, searchText, sourceReports]);
 
+  // Rows behind the approved header cards: RBAC-scoped + date range (from the API) + the Filters panel, but NOT the free-text page search.
+  const headerRows = useMemo(() => {
+    const supplier = safeTerm(filters.supplier);
+    const branch = safeTerm(filters.branch);
+    const country = safeTerm(filters.country);
+    const status = safeTerm(filters.status);
+    const currency = safeTerm(filters.currency);
+    return sourceReports.filter((report) => {
+      if (!report) return false;
+      if (supplier && !String(report.supplierName || "").toLowerCase().includes(supplier)) return false;
+      if (branch && !String(report.branchName || "").toLowerCase().includes(branch)) return false;
+      if (country && !String(report.countryName || "").toLowerCase().includes(country)) return false;
+      if (status && !String(report.status || "").toLowerCase().includes(status)) return false;
+      if (currency && String(report.currency || "").toLowerCase() !== currency) return false;
+      return true;
+    });
+  }, [filters.branch, filters.country, filters.currency, filters.status, filters.supplier, sourceReports]);
+
   const selected = useMemo(() => sourceReports.find((report) => report.id === selectedId) ?? registerRows[0] ?? sourceReports[0] ?? null, [registerRows, selectedId, sourceReports]);
   const allContainers = useMemo(() => makeContainers(selected), [selected]);
   const filteredContainers = useMemo(() => {
@@ -2163,281 +2163,105 @@ export function PurchaseBookingJournalReportView({
 
   return (
     <div dir={isRtl ? "rtl" : "ltr"} className="space-y-6 animate-in fade-in duration-200">
-      {/* Portals for Top Navigation Strip */}
-      {titleSlot && createPortal(
-        <div className="min-w-0">
-          <h1 className="truncate text-sm font-black text-slate-900 dark:text-slate-100">{t(activeLang, "pb_register.title", "Purchase Booking Register")}</h1>
-          <p className="hidden text-[10px] font-semibold text-slate-400 sm:block">{t(activeLang, "pb_register.subtitle", "Wholesaler / Import Export / Container Trading")}</p>
-        </div>,
-        titleSlot
-      )}
 
-      {actionsSlot && createPortal(
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Select Country Dropdown */}
-          <select
-            disabled={!!lockedCountryName}
-            value={filters.country}
-            onChange={(e) => setFilters(prev => ({ ...prev, country: e.target.value }))}
-            className="h-8 min-w-[130px] rounded-lg border border-slate-200 bg-white px-2.5 text-[10px] font-semibold text-slate-700 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 disabled:opacity-50"
-          >
-            <option value="">{t(activeLang, "pb_register.select_country_all", "Select Country (All)")}</option>
-            {countries.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
-
-          {/* Select Branch Dropdown */}
-          <select
-            disabled={!!lockedBranchName}
-            value={filters.branch}
-            onChange={(e) => setFilters(prev => ({ ...prev, branch: e.target.value }))}
-            className="h-8 min-w-[130px] rounded-lg border border-slate-200 bg-white px-2.5 text-[10px] font-semibold text-slate-700 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 disabled:opacity-50"
-          >
-            <option value="">{t(activeLang, "pb_register.select_branch_all", "Select Branch (All)")}</option>
-            {branches.map((b) => <option key={b} value={b}>{b}</option>)}
-          </select>
-
-          {/* Status Dropdown */}
-          <select
-            value={filters.status}
-            onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
-            className="h-8 min-w-[120px] rounded-lg border border-slate-200 bg-white px-2.5 text-[10px] font-semibold text-slate-700 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
-          >
-            <option value="">{t(activeLang, "pb_register.select_status_all", "Select Status (All)")}</option>
-            <option value="Draft">{t(activeLang, "pb_register.status_draft", "Draft")}</option>
-            <option value="Accepted">{t(activeLang, "pb_register.status_accepted", "Accepted")}</option>
-            <option value="Transferred">{t(activeLang, "pb_register.status_transferred", "Transferred")}</option>
-            <option value="Completed">{t(activeLang, "pb_register.status_completed", "Completed")}</option>
-          </select>
-
-          {/* Search box input */}
-          <div className="relative min-w-[180px] sm:min-w-[220px]">
-            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-            <input
+      {/* Approved Purchase header: title + page toolbar + the three approved cards (yellow / blue / green). The toolbar wraps the page's
+          EXISTING controls and handlers; the register table below is untouched except for a CSS-only skin. */}
+      <BookingApprovedHeader
+        rows={headerRows}
+        usdRates={dailyUsdRates}
+        scopeCountry={filters.country || undefined}
+        onCountryOpen={lockedCountryName ? undefined : (name) => setFilters((prev) => ({ ...prev, country: name }))}
+        toolbar={
+          <>
+            <PapSearch
               value={searchText}
-              onChange={(event) => setSearchText(event.target.value)}
+              onChange={setSearchText}
               placeholder={t(activeLang, "pb_register.search_placeholder", "Search booking, supplier, branch...")}
-              className="h-8 w-full rounded-lg border border-slate-200 bg-white pl-8 pr-2.5 text-[10px] font-semibold text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
             />
-          </div>
+            <PapFilters label={t(activeLang, "pap.filters", "Filters")} badge={[filters.country, filters.branch, filters.status].filter(Boolean).length || undefined}>
+              <select
+                disabled={!!lockedCountryName}
+                value={filters.country}
+                onChange={(e) => setFilters((prev) => ({ ...prev, country: e.target.value }))}
+                aria-label={t(activeLang, "pb_register.select_country_all", "Select Country (All)")}
+              >
+                <option value="">{t(activeLang, "pb_register.select_country_all", "Select Country (All)")}</option>
+                {countries.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+              <select
+                disabled={!!lockedBranchName}
+                value={filters.branch}
+                onChange={(e) => setFilters((prev) => ({ ...prev, branch: e.target.value }))}
+                aria-label={t(activeLang, "pb_register.select_branch_all", "Select Branch (All)")}
+              >
+                <option value="">{t(activeLang, "pb_register.select_branch_all", "Select Branch (All)")}</option>
+                {branches.map((b) => <option key={b} value={b}>{b}</option>)}
+              </select>
+              <select
+                value={filters.status}
+                onChange={(e) => setFilters((prev) => ({ ...prev, status: e.target.value }))}
+                aria-label={t(activeLang, "pb_register.select_status_all", "Select Status (All)")}
+              >
+                <option value="">{t(activeLang, "pb_register.select_status_all", "Select Status (All)")}</option>
+                <option value="Draft">{t(activeLang, "pb_register.status_draft", "Draft")}</option>
+                <option value="Accepted">{t(activeLang, "pb_register.status_accepted", "Accepted")}</option>
+                <option value="Transferred">{t(activeLang, "pb_register.status_transferred", "Transferred")}</option>
+                <option value="Completed">{t(activeLang, "pb_register.status_completed", "Completed")}</option>
+              </select>
+            </PapFilters>
+            <div className="dgt-pa-date">
+            <ErpDatePicker
+              mode="range"
+              lang={activeLang}
+              size="sm"
+              value={{ from: filters.fromDate || null, to: filters.toDate || null }}
+              onApply={(v) => setFilters((previous: any) => ({ ...previous, fromDate: v.from ?? "", toDate: v.to ?? "" }))}
+            />
+            </div>
+            <PapRefresh
+              title={t(activeLang, "pb_register.reset_refresh", "Reset & Refresh")}
+              spinning={loading}
+              onClick={() => {
+                setSearchText("");
+                setFilters((previous) => ({
+                  ...previous,
+                  supplier: "",
+                  branch: "",
+                  country: "",
+                  status: "",
+                  currency: "",
+                  bookingNo: "",
+                  containerNo: "",
+                  blNo: "",
+                  confirmationStatus: "",
+                  financialSupplier: "",
+                  financialCurrency: "",
+                  draftStatus: "",
+                  fromDate: "",
+                  toDate: ""
+                }));
+                void loadReport();
+              }}
+            />
+            {/* Print / Excel / CSV: the page's existing three-dot menu (same exportCsv / printPurchaseBookingRegister handlers) */}
+            <ReportActions rows={registerRows} />
+            <button
+              type="button"
+              className="dgt-pa-ctrl dgt-pa-primary"
+              onClick={() => {
+                if (onNewBooking) {
+                  onNewBooking();
+                } else {
+                  router.push("/dashboard/purchase/new-purchase-booking-order");
+                }
+              }}
+            >
+              <Plus aria-hidden="true" /> {t(activeLang, "pb_register.new_booking", "New Booking")}
+            </button>
+          </>
+        }
+      />
 
-          {/* Combined Reset & Refresh Button */}
-          <button
-            onClick={() => {
-              setSearchText("");
-              setFilters((previous) => ({
-                ...previous,
-                supplier: "",
-                branch: "",
-                country: "",
-                status: "",
-                currency: "",
-                bookingNo: "",
-                containerNo: "",
-                blNo: "",
-                confirmationStatus: "",
-                financialSupplier: "",
-                financialCurrency: "",
-                draftStatus: "",
-                fromDate: "",
-                toDate: ""
-              }));
-              void loadReport();
-            }}
-            className="flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-[10px] font-bold text-slate-600 shadow-sm hover:bg-slate-50 transition dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400"
-          >
-            <RefreshCcw className={loading ? "h-3 w-3 animate-spin text-slate-500" : "h-3 w-3 text-slate-500"} />
-            {t(activeLang, "pb_register.reset_refresh", "Reset & Refresh")}
-          </button>
-
-          {/* Visible Print action (journal register print standard) */}
-          <button
-            type="button"
-            data-testid="print-action"
-            onClick={() => void printPurchaseBookingRegister(registerRows, activeLang, { countryId: erpScope.lockedCountryId, countryBranchId: erpScope.lockedCountryBranchId, cityBranchId: erpScope.lockedCityBranchId, countryName: erpScope.countryName, branchName: erpScope.branchDisplayName, userName: erpScope.userName })}
-            className="flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-[10px] font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
-          >
-            <Printer className="h-3 w-3 text-slate-500" />
-            {t(activeLang, "pbjr.print", "Print")}
-          </button>
-
-          {/* Three-dots menu */}
-          <ReportActions rows={registerRows} />
-
-          {/* New Booking Button */}
-          <button
-            onClick={() => {
-              if (onNewBooking) {
-                onNewBooking();
-              } else {
-                router.push("/dashboard/purchase/new-purchase-booking-order");
-              }
-            }}
-            className="h-8 rounded-lg bg-blue-600 px-3 text-[10px] font-bold text-white hover:bg-blue-700 shadow-sm border-0 flex items-center gap-1.5 transition"
-          >
-            <Plus className="h-3 w-3" /> {t(activeLang, "pb_register.new_booking", "New Booking")}
-          </button>
-        </div>,
-        actionsSlot
-      )}
-
-      {/* ── 5 Top Summary KPI Cards Grid ─────────────────────────── */}
-      <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
-        {/* Card 1: BILL SUMMARY */}
-        <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-          <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
-            <ClipboardList className="h-4 w-4 text-blue-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">{t(activeLang, "pb_register.card_bill_summary", "BILL SUMMARY")}</span>
-          </div>
-          <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
-            <div className="flex justify-between text-slate-600 dark:text-slate-400">
-              <span>{t(activeLang, "pb_register.total_bills", "Total Bills")}</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100">{reports.length}</span>
-            </div>
-            <div className="flex justify-between text-slate-500">
-              <span>{t(activeLang, "pb_register.status_draft", "Draft")}</span>
-              <span className="font-bold text-slate-700 dark:text-slate-300">
-                {reports.filter(r => r.status === "Draft" || r.status === "Open" || (r.status !== "Accepted" && r.status !== "Transferred" && r.status !== "Posted" && r.status !== "Completed")).length}
-              </span>
-            </div>
-            <div className="flex justify-between text-red-600 dark:text-red-400 font-bold">
-              <span>{t(activeLang, "pb_register.accepted_not_transferred", "Accepted (Not Transferred)")}</span>
-              <span>
-                {reports.filter(r => (r.status === "Accepted" || r.confirmationStatus === "Confirmed") && r.status !== "Transferred" && r.status !== "Posted" && r.status !== "Completed").length}
-              </span>
-            </div>
-            <div className="flex justify-between text-slate-900 dark:text-slate-100 font-black">
-              <span>{t(activeLang, "pb_register.status_transferred", "Transferred")}</span>
-              <span>
-                {reports.filter(r => r.status === "Transferred" || r.status === "Posted" || (r as any).ledgerPostingStatus === "Posted" || (r as any).ledger_posting_status === "Posted").length}
-              </span>
-            </div>
-            <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
-              <span>{t(activeLang, "pb_register.status_completed", "Completed")}</span>
-              <span>
-                {reports.filter(r => r.status === "Completed").length}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 2: TOTAL AMOUNTS (AED) */}
-        <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-          <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
-            <BadgeDollarSign className="h-4 w-4 text-emerald-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">{t(activeLang, "pb_register.card_total_amounts", "TOTAL AMOUNTS")} (AED)</span>
-          </div>
-          <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
-            <div className="flex justify-between text-slate-600 dark:text-slate-400">
-              <span>{t(activeLang, "pb_register.total_purchase_amount", "Total Purchase Amount")}</span>
-              <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
-                {formatMoney(reports.reduce((s, r) => s + Number(r.totalPurchaseAmount || r.purchaseAmount || 0), 0))}
-              </span>
-            </div>
-            <div className="flex justify-between text-red-600 dark:text-red-400 font-bold">
-              <span>{t(activeLang, "pb_register.accepted_not_transferred", "Accepted (Not Transferred)")}</span>
-              <span className="font-mono">
-                {formatMoney(reports.filter(r => (r.status === "Accepted" || r.confirmationStatus === "Confirmed") && r.status !== "Transferred" && r.status !== "Posted" && r.status !== "Completed").reduce((s, r) => s + Number(r.totalPurchaseAmount || r.purchaseAmount || 0), 0))}
-              </span>
-            </div>
-            <div className="flex justify-between text-slate-900 dark:text-slate-100 font-black">
-              <span>{t(activeLang, "pb_register.status_transferred", "Transferred")}</span>
-              <span className="font-mono">
-                {formatMoney(reports.filter(r => r.status === "Transferred" || r.status === "Posted" || (r as any).ledgerPostingStatus === "Posted" || (r as any).ledger_posting_status === "Posted").reduce((s, r) => s + Number(r.totalPurchaseAmount || r.purchaseAmount || 0), 0))}
-              </span>
-            </div>
-            <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
-              <span>{t(activeLang, "pb_register.status_completed", "Completed")}</span>
-              <span className="font-mono">
-                {formatMoney(reports.filter(r => r.status === "Completed").reduce((s, r) => s + Number(r.totalPurchaseAmount || r.purchaseAmount || 0), 0))}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 3: BRANCHES */}
-        <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-          <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
-            <Building2 className="h-4 w-4 text-purple-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">{t(activeLang, "pb_register.card_branches", "BRANCHES")}</span>
-          </div>
-          <div className="mt-2.5 space-y-1.5 text-[11px] font-semibold">
-            <div className="flex justify-between text-slate-600 dark:text-slate-400">
-              <span>{t(activeLang, "pb_register.total_branches", "Total Branches")}</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100">
-                {branchSummary.length}
-              </span>
-            </div>
-            <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
-              <span>{t(activeLang, "pb_register.active_branches", "Active Branches")}</span>
-              <span>{branchSummary.length}</span>
-            </div>
-            <div className="flex justify-between text-slate-400">
-              <span>{t(activeLang, "pb_register.inactive_branches", "Inactive Branches")}</span>
-              <span>0</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 4: THIS MONTH */}
-        <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-          <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
-            <CalendarDays className="h-4 w-4 text-blue-500" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">{t(activeLang, "pb_register.card_this_month", "THIS MONTH")}</span>
-          </div>
-          <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
-            <div className="flex justify-between text-slate-600 dark:text-slate-400">
-              <span>{t(activeLang, "pb_register.bills_created", "Bills Created")}</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100">
-                {reports.filter(r => new Date(r.purchaseDate || r.createdAt).getMonth() === new Date().getMonth()).length}
-              </span>
-            </div>
-            <div className="flex justify-between text-blue-600 dark:text-blue-400 font-bold">
-              <span>{t(activeLang, "pb_register.amount_label", "Amount")} (AED)</span>
-              <span className="font-mono">
-                {formatMoney(reports.filter(r => new Date(r.purchaseDate || r.createdAt).getMonth() === new Date().getMonth()).reduce((s, r) => s + Number(r.totalPurchaseAmount || r.purchaseAmount || 0), 0))}
-              </span>
-            </div>
-            <div className="flex justify-between text-slate-900 dark:text-slate-100 font-black">
-              <span>{t(activeLang, "pb_register.status_transferred", "Transferred")}</span>
-              <span>
-                {reports.filter(r => (r.status === "Transferred" || r.status === "Posted") && new Date(r.purchaseDate || r.createdAt).getMonth() === new Date().getMonth()).length}
-              </span>
-            </div>
-            <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
-              <span>{t(activeLang, "pb_register.status_completed", "Completed")}</span>
-              <span>
-                {reports.filter(r => r.status === "Completed" && new Date(r.purchaseDate || r.createdAt).getMonth() === new Date().getMonth()).length}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 5: QUICK INFO — live from API */}
-        <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-          <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
-            <Clock3 className="h-4 w-4 text-amber-500" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">{t(activeLang, "pb_register.card_quick_info", "QUICK INFO")}</span>
-          </div>
-          <div className="mt-2.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
-            <div className="flex justify-between">
-              <span>{t(activeLang, "pb_register.currency", "Currency")}</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100">{apiSummary?.quickInfo?.currency ?? "—"}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>{t(activeLang, "pb_register.exchange_rate_avg", "Exchange Rate (Avg.)")}</span>
-              <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{apiSummary?.quickInfo?.exchangeRate ?? "—"}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>{t(activeLang, "pb_register.company", "Company")}</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[120px] text-right" title={apiSummary?.quickInfo?.company}>{apiSummary?.quickInfo?.company ?? "—"}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>{t(activeLang, "pb_register.financial_year", "Financial Year")}</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100">{apiSummary?.quickInfo?.financialYear ?? "—"}</span>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {error && (
         <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
@@ -2446,7 +2270,7 @@ export function PurchaseBookingJournalReportView({
       )}
 
       {/* ── Main Register Section ────────────────────────────────── */}
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
+      <section className="dgt-purchase-table-skin overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
         {/* Table Header with View Switcher */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-3.5 border-b border-slate-100 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-900/50">
           <div className="flex items-center gap-2">

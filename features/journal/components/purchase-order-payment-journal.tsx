@@ -4749,6 +4749,22 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
             )
           }
           onDownloadPdf={(orderRow) => handleOpenA4PDF(orderRow, true)}
+          onPrintJournal={() => void printPaymentJournal({
+            kind: "purchase",
+            rows: filtered as Record<string, unknown>[],
+            lang: currentLanguage,
+            title: translateHeader(currentLanguage, "Purchase Payments Journal"),
+            modeLabel: String(mode).toUpperCase(),
+            filters: [],
+            countryId: erpScope.lockedCountryId,
+            countryBranchId: erpScope.lockedCountryBranchId,
+            cityBranchId: erpScope.lockedCityBranchId,
+            countryName: erpScope.countryName,
+            branchName: erpScope.branchDisplayName,
+            printedBy: erpScope.userName,
+            reportPeriod: null,
+          })}
+          onExportJournal={() => exportRows(filtered, activeMode, currentLanguage)}
         />
       ) : (
       <>

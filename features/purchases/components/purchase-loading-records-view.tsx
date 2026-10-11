@@ -2,6 +2,9 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
+import { PapFilters, PapMenu, PapRefresh, PapSearch } from "@/components/purchase-ui/purchase-approved-header";
+import "@/components/purchase-ui/purchase-table-skin.css";
+import { LoadingApprovedHeader } from "./purchase-loading-approved-header";
 import { useSearchParams } from "next/navigation";
 import { openLoadingRecordsPrintReport } from "@/lib/reports/open-loading-records-print-report";
 import { SearchableSelect } from "@/components/ui/searchable-select";
@@ -2868,44 +2871,42 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
       {receivingRecord && (
         <ReceivingModal record={receivingRecord} onClose={() => setReceivingRecord(null)} onReceived={() => void loadRecords()} />
       )}
-      {actionsSlot && createPortal(
-        <div className="flex flex-wrap items-center gap-1.5 print:hidden">
-          <SearchableSelect
-            value={selectedInvoicePoNo}
-            onChange={(val) => setSelectedInvoicePoNo(val)}
-            options={[
-              { label: tt("plr.all_invoices", "All Invoices / POs"), value: "" },
-              ...uniqueInvoiceOptions
-            ]}
-            placeholder={tt("plr.sel_invoice", "Select Purchase Invoice / PO...")}
-            className="w-60 text-xs font-semibold relative z-[45]"
-          />
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder={tt("plr.search_ph", "Search container / loading no / PO")}
-              className="h-8 w-52 rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-slate-800 dark:bg-slate-900 text-slate-800 dark:text-slate-100"
+      {/* Approved Purchase header (title, page toolbar, yellow / blue / green cards). The toolbar wraps this page's EXISTING invoice select,
+          search, status filter, refresh and print handlers; the loading-records table below keeps every column, row and action (CSS skin only). */}
+      <LoadingApprovedHeader
+        summaryRows={loadingSummaryRows}
+        records={records}
+        unitLabel={tt("uom.bags", "Bags")}
+        toolbar={
+          <>
+            <PapSearch value={query} onChange={setQuery} placeholder={tt("plr.search_ph", "Search container / loading no / PO")} />
+            <PapFilters label={tt("pap.filters", "Filters")} badge={[selectedInvoicePoNo, status !== "all" ? status : ""].filter(Boolean).length || undefined}>
+              <SearchableSelect
+                value={selectedInvoicePoNo}
+                onChange={(val) => setSelectedInvoicePoNo(val)}
+                options={[
+                  { label: tt("plr.all_invoices", "All Invoices / POs"), value: "" },
+                  ...uniqueInvoiceOptions
+                ]}
+                placeholder={tt("plr.sel_invoice", "Select Purchase Invoice / PO...")}
+                className="w-full text-xs font-semibold relative z-[45]"
+              />
+              <SearchableSelect
+                value={status}
+                onChange={(val) => setStatus(val as "all" | LoadingStatus)}
+                options={statusOptions.map(opt => ({ label: opt === "all" ? tt("common.all_status", "All Status") : translateOptionLabel(activeLang, opt.toUpperCase()), value: opt }))}
+                placeholder={tt("common.all_status", "All Status")}
+                className="w-full text-xs font-semibold relative z-[45]"
+              />
+            </PapFilters>
+            <PapRefresh title={tt("plr.apply_filter", "Apply Filter")} spinning={loading} onClick={() => void loadRecords()} />
+            <PapMenu
+              label={tt("common.actions", "Actions")}
+              items={[{ key: "print", label: tt("common.print", "Print"), icon: <Printer />, onClick: handlePrintReport }]}
             />
-          </div>
-          <SearchableSelect
-            value={status}
-            onChange={(val) => setStatus(val as "all" | LoadingStatus)}
-            options={statusOptions.map(opt => ({ label: opt === "all" ? tt("common.all_status", "All Status") : translateOptionLabel(activeLang, opt.toUpperCase()), value: opt }))}
-            placeholder={tt("common.all_status", "All Status")}
-            className="w-32 text-xs font-semibold relative z-[45]"
-          />
-          <Button type="button" size="sm" variant="outline" onClick={() => void loadRecords()} disabled={loading} className="h-8 rounded-lg border-slate-200 text-xs font-bold">
-            <RefreshCcw className={cn("mr-1.5 h-3.5 w-3.5 text-slate-500", loading && "animate-spin")} />
-            {tt("plr.apply_filter", "Apply Filter")}
-          </Button>
-          <Button type="button" size="sm" variant="outline" onClick={handlePrintReport} className="h-8 rounded-lg border-slate-200 text-xs font-bold">
-            <Printer className="mr-1.5 h-3.5 w-3.5 text-slate-500" /> {tt("common.print", "Print")}
-          </Button>
-        </div>,
-        actionsSlot
-      )}
+          </>
+        }
+      />
 
       {/* Selected Purchase Invoice / Approved Contract Summary Card (Requirement 2) */}
       {activeInvoiceRecord && (() => {
@@ -3035,134 +3036,8 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
 
         return (
           <div className="flex flex-col mb-6 space-y-4">
-            {/* 4 Panels Container */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-              {/* Panel 1: Branch & User Details */}
-              <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
-                <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-blue-50/50 dark:bg-blue-900/10">
-                  <div className="bg-blue-600 p-1 rounded-full text-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                  </div>
-                  <h4 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">{tt("plr.sec_branch_user", "1. Branch & User Details")}</h4>
-                </div>
-                <div className="p-4 flex flex-col gap-2.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
-                  <div className="flex justify-between items-center">
-                    <span>{tt("plr.f_country", "Country:")}</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                      {countryDisplay}{countryIso ? ` (${countryIso})` : ""}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span>{tt("plr.f_branch_name", "Branch Name:")}</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{branchDisplay}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span>{tt("plr.f_user_id", "User ID:")}</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{userIdDisplay}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span>{tt("plr.f_user_name", "User Name:")}</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{userNameDisplay}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span>{tt("plr.f_role", "Role:")}</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{roleDisplay}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span>{tt("plr.f_date_time", "Date & Time:")}</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">{dateStr}, {timeStr}</span>
-                  </div>
-                  <div className="flex justify-between items-center mt-auto">
-                    <span>{tt("plr.f_status", "Status:")}</span>
-                    <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[10px]">{tt("plr.word_active", "Active")}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Panel 2: Global Financial Summary */}
-              <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
-                <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-emerald-50/50 dark:bg-emerald-900/10">
-                  <div className="bg-emerald-600 p-1 rounded-full text-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>
-                  </div>
-                  <h4 className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400">2. {isSuperAdminScope ? "GLOBAL" : "SCOPED"} LOADING SUMMARY</h4>
-                </div>
-                <div className="p-4 flex flex-col gap-3 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
-                  <div className="flex justify-between items-center">
-                    <span>{tt("plr.f_total_purchase_value", "Total Purchase Value:")}</span>
-                    <span className="font-black text-slate-800 dark:text-slate-200 font-mono">{formatMoney(totalPurchaseValue)}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span>{tt("plr.f_total_loaded_value", "Total Loaded Value:")}</span>
-                    <span className="font-black text-emerald-700 dark:text-emerald-400 font-mono">{formatMoney(totalLoadedValue)}</span>
-                  </div>
-                  <div className="flex justify-between items-center mt-1 pt-2 border-t border-slate-100 dark:border-slate-800">
-                    <span className="text-rose-600 dark:text-rose-500 font-bold uppercase">{tt("plr.f_remaining_value", "Remaining Value:")}</span>
-                    <span className="font-black text-rose-700 dark:text-rose-400 font-mono text-sm">{formatMoney(totalRemainingValue)}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Panel 3: Active Operations Summary */}
-              <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
-                <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-purple-50/50 dark:bg-purple-900/10">
-                  <div className="bg-purple-600 p-1 rounded-full text-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
-                  </div>
-                  <h4 className="text-xs font-black uppercase tracking-wider text-purple-800 dark:text-purple-400 truncate">{tt("plr.sec_active_ops", "3. Active Operations Summary")}</h4>
-                </div>
-                <div className="p-4 flex flex-col gap-3 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
-                  <div className="flex justify-between items-center">
-                    <span>{isSuperAdminScope ? "Total Active Countries:" : "Scoped Countries:"}</span>
-                    <span className="font-black text-purple-700 dark:text-purple-400 font-mono">{activeCountriesCount}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span>{isSuperAdminScope ? "Total Active Branches:" : "Scoped Branches:"}</span>
-                    <span className="font-black text-purple-700 dark:text-purple-400 font-mono">{activeBranchesCount}</span>
-                  </div>
-                  <div className="flex justify-between items-center mt-auto pt-2 border-t border-dashed border-slate-200 dark:border-slate-700">
-                    <span>{tt("plr.f_system_status", "System Status:")}</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">{tt("plr.word_online", "Online")}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Panel 4: Transaction Summary */}
-              <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
-                <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-orange-50/50 dark:bg-orange-900/10">
-                  <div className="bg-orange-600 p-1 rounded-full text-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                  </div>
-                  <h4 className="text-xs font-black uppercase tracking-wider text-orange-800 dark:text-orange-400">{tt("plr.sec_loading_qty", "4. Loading Qty Summary")}</h4>
-                </div>
-                <div className="p-4 flex flex-col gap-2.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
-                  <div className="flex justify-between items-center">
-                    <span>{tt("plr.f_total_loaded_qty", "Total Loaded Qty:")}</span>
-                    <span className="font-bold text-emerald-600 font-mono">{totalLoadedQty.toLocaleString()} Bags</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span>{tt("plr.f_gross_weight", "Gross Weight:")}</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">{totalGrossWeight.toLocaleString()} KG</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span>{tt("plr.f_net_weight", "Net Weight:")}</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">{totalNetWeight.toLocaleString()} KG</span>
-                  </div>
-                  <div className="flex justify-between items-center mt-1 pt-2 border-t border-slate-100 dark:border-slate-800">
-                    <span className="text-rose-600 dark:text-rose-500 font-bold uppercase">{tt("plr.f_total_remaining_qty", "Total Remaining Qty:")}</span>
-                    <span className="font-black text-rose-700 dark:text-rose-400 font-mono">{totalRemainingQty.toLocaleString()} Bags</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center mt-auto pt-2 border-t border-slate-100 dark:border-slate-800">
-                    <span>{tt("plr.f_last_updated", "Last Updated:")}</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">{dateStr}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             {/* Collapsible Country Dashboard Section */}
-            <details className="group border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm overflow-hidden" open>
+            <details className="group border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
               <summary className="flex cursor-pointer items-center justify-between bg-slate-50 px-4 py-3 font-black text-slate-800 hover:bg-slate-100 dark:bg-slate-900/50 dark:text-slate-200 dark:hover:bg-slate-900/80 uppercase text-xs tracking-wider">
                 <div className="flex items-center gap-2">
                   <span className="transition-transform group-open:rotate-90">
@@ -3258,12 +3133,6 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
         );
       })()}
 
-      <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
-        <Metric label={tt("plr.total_records", "Total Records")} value={summary.total} tone="slate" />
-        <Metric label={tt("plr.loaded", "Loaded")} value={summary.loaded} tone="green" />
-        <Metric label={tt("plr.pending", "Pending")} value={summary.pending} tone="amber" />
-        <Metric label={tt("plr.received", "Received")} value={summary.received} tone="blue" />
-      </div>
 
       {setupMessage ? (
         <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-100">
@@ -3277,7 +3146,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
       ) : null}
 
       <div className="space-y-4">
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
+        <div className="dgt-purchase-table-skin overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/20">
             <div className="flex items-center gap-2">
               <Ship className="h-4 w-4 text-blue-600" />

@@ -39,6 +39,11 @@ import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { Th } from "@/components/ui/translated-th";
 import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { t, type LanguageCode } from "@/features/i18n/purchase-journal-translations";
+import { t as centralT } from "@/lib/i18n/ui";
+import { PapFilters, PapMenu, PapRefresh, PapSearch } from "@/components/purchase-ui/purchase-approved-header";
+import "@/components/purchase-ui/purchase-table-skin.css";
+import { useUsdRates } from "@/lib/purchase-ui/use-usd-rates";
+import { PaymentApprovedHeader, ordersToPayRows } from "@/features/purchases/components/purchase-payments-approved-header";
 
 type FlatPayment = {
   id: string;
@@ -88,6 +93,9 @@ export type PurchasePaymentJournalRemainingViewProps = {
   onOpenFullDetails: (orderId: string, initialTab?: "overview" | "goods" | "payments" | "transport") => void;
   onPrintReceipt: (payment: any, orderRow: any) => void;
   onDownloadPdf: (orderRow: any) => void;
+  /** the parent journal's existing print / export handlers for the whole register (shown in the three-dot menu) */
+  onPrintJournal?: () => void;
+  onExportJournal?: () => void;
 };
 
 function money(v: number | string | null | undefined) {
@@ -194,9 +202,12 @@ export function PurchasePaymentJournalRemainingView({
   branchOptions,
   onOpenFullDetails,
   onPrintReceipt,
-  onDownloadPdf
+  onDownloadPdf,
+  onPrintJournal,
+  onExportJournal
 }: PurchasePaymentJournalRemainingViewProps) {
   const tt = (key: string, fallback: string) => t(key, lang) || fallback;
+  const usdRates = useUsdRates();
 
   const [payments, setPayments] = useState<FlatPayment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -263,6 +274,13 @@ export function PurchasePaymentJournalRemainingView({
     });
   }, [payments, query, countryFilter, branchFilter, statusFilter, dateRange, orderById]);
 
+  // Orders behind the approved header cards: the parent's RBAC-scoped orders, narrowed by the Country / Branch filters only.
+  const headerRows = useMemo(() => ordersToPayRows(orders.filter((o) => {
+    if (countryFilter && (o.countryName || o.country_name || "") !== countryFilter) return false;
+    if (branchFilter && (o.branchName || o.branch_name || "") !== branchFilter) return false;
+    return true;
+  })), [orders, countryFilter, branchFilter]);
+
   const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
   const pageRows = useMemo(() => {
     const start = (page - 1) * pageSize;
@@ -325,165 +343,85 @@ export function PurchasePaymentJournalRemainingView({
 
   return (
     <div dir={["ur", "ar", "fa", "ps"].includes(lang) ? "rtl" : "ltr"} className="w-full space-y-5 px-4 sm:px-6 pt-4 pb-2">
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium">
-        <Link href="/dashboard" className="inline-flex items-center gap-1 hover:text-blue-600 dark:hover:text-blue-400">
-          <Home className="h-3.5 w-3.5" /> {tt("breadcrumb_home", "Home")}
-        </Link>
-        <ChevronRight className="h-3 w-3 text-slate-300 dark:text-slate-600" />
-        <Link href="/dashboard/purchase" className="hover:text-blue-600 dark:hover:text-blue-400">
-          {tt("breadcrumb_purchase_mgmt", "Purchase Management")}
-        </Link>
-        <ChevronRight className="h-3 w-3 text-slate-300 dark:text-slate-600" />
-        <span className="text-blue-600 dark:text-blue-400 font-bold">{tt("page_title_v3", "Purchase Order Payment Journal")}</span>
-      </nav>
-
-      {/* Title */}
-      <div className="text-center">
-        <h1 className="text-2xl md:text-[28px] font-black tracking-tight text-slate-900 dark:text-white">
-          {tt("page_title_v3", "Purchase Order Payment Journal")}
-        </h1>
-        <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 font-medium mt-1">
-          {tt("page_subtitle_v3", "Track and manage payments made against purchase orders")}
-        </p>
-      </div>
-
-      {/* 5 KPI cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3.5">
-        <KpiCard
-          icon={<Users className="h-4 w-4" />}
-          tone="bg-purple-600"
-          title={tt("card_branch_user", "Branch & User Details")}
-          rows={[
-            { label: tt("col_country", "Country"), value: session?.scopes?.summary?.countryName || (session?.scopes?.isSuperAdmin ? tt("global", "Global") : "—") },
-            { label: tt("col_branch", "Branch"), value: session?.scopes?.summary?.branchDisplayName || (session?.scopes?.isSuperAdmin ? tt("global", "Global") : "—") },
-            { label: tt("col_user", "User"), value: session?.user?.fullName || session?.user?.email || "—" },
-            { label: tt("col_role", "Role"), value: session?.roles?.[0] || "—" }
-          ]}
-        />
-        <KpiCard
-          icon={<Wallet className="h-4 w-4" />}
-          tone="bg-emerald-600"
-          title={tt("card_payment_summary", "Payment Summary")}
-          rows={[
-            { label: tt("total_payments", "Total Payments"), value: kpi.totalPayments },
-            { label: tt("status_posted", "Paid"), value: kpi.paid },
-            { label: tt("status_pending", "Pending"), value: kpi.pending },
-            { label: tt("status_cancelled", "Cancelled"), value: kpi.cleared }
-          ]}
-        />
-        <KpiCard
-          icon={<ClipboardList className="h-4 w-4" />}
-          tone="bg-blue-600"
-          title={tt("card_po_summary", "Purchase Order Summary")}
-          rows={[
-            { label: tt("total_po_value", "Total PO Value"), value: `${money(kpi.totalPoValue)} ${baseCurrency}` },
-            { label: tt("paid_amount", "Paid Amount"), value: `${money(kpi.paidAmount)} ${baseCurrency}` },
-            { label: tt("balance", "Balance"), value: `${money(kpi.balanceAmount)} ${baseCurrency}` },
-            { label: tt("overdue", "Overdue"), value: kpi.overdueCount }
-          ]}
-        />
-        <KpiCard
-          icon={<BookOpen className="h-4 w-4" />}
-          tone="bg-amber-500"
-          title={tt("card_ledger_summary", "Ledger Posting Summary")}
-          rows={[
-            { label: tt("status_posted", "Posted"), value: kpi.postedCount },
-            { label: tt("status_pending", "Pending"), value: kpi.pendingCount },
-            { label: tt("debit", "Debit"), value: `${money(kpi.debitTotal)} ${baseCurrency}` },
-            { label: tt("credit", "Credit"), value: `${money(kpi.creditTotal)} ${baseCurrency}` }
-          ]}
-        />
-        {isSuperAdmin ? (
-          <KpiCard
-            icon={<Globe2 className="h-4 w-4" />}
-            tone="bg-rose-600"
-            title={tt("card_country_branch", "Country/Branch Report")}
-            badge={
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 border border-rose-200/80 dark:border-rose-800 text-[9px] font-black uppercase tracking-wider">
-                {tt("super_admin_only", "Super Admin Only")}
-              </span>
-            }
-            rows={[
-              { label: tt("countries", "Countries"), value: kpi.countryCount },
-              { label: tt("branches", "Branches"), value: kpi.branchCount },
-              { label: tt("active_users", "Active Users"), value: kpi.activeUserCount },
-              { label: tt("current_branch", "Current Branch"), value: session?.scopes?.summary?.branchDisplayName || (session?.scopes?.isSuperAdmin ? tt("global", "Global") : "—") }
-            ]}
-          />
-        ) : null}
-      </div>
-
-      {/* Inline filter bar */}
-      <div className="flex flex-col lg:flex-row lg:items-center gap-2.5">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={tt("search_placeholder_v3", "Search by PO No, Vendor, Payment No...")}
-            className="h-9 w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 ps-8 pe-3 text-xs font-semibold"
-          />
-        </div>
-        <ErpDatePicker
-          mode="range"
-          value={{ from: dateRange.from as any, to: dateRange.to as any }}
-          onChange={(v: any) => setDateRange({ from: v.from || null, to: v.to || null })}
-          size="sm"
-          presets
-        />
-        <select value={countryFilter} onChange={(e) => setCountryFilter(e.target.value)} className="h-9 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-2 text-xs font-semibold">
-          <option value="">{tt("all_countries", "All Countries")}</option>
-          {countryOptions.map((c) => (
-            <option key={c} value={c}>{c}</option>
-          ))}
-        </select>
-        <select value={branchFilter} onChange={(e) => setBranchFilter(e.target.value)} className="h-9 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-2 text-xs font-semibold">
-          <option value="">{tt("all_branches", "All Branches")}</option>
-          {branchOptions.map((b) => (
-            <option key={b} value={b}>{b}</option>
-          ))}
-        </select>
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-9 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-2 text-xs font-semibold">
-          <option value="">{tt("all_status", "All Status")}</option>
-          <option value="posted">{tt("status_posted", "Posted")}</option>
-          <option value="draft">{tt("status_pending", "Pending")}</option>
-          <option value="cancelled">{tt("status_cancelled", "Cancelled")}</option>
-        </select>
-        <button
-          type="button"
-          onClick={() => void loadPayments()}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900"
-          title={tt("refresh", "Refresh")}
-        >
-          <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin")} />
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setQuery(""); setCountryFilter(""); setBranchFilter(""); setStatusFilter(""); setDateRange({ from: null, to: null });
-          }}
-          className="inline-flex items-center gap-1.5 h-9 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900"
-        >
-          <RotateCcw className="h-3.5 w-3.5" /> {tt("reset_all", "Reset")}
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            if (orders[0]) onOpenFullDetails(orders[0].id);
-          }}
-          className="inline-flex items-center gap-1.5 h-9 rounded-lg bg-blue-600 hover:bg-blue-700 px-3.5 text-xs font-black text-white shadow-sm"
-        >
-          <Plus className="h-3.5 w-3.5" /> {tt("new_payment", "New Payment")}
-        </button>
-      </div>
+      {/* Approved Purchase header (title, page toolbar, yellow / blue / green cards). Figures = plain sums of the order rows this page already
+          loaded (RBAC-scoped by the parent); the toolbar wraps this page's EXISTING search, date, country/branch/status filters, refresh,
+          reset and New Payment handlers. The payments table below keeps every column, row and action (CSS skin only). */}
+      <PaymentApprovedHeader
+        variant="payments"
+        rows={headerRows}
+        rates={usdRates}
+        scopeCountry={countryFilter || undefined}
+        onCountryOpen={(name) => setCountryFilter(name)}
+        toolbar={
+          <>
+            <PapSearch value={query} onChange={setQuery} placeholder={tt("search_placeholder_v3", "Search by PO No, Vendor, Payment No...")} />
+            <PapFilters label={tt("filters", "Filters")} badge={[countryFilter, branchFilter, statusFilter].filter(Boolean).length || undefined}>
+              <select value={countryFilter} onChange={(e) => setCountryFilter(e.target.value)} aria-label={tt("all_countries", "All Countries")}>
+                <option value="">{tt("all_countries", "All Countries")}</option>
+                {countryOptions.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+              <select value={branchFilter} onChange={(e) => setBranchFilter(e.target.value)} aria-label={tt("all_branches", "All Branches")}>
+                <option value="">{tt("all_branches", "All Branches")}</option>
+                {branchOptions.map((b) => (
+                  <option key={b} value={b}>{b}</option>
+                ))}
+              </select>
+              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} aria-label={tt("all_status", "All Status")}>
+                <option value="">{tt("all_status", "All Status")}</option>
+                <option value="posted">{tt("status_posted", "Posted")}</option>
+                <option value="draft">{tt("status_pending", "Pending")}</option>
+                <option value="cancelled">{tt("status_cancelled", "Cancelled")}</option>
+              </select>
+              <button
+                type="button"
+                className="dgt-pa-menu-item"
+                onClick={() => {
+                  setQuery(""); setCountryFilter(""); setBranchFilter(""); setStatusFilter(""); setDateRange({ from: null, to: null });
+                }}
+              >
+                <RotateCcw aria-hidden="true" /> {tt("reset_all", "Reset")}
+              </button>
+            </PapFilters>
+            <div className="dgt-pa-date">
+              <ErpDatePicker
+                mode="range"
+                value={{ from: dateRange.from as any, to: dateRange.to as any }}
+                onChange={(v: any) => setDateRange({ from: v.from || null, to: v.to || null })}
+                size="sm"
+                presets
+              />
+            </div>
+            <PapRefresh title={tt("refresh", "Refresh")} spinning={loading} onClick={() => void loadPayments()} />
+            {onPrintJournal || onExportJournal ? (
+              <PapMenu
+                label={tt("actions", "Actions")}
+                items={[
+                  ...(onPrintJournal ? [{ key: "print", label: tt("print", "Print"), icon: <Printer />, onClick: onPrintJournal }] : []),
+                  ...(onExportJournal ? [{ key: "export", label: centralT(lang, "pap.exportCsv", "Export CSV"), icon: <Download />, onClick: onExportJournal }] : []),
+                ]}
+              />
+            ) : null}
+            <button
+              type="button"
+              onClick={() => {
+                if (orders[0]) onOpenFullDetails(orders[0].id);
+              }}
+              className="dgt-pa-ctrl dgt-pa-primary"
+            >
+              <Plus aria-hidden="true" /> {tt("new_payment", "New Payment")}
+            </button>
+          </>
+        }
+      />
 
       {error ? (
         <div className="rounded-md border border-rose-300 bg-rose-50 p-2 text-xs text-rose-700 dark:border-rose-800 dark:bg-rose-950/30 dark:text-rose-300">{error}</div>
       ) : null}
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+      <div className="dgt-purchase-table-skin overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
         <div className="px-3.5 py-2.5 border-b border-slate-200 dark:border-slate-800 text-xs font-black uppercase tracking-wide text-slate-700 dark:text-slate-300">
           {tt("purchase_order_payments", "Purchase Order Payments")} ({filtered.length})
         </div>

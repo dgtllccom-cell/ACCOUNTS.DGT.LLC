@@ -1,0 +1,22 @@
+/* DGT Purchase — CSS-ONLY visual skin for the EXISTING register tables on the five approved pages.
+   It restyles typography, colours, borders, row spacing and hover. It never changes text, columns, order, data, handlers, sort, sticky
+   headers, scrolling, pagination, print/export. No display/position/overflow/width rules on table parts. Scope: wrap the ORIGINAL table
+   in `.dgt-purchase-table-skin` (see PurchaseTableSkin). Group banner cells (th[colspan]) keep their own colours. */
+.dgt-purchase-table-skin{--pts-head:#edf4ff;--pts-head-ink:#3b5688;--pts-ink:#27406d;--pts-line:#e4ecf8;--pts-zebra:#f8fbff;--pts-hover:#eaf2ff;--pts-edge:#dfeaf6;
+  max-width:100%;min-width:0;border:1px solid var(--pts-edge);border-radius:12px}
+.dark .dgt-purchase-table-skin{--pts-head:#1f3453;--pts-head-ink:#bcd0ee;--pts-ink:#d7e4fb;--pts-line:#2c4568;--pts-zebra:#17263b;--pts-hover:#213a5c;--pts-edge:#33496a}
+.dgt-purchase-table-skin table{font-variant-numeric:tabular-nums;color:var(--pts-ink)}
+.dgt-purchase-table-skin table thead th:not([colspan]){background-color:var(--pts-head);color:var(--pts-head-ink);font-weight:800;font-size:.72rem;letter-spacing:.02em;line-height:1.3;border-bottom:1px solid var(--pts-edge);padding-block:.8rem;padding-inline:.75rem;vertical-align:middle}
+.dgt-purchase-table-skin table tbody td{font-size:.78rem;line-height:1.4;color:var(--pts-ink);border-bottom:1px solid var(--pts-line);padding-block:.7rem;padding-inline:.75rem;vertical-align:middle}
+.dgt-purchase-table-skin table tbody tr:nth-child(even) td{background-color:var(--pts-zebra)}
+.dgt-purchase-table-skin table tbody tr:hover td{background-color:var(--pts-hover)}
+.dgt-purchase-table-skin table :is(button,a,input,select):focus-visible{outline:2px solid #3478d4;outline-offset:2px}
+@media (max-width:767px){
+  .dgt-purchase-table-skin table thead th:not([colspan]){padding-block:.6rem;padding-inline:.55rem}
+  .dgt-purchase-table-skin table tbody td{padding-block:.55rem;padding-inline:.55rem}
+}
+@media print{.dgt-purchase-table-skin{border:0}.dgt-purchase-table-skin table tbody tr td{background-color:transparent!important}}
+
+/* RTL: codes, serials and dates live in monospace cells — keep them in their natural left-to-right reading order ("10 Oct 2026", not "Oct 2026 10"). No text is changed. */
+[dir="rtl"] .dgt-purchase-table-skin table td.font-mono,
+[dir="rtl"] .dgt-purchase-table-skin table td .font-mono{unicode-bidi:plaintext}
