@@ -31,7 +31,7 @@ I will then put those details into every listing and keep the schedule current.
 
 ## Step 5 — decisions I need from you (a single yes/no each)
 * Approve the **icons / feature graphics** (`DGT-Mobile-Apps\Store-graphics`) and the **privacy page text**.
-* Approve a **reviewer login** for the stores' reviewers (a least-privilege Production account with no extra business data).
+* Approve the **reviewer access** for the stores' reviewers — a read-only login on an empty country plus a time-limited **review pass** (tested on Testing; see `docs/store/reviewer-accounts.md` for options A/B and the Production steps).
 * Approve a **Production deployment window** (privacy page + device-approval backend + its migration) — separate approval, after my final tests. Needed before Google/Samsung/Apple review can open the apps' first screen.
 * Whether to **rent a cloud Mac** (about one day of work) for the iPhone/iPad build, or you will provide a Mac.
 * The pending security approvals (branch switch to `production`, the two unused SSH keys, GitHub protection of `production`).

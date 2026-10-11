@@ -24,7 +24,7 @@ Prepared 2026-10-10. Everything marked **OWNER** needs a person with authority f
 3. A **support e-mail on the company domain** (see §5) and the public **support page URL** (can be `https://dgt.llc`).
 4. The person who will be the **permanent account owner** of each store account (must have authority to sign for the company).
 5. **Final logo/artwork approval** (the current icons are working marks), and approval of the **privacy policy text** (`/legal/privacy`).
-6. A **reviewer login** for Apple/Google/Samsung (least-privilege Production account) — your decision, because Production must not receive test data.
+6. A **reviewer login + review pass** for Apple/Google/Samsung — built and proven on the Testing database (`docs/store/reviewer-accounts.md`: read-only Reports Auditor, finance hidden, empty country scope, time- and device-limited pass). Your decisions: option A (empty scope + demo video) or B (labelled sample data), which unused country to use, and approval to create them in Production.
 7. Company **bank account** details (Samsung Seller Portal asks for them for commercial-seller status).
 
 ## 3. D-U-N-S number
