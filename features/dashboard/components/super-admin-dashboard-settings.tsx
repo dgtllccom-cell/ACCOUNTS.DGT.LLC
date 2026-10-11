@@ -106,19 +106,21 @@ export function SuperAdminDashboardSettingsPanel({
         {t(lang, "dash.dashboard_settings", "Dashboard Settings")}
       </button>
       {open && (
-        <>
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 sm:pt-28 p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-150">
           {/* Subtle click-outside backdrop */}
           <div
-            className="fixed inset-0 z-40 bg-black/10 backdrop-blur-[0.5px]"
+            className="fixed inset-0 -z-10"
             onClick={() => setOpen(false)}
           />
-          <div className="absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-950 shadow-2xl dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
-            <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/90 px-4 py-3 dark:border-slate-800 dark:bg-slate-800/90">
-              <div className="flex items-center gap-2">
-                <Settings2 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+          <div className="w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-950 shadow-2xl dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/90 px-5 py-3.5 dark:border-slate-800 dark:bg-slate-800/90">
+              <div className="flex items-center gap-2.5">
+                <div className="grid h-8 w-8 place-items-center rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400">
+                  <Settings2 className="h-4 w-4" />
+                </div>
                 <div>
-                  <p className="text-xs font-black">{t(lang, "dash.dashboard_settings", "Dashboard Settings")}</p>
-                  <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400">
+                  <p className="text-sm font-black">{t(lang, "dash.dashboard_settings", "Dashboard Settings")}</p>
+                  <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
                     {t(lang, "dash.choose_widgets_subtitle", "Choose what appears on this dashboard.")}
                   </p>
                 </div>
@@ -126,19 +128,19 @@ export function SuperAdminDashboardSettingsPanel({
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-200 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-slate-200 cursor-pointer"
-                aria-label="Close"
+                className="rounded-xl p-1.5 text-slate-400 hover:bg-slate-200 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-slate-200 cursor-pointer"
+                aria-label={t(lang, "common.close", "Close")}
               >
-                <X className="h-4 w-4" />
+                <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="space-y-1 p-2">
+            <div className="space-y-1 p-3 max-h-[60vh] overflow-y-auto">
               {WIDGETS.map((item) => (
                 <button
                   key={item.id}
                   type="button"
                   onClick={() => toggle(item.id)}
-                  className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs font-bold transition hover:bg-blue-50 dark:hover:bg-slate-800 cursor-pointer"
+                  className="flex w-full items-center justify-between rounded-xl px-3.5 py-2.5 text-left text-xs font-bold transition hover:bg-blue-50 dark:hover:bg-slate-800 cursor-pointer"
                 >
                   <span>{t(lang, item.labelKey, item.label)}</span>
                   <span
@@ -151,17 +153,17 @@ export function SuperAdminDashboardSettingsPanel({
                 </button>
               ))}
             </div>
-            <div className="border-t border-slate-100 p-2 dark:border-slate-800">
+            <div className="border-t border-slate-100 p-3 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40">
               <button
                 type="button"
                 onClick={reset}
-                className="w-full rounded-xl bg-slate-900 px-3 py-2 text-xs font-black text-white transition hover:bg-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 cursor-pointer"
+                className="w-full rounded-xl bg-slate-900 py-2.5 text-xs font-black text-white transition hover:bg-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 cursor-pointer"
               >
                 {t(lang, "dash.reset_dashboard", "Reset Dashboard")}
               </button>
             </div>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

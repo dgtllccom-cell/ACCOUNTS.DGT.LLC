@@ -196,14 +196,7 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
   ];
 
   return (
-    <div className="min-h-screen space-y-4 pb-12 text-[#123a61] dark:text-slate-100" dir={rtl ? "rtl" : "ltr"}>
-      {/* 1. TOP BREADCRUMB */}
-      <div className="flex items-center gap-1.5 pt-1 px-1 text-xs font-semibold text-slate-500 dark:text-slate-400">
-        <span>{tt("nav.dashboard", "Dashboard")}</span>
-        <span className="text-slate-300">›</span>
-        <span className="font-bold text-slate-800 dark:text-slate-100">{tt("nav.super_admin_menu", "Super Admin Dashboard")}</span>
-      </div>
-
+    <div className="w-full space-y-4 pb-12 text-[#123a61] dark:text-slate-100" dir={rtl ? "rtl" : "ltr"}>
       {/* 2. V20 APPROVED MARITIME HERO BANNER */}
       <section className="relative rounded-2xl border border-slate-200/80 shadow-md dark:border-slate-800">
         {/* Background layer with rounded corners and clipping */}
@@ -240,107 +233,109 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
                   <ChevronDown className={`h-3.5 w-3.5 transition-transform ${flyoutOpen ? "rotate-180" : ""}`} />
                 </button>
 
-              {/* Flyout Dialog */}
+              {/* Flyout Dialog (Centered Floating Modal, Never Clipped) */}
               {flyoutOpen && (
-                <>
+                <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 sm:pt-28 p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-150">
                   {/* Subtle click-outside backdrop */}
                   <div
-                    className="fixed inset-0 z-40 bg-black/10 backdrop-blur-[0.5px]"
+                    className="fixed inset-0 -z-10"
                     onClick={() => setFlyoutOpen(false)}
                   />
-                  <div
-                    className={`absolute top-full mt-2.5 z-50 w-72 rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl dark:border-slate-700 dark:bg-slate-900 ${
-                      rtl ? "left-0" : "right-0"
-                    }`}
-                  >
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-2.5 dark:border-slate-800">
-                    <div>
-                      <span className="block text-[8.5px] font-black uppercase tracking-wider text-slate-400">
-                        DASHBOARD VIEW
-                      </span>
-                      <strong className="text-xs font-bold text-slate-800 dark:text-slate-100">
-                        Business / Admin / Country
-                      </strong>
+                  <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl dark:border-slate-700 dark:bg-slate-900 animate-in zoom-in-95 duration-150">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
+                      <div className="flex items-center gap-2.5">
+                        <span className="grid h-8 w-8 place-items-center rounded-xl bg-amber-100 text-amber-800 text-sm font-black dark:bg-amber-950/60 dark:text-amber-400">
+                          ☷
+                        </span>
+                        <div>
+                          <span className="block text-[9px] font-black uppercase tracking-wider text-slate-400">
+                            DASHBOARD VIEW
+                          </span>
+                          <strong className="text-sm font-black text-slate-800 dark:text-slate-100">
+                            Business / Admin / Country
+                          </strong>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setFlyoutOpen(false)}
+                        className="rounded-xl p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200 cursor-pointer"
+                        aria-label={tt("common.close", "Close")}
+                      >
+                        <X className="h-5 w-5" />
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setFlyoutOpen(false)}
-                      className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
 
-                  <div className="mt-3 space-y-2.5 text-xs">
-                    <label className="block">
-                      <span className="text-[10.5px] font-bold text-slate-500">Business</span>
-                      <select
-                        value={selectedBusiness}
-                        onChange={(e) => setSelectedBusiness(e.target.value)}
-                        className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                    <div className="mt-4 space-y-3.5 text-xs">
+                      <label className="block">
+                        <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">Business</span>
+                        <select
+                          value={selectedBusiness}
+                          onChange={(e) => setSelectedBusiness(e.target.value)}
+                          className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                        >
+                          <option value="all">{data.companies?.[0]?.name || tt("purchase.damaan_business_group", "Damaan General Trading LLC")}</option>
+                          {data.companies?.map((c) => (
+                            <option key={c.id} value={c.id}>
+                              {c.name}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <label className="block">
+                        <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">Admin Role</span>
+                        <select
+                          value={selectedRole}
+                          onChange={(e) => setSelectedRole(e.target.value)}
+                          className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                        >
+                          <option value="Super Admin">{tt("sarh.opt_super_admin", "Super Admin")}</option>
+                          <option value="Country Admin">{tt("sarh.opt_country_admin", "Country Admin")}</option>
+                          <option value="Branch Admin">{tt("sarh.opt_branch_admin", "Branch Admin")}</option>
+                        </select>
+                      </label>
+
+                      <label className="block">
+                        <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">{tt("dash.total_countries", "Country")}</span>
+                        <select
+                          value={selectedCountry}
+                          onChange={(e) => setSelectedCountry(e.target.value)}
+                          className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                        >
+                          <option value="all">{tt("audit.filter_all_countries", "All Countries")}</option>
+                          {data.countries.map((c) => (
+                            <option key={c.id} value={c.id}>
+                              {c.name}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+
+                    <div className="mt-5 flex gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleReset}
+                        className="h-9 flex-1 text-xs font-bold"
                       >
-                        <option value="all">{data.companies?.[0]?.name || tt("purchase.damaan_business_group", "Damaan General Trading LLC")}</option>
-                        {data.companies?.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.name}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-
-                    <label className="block">
-                      <span className="text-[10.5px] font-bold text-slate-500">Admin Role</span>
-                      <select
-                        value={selectedRole}
-                        onChange={(e) => setSelectedRole(e.target.value)}
-                        className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                        {tt("common.reset", "Reset")}
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={handleApply}
+                        className="h-9 flex-1 bg-blue-600 text-xs font-bold hover:bg-blue-700"
                       >
-                        <option value="Super Admin">{tt("sarh.opt_super_admin", "Super Admin")}</option>
-                        <option value="Country Admin">{tt("sarh.opt_country_admin", "Country Admin")}</option>
-                        <option value="Branch Admin">{tt("sarh.opt_branch_admin", "Branch Admin")}</option>
-                      </select>
-                    </label>
+                        {tt("report.apply_filters", "Apply view")} ✓
+                      </Button>
+                    </div>
 
-                    <label className="block">
-                      <span className="text-[10.5px] font-bold text-slate-500">{tt("dash.total_countries", "Country")}</span>
-                      <select
-                        value={selectedCountry}
-                        onChange={(e) => setSelectedCountry(e.target.value)}
-                        className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                      >
-                        <option value="all">{tt("audit.filter_all_countries", "All Countries")}</option>
-                        {data.countries.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.name}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
+                    <small className="mt-3 block text-center text-[10px] text-slate-400">
+                      Live ERP database connected
+                    </small>
                   </div>
-
-                  <div className="mt-4 flex gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={handleReset}
-                      className="h-8 flex-1 text-xs font-bold"
-                    >
-                      {tt("common.reset", "Reset")}
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={handleApply}
-                      className="h-8 flex-1 bg-blue-600 text-xs font-bold hover:bg-blue-700"
-                    >
-                      {tt("report.apply_filters", "Apply view")} ✓
-                    </Button>
-                  </div>
-
-                  <small className="mt-2 block text-center text-[9px] text-slate-400">
-                    Live ERP database connected
-                  </small>
                 </div>
-              </>
               )}
             </div>
 

@@ -186,7 +186,7 @@ export default async function SuperAdminDashboardPage() {
 
   return (
     <SuperAdminDashboardSettingsProvider>
-      <div className="min-h-screen p-2.5 sm:p-4 lg:p-6 text-foreground bg-[#f8fafc]/80 dark:bg-background">
+      <div className="w-full text-foreground space-y-4">
         <SuperAdminDashboardLiveRefresh />
         {data.error && (
           <div
