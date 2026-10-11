@@ -675,7 +675,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                                     </div>
                                     <div className="flex justify-between">
                                       <span className="text-slate-400">Driver / Contact:</span>
-                                      <span className="font-semibold">{row.driverName || "—"}</span>
+                                      <span className="font-semibold">{(row as any).driverName || "—"}</span>
                                     </div>
                                     <div className="flex justify-between">
                                       <span className="text-slate-400">Receiving Status:</span>
