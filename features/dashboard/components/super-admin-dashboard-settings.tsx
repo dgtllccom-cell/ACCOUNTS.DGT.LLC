@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, type ReactNode, useContext, useEffect, useMemo, useState } from "react";
-import { Check, Settings2, SlidersHorizontal } from "lucide-react";
+import { Check, Settings2, SlidersHorizontal, X } from "lucide-react";
 import { t, type UiKey } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
@@ -74,59 +74,94 @@ export function DashboardWidget({ id, children }: { id: WidgetId; children: Reac
   return <>{children}</>;
 }
 
-export function SuperAdminDashboardSettingsPanel({ className }: { className?: string } = {}) {
+export function SuperAdminDashboardSettingsPanel({
+  className,
+  isOpen,
+  onOpenChange
+}: {
+  className?: string;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+} = {}) {
   const { visible, toggle, reset } = useDashboardSettings();
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = isOpen !== undefined ? isOpen : internalOpen;
+  const setOpen = (val: boolean) => {
+    if (onOpenChange) {
+      onOpenChange(val);
+    } else {
+      setInternalOpen(val);
+    }
+  };
   const lang = useActiveLanguage();
 
   return (
     <div className="relative">
       <button
         type="button"
-        onClick={() => setOpen((value) => !value)}
-        className={className || "inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-border bg-card px-3 text-xs font-bold text-card-foreground shadow-sm transition hover:bg-muted"}
+        onClick={() => setOpen(!open)}
+        className={className || "inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-border bg-card px-3 text-xs font-bold text-card-foreground shadow-sm transition hover:bg-muted cursor-pointer"}
       >
         <SlidersHorizontal className="h-4 w-4" />
         {t(lang, "dash.dashboard_settings", "Dashboard Settings")}
       </button>
       {open && (
-        <div className="absolute right-0 z-30 mt-2 w-72 overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-950 shadow-2xl">
-          <div className="flex items-center gap-2 border-b border-slate-100 bg-slate-50 px-4 py-3">
-            <Settings2 className="h-4 w-4 text-blue-600" />
-            <div>
-              <p className="text-sm font-black">{t(lang, "dash.dashboard_settings", "Dashboard Settings")}</p>
-              <p className="text-[11px] font-medium text-slate-500">{t(lang, "dash.choose_widgets_subtitle", "Choose what appears on this dashboard.")}</p>
+        <>
+          {/* Subtle click-outside backdrop */}
+          <div
+            className="fixed inset-0 z-40 bg-black/10 backdrop-blur-[0.5px]"
+            onClick={() => setOpen(false)}
+          />
+          <div className="absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-950 shadow-2xl dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+            <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/90 px-4 py-3 dark:border-slate-800 dark:bg-slate-800/90">
+              <div className="flex items-center gap-2">
+                <Settings2 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <div>
+                  <p className="text-xs font-black">{t(lang, "dash.dashboard_settings", "Dashboard Settings")}</p>
+                  <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400">
+                    {t(lang, "dash.choose_widgets_subtitle", "Choose what appears on this dashboard.")}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-200 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-slate-200 cursor-pointer"
+                aria-label="Close"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="space-y-1 p-2">
+              {WIDGETS.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => toggle(item.id)}
+                  className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs font-bold transition hover:bg-blue-50 dark:hover:bg-slate-800 cursor-pointer"
+                >
+                  <span>{t(lang, item.labelKey, item.label)}</span>
+                  <span
+                    className={`grid h-5 w-5 place-items-center rounded-md border ${
+                      visible[item.id] ? "border-blue-600 bg-blue-600 text-white" : "border-slate-300 dark:border-slate-600 text-transparent"
+                    }`}
+                  >
+                    <Check className="h-3.5 w-3.5" />
+                  </span>
+                </button>
+              ))}
+            </div>
+            <div className="border-t border-slate-100 p-2 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={reset}
+                className="w-full rounded-xl bg-slate-900 px-3 py-2 text-xs font-black text-white transition hover:bg-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 cursor-pointer"
+              >
+                {t(lang, "dash.reset_dashboard", "Reset Dashboard")}
+              </button>
             </div>
           </div>
-          <div className="space-y-1 p-2">
-            {WIDGETS.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => toggle(item.id)}
-                className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs font-bold transition hover:bg-blue-50"
-              >
-                <span>{t(lang, item.labelKey, item.label)}</span>
-                <span
-                  className={`grid h-5 w-5 place-items-center rounded-md border ${
-                    visible[item.id] ? "border-blue-600 bg-blue-600 text-white" : "border-slate-300 text-transparent"
-                  }`}
-                >
-                  <Check className="h-3.5 w-3.5" />
-                </span>
-              </button>
-            ))}
-          </div>
-          <div className="border-t border-slate-100 p-2">
-            <button
-              type="button"
-              onClick={reset}
-              className="w-full rounded-xl bg-slate-900 px-3 py-2 text-xs font-black text-white transition hover:bg-slate-700"
-            >
-              {t(lang, "dash.reset_dashboard", "Reset Dashboard")}
-            </button>
-          </div>
-        </div>
+        </>
       )}
     </div>
   );

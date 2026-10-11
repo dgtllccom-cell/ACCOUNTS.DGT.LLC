@@ -64,6 +64,7 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
 
   // V20 Scope / Filter State
   const [flyoutOpen, setFlyoutOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [selectedBusiness, setSelectedBusiness] = useState("all");
   const [selectedRole, setSelectedRole] = useState("Super Admin");
   const [selectedCountry, setSelectedCountry] = useState("all");
@@ -204,15 +205,17 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
       </div>
 
       {/* 2. V20 APPROVED MARITIME HERO BANNER */}
-      <section className="relative overflow-hidden rounded-2xl border border-slate-200/80 shadow-md dark:border-slate-800">
+      <section className="relative rounded-2xl border border-slate-200/80 shadow-md dark:border-slate-800">
+        {/* Background layer with rounded corners and clipping */}
         <div
-          className="relative min-h-[140px] sm:min-h-[160px] md:min-h-[184px] w-full p-4 sm:p-6 md:p-8 flex flex-col justify-between"
+          className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none"
           style={{
             backgroundImage: `linear-gradient(90deg, rgba(2,22,46,0.85) 0%, rgba(4,28,55,0.60) 52%, rgba(3,17,40,0.72) 100%), url('/assets/dgt-maritime-banner.png')`,
             backgroundPosition: "center 52%",
             backgroundSize: "cover"
           }}
-        >
+        />
+        <div className="relative z-10 min-h-[140px] sm:min-h-[160px] md:min-h-[184px] w-full p-4 sm:p-6 md:p-8 flex flex-col justify-between">
           {/* Top Tools: Action Buttons & Enclosed Date/Time */}
           <div className="flex flex-col items-end gap-2 self-end z-20">
             {/* The 3 action buttons in a row */}
@@ -221,7 +224,10 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
               <div className="relative">
                 <button
                   type="button"
-                  onClick={() => setFlyoutOpen(!flyoutOpen)}
+                  onClick={() => {
+                    setFlyoutOpen((prev) => !prev);
+                    setSettingsOpen(false);
+                  }}
                   aria-expanded={flyoutOpen}
                   className="flex items-center gap-2 rounded-lg border border-[#ffe9a1] bg-gradient-to-r from-[#ffe184] to-[#ffc64b] px-3 py-1.5 text-xs font-extrabold text-[#443418] shadow-md transition hover:from-[#ffe697] hover:to-[#ffd064] cursor-pointer"
                 >
@@ -236,11 +242,17 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
 
               {/* Flyout Dialog */}
               {flyoutOpen && (
-                <div
-                  className={`absolute top-full mt-2 z-50 w-72 rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl dark:border-slate-700 dark:bg-slate-900 ${
-                    rtl ? "left-0" : "right-0"
-                  }`}
-                >
+                <>
+                  {/* Subtle click-outside backdrop */}
+                  <div
+                    className="fixed inset-0 z-40 bg-black/10 backdrop-blur-[0.5px]"
+                    onClick={() => setFlyoutOpen(false)}
+                  />
+                  <div
+                    className={`absolute top-full mt-2.5 z-50 w-72 rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl dark:border-slate-700 dark:bg-slate-900 ${
+                      rtl ? "left-0" : "right-0"
+                    }`}
+                  >
                   <div className="flex items-center justify-between border-b border-slate-100 pb-2.5 dark:border-slate-800">
                     <div>
                       <span className="block text-[8.5px] font-black uppercase tracking-wider text-slate-400">
@@ -328,11 +340,17 @@ export function SuperAdminV20DashboardView({ data }: { data: DashboardV20Data })
                     Live ERP database connected
                   </small>
                 </div>
+              </>
               )}
             </div>
 
             {/* 2. Dashboard Settings Button */}
             <SuperAdminDashboardSettingsPanel
+              isOpen={settingsOpen}
+              onOpenChange={(next) => {
+                setSettingsOpen(next);
+                if (next) setFlyoutOpen(false);
+              }}
               className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200/40 bg-white/95 px-3 py-1.5 text-xs font-extrabold text-slate-800 shadow-sm backdrop-blur-xs transition hover:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-white cursor-pointer"
             />
 
