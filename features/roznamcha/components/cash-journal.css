@@ -1,0 +1,95 @@
+/*
+ * Cash Journal — visual skin (design only). Colours/sizes only: no markup, column, formula, rate, balance, validation or posting
+ * logic is defined here. Logical properties throughout so the page mirrors correctly in UR / AR / FA / PS.
+ * "Standard" visual style = this design; the other three styles (app/cash-entry-styles.css) keep their own tokens.
+ */
+:root {
+  --cj-blue: #0055ff; --cj-blue-soft: #e8f0ff; --cj-green: #06994f; --cj-green-deep: #088a63; --cj-green-soft: #e8fbf1;
+  --cj-red: #e82230; --cj-red-soft: #fff0f1;
+  --cj-ink: #121d3e; --cj-muted: #78849c; --cj-border: #e4e9f1; --cj-surface: #ffffff; --cj-soft: #f6f9ff; --cj-chip: #eaf2ff;
+  --cj-shadow: 0 2px 6px #153c7012; --cj-pop: 0 16px 40px #0c2b5528;
+}
+.dark {
+  --cj-blue: #5b8dff; --cj-blue-soft: #14284d; --cj-green: #2fd283; --cj-green-deep: #14b27c; --cj-green-soft: #0f2a22;
+  --cj-red: #ff6b78; --cj-red-soft: #33161c;
+  --cj-ink: #e8eefc; --cj-muted: #9fb2d3; --cj-border: #26344f; --cj-surface: #0f1a30; --cj-soft: #12203a; --cj-chip: #172a50;
+  --cj-shadow: 0 2px 8px #00000066; --cj-pop: 0 16px 40px #000000a0;
+}
+
+/* ───────── heading ───────── */
+.dgt-cj-heading { display: flex; align-items: center; gap: 14px; margin: 4px 16px 14px; flex-wrap: wrap; }
+.dgt-cj-heading-icon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 10px; background: var(--cj-green-soft); color: var(--cj-green); flex-shrink: 0; }
+.dgt-cj-heading-icon svg { width: 24px; height: 24px; }
+.dgt-cj-heading-text { min-width: 0; flex: 1 1 260px; }
+.dgt-cj-heading h1 { margin: 0 0 4px; font-size: 20px; line-height: 1.25; font-weight: 800; color: var(--cj-ink); overflow-wrap: anywhere; }
+.dgt-cj-heading p { margin: 0; font-size: 12px; color: var(--cj-muted); }
+.dgt-cj-heading-back { margin-inline-start: auto; }
+
+/* ───────── controls (toolbar buttons) ───────── */
+.dgt-cj-ctrl { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 32px; padding: 0 11px; border: 1px solid var(--cj-border); border-radius: 8px; background: var(--cj-surface); color: var(--cj-blue); font-size: 11.5px; font-weight: 700; cursor: pointer; white-space: nowrap; list-style: none; }
+.dgt-cj-ctrl::-webkit-details-marker { display: none; }
+.dgt-cj-ctrl:hover { background: var(--cj-soft); border-color: color-mix(in srgb, var(--cj-blue) 45%, var(--cj-border)); }
+.dgt-cj-ctrl:focus-visible, .dgt-cj-menu-item:focus-visible, .dgt-cj-field select:focus-visible, .dgt-cj-field input:focus-visible { outline: 2px solid var(--cj-blue); outline-offset: 2px; }
+.dgt-cj-ctrl:disabled { opacity: .45; cursor: not-allowed; }
+.dgt-cj-ctrl svg { width: 15px; height: 15px; flex-shrink: 0; }
+.dgt-cj-ctrl-icon { width: 32px; padding: 0; }
+.dgt-cj-primary { background: var(--cj-blue); border-color: var(--cj-blue); color: #fff; }
+.dgt-cj-primary:hover { background: #0046d6; border-color: #0046d6; }
+.dgt-cj-count { display: inline-grid; place-items: center; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 20px; background: var(--cj-blue); color: #fff; font-size: 9.5px; }
+.dgt-cj-chev { width: 13px; height: 13px; opacity: .7; }
+.dgt-cj-filters-btn { background: var(--cj-chip); border-color: color-mix(in srgb, var(--cj-blue) 35%, var(--cj-border)); }
+[dir="rtl"] .dgt-cj-flip { transform: scaleX(-1); }
+
+/* ───────── three-dot menu ───────── */
+.dgt-cj-menu { position: relative; display: inline-block; }
+.dgt-cj-menu-panel { position: absolute; inset-inline-end: 0; top: calc(100% + 6px); z-index: 60; min-width: 210px; padding: 8px; border: 1px solid var(--cj-border); border-radius: 12px; background: var(--cj-surface); box-shadow: var(--cj-pop); }
+.dgt-cj-menu-label { padding: 4px 8px 8px; font-size: 9.5px; letter-spacing: .6px; font-weight: 800; text-transform: uppercase; color: var(--cj-muted); }
+.dgt-cj-menu-item { display: flex; align-items: center; gap: 9px; width: 100%; padding: 9px 10px; border: 0; border-radius: 8px; background: transparent; color: var(--cj-ink); font-size: 12px; font-weight: 600; text-align: start; cursor: pointer; }
+.dgt-cj-menu-item:hover:not(:disabled) { background: var(--cj-soft); color: var(--cj-blue); }
+.dgt-cj-menu-item:disabled { opacity: .45; cursor: not-allowed; }
+.dgt-cj-menu-item svg { width: 15px; height: 15px; }
+
+/* ───────── filters dialog ───────── */
+.dgt-cj-filter-body { display: flex; flex-direction: column; gap: 14px; padding: 4px 2px 2px; }
+.dgt-cj-filter-sub { margin: 0; font-size: 12px; color: var(--cj-muted); }
+.dgt-cj-filter-caption { font-size: 9.5px; font-weight: 800; letter-spacing: 1px; color: var(--cj-muted); }
+.dgt-cj-filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.dgt-cj-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.dgt-cj-field > span { font-size: 11px; font-weight: 700; color: var(--cj-ink); }
+.dgt-cj-field select, .dgt-cj-field input { height: 38px; width: 100%; min-width: 0; padding: 0 10px; border: 1px solid var(--cj-border); border-radius: 8px; background: var(--cj-soft); color: var(--cj-ink); font-size: 12px; }
+.dgt-cj-filter-actions { display: flex; align-items: center; gap: 8px; margin-top: 6px; padding-top: 14px; border-top: 1px solid var(--cj-border); flex-wrap: wrap; }
+.dgt-cj-spacer { flex: 1; }
+@media (max-width: 480px) { .dgt-cj-filter-grid { grid-template-columns: 1fr; } }
+
+/* ───────── "Amount & Payment" summary card ───────── */
+.dgt-cj-summary { display: flex; flex-direction: column; gap: 12px; padding: 14px 16px; border: 1px solid var(--cj-border); border-radius: 12px; background: var(--cj-surface); box-shadow: var(--cj-shadow); }
+.dgt-cj-summary h4 { display: flex; align-items: center; gap: 9px; margin: 0; font-size: 13px; font-weight: 800; color: var(--cj-green); }
+.dgt-cj-badge { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 6px; background: var(--cj-green); color: #fff; font-size: 13px; font-weight: 800; }
+.dgt-cj-sum-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 13px; color: var(--cj-ink); }
+.dgt-cj-sum-row b { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13.5px; }
+.dgt-cj-sum-diff { padding-top: 11px; border-top: 1px solid var(--cj-border); font-weight: 700; }
+.dgt-cj-credit { color: var(--cj-green); }
+.dgt-cj-debit { color: var(--cj-red); }
+.dgt-cj-sum-counts { display: flex; justify-content: space-between; gap: 8px; padding-top: 10px; border-top: 1px solid var(--cj-border); font-size: 11px; color: var(--cj-muted); }
+.dgt-cj-sum-counts b { color: var(--cj-ink); }
+.dgt-cj-note { color: #b97100; font-size: 10.5px; }
+.dgt-cj-scope { color: var(--cj-muted); font-size: 10.5px; }
+
+/* ───────── journal table footer ───────── */
+.dgt-cj-pager { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; padding: 10px 14px; border-top: 1px solid var(--cj-border); font-size: 11px; color: var(--cj-muted); }
+.dgt-cj-rows { display: inline-flex; align-items: center; gap: 8px; }
+.dgt-cj-rows select { height: 30px; padding: 0 8px; border: 1px solid var(--cj-border); border-radius: 8px; background: var(--cj-surface); color: var(--cj-ink); font-size: 11px; }
+.dgt-cj-pages { display: inline-flex; align-items: center; gap: 8px; margin-inline-start: auto; }
+.dgt-cj-page-no { min-width: 48px; text-align: center; font-weight: 800; color: var(--cj-ink); }
+
+/* ───────── page skin: cards (Standard style only) ───────── */
+[data-cash-style="standard"] .dgt-cj > div.grid > div,
+[data-cash-style="standard"] .dgt-cj > div.grid > .dgt-cj-summary { border-radius: 12px; box-shadow: var(--cj-shadow); }
+[data-cash-style="standard"] .dgt-cj thead th { background: var(--cj-soft); }
+
+/* ───────── New Cash Entry dialog skin (Standard style only) ───────── */
+[data-cash-style="standard"] .dgt-cj-modal.relative { max-width: 1000px; border-radius: 14px; }
+[data-cash-style="standard"] .dgt-cj-modal span.rounded-full.bg-blue-600 { background: var(--cj-green-deep); }
+[data-cash-style="standard"] .dgt-cj-modal .dgt-cj-post { background: var(--cj-green-deep); }
+[data-cash-style="standard"] .dgt-cj-modal .dgt-cj-post:hover:not(:disabled) { background: #067550; }
+[data-cash-style="standard"] .dgt-cj-modal .dgt-cj-post.dgt-cj-post-pending { background: #d97706; }
