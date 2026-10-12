@@ -20,7 +20,10 @@ import {
   Sparkles,
   MapPin,
   FileCheck2,
-  Info
+  Info,
+  Check,
+  Route,
+  ArrowRight
 } from "lucide-react";
 import { t } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
@@ -182,123 +185,254 @@ export function CustomerOrderMovementSpecs({
 
   const arrivedAtEntry = formData.movement_type === "import" && formData.import_scenario === "arrived_at_entry";
 
-  // Quick preset chips helper
-  const renderPresets = (countryCode: string, onSelectPreset: (label: string) => void) => {
-    const list = COUNTRY_PORT_PRESETS[countryCode];
-    if (!list || !list.length) return null;
-    return (
-      <div className="mt-1 flex flex-wrap items-center gap-1.5 pt-0.5">
-        <span className="text-[10px] font-semibold text-slate-400">
-          {tt("quick_suggestions", "Suggestions:")}
-        </span>
-        {list.map((item, idx) => (
-          <button
-            key={idx}
-            type="button"
-            onClick={() => onSelectPreset(item.name)}
-            className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-medium text-slate-700 hover:border-blue-400 hover:bg-blue-50/60 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-blue-500 transition"
-          >
-            <span>{item.name}</span>
-          </button>
-        ))}
-      </div>
+  // Render location dropdown with both DB commercial ports and regional border crossings in optgroups
+  const renderLocationSelect = ({
+    label,
+    required = false,
+    value,
+    countryId,
+    countryCodeFallback,
+    onChange
+  }: {
+    label: string;
+    required?: boolean;
+    value: string;
+    countryId: string;
+    countryCodeFallback?: string;
+    onChange: (id: string, name: string) => void;
+  }) => {
+    const code = getCountryCode(countryId) || countryCodeFallback || "PK";
+    const dbList = portsFor(countryId, value);
+    const presets = COUNTRY_PORT_PRESETS[code] || [];
+    const borderPresets = presets.filter(
+      (pr) => !dbList.some((p) => p.port_name.toLowerCase().trim() === pr.name.toLowerCase().trim())
     );
-  };
 
-  const renderCustomsHouses = (countryCode: string) => {
-    const list = COMMON_CUSTOMS_HOUSES[countryCode] || COMMON_CUSTOMS_HOUSES["PK"];
+    const matchedDb = dbList.find((p) => p.id === value);
+    const displayName = matchedDb?.port_name || (value.startsWith("custom:") ? value.slice(7) : value);
+
     return (
-      <div className="mt-1 flex flex-wrap items-center gap-1.5 pt-0.5">
-        <span className="text-[10px] font-semibold text-slate-400">
-          {tt("custom_house_suggestions", "Customs House:")}
-        </span>
-        {list.map((ch, idx) => (
-          <button
-            key={idx}
-            type="button"
-            onClick={() => setFormData((c: any) => ({ ...c, customs_point_text: ch, customs_clearance_office: ch }))}
-            className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-medium text-slate-700 hover:border-emerald-400 hover:bg-emerald-50/60 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-emerald-500 transition"
-          >
-            <span>{ch}</span>
-          </button>
-        ))}
-      </div>
-    );
-  };
-
-  // Customs Yes/No Selector Block
-  const renderCustomsSwitch = (label?: string) => (
-    <div className="space-y-2 rounded-xl border border-slate-200/90 bg-white/80 p-3 dark:border-slate-800 dark:bg-slate-900/60">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-        <div>
-          <label className="flex items-center gap-1.5 text-[11px] font-bold text-slate-800 dark:text-slate-200">
-            <Building2 className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-            <span>{label || tt("customs_clearance_required_q", "Customs Clearance Required?")}</span>
+      <div>
+        <div className="flex items-center justify-between mb-1">
+          <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
+            {label} {required ? "*" : ""}
           </label>
-          <p className="text-[10px] text-slate-500 dark:text-slate-400">
-            {isCustomsRequired
-              ? tt("customs_required_sub", "Customs declaration, inspection and official clearance required.")
-              : tt("customs_exempt_sub", "Exempt from customs clearance / direct cargo release.")}
-          </p>
+          {displayName && (
+            <span className="inline-flex items-center gap-1 rounded bg-blue-50 dark:bg-blue-950/40 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40 max-w-[170px] truncate">
+              <Check className="h-2.5 w-2.5 shrink-0" />
+              <span className="truncate">{displayName}</span>
+            </span>
+          )}
         </div>
-
-        {/* Yes / No Segmented Button */}
-        <div className="inline-flex rounded-xl border border-slate-200 bg-slate-100 p-0.5 dark:border-slate-700 dark:bg-slate-800 self-start sm:self-auto">
-          <button
-            type="button"
-            onClick={() => setCustomsRequired(true)}
-            className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-bold transition ${
-              isCustomsRequired
-                ? "bg-white text-blue-700 shadow-2xs dark:bg-slate-900 dark:text-blue-300"
-                : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-            }`}
-          >
-            <ShieldCheck className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-            <span>{tt("yes_customs_required", "Yes — Required")}</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setCustomsRequired(false)}
-            className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-bold transition ${
-              !isCustomsRequired
-                ? "bg-white text-emerald-700 shadow-2xs dark:bg-slate-900 dark:text-emerald-300"
-                : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-            }`}
-          >
-            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-            <span>{tt("no_customs_exempt", "No — Direct / Exempt")}</span>
-          </button>
-        </div>
-      </div>
-
-      {isCustomsRequired ? (
-        <div className="pt-2 border-t border-slate-100 dark:border-slate-800 animate-in fade-in duration-150">
-          <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-            {tt("customs_clearance_point", "Customs Clearance Point / Port")} *
-          </label>
-          <input
-            type="text"
-            placeholder={tt("ph_customs_point", "e.g. Karachi Custom House / Torkham Customs")}
-            value={formData.customs_point_text || ""}
-            onChange={(e) =>
-              setFormData((c: any) => ({
-                ...c,
-                customs_point_text: e.target.value,
-                customs_clearance_office: e.target.value
-              }))
+        <select
+          value={value}
+          onChange={(e) => {
+            const val = e.target.value;
+            if (!val) {
+              onChange("", "");
+              return;
             }
-            className={inputClass}
-          />
-          {renderCustomsHouses(getCountryCode(formData.receiving_country_id || formData.loading_country_id))}
+            if (val.startsWith("custom:")) {
+              const customName = val.slice(7);
+              const matched = ports.find((p) => p.port_name.toLowerCase() === customName.toLowerCase());
+              onChange(matched ? matched.id : val, customName);
+            } else {
+              const matched = ports.find((p) => p.id === val);
+              onChange(val, matched?.port_name || "");
+            }
+          }}
+          className={selectClass}
+        >
+          <option value="">— {tt("loc_select_generic", "Select location")} —</option>
+
+          {dbList.length > 0 && (
+            <optgroup label={tt("opt_commercial_ports", "Commercial Seaports & Terminals")}>
+              {dbList.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.port_name}
+                </option>
+              ))}
+            </optgroup>
+          )}
+
+          {borderPresets.length > 0 && (
+            <optgroup label={tt("opt_border_checkpoints", "Border Crossings & Inland Customs Terminals")}>
+              {borderPresets.map((pr) => (
+                <option key={pr.name} value={`custom:${pr.name}`}>
+                  {pr.name}
+                </option>
+              ))}
+            </optgroup>
+          )}
+        </select>
+      </div>
+    );
+  };
+
+  // Compact Live Corridor Message Bar
+  const renderLiveCorridorMessage = () => {
+    const origin = formData.loading_source_name || formData.loading_port_name || formData.loading_country_name || "";
+    const entry = formData.entry_border_port_name || "";
+    const exit = formData.exit_border_port_name || "";
+    const dest = formData.destination_city || formData.receiving_country_name || "";
+
+    if (!origin && !entry && !exit && !dest) return null;
+
+    return (
+      <div className="flex items-center gap-2 rounded-xl border border-sky-200/90 bg-white/95 px-3 py-2 text-xs text-sky-950 dark:border-sky-800/60 dark:bg-slate-900/90 dark:text-sky-200 shadow-2xs">
+        <Route className="h-4 w-4 text-sky-600 dark:text-sky-400 shrink-0" />
+        <span className="font-bold text-[11px] text-slate-500 dark:text-slate-400 shrink-0">
+          {tt("live_corridor_path", "Live Route Corridor:")}
+        </span>
+        <div className="flex flex-wrap items-center gap-1.5 text-xs font-semibold overflow-hidden">
+          {origin && (
+            <span className="rounded bg-slate-100 dark:bg-slate-800 px-2 py-0.5 border border-slate-200 dark:border-slate-700">
+              {origin}
+            </span>
+          )}
+          {origin && (entry || exit || dest) && <ArrowRight className="h-3 w-3 text-slate-400 shrink-0" />}
+          {entry && (
+            <>
+              <span className="rounded bg-sky-100 dark:bg-sky-900/60 px-2 py-0.5 text-sky-800 dark:text-sky-200 border border-sky-300 dark:border-sky-700">
+                {entry}
+              </span>
+              {(exit || dest) && <ArrowRight className="h-3 w-3 text-slate-400 shrink-0" />}
+            </>
+          )}
+          {exit && (
+            <>
+              <span className="rounded bg-amber-100 dark:bg-amber-900/60 px-2 py-0.5 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-700">
+                {exit}
+              </span>
+              {dest && <ArrowRight className="h-3 w-3 text-slate-400 shrink-0" />}
+            </>
+          )}
+          {dest && (
+            <span className="rounded bg-emerald-100 dark:bg-emerald-900/60 px-2 py-0.5 text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-700">
+              {dest}
+            </span>
+          )}
         </div>
-      ) : (
-        <div className="flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
-          <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-          <span>{tt("customs_exempt_badge", "No Customs Clearance Required — Direct Movement & Delivery")}</span>
+      </div>
+    );
+  };
+
+  // Customs Yes/No Selector Block with dropdown customs stations
+  const renderCustomsSwitch = (label?: string) => {
+    const activeCountryCode = getCountryCode(formData.receiving_country_id || formData.loading_country_id) || "PK";
+    const commonHouses = COMMON_CUSTOMS_HOUSES[activeCountryCode] || COMMON_CUSTOMS_HOUSES["PK"];
+
+    return (
+      <div className="space-y-2 rounded-xl border border-slate-200/90 bg-white/80 p-3 dark:border-slate-800 dark:bg-slate-900/60">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div>
+            <label className="flex items-center gap-1.5 text-[11px] font-bold text-slate-800 dark:text-slate-200">
+              <Building2 className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+              <span>{label || tt("customs_clearance_required_q", "Customs Clearance Required?")}</span>
+            </label>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400">
+              {isCustomsRequired
+                ? tt("customs_required_sub", "Customs declaration, inspection and official clearance required.")
+                : tt("customs_exempt_sub", "Exempt from customs clearance / direct cargo release.")}
+            </p>
+          </div>
+
+          {/* Yes / No Segmented Button */}
+          <div className="inline-flex rounded-xl border border-slate-200 bg-slate-100 p-0.5 dark:border-slate-700 dark:bg-slate-800 self-start sm:self-auto">
+            <button
+              type="button"
+              onClick={() => setCustomsRequired(true)}
+              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-bold transition ${
+                isCustomsRequired
+                  ? "bg-white text-blue-700 shadow-2xs dark:bg-slate-900 dark:text-blue-300"
+                  : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+              }`}
+            >
+              <ShieldCheck className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+              <span>{tt("yes_customs_required", "Yes — Required")}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setCustomsRequired(false)}
+              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-bold transition ${
+                !isCustomsRequired
+                  ? "bg-white text-emerald-700 shadow-2xs dark:bg-slate-900 dark:text-emerald-300"
+                  : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+              }`}
+            >
+              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span>{tt("no_customs_exempt", "No — Direct / Exempt")}</span>
+            </button>
+          </div>
         </div>
-      )}
-    </div>
-  );
+
+        {isCustomsRequired ? (
+          <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1.5 animate-in fade-in duration-150">
+            <div className="flex items-center justify-between">
+              <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                {tt("customs_clearance_point", "Customs Clearance Point / Port")} *
+              </label>
+              {formData.customs_point_text && (
+                <span className="inline-flex items-center gap-1 rounded bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40 max-w-[200px] truncate">
+                  <Check className="h-2.5 w-2.5 shrink-0" />
+                  <span className="truncate">{formData.customs_point_text}</span>
+                </span>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <select
+                value={
+                  commonHouses.includes(formData.customs_point_text)
+                    ? formData.customs_point_text
+                    : formData.customs_point_text
+                    ? "__custom__"
+                    : ""
+                }
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === "__custom__") return;
+                  setFormData((c: any) => ({
+                    ...c,
+                    customs_point_text: val,
+                    customs_clearance_office: val
+                  }));
+                }}
+                className={selectClass}
+              >
+                <option value="">— {tt("select_customs_station", "Select Customs House / Station")} —</option>
+                {commonHouses.map((ch) => (
+                  <option key={ch} value={ch}>
+                    {ch}
+                  </option>
+                ))}
+                <option value="__custom__">✍️ {tt("other_customs_station", "Other Customs Terminal")}...</option>
+              </select>
+
+              <input
+                type="text"
+                placeholder={tt("ph_customs_point", "e.g. Karachi Custom House / Torkham Customs")}
+                value={formData.customs_point_text || ""}
+                onChange={(e) =>
+                  setFormData((c: any) => ({
+                    ...c,
+                    customs_point_text: e.target.value,
+                    customs_clearance_office: e.target.value
+                  }))
+                }
+                className={inputClass}
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
+            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+            <span>{tt("customs_exempt_badge", "No Customs Clearance Required — Direct Movement & Delivery")}</span>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   // =========================================================================
   // SCENARIO 1: STANDARD IMPORT (سادہ امپورٹ)
@@ -380,25 +514,21 @@ export function CustomerOrderMovementSpecs({
           </div>
 
           <div className={arrivedAtEntry ? "hidden" : ""}>
-            <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-              {locLabel("loading")}
-            </label>
-            <select
-              value={formData.loading_port_id}
-              onChange={(e) => handleLoadingPortChange(e.target.value)}
-              className={selectClass}
-            >
-              <option value="">— {tt("loc_select_generic", "Select location")} —</option>
-              {portsFor(formData.loading_country_id, formData.loading_port_id).map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.port_name}
-                </option>
-              ))}
-            </select>
-            {renderPresets(originCountryCode, (val) => {
-              const matched = ports.find((p) => p.port_name.toLowerCase().includes(val.toLowerCase()));
-              if (matched) handleLoadingPortChange(matched.id);
-              else setFormData((c: any) => ({ ...c, loading_source_name: val, loading_port_name: val }));
+            {renderLocationSelect({
+              label: locLabel("loading"),
+              required: false,
+              value: formData.loading_port_id || (formData.loading_port_name ? `custom:${formData.loading_port_name}` : ""),
+              countryId: formData.loading_country_id,
+              countryCodeFallback: originCountryCode,
+              onChange: (id, name) => {
+                handleLoadingPortChange(id);
+                setFormData((c: any) => ({
+                  ...c,
+                  loading_port_id: id,
+                  loading_port_name: name,
+                  loading_source_name: name || c.loading_source_name
+                }));
+              }
             })}
           </div>
         </div>
@@ -406,40 +536,17 @@ export function CustomerOrderMovementSpecs({
         {/* Row 2: Entry Gateway & Arrival Date */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-              {locLabel("entry")} *
-            </label>
-            <select
-              value={formData.entry_border_port_id}
-              onChange={(e) => {
-                const p = ports.find((item) => item.id === e.target.value);
+            {renderLocationSelect({
+              label: locLabel("entry"),
+              required: true,
+              value: formData.entry_border_port_id || (formData.entry_border_port_name ? `custom:${formData.entry_border_port_name}` : ""),
+              countryId: formData.receiving_country_id,
+              countryCodeFallback: entryCountryCode || "PK",
+              onChange: (id, name) => {
                 setFormData((c: any) => ({
                   ...c,
-                  entry_border_port_id: e.target.value,
-                  entry_border_port_name: p?.port_name || ""
-                }));
-              }}
-              className={selectClass}
-            >
-              <option value="">— {tt("loc_select_generic", "Select location")} —</option>
-              {portsFor(formData.receiving_country_id, formData.entry_border_port_id).map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.port_name}
-                </option>
-              ))}
-            </select>
-            {renderPresets(entryCountryCode || "PK", (val) => {
-              const matched = ports.find((p) => p.port_name.toLowerCase().includes(val.toLowerCase()));
-              if (matched) {
-                setFormData((c: any) => ({
-                  ...c,
-                  entry_border_port_id: matched.id,
-                  entry_border_port_name: matched.port_name
-                }));
-              } else {
-                setFormData((c: any) => ({
-                  ...c,
-                  entry_border_port_name: val
+                  entry_border_port_id: id,
+                  entry_border_port_name: name
                 }));
               }
             })}
@@ -491,6 +598,9 @@ export function CustomerOrderMovementSpecs({
             />
           </div>
         </div>
+
+        {/* Live Route Corridor message */}
+        {renderLiveCorridorMessage()}
       </div>
     );
   }
@@ -556,53 +666,41 @@ export function CustomerOrderMovementSpecs({
             </div>
 
             <div>
-              <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                {locLabel("loading")}
-              </label>
-              <select
-                value={formData.loading_port_id}
-                onChange={(e) => handleLoadingPortChange(e.target.value)}
-                className={selectClass}
-              >
-                <option value="">— {tt("loc_select_generic", "Select location")} —</option>
-                {portsFor(formData.loading_country_id, formData.loading_port_id).map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.port_name}
-                  </option>
-                ))}
-              </select>
-              {renderPresets(originCountryCode, (val) => {
-                const matched = ports.find((p) => p.port_name.toLowerCase().includes(val.toLowerCase()));
-                if (matched) handleLoadingPortChange(matched.id);
-                else setFormData((c: any) => ({ ...c, loading_source_name: val, loading_port_name: val }));
+              {renderLocationSelect({
+                label: locLabel("loading"),
+                required: false,
+                value: formData.loading_port_id || (formData.loading_port_name ? `custom:${formData.loading_port_name}` : ""),
+                countryId: formData.loading_country_id,
+                countryCodeFallback: originCountryCode,
+                onChange: (id, name) => {
+                  handleLoadingPortChange(id);
+                  setFormData((c: any) => ({
+                    ...c,
+                    loading_port_id: id,
+                    loading_port_name: name,
+                    loading_source_name: name || c.loading_source_name
+                  }));
+                }
               })}
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                {locLabel("entry")} (Hub Entry Gateway) *
-              </label>
-              <select
-                value={formData.entry_border_port_id}
-                onChange={(e) => {
-                  const p = ports.find((item) => item.id === e.target.value);
+              {renderLocationSelect({
+                label: `${locLabel("entry")} (Hub Entry Gateway)`,
+                required: true,
+                value: formData.entry_border_port_id || (formData.entry_border_port_name ? `custom:${formData.entry_border_port_name}` : ""),
+                countryId: "",
+                countryCodeFallback: "PK",
+                onChange: (id, name) => {
                   setFormData((c: any) => ({
                     ...c,
-                    entry_border_port_id: e.target.value,
-                    entry_border_port_name: p?.port_name || ""
+                    entry_border_port_id: id,
+                    entry_border_port_name: name
                   }));
-                }}
-                className={selectClass}
-              >
-                <option value="">— {tt("loc_select_generic", "Select location")} —</option>
-                {portsFor("", formData.entry_border_port_id).map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.port_name}
-                  </option>
-                ))}
-              </select>
+                }
+              })}
             </div>
 
             <div>
@@ -695,20 +793,26 @@ export function CustomerOrderMovementSpecs({
               </label>
               <input
                 type="text"
+                list="reexport-dest-presets"
                 placeholder={tt("ph_destination_city_pk", "e.g. Dubai / Bandar Abbas / Kabul / Mumbai")}
                 value={formData.destination_city}
                 onChange={(e) => setFormData((c: any) => ({ ...c, destination_city: e.target.value }))}
                 className={inputClass}
               />
-              {renderPresets(destCountryCode, (val) => {
-                setFormData((c: any) => ({ ...c, destination_city: val }));
-              })}
+              <datalist id="reexport-dest-presets">
+                {(COUNTRY_PORT_PRESETS[destCountryCode] || []).map((preset, pIdx) => (
+                  <option key={pIdx} value={preset.name} />
+                ))}
+              </datalist>
             </div>
           </div>
         </div>
 
         {/* Customs Clearance Switch */}
         {renderCustomsSwitch(tt("reexport_customs_label", "Re-Export Customs Declaration & Inspection Required?"))}
+
+        {/* Live Route Corridor message */}
+        {renderLiveCorridorMessage()}
       </div>
     );
   }
@@ -849,28 +953,20 @@ export function CustomerOrderMovementSpecs({
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-              {locLabel("entry")} (Inbound Entry Gateway) *
-            </label>
-            <select
-              value={formData.entry_border_port_id}
-              onChange={(e) => {
-                const p = ports.find((item) => item.id === e.target.value);
+            {renderLocationSelect({
+              label: `${locLabel("entry")} (Inbound Entry Gateway)`,
+              required: true,
+              value: formData.entry_border_port_id || (formData.entry_border_port_name ? `custom:${formData.entry_border_port_name}` : ""),
+              countryId: "",
+              countryCodeFallback: "PK",
+              onChange: (id, name) => {
                 setFormData((c: any) => ({
                   ...c,
-                  entry_border_port_id: e.target.value,
-                  entry_border_port_name: p?.port_name || ""
+                  entry_border_port_id: id,
+                  entry_border_port_name: name
                 }));
-              }}
-              className={selectClass}
-            >
-              <option value="">— {tt("loc_select_generic", "Select location")} —</option>
-              {portsFor("", formData.entry_border_port_id).map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.port_name}
-                </option>
-              ))}
-            </select>
+              }
+            })}
           </div>
         </div>
 
@@ -889,28 +985,20 @@ export function CustomerOrderMovementSpecs({
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-              {tt("exit_border_checkpoint", "Exit Border Checkpoint (Exit Gateway)")} *
-            </label>
-            <select
-              value={formData.exit_border_port_id}
-              onChange={(e) => {
-                const p = ports.find((item) => item.id === e.target.value);
+            {renderLocationSelect({
+              label: tt("exit_border_checkpoint", "Exit Border Checkpoint (Exit Gateway)"),
+              required: true,
+              value: formData.exit_border_port_id || (formData.exit_border_port_name ? `custom:${formData.exit_border_port_name}` : ""),
+              countryId: "",
+              countryCodeFallback: "PK",
+              onChange: (id, name) => {
                 setFormData((c: any) => ({
                   ...c,
-                  exit_border_port_id: e.target.value,
-                  exit_border_port_name: p?.port_name || ""
+                  exit_border_port_id: id,
+                  exit_border_port_name: name
                 }));
-              }}
-              className={selectClass}
-            >
-              <option value="">— {tt("select_exit_border", "Select Exit Border")} —</option>
-              {portsFor("", formData.exit_border_port_id).map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.port_name}
-                </option>
-              ))}
-            </select>
+              }
+            })}
           </div>
         </div>
 
@@ -962,6 +1050,9 @@ export function CustomerOrderMovementSpecs({
         </div>
 
         {renderCustomsSwitch(tt("transit_customs_escort_label", "Transit Customs Bond & Escort Clearance Required?"))}
+
+        {/* Live Route Corridor message */}
+        {renderLiveCorridorMessage()}
       </div>
     );
   }
@@ -1009,40 +1100,20 @@ export function CustomerOrderMovementSpecs({
         </div>
 
         <div>
-          <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-            {locLabel("exit")} *
-          </label>
-          <select
-            value={formData.exit_border_port_id || formData.loading_port_id}
-            onChange={(e) => {
-              const p = ports.find((item) => item.id === e.target.value);
+          {renderLocationSelect({
+            label: locLabel("exit"),
+            required: true,
+            value: formData.exit_border_port_id || formData.loading_port_id || (formData.exit_border_port_name ? `custom:${formData.exit_border_port_name}` : ""),
+            countryId: formData.loading_country_id,
+            countryCodeFallback: exportCountryCode || "PK",
+            onChange: (id, name) => {
               setFormData((c: any) => ({
                 ...c,
-                exit_border_port_id: e.target.value,
-                exit_border_port_name: p?.port_name || "",
-                loading_port_id: e.target.value,
-                loading_port_name: p?.port_name || ""
+                exit_border_port_id: id,
+                exit_border_port_name: name,
+                loading_port_id: id,
+                loading_port_name: name
               }));
-            }}
-            className={selectClass}
-          >
-            <option value="">— {tt("loc_select_generic", "Select location")} —</option>
-            {portsFor(formData.loading_country_id, formData.exit_border_port_id || formData.loading_port_id).map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.port_name}
-              </option>
-            ))}
-          </select>
-          {renderPresets(exportCountryCode || "PK", (val) => {
-            const matched = ports.find((p) => p.port_name.toLowerCase().includes(val.toLowerCase()));
-            if (matched) {
-              setFormData((c: any) => ({
-                ...c,
-                exit_border_port_id: matched.id,
-                exit_border_port_name: matched.port_name
-              }));
-            } else {
-              setFormData((c: any) => ({ ...c, exit_border_port_name: val }));
             }
           })}
         </div>
@@ -1102,6 +1173,9 @@ export function CustomerOrderMovementSpecs({
 
       {/* Customs Clearance Switch */}
       {renderCustomsSwitch(tt("export_customs_required_q", "Export Customs Clearance Required?"))}
+
+      {/* Live Route Corridor message */}
+      {renderLiveCorridorMessage()}
     </div>
   );
 }

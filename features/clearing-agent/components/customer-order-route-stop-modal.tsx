@@ -436,47 +436,48 @@ export function CustomerOrderRouteStopModal({
                     ? tt("airport_label", "Airport / Air Cargo Terminal")
                     : tt("rail_terminal_label", "Rail Terminal / Dry Port")} *
                 </label>
-                <input
-                  type="text"
-                  placeholder={
-                    transportMode === "by_sea"
-                      ? "e.g. Karachi Port (KPT), Jebel Ali, Port Qasim, Bandar Abbas"
-                      : transportMode === "by_road"
-                      ? "e.g. Torkham Border, Chaman Border, Taftan, Dogharoon"
-                      : transportMode === "by_air"
-                      ? "e.g. Dubai Cargo Village (DXB), Karachi AFU"
-                      : "e.g. Azakhel Dry Port, Lahore Dry Port"
-                  }
-                  value={locationName}
-                  onChange={(e) => {
-                    setLocationName(e.target.value);
-                    if (errorMsg) setErrorMsg("");
-                  }}
-                  className={inputClass}
-                />
-              </div>
-
-              {/* Mode-Specific Quick Suggestions */}
-              {modePresets.length > 0 && (
-                <div className="sm:col-span-2 flex flex-wrap items-center gap-1.5 pt-0.5">
-                  <span className="text-[10px] font-bold text-slate-400">
-                    {tt("quick_suggestions", "Suggestions:")}
-                  </span>
-                  {modePresets.map((preset, pIdx) => (
-                    <button
-                      key={pIdx}
-                      type="button"
-                      onClick={() => {
-                        setLocationName(preset);
-                        if (!customsPoint) setCustomsPoint(preset);
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {modePresets.length > 0 && (
+                    <select
+                      value={modePresets.includes(locationName) ? locationName : locationName ? "__custom__" : ""}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === "__custom__") return;
+                        setLocationName(val);
+                        if (!customsPoint) setCustomsPoint(val);
+                        if (errorMsg) setErrorMsg("");
                       }}
-                      className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-medium text-slate-700 hover:border-blue-400 hover:bg-blue-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 transition"
+                      className={selectClass}
                     >
-                      <span>{preset}</span>
-                    </button>
-                  ))}
+                      <option value="">— {tt("select_from_popular_borders", "Select Border / Port / Terminal")} —</option>
+                      {modePresets.map((preset, pIdx) => (
+                        <option key={pIdx} value={preset}>
+                          {preset}
+                        </option>
+                      ))}
+                      <option value="__custom__">✍️ {tt("enter_custom_below", "Other / Enter Name Below")}...</option>
+                    </select>
+                  )}
+                  <input
+                    type="text"
+                    placeholder={
+                      transportMode === "by_sea"
+                        ? "e.g. Karachi Port (KPT), Jebel Ali, Port Qasim, Bandar Abbas"
+                        : transportMode === "by_road"
+                        ? "e.g. Torkham Border, Chaman Border, Taftan, Dogharoon"
+                        : transportMode === "by_air"
+                        ? "e.g. Dubai Cargo Village (DXB), Karachi AFU"
+                        : "e.g. Azakhel Dry Port, Lahore Dry Port"
+                    }
+                    value={locationName}
+                    onChange={(e) => {
+                      setLocationName(e.target.value);
+                      if (errorMsg) setErrorMsg("");
+                    }}
+                    className={inputClass}
+                  />
                 </div>
-              )}
+              </div>
 
               <div className="sm:col-span-2">
                 <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
