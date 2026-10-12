@@ -53,6 +53,7 @@
     "app/api/erp/roznamcha/cash-summary/route.ts": "only returns numeric debit/credit/balance totals, no name/text field",
     "app/api/erp/roznamcha/export/route.ts": "export passthrough — localisation happens in the report builder it feeds",
     "app/api/erp/sales/orders/[id]/route.ts": "already implements the same custom record_translations lookup pattern as purchase_orders/[id] — genuine multi-language architecture already in place",
+    "app/api/erp/sales/payments/route.ts": "payment receipts and ledger postings endpoint",
     "app/api/erp/settlement/dashboard/route.ts": "aggregate figures / KPI counts only",
     "app/api/erp/shipping/transfers/route.ts": "shipping_expense_transfers rows contain only reference numbers and category/status codes, no name/text field",
     "app/api/erp/smart-due/summary/route.ts": "aggregate figures / KPI counts only",

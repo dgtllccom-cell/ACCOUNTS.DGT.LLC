@@ -35460,6 +35460,12 @@ const en: Dict = {
   "pap.chaman": "Chaman",
   "pap.mixedCurrencies": "Mixed currencies — no exchange rate",
   "pap.india": "India",
+  "pap.salesSummary": "Sales Summary",
+  "pap.totalSalesBills": "Total Sales Bills",
+  "pap.totalReceived": "Total Received",
+  "pap.receivableBalance": "Receivable Balance",
+  "pap.sales": "Sales",
+  "pap.bankingBalance": "Banking Balance",
 };
 
 const ur: Dict = {
@@ -59192,6 +59198,12 @@ const ur: Dict = {
   "pap.chaman": "چمن",
   "pap.mixedCurrencies": "مختلف کرنسیاں — ایکسچینج ریٹ دستیاب نہیں",
   "pap.india": "بھارت",
+  "pap.salesSummary": "سیلز کا خلاصہ",
+  "pap.totalSalesBills": "کل سیلز بل",
+  "pap.totalReceived": "کل وصول شدہ",
+  "pap.receivableBalance": "قابلِ وصول بیلنس",
+  "pap.sales": "سیلز",
+  "pap.bankingBalance": "بینکنگ بیلنس",
 };
 
 const ar: Dict = {
@@ -82925,6 +82937,12 @@ const ar: Dict = {
   "pap.chaman": "شمن",
   "pap.mixedCurrencies": "عملات مختلفة — لا يوجد سعر صرف",
   "pap.india": "الهند",
+  "pap.salesSummary": "ملخص المبيعات",
+  "pap.totalSalesBills": "إجمالي فواتير المبيعات",
+  "pap.totalReceived": "إجمالي المقبوضات",
+  "pap.receivableBalance": "الرصيد المستحق التحصيل",
+  "pap.sales": "المبيعات",
+  "pap.bankingBalance": "الرصيد البنكي",
 };
 
 const fa: Dict = {
@@ -106657,6 +106675,12 @@ const fa: Dict = {
   "pap.chaman": "چمن",
   "pap.mixedCurrencies": "ارزهای مختلف — نرخ تبدیل موجود نیست",
   "pap.india": "هند",
+  "pap.salesSummary": "خلاصه فروش",
+  "pap.totalSalesBills": "کل صورتحساب‌های فروش",
+  "pap.totalReceived": "کل دریافتی‌ها",
+  "pap.receivableBalance": "مانده قابل دریافت",
+  "pap.sales": "فروش",
+  "pap.bankingBalance": "موجودی بانکی",
 };
 
 const ps: Dict = {
@@ -130396,6 +130420,12 @@ const ps: Dict = {
   "pap.chaman": "چمن",
   "pap.mixedCurrencies": "ګډې اسعار — د تبادلې نرخ نشته",
   "pap.india": "هند",
+  "pap.salesSummary": "د پلور لنډیز",
+  "pap.totalSalesBills": "د پلور ټول بلونه",
+  "pap.totalReceived": "ټولې ترلاسه شوې پیسې",
+  "pap.receivableBalance": "د ترلاسه کولو وړ بیلانس",
+  "pap.sales": "پلور",
+  "pap.bankingBalance": "بانکي بیلانس",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
