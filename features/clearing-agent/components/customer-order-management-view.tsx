@@ -101,6 +101,7 @@ import { CustomerOrderCorridorModal } from "@/features/clearing-agent/components
 import { CustomerOrderFleetPickerModal } from "@/features/clearing-agent/components/customer-order-fleet-picker-modal";
 import { CustomerOrderExternalTruckDialog, type ExternalTruckFormData } from "@/features/clearing-agent/components/customer-order-external-truck-dialog";
 import { CustomerOrderReviewSubmitView } from "@/features/clearing-agent/components/customer-order-review-submit-view";
+import { CustomerOrderWarehouseModal } from "@/features/clearing-agent/components/customer-order-warehouse-modal";
 import {
   isTruckPlaceholder,
   legTruckRegistrationType,
@@ -5978,6 +5979,7 @@ function Step1BookingCustomer({
   const [corridorModalOpen, setCorridorModalOpen] = useState(false);
   const [fleetPickerOpen, setFleetPickerOpen] = useState(false);
   const [externalTruckOpen, setExternalTruckOpen] = useState(false);
+  const [warehouseModalOpen, setWarehouseModalOpen] = useState(false);
   const [internalDraftGoodsItem, setInternalDraftGoodsItem] = useState<CustomerOrderGoodsItem>(defaultGoodsItem());
   const [internalEditingGoodsIdx, setInternalEditingGoodsIdx] = useState<number | null>(null);
 
@@ -7624,8 +7626,8 @@ function Step1BookingCustomer({
                 ) : null}
               </div>
 
-              {/* Warehouse Location Selection */}
-              <div className="space-y-1">
+              {/* Warehouse Location Selection — Modal Trigger & Summary Card */}
+              <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <label className="text-[10.5px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                     <Warehouse className="h-3.5 w-3.5 text-blue-600" />
@@ -7634,134 +7636,80 @@ function Step1BookingCustomer({
                   <span className="text-[10px] font-bold text-slate-400">{tt("step3_specification", "Step 3 Specification")}</span>
                 </div>
 
-                <select
-                  value={draftGoodsItem.warehouseSourceType}
-                  onChange={(e) => {
-                    const val = e.target.value as "company_warehouse" | "customer_warehouse" | "other";
-                    handleDraftGoodsChange("warehouseSourceType", val);
-                    if (val === "customer_warehouse") {
-                      handleDraftGoodsChange("warehouseName", selectedCustomer ? `${selectedCustomer.customer_name}'s Warehouse` : tt("customer_warehouse_title", "Customer Warehouse"));
-                      handleDraftGoodsChange("warehouseAddressText", selectedCustomer?.address || tt("customer_registered_address", "Customer Registered Address"));
-                    }
-                  }}
-                  className={selectClass}
+                {/* Warehouse Summary Card / Modal Trigger */}
+                <div
+                  onClick={() => setWarehouseModalOpen(true)}
+                  className={`p-3 rounded-xl border cursor-pointer transition shadow-2xs flex items-center justify-between gap-3 ${
+                    draftGoodsItem.warehouseName
+                      ? draftGoodsItem.warehouseSourceType === "company_warehouse"
+                        ? "border-blue-200 bg-blue-50/60 hover:bg-blue-100/60 dark:border-blue-900/60 dark:bg-blue-950/30"
+                        : draftGoodsItem.warehouseSourceType === "customer_warehouse"
+                        ? "border-emerald-200 bg-emerald-50/60 hover:bg-emerald-100/60 dark:border-emerald-900/60 dark:bg-emerald-950/30"
+                        : "border-amber-200 bg-amber-50/60 hover:bg-amber-100/60 dark:border-amber-900/60 dark:bg-amber-950/30"
+                      : "border-dashed border-slate-300 bg-white hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900"
+                  }`}
                 >
-                  <option value="company_warehouse">{tt("own_warehouse_title", "Own Warehouse (Company DGT Warehouse)")}</option>
-                  <option value="customer_warehouse">{tt("customer_warehouse_title", "Customer Warehouse (Client Premises / Yard)")}</option>
-                  <option value="other">{tt("other_warehouse_title", "Other Warehouse (Third-Party Yard / Port)")}</option>
-                </select>
-
-                {/* Dynamic inputs based on selection */}
-                {draftGoodsItem.warehouseSourceType === "company_warehouse" && (
-                  <div className="mt-1.5">
-                    <SearchSelect
-                      label={`${tt("select_company_warehouse", "Select Company Warehouse")} *`}
-                      value={draftGoodsItem.warehouseId}
-                      placeholder={tt("select_company_warehouse_ph", "Select Company Warehouse...")}
-                      options={(warehousesList || []).map((w: any) => ({
-                        value: w.id,
-                        label: `${w.warehouse_name || w.name} (${w.city_name || w.country_name || "Central"})`,
-                        keywords: [w.warehouse_name, w.name, w.city_name, w.country_name, w.full_address].filter(Boolean).join(" ")
-                      }))}
-                      onValueChange={(warehouseId) => {
-                        const w = (warehousesList || []).find((wh: any) => wh.id === warehouseId);
-                        const addr = [w?.full_address, w?.city_name, w?.country_name].filter(Boolean).join(", ");
-                        handleDraftGoodsChange("warehouseId", warehouseId);
-                        handleDraftGoodsChange("warehouseName", w?.warehouse_name || w?.name || "");
-                        handleDraftGoodsChange("warehouseAddressText", addr);
-                      }}
-                      searchPlaceholder="Search company warehouses..."
-                      emptyLabel="No warehouses found in master"
-                    />
-                  </div>
-                )}
-
-                {draftGoodsItem.warehouseSourceType === "customer_warehouse" && (
-                  <div className="mt-1.5 p-3 rounded-xl border border-emerald-200 bg-emerald-50/50 dark:border-emerald-900/50 dark:bg-emerald-950/20 text-xs space-y-2">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {/* Customer Account Number Selector */}
-                      <div>
-                        <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
-                          {tt("customer_account_num", "Customer Account Number")} *
-                        </label>
-                        <select
-                          value={draftGoodsItem.warehouseAccountId || selectedAccount?.id || ""}
-                          onChange={(e) => {
-                            const accId = e.target.value;
-                            const acc = accounts.find((a) => a.id === accId);
-                            handleDraftGoodsChange("warehouseAccountId", accId);
-                            if (acc) {
-                              const whName = `${acc.name || (acc as any).account_name} Warehouse`;
-                              handleDraftGoodsChange("warehouseName", whName);
-                            }
-                          }}
-                          className={selectClass}
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div
+                      className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${
+                        draftGoodsItem.warehouseSourceType === "company_warehouse"
+                          ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+                          : draftGoodsItem.warehouseSourceType === "customer_warehouse"
+                          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300"
+                          : "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300"
+                      }`}
+                    >
+                      {draftGoodsItem.warehouseSourceType === "company_warehouse" ? (
+                        <Building2 className="h-4 w-4" />
+                      ) : draftGoodsItem.warehouseSourceType === "customer_warehouse" ? (
+                        <User className="h-4 w-4" />
+                      ) : (
+                        <MapPin className="h-4 w-4" />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className={`text-[9.5px] font-black uppercase px-1.5 py-0.5 rounded ${
+                            draftGoodsItem.warehouseSourceType === "company_warehouse"
+                              ? "bg-blue-200/80 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                              : draftGoodsItem.warehouseSourceType === "customer_warehouse"
+                              ? "bg-emerald-200/80 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200"
+                              : "bg-amber-200/80 text-amber-800 dark:bg-amber-900 dark:text-amber-200"
+                          }`}
                         >
-                          <option value="">{tt("select_account_ph", "Select Customer Account...")}</option>
-                          {accounts
-                            .filter((a) => !formData.customer_id || a.customer_id === formData.customer_id || a.id === formData.customer_id || (selectedCustomer && a.id === (selectedCustomer as any).account_id))
-                            .map((a) => (
-                              <option key={a.id} value={a.id}>
-                                #{a.account_number || (a as any).code || a.id.slice(0, 6)} - {a.name || (a as any).account_name}
-                              </option>
-                            ))}
-                          {accounts.slice(0, 10).map((a) => (
-                            <option key={`fb-${a.id}`} value={a.id}>
-                              #{a.account_number || (a as any).code || a.id.slice(0, 6)} - {a.name || (a as any).account_name}
-                            </option>
-                          ))}
-                        </select>
+                          {draftGoodsItem.warehouseSourceType === "company_warehouse"
+                            ? tt("own_company_warehouse", "Company Warehouse")
+                            : draftGoodsItem.warehouseSourceType === "customer_warehouse"
+                            ? tt("customer_warehouse_label", "Customer Warehouse")
+                            : tt("other_warehouse_label", "Other / 3rd-Party")}
+                        </span>
+                        <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                          {draftGoodsItem.warehouseName || tt("select_warehouse_location", "Select Warehouse Location")}
+                        </span>
                       </div>
-
-                      {/* Customer Warehouse Name / Facility Selector */}
-                      <div>
-                        <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
-                          {tt("customer_warehouse_name", "Customer Warehouse / Depot")} *
-                        </label>
-                        <input
-                          type="text"
-                          placeholder={tt("customer_warehouse_ph", "e.g. Warehouse #1 (Client Central Yard)")}
-                          value={draftGoodsItem.warehouseName}
-                          onChange={(e) => handleDraftGoodsChange("warehouseName", e.target.value)}
-                          className={inputClass}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Facility Address */}
-                    <div>
-                      <label className="block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 mb-0.5">
-                        {tt("facility_delivery_address", "Warehouse Location & Address")}
-                      </label>
-                      <input
-                        type="text"
-                        placeholder={tt("facility_delivery_address_ph", "Full Address / Industrial Area / Gate No")}
-                        value={draftGoodsItem.warehouseAddressText || selectedCustomer?.address || ""}
-                        onChange={(e) => handleDraftGoodsChange("warehouseAddressText", e.target.value)}
-                        className={inputClass}
-                      />
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                        {draftGoodsItem.warehouseAddressText || tt("click_to_configure_warehouse", "Click to configure or search warehouse facility...")}
+                      </p>
                     </div>
                   </div>
-                )}
 
-                {draftGoodsItem.warehouseSourceType === "other" && (
-                  <div className="mt-1.5 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <input
-                      type="text"
-                      placeholder={`${tt("other_warehouse_yard_name", "Other Warehouse / Yard Name")} *`}
-                      value={draftGoodsItem.warehouseName}
-                      onChange={(e) => handleDraftGoodsChange("warehouseName", e.target.value)}
-                      className={inputClass}
-                    />
-                    <input
-                      type="text"
-                      placeholder={`${tt("address_port_yard_location", "Address / Port Yard Location")} *`}
-                      value={draftGoodsItem.warehouseAddressText}
-                      onChange={(e) => handleDraftGoodsChange("warehouseAddressText", e.target.value)}
-                      className={inputClass}
-                    />
-                  </div>
-                )}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setWarehouseModalOpen(true);
+                    }}
+                    className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition shrink-0 ${
+                      draftGoodsItem.warehouseName
+                        ? "bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700"
+                        : "bg-blue-600 text-white hover:bg-blue-700 shadow-xs"
+                    }`}
+                  >
+                    <span>{draftGoodsItem.warehouseName ? tt("change", "Change") : tt("choose_warehouse", "Choose Warehouse")}</span>
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               </div>
 
               {/* Row 1: Goods Master Selection, Goods Name, CHS Code */}
@@ -8158,6 +8106,33 @@ function Step1BookingCustomer({
           }));
           setExternalTruckOpen(false);
         }}
+      />
+
+      <CustomerOrderWarehouseModal
+        open={warehouseModalOpen}
+        onClose={() => setWarehouseModalOpen(false)}
+        lang={lang}
+        initialValues={{
+          warehouseSourceType: draftGoodsItem.warehouseSourceType,
+          warehouseId: draftGoodsItem.warehouseId,
+          warehouseAccountId: draftGoodsItem.warehouseAccountId,
+          warehouseName: draftGoodsItem.warehouseName,
+          warehouseAddressText: draftGoodsItem.warehouseAddressText,
+          remarks: draftGoodsItem.remarks
+        }}
+        onApply={(data) => {
+          handleDraftGoodsChange("warehouseSourceType", data.warehouseSourceType);
+          handleDraftGoodsChange("warehouseId", data.warehouseId);
+          if (data.warehouseAccountId) handleDraftGoodsChange("warehouseAccountId", data.warehouseAccountId);
+          handleDraftGoodsChange("warehouseName", data.warehouseName);
+          handleDraftGoodsChange("warehouseAddressText", data.warehouseAddressText);
+          setWarehouseModalOpen(false);
+        }}
+        warehousesList={warehousesList || []}
+        accounts={accounts || []}
+        customers={customers || []}
+        selectedCustomer={selectedCustomer}
+        selectedAccount={selectedAccount}
       />
     </div>
   );
