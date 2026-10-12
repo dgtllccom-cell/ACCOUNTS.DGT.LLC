@@ -10,7 +10,7 @@ export default async function PurchaseOrderChargesPaymentPage() {
   const lang = await getRequestLanguage();
   return (
     <Suspense fallback={<div className="p-6 text-xs font-semibold text-slate-500">{t(lang, "pojp.loading_charges", "Loading Credit / Charges Payment Journal...")}</div>}>
-      <PurchaseOrderPaymentJournal mode="credit" />
+      <PurchaseOrderPaymentJournal mode="credit" paymentPage />
     </Suspense>
   );
 }

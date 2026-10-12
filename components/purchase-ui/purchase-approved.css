@@ -21,7 +21,7 @@
 .dgt-pa-ctrl svg{width:19px;height:19px;flex:none}
 .dgt-pa-search{width:245px;color:#6484ae;font-weight:600}
 .dgt-pa-search:focus-within{border-color:#0865ff}
-.dgt-pa-search input{width:100%;min-width:0;outline:0;border:0;font-size:12px;background:transparent;color:inherit;font-weight:600}
+.dgt-pa-search input,.dark .dgt-pa .dgt-pa-search input{width:100%;min-width:0;outline:0;border:0;box-shadow:none;font-size:12px;background:transparent!important;color:inherit;font-weight:600}
 .dgt-pa-sq{width:43px;justify-content:center;padding:0}
 .dgt-pa-pop{position:relative}
 .dgt-pa-pop>summary{list-style:none}

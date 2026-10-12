@@ -14,7 +14,7 @@ import "./purchase-approved.css";
  * PRESENTATION ONLY. Every number/label is passed in already computed by the page's EXISTING data code — nothing here
  * fetches, converts currency, sums, posts or fabricates. A missing figure is passed as "—", never as a made-up zero.
  */
-export type ApprovedPurchasePage = "booking-details" | "purchase-payments" | "orders-payment" | "country-bill-payment" | "loading-records";
+export type ApprovedPurchasePage = "booking-details" | "purchase-payments" | "orders-payment" | "country-bill-payment" | "loading-records" | "payment-module";
 export type PapTone = "dark" | "green" | "red" | "blue";
 
 const TITLE_KEY: Record<ApprovedPurchasePage, string> = {
@@ -23,6 +23,7 @@ const TITLE_KEY: Record<ApprovedPurchasePage, string> = {
   "orders-payment": "orderPayment",
   "country-bill-payment": "countryBill",
   "loading-records": "loadingRecords",
+  "payment-module": "purchasePayments", // the page passes its own title (see `title`)
 };
 
 export interface PapMetric { label: string; value: string; note?: string; tone?: PapTone }
@@ -31,6 +32,10 @@ export interface PapCountryRow { key: string; name: string; value: string; count
 
 export interface PurchaseApprovedHeaderProps {
   page: ApprovedPurchasePage;
+  /** page title for the ten Purchase/Sales payment pages (already translated); the five Purchase pages use the built-in titles */
+  title?: string;
+  /** breadcrumb middle item for the payment pages ("Purchase" / "Sales"), already translated */
+  crumbModule?: string;
   /** localized, authorized scope text e.g. "All Countries"; defaults to the localized "All Countries" */
   scopeLabel?: string;
   summary: { title: string; subtitle?: string; metrics: readonly [PapMetric, PapMetric, PapMetric] };
@@ -44,9 +49,9 @@ export interface PurchaseApprovedHeaderProps {
 const Go = () => <span className="dgt-pa-go" aria-hidden="true"><ChevronRight /></span>;
 const Bars = () => <span className="dgt-pa-bars" aria-hidden="true"><span /><span /><span /></span>;
 
-export function PurchaseApprovedHeader({ page, scopeLabel, summary, stages, countries, toolbar, langProp }: PurchaseApprovedHeaderProps) {
+export function PurchaseApprovedHeader({ page, title: titleOverride, crumbModule, scopeLabel, summary, stages, countries, toolbar, langProp }: PurchaseApprovedHeaderProps) {
   const s = useErpScreen("pap", langProp);
-  const title = s.t(TITLE_KEY[page], "Purchase");
+  const title = titleOverride ?? s.t(TITLE_KEY[page], "Purchase");
   const stageIcon = (tone: PapStageRow["tone"]) => (tone === "green" ? "✓" : tone === "red" ? "◎" : tone === "blue" ? "▵" : "☰");
   return (
     <section className="dgt-pa" dir={s.dir} data-dgt-page={page} aria-label={title}>
@@ -56,7 +61,7 @@ export function PurchaseApprovedHeader({ page, scopeLabel, summary, stages, coun
           <h1>{title}</h1>
           <div className="dgt-pa-crumbs">
             <span>{s.t("dashboard", "Dashboard")}</span><ChevronRight aria-hidden="true" />
-            <span>{s.t("purchase", "Purchase")}</span><ChevronRight aria-hidden="true" />
+            <span>{crumbModule ?? s.t("purchase", "Purchase")}</span><ChevronRight aria-hidden="true" />
             <span>{title}</span>
           </div>
         </div>

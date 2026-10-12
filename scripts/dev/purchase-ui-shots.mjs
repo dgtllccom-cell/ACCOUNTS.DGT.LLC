@@ -14,6 +14,16 @@ const PAGES = {
   orders: "/dashboard/purchase/purchase-order",
   country: "/dashboard/purchase/completed-purchase-bills",
   loading: "/dashboard/purchase/purchase-loading-records",
+  p_advance: "/dashboard/journal/purchase-order-payment/advance",
+  p_endorsement: "/dashboard/journal/purchase-order-payment/endorsement",
+  p_credit: "/dashboard/journal/purchase-order-payment/charges",
+  p_remaining: "/dashboard/journal/purchase-order-payment/remaining",
+  p_history: "/dashboard/journal/purchase-order-payment/history",
+  p_final: "/dashboard/journal/purchase-order-payment/final",
+  s_advance: "/dashboard/journal/sales-order-payment/advance",
+  s_credit: "/dashboard/journal/sales-order-payment/charges",
+  s_remaining: "/dashboard/journal/sales-order-payment/remaining",
+  s_history: "/dashboard/journal/sales-order-payment/history",
   journalrem: "/dashboard/journal/purchase-order-payment/remaining", // NOT one of the five approved pages: must keep its original layout
 };
 const DEVICES = {
@@ -56,12 +66,14 @@ for (const dev of devices) {
           await page.waitForTimeout(Number(process.env.SETTLE || 5000));
           // slow dev API: wait (max 30s) until the register has rows (or the page settles with none)
           await page.waitForFunction(() => document.querySelectorAll("tbody tr").length > 2 && !/Loading/i.test(document.querySelector("main, [data-erp-content]")?.innerText || ""), null, { timeout: 30000 }).catch(() => {});
+          // approved header fully loaded: summary has figures and no payment-type row is still "—" (data still loading)
+          const loaded = await page.waitForFunction(() => { const c = [...document.querySelectorAll(".dgt-pa-card")]; return c.length === 3 && /\d{2,}/.test(c[0].innerText) && !/(^|\n)—(\n|$)/.test(c[1].innerText); }, null, { timeout: Number(process.env.HEADER_WAIT || 45000) }).then(() => true).catch(() => false);
           await page.waitForTimeout(1500);
           const file = `${OUT}/${p}-${dev}-${lang}-${theme}.png`;
           await page.screenshot({ path: file, fullPage: FULL });
           const m = await page.evaluate(() => ({ dir: document.documentElement.dir, overflowX: document.documentElement.scrollWidth > innerWidth + 1, h1: document.querySelector("h1,h2")?.textContent?.trim().slice(0, 60) }));
-          summary.push({ p, dev, lang, theme, ...m, errors: errors.length });
-          console.log("ok", p, dev, lang, theme, JSON.stringify(m), errors.length ? "ERR " + errors[0] : "");
+          summary.push({ p, dev, lang, theme, ...m, headerLoaded: loaded, errors: errors.length });
+          console.log("ok", p, dev, lang, theme, "loaded=" + loaded, JSON.stringify(m), errors.length ? "ERR " + errors[0] : "");
         } catch (e) { console.log("FAIL", p, dev, lang, theme, String(e).slice(0, 100)); }
         await page.close();
       }

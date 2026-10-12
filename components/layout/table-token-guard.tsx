@@ -38,7 +38,7 @@ export function TableTokenGuard() {
         if (!el || !el.isConnected) continue;
         const cell = el.closest("td, th");
         if (cell) { mark(cell); if (el !== cell) mark(el); }
-        if (el.querySelector) scan(el);
+        scan(el);
       }
       pending.clear();
     };
@@ -62,9 +62,11 @@ export function TableTokenGuard() {
       document.querySelectorAll("[data-token]").forEach((c) => c.removeAttribute("data-token"));
     };
     const onChange = () => (mq.matches ? start() : stop());
-    start();
+    // First scan only after the page has finished hydrating: marking cells earlier makes React see attributes the server HTML did not have
+    // ("A tree hydrated but some attributes of the server rendered HTML didn't match"). Presentation is unchanged; touch devices apply it ~1.5 s after load.
+    let first: number | null = window.setTimeout(() => { first = null; start(); }, 1500);
     mq.addEventListener("change", onChange);
-    return () => { mq.removeEventListener("change", onChange); stop(); if (timer != null) window.clearTimeout(timer); };
+    return () => { if (first != null) window.clearTimeout(first); mq.removeEventListener("change", onChange); stop(); if (timer != null) window.clearTimeout(timer); };
   }, []);
   return null;
 }

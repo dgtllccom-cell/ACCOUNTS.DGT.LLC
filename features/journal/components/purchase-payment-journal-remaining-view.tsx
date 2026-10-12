@@ -44,6 +44,8 @@ import { PapFilters, PapMenu, PapRefresh, PapSearch } from "@/components/purchas
 import "@/components/purchase-ui/purchase-table-skin.css";
 import { useUsdRates } from "@/lib/purchase-ui/use-usd-rates";
 import { PaymentApprovedHeader, ordersToPayRows } from "@/features/purchases/components/purchase-payments-approved-header";
+import { PaymentModuleHeader, purchaseOrdersToModuleRows, useModulePayments } from "./payment-module-approved-header";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 type FlatPayment = {
   id: string;
@@ -95,6 +97,8 @@ export type PurchasePaymentJournalRemainingViewProps = {
   onDownloadPdf: (orderRow: any) => void;
   /** "approved" = owner-approved Purchase Payments layout (the Purchase Payments route only); default keeps the original layout */
   layout?: "approved" | "legacy";
+  /** "module" = the ten-payment-pages header (Journal › Purchase Payments › Remaining Payment); default = the Purchase Payments page header */
+  headerKind?: "purchase-payments" | "module";
   /** the parent journal's existing print / export handlers for the whole register (shown in the three-dot menu) */
   onPrintJournal?: () => void;
   onExportJournal?: () => void;
@@ -206,11 +210,13 @@ export function PurchasePaymentJournalRemainingView({
   onPrintReceipt,
   onDownloadPdf,
   layout = "legacy",
+  headerKind = "purchase-payments",
   onPrintJournal,
   onExportJournal
 }: PurchasePaymentJournalRemainingViewProps) {
   const tt = (key: string, fallback: string) => t(key, lang) || fallback;
   const usdRates = useUsdRates(layout === "approved");
+  const modulePayments = useModulePayments("purchase");
 
   const [payments, setPayments] = useState<FlatPayment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -344,6 +350,19 @@ export function PurchasePaymentJournalRemainingView({
     setDrawerOpen(true);
   }
 
+  /** Excel (CSV) of exactly the payment register on screen (same rows after the page's filters, same columns as the table). */
+  function exportRegisterCsv() {
+    const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const head = [tt("payment_no", "Payment No."), tt("payment_date", "Payment Date"), tt("purchase_order_no", "Purchase Order No."), tt("vendor", "Vendor"), `${tt("amount", "Amount")} (${baseCurrency})`, tt("payment_method", "Payment Method"), tt("status", "Status"), tt("reference", "Reference")];
+    const lines = filtered.map((p) => [p.super_admin_serial || p.entry_serial || "", fmtDate(p.entry_date || p.created_at), p.purchase_order_no || "", p.vendor_name || "", p.amount ?? "", p.payment_method_name || "", statusLabel(p.status, lang), p.reference_no || ""]);
+    const csv = "﻿" + [head, ...lines].map((r) => r.map(esc).join(",")).join("\r\n");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    a.download = `purchase-payments-remaining-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
   return (
     <div dir={["ur", "ar", "fa", "ps"].includes(lang) ? "rtl" : "ltr"} className="w-full space-y-5 px-4 sm:px-6 pt-4 pb-2">
       {layout === "approved" && (
@@ -351,6 +370,72 @@ export function PurchasePaymentJournalRemainingView({
       {/* Approved Purchase header (title, page toolbar, yellow / blue / green cards). Figures = plain sums of the order rows this page already
           loaded (RBAC-scoped by the parent); the toolbar wraps this page's EXISTING search, date, country/branch/status filters, refresh,
           reset and New Payment handlers. The payments table below keeps every column, row and action (CSS skin only). */}
+      {headerKind === "module" ? (
+      <PaymentModuleHeader
+        module="purchase"
+        title={translateHeader(lang, "Remaining Payment")}
+        activeKey="remaining"
+        rows={purchaseOrdersToModuleRows(orders.filter((o) => (!countryFilter || (o.countryName || o.country_name || "") === countryFilter) && (!branchFilter || (o.branchName || o.branch_name || "") === branchFilter)))}
+        payments={modulePayments}
+        rates={usdRates}
+        scopeCountry={countryFilter || undefined}
+        onCountryOpen={(name) => setCountryFilter(name)}
+        translateLabel={(label) => translateHeader(lang, label)}
+        toolbar={
+          <>
+            <PapSearch value={query} onChange={setQuery} placeholder={tt("search_placeholder_v3", "Search by PO No, Vendor, Payment No...")} />
+            <PapFilters label={tt("filters", "Filters")} badge={[countryFilter, branchFilter, statusFilter].filter(Boolean).length || undefined}>
+              <select value={countryFilter} onChange={(e) => setCountryFilter(e.target.value)} aria-label={tt("all_countries", "All Countries")}>
+                <option value="">{tt("all_countries", "All Countries")}</option>
+                {countryOptions.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+              <select value={branchFilter} onChange={(e) => setBranchFilter(e.target.value)} aria-label={tt("all_branches", "All Branches")}>
+                <option value="">{tt("all_branches", "All Branches")}</option>
+                {branchOptions.map((b) => (
+                  <option key={b} value={b}>{b}</option>
+                ))}
+              </select>
+              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} aria-label={tt("all_status", "All Status")}>
+                <option value="">{tt("all_status", "All Status")}</option>
+                <option value="posted">{tt("status_posted", "Posted")}</option>
+                <option value="draft">{tt("status_pending", "Pending")}</option>
+                <option value="cancelled">{tt("status_cancelled", "Cancelled")}</option>
+              </select>
+              <button
+                type="button"
+                className="dgt-pa-menu-item"
+                onClick={() => {
+                  setQuery(""); setCountryFilter(""); setBranchFilter(""); setStatusFilter(""); setDateRange({ from: null, to: null });
+                }}
+              >
+                <RotateCcw aria-hidden="true" /> {tt("reset_all", "Reset")}
+              </button>
+            </PapFilters>
+            <div className="dgt-pa-date">
+              <ErpDatePicker
+                mode="range"
+                value={{ from: dateRange.from as any, to: dateRange.to as any }}
+                onChange={(v: any) => setDateRange({ from: v.from || null, to: v.to || null })}
+                size="sm"
+                presets
+              />
+            </div>
+            <PapRefresh title={tt("refresh", "Refresh")} spinning={loading} onClick={() => void loadPayments()} />
+            {onPrintJournal || onExportJournal ? (
+              <PapMenu
+                label={tt("actions", "Actions")}
+                items={[
+                  ...(onPrintJournal ? [{ key: "print", label: centralT(lang, "pap.printPdf", "Print / PDF"), icon: <Printer />, onClick: onPrintJournal }] : []),
+                  { key: "export", label: centralT(lang, "pap.exportExcel", "Export Excel"), icon: <Download />, onClick: exportRegisterCsv },
+                ]}
+              />
+            ) : null}
+          </>
+        }
+      />
+      ) : (
       <PaymentApprovedHeader
         variant="payments"
         rows={headerRows}
@@ -420,6 +505,7 @@ export function PurchasePaymentJournalRemainingView({
           </>
         }
       />
+      )}
       </>
       )}
 
