@@ -45,8 +45,11 @@ async function run() {
   ]);
 
   const page = await context.newPage();
+  page.on('console', msg => console.log('PAGE LOG:', msg.text()));
+  page.on('pageerror', err => console.log('PAGE ERROR:', err.message));
   await page.goto(`${TARGET_HOST}/dashboard/clearing-agent/customer-order?create=true`, { waitUntil: 'domcontentloaded' });
-  await page.waitForTimeout(3000);
+  console.log('Waiting for initial bulk lookups (14 endpoints) to resolve...');
+  await page.waitForTimeout(14000);
 
   // Switch to Step 1C Goods Entry
   console.log('Switching to Step 1C...');
@@ -61,7 +64,8 @@ async function run() {
   // 2. Click the Warehouse Trigger Card to open the modal ("parda")
   console.log('Clicking Warehouse Trigger Card to open modal...');
   await page.getByRole('button', { name: /Choose Warehouse|Change/i }).first().click();
-  await page.waitForTimeout(1000);
+  await page.waitForSelector('select option:nth-child(2)', { timeout: 15000 }).catch(() => null);
+  await page.waitForTimeout(1500);
 
   // 2a. Capture Tab 1: Company Warehouse
   const shotCompany = path.join(ARTIFACT_DIR, '09a_warehouse_modal_company.png');
@@ -71,7 +75,12 @@ async function run() {
   // 2b. Switch to Tab 2: Customer Warehouse
   console.log('Switching to Customer Warehouse tab...');
   await page.locator('button:has-text("Customer Warehouse")').first().click();
-  await page.waitForTimeout(800);
+  await page.waitForTimeout(1200);
+  const customerBtn = page.locator('div[role="dialog"] button:has(span.font-semibold)').first();
+  if (await customerBtn.count() > 0) {
+    await customerBtn.click();
+    await page.waitForTimeout(600);
+  }
   const shotCustomer = path.join(ARTIFACT_DIR, '09b_warehouse_modal_customer.png');
   await page.screenshot({ path: shotCustomer });
   console.log('Saved 09b_warehouse_modal_customer.png');

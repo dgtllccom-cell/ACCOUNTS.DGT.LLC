@@ -360,6 +360,8 @@ export type CustomerOrderGoodsItem = {
   warehouseAccountId?: string;
   warehouseName: string;
   warehouseAddressText: string;
+  contactPerson?: string;
+  contactPhone?: string;
   photoUrl?: string;
   photoName?: string;
   remarks?: string;
@@ -7691,6 +7693,11 @@ function Step1BookingCustomer({
                       <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
                         {draftGoodsItem.warehouseAddressText || tt("click_to_configure_warehouse", "Click to configure or search warehouse facility...")}
                       </p>
+                      {(draftGoodsItem.contactPerson || draftGoodsItem.contactPhone) && (
+                        <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate mt-0.5">
+                          {[draftGoodsItem.contactPerson, draftGoodsItem.contactPhone].filter(Boolean).join(" • ")}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -8118,6 +8125,8 @@ function Step1BookingCustomer({
           warehouseAccountId: draftGoodsItem.warehouseAccountId,
           warehouseName: draftGoodsItem.warehouseName,
           warehouseAddressText: draftGoodsItem.warehouseAddressText,
+          contactPerson: draftGoodsItem.contactPerson,
+          contactPhone: draftGoodsItem.contactPhone,
           remarks: draftGoodsItem.remarks
         }}
         onApply={(data) => {
@@ -8126,6 +8135,9 @@ function Step1BookingCustomer({
           if (data.warehouseAccountId) handleDraftGoodsChange("warehouseAccountId", data.warehouseAccountId);
           handleDraftGoodsChange("warehouseName", data.warehouseName);
           handleDraftGoodsChange("warehouseAddressText", data.warehouseAddressText);
+          if (data.contactPerson) handleDraftGoodsChange("contactPerson", data.contactPerson);
+          if (data.contactPhone) handleDraftGoodsChange("contactPhone", data.contactPhone);
+          if (data.remarks) handleDraftGoodsChange("remarks", data.remarks);
           setWarehouseModalOpen(false);
         }}
         warehousesList={warehousesList || []}
