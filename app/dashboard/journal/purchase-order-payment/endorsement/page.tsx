@@ -5,6 +5,6 @@ import { PurchaseOrderPaymentJournal } from "@/features/journal/components/purch
 export const metadata = { title: "Journal — Purchase Order Payment — Endorsement" };
 
 export default function PurchaseOrderEndorsementPaymentPage() {
-  return <PurchaseOrderPaymentJournal mode="endorsement" />;
+  return <PurchaseOrderPaymentJournal mode="endorsement" paymentPage />;
 }
 

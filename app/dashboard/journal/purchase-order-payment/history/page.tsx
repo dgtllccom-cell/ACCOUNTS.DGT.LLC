@@ -10,7 +10,7 @@ export default async function PurchaseOrderPaymentHistoryPage() {
   const lang = await getRequestLanguage();
   return (
     <Suspense fallback={<div className="p-6 text-xs font-semibold text-slate-500">{t(lang, "pojp.loading_history", "Loading Payment History Journal...")}</div>}>
-      <PurchaseOrderPaymentJournal mode="history" />
+      <PurchaseOrderPaymentJournal mode="history" paymentPage />
     </Suspense>
   );
 }

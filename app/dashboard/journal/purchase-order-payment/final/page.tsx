@@ -9,7 +9,7 @@ export default async function PurchaseOrderFinalPaymentPage() {
   const lang = await getRequestLanguage();
   return (
     <Suspense fallback={<div className="p-6 text-xs font-semibold text-slate-500">{t(lang, "pojp.loading_final", "Loading Final Payment Report...")}</div>}>
-      <PurchaseOrderPaymentJournal mode="final" />
+      <PurchaseOrderPaymentJournal mode="final" paymentPage />
     </Suspense>
   );
 }

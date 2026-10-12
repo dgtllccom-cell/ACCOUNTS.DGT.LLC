@@ -42,6 +42,7 @@ import {
   Paperclip,
   Plus,
   Printer,
+  SlidersHorizontal,
   RefreshCw,
   Save,
   Scale,
@@ -81,6 +82,10 @@ import { Th } from "@/components/ui/translated-th";
 import { t, tData, type LanguageCode } from "@/features/i18n/purchase-journal-translations";
 import { t as tGlobal } from "@/lib/i18n/ui";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import { PaymentModuleHeader, useModulePayments, type ModuleRow } from "./payment-module-approved-header";
+import { PapMenu, PapRefresh, PapSearch } from "@/components/purchase-ui/purchase-approved-header";
+import { useUsdRates } from "@/lib/purchase-ui/use-usd-rates";
+import "@/components/purchase-ui/purchase-table-skin.css";
 import { ErpDatePicker } from "@/components/ui/erp-date-picker";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { rtlLanguages } from "@/lib/i18n/languages";
@@ -3292,6 +3297,33 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
     });
   }, [activeMode, branchFilter, countryFilter, currencyFilter, draftFilter, orders, query, startDateFilter, endDateFilter]);
 
+  // ── Approved header data: this page's RBAC-scoped orders (narrowed by the Country / Branch filters) + the real payment records ──
+  const modulePayments = useModulePayments("sales");
+  const dailyUsdRates = useUsdRates();
+  const countryNameById = useMemo(() => new Map<string, string>((saCountries as any[]).map((c) => [String(c.id), String(c.name)])), [saCountries]);
+  const moduleRows = useMemo<ModuleRow[]>(() => orders
+    .filter((row) => (!countryFilter || countryFilter === "All Countries" || rowCountryName(row) === countryFilter) && (!branchFilter || branchFilter === "All Branches" || rowBranchName(row) === branchFilter))
+    .map((row) => {
+      const total = orderTotal(row);
+      const r: any = row;
+      const paid = Number(r.paid_amount || 0);
+      const rawDue = r.remaining_amount;
+      const due = rawDue === null || rawDue === undefined ? Math.max(0, total - paid) : Math.max(0, Number(rawDue) || 0);
+      const status = String(r.payment_status || "").toLowerCase();
+      const form = rowForm(row);
+      return {
+        id: String(row.id),
+        // the order's own country (by id, from the scoped countries list) and its stored currency — the amounts are denominated in currency_code
+        country: countryNameById.get(String((row as any).country_id)) || rowCountryName(row),
+        currency: String((row as any).currency_code || rowCurrency(row)).toUpperCase(),
+        total,
+        paid,
+        due,
+        settled: status === "paid" || status === "completed" || (total > 0 && due <= 0.01),
+        endorsement: String(form.paymentType || form.paymentCondition || "").toLowerCase().includes("endorsement"),
+      };
+    }), [orders, countryFilter, branchFilter, countryNameById]);
+
   const selected = selectedId ? (filtered.find((row) => row.id === selectedId) ?? null) : null;
 
   // Container Selection local state (moved here to allow access to 'selected' initialization)
@@ -4356,62 +4388,69 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
 
   return (
     <div dir={isRtl ? "rtl" : "ltr"} className={cn("flex min-h-screen flex-col bg-slate-50 dark:bg-slate-950", isRtl ? "text-right" : "text-left")}>
-      {/* ── Enterprise Centered Header & 4 Stats Cards (Matching Reference Screenshot) ── */}
-      <PaymentJournalV2Header
-        title={t("page_title_sales", currentLanguage) || "Sales Payments"}
-        breadcrumbs={[
-          { label: tGlobal(currentLanguage, "common.dashboard", "Dashboard"), href: "/dashboard" },
-          { label: t("breadcrumb_sales", currentLanguage), href: "/dashboard/sales" },
-          { label: t("breadcrumb_sales_payments", currentLanguage), href: "/dashboard/journal/sales-order-payment/remaining" },
-          {
-            label:
-              activeMode === "advance"
-                ? "Advance Payment / Receipt"
-                : activeMode === "advance_completed"
-                ? "Completed Advance"
-                : activeMode === "credit"
-                ? "Credit Payment / Receipt"
-                : activeMode === "history"
-                ? "Sales Payment History"
-                : activeMode === "final"
-                ? t("final_payment_report", currentLanguage) || "Final / Remaining Balance Payment"
-                : "Remaining Payment / Recovery",
-            active: true
-          }
-        ]}
-        activeFiltersCount={activeFiltersCount}
-        onOpenFilters={() => setFiltersOpen(true)}
-        onPrint={() => void printPaymentJournal({
-          kind: "sales",
-          rows: filtered as Record<string, unknown>[],
-          lang: currentLanguage,
-          title: translateHeader(currentLanguage, "Sales Payments Journal"),
-          modeLabel: String(mode).toUpperCase(),
-          filters: [
-            ...(startDateFilter || endDateFilter ? [{ label: pl("Period"), value: `${startDateFilter || "…"} → ${endDateFilter || "…"}` }] : []),
-            ...(partyFilter ? [{ label: pl("Party"), value: partyFilter }] : []),
-            ...(currencyFilter ? [{ label: pl("Currency"), value: String(currencyFilter) }] : []),
-            ...(query ? [{ label: pl("Search"), value: String(query) }] : []),
-          ],
-          countryId: erpScope.lockedCountryId,
-          countryBranchId: erpScope.lockedCountryBranchId,
-          cityBranchId: erpScope.lockedCityBranchId,
-          countryName: erpScope.countryName,
-          branchName: erpScope.branchDisplayName,
-          printedBy: erpScope.userName,
-          reportPeriod: startDateFilter || endDateFilter ? `${startDateFilter || "…"} → ${endDateFilter || "…"}` : null,
-        })}
-        onExport={() => exportRows(filtered, activeMode, currentLanguage)}
-        onRefresh={() => void loadOrders()}
-        onBankingBalanceClick={() => {
-          const el = document.getElementById("ledger-cash-entry-section");
-          if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-        }}
-        stats={{
-          // real values only (fabricated bank balance / counts removed)
-          currency: (session?.localCurrency || session?.currency || "AED").toUpperCase(),
-          totalAccounts: ledgers?.length ?? undefined,
-        }}
+      {/* Approved payment-page header (title, page toolbar, yellow summary · blue payment types · green countries). The toolbar wraps this
+          page's EXISTING search, Filters panel, date range, refresh, print and export handlers; the payment-type rows link to the existing routes. */}
+      <PaymentModuleHeader
+        module="sales"
+        title={translateHeader(currentLanguage, ({ advance: "Advance Payment / Receipt", advance_completed: "Advance Payment / Receipt", credit: "Credit Payment / Receipt", charges: "Credit Payment / Receipt", remaining: "Remaining Payment / Recovery", history: "Sales Payment History", final: "Final Payment" } as Record<string, string>)[activeMode] ?? "Sales Payments")}
+        activeKey={activeMode === "credit" ? "credit" : activeMode === "advance_completed" ? "advance" : activeMode}
+        rows={moduleRows}
+        payments={modulePayments}
+        rates={dailyUsdRates}
+        scopeCountry={countryFilter && countryFilter !== "All Countries" ? countryFilter : undefined}
+        onCountryOpen={(name) => { setCountryFilter(name); setPageIndex(0); }}
+        translateLabel={(label) => translateHeader(currentLanguage, label)}
+        toolbar={
+          <>
+            <PapSearch
+              value={query}
+              onChange={(v) => { setQuery(v); setPageIndex(0); }}
+              placeholder={translateHeader(currentLanguage, "Search")}
+            />
+            <button type="button" className="dgt-pa-ctrl" onClick={() => setFiltersOpen(true)} aria-haspopup="dialog">
+              <SlidersHorizontal aria-hidden="true" />
+              {translateHeader(currentLanguage, "Filters")}{activeFiltersCount ? <span dir="ltr">({activeFiltersCount})</span> : null}
+            </button>
+            <div className="dgt-pa-date">
+              <ErpDatePicker
+                mode="range"
+                lang={currentLanguage}
+                size="sm"
+                value={{ from: startDateFilter || null, to: endDateFilter || null }}
+                onApply={(v) => { setStartDateFilter(v.from ?? ""); setEndDateFilter(v.to ?? ""); setPageIndex(0); }}
+              />
+            </div>
+            <PapRefresh title={translateHeader(currentLanguage, "Refresh")} spinning={loading} onClick={() => void loadOrders()} />
+            {/* Print / PDF, Excel and the banking-balance shortcut: the same handlers the old header buttons used */}
+            <PapMenu
+              label={translateHeader(currentLanguage, "Actions")}
+              items={[
+                { key: "print", label: translateHeader(currentLanguage, "Print") + " / PDF", icon: <Printer />, onClick: () => void printPaymentJournal({
+                  kind: "sales",
+                  rows: filtered as Record<string, unknown>[],
+                  lang: currentLanguage,
+                  title: translateHeader(currentLanguage, "Sales Payments Journal"),
+                  modeLabel: String(mode).toUpperCase(),
+                  filters: [
+                    ...(startDateFilter || endDateFilter ? [{ label: pl("Period"), value: `${startDateFilter || "…"} → ${endDateFilter || "…"}` }] : []),
+                    ...(partyFilter ? [{ label: pl("Party"), value: partyFilter }] : []),
+                    ...(currencyFilter ? [{ label: pl("Currency"), value: String(currencyFilter) }] : []),
+                    ...(query ? [{ label: pl("Search"), value: String(query) }] : []),
+                  ],
+                  countryId: erpScope.lockedCountryId,
+                  countryBranchId: erpScope.lockedCountryBranchId,
+                  cityBranchId: erpScope.lockedCityBranchId,
+                  countryName: erpScope.countryName,
+                  branchName: erpScope.branchDisplayName,
+                  printedBy: erpScope.userName,
+                  reportPeriod: startDateFilter || endDateFilter ? `${startDateFilter || "…"} → ${endDateFilter || "…"}` : null,
+                }) },
+                { key: "excel", label: translateHeader(currentLanguage, "Export Excel"), icon: <FileSpreadsheet />, onClick: () => exportRows(filtered, activeMode, currentLanguage) },
+                { key: "bank", label: translateHeader(currentLanguage, "Banking Balance"), icon: <Landmark />, onClick: () => { const el = document.getElementById("ledger-cash-entry-section"); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); } },
+              ]}
+            />
+          </>
+        }
       />
 
       {/* ── Search & Filter Popup Modal (Matching Reference Screenshot) ── */}
@@ -4469,7 +4508,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
       )}
 
       {/* ── Main Table Card ── */}
-      <div className="mx-6 mb-6 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
+      <div className="dgt-purchase-table-skin mx-6 mb-6 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
         {/* Table Title Bar (Matching Reference Screenshot: SALES ORDER PAYMENTS (18)) */}
         <div className="px-6 py-4 border-b border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#091020] flex flex-wrap justify-between items-center gap-3">
           <div className="flex flex-wrap items-center gap-3">

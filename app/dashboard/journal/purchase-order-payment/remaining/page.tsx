@@ -10,7 +10,7 @@ export default async function PurchaseOrderRemainingPaymentPage() {
   const lang = await getRequestLanguage();
   return (
     <Suspense fallback={<div className="p-6 text-xs font-semibold text-slate-500">{t(lang, "pojp.loading_remaining", "Loading Remaining Payment Journal...")}</div>}>
-      <PurchaseOrderPaymentJournal mode="remaining" />
+      <PurchaseOrderPaymentJournal mode="remaining" paymentPage />
     </Suspense>
   );
 }
