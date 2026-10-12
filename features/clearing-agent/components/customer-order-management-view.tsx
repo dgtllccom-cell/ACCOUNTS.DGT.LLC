@@ -4636,7 +4636,7 @@ export function CustomerOrderManagementView() {
               />
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(320px,0.64fr)_minmax(0,1.36fr)] xl:items-start 2xl:grid-cols-[minmax(360px,0.6fr)_minmax(0,1.4fr)]" dir="ltr">
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(540px,1.25fr)_minmax(360px,0.75fr)] xl:items-start 2xl:grid-cols-[minmax(600px,1.2fr)_minmax(420px,0.8fr)]" dir="ltr">
               {/* LEFT COLUMN: The Form Cards */}
               <div dir={isRtl ? "rtl" : "ltr"} className="space-y-3">
                 <div className="rounded-xl border border-slate-200/90 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
@@ -6195,11 +6195,12 @@ function Step1BookingCustomer({
   return (
     <div className="space-y-4 animate-in fade-in duration-150">
       {/* Dynamic 1A / 1B / 1C Sub-step Navigator */}
-      <div className="grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 shadow-xs">
+      <div className="grid grid-cols-3 gap-1 p-1 rounded-2xl bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 shadow-xs">
         <button
           type="button"
           onClick={() => selectSub("1A")}
-          className={`flex items-center justify-center gap-1.5 py-2 px-2 sm:px-3 rounded-xl text-xs font-bold transition-all ${
+          title={tt("tab_1a", "1A — Customer & Route")}
+          className={`flex items-center justify-center gap-1.5 py-2 px-1.5 sm:px-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all ${
             step1SubStep === "1A"
               ? "bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 shadow-sm border border-blue-200/80 dark:border-blue-900/80"
               : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/40"
@@ -6213,7 +6214,8 @@ function Step1BookingCustomer({
         <button
           type="button"
           onClick={() => selectSub("1B")}
-          className={`flex items-center justify-center gap-1.5 py-2 px-2 sm:px-3 rounded-xl text-xs font-bold transition-all ${
+          title={tt("tab_1b", "1B — Truck & Transport")}
+          className={`flex items-center justify-center gap-1.5 py-2 px-1.5 sm:px-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all ${
             step1SubStep === "1B"
               ? "bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 shadow-sm border border-blue-200/80 dark:border-blue-900/80"
               : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/40"
@@ -6229,7 +6231,8 @@ function Step1BookingCustomer({
         <button
           type="button"
           onClick={() => selectSub("1C")}
-          className={`flex items-center justify-center gap-1.5 py-2 px-2 sm:px-3 rounded-xl text-xs font-bold transition-all ${
+          title={tt("tab_1c", "1C — Goods Entry")}
+          className={`flex items-center justify-center gap-1.5 py-2 px-1.5 sm:px-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all ${
             step1SubStep === "1C"
               ? "bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 shadow-sm border border-blue-200/80 dark:border-blue-900/80"
               : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/40"
@@ -6313,175 +6316,152 @@ function Step1BookingCustomer({
           {/* ROW 2: Movement Type, Shipment Mode & Operation Type (Clean Dropdown Selectors matching Customer Account style) */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {/* 1. Movement Type Dropdown Card */}
-            <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+            <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
               <div>
-                <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center justify-between gap-1 mb-1.5">
                   <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                    <Repeat2 className="h-4 w-4 text-purple-600" />
-                    <span>{tt("movement_type_route", "Movement Type")} *</span>
+                    <Repeat2 className="h-4 w-4 text-purple-600 shrink-0" />
+                    <span>{tt("movement_type", "Movement Type")} *</span>
                   </label>
-                  <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200/70 dark:border-purple-800">
-                    {formData.movement_type || "import"}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-1.5">
-                  <div className="relative flex-1">
-                    <select
-                      value={formData.movement_type || "import"}
-                      onChange={(e) => {
-                        const val = e.target.value as any;
-                        setFormData((c) => ({ ...c, movement_type: val }));
-                        setMovementModalOpen(true);
-                      }}
-                      className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-2 focus:ring-purple-500/20"
-                    >
-                      <option value="import">{tt("opt_import", "Import (Foreign ➔ Domestic)")}</option>
-                      <option value="export">{tt("opt_export", "Export (Domestic ➔ Foreign)")}</option>
-                      <option value="transit">{tt("opt_transit", "Transit (Foreign ➔ Foreign)")}</option>
-                      <option value="up_transit">{tt("opt_up_transit", "Up-Transit (Bonded Corridor)")}</option>
-                      <option value="re_export">{tt("opt_re_export", "Re-Export (Cross Trade)")}</option>
-                      <option value="domestic">{tt("opt_domestic", "Domestic / Internal Transfer")}</option>
-                    </select>
-                  </div>
                   <button
                     type="button"
                     onClick={() => setMovementModalOpen(true)}
-                    className="h-9 px-2.5 rounded-xl border border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100 dark:border-purple-800 dark:bg-purple-950/50 dark:text-purple-300 transition shrink-0 flex items-center justify-center shadow-2xs"
+                    className="h-6 w-6 rounded-lg border border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100 dark:border-purple-800 dark:bg-purple-950/50 dark:text-purple-300 transition shrink-0 flex items-center justify-center shadow-2xs"
                     title={tt("open_movement_modal", "Configure Movement Details (Parda)")}
                   >
-                    <Pencil className="h-3.5 w-3.5" />
+                    <Pencil className="h-3 w-3" />
                   </button>
+                </div>
+
+                <div className="relative">
+                  <select
+                    value={formData.movement_type || "import"}
+                    onChange={(e) => {
+                      const val = e.target.value as any;
+                      setFormData((c) => ({ ...c, movement_type: val }));
+                      setMovementModalOpen(true);
+                    }}
+                    className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-2 focus:ring-purple-500/20"
+                  >
+                    <option value="import">{tt("opt_import", "Import")}</option>
+                    <option value="export">{tt("opt_export", "Export")}</option>
+                    <option value="transit">{tt("opt_transit", "Transit")}</option>
+                    <option value="up_transit">{tt("opt_up_transit", "Up-Transit")}</option>
+                    <option value="re_export">{tt("opt_re_export", "Re-Export")}</option>
+                    <option value="domestic">{tt("opt_domestic", "Domestic")}</option>
+                  </select>
                 </div>
               </div>
 
               {/* Tag summary underneath dropdown */}
-              <div className="flex flex-wrap items-center gap-1.5 pt-1.5 text-xs text-slate-600 dark:text-slate-300 border-t border-slate-100 dark:border-slate-800/60">
-                <span className="font-bold text-slate-900 dark:text-white capitalize">
-                  {movementTypeLabel(lang, formData.movement_type)}
+              <div className="flex items-center justify-between gap-1 pt-1.5 text-xs text-slate-600 dark:text-slate-300 border-t border-slate-100 dark:border-slate-800/60">
+                <span className="text-[10px] font-mono font-bold uppercase px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200/70 dark:border-purple-800">
+                  {formData.movement_type || "import"}
                 </span>
-                <span className="text-slate-300 dark:text-slate-600">•</span>
-                <span className="text-[11px] text-slate-500 truncate">
+                <span className="text-[10.5px] text-slate-500 font-medium truncate">
                   {movementFlowLabel(lang, formData.movement_type)}
                 </span>
               </div>
             </div>
 
             {/* 2. Shipment / Package Type Dropdown Card */}
-            <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+            <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
               <div>
-                <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center justify-between gap-1 mb-1.5">
                   <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                    <Ship className="h-4 w-4 text-blue-600" />
-                    <span>{tt("shipping_transport_mode", "Shipment Mode")} *</span>
+                    <Ship className="h-4 w-4 text-blue-600 shrink-0" />
+                    <span>{tt("transport_mode", "Transport Mode")} *</span>
                   </label>
-                  <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200/70 dark:border-blue-800">
-                    {formData.transport_mode ? formData.transport_mode.replace("by_", "") : "sea"}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-1.5">
-                  <div className="relative flex-1">
-                    <select
-                      value={formData.transport_mode || "by_sea"}
-                      onChange={(e) => {
-                        const mode = e.target.value as any;
-                        setFormData((c) => ({ ...c, transport_mode: mode }));
-                        setShipmentModalOpen(true);
-                      }}
-                      className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20"
-                    >
-                      <option value="by_sea">{tt("opt_sea", "🚢 By Sea (Ocean Vessel)")}</option>
-                      <option value="by_road">{tt("opt_road", "🚛 By Road (Truck / Trailer)")}</option>
-                      <option value="by_air">{tt("opt_air", "✈️ By Air (Air Freight)")}</option>
-                      <option value="by_rail">{tt("opt_rail", "🚆 By Rail (Rail Freight)")}</option>
-                    </select>
-                  </div>
                   <button
                     type="button"
                     onClick={() => setShipmentModalOpen(true)}
-                    className="h-9 px-2.5 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950/50 dark:text-blue-300 transition shrink-0 flex items-center justify-center shadow-2xs"
+                    className="h-6 w-6 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950/50 dark:text-blue-300 transition shrink-0 flex items-center justify-center shadow-2xs"
                     title={tt("open_shipment_modal", "Configure Shipment Mode (Parda)")}
                   >
-                    <Pencil className="h-3.5 w-3.5" />
+                    <Pencil className="h-3 w-3" />
                   </button>
+                </div>
+
+                <div className="relative">
+                  <select
+                    value={formData.transport_mode || "by_sea"}
+                    onChange={(e) => {
+                      const mode = e.target.value as any;
+                      setFormData((c) => ({ ...c, transport_mode: mode }));
+                      setShipmentModalOpen(true);
+                    }}
+                    className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20"
+                  >
+                    <option value="by_sea">{tt("opt_sea", "🚢 By Sea")}</option>
+                    <option value="by_road">{tt("opt_road", "🚛 By Road")}</option>
+                    <option value="by_air">{tt("opt_air", "✈️ By Air")}</option>
+                    <option value="by_rail">{tt("opt_rail", "🚆 By Rail")}</option>
+                  </select>
                 </div>
               </div>
 
               {/* Tag summary underneath dropdown */}
-              <div className="flex flex-wrap items-center gap-1.5 pt-1.5 text-xs text-slate-600 dark:text-slate-300 border-t border-slate-100 dark:border-slate-800/60">
-                <span className="font-bold text-slate-900 dark:text-white capitalize">
-                  {transportModeLabel(lang, formData.transport_mode)}
-                </span>
-                <span className="text-slate-300 dark:text-slate-600">•</span>
-                <span className="text-[11px] font-semibold text-blue-600 dark:text-blue-400">
-                  {formData.shipment_type || "FCL"}
-                </span>
-                <span className="text-slate-300 dark:text-slate-600">•</span>
-                <span className="text-[11px] text-slate-500 truncate">
+              <div className="flex items-center justify-between gap-1 pt-1.5 text-xs text-slate-600 dark:text-slate-300 border-t border-slate-100 dark:border-slate-800/60">
+                <div className="flex items-center gap-1 shrink-0">
+                  <span className="text-[10px] font-mono font-bold uppercase px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200/70 dark:border-blue-800">
+                    {formData.transport_mode ? formData.transport_mode.replace("by_", "") : "sea"}
+                  </span>
+                  <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400">
+                    {formData.shipment_type || "FCL"}
+                  </span>
+                </div>
+                <span className="text-[10.5px] text-slate-500 font-medium truncate">
                   {transportModeDescLabel(lang, formData.transport_mode)}
                 </span>
               </div>
             </div>
 
             {/* 3. Operation Type Dropdown Card */}
-            <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+            <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
               <div>
-                <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center justify-between gap-1 mb-1.5">
                   <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                    <Boxes className="h-4 w-4 text-amber-600" />
+                    <Boxes className="h-4 w-4 text-amber-600 shrink-0" />
                     <span>{tt("operation_type_label", "Operation Type")} *</span>
                   </label>
-                  <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200/70 dark:border-amber-800">
-                    {(formData as any).operation_type || (formData.movement_type === "transit" || formData.movement_type === "up_transit" ? "transit" : formData.movement_type === "re_export" ? "re_export" : "direct")}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-1.5">
-                  <div className="relative flex-1">
-                    <select
-                      value={(formData as any).operation_type || (formData.movement_type === "transit" || formData.movement_type === "up_transit" ? "transit" : formData.movement_type === "re_export" ? "re_export" : "direct")}
-                      onChange={(e) => {
-                        const op = e.target.value;
-                        setFormData((c) => ({
-                          ...c,
-                          operation_type: op,
-                          movement_type: op === "transit" ? "up_transit" : op === "re_export" ? "re_export" : "import"
-                        }));
-                        setOperationModalOpen(true);
-                      }}
-                      className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-2 focus:ring-amber-500/20"
-                    >
-                      <option value="direct">{tt("opt_direct", "Direct Import / Delivery")}</option>
-                      <option value="transit">{tt("opt_transit_bonded", "Customs Bonded Transit")}</option>
-                      <option value="re_export">{tt("opt_re_export_cross", "Re-Export (Cross Trade)")}</option>
-                      <option value="cross_stuffing">{tt("opt_cross_stuffing", "Cross-Stuffing / Terminal Hub")}</option>
-                    </select>
-                  </div>
                   <button
                     type="button"
                     onClick={() => setOperationModalOpen(true)}
-                    className="h-9 px-2.5 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300 transition shrink-0 flex items-center justify-center shadow-2xs"
+                    className="h-6 w-6 rounded-lg border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300 transition shrink-0 flex items-center justify-center shadow-2xs"
                     title={tt("open_operation_modal", "Configure Operation Type (Parda)")}
                   >
-                    <Pencil className="h-3.5 w-3.5" />
+                    <Pencil className="h-3 w-3" />
                   </button>
+                </div>
+
+                <div className="relative">
+                  <select
+                    value={(formData as any).operation_type || (formData.movement_type === "transit" || formData.movement_type === "up_transit" ? "transit" : formData.movement_type === "re_export" ? "re_export" : "direct")}
+                    onChange={(e) => {
+                      const op = e.target.value;
+                      setFormData((c) => ({
+                        ...c,
+                        operation_type: op,
+                        movement_type: op === "transit" ? "up_transit" : op === "re_export" ? "re_export" : "import"
+                      }));
+                      setOperationModalOpen(true);
+                    }}
+                    className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-2 focus:ring-amber-500/20"
+                  >
+                    <option value="direct">{tt("opt_direct", "Direct Delivery")}</option>
+                    <option value="transit">{tt("opt_transit_bonded", "Bonded Transit")}</option>
+                    <option value="re_export">{tt("opt_re_export_cross", "Re-Export")}</option>
+                    <option value="cross_stuffing">{tt("opt_cross_stuffing", "Cross-Stuffing")}</option>
+                  </select>
                 </div>
               </div>
 
               {/* Tag summary underneath dropdown */}
-              <div className="flex flex-wrap items-center gap-1.5 pt-1.5 text-xs text-slate-600 dark:text-slate-300 border-t border-slate-100 dark:border-slate-800/60">
-                <span className="font-bold text-slate-900 dark:text-white capitalize">
-                  {(formData as any).operation_type === "transit" || formData.movement_type === "transit" || formData.movement_type === "up_transit"
-                    ? "Transit Bonded"
-                    : (formData as any).operation_type === "re_export" || formData.movement_type === "re_export"
-                    ? "Re-Export"
-                    : (formData as any).operation_type === "cross_stuffing"
-                    ? "Cross-Stuffing"
-                    : "Direct Import"}
+              <div className="flex items-center justify-between gap-1 pt-1.5 text-xs text-slate-600 dark:text-slate-300 border-t border-slate-100 dark:border-slate-800/60">
+                <span className="text-[10px] font-mono font-bold uppercase px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200/70 dark:border-amber-800 shrink-0">
+                  {(formData as any).operation_type || (formData.movement_type === "transit" || formData.movement_type === "up_transit" ? "transit" : formData.movement_type === "re_export" ? "re_export" : "direct")}
                 </span>
-                <span className="text-slate-300 dark:text-slate-600">•</span>
-                <span className="text-[11px] text-slate-500 truncate">
+                <span className="text-[10.5px] text-slate-500 font-medium truncate">
                   {(formData as any).operation_type === "transit" || formData.movement_type === "transit" || formData.movement_type === "up_transit"
                     ? "Customs Bonded Corridor"
                     : (formData as any).operation_type === "re_export" || formData.movement_type === "re_export"
