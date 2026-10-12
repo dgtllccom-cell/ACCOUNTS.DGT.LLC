@@ -23,11 +23,20 @@ import {
   ClipboardList,
   Check,
   ArrowRight,
+  Printer,
+  UploadCloud,
+  Paperclip,
+  ChevronDown,
+  ChevronUp,
+  Trash2,
+  Download,
+  Phone,
+  Mail,
+  HelpCircle,
 } from "lucide-react";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
-import { VoiceDictateButton } from "@/components/voice-dictate-button";
 import { t } from "@/lib/i18n/ui";
 import { PersonPicker } from "@/components/erp/person-picker";
 import { CompanyPicker } from "@/features/companies/components/company-picker";
@@ -41,22 +50,16 @@ import { Th } from "@/components/ui/translated-th";
 /**
  * Clearing Truck Registration (Shipping & Clearing). Table: trucks.
  *
- * Table-first workflow: the Registered Trucks list — with a live Branch & User /
- * Truck / Registration / Countries summary above it — is the landing view. "New
- * Clearing Truck Registration" opens a compact entry form (left) next to a large
- * live report preview (right) that mirrors every field as it's typed. Saving
- * returns to the (now updated) list view. Same POST/PATCH/DELETE contract as
- * before against /api/erp/master-data/trucks — no new module, route, table or
- * duplicate Truck Registration system.
- *
- * Owner, Transporter and Driver all resolve through the same Customer/Person
- * master (PersonPicker) — search/select an existing person, or "+ New Owner /
- * Transporter / Driver" opens the SAME embedded Customer/Person Management form
- * (no separate Driver master), saves, and auto-selects the newly created person.
- * Registered Company resolves through the Company master (CompanyPicker). Each
- * keeps one stable id — the display name is fetched live from the master record
- * (already localized server-side), so it follows the viewer's active language
- * via the ERP's one central translation architecture.
+ * Implements the DGT Truck Developer Package specifications:
+ * - Table-first landing list with live KPI analytics
+ * - Compact registration form (left) with larger sticky Live Truck Report (right)
+ * - Owner/Customer Selection with registered account profile
+ * - Merged Truck & Vehicle details card
+ * - Transporter / Shipping Line information with Yes/No company link
+ * - Driver Information with photo upload, up to 10 repeatable contacts, and location management
+ * - Drag-and-drop session documents with View / Download
+ * - "View ⌄" dropdown menu with full Live Truck Report & section overlays
+ * - Preserves existing ERP master data selectors, APIs (/api/erp/master-data/trucks), and database contracts
  */
 
 type CustomerDetails = {
@@ -66,10 +69,14 @@ type CustomerDetails = {
   person_code?: string;
   mobile?: string;
   whatsapp?: string;
+  email?: string;
   cnic?: string;
   passport?: string;
   license_no?: string;
   address?: string;
+  country?: string;
+  state?: string;
+  city?: string;
 };
 
 type CompanyDetails = {
@@ -126,37 +133,61 @@ type TruckRow = {
   entry_serial: string | null;
 };
 
+export type ContactType = "WhatsApp" | "Mobile" | "Phone" | "Email";
+
+export type ContactEntry = {
+  id: string;
+  type: ContactType;
+  value: string;
+};
+
+export type SessionDocument = {
+  id: string;
+  name: string;
+  size: number;
+  url: string;
+  file?: File;
+};
+
 const EMPTY_FORM = {
+  hasOwner: "yes",
   ownerId: "",
   truckNumber: "",
   truckName: "",
   truckModel: "",
   chassisNumber: "",
   engineNumber: "",
+  registrationNumber: "",
+  truckType: "Trailer Truck",
+  make: "",
+  manufacturingYear: "2022",
+  color: "White",
+  fuelType: "Diesel",
+  capacity: "25",
+  registrationExpiryDate: "",
+  insuranceExpiryDate: "",
+  companyLink: "yes",
+  companyType: "transporter",
   companyId: "",
   transporterId: "",
+  driverType: "permanent",
+  temporaryDriverName: "",
   driverId: "",
   driverMobile: "",
   driverLicenseNo: "",
   driverLicenseExpiry: "",
+  addDriverLocation: "yes",
+  driverCountry: "",
+  driverState: "",
+  driverCity: "",
+  driverAddress: "",
   remarks: "",
   status: "active",
   registrationDate: new Date().toISOString().slice(0, 10),
-  registrationNumber: "",
-  truckType: "",
-  make: "",
-  manufacturingYear: "",
-  color: "",
-  fuelType: "",
-  capacity: "",
-  registrationExpiryDate: "",
-  insuranceExpiryDate: "",
 };
 
 type ViewMode = "list" | "form";
-
 const PAGE_SIZE_OPTIONS = [10, 25, 50] as const;
-
 type OptionalColumnKey = "truckName" | "model" | "company" | "transporter" | "mobile" | "branch";
 
 export function TruckRecreationWizard({
@@ -176,9 +207,32 @@ export function TruckRecreationWizard({
 
   const [view, setView] = useState<ViewMode>("list");
   const [form, setForm] = useState(EMPTY_FORM);
+  const [contacts, setContacts] = useState<ContactEntry[]>([
+    { id: "c-1", type: "WhatsApp", value: "" },
+  ]);
+  const [driverPhotoUrl, setDriverPhotoUrl] = useState<string | null>(null);
+  const [driverPhotoName, setDriverPhotoName] = useState<string | null>(null);
+  const [documents, setDocuments] = useState<SessionDocument[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ kind: "success" | "error"; text: string } | null>(null);
+
+  // Overlay modal states
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [viewModalTab, setViewModalTab] = useState<"full" | "owner" | "vehicle" | "transporter" | "driver" | "documents">("full");
+  const [viewMenuOpen, setViewMenuOpen] = useState(false);
+  const viewMenuRef = useRef<HTMLDivElement>(null);
+
+  // Card collapse state
+  const [collapsedCards, setCollapsedCards] = useState<Record<string, boolean>>({
+    owner: false,
+    vehicle: false,
+    transporter: false,
+    driver: false,
+    documents: false,
+  });
 
   const [ownerDetails, setOwnerDetails] = useState<CustomerDetails | null>(null);
   const [companyDetails, setCompanyDetails] = useState<CompanyDetails | null>(null);
@@ -206,7 +260,6 @@ export function TruckRecreationWizard({
     branch: false,
   });
 
-  // set after mount: a clock string rendered on the server and again in the browser differs by seconds (React hydration error #418)
   const [nowStr, setNowStr] = useState("");
   useEffect(() => { setNowStr(new Date().toLocaleString()); }, []);
 
@@ -223,18 +276,22 @@ export function TruckRecreationWizard({
       }
     })();
   }, []);
+
   function optionLabel(o: TruckOption): string {
     const byLang: Record<string, string | undefined> = { en: o.name_en, ur: o.name_ur, ar: o.name_ar, fa: o.name_fa, ps: o.name_ps };
     return byLang[activeLang] || o.name_en || o.code;
   }
+
   const truckTypeOptions = useMemo(() => truckOptions.filter((o) => o.category === "truck_type"), [truckOptions]);
   const makeOptions = useMemo(() => truckOptions.filter((o) => o.category === "make"), [truckOptions]);
   const colorOptions = useMemo(() => truckOptions.filter((o) => o.category === "color"), [truckOptions]);
   const fuelTypeOptions = useMemo(() => truckOptions.filter((o) => o.category === "fuel_type"), [truckOptions]);
 
+  // Close menus on outside click
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
       if (columnsRef.current && !columnsRef.current.contains(e.target as Node)) setColumnsOpen(false);
+      if (viewMenuRef.current && !viewMenuRef.current.contains(e.target as Node)) setViewMenuOpen(false);
     }
     document.addEventListener("mousedown", onDocClick);
     return () => document.removeEventListener("mousedown", onDocClick);
@@ -262,8 +319,9 @@ export function TruckRecreationWizard({
     setPage(1);
   }, [query, statusFilter, pageSize]);
 
+  // Lookup details for Owner
   useEffect(() => {
-    if (!form.ownerId) {
+    if (!form.ownerId || form.hasOwner === "no") {
       setOwnerDetails(null);
       return;
     }
@@ -280,10 +338,11 @@ export function TruckRecreationWizard({
     return () => {
       cancelled = true;
     };
-  }, [form.ownerId]);
+  }, [form.ownerId, form.hasOwner]);
 
+  // Lookup details for Company
   useEffect(() => {
-    if (!form.companyId) {
+    if (!form.companyId || form.companyLink === "no") {
       setCompanyDetails(null);
       return;
     }
@@ -300,10 +359,11 @@ export function TruckRecreationWizard({
     return () => {
       cancelled = true;
     };
-  }, [form.companyId]);
+  }, [form.companyId, form.companyLink]);
 
+  // Lookup details for Transporter
   useEffect(() => {
-    if (!form.transporterId) {
+    if (!form.transporterId || form.companyLink === "no") {
       setTransporterDetails(null);
       return;
     }
@@ -320,10 +380,11 @@ export function TruckRecreationWizard({
     return () => {
       cancelled = true;
     };
-  }, [form.transporterId]);
+  }, [form.transporterId, form.companyLink]);
 
+  // Lookup details for Driver
   useEffect(() => {
-    if (!form.driverId) {
+    if (!form.driverId || form.driverType !== "permanent") {
       setDriverDetails(null);
       return;
     }
@@ -339,7 +400,24 @@ export function TruckRecreationWizard({
             ...prev,
             driverMobile: prev.driverMobile || c.mobile || c.whatsapp || "",
             driverLicenseNo: prev.driverLicenseNo || c.license_no || "",
+            driverCountry: prev.driverCountry || c.country || "",
+            driverState: prev.driverState || c.state || "",
+            driverCity: prev.driverCity || c.city || "",
+            driverAddress: prev.driverAddress || c.address || "",
           }));
+          // Pre-populate contacts row if empty
+          if (c.mobile || c.whatsapp) {
+            setContacts((prev) => {
+              const existingFilled = prev.filter((r) => r.value.trim().length > 0);
+              if (existingFilled.length === 0) {
+                const next: ContactEntry[] = [];
+                if (c.whatsapp) next.push({ id: "c-wa", type: "WhatsApp", value: c.whatsapp });
+                if (c.mobile && c.mobile !== c.whatsapp) next.push({ id: "c-mob", type: "Mobile", value: c.mobile });
+                return next.length > 0 ? next : prev;
+              }
+              return prev;
+            });
+          }
         }
       } catch {
         /* ignore */
@@ -348,69 +426,104 @@ export function TruckRecreationWizard({
     return () => {
       cancelled = true;
     };
-  }, [form.driverId]);
+  }, [form.driverId, form.driverType]);
 
-  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4 | 5>(1);
+  function toggleCollapse(cardKey: string) {
+    setCollapsedCards((prev) => ({ ...prev, [cardKey]: !prev[cardKey] }));
+  }
 
-  function canGoNext(step: number): boolean {
-    if (step === 1) {
-      if (!form.ownerId) {
-        setMessage({ kind: "error", text: tt("trk.required_fields_error", "Please select a Truck Owner to continue.") });
-        return false;
+  function scrollToSection(cardId: string) {
+    if (typeof document !== "undefined") {
+      const el = document.getElementById(cardId);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     }
-    if (step === 2) {
-      if (!form.truckNumber.trim() || !form.chassisNumber.trim() || !form.engineNumber.trim()) {
-        setMessage({ kind: "error", text: tt("trk.required_fields_error", "Truck Number, Chassis No and Engine No are required.") });
-        return false;
+  }
+
+  // Contact management (up to 10 rows)
+  function handleAddContact() {
+    if (contacts.length >= 10) return;
+    setContacts((prev) => [...prev, { id: `c-${Date.now()}-${prev.length}`, type: "WhatsApp", value: "" }]);
+  }
+
+  function handleRemoveContact(index: number) {
+    if (contacts.length <= 1) {
+      setContacts([{ id: "c-1", type: "WhatsApp", value: "" }]);
+      return;
+    }
+    setContacts((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function handleContactTypeChange(index: number, type: ContactType) {
+    setContacts((prev) =>
+      prev.map((c, i) => (i === index ? { ...c, type } : c))
+    );
+  }
+
+  function handleContactValueChange(index: number, value: string) {
+    setContacts((prev) =>
+      prev.map((c, i) => (i === index ? { ...c, value } : c))
+    );
+  }
+
+  // Driver photo upload
+  function handleDriverPhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!["image/jpeg", "image/png"].includes(file.type) || file.size > 5 * 1024 * 1024) {
+      alert("Please upload a JPG or PNG image under 5 MB.");
+      e.target.value = "";
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    setDriverPhotoUrl(url);
+    setDriverPhotoName(file.name);
+    e.target.value = "";
+  }
+
+  // Document upload
+  function handleAddDocuments(files: FileList | File[]) {
+    const acceptedTypes = ["application/pdf", "image/jpeg", "image/png"];
+    const added: SessionDocument[] = [];
+    Array.from(files).forEach((f) => {
+      if (acceptedTypes.includes(f.type) && f.size <= 10 * 1024 * 1024) {
+        added.push({
+          id: `doc-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          name: f.name,
+          size: f.size,
+          url: URL.createObjectURL(f),
+          file: f,
+        });
       }
-    }
-    // Step 3: Company is optional, can always proceed!
-    // Step 4: Transporter is optional, can always proceed!
-    setMessage(null);
-    return true;
-  }
-
-  function handleNext() {
-    if (!canGoNext(currentStep)) return;
-    if (currentStep < 5) {
-      setCurrentStep((p) => ((p + 1) as any));
+    });
+    if (added.length > 0) {
+      setDocuments((prev) => [...prev, ...added]);
     }
   }
 
-  function handlePrev() {
-    setMessage(null);
-    if (currentStep > 1) {
-      setCurrentStep((p) => ((p - 1) as any));
-    }
-  }
-
-  function canGoToStep(targetStep: 1 | 2 | 3 | 4 | 5): boolean {
-    if (targetStep <= currentStep) {
-      setMessage(null);
-      return true;
-    }
-    for (let s = currentStep; s < targetStep; s++) {
-      if (!canGoNext(s)) return false;
-    }
-    setMessage(null);
-    return true;
+  function handleRemoveDocument(docId: string) {
+    setDocuments((prev) => prev.filter((d) => d.id !== docId));
   }
 
   function resetForm() {
     setForm(EMPTY_FORM);
+    setContacts([{ id: "c-1", type: "WhatsApp", value: "" }]);
+    setDriverPhotoUrl(null);
+    setDriverPhotoName(null);
+    setDocuments([]);
     setEditingId(null);
     setOwnerDetails(null);
     setCompanyDetails(null);
     setTransporterDetails(null);
     setDriverDetails(null);
-    setCurrentStep(1);
   }
 
   function openNewRegistration() {
     resetForm();
     setMessage(null);
     setView("form");
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function backToList() {
@@ -421,36 +534,63 @@ export function TruckRecreationWizard({
 
   function startEdit(row: TruckRow) {
     setEditingId(row.id);
-    setCurrentStep(1);
     setForm({
+      hasOwner: row.owner_person_id ? "yes" : "no",
       ownerId: row.owner_person_id || "",
       truckNumber: row.truck_number || "",
       truckName: row.truck_name || "",
       truckModel: row.model || "",
       chassisNumber: row.chassis_number || "",
       engineNumber: row.engine_number || "",
+      companyLink: row.transport_company_id || row.transporter_person_id ? "yes" : "no",
+      companyType: "transporter",
       companyId: row.transport_company_id || "",
       transporterId: row.transporter_person_id || "",
+      driverType: row.driver_person_id ? "permanent" : "temporary",
+      temporaryDriverName: row.driver_display_name || "",
       driverId: row.driver_person_id || "",
       driverMobile: row.driver_mobile || "",
       driverLicenseNo: row.driver_cnic_passport || "",
       driverLicenseExpiry: row.driver_docs_expiry_date || "",
+      addDriverLocation: "yes",
+      driverCountry: "",
+      driverState: "",
+      driverCity: "",
+      driverAddress: "",
       remarks: row.notes || "",
       status: row.status || "active",
       registrationDate: (row.created_at || "").slice(0, 10) || new Date().toISOString().slice(0, 10),
       registrationNumber: row.registration_number || "",
-      truckType: row.truck_type || "",
+      truckType: row.truck_type || "Trailer Truck",
       make: row.make || "",
-      manufacturingYear: row.manufacturing_year ? String(row.manufacturing_year) : "",
-      color: row.color || "",
-      fuelType: row.fuel_type || "",
-      capacity: row.capacity || "",
+      manufacturingYear: row.manufacturing_year ? String(row.manufacturing_year) : "2022",
+      color: row.color || "White",
+      fuelType: row.fuel_type || "Diesel",
+      capacity: row.capacity || "25",
       registrationExpiryDate: row.registration_expiry_date || "",
       insuranceExpiryDate: row.insurance_expiry_date || "",
     });
+    if (row.driver_mobile) {
+      setContacts([{ id: "c-1", type: "WhatsApp", value: row.driver_mobile }]);
+    }
     setMessage(null);
     setView("form");
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  // Save Draft to LocalStorage
+  function handleSaveDraft() {
+    try {
+      const draft = { form, contacts };
+      localStorage.setItem("dgt-truck-registration-draft-v1", JSON.stringify(draft));
+      setMessage({
+        kind: "success",
+        text: tt("trk.success_msg", "Draft successfully saved in this browser! Uploaded files remain in this session."),
+      });
+      setTimeout(() => setMessage(null), 4000);
+    } catch {
+      setMessage({ kind: "error", text: tt("common.error", "Something went wrong.") });
+    }
   }
 
   async function handleDelete(id: string) {
@@ -524,16 +664,6 @@ export function TruckRecreationWizard({
           rows: [{ label: tt("trk.remarks", "Remarks (Optional)"), value: row.notes }],
           fullWidth: true,
         },
-        {
-          title: tt("common.serial_numbers", "Serial Numbers"),
-          rows: [
-            { label: tt("trk.serial_global", "Global / Super Admin Serial"), value: row.super_admin_serial },
-            { label: tt("trk.serial_country", "Country Serial"), value: row.country_serial },
-            { label: tt("trk.serial_branch", "Main / Parent Branch Serial"), value: row.branch_serial },
-            { label: tt("trk.serial_city", "Branch / City Branch Serial"), value: row.entry_serial },
-          ],
-          fullWidth: true,
-        },
       ],
       reportIdPrefix: "TRUCK",
       reportIdValue: row.entry_serial || row.truck_number,
@@ -543,32 +673,35 @@ export function TruckRecreationWizard({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (currentStep !== 5) {
-      handleNext();
+    if (!form.truckNumber.trim() || !form.chassisNumber.trim() || !form.engineNumber.trim()) {
+      setMessage({ kind: "error", text: tt("trk.required_fields_error", "Please fill mandatory fields: Truck Number, Chassis No, Engine No.") });
       return;
     }
-    if (!form.ownerId || !form.truckNumber.trim() || !form.chassisNumber.trim() || !form.engineNumber.trim() || !form.driverId) {
-      setMessage({ kind: "error", text: tt("trk.required_fields_error", "Please fill all mandatory fields marked with *.") });
-      return;
-    }
+
     setSaving(true);
     setMessage(null);
     try {
+      const firstValidContact = contacts.find((c) => c.value.trim().length > 0)?.value.trim() || form.driverMobile.trim() || null;
+      const driverName =
+        form.driverType === "permanent"
+          ? driverDetails?.customer_name || null
+          : form.temporaryDriverName.trim() || null;
+
       const payload = {
         truck_number: form.truckNumber.trim(),
         truck_name: form.truckName.trim() || null,
         model: form.truckModel.trim() || null,
         chassis_number: form.chassisNumber.trim(),
         engine_number: form.engineNumber.trim(),
-        owner_person_id: form.ownerId,
-        owner_name: ownerDetails?.customer_name || null,
-        owner_mobile: ownerDetails?.mobile || ownerDetails?.whatsapp || null,
-        transport_company_id: form.companyId || null,
-        transport_company: companyDetails?.name || null,
-        transporter_person_id: form.transporterId || null,
-        driver_person_id: form.driverId,
-        driver_name: driverDetails?.customer_name || null,
-        driver_mobile: form.driverMobile.trim() || null,
+        owner_person_id: form.hasOwner === "yes" && form.ownerId ? form.ownerId : null,
+        owner_name: form.hasOwner === "yes" ? ownerDetails?.customer_name || null : null,
+        owner_mobile: form.hasOwner === "yes" ? ownerDetails?.mobile || ownerDetails?.whatsapp || null : null,
+        transport_company_id: form.companyLink === "yes" && form.companyId ? form.companyId : null,
+        transport_company: form.companyLink === "yes" ? companyDetails?.name || null : null,
+        transporter_person_id: form.companyLink === "yes" && form.transporterId ? form.transporterId : null,
+        driver_person_id: form.driverType === "permanent" && form.driverId ? form.driverId : null,
+        driver_name: driverName,
+        driver_mobile: firstValidContact,
         driver_cnic_passport: form.driverLicenseNo.trim() || null,
         driver_docs_expiry_date: form.driverLicenseExpiry || null,
         notes: form.remarks.trim() || null,
@@ -596,12 +729,19 @@ export function TruckRecreationWizard({
       }
 
       const wasEditing = Boolean(editingId);
+      try {
+        localStorage.removeItem("dgt-truck-registration-draft-v1");
+      } catch {
+        /* ignore */
+      }
       resetForm();
       setView("list");
       await loadList();
       setMessage({
         kind: "success",
-        text: wasEditing ? tt("trk.updated_success_msg", "Truck Record Successfully Updated!") : tt("trk.success_msg", "Truck Record Successfully Created!"),
+        text: wasEditing
+          ? tt("trk.updated_success_msg", "Truck Record Successfully Updated!")
+          : tt("trk.success_msg", "Truck Record Successfully Created!"),
       });
       setTimeout(() => setMessage(null), 4000);
     } catch (err: any) {
@@ -628,7 +768,6 @@ export function TruckRecreationWizard({
   const pageStart = (clampedPage - 1) * pageSize;
   const paginatedRows = filteredRows.slice(pageStart, pageStart + pageSize);
 
-  // ── KPI / summary computations — real, live, derived from the same fetched rows ──
   const totalTrucks = rows.length;
   const activeTrucksCount = rows.filter((r) => r.status === "active").length;
   const registeredOwnersCount = new Set(rows.map((r) => r.owner_person_id).filter(Boolean)).size;
@@ -669,955 +808,1270 @@ export function TruckRecreationWizard({
       ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
       : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300";
 
-  const ReportSection = ({
+  // Reusable Report Row
+  const LiveReportRow = ({ label, value }: { label: string; value: string | null | undefined }) => (
+    <div className="grid grid-cols-[44%_56%] items-baseline border-b border-slate-100 py-1.5 text-[11px] last:border-0 dark:border-slate-800">
+      <span className="text-slate-500 font-medium">{label}</span>
+      <b className="text-slate-800 dark:text-slate-100 font-semibold break-all text-end sm:text-start">{value || "—"}</b>
+    </div>
+  );
+
+  // Reusable Report Section
+  const LiveReportSection = ({
     title,
     icon: Icon,
-    rows: sectionRows,
+    children,
   }: {
     title: string;
     icon: any;
-    rows: Array<{ label: string; value: string | null | undefined }>;
+    children: React.ReactNode;
   }) => (
-    <div className="border-b border-slate-100 py-3 last:border-0 last:pb-0 dark:border-slate-800">
-      <div className="mb-2 flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wide text-blue-700 dark:text-blue-300">
-        <Icon className="h-3.5 w-3.5" /> {title}
+    <div className="mb-3 rounded-xl border border-slate-100 bg-white p-3 shadow-2xs dark:border-slate-800/80 dark:bg-slate-900">
+      <div className="mb-2 flex items-center gap-1.5 rounded-lg bg-blue-50/70 px-2.5 py-1 text-[10.5px] font-black uppercase tracking-wider text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+        <Icon className="h-3.5 w-3.5 shrink-0" />
+        <span>{title}</span>
       </div>
-      <dl className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-        {sectionRows.map((r) => (
-          <div
-            key={r.label}
-            className="flex items-baseline justify-between gap-2 rounded-lg bg-slate-50/70 px-2.5 py-1.5 dark:bg-slate-800/40"
-          >
-            <dt className="shrink-0 text-[11px] font-semibold text-slate-500 dark:text-slate-400">{r.label}</dt>
-            <dd className="truncate text-end text-xs font-bold text-slate-800 dark:text-slate-100">{r.value || "-"}</dd>
+      <div className="space-y-0.5 px-1">{children}</div>
+    </div>
+  );
+
+  // Full Live Report Content
+  const fullLiveReportContent = (
+    <div className="space-y-3">
+      {/* Dark Truck Banner */}
+      <div className="rounded-2xl bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 p-4 text-white shadow-md">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-[10px] font-bold tracking-widest text-blue-300 uppercase">
+              {tt("trk.col_truck_no", "Truck No.")}
+            </div>
+            <div className="text-2xl font-black font-mono tracking-tight text-white mt-0.5">
+              {form.truckNumber || "New Registration"}
+            </div>
           </div>
-        ))}
-      </dl>
-    </div>
-  );
-
-  const KpiCard = ({
-    title,
-    icon: Icon,
-    items,
-  }: {
-    title: string;
-    icon: any;
-    items: Array<{ label: string; value: string | number }>;
-  }) => (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-      <div className="mb-3 flex items-center gap-2 text-xs font-black text-blue-700 dark:text-blue-300">
-        <Icon className="h-4 w-4" /> {title}
-      </div>
-      <dl className="space-y-2">
-        {items.map((it) => (
-          <div key={it.label} className="flex items-center justify-between gap-2">
-            <dt className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">{it.label}</dt>
-            <dd className="text-sm font-black text-slate-900 dark:text-white">{it.value}</dd>
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600/30 border border-blue-400/30 text-blue-200">
+            <TruckIcon className="h-6 w-6" />
           </div>
-        ))}
-      </dl>
-    </div>
-  );
-
-  const breadcrumb = (
-    <nav className="flex flex-wrap items-center gap-1.5 px-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-      <a href="/dashboard" className="hover:text-blue-600 dark:hover:text-blue-400">
-        {tt("nav.dashboard", "Dashboard")}
-      </a>
-      <span className="text-slate-300 dark:text-slate-700">›</span>
-      <span>{tt("nav.shipping_clearing", "Shipping & Clearing")}</span>
-      <span className="text-slate-300 dark:text-slate-700">›</span>
-      <span className="font-black text-slate-700 dark:text-slate-200">{tt("trk.registered_truck_title", "Clearing Truck Registration")}</span>
-    </nav>
-  );
-
-  const listHeader = (
-    <div className="flex flex-col gap-3 rounded-3xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex min-w-0 items-center gap-3">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-500/20">
-          <TruckIcon className="h-6 w-6" />
-        </div>
-        <div className="min-w-0">
-          <h1 className="truncate text-xl font-black tracking-tight text-slate-900 dark:text-white">
-            {tt("trk.registered_truck_title", "Clearing Truck Registration")}
-          </h1>
-          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-            {tt("trk.module_subtitle", "Truck master, owner, transporter, driver and reporting.")}
-          </p>
         </div>
       </div>
-      <button
-        type="button"
-        onClick={openNewRegistration}
-        className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-md shadow-blue-600/25 hover:bg-blue-700"
-      >
-        <Plus className="h-4 w-4" /> {tt("trk.new_chat_registration", "New Clearing Truck Registration")}
-      </button>
-    </div>
-  );
 
-  const formHeader = (
-    <div className="flex flex-col gap-3 rounded-3xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex min-w-0 items-center gap-3">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-500/20">
-          <TruckIcon className="h-6 w-6" />
-        </div>
-        <div className="min-w-0">
-          <h1 className="truncate text-xl font-black tracking-tight text-slate-900 dark:text-white">
-            {editingId ? tt("trk.form_title_edit", "Edit Clearing Truck Registration") : tt("trk.new_truck_registration", "New Clearing Truck Registration")}
-          </h1>
-          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-            {tt("trk.module_subtitle", "Truck master, owner, transporter, driver and reporting.")}
-          </p>
-        </div>
-      </div>
-      <button
-        type="button"
-        onClick={backToList}
-        className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
-      >
-        <ArrowLeft className="h-3.5 w-3.5 rtl:rotate-180" /> {tt("trk.back_to_list", "Back to List")}
-      </button>
-    </div>
-  );
-
-  const messageBanner = message && (
-    <div
-      className={`rounded-2xl border p-3 text-sm font-bold ${
-        message.kind === "success"
-          ? "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-200"
-          : "border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-900 dark:bg-rose-950/60 dark:text-rose-200"
-      }`}
-    >
-      {message.text}
-    </div>
-  );
-
-  const kpiCards = (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <KpiCard
-        title={tt("trk.section_branch_user", "1. Branch & User Details")}
-        icon={Users}
-        items={[
-          { label: tt("common.country", "Country"), value: scopeCountryLabel },
-          { label: tt("common.branch_name", "Branch Name"), value: scopeBranchLabel },
-          { label: tt("common.user_name", "User Name"), value: userName || "—" },
-          { label: tt("common.date_time", "Date & Time"), value: nowStr },
-        ]}
-      />
-      <KpiCard
-        title={tt("trk.section_truck_summary", "2. Truck Summary")}
-        icon={TruckIcon}
-        items={[
-          { label: tt("trk.kpi_total_trucks", "Total Trucks"), value: totalTrucks },
-          { label: tt("trk.kpi_active_trucks", "Active Trucks"), value: activeTrucksCount },
-          { label: tt("trk.kpi_registered_owners", "Registered Owners"), value: registeredOwnersCount },
-          { label: tt("trk.kpi_assigned_drivers", "Assigned Drivers"), value: assignedDriversCount },
-        ]}
-      />
-      <KpiCard
-        title={tt("trk.section_registration_summary", "3. Registration Summary")}
-        icon={ClipboardList}
-        items={[
-          { label: tt("common.total_records", "Total Records"), value: totalTrucks },
-          { label: tt("common.active", "Active"), value: activeTrucksCount },
-          { label: tt("common.pending", "Pending"), value: pendingCount },
-          { label: tt("common.inactive", "Inactive"), value: inactiveCount },
-        ]}
-      />
-      <KpiCard
-        title={tt("trk.section_countries_report", "4. All Countries Report")}
-        icon={Globe}
-        items={
-          countryBreakdown.length
-            ? countryBreakdown.map((c) => ({ label: c.name, value: `${c.count} ${tt("trk.trucks_count_suffix", "trucks")}` }))
-            : [{ label: tt("common.all_countries", "All Countries"), value: 0 }]
-        }
-      />
-    </div>
-  );
-
-  const OPTIONAL_COLUMN_DEFS: Array<{ key: OptionalColumnKey; label: string }> = [
-    { key: "truckName", label: tt("trk.col_truck_name", "Truck Name") },
-    { key: "model", label: tt("trk.col_model", "Model") },
-    { key: "company", label: tt("trk.col_company", "Company") },
-    { key: "transporter", label: tt("trk.col_transporter", "Transporter") },
-    { key: "mobile", label: tt("common.mobile", "Mobile") },
-    { key: "branch", label: tt("trk.col_branch", "Branch") },
-  ];
-
-  const columnsToggle = (
-    <div className="relative" ref={columnsRef}>
-      <button
-        type="button"
-        onClick={() => setColumnsOpen((v) => !v)}
-        className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300"
-      >
-        <ColumnsIcon className="h-3.5 w-3.5" /> {tt("common.columns", "Columns")}
-      </button>
-      {columnsOpen && (
-        <div className="absolute end-0 z-20 mt-1.5 w-48 rounded-xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-800 dark:bg-slate-900">
-          {OPTIONAL_COLUMN_DEFS.map((col) => (
-            <label
-              key={col.key}
-              className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
-            >
-              <input
-                type="checkbox"
-                checked={visibleCols[col.key]}
-                onChange={(e) => setVisibleCols((prev) => ({ ...prev, [col.key]: e.target.checked }))}
-                className="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-              />
-              {col.label}
-            </label>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-
-  const paginationBar = (
-    <div className="flex flex-col gap-2 border-t border-slate-100 px-1 pt-3 text-xs font-semibold text-slate-500 dark:border-slate-800 dark:text-slate-400 sm:flex-row sm:items-center sm:justify-between">
-      <div>
-        {filteredRows.length === 0
-          ? tt("trk.no_trucks_found", "No registered trucks found.")
-          : tt("trk.showing_records", "Showing {from} to {to} of {total} records")
-              .replace("{from}", String(pageStart + 1))
-              .replace("{to}", String(Math.min(pageStart + pageSize, filteredRows.length)))
-              .replace("{total}", String(filteredRows.length))}
-      </div>
-      <div className="flex items-center gap-3">
-        <select
-          value={pageSize}
-          onChange={(e) => setPageSize(Number(e.target.value))}
-          className="h-7 rounded-lg border border-slate-200 bg-white px-1.5 text-[11px] font-bold outline-none dark:border-slate-700 dark:bg-slate-950"
-        >
-          {PAGE_SIZE_OPTIONS.map((n) => (
-            <option key={n} value={n}>
-              {n} {tt("trk.per_page_suffix", "/ page")}
-            </option>
-          ))}
-        </select>
-        <div className="flex items-center gap-1">
-          <button
-            type="button"
-            disabled={clampedPage <= 1}
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            className="grid h-7 w-7 place-items-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 disabled:opacity-40 dark:border-slate-700 dark:bg-slate-950"
-          >
-            <ChevronLeft className="h-3.5 w-3.5 rtl:rotate-180" />
-          </button>
-          <span className="min-w-[2.5rem] text-center font-black text-slate-700 dark:text-slate-200">
-            {clampedPage} / {totalPages}
-          </span>
-          <button
-            type="button"
-            disabled={clampedPage >= totalPages}
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            className="grid h-7 w-7 place-items-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 disabled:opacity-40 dark:border-slate-700 dark:bg-slate-950"
-          >
-            <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" />
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
-  const trucksTable = (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-      <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="flex items-center gap-2 text-sm font-black text-slate-800 dark:text-slate-100">
-            <ListChecks className="h-4 w-4 text-blue-600" /> {tt("trk.list_title", "Registered Trucks")}
-          </h2>
-          <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-            {tt("trk.list_subtitle", "All registered trucks and master records")}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative">
-            <Search className="pointer-events-none absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={tt("trk.search_trucks_ph", "Search trucks...")}
-              className="h-8 w-56 rounded-lg border border-slate-200 bg-white ps-8 pe-3 text-xs font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
-            />
+      {/* 1. Owner / Customer Information */}
+      <LiveReportSection title={`1. ${tt("trk.section_owner", "Truck Owner Information")}`} icon={User}>
+        {form.hasOwner === "no" ? (
+          <div className="p-2 text-xs text-slate-500 italic">
+            No owner is linked to this truck. Direct registration.
           </div>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs font-semibold outline-none dark:border-slate-700 dark:bg-slate-950"
-          >
-            <option value="all">{tt("common.filter", "Filter")}: {tt("common.status", "Status")}</option>
-            <option value="active">{tt("common.active", "Active")}</option>
-            <option value="inactive">{tt("common.inactive", "Inactive")}</option>
-          </select>
-          {columnsToggle}
-          <ReportActions
-            title={tt("trk.list_title", "Registered Trucks")}
-            lang={activeLang}
-            rows={filteredRows.map((r) => ({
-              owner: r.owner_display_name || "-",
-              truck_no: r.truck_number,
-              truck_name: r.truck_name || "-",
-              model: r.model || "-",
-              company: r.company_display_name || "-",
-              transporter: r.transporter_display_name || "-",
-              driver: r.driver_display_name || "-",
-              mobile: r.driver_mobile || "-",
-              status: r.status,
-              reg_date: (r.created_at || "").slice(0, 10),
-              branch: r.branch_display_name || "-",
-              serial: r.entry_serial || "-",
-            }))}
-            columns={[
-              { key: "owner", label: tt("trk.col_owner", "Owner Name") },
-              { key: "truck_no", label: tt("trk.col_truck_no", "Truck No.") },
-              { key: "truck_name", label: tt("trk.col_truck_name", "Truck Name") },
-              { key: "model", label: tt("trk.col_model", "Model") },
-              { key: "company", label: tt("trk.col_company", "Company") },
-              { key: "transporter", label: tt("trk.col_transporter", "Transporter") },
-              { key: "driver", label: tt("trk.col_driver", "Driver") },
-              { key: "mobile", label: tt("common.mobile", "Mobile") },
-              { key: "status", label: tt("common.status", "Status") },
-              { key: "reg_date", label: tt("trk.col_reg_date", "Reg. Date") },
-              { key: "branch", label: tt("trk.col_branch", "Branch") },
-              { key: "serial", label: tt("trk.col_serials", "Serials") },
-            ]}
-          />
-        </div>
-      </div>
+        ) : (
+          <>
+            <LiveReportRow label={tt("common.name", "Name")} value={ownerDetails?.customer_name || "—"} />
+            <LiveReportRow label={tt("trk.owner_code_label", "Owner Code")} value={ownerDetails?.person_code || ownerDetails?.code || "—"} />
+            <LiveReportRow label={tt("common.mobile", "Mobile")} value={ownerDetails?.mobile || "—"} />
+            <LiveReportRow label="WhatsApp" value={ownerDetails?.whatsapp || "—"} />
+            <LiveReportRow label={tt("common.address", "Address")} value={ownerDetails?.address || "—"} />
+          </>
+        )}
+      </LiveReportSection>
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-start text-xs">
-          <thead className="border-b border-slate-200 text-[10px] font-black uppercase text-slate-500 dark:border-slate-800 dark:text-slate-400">
-            <tr>
-              <Th className="px-2 py-2 text-start">#</Th>
-              <Th className="px-2 py-2 text-start">{tt("trk.col_truck_no", "Truck No.")}</Th>
-              <Th className="px-2 py-2 text-start">{tt("trk.col_owner", "Owner Name")}</Th>
-              {visibleCols.truckName && <Th className="px-2 py-2 text-start">{tt("trk.col_truck_name", "Truck Name")}</Th>}
-              {visibleCols.model && <Th className="px-2 py-2 text-start">{tt("trk.col_model", "Model")}</Th>}
-              {visibleCols.company && <Th className="px-2 py-2 text-start">{tt("trk.col_company", "Company")}</Th>}
-              {visibleCols.transporter && <Th className="px-2 py-2 text-start">{tt("trk.col_transporter", "Transporter")}</Th>}
-              <Th className="px-2 py-2 text-start">{tt("trk.col_driver", "Driver")}</Th>
-              {visibleCols.mobile && <Th className="px-2 py-2 text-start">{tt("common.mobile", "Mobile")}</Th>}
-              {visibleCols.branch && <Th className="px-2 py-2 text-start">{tt("trk.col_branch", "Branch")}</Th>}
-              <Th className="px-2 py-2 text-start">{tt("common.status", "Status")}</Th>
-              <Th className="px-2 py-2 text-end">{tt("common.actions", "Actions")}</Th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-            {loadingList ? (
-              <tr>
-                <td colSpan={12} className="px-4 py-8 text-center text-slate-400">
-                  <Loader2 className="mx-auto h-5 w-5 animate-spin" />
-                </td>
-              </tr>
-            ) : paginatedRows.length === 0 ? (
-              <tr>
-                <td colSpan={12} className="px-4 py-8 text-center text-slate-400">
-                  {tt("trk.no_trucks_found", "No registered trucks found.")}
-                </td>
-              </tr>
+      {/* 2. Truck & Vehicle Details */}
+      <LiveReportSection title={`2. ${tt("trk.section_truck_details", "Truck Details")}`} icon={TruckIcon}>
+        <LiveReportRow label={tt("trk.truck_no", "Truck Number")} value={form.truckNumber} />
+        <LiveReportRow label={tt("trk.chassis_no", "Chassis No")} value={form.chassisNumber} />
+        <LiveReportRow label={tt("trk.engine_no", "Engine No")} value={form.engineNumber} />
+        <LiveReportRow label={tt("trk.reg_no", "Registration No")} value={form.registrationNumber} />
+        <LiveReportRow label={tt("trk.truck_type", "Truck Type")} value={form.truckType} />
+        <LiveReportRow label={tt("trk.year", "Year")} value={form.manufacturingYear} />
+        <LiveReportRow label={tt("trk.color", "Color")} value={form.color} />
+        <LiveReportRow label={tt("trk.fuel_type", "Fuel Type")} value={form.fuelType} />
+        <LiveReportRow label={tt("trk.capacity", "Capacity (Tons)")} value={form.capacity} />
+        <LiveReportRow label={tt("tr.reg_expiry", "Reg. Expiry")} value={form.registrationExpiryDate} />
+        <LiveReportRow label={tt("tr.ins_expiry", "Insurance Expiry")} value={form.insuranceExpiryDate} />
+      </LiveReportSection>
+
+      {/* 3. Transporter / Shipping Line */}
+      <LiveReportSection title={`3. ${tt("trk.section_transporter", "Transporter Information")}`} icon={Building2}>
+        {form.companyLink === "no" ? (
+          <div className="p-2 text-xs text-slate-500 italic">
+            No transporter or shipping-line company is linked.
+          </div>
+        ) : (
+          <>
+            <LiveReportRow label={tt("trk.company_name_label", "Company Name")} value={companyDetails?.name || "—"} />
+            <LiveReportRow label={tt("trk.company_code_label", "Company Code")} value={companyDetails?.company_code || "—"} />
+            <LiveReportRow label={tt("common.phone", "Phone")} value={companyPhone(companyDetails) || "—"} />
+            <LiveReportRow label={tt("common.city", "City")} value={[companyDetails?.city_name, companyDetails?.country_name].filter(Boolean).join(", ") || "—"} />
+            <LiveReportRow label={tt("common.address", "Address")} value={companyDetails?.address || "—"} />
+          </>
+        )}
+      </LiveReportSection>
+
+      {/* 4. Driver Information */}
+      <LiveReportSection title={`4. ${tt("trk.section_driver", "Driver Information")}`} icon={UserCheck}>
+        {/* Driver Photo Preview Card */}
+        <div className="my-2 flex items-center gap-3 rounded-xl border border-blue-100 bg-blue-50/50 p-2.5 dark:border-blue-900/40 dark:bg-blue-950/20">
+          <div className="relative h-14 w-12 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-2xs dark:border-slate-700 dark:bg-slate-800 flex items-center justify-center">
+            {driverPhotoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={driverPhotoUrl} alt="Driver" className="h-full w-full object-cover" />
             ) : (
-              paginatedRows.map((r, idx) => (
-                <tr key={r.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
-                  <td className="px-2 py-2 font-semibold text-slate-500">{pageStart + idx + 1}</td>
-                  <td className="px-2 py-2 font-mono font-bold">{r.truck_number}</td>
-                  <td className="px-2 py-2 font-bold text-slate-800 dark:text-slate-100">{r.owner_display_name || "-"}</td>
-                  {visibleCols.truckName && <td className="px-2 py-2">{r.truck_name || "-"}</td>}
-                  {visibleCols.model && <td className="px-2 py-2">{r.model || "-"}</td>}
-                  {visibleCols.company && <td className="px-2 py-2">{r.company_display_name || "-"}</td>}
-                  {visibleCols.transporter && <td className="px-2 py-2">{r.transporter_display_name || "-"}</td>}
-                  <td className="px-2 py-2">{r.driver_display_name || "-"}</td>
-                  {visibleCols.mobile && (
-                    <td className="px-2 py-2 font-mono" dir="ltr">
-                      {r.driver_mobile || "-"}
-                    </td>
-                  )}
-                  {visibleCols.branch && <td className="px-2 py-2">{r.branch_display_name || "-"}</td>}
-                  <td className="px-2 py-2">
-                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${statusBadgeClasses(r.status)}`}>
-                      {statusLabel(r.status)}
-                    </span>
-                  </td>
-                  <td className="px-2 py-2">
-                    <div className="flex justify-end">
-                      <UnifiedActionMenu
-                        onView={() => handleView(r)}
-                        onEdit={() => startEdit(r)}
-                        onPrint={() => handleView(r, { autoPrint: true })}
-                        onDelete={() => handleDelete(r.id)}
-                      />
-                    </div>
-                  </td>
-                </tr>
-              ))
+              <User className="h-6 w-6 text-slate-400" />
             )}
-          </tbody>
-        </table>
-      </div>
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-xs font-black text-slate-900 dark:text-white">
+              {form.driverType === "permanent"
+                ? driverDetails?.customer_name || tt("trk.driver_name_label", "Driver Name")
+                : form.temporaryDriverName || "Temporary Driver"}
+            </div>
+            <div className="mt-0.5 inline-block rounded-md bg-blue-100 px-1.5 py-0.5 text-[9px] font-bold text-blue-700 dark:bg-blue-900 dark:text-blue-200">
+              {form.driverType === "permanent" ? "Permanent Driver" : "Temporary Driver"}
+            </div>
+          </div>
+        </div>
 
-      {paginationBar}
+        <LiveReportRow label={tt("trk.license_no", "Driving License Number")} value={form.driverLicenseNo} />
+        <LiveReportRow label={tt("trk.licence_expiry_label", "Licence Expiry Date")} value={form.driverLicenseExpiry} />
+        <div className="grid grid-cols-[44%_56%] items-baseline border-b border-slate-100 py-1.5 text-[11px] last:border-0 dark:border-slate-800">
+          <span className="text-slate-500 font-medium">{tt("common.status", "Status")}</span>
+          <span className="text-end sm:text-start">
+            <span className={`inline-block rounded-md px-2 py-0.5 text-[10px] font-bold ${statusBadgeClasses(form.status)}`}>
+              {statusLabel(form.status)}
+            </span>
+          </span>
+        </div>
+
+        {/* Contacts */}
+        {contacts.filter((c) => c.value.trim().length > 0).map((c, idx) => (
+          <LiveReportRow key={c.id || idx} label={c.type} value={c.value} />
+        ))}
+
+        {form.addDriverLocation === "yes" && (
+          <LiveReportRow
+            label="Location"
+            value={[form.driverCountry, form.driverState, form.driverCity, form.driverAddress].filter(Boolean).join(", ") || "—"}
+          />
+        )}
+      </LiveReportSection>
+
+      {/* 5. Documents */}
+      <LiveReportSection title="5. Documents" icon={FileText}>
+        {documents.length === 0 ? (
+          <div className="p-2 text-center text-xs text-slate-400">
+            No documents uploaded yet.
+          </div>
+        ) : (
+          <div className="space-y-1.5 pt-1">
+            {documents.map((d) => (
+              <div key={d.id} className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50/70 p-2 text-xs dark:border-slate-800 dark:bg-slate-800/40">
+                <span className="truncate font-medium text-slate-700 dark:text-slate-300 max-w-[150px]">{d.name}</span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <a href={d.url} target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold text-blue-600 hover:underline">
+                    View
+                  </a>
+                  <a href={d.url} download={d.name} className="text-[11px] font-bold text-blue-600 hover:underline">
+                    Download
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </LiveReportSection>
     </div>
   );
 
   return (
-    <div dir={dir} className="space-y-4">
-      {view === "list" ? (
+    <div className="space-y-5" dir={dir}>
+      {/* LIST VIEW */}
+      {view === "list" && (
         <>
-          {listHeader}
-          {breadcrumb}
-          {messageBanner}
-          {kpiCards}
-          {trucksTable}
-        </>
-      ) : (
-        <>
-          {formHeader}
-          {messageBanner}
+          {/* Breadcrumb */}
+          <nav className="flex flex-wrap items-center gap-1.5 px-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+            <a href="/dashboard" className="hover:text-blue-600 dark:hover:text-blue-400">
+              {tt("nav.dashboard", "Dashboard")}
+            </a>
+            <span className="text-slate-300 dark:text-slate-700">›</span>
+            <span>{tt("nav.shipping_clearing", "Shipping & Clearing")}</span>
+            <span className="text-slate-300 dark:text-slate-700">›</span>
+            <span className="font-black text-slate-700 dark:text-slate-200">{tt("trk.registered_truck_title", "Clearing Truck Registration")}</span>
+          </nav>
 
-          {/* Stepper Progress Bar */}
-          <div className="rounded-3xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-              {[
-                { step: 1, label: "Step 1", name: tt("trk.section_owner", "Owner Info"), icon: User, required: true },
-                { step: 2, label: "Step 2", name: tt("trk.section_truck_details", "Truck & Specs"), icon: TruckIcon, required: true },
-                { step: 3, label: "Step 3", name: tt("trk.section_company", "Company"), badge: "Optional", icon: Building2, required: false },
-                { step: 4, label: "Step 4", name: tt("trk.section_transporter", "Transporter"), badge: "Optional", icon: TruckIcon, required: false },
-                { step: 5, label: "Step 5", name: tt("trk.section_driver", "Driver & Finalize"), icon: UserCheck, required: true },
-              ].map((s) => {
-                const isActive = currentStep === s.step;
-                const isPassed = currentStep > s.step;
-                const StepIcon = s.icon;
-                return (
-                  <button
-                    key={s.step}
-                    type="button"
-                    onClick={() => {
-                      if (canGoToStep(s.step as any)) setCurrentStep(s.step as any);
-                    }}
-                    className={`group relative flex items-center gap-3 rounded-2xl border p-3 text-start transition-all ${
-                      isActive
-                        ? "border-blue-500 bg-blue-50/70 shadow-sm shadow-blue-500/10 ring-2 ring-blue-500/20 dark:border-blue-500 dark:bg-blue-950/40"
-                        : isPassed
-                        ? "border-emerald-200 bg-emerald-50/40 hover:bg-emerald-50/80 dark:border-emerald-900/60 dark:bg-emerald-950/20"
-                        : "border-slate-200/70 bg-slate-50/50 hover:bg-slate-100/60 dark:border-slate-800 dark:bg-slate-800/40"
-                    }`}
-                  >
-                    <div
-                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl font-bold transition-all ${
-                        isActive
-                          ? "bg-blue-600 text-white shadow-md shadow-blue-500/25"
-                          : isPassed
-                          ? "bg-emerald-600 text-white shadow-sm"
-                          : "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
-                      }`}
-                    >
-                      {isPassed ? <Check className="h-5 w-5" /> : <StepIcon className="h-4 w-4" />}
+          {/* List Header */}
+          <div className="flex flex-col gap-3 rounded-3xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-500/20">
+                <TruckIcon className="h-6 w-6" />
+              </div>
+              <div className="min-w-0">
+                <h1 className="truncate text-xl font-black tracking-tight text-slate-900 dark:text-white">
+                  {tt("trk.registered_truck_title", "Clearing Truck Registration")}
+                </h1>
+                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                  {tt("trk.module_subtitle", "Truck master, owner, transporter, driver and reporting.")}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={openNewRegistration}
+              className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-md shadow-blue-600/25 hover:bg-blue-700 transition"
+            >
+              <Plus className="h-4 w-4" /> {tt("trk.new_chat_registration", "New Clearing Truck Registration")}
+            </button>
+          </div>
+
+          {message && (
+            <div
+              className={`rounded-2xl border p-3 text-sm font-bold ${
+                message.kind === "success"
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-200"
+                  : "border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-900 dark:bg-rose-950/60 dark:text-rose-200"
+              }`}
+            >
+              {message.text}
+            </div>
+          )}
+
+          {/* KPI Analytics */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+              <div className="mb-3 flex items-center gap-2 text-xs font-black text-blue-700 dark:text-blue-300">
+                <Users className="h-4 w-4" /> {tt("trk.section_branch_user", "1. Branch & User Details")}
+              </div>
+              <dl className="space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <dt className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">{tt("common.country", "Country")}</dt>
+                  <dd className="text-sm font-black text-slate-900 dark:text-white">{scopeCountryLabel}</dd>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <dt className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">{tt("common.branch_name", "Branch Name")}</dt>
+                  <dd className="text-sm font-black text-slate-900 dark:text-white">{scopeBranchLabel}</dd>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <dt className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">{tt("common.user_name", "User Name")}</dt>
+                  <dd className="text-sm font-black text-slate-900 dark:text-white">{userName || "—"}</dd>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <dt className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">{tt("common.date_time", "Date & Time")}</dt>
+                  <dd className="text-xs font-bold text-slate-700 dark:text-slate-200">{nowStr}</dd>
+                </div>
+              </dl>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+              <div className="mb-3 flex items-center gap-2 text-xs font-black text-blue-700 dark:text-blue-300">
+                <TruckIcon className="h-4 w-4" /> {tt("trk.section_truck_summary", "2. Truck Summary")}
+              </div>
+              <dl className="space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <dt className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">{tt("trk.kpi_total_trucks", "Total Trucks")}</dt>
+                  <dd className="text-sm font-black text-slate-900 dark:text-white">{totalTrucks}</dd>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <dt className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">{tt("trk.kpi_active_trucks", "Active Trucks")}</dt>
+                  <dd className="text-sm font-black text-emerald-600 dark:text-emerald-400">{activeTrucksCount}</dd>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <dt className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">{tt("trk.kpi_registered_owners", "Registered Owners")}</dt>
+                  <dd className="text-sm font-black text-slate-900 dark:text-white">{registeredOwnersCount}</dd>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <dt className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">{tt("trk.kpi_assigned_drivers", "Assigned Drivers")}</dt>
+                  <dd className="text-sm font-black text-slate-900 dark:text-white">{assignedDriversCount}</dd>
+                </div>
+              </dl>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+              <div className="mb-3 flex items-center gap-2 text-xs font-black text-blue-700 dark:text-blue-300">
+                <ClipboardList className="h-4 w-4" /> {tt("trk.section_registration_summary", "3. Registration Summary")}
+              </div>
+              <dl className="space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <dt className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">{tt("common.total_records", "Total Records")}</dt>
+                  <dd className="text-sm font-black text-slate-900 dark:text-white">{totalTrucks}</dd>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <dt className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">{tt("common.active", "Active")}</dt>
+                  <dd className="text-sm font-black text-emerald-600 dark:text-emerald-400">{activeTrucksCount}</dd>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <dt className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">{tt("trk.badge_pending", "Pending")}</dt>
+                  <dd className="text-sm font-black text-amber-600 dark:text-amber-400">{pendingCount}</dd>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <dt className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">{tt("common.inactive", "Inactive")}</dt>
+                  <dd className="text-sm font-black text-slate-500 dark:text-slate-400">{inactiveCount}</dd>
+                </div>
+              </dl>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+              <div className="mb-3 flex items-center gap-2 text-xs font-black text-blue-700 dark:text-blue-300">
+                <Globe className="h-4 w-4" /> {tt("trk.section_countries_report", "4. All Countries Report")}
+              </div>
+              <dl className="space-y-2">
+                {countryBreakdown.length ? (
+                  countryBreakdown.map((c) => (
+                    <div key={c.name} className="flex items-center justify-between gap-2">
+                      <dt className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">{c.name}</dt>
+                      <dd className="text-sm font-black text-slate-900 dark:text-white">
+                        {c.count} {tt("trk.trucks_count_suffix", "trucks")}
+                      </dd>
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5">
-                        <span
-                          className={`text-[10px] font-black uppercase tracking-wider ${
-                            isActive ? "text-blue-700 dark:text-blue-300" : isPassed ? "text-emerald-700 dark:text-emerald-300" : "text-slate-500 dark:text-slate-400"
-                          }`}
-                        >
-                          {s.label}
-                        </span>
-                        {s.badge && (
-                          <span className="rounded bg-slate-200/80 px-1.5 py-0.5 text-[9px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                            {s.badge}
-                          </span>
-                        )}
-                      </div>
-                      <div className="truncate text-xs font-bold text-slate-800 dark:text-slate-200">
-                        {s.name}
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
+                  ))
+                ) : (
+                  <div className="flex items-center justify-between gap-2">
+                    <dt className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">{tt("common.all_countries", "All Countries")}</dt>
+                    <dd className="text-sm font-black text-slate-900 dark:text-white">0</dd>
+                  </div>
+                )}
+              </dl>
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-            {/* Left column: active step entry form */}
-            <div className="space-y-4 lg:col-span-7">
-              {/* STEP 1: Owner Information */}
-              {currentStep === 1 && (
-                <section className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                  <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
-                    <div className="flex items-center gap-2.5">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-                        <User className="h-4 w-4" />
+          {/* Filter Bar & Table */}
+          <div className="space-y-3 rounded-3xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={tt("trk.search_trucks_ph", "Search trucks...")}
+                  className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/70 pl-10 pr-4 text-xs font-medium outline-none focus:border-blue-500 focus:bg-white dark:border-slate-800 dark:bg-slate-800/40 dark:focus:bg-slate-900"
+                />
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="h-10 rounded-xl border border-slate-200 bg-slate-50/70 px-3 text-xs font-bold text-slate-700 outline-none dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-200"
+                >
+                  <option value="all">{tt("common.filter", "Filter")}: {tt("common.status", "Status")}</option>
+                  <option value="active">{tt("common.active", "Active")}</option>
+                  <option value="inactive">{tt("common.inactive", "Inactive")}</option>
+                  <option value="suspended">{tt("trk.badge_pending", "Pending")}</option>
+                  <option value="expired">{tt("trk.badge_completed", "Completed")}</option>
+                </select>
+
+                <div className="relative" ref={columnsRef}>
+                  <button
+                    type="button"
+                    onClick={() => setColumnsOpen((c) => !c)}
+                    className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/70 px-3 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-200"
+                  >
+                    <ColumnsIcon className="h-4 w-4" /> {tt("common.columns", "Columns")}
+                  </button>
+                  {columnsOpen && (
+                    <div className="absolute right-0 top-full z-20 mt-2 w-52 rounded-2xl border border-slate-200 bg-white p-3 shadow-xl dark:border-slate-800 dark:bg-slate-900">
+                      <div className="mb-2 text-[11px] font-black uppercase text-slate-400">
+                        {tt("common.columns", "Columns")}
                       </div>
-                      <div>
-                        <h2 className="text-sm font-black text-slate-900 dark:text-white">
-                          Step 1: {tt("trk.section_owner", "Truck Owner Information")}
-                        </h2>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                          Select or register the owner of this vehicle
-                        </p>
+                      <div className="space-y-1.5">
+                        {[
+                          { key: "truckName" as OptionalColumnKey, label: tt("trk.col_truck_name", "Truck Name") },
+                          { key: "model" as OptionalColumnKey, label: tt("trk.col_model", "Model") },
+                          { key: "company" as OptionalColumnKey, label: tt("trk.col_company", "Company") },
+                          { key: "transporter" as OptionalColumnKey, label: tt("trk.col_transporter", "Transporter") },
+                          { key: "mobile" as OptionalColumnKey, label: tt("common.mobile", "Mobile") },
+                          { key: "branch" as OptionalColumnKey, label: tt("trk.col_branch", "Branch") },
+                        ].map((col) => (
+                          <label key={col.key} className="flex cursor-pointer items-center gap-2 text-xs font-semibold">
+                            <input
+                              type="checkbox"
+                              checked={visibleCols[col.key]}
+                              onChange={(e) =>
+                                setVisibleCols((prev) => ({ ...prev, [col.key]: e.target.checked }))
+                              }
+                              className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                            />
+                            <span>{col.label}</span>
+                          </label>
+                        ))}
                       </div>
                     </div>
-                    <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-black uppercase text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
-                      Step 1 of 5
-                    </span>
+                  )}
+                </div>
+
+                <ReportActions
+                  title={tt("trk.list_title", "Registered Trucks")}
+                  lang={activeLang}
+                  rows={filteredRows.map((r) => ({
+                    owner: r.owner_display_name || "-",
+                    truck_no: r.truck_number,
+                    truck_name: r.truck_name || "-",
+                    model: r.model || "-",
+                    company: r.company_display_name || "-",
+                    transporter: r.transporter_display_name || "-",
+                    driver: r.driver_display_name || "-",
+                    mobile: r.driver_mobile || "-",
+                    status: r.status,
+                    reg_date: (r.created_at || "").slice(0, 10),
+                    branch: r.branch_display_name || "-",
+                    serial: r.entry_serial || "-",
+                  }))}
+                  columns={[
+                    { key: "truck_no", label: tt("trk.col_truck_no", "Truck No.") },
+                    { key: "owner", label: tt("trk.col_owner", "Owner") },
+                    { key: "driver", label: tt("trk.col_driver", "Driver") },
+                    { key: "status", label: tt("common.status", "Status") },
+                  ]}
+                />
+              </div>
+            </div>
+
+            {/* Table */}
+            <div className="overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-800">
+              <table className="w-full text-start text-xs">
+                <thead>
+                  <tr className="border-b border-slate-100 bg-slate-50/70 font-black text-slate-600 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-300">
+                    <Th className="p-3 text-start">{tt("trk.col_truck_no", "Truck No.")}</Th>
+                    {visibleCols.truckName && <Th className="p-3 text-start">{tt("trk.col_truck_name", "Truck Name")}</Th>}
+                    {visibleCols.model && <Th className="p-3 text-start">{tt("trk.col_model", "Model")}</Th>}
+                    <Th className="p-3 text-start">{tt("trk.col_owner", "Owner")}</Th>
+                    {visibleCols.company && <Th className="p-3 text-start">{tt("trk.col_company", "Company")}</Th>}
+                    {visibleCols.transporter && <Th className="p-3 text-start">{tt("trk.col_transporter", "Transporter")}</Th>}
+                    <Th className="p-3 text-start">{tt("trk.col_driver", "Driver")}</Th>
+                    {visibleCols.mobile && <Th className="p-3 text-start">{tt("common.mobile", "Mobile")}</Th>}
+                    <Th className="p-3 text-start">{tt("common.status", "Status")}</Th>
+                    {visibleCols.branch && <Th className="p-3 text-start">{tt("trk.col_branch", "Branch")}</Th>}
+                    <Th className="p-3 text-end">{tt("common.actions", "Actions")}</Th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {loadingList ? (
+                    <tr>
+                      <td colSpan={11} className="p-8 text-center text-slate-400">
+                        <Loader2 className="mx-auto h-6 w-6 animate-spin text-blue-600" />
+                        <span className="mt-2 block font-medium">Loading...</span>
+                      </td>
+                    </tr>
+                  ) : paginatedRows.length === 0 ? (
+                    <tr>
+                      <td colSpan={11} className="p-8 text-center text-slate-400">
+                        {tt("trk.no_trucks_found", "No registered trucks found.")}
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedRows.map((row) => (
+                      <tr key={row.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/30">
+                        <td className="p-3 font-mono font-black text-slate-900 dark:text-white">
+                          {row.truck_number}
+                        </td>
+                        {visibleCols.truckName && (
+                          <td className="p-3 font-medium text-slate-600 dark:text-slate-300">{row.truck_name || "—"}</td>
+                        )}
+                        {visibleCols.model && (
+                          <td className="p-3 font-medium text-slate-600 dark:text-slate-300">{row.model || "—"}</td>
+                        )}
+                        <td className="p-3 font-semibold text-slate-800 dark:text-slate-200">
+                          {row.owner_display_name || "—"}
+                        </td>
+                        {visibleCols.company && (
+                          <td className="p-3 font-medium text-slate-600 dark:text-slate-300">{row.company_display_name || "—"}</td>
+                        )}
+                        {visibleCols.transporter && (
+                          <td className="p-3 font-medium text-slate-600 dark:text-slate-300">{row.transporter_display_name || "—"}</td>
+                        )}
+                        <td className="p-3 font-semibold text-slate-800 dark:text-slate-200">
+                          {row.driver_display_name || "—"}
+                        </td>
+                        {visibleCols.mobile && (
+                          <td className="p-3 font-mono text-slate-600 dark:text-slate-300">{row.driver_mobile || "—"}</td>
+                        )}
+                        <td className="p-3">
+                          <span className={`inline-block rounded-md px-2 py-0.5 text-[10px] font-bold ${statusBadgeClasses(row.status)}`}>
+                            {statusLabel(row.status)}
+                          </span>
+                        </td>
+                        {visibleCols.branch && (
+                          <td className="p-3 text-slate-500">{row.branch_display_name || "—"}</td>
+                        )}
+                        <td className="p-3 text-end">
+                          <UnifiedActionMenu
+                            onView={() => handleView(row)}
+                            onEdit={() => startEdit(row)}
+                            onDelete={() => handleDelete(row.id)}
+                            onPrint={() => handleView(row, { autoPrint: true })}
+                          />
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            <div className="flex flex-col items-center justify-between gap-3 pt-2 sm:flex-row">
+              <div className="text-xs text-slate-500">
+                {tt("trk.showing_records", "Showing")} {filteredRows.length === 0 ? 0 : pageStart + 1} -{" "}
+                {Math.min(pageStart + pageSize, filteredRows.length)} / {filteredRows.length}
+              </div>
+              <div className="flex items-center gap-2">
+                <select
+                  value={pageSize}
+                  onChange={(e) => setPageSize(Number(e.target.value))}
+                  className="h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-700 outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+                >
+                  {PAGE_SIZE_OPTIONS.map((size) => (
+                    <option key={size} value={size}>
+                      {size} {tt("trk.per_page_suffix", "/ page")}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  disabled={clampedPage <= 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 disabled:opacity-40 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+                >
+                  <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
+                </button>
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  {clampedPage} / {totalPages}
+                </span>
+                <button
+                  type="button"
+                  disabled={clampedPage >= totalPages}
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 disabled:opacity-40 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+                >
+                  <ChevronRight className="h-4 w-4 rtl:rotate-180" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* FORM & LIVE REPORT VIEW */}
+      {view === "form" && (
+        <>
+          {/* Breadcrumb */}
+          <nav className="flex flex-wrap items-center gap-1.5 px-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+            <a href="/dashboard" className="hover:text-blue-600 dark:hover:text-blue-400">
+              {tt("nav.dashboard", "Dashboard")}
+            </a>
+            <span className="text-slate-300 dark:text-slate-700">›</span>
+            <span>{tt("nav.shipping_clearing", "Shipping & Clearing")}</span>
+            <span className="text-slate-300 dark:text-slate-700">›</span>
+            <button type="button" onClick={backToList} className="hover:text-blue-600 dark:hover:text-blue-400">
+              {tt("trk.registered_truck_title", "Clearing Truck Registration")}
+            </button>
+            <span className="text-slate-300 dark:text-slate-700">›</span>
+            <span className="font-black text-slate-700 dark:text-slate-200">
+              {editingId ? tt("trk.form_title_edit", "Edit Clearing Truck Registration") : tt("trk.new_truck_registration", "New Clearing Truck Registration")}
+            </span>
+          </nav>
+
+          {/* Form Header with "View ⌄" dropdown and "← Back to List" */}
+          <div className="flex flex-col gap-3 rounded-3xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-500/20">
+                <TruckIcon className="h-6 w-6" />
+              </div>
+              <div className="min-w-0">
+                <h1 className="truncate text-xl font-black tracking-tight text-slate-900 dark:text-white">
+                  {editingId
+                    ? tt("trk.form_title_edit", "Edit Clearing Truck Registration")
+                    : tt("trk.registered_truck_title", "Clearing Truck Registration")}
+                </h1>
+                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                  {tt("trk.module_subtitle", "Truck master, owner, transporter, driver and reporting.")}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800">
+                LIVE ERP SYNC
+              </span>
+
+              {/* View ⌄ Dropdown */}
+              <div className="relative" ref={viewMenuRef}>
+                <button
+                  type="button"
+                  onClick={() => setViewMenuOpen((v) => !v)}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50/70 px-3.5 py-2 text-xs font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900 dark:bg-blue-950/60 dark:text-blue-300 shadow-2xs"
+                >
+                  <Eye className="h-4 w-4" />
+                  <span>View</span>
+                  <ChevronDown className="h-3.5 w-3.5 opacity-70" />
+                </button>
+
+                {viewMenuOpen && (
+                  <div className="absolute right-0 top-full z-30 mt-1.5 w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl dark:border-slate-800 dark:bg-slate-900 animate-in fade-in slide-in-from-top-1">
+                    <div className="px-2 py-1 text-[9px] font-black tracking-wider text-slate-400 uppercase">
+                      REGISTRATION VIEWS
+                    </div>
+                    {[
+                      { key: "full", label: "Live Truck Report", icon: TruckIcon },
+                      { key: "owner", label: "Owner Details", icon: User },
+                      { key: "vehicle", label: "Truck & Vehicle", icon: TruckIcon },
+                      { key: "transporter", label: "Transporter Details", icon: Building2 },
+                      { key: "driver", label: "Driver Details", icon: UserCheck },
+                      { key: "documents", label: "Documents", icon: FileText },
+                    ].map((opt) => {
+                      const Icon = opt.icon;
+                      return (
+                        <button
+                          key={opt.key}
+                          type="button"
+                          onClick={() => {
+                            setViewModalTab(opt.key as any);
+                            setViewModalOpen(true);
+                            setViewMenuOpen(false);
+                          }}
+                          className="flex w-full items-center justify-between rounded-xl px-2.5 py-2 text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700 dark:text-slate-300 dark:hover:bg-slate-800 transition"
+                        >
+                          <span className="flex items-center gap-2">
+                            <Icon className="h-3.5 w-3.5 text-blue-600" />
+                            <span>{opt.label}</span>
+                          </span>
+                          <ChevronRight className="h-3.5 w-3.5 text-slate-400 rtl:rotate-180" />
+                        </button>
+                      );
+                    })}
+                    <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setViewMenuOpen(false);
+                        window.print();
+                      }}
+                      className="flex w-full items-center justify-between rounded-xl px-2.5 py-2 text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700 dark:text-slate-300 dark:hover:bg-slate-800 transition"
+                    >
+                      <span className="flex items-center gap-2">
+                        <Printer className="h-3.5 w-3.5 text-slate-500" />
+                        <span>Print Report</span>
+                      </span>
+                      <ChevronRight className="h-3.5 w-3.5 text-slate-400 rtl:rotate-180" />
+                    </button>
                   </div>
+                )}
+              </div>
 
-                  <div className="space-y-4">
-                    <PersonPicker
-                      label={tt("trk.truck_owner_name_label", "Truck Owner Name *")}
-                      value={form.ownerId}
-                      onValueChange={(id) => setForm((p) => ({ ...p, ownerId: id }))}
-                      placeholder={tt("trk.search_owner_ph", "Search truck owner...")}
-                      lang={activeLang}
-                      createLabel={tt("trk.new_truck_owner", "+ New Truck Owner")}
-                    />
+              <button
+                type="button"
+                onClick={backToList}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 shadow-2xs transition"
+              >
+                <ArrowLeft className="h-3.5 w-3.5 rtl:rotate-180" /> {tt("trk.back_to_list", "Back to List")}
+              </button>
+            </div>
+          </div>
 
-                    {form.ownerId && (
-                      <div className="rounded-2xl border border-blue-100 bg-blue-50/50 p-3.5 dark:border-blue-900/40 dark:bg-blue-950/20">
-                        <div className="flex items-center justify-between">
-                          <div className="min-w-0">
-                            <div className="text-xs font-black text-slate-900 dark:text-white">
-                              {ownerDetails?.customer_name}
+          {/* 5-Step Bar across the top */}
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-5 rounded-2xl border border-slate-200/80 bg-white p-2 shadow-2xs dark:border-slate-800 dark:bg-slate-900">
+            {[
+              { id: "vehicleCard", num: 1, title: "Truck & Vehicle", sub: "Truck, chassis, engine" },
+              { id: "transporterCard", num: 2, title: "Transporter", sub: "Transporter / Company" },
+              { id: "driverCard", num: 3, title: "Driver", sub: "Driver & photo info" },
+              { id: "documentsCard", num: 4, title: "Documents", sub: "Upload documents" },
+              { id: "review", num: 5, title: "Review & Save", sub: "Confirm & register" },
+            ].map((st) => (
+              <button
+                key={st.id}
+                type="button"
+                onClick={() => {
+                  if (st.id === "review") {
+                    setViewModalTab("full");
+                    setViewModalOpen(true);
+                  } else {
+                    scrollToSection(st.id);
+                  }
+                }}
+                className="flex items-center gap-2.5 rounded-xl p-2 text-start transition hover:bg-slate-50 dark:hover:bg-slate-800/50"
+              >
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-xs font-black text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                  {st.num}
+                </div>
+                <div className="min-w-0">
+                  <div className="truncate text-xs font-bold text-slate-800 dark:text-slate-200">{st.title}</div>
+                  <div className="truncate text-[10px] text-slate-400 hidden xl:block">{st.sub}</div>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {message && (
+            <div
+              className={`rounded-2xl border p-3 text-sm font-bold ${
+                message.kind === "success"
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-200"
+                  : "border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-900 dark:bg-rose-950/60 dark:text-rose-200"
+              }`}
+            >
+              {message.text}
+            </div>
+          )}
+
+          {/* MAIN 2-COLUMN LAYOUT: Compact Form (Left) & Sticky Live Truck Report (Right) */}
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 items-start">
+            {/* LEFT FORM COLUMN (Col 7) */}
+            <form onSubmit={handleSubmit} className="space-y-4 lg:col-span-7">
+              {/* CARD 1: Owner / Customer Selection (Optional) */}
+              <section id="ownerCard" className="rounded-3xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 scroll-mt-20">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100 text-xs font-black text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                      1
+                    </span>
+                    <div>
+                      <h2 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                        <span>{tt("trk.section_owner", "Truck Owner Information")}</span>
+                        <span className="text-[10px] font-normal text-slate-400">(Optional)</span>
+                      </h2>
+                      <p className="text-[10.5px] text-slate-500 dark:text-slate-400">
+                        Select an existing owner/customer account. Registered details appear below.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => toggleCollapse("owner")}
+                    className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                  >
+                    {collapsedCards.owner ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+                  </button>
+                </div>
+
+                {!collapsedCards.owner && (
+                  <div className="mt-4 space-y-3.5">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1.2fr_1fr]">
+                      <div>
+                        <PersonPicker
+                          label={tt("trk.truck_owner_name_label", "Truck Owner Name *")}
+                          value={form.ownerId}
+                          onValueChange={(id) => setForm((p) => ({ ...p, ownerId: id, hasOwner: id ? "yes" : "no" }))}
+                          placeholder={tt("trk.search_owner_ph", "Search truck owner...")}
+                          lang={activeLang}
+                          createLabel={tt("trk.new_truck_owner", "+ New Truck Owner")}
+                        />
+                      </div>
+                      <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-2.5 text-[11px] text-blue-800 dark:border-blue-900/40 dark:bg-blue-950/20 dark:text-blue-300 flex items-start gap-2">
+                        <HelpCircle className="h-4 w-4 shrink-0 text-blue-600 mt-0.5" />
+                        <span>
+                          If there is no owner, leave blank (Without Owner) and continue with truck registration.
+                        </span>
+                      </div>
+                    </div>
+
+                    {form.ownerId && ownerDetails && (
+                      <div className="rounded-2xl border border-blue-100 bg-blue-50/40 p-3.5 dark:border-blue-900/40 dark:bg-blue-950/20">
+                        <div className="flex items-center justify-between border-b border-blue-100/80 pb-2 dark:border-blue-900/40">
+                          <div className="flex items-center gap-2">
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600 text-white font-black text-xs">
+                              <User className="h-4 w-4" />
                             </div>
-                            <div className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
-                              {ownerDetails?.person_code ? `${tt("trk.owner_code_label", "Owner Code")}: ${ownerDetails.person_code}` : ""}
-                              {ownerDetails?.mobile ? ` • ${ownerDetails.mobile}` : ""}
+                            <div>
+                              <div className="text-xs font-black text-slate-900 dark:text-white">
+                                {ownerDetails.customer_name}
+                              </div>
+                              <div className="text-[10px] text-blue-700 dark:text-blue-300 font-bold uppercase">
+                                REGISTERED OWNER
+                              </div>
                             </div>
                           </div>
                           <button
                             type="button"
-                            onClick={() => setParty360({ customerId: form.ownerId, name: ownerDetails?.customer_name || "" })}
-                            className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-blue-200 bg-white px-3 py-1.5 text-xs font-bold text-blue-700 shadow-sm hover:bg-blue-50 dark:border-blue-800 dark:bg-slate-900 dark:text-blue-300"
+                            onClick={() => setParty360({ customerId: form.ownerId, name: ownerDetails.customer_name || "" })}
+                            className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-white px-2.5 py-1 text-[11px] font-bold text-blue-700 shadow-2xs hover:bg-blue-50 dark:border-blue-800 dark:bg-slate-900 dark:text-blue-300"
                           >
-                            <Eye className="h-3.5 w-3.5" /> {tt("trk.view_owner_details", "View Owner Details")}
+                            <Eye className="h-3 w-3" /> {tt("trk.view_owner_details", "View Owner Details")}
                           </button>
+                        </div>
+                        <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px]">
+                          <div className="flex justify-between py-0.5"><span className="text-slate-500">ID / Code:</span> <b className="text-slate-800 dark:text-slate-100">{ownerDetails.person_code || ownerDetails.code || "—"}</b></div>
+                          <div className="flex justify-between py-0.5"><span className="text-slate-500">Mobile:</span> <b className="text-slate-800 dark:text-slate-100">{ownerDetails.mobile || "—"}</b></div>
+                          <div className="flex justify-between py-0.5"><span className="text-slate-500">WhatsApp:</span> <b className="text-slate-800 dark:text-slate-100">{ownerDetails.whatsapp || "—"}</b></div>
+                          <div className="flex justify-between py-0.5"><span className="text-slate-500">Address:</span> <b className="text-slate-800 dark:text-slate-100 truncate">{ownerDetails.address || "—"}</b></div>
                         </div>
                       </div>
                     )}
                   </div>
+                )}
+              </section>
 
-                  <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-4 dark:border-slate-800">
-                    <button
-                      type="button"
-                      onClick={backToList}
-                      className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
-                    >
-                      <X className="h-4 w-4" /> {tt("common.cancel", "Cancel")}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleNext}
-                      className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-600/25 hover:bg-blue-700"
-                    >
-                      Next Step <ArrowRight className="h-4 w-4 rtl:rotate-180" />
-                    </button>
-                  </div>
-                </section>
-              )}
-
-              {/* STEP 2: Truck Details & Vehicle Specifications */}
-              {currentStep === 2 && (
-                <section className="space-y-4 rounded-3xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
-                    <div className="flex items-center gap-2.5">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-                        <TruckIcon className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <h2 className="text-sm font-black text-slate-900 dark:text-white">
-                          Step 2: {tt("trk.section_truck_details", "Truck Details & Specifications")}
-                        </h2>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                          Enter identification numbers and physical specifications
-                        </p>
-                      </div>
-                    </div>
-                    <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-black uppercase text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
-                      Step 2 of 5
+              {/* CARD 2: Truck Registration Details (Combined Details & Physical Specs) */}
+              <section id="vehicleCard" className="rounded-3xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 scroll-mt-20">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100 text-xs font-black text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                      2
                     </span>
+                    <div>
+                      <h2 className="text-sm font-black text-slate-900 dark:text-white">
+                        {tt("trk.section_truck_details", "Truck Details")}
+                      </h2>
+                      <p className="text-[10.5px] text-slate-500 dark:text-slate-400">
+                        Enter truck identification and physical specifications.
+                      </p>
+                    </div>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => toggleCollapse("vehicle")}
+                    className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                  >
+                    {collapsedCards.vehicle ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+                  </button>
+                </div>
 
-                  {/* 2a. Basic Identifiers */}
-                  <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-800/30">
-                    <h3 className="mb-3 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                      {tt("trk.section_truck_details", "2. Truck Details")}
-                    </h3>
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {!collapsedCards.vehicle && (
+                  <div className="mt-4 space-y-3.5">
+                    {/* Row 1: Identification */}
+                    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
                       <label className="space-y-1 text-xs">
-                        <span className="font-bold text-slate-600 dark:text-slate-400">{tt("trk.truck_no", "Truck Number *")}</span>
+                        <span className="font-bold text-slate-700 dark:text-slate-300">
+                          {tt("trk.truck_no", "Truck Number *")}
+                        </span>
                         <input
                           required
                           value={form.truckNumber}
                           onChange={(e) => setForm((p) => ({ ...p, truckNumber: e.target.value }))}
-                          placeholder="e.g. TRK-8891"
-                          className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                          placeholder="e.g. TRK-TEST-001"
+                          className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                         />
                       </label>
                       <label className="space-y-1 text-xs">
-                        <span className="font-bold text-slate-600 dark:text-slate-400">{tt("trk.truck_name_label", "Truck Name")}</span>
-                        <input
-                          value={form.truckName}
-                          onChange={(e) => setForm((p) => ({ ...p, truckName: e.target.value }))}
-                          placeholder="e.g. Dammam Express"
-                          className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
-                        />
-                      </label>
-                      <label className="space-y-1 text-xs">
-                        <span className="font-bold text-slate-600 dark:text-slate-400">{tt("trk.model", "Model *")}</span>
-                        <input
-                          value={form.truckModel}
-                          onChange={(e) => setForm((p) => ({ ...p, truckModel: e.target.value }))}
-                          placeholder={tt("trk.ph_model", "Enter model")}
-                          className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
-                        />
-                      </label>
-                      <label className="space-y-1 text-xs">
-                        <span className="font-bold text-slate-600 dark:text-slate-400">{tt("trk.chassis_no", "Chassis No *")}</span>
+                        <span className="font-bold text-slate-700 dark:text-slate-300">
+                          {tt("trk.chassis_no", "Chassis No *")}
+                        </span>
                         <input
                           required
                           value={form.chassisNumber}
                           onChange={(e) => setForm((p) => ({ ...p, chassisNumber: e.target.value }))}
                           placeholder={tt("trk.ph_chassis_no", "Enter chassis number")}
-                          className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                          className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                         />
                       </label>
-                      <label className="space-y-1 text-xs sm:col-span-2">
-                        <span className="font-bold text-slate-600 dark:text-slate-400">{tt("trk.engine_no", "Engine No *")}</span>
+                      <label className="space-y-1 text-xs">
+                        <span className="font-bold text-slate-700 dark:text-slate-300">
+                          {tt("trk.engine_no", "Engine No")} <span className="text-rose-500">*</span>
+                        </span>
                         <input
                           required
                           value={form.engineNumber}
                           onChange={(e) => setForm((p) => ({ ...p, engineNumber: e.target.value }))}
                           placeholder={tt("trk.ph_engine_no", "Enter engine number")}
-                          className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                          className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                         />
                       </label>
-                    </div>
-                  </div>
-
-                  {/* 2b. Vehicle Specifications */}
-                  <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-800/30">
-                    <h3 className="mb-3 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                      {tt("com.vehicle_specifications", "Vehicle Specifications")}
-                    </h3>
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                       <label className="space-y-1 text-xs">
-                        <span className="font-bold text-slate-600 dark:text-slate-400">{tt("trk.reg_no", "Registration No")}</span>
+                        <span className="font-bold text-slate-700 dark:text-slate-300">
+                          {tt("trk.reg_no", "Registration No *")}
+                        </span>
                         <input
                           value={form.registrationNumber}
                           onChange={(e) => setForm((p) => ({ ...p, registrationNumber: e.target.value }))}
-                          placeholder="e.g. 1234-XYZ"
-                          className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                          placeholder="e.g. Qq-1234-XYZ"
+                          className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                         />
                       </label>
                       <label className="space-y-1 text-xs">
-                        <span className="font-bold text-slate-600 dark:text-slate-400">{tt("trk.truck_type", "Truck Type")}</span>
+                        <span className="font-bold text-slate-700 dark:text-slate-300">
+                          {tt("trk.truck_type", "Truck Type *")}
+                        </span>
                         <select
                           value={form.truckType}
                           onChange={(e) => setForm((p) => ({ ...p, truckType: e.target.value }))}
-                          className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                          className="h-9 w-full rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                         >
-                          <option value="" />
+                          <option value="Trailer Truck">Trailer Truck</option>
+                          <option value="Container Truck">Container Truck</option>
+                          <option value="Flatbed Truck">Flatbed Truck</option>
+                          <option value="Box Truck">Box Truck</option>
                           {truckTypeOptions.map((o) => (
-                            <option key={o.id} value={o.code}>{optionLabel(o)}</option>
+                            <option key={o.id} value={o.code}>
+                              {optionLabel(o)}
+                            </option>
                           ))}
                         </select>
                       </label>
                       <label className="space-y-1 text-xs">
-                        <span className="font-bold text-slate-600 dark:text-slate-400">{tt("trk.make", "Make")}</span>
-                        <select
-                          value={form.make}
-                          onChange={(e) => setForm((p) => ({ ...p, make: e.target.value }))}
-                          className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
-                        >
-                          <option value="" />
-                          {makeOptions.map((o) => (
-                            <option key={o.id} value={o.code}>{optionLabel(o)}</option>
-                          ))}
-                        </select>
-                      </label>
-                      <label className="space-y-1 text-xs">
-                        <span className="font-bold text-slate-600 dark:text-slate-400">{tt("trk.year", "Year")}</span>
+                        <span className="font-bold text-slate-700 dark:text-slate-300">
+                          {tt("trk.year", "Year *")}
+                        </span>
                         <input
                           type="number"
-                          min={1980}
-                          max={new Date().getFullYear() + 1}
+                          min={1900}
+                          max={2100}
                           value={form.manufacturingYear}
                           onChange={(e) => setForm((p) => ({ ...p, manufacturingYear: e.target.value }))}
-                          className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                          className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                         />
                       </label>
+                    </div>
+
+                    {/* Row 2: Physical Specifications */}
+                    <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-5 pt-1">
                       <label className="space-y-1 text-xs">
-                        <span className="font-bold text-slate-600 dark:text-slate-400">{tt("trk.color", "Color")}</span>
+                        <span className="font-bold text-slate-700 dark:text-slate-300">{tt("trk.color", "Color")}</span>
                         <select
                           value={form.color}
                           onChange={(e) => setForm((p) => ({ ...p, color: e.target.value }))}
-                          className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                          className="h-9 w-full rounded-xl border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                         >
-                          <option value="" />
+                          <option value="White">White</option>
+                          <option value="Blue">Blue</option>
+                          <option value="Black">Black</option>
+                          <option value="Red">Red</option>
+                          <option value="Silver">Silver</option>
                           {colorOptions.map((o) => (
-                            <option key={o.id} value={o.code}>{optionLabel(o)}</option>
+                            <option key={o.id} value={o.code}>
+                              {optionLabel(o)}
+                            </option>
                           ))}
                         </select>
                       </label>
                       <label className="space-y-1 text-xs">
-                        <span className="font-bold text-slate-600 dark:text-slate-400">{tt("trk.fuel_type", "Fuel Type")}</span>
+                        <span className="font-bold text-slate-700 dark:text-slate-300">{tt("trk.fuel_type", "Fuel Type")}</span>
                         <select
                           value={form.fuelType}
                           onChange={(e) => setForm((p) => ({ ...p, fuelType: e.target.value }))}
-                          className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                          className="h-9 w-full rounded-xl border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                         >
-                          <option value="" />
+                          <option value="Diesel">Diesel</option>
+                          <option value="Petrol">Petrol</option>
+                          <option value="Electric">Electric</option>
+                          <option value="Hybrid">Hybrid</option>
                           {fuelTypeOptions.map((o) => (
-                            <option key={o.id} value={o.code}>{optionLabel(o)}</option>
+                            <option key={o.id} value={o.code}>
+                              {optionLabel(o)}
+                            </option>
                           ))}
                         </select>
                       </label>
-                      <label className="space-y-1 text-xs sm:col-span-2">
-                        <span className="font-bold text-slate-600 dark:text-slate-400">{tt("trk.capacity", "Capacity (Tons)")}</span>
+                      <label className="space-y-1 text-xs">
+                        <span className="font-bold text-slate-700 dark:text-slate-300">{tt("trk.capacity", "Capacity (Tons) *")}</span>
                         <input
+                          type="number"
+                          step="0.01"
                           value={form.capacity}
                           onChange={(e) => setForm((p) => ({ ...p, capacity: e.target.value }))}
-                          placeholder="e.g. 25"
-                          className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                          className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                         />
                       </label>
                       <label className="space-y-1 text-xs">
-                        <span className="font-bold text-slate-600 dark:text-slate-400">{tt("tr.reg_expiry", "Reg. Expiry")}</span>
+                        <span className="font-bold text-slate-700 dark:text-slate-300">{tt("tr.reg_expiry", "Reg. Expiry")}</span>
                         <input
                           type="date"
                           value={form.registrationExpiryDate}
                           onChange={(e) => setForm((p) => ({ ...p, registrationExpiryDate: e.target.value }))}
-                          className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                          className="h-9 w-full rounded-xl border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                         />
                       </label>
                       <label className="space-y-1 text-xs">
-                        <span className="font-bold text-slate-600 dark:text-slate-400">{tt("tr.ins_expiry", "Insurance Expiry")}</span>
+                        <span className="font-bold text-slate-700 dark:text-slate-300">{tt("tr.ins_expiry", "Insurance Expiry")}</span>
                         <input
                           type="date"
                           value={form.insuranceExpiryDate}
                           onChange={(e) => setForm((p) => ({ ...p, insuranceExpiryDate: e.target.value }))}
-                          className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                          className="h-9 w-full rounded-xl border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                         />
                       </label>
                     </div>
                   </div>
+                )}
+              </section>
 
-                  <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-4 dark:border-slate-800">
-                    <button
-                      type="button"
-                      onClick={handlePrev}
-                      className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
-                    >
-                      <ChevronLeft className="h-4 w-4 rtl:rotate-180" /> Back
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleNext}
-                      className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-600/25 hover:bg-blue-700"
-                    >
-                      Next Step <ArrowRight className="h-4 w-4 rtl:rotate-180" />
-                    </button>
-                  </div>
-                </section>
-              )}
-
-              {/* STEP 3: Registered Company (Optional) */}
-              {currentStep === 3 && (
-                <section className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                  <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
-                    <div className="flex items-center gap-2.5">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-                        <Building2 className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h2 className="text-sm font-black text-slate-900 dark:text-white">
-                            Step 3: {tt("trk.section_company", "Registered Company")}
-                          </h2>
-                          <span className="rounded-md bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/60">
-                            Optional
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                          Optional registration if the truck is registered under a transport company
-                        </p>
-                      </div>
-                    </div>
-                    <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-black uppercase text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
-                      Step 3 of 5
+              {/* CARD 3: Transporter / Shipping Line Information */}
+              <section id="transporterCard" className="rounded-3xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 scroll-mt-20">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100 text-xs font-black text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                      3
                     </span>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div className="rounded-2xl border border-blue-100 bg-blue-50/60 p-3.5 text-xs text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-200">
-                      <p className="font-semibold leading-relaxed">
-                        Company registration is not mandatory. If this truck is owned independently or not linked to any transport company, you can leave this empty and click Next or Skip.
+                    <div>
+                      <h2 className="text-sm font-black text-slate-900 dark:text-white">
+                        {tt("trk.section_transporter", "Transporter Information")}
+                      </h2>
+                      <p className="text-[10.5px] text-slate-500 dark:text-slate-400">
+                        Choose an existing company to display its registered details.
                       </p>
                     </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => toggleCollapse("transporter")}
+                    className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                  >
+                    {collapsedCards.transporter ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+                  </button>
+                </div>
 
-                    <CompanyPicker
-                      label={tt("trk.company_name_label", "Company Name (Optional)")}
-                      value={form.companyId}
-                      onValueChange={(id) => setForm((p) => ({ ...p, companyId: id }))}
-                      placeholder={tt("trk.search_company_ph", "Search company (or leave blank)...")}
-                    />
+                {!collapsedCards.transporter && (
+                  <div className="mt-4 space-y-3.5">
+                    {/* Link Company Radio */}
+                    <div className="flex items-center gap-4 text-xs font-bold text-slate-700 dark:text-slate-300">
+                      <span>Link a company?</span>
+                      <label className="flex items-center gap-1.5 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="companyLink"
+                          value="yes"
+                          checked={form.companyLink === "yes"}
+                          onChange={() => setForm((p) => ({ ...p, companyLink: "yes" }))}
+                          className="text-blue-600"
+                        />
+                        <span>Yes</span>
+                      </label>
+                      <label className="flex items-center gap-1.5 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="companyLink"
+                          value="no"
+                          checked={form.companyLink === "no"}
+                          onChange={() => setForm((p) => ({ ...p, companyLink: "no", companyId: "" }))}
+                          className="text-blue-600"
+                        />
+                        <span>No</span>
+                      </label>
+                    </div>
 
-                    {form.companyId && (
-                      <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50/70 p-3 text-xs dark:border-slate-800 dark:bg-slate-800/40">
-                        <div className="min-w-0">
-                          <span className="font-bold text-slate-800 dark:text-slate-200">{companyDetails?.name}</span>
-                          {companyDetails?.company_code && (
-                            <span className="ms-2 text-slate-500">({companyDetails.company_code})</span>
-                          )}
+                    {form.companyLink === "yes" ? (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-[140px_1fr] gap-3">
+                          <label className="space-y-1 text-xs">
+                            <span className="font-bold text-slate-700 dark:text-slate-300">Company Type</span>
+                            <select
+                              value={form.companyType}
+                              onChange={(e) => setForm((p) => ({ ...p, companyType: e.target.value }))}
+                              className="h-9 w-full rounded-xl border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-800 outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                            >
+                              <option value="transporter">Transporter Company</option>
+                              <option value="shippingLine">Shipping Line Company</option>
+                            </select>
+                          </label>
+
+                          <div>
+                            <CompanyPicker
+                              label={form.companyType === "shippingLine" ? "Shipping Line Company *" : "Transporter Company *"}
+                              value={form.companyId}
+                              onValueChange={(id) => setForm((p) => ({ ...p, companyId: id }))}
+                              placeholder={tt("trk.search_company_ph", "Search company...")}
+                            />
+                          </div>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => setForm((p) => ({ ...p, companyId: "" }))}
-                          className="text-xs font-bold text-rose-600 hover:underline dark:text-rose-400"
-                        >
-                          {tt("common.clear", "Clear")}
-                        </button>
+
+                        {form.companyId && companyDetails && (
+                          <div className="rounded-2xl border border-blue-100 bg-blue-50/40 p-3.5 dark:border-blue-900/40 dark:bg-blue-950/20">
+                            <div className="flex items-center justify-between border-b border-blue-100/80 pb-2 dark:border-blue-900/40">
+                              <div className="flex items-center gap-2">
+                                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600 text-white font-black text-xs">
+                                  <Building2 className="h-4 w-4" />
+                                </div>
+                                <div>
+                                  <div className="text-xs font-black text-slate-900 dark:text-white">
+                                    {companyDetails.name}
+                                  </div>
+                                  <div className="text-[10px] text-blue-700 dark:text-blue-300 font-bold uppercase">
+                                    REGISTERED COMPANY
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px]">
+                              <div className="flex justify-between py-0.5"><span className="text-slate-500">Company Code:</span> <b className="text-slate-800 dark:text-slate-100">{companyDetails.company_code || "—"}</b></div>
+                              <div className="flex justify-between py-0.5"><span className="text-slate-500">Phone:</span> <b className="text-slate-800 dark:text-slate-100">{companyPhone(companyDetails) || "—"}</b></div>
+                              <div className="flex justify-between py-0.5"><span className="text-slate-500">City / Country:</span> <b className="text-slate-800 dark:text-slate-100">{[companyDetails.city_name, companyDetails.country_name].filter(Boolean).join(", ") || "—"}</b></div>
+                              <div className="flex justify-between py-0.5"><span className="text-slate-500">Address:</span> <b className="text-slate-800 dark:text-slate-100 truncate">{companyDetails.address || "—"}</b></div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-3 text-xs text-slate-500 italic dark:border-slate-800 dark:bg-slate-800/30">
+                        No transporter or shipping-line company is linked.
                       </div>
                     )}
                   </div>
+                )}
+              </section>
 
-                  <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-4 dark:border-slate-800">
+              {/* CARD 4: Driver Information (Optional) with Photo, Multi-Contacts, and Location */}
+              <section id="driverCard" className="rounded-3xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 scroll-mt-20">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100 text-xs font-black text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                      4
+                    </span>
+                    <div>
+                      <h2 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                        <span>{tt("trk.section_driver", "Driver Information")}</span>
+                        <span className="text-[10px] font-normal text-slate-400">(Optional)</span>
+                      </h2>
+                      <p className="text-[10.5px] text-slate-500 dark:text-slate-400">
+                        Select a permanent driver or enter temporary driver details.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="hidden sm:flex items-center gap-3 text-xs font-bold text-slate-700 dark:text-slate-300">
+                      <label className="flex items-center gap-1 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="driverType"
+                          value="permanent"
+                          checked={form.driverType === "permanent"}
+                          onChange={() => setForm((p) => ({ ...p, driverType: "permanent" }))}
+                          className="text-blue-600"
+                        />
+                        <span>Permanent</span>
+                      </label>
+                      <label className="flex items-center gap-1 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="driverType"
+                          value="temporary"
+                          checked={form.driverType === "temporary"}
+                          onChange={() => setForm((p) => ({ ...p, driverType: "temporary" }))}
+                          className="text-blue-600"
+                        />
+                        <span>Temporary</span>
+                      </label>
+                    </div>
                     <button
                       type="button"
-                      onClick={handlePrev}
-                      className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+                      onClick={() => toggleCollapse("driver")}
+                      className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                     >
-                      <ChevronLeft className="h-4 w-4 rtl:rotate-180" /> Back
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleNext}
-                      className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-600/25 hover:bg-blue-700"
-                    >
-                      {form.companyId
-                        ? "Next Step"
-                        : "Skip / Next Step"} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+                      {collapsedCards.driver ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
                     </button>
                   </div>
-                </section>
-              )}
+                </div>
 
-              {/* STEP 4: Transporter Information (Optional) */}
-              {currentStep === 4 && (
-                <section className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                  <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
-                    <div className="flex items-center gap-2.5">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-                        <TruckIcon className="h-4 w-4" />
+                {!collapsedCards.driver && (
+                  <div className="mt-4 space-y-4">
+                    {/* Mobile Driver Type Radio */}
+                    <div className="flex sm:hidden items-center gap-3 text-xs font-bold text-slate-700 dark:text-slate-300">
+                      <label className="flex items-center gap-1 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="driverTypeMobile"
+                          value="permanent"
+                          checked={form.driverType === "permanent"}
+                          onChange={() => setForm((p) => ({ ...p, driverType: "permanent" }))}
+                          className="text-blue-600"
+                        />
+                        <span>Permanent Driver</span>
+                      </label>
+                      <label className="flex items-center gap-1 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="driverTypeMobile"
+                          value="temporary"
+                          checked={form.driverType === "temporary"}
+                          onChange={() => setForm((p) => ({ ...p, driverType: "temporary" }))}
+                          className="text-blue-600"
+                        />
+                        <span>Temporary Driver</span>
+                      </label>
+                    </div>
+
+                    {/* Driver Photograph Upload Control */}
+                    <div className="flex items-center gap-3.5 rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50/60 to-white p-3 dark:border-blue-950/60 dark:from-blue-950/20 dark:to-slate-900">
+                      <div className="relative h-18 w-16 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xs dark:border-slate-700 dark:bg-slate-800 flex items-center justify-center">
+                        {driverPhotoUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={driverPhotoUrl} alt="Driver preview" className="h-full w-full object-cover" />
+                        ) : (
+                          <User className="h-8 w-8 text-blue-300" />
+                        )}
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h2 className="text-sm font-black text-slate-900 dark:text-white">
-                            Step 4: {tt("trk.section_transporter", "Transporter Information")}
-                          </h2>
-                          <span className="rounded-md bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/60">
-                            Optional
+                      <div className="min-w-0 flex-1">
+                        <strong className="block text-xs font-black text-slate-800 dark:text-slate-200">
+                          Driver photograph
+                        </strong>
+                        <p className="mt-0.5 text-[10.5px] text-slate-500">
+                          Add driver photo first, then complete driver details.
+                        </p>
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                          <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-blue-200 bg-white px-2.5 py-1 text-xs font-bold text-blue-700 shadow-2xs hover:bg-blue-50 dark:border-blue-800 dark:bg-slate-900 dark:text-blue-300">
+                            <Plus className="h-3 w-3" /> Add Driver Photo
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/png"
+                              onChange={handleDriverPhotoUpload}
+                              className="sr-only"
+                            />
+                          </label>
+                          <span className="text-[10px] text-slate-400">
+                            {driverPhotoName || "📎 Photograph attachment · JPG/PNG ≤ 5 MB"}
                           </span>
                         </div>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                          Optional transporter person or dispatch party
-                        </p>
                       </div>
                     </div>
-                    <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-black uppercase text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
-                      Step 4 of 5
-                    </span>
-                  </div>
 
-                  <div className="space-y-4">
-                    <PersonPicker
-                      label={tt("trk.transporter_name_label", "Transporter Name (Optional)")}
-                      value={form.transporterId}
-                      onValueChange={(id) => setForm((p) => ({ ...p, transporterId: id }))}
-                      placeholder={tt("trk.search_transporter_ph", "Search transporter (or leave blank)...")}
-                      lang={activeLang}
-                      createLabel={tt("trk.new_transporter", "+ New Transporter")}
-                    />
+                    {/* Driver Contacts: Up to 10 Repeatable Rows */}
+                    <details className="rounded-2xl border border-slate-200 bg-slate-50/50 p-3.5 dark:border-slate-800 dark:bg-slate-800/20 open:bg-white dark:open:bg-slate-900 transition">
+                      <summary className="cursor-pointer text-xs font-bold text-blue-700 dark:text-blue-300 flex items-center justify-between select-none">
+                        <span className="flex items-center gap-1.5">
+                          <Phone className="h-3.5 w-3.5" />
+                          <span>+ Contacts · WhatsApp / Mobile / Email</span>
+                        </span>
+                        <span className="text-[10px] font-mono text-slate-400">
+                          {contacts.length} / 10 contacts
+                        </span>
+                      </summary>
 
-                    {form.transporterId && (
-                      <div className="rounded-2xl border border-blue-100 bg-blue-50/50 p-3.5 dark:border-blue-900/40 dark:bg-blue-950/20">
-                        <div className="flex items-center justify-between">
-                          <div className="min-w-0">
-                            <div className="text-xs font-black text-slate-900 dark:text-white">
-                              {transporterDetails?.customer_name}
+                      <div className="mt-3 space-y-2">
+                        {contacts.map((contact, index) => {
+                          const isEmail = contact.type === "Email";
+                          return (
+                            <div key={contact.id} className="grid grid-cols-[100px_1fr_32px] gap-2 items-center">
+                              <select
+                                value={contact.type}
+                                onChange={(e) => handleContactTypeChange(index, e.target.value as ContactType)}
+                                className="h-8.5 rounded-xl border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-800 outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                              >
+                                <option value="WhatsApp">WhatsApp</option>
+                                <option value="Mobile">Mobile</option>
+                                <option value="Phone">Phone</option>
+                                <option value="Email">Email</option>
+                              </select>
+                              <input
+                                type={isEmail ? "email" : "tel"}
+                                value={contact.value}
+                                onChange={(e) => handleContactValueChange(index, e.target.value)}
+                                placeholder={isEmail ? "Email address" : "Number with country code"}
+                                className="h-8.5 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveContact(index)}
+                                className="flex h-8.5 w-8 items-center justify-center rounded-xl border border-slate-200 text-slate-400 hover:bg-rose-50 hover:text-rose-600 dark:border-slate-700 dark:hover:bg-rose-950/40"
+                                title="Remove contact"
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </button>
                             </div>
-                            <div className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
-                              {transporterDetails?.person_code ? `${tt("trk.transporter_code_label", "Transporter Code")}: ${transporterDetails.person_code}` : ""}
-                              {transporterDetails?.mobile ? ` • ${transporterDetails.mobile}` : ""}
-                            </div>
-                          </div>
+                          );
+                        })}
+
+                        <div className="flex items-center justify-between pt-1">
+                          <span className="text-[10.5px] text-slate-400">
+                            {contacts.length >= 10 ? "Maximum 10 contacts reached" : "Repeated types allowed"}
+                          </span>
                           <button
                             type="button"
-                            onClick={() => setParty360({ customerId: form.transporterId, name: transporterDetails?.customer_name || "" })}
-                            className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-blue-200 bg-white px-3 py-1.5 text-xs font-bold text-blue-700 shadow-sm hover:bg-blue-50 dark:border-blue-800 dark:bg-slate-900 dark:text-blue-300"
+                            disabled={contacts.length >= 10}
+                            onClick={handleAddContact}
+                            className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700 hover:bg-blue-100 disabled:opacity-40 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-300"
                           >
-                            <Eye className="h-3.5 w-3.5" /> {tt("trk.view_transporter_details", "View Transporter Details")}
+                            <Plus className="h-3 w-3" /> Add Contact
                           </button>
                         </div>
                       </div>
-                    )}
-                  </div>
+                    </details>
 
-                  <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-4 dark:border-slate-800">
-                    <button
-                      type="button"
-                      onClick={handlePrev}
-                      className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
-                    >
-                      <ChevronLeft className="h-4 w-4 rtl:rotate-180" /> Back
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleNext}
-                      className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-600/25 hover:bg-blue-700"
-                    >
-                      Next Step <ArrowRight className="h-4 w-4 rtl:rotate-180" />
-                    </button>
-                  </div>
-                </section>
-              )}
-
-              {/* STEP 5: Driver Information & Finalization */}
-              {currentStep === 5 && (
-                <section className="space-y-4 rounded-3xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
-                    <div className="flex items-center gap-2.5">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-                        <UserCheck className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <h2 className="text-sm font-black text-slate-900 dark:text-white">
-                          Step 5: {tt("trk.section_driver", "Driver Information & Finalization")}
-                        </h2>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                          Assign driver, add remarks and complete registration
-                        </p>
-                      </div>
-                    </div>
-                    <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
-                      Step 5 of 5
-                    </span>
-                  </div>
-
-                  {/* Driver fields */}
-                  <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-800/30">
-                    <h3 className="mb-3 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                      {tt("trk.section_driver", "5. Driver Information")}
-                    </h3>
-                    <div className="space-y-3">
-                      <div className="flex items-end gap-2">
-                        <div className="flex-1">
+                    {/* Driver Name & Identification Fields */}
+                    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-4">
+                      <div className="sm:col-span-1">
+                        {form.driverType === "permanent" ? (
                           <PersonPicker
                             label={tt("trk.driver_name_label", "Driver Name *")}
                             value={form.driverId}
@@ -1626,252 +2080,490 @@ export function TruckRecreationWizard({
                             lang={activeLang}
                             createLabel={tt("trk.new_driver", "+ New Driver")}
                           />
-                        </div>
-                        {form.driverId && (
-                          <button
-                            type="button"
-                            onClick={() => setParty360({ customerId: form.driverId, name: driverDetails?.customer_name || "" })}
-                            className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-2.5 text-xs font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900 dark:bg-blue-950/60 dark:text-blue-300"
-                            title={tt("trk.view_driver_details", "View Driver Details")}
-                          >
-                            <Eye className="h-3.5 w-3.5" />
-                          </button>
+                        ) : (
+                          <label className="space-y-1 text-xs block">
+                            <span className="font-bold text-slate-700 dark:text-slate-300">
+                              Temporary Driver Name
+                            </span>
+                            <input
+                              value={form.temporaryDriverName}
+                              onChange={(e) => setForm((p) => ({ ...p, temporaryDriverName: e.target.value }))}
+                              placeholder="Enter temporary driver name..."
+                              className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                            />
+                          </label>
                         )}
                       </div>
 
-                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        <label className="space-y-1 text-xs">
-                          <span className="font-bold text-slate-600 dark:text-slate-400">{tt("common.mobile", "Mobile")}</span>
-                          <input
-                            value={form.driverMobile}
-                            onChange={(e) => setForm((p) => ({ ...p, driverMobile: e.target.value }))}
-                            className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
-                          />
-                        </label>
-                        <label className="space-y-1 text-xs">
-                          <span className="font-bold text-slate-600 dark:text-slate-400">{tt("trk.license_no", "Driving License Number")}</span>
-                          <input
-                            value={form.driverLicenseNo}
-                            onChange={(e) => setForm((p) => ({ ...p, driverLicenseNo: e.target.value }))}
-                            className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
-                          />
-                        </label>
-                        <label className="space-y-1 text-xs sm:col-span-2">
-                          <span className="font-bold text-slate-600 dark:text-slate-400">{tt("trk.licence_expiry_label", "Licence Expiry Date")}</span>
-                          <input
-                            type="date"
-                            value={form.driverLicenseExpiry}
-                            onChange={(e) => setForm((p) => ({ ...p, driverLicenseExpiry: e.target.value }))}
-                            className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
-                          />
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Additional info */}
-                  <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-800/30">
-                    <h3 className="mb-3 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                      {tt("trk.section_additional", "6. Additional Information")}
-                    </h3>
-                    <div className="space-y-3">
                       <label className="space-y-1 text-xs">
-                        <div className="flex items-center justify-between">
-                          <span className="font-bold text-slate-600 dark:text-slate-400">{tt("trk.remarks", "Remarks (Optional)")}</span>
-                          <VoiceDictateButton
-                            context="clearing"
-                            lang={activeLang}
-                            value={form.remarks}
-                            onChange={(next) => setForm((p) => ({ ...p, remarks: next }))}
-                          />
-                        </div>
-                        <textarea
-                          rows={2}
-                          value={form.remarks}
-                          onChange={(e) => setForm((p) => ({ ...p, remarks: e.target.value }))}
-                          className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
+                        <span className="font-bold text-slate-700 dark:text-slate-300">{tt("trk.license_no", "Driving License Number")}</span>
+                        <input
+                          value={form.driverLicenseNo}
+                          onChange={(e) => setForm((p) => ({ ...p, driverLicenseNo: e.target.value }))}
+                          placeholder="Licence number"
+                          className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                         />
                       </label>
-                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        <label className="space-y-1 text-xs">
-                          <span className="font-bold text-slate-600 dark:text-slate-400">{tt("common.status", "Status")}</span>
-                          <select
-                            value={form.status}
-                            onChange={(e) => setForm((p) => ({ ...p, status: e.target.value }))}
-                            className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2 text-sm font-semibold outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
-                          >
-                            <option value="active">{tt("common.active", "Active")}</option>
-                            <option value="inactive">{tt("common.inactive", "Inactive")}</option>
-                            <option value="suspended">{tt("trk.badge_pending", "Pending")}</option>
-                            <option value="expired">{tt("trk.badge_completed", "Completed")}</option>
-                          </select>
-                        </label>
-                        <label className="space-y-1 text-xs">
-                          <span className="font-bold text-slate-600 dark:text-slate-400">{tt("common.registration_date", "Registration Date")}</span>
+
+                      <label className="space-y-1 text-xs">
+                        <span className="font-bold text-slate-700 dark:text-slate-300">{tt("trk.licence_expiry_label", "Licence Expiry Date")}</span>
+                        <input
+                          type="date"
+                          value={form.driverLicenseExpiry}
+                          onChange={(e) => setForm((p) => ({ ...p, driverLicenseExpiry: e.target.value }))}
+                          className="h-9 w-full rounded-xl border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                        />
+                      </label>
+
+                      <label className="space-y-1 text-xs">
+                        <span className="font-bold text-slate-700 dark:text-slate-300">{tt("common.status", "Status")}</span>
+                        <select
+                          value={form.status}
+                          onChange={(e) => setForm((p) => ({ ...p, status: e.target.value }))}
+                          className="h-9 w-full rounded-xl border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                        >
+                          <option value="active">{tt("common.active", "Active")}</option>
+                          <option value="inactive">{tt("common.inactive", "Inactive")}</option>
+                          <option value="suspended">{tt("trk.badge_pending", "Pending")}</option>
+                          <option value="expired">{tt("trk.badge_completed", "Completed")}</option>
+                        </select>
+                      </label>
+                    </div>
+
+                    {/* Location Management for Driver */}
+                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+                      <div className="flex items-center gap-4 text-xs font-bold text-slate-700 dark:text-slate-300 mb-2.5">
+                        <span>Location Management for Driver</span>
+                        <label className="flex items-center gap-1.5 cursor-pointer">
                           <input
-                            type="date"
-                            value={form.registrationDate}
-                            onChange={(e) => setForm((p) => ({ ...p, registrationDate: e.target.value }))}
-                            disabled
-                            className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-semibold outline-none dark:border-slate-700 dark:bg-slate-800"
+                            type="radio"
+                            name="addDriverLocation"
+                            value="yes"
+                            checked={form.addDriverLocation === "yes"}
+                            onChange={() => setForm((p) => ({ ...p, addDriverLocation: "yes" }))}
+                            className="text-blue-600"
                           />
+                          <span>Yes (Add Location)</span>
+                        </label>
+                        <label className="flex items-center gap-1.5 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="addDriverLocation"
+                            value="no"
+                            checked={form.addDriverLocation === "no"}
+                            onChange={() => setForm((p) => ({ ...p, addDriverLocation: "no" }))}
+                            className="text-blue-600"
+                          />
+                          <span>No (Not Required)</span>
                         </label>
                       </div>
+
+                      {form.addDriverLocation === "yes" && (
+                        <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
+                          <label className="space-y-1 text-xs">
+                            <span className="font-bold text-slate-600 dark:text-slate-400">{tt("common.country", "Country")}</span>
+                            <input
+                              value={form.driverCountry}
+                              onChange={(e) => setForm((p) => ({ ...p, driverCountry: e.target.value }))}
+                              placeholder="Country"
+                              className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                            />
+                          </label>
+                          <label className="space-y-1 text-xs">
+                            <span className="font-bold text-slate-600 dark:text-slate-400">State / Province</span>
+                            <input
+                              value={form.driverState}
+                              onChange={(e) => setForm((p) => ({ ...p, driverState: e.target.value }))}
+                              placeholder="State / province"
+                              className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                            />
+                          </label>
+                          <label className="space-y-1 text-xs">
+                            <span className="font-bold text-slate-600 dark:text-slate-400">{tt("common.city", "City")}</span>
+                            <input
+                              value={form.driverCity}
+                              onChange={(e) => setForm((p) => ({ ...p, driverCity: e.target.value }))}
+                              placeholder="City"
+                              className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                            />
+                          </label>
+                          <label className="space-y-1 text-xs">
+                            <span className="font-bold text-slate-600 dark:text-slate-400">{tt("common.address", "Full Address")}</span>
+                            <input
+                              value={form.driverAddress}
+                              onChange={(e) => setForm((p) => ({ ...p, driverAddress: e.target.value }))}
+                              placeholder="Enter full address..."
+                              className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                            />
+                          </label>
+                        </div>
+                      )}
                     </div>
                   </div>
+                )}
+              </section>
 
-                  {editingId ? (
-                    <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-800/30">
-                      <TruckAttachments entityId={editingId} entityKey="truck" />
+              {/* CARD 5: Documents (Optional) */}
+              <section id="documentsCard" className="rounded-3xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 scroll-mt-20">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100 text-xs font-black text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                      5
+                    </span>
+                    <div>
+                      <h2 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                        <span>Documents</span>
+                        <span className="text-[10px] font-normal text-slate-400">(Optional)</span>
+                      </h2>
+                      <p className="text-[10.5px] text-slate-500 dark:text-slate-400">
+                        Upload registration, insurance, driver licence and supporting files.
+                      </p>
                     </div>
-                  ) : null}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => toggleCollapse("documents")}
+                    className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                  >
+                    {collapsedCards.documents ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+                  </button>
+                </div>
 
-                  <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-4 dark:border-slate-800">
-                    <button
-                      type="button"
-                      onClick={handlePrev}
-                      className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+                {!collapsedCards.documents && (
+                  <div className="mt-4 space-y-3.5">
+                    {/* Drag & Drop Upload Zone */}
+                    <label
+                      onDragEnter={(e) => { e.preventDefault(); setIsDragging(true); }}
+                      onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                      onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setIsDragging(false);
+                        if (e.dataTransfer.files?.length) handleAddDocuments(e.dataTransfer.files);
+                      }}
+                      className={`flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed p-5 text-center transition ${
+                        isDragging
+                          ? "border-blue-500 bg-blue-50/60 dark:bg-blue-950/30"
+                          : "border-slate-200 bg-slate-50/50 hover:bg-blue-50/30 dark:border-slate-700 dark:bg-slate-800/30"
+                      }`}
                     >
-                      <ChevronLeft className="h-4 w-4 rtl:rotate-180" /> Back
-                    </button>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={backToList}
-                        className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
-                      >
-                        <X className="h-4 w-4" /> {tt("common.cancel", "Cancel")}
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={saving}
-                        className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 text-xs font-black text-white shadow-md shadow-emerald-600/25 hover:bg-emerald-700 disabled:opacity-50"
-                      >
-                        {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                        {tt("common.save", "Save")}
-                      </button>
-                    </div>
-                  </div>
-                </section>
-              )}
-            </div>
+                      <UploadCloud className="h-8 w-8 text-blue-500" />
+                      <div className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                        Drag & drop files here, or click to upload
+                      </div>
+                      <div className="text-[10.5px] text-slate-400">
+                        PDF, JPG, PNG · Max 10 MB each · Session preview
+                      </div>
+                      <input
+                        type="file"
+                        multiple
+                        accept="application/pdf,image/jpeg,image/png"
+                        onChange={(e) => {
+                          if (e.target.files?.length) handleAddDocuments(e.target.files);
+                          e.target.value = "";
+                        }}
+                        className="sr-only"
+                      />
+                    </label>
 
-            {/* Right column: live report */}
+                    {/* Compact Documents List with View / Download */}
+                    <details open className="rounded-2xl border border-slate-200 bg-slate-50/50 p-3.5 dark:border-slate-800 dark:bg-slate-800/20">
+                      <summary className="cursor-pointer text-xs font-bold text-blue-700 dark:text-blue-300 flex items-center justify-between select-none">
+                        <span className="flex items-center gap-1.5">
+                          <Paperclip className="h-3.5 w-3.5" />
+                          <span>📎 Documents · View / Download</span>
+                        </span>
+                        <span className="text-[10.5px] font-mono text-slate-400">
+                          {documents.length} files
+                        </span>
+                      </summary>
+
+                      <div className="mt-3 space-y-1.5">
+                        {documents.length === 0 ? (
+                          <div className="text-center text-xs text-slate-400 py-2">
+                            No documents added
+                          </div>
+                        ) : (
+                          documents.map((doc) => (
+                            <div
+                              key={doc.id}
+                              className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs dark:border-slate-700 dark:bg-slate-800"
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                <FileText className="h-4 w-4 shrink-0 text-blue-600" />
+                                <span className="truncate font-medium text-slate-800 dark:text-slate-200">{doc.name}</span>
+                                <span className="text-[10px] text-slate-400 shrink-0">
+                                  · {(doc.size / 1024).toFixed(0)} KB
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <a
+                                  href={doc.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-[11px] font-bold text-blue-600 hover:underline"
+                                >
+                                  View
+                                </a>
+                                <a
+                                  href={doc.url}
+                                  download={doc.name}
+                                  className="text-[11px] font-bold text-blue-600 hover:underline"
+                                >
+                                  Download
+                                </a>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveDocument(doc.id)}
+                                  className="p-1 text-slate-400 hover:text-rose-600"
+                                  title="Remove file"
+                                >
+                                  <X className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </details>
+
+                    {/* Existing Truck Attachments if editing */}
+                    {editingId && (
+                      <div className="mt-2 rounded-2xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
+                        <TruckAttachments entityId={editingId} entityKey="truck" />
+                      </div>
+                    )}
+                  </div>
+                )}
+              </section>
+
+              {/* Form Footer Actions */}
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={backToList}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 shadow-2xs"
+                >
+                  <X className="h-4 w-4" /> {tt("common.cancel", "Cancel")}
+                </button>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleSaveDraft}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 shadow-2xs"
+                  >
+                    <Save className="h-4 w-4 text-blue-600" />
+                    <span>Save Draft</span>
+                  </button>
+
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-xs font-black text-white shadow-md shadow-blue-600/25 hover:bg-blue-700 disabled:opacity-50 transition"
+                  >
+                    {saving ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <span>Save & Register</span>
+                        <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </form>
+
+            {/* RIGHT STICKY LIVE TRUCK REPORT COLUMN (Col 5) */}
             <div className="lg:col-span-5">
-              <div className="rounded-3xl border border-blue-100 bg-white shadow-md dark:border-blue-950/60 dark:bg-slate-900 lg:sticky lg:top-6">
-                <div className="flex items-center justify-between gap-3 rounded-t-3xl border-b border-slate-100 bg-gradient-to-r from-blue-50 to-white px-5 py-4 dark:border-slate-800 dark:from-blue-950/40 dark:to-slate-900">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow">
-                      <FileText className="h-5 w-5" />
+              <aside className="rounded-3xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:sticky lg:top-6 overflow-hidden">
+                {/* Header */}
+                <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/80 px-4 py-3.5 dark:border-slate-800 dark:bg-slate-800/40">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
+                      <FileText className="h-4 w-4" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-black text-slate-900 dark:text-white">{tt("trk.live_report_title", "Live Truck Report")}</h3>
-                      <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                      <h3 className="text-xs font-black text-slate-900 dark:text-white">
+                        {tt("trk.live_report_title", "Live Truck Report")}
+                      </h3>
+                      <p className="text-[10px] text-slate-400">
                         {tt("trk.live_report_sub", "Registration preview — updates as you type")}
                       </p>
                     </div>
                   </div>
-                  <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ${statusBadgeClasses(form.status)}`}>
-                    {statusLabel(form.status)}
+                  <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[9px] font-bold text-blue-700 border border-blue-200/60 dark:bg-blue-950/60 dark:text-blue-300">
+                    LIVE PREVIEW
                   </span>
                 </div>
 
-                <div className="px-5 py-4">
-                  <div className="mb-3 rounded-2xl bg-slate-900 px-4 py-3.5 text-white dark:bg-slate-800">
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-blue-200">{tt("trk.col_truck_no", "Truck No.")}</div>
-                    <div className="truncate font-mono text-2xl font-black">{form.truckNumber || "—"}</div>
-                  </div>
-
-                  <ReportSection
-                    title={tt("trk.section_owner", "1. Truck Owner Information")}
-                    icon={User}
-                    rows={[
-                      { label: tt("common.name", "Name"), value: ownerDetails?.customer_name },
-                      { label: tt("trk.owner_code_label", "Owner Code"), value: ownerDetails?.person_code },
-                      { label: tt("common.mobile", "Mobile"), value: ownerDetails?.mobile || ownerDetails?.whatsapp },
-                      { label: tt("common.address", "Address"), value: ownerDetails?.address },
-                    ]}
-                  />
-
-                  <ReportSection
-                    title={tt("trk.section_truck_details", "2. Truck Details")}
-                    icon={TruckIcon}
-                    rows={[
-                      { label: tt("trk.truck_name_label", "Truck Name"), value: form.truckName },
-                      { label: tt("trk.model", "Model *").replace(" *", ""), value: form.truckModel },
-                      { label: tt("trk.chassis_no", "Chassis No *").replace(" *", ""), value: form.chassisNumber },
-                      { label: tt("trk.engine_no", "Engine No"), value: form.engineNumber },
-                    ]}
-                  />
-
-                  <ReportSection
-                    title={tt("com.vehicle_specifications", "Vehicle Specifications")}
-                    icon={ListChecks}
-                    rows={[
-                      { label: tt("trk.reg_no", "Registration No *").replace(" *", ""), value: form.registrationNumber },
-                      { label: tt("trk.truck_type", "Truck Type *").replace(" *", ""), value: truckTypeOptions.find((o) => o.code === form.truckType) ? optionLabel(truckTypeOptions.find((o) => o.code === form.truckType)!) : form.truckType },
-                      { label: tt("trk.make", "Make *").replace(" *", ""), value: makeOptions.find((o) => o.code === form.make) ? optionLabel(makeOptions.find((o) => o.code === form.make)!) : form.make },
-                      { label: tt("trk.year", "Year *").replace(" *", ""), value: form.manufacturingYear },
-                      { label: tt("trk.color", "Color"), value: colorOptions.find((o) => o.code === form.color) ? optionLabel(colorOptions.find((o) => o.code === form.color)!) : form.color },
-                      { label: tt("trk.fuel_type", "Fuel Type"), value: fuelTypeOptions.find((o) => o.code === form.fuelType) ? optionLabel(fuelTypeOptions.find((o) => o.code === form.fuelType)!) : form.fuelType },
-                      { label: tt("trk.capacity", "Capacity (Tons) *").replace(" *", ""), value: form.capacity },
-                      { label: tt("tr.reg_expiry", "Reg. Expiry"), value: form.registrationExpiryDate },
-                      { label: tt("tr.ins_expiry", "Insurance Expiry"), value: form.insuranceExpiryDate },
-                    ]}
-                  />
-
-                  <ReportSection
-                    title={tt("trk.section_company", "3. Registered Company")}
-                    icon={Building2}
-                    rows={[
-                      { label: tt("common.name", "Name"), value: companyDetails?.name },
-                      { label: tt("trk.company_code_label", "Company Code"), value: companyDetails?.company_code },
-                      { label: tt("common.country", "Country"), value: companyDetails?.country_name },
-                      { label: tt("common.city", "City"), value: companyDetails?.city_name },
-                      { label: tt("common.phone", "Phone"), value: companyPhone(companyDetails) },
-                    ]}
-                  />
-
-                  <ReportSection
-                    title={tt("trk.section_transporter", "4. Transporter Information")}
-                    icon={TruckIcon}
-                    rows={[
-                      { label: tt("common.name", "Name"), value: transporterDetails?.customer_name },
-                      { label: tt("trk.transporter_code_label", "Transporter Code"), value: transporterDetails?.person_code },
-                      { label: tt("common.contact", "Contact"), value: transporterDetails?.mobile || transporterDetails?.whatsapp },
-                      { label: tt("common.address", "Address"), value: transporterDetails?.address },
-                    ]}
-                  />
-
-                  <ReportSection
-                    title={tt("trk.section_driver", "5. Driver Information")}
-                    icon={UserCheck}
-                    rows={[
-                      { label: tt("common.name", "Name"), value: driverDetails?.customer_name },
-                      { label: tt("common.mobile", "Mobile"), value: form.driverMobile },
-                      { label: tt("trk.lbl_license", "License No"), value: form.driverLicenseNo },
-                      { label: tt("trk.licence_expiry_label", "Licence Expiry Date"), value: form.driverLicenseExpiry },
-                      { label: tt("common.address", "Address"), value: driverDetails?.address },
-                    ]}
-                  />
-
-                  <ReportSection
-                    title={tt("trk.section_additional", "6. Additional Information")}
-                    icon={ListChecks}
-                    rows={[
-                      { label: tt("common.registration_date", "Registration Date"), value: form.registrationDate },
-                      { label: tt("trk.remarks", "Remarks (Optional)").replace(" (Optional)", ""), value: form.remarks },
-                    ]}
-                  />
+                {/* Content */}
+                <div className="p-3.5 max-h-[calc(100vh-180px)] overflow-y-auto">
+                  {fullLiveReportContent}
                 </div>
-              </div>
+
+                {/* Bottom Action Bar */}
+                <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/80 px-4 py-2.5 text-[10px] text-slate-400 dark:border-slate-800 dark:bg-slate-800/40">
+                  <span>Live form preview · central ERP</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setViewModalTab("full");
+                      setViewModalOpen(true);
+                    }}
+                    className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-blue-700 shadow-2xs hover:bg-blue-50 dark:border-slate-700 dark:bg-slate-800 dark:text-blue-300"
+                  >
+                    <Eye className="h-3.5 w-3.5" />
+                    <span>View Report</span>
+                  </button>
+                </div>
+              </aside>
             </div>
-          </form>
+          </div>
         </>
       )}
 
+      {/* OVERLAY MODAL: VIEW REPORT DIALOG */}
+      {viewModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs">
+          <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col rounded-3xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900 animate-in fade-in zoom-in-95">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 dark:border-slate-800">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                  <FileText className="h-4 w-4" />
+                </div>
+                <h2 className="text-sm font-black text-slate-900 dark:text-white">
+                  {viewModalTab === "full" && tt("trk.live_report_title", "Live Truck Report")}
+                  {viewModalTab === "owner" && tt("trk.section_owner", "Owner Details")}
+                  {viewModalTab === "vehicle" && tt("trk.section_truck_details", "Truck & Vehicle Details")}
+                  {viewModalTab === "transporter" && tt("trk.section_transporter", "Transporter Details")}
+                  {viewModalTab === "driver" && tt("trk.section_driver", "Driver Details")}
+                  {viewModalTab === "documents" && "Documents"}
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setViewModalOpen(false)}
+                className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600 dark:border-slate-800 dark:hover:bg-slate-800"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+              {viewModalTab === "full" && fullLiveReportContent}
+
+              {viewModalTab === "owner" && (
+                <LiveReportSection title={`1. ${tt("trk.section_owner", "Truck Owner Information")}`} icon={User}>
+                  <LiveReportRow label={tt("common.name", "Name")} value={ownerDetails?.customer_name || "—"} />
+                  <LiveReportRow label={tt("trk.owner_code_label", "Owner Code")} value={ownerDetails?.person_code || ownerDetails?.code || "—"} />
+                  <LiveReportRow label={tt("common.mobile", "Mobile")} value={ownerDetails?.mobile || "—"} />
+                  <LiveReportRow label="WhatsApp" value={ownerDetails?.whatsapp || "—"} />
+                  <LiveReportRow label={tt("common.address", "Address")} value={ownerDetails?.address || "—"} />
+                </LiveReportSection>
+              )}
+
+              {viewModalTab === "vehicle" && (
+                <LiveReportSection title={`2. ${tt("trk.section_truck_details", "Truck Details")}`} icon={TruckIcon}>
+                  <LiveReportRow label={tt("trk.truck_no", "Truck Number")} value={form.truckNumber} />
+                  <LiveReportRow label={tt("trk.chassis_no", "Chassis No")} value={form.chassisNumber} />
+                  <LiveReportRow label={tt("trk.engine_no", "Engine No")} value={form.engineNumber} />
+                  <LiveReportRow label={tt("trk.reg_no", "Registration No")} value={form.registrationNumber} />
+                  <LiveReportRow label={tt("trk.truck_type", "Truck Type")} value={form.truckType} />
+                  <LiveReportRow label={tt("trk.year", "Year")} value={form.manufacturingYear} />
+                  <LiveReportRow label={tt("trk.color", "Color")} value={form.color} />
+                  <LiveReportRow label={tt("trk.fuel_type", "Fuel Type")} value={form.fuelType} />
+                  <LiveReportRow label={tt("trk.capacity", "Capacity (Tons)")} value={form.capacity} />
+                  <LiveReportRow label={tt("tr.reg_expiry", "Reg. Expiry")} value={form.registrationExpiryDate} />
+                  <LiveReportRow label={tt("tr.ins_expiry", "Insurance Expiry")} value={form.insuranceExpiryDate} />
+                </LiveReportSection>
+              )}
+
+              {viewModalTab === "transporter" && (
+                <LiveReportSection title={`3. ${tt("trk.section_transporter", "Transporter Information")}`} icon={Building2}>
+                  <LiveReportRow label={tt("trk.company_name_label", "Company Name")} value={companyDetails?.name || "—"} />
+                  <LiveReportRow label={tt("trk.company_code_label", "Company Code")} value={companyDetails?.company_code || "—"} />
+                  <LiveReportRow label={tt("common.phone", "Phone")} value={companyPhone(companyDetails) || "—"} />
+                  <LiveReportRow label={tt("common.city", "City")} value={[companyDetails?.city_name, companyDetails?.country_name].filter(Boolean).join(", ") || "—"} />
+                  <LiveReportRow label={tt("common.address", "Address")} value={companyDetails?.address || "—"} />
+                </LiveReportSection>
+              )}
+
+              {viewModalTab === "driver" && (
+                <LiveReportSection title={`4. ${tt("trk.section_driver", "Driver Information")}`} icon={UserCheck}>
+                  <LiveReportRow
+                    label={tt("trk.driver_name_label", "Driver Name")}
+                    value={form.driverType === "permanent" ? driverDetails?.customer_name : form.temporaryDriverName}
+                  />
+                  <LiveReportRow label={tt("trk.license_no", "Driving License Number")} value={form.driverLicenseNo} />
+                  <LiveReportRow label={tt("trk.licence_expiry_label", "Licence Expiry Date")} value={form.driverLicenseExpiry} />
+                  {contacts.filter((c) => c.value.trim().length > 0).map((c, idx) => (
+                    <LiveReportRow key={c.id || idx} label={c.type} value={c.value} />
+                  ))}
+                  {form.addDriverLocation === "yes" && (
+                    <LiveReportRow
+                      label="Location"
+                      value={[form.driverCountry, form.driverState, form.driverCity, form.driverAddress].filter(Boolean).join(", ") || "—"}
+                    />
+                  )}
+                </LiveReportSection>
+              )}
+
+              {viewModalTab === "documents" && (
+                <LiveReportSection title="5. Documents" icon={FileText}>
+                  {documents.length === 0 ? (
+                    <div className="p-2 text-center text-xs text-slate-400">
+                      No documents uploaded yet.
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5 pt-1">
+                      {documents.map((d) => (
+                        <div key={d.id} className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50/70 p-2 text-xs dark:border-slate-800 dark:bg-slate-800/40">
+                          <span className="truncate font-medium text-slate-700 dark:text-slate-300">{d.name}</span>
+                          <div className="flex items-center gap-2">
+                            <a href={d.url} target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-blue-600 hover:underline">
+                              View
+                            </a>
+                            <a href={d.url} download={d.name} className="text-xs font-bold text-blue-600 hover:underline">
+                              Download
+                            </a>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </LiveReportSection>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-between border-t border-slate-100 px-5 py-3 dark:border-slate-800">
+              <span className="text-[11px] text-slate-400">
+                Design preview synced with active form inputs
+              </span>
+              <button
+                type="button"
+                onClick={() => setViewModalOpen(false)}
+                className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow hover:bg-blue-700"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Party 360 View Modal */}
       {party360 && (
-        <Party360Modal customerId={party360.customerId} name={party360.name} lang={activeLang} onClose={() => setParty360(null)} />
+        <Party360Modal
+          customerId={party360.customerId}
+          name={party360.name}
+          lang={activeLang}
+          onClose={() => setParty360(null)}
+        />
       )}
     </div>
   );
