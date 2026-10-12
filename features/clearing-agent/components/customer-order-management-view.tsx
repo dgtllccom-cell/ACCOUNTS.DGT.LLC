@@ -55,7 +55,8 @@ import {
   AlertTriangle,
   Copy,
   Check,
-  ShieldCheck
+  ShieldCheck,
+  UserCheck
 } from "lucide-react";
 
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
@@ -95,6 +96,7 @@ import { CustomerOrderPartnerBillsPanel } from "@/features/clearing-agent/compon
 import { CustomerOrderInsurancePanel } from "@/features/clearing-agent/components/customer-order-insurance-panel";
 import { CustomerOrderRegistryFiltersPopover, type CustomerOrderFilterValues } from "@/features/clearing-agent/components/customer-order-registry-filters-popover";
 import { CustomerOrderMovementModal } from "@/features/clearing-agent/components/customer-order-movement-modal";
+import { CustomerOrderMovementSpecs } from "@/features/clearing-agent/components/customer-order-movement-specs";
 import { CustomerOrderShipmentTypeModal } from "@/features/clearing-agent/components/customer-order-shipment-type-modal";
 import { CustomerOrderOperationTypeModal } from "@/features/clearing-agent/components/customer-order-operation-type-modal";
 import { CustomerOrderCorridorModal } from "@/features/clearing-agent/components/customer-order-corridor-modal";
@@ -4667,6 +4669,8 @@ export function CustomerOrderManagementView() {
                       trucksList={trucksList}
                       warehousesList={warehousesList}
                       goodsMasterList={goodsMasterList}
+                      countryBranches={countryBranches}
+                      cityBranches={cityBranches}
                       assignableUsers={assignableUsers}
                       onSelectSubStep={(sub) => {
                         setStep1SubStep(sub);
@@ -4970,256 +4974,227 @@ export function CustomerOrderManagementView() {
                   </p>
                 </div>
 
-                {/* 1. Unified Movement & Dynamic Route Journey Specification Card */}
-                <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-3.5">
-                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-600 text-white font-black text-sm shadow-md shadow-sky-600/20">
-                        <Route className="h-5 w-5" />
+                {/* Unified Movement & Route Journey Card — Clean message style matching Order Bill & Customer Address (Audio 7 & 9) */}
+                <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900 space-y-3">
+                  {/* Card Header matching Order Bill & Customer Address */}
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-200/60 dark:border-slate-800">
+                    <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 text-xs">
+                      <span className="flex h-5 w-5 items-center justify-center rounded-md bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300">
+                        <Route className="h-3 w-3" />
                       </span>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-black text-slate-900 dark:text-white">
-                            {tt("movement_route_journey", "Movement & Route Journey")}
-                          </span>
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase ${
-                            formData.movement_type === "import"
-                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800"
-                              : formData.movement_type === "export"
-                              ? "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800"
-                              : "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800"
-                          }`}>
-                            {movementTypeLabel(lang, formData.movement_type)}
-                          </span>
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800 uppercase">
-                            {transportModeLabel(lang, formData.transport_mode || "by_road")}
-                          </span>
-                        </div>
-                        <div className="text-[11px] text-slate-600 dark:text-slate-300 flex items-center gap-1.5 mt-1">
-                          <span className="text-slate-500 font-medium">{tt("route_via_colon", "Route Via:")}</span>
-                          <span className="inline-flex items-center gap-1 font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200/80 dark:border-emerald-800">
-                            <Route className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
-                            {formData.route_name || tt("direct_customs_corridor", "Direct Customs Corridor")}
-                          </span>
-                        </div>
-                      </div>
+                      <span>{tt("movement_route_journey_report", "MOVEMENT & ROUTE JOURNEY")}</span>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setStep1SubStep("1A");
-                        setCurrentStep(1);
-                      }}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-sky-200 bg-sky-50 text-xs font-bold text-sky-700 hover:bg-sky-100 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-300 transition shadow-2xs"
-                      title={tt("transfer_step1a_route", "Transfer to Step 1A / Movement & Route Entry")}
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                      <span>{tt("transfer_route_1a", "Transfer to Route (1A)")}</span>
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px] font-bold uppercase ${
+                        formData.movement_type === "import"
+                          ? "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800"
+                          : formData.movement_type === "export"
+                          ? "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800"
+                          : "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800"
+                      }`}>
+                        {movementTypeLabel(lang, formData.movement_type)}
+                      </span>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800 uppercase">
+                        {transportModeLabel(lang, formData.transport_mode || "by_road")}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setStep1SubStep("1A");
+                          setCurrentStep(1);
+                        }}
+                        className="text-slate-400 hover:text-sky-600 transition p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800"
+                        title={tt("transfer_route_1a", "Edit Movement & Route (1A)")}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   </div>
 
-                  {/* Visual Route Journey Message Box (As requested: ek message ki tarah dikhana chahiye) */}
-                  {(() => {
-                    const liveRouteStops = parseRouteStops(formData.route_name);
-                    if (liveRouteStops.length === 0) return null;
-                    return (
-                      <div className="rounded-xl border border-emerald-200/90 bg-gradient-to-r from-emerald-50/70 via-sky-50/50 to-blue-50/60 p-3 dark:border-emerald-900/60 dark:from-emerald-950/30 dark:via-slate-900/50 dark:to-blue-950/30 shadow-2xs space-y-2">
-                        <div className="flex items-center justify-between text-xs">
-                          <div className="flex items-center gap-1.5 font-black text-emerald-800 dark:text-emerald-300 uppercase tracking-wide">
-                            <Route className="h-4 w-4 text-emerald-600" />
-                            <span>{tt("route_pathway_title", "Transit Route Pathway")}</span>
-                          </div>
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                            {liveRouteStops.length > 1 ? `${liveRouteStops.length} Stages Route` : "Single Corridor"}
-                          </span>
-                        </div>
+                  {/* Prominent Journey Headline (From -> To) */}
+                  <div className="leading-relaxed space-y-0.5 pt-0.5">
+                    <p className="font-bold text-slate-900 dark:text-white text-base tracking-tight flex items-center gap-2">
+                      <span>{formData.loading_country_name || tt("origin", "Origin")}</span>
+                      <span className="text-sky-500 font-bold">➔</span>
+                      <span>{formData.receiving_country_name || tt("destination", "Destination")}</span>
+                    </p>
+                    <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                      <span className="font-semibold text-slate-600 dark:text-slate-300">{tt("route_via_colon", "Route Via:")}</span>
+                      <span className="font-mono text-emerald-700 dark:text-emerald-400 font-bold">
+                        {formData.route_name || tt("direct_customs_corridor", "Direct Customs Corridor")}
+                      </span>
+                    </p>
+                  </div>
 
-                        {/* Visual Flow Chain (Pills with arrows) */}
-                        <div className="flex flex-wrap items-center gap-1.5 py-1">
-                          {liveRouteStops.map((stop, idx) => (
-                            <Fragment key={idx}>
-                              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-emerald-200/90 dark:border-emerald-800/80 shadow-2xs text-xs font-bold text-slate-800 dark:text-slate-100">
-                                <span className="text-sm">{getRouteCountryFlag(stop)}</span>
-                                <span>{stop}</span>
-                                <span className="text-[9px] px-1 py-0.2 rounded font-black uppercase text-slate-400 bg-slate-100 dark:bg-slate-700">
-                                  {idx === 0 ? "Origin" : idx === liveRouteStops.length - 1 ? "Dest" : `Via ${idx}`}
-                                </span>
-                              </div>
-                              {idx < liveRouteStops.length - 1 ? (
-                                <span className="text-emerald-600 dark:text-emerald-400 font-black text-sm px-0.5">➔</span>
-                              ) : null}
-                            </Fragment>
-                          ))}
-                        </div>
-
-                        {/* Narrative Route Message Line */}
-                        {liveRouteStops.length > 1 && (
-                          <div className="text-[11px] text-slate-600 dark:text-slate-300 pt-1 border-t border-emerald-200/50 dark:border-slate-800 flex items-center gap-1.5">
-                            <span className="font-semibold text-emerald-700 dark:text-emerald-400">{tt("journey_summary", "Journey:")}</span>
-                            <span>
-                              From <strong>{liveRouteStops[0]}</strong> transiting through{" "}
-                              <strong>{liveRouteStops.slice(1, -1).join(", ")}</strong> to final destination{" "}
-                              <strong>{liveRouteStops[liveRouteStops.length - 1]}</strong>.
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })()}
-
-                  {/* 3-Stage Chronological Journey in Clean Message Layout (No Nested Packets) */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs pt-1">
-                    {/* Stage 1: Origin & Loading */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-slate-800">
-                        <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 text-xs">
-                          <span className="flex h-5 w-5 items-center justify-center rounded-md bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300">
-                            <MapPin className="h-3 w-3" />
-                          </span>
-                          <span>{tt("option1_origin_loading", "1. ORIGIN & LOADING")}</span>
-                        </div>
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-sky-50 text-sky-700 border border-sky-200 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-800">
+                  {/* Clean Structured Message Rows (No awkward landing pathway banner) */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1 text-xs">
+                    {/* Stage 1: Origin */}
+                    <div className="rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-850/50 p-2.5 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+                          {tt("stage_origin", "1. ORIGIN & DISPATCH")}
+                        </span>
+                        <span className="text-[9.5px] font-bold text-sky-700 dark:text-sky-300 bg-sky-100 dark:bg-sky-950 px-1.5 py-0.2 rounded">
                           {formData.loading_country_name ? tt("specified", "Specified") : tt("pending", "Pending")}
                         </span>
                       </div>
-
-                      {/* Prominent Origin Country */}
-                      <div className="leading-relaxed space-y-0.5 pt-0.5">
-                        <p className="font-black text-slate-900 dark:text-white text-sm tracking-tight truncate">
-                          {formData.loading_country_name || tt("country_pending", "Country Pending")}
-                        </p>
-                        <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                          {tt("origin_country_region", "Origin Country & Port of Loading")}
-                        </p>
-                      </div>
-
-                      {/* Clean Details List */}
-                      <div className="pt-1.5 space-y-1.5 text-[11.5px] text-slate-600 dark:text-slate-400">
+                      <p className="font-bold text-slate-800 dark:text-slate-100 text-xs">
+                        {formData.loading_country_name || tt("country_pending", "Country Pending")}
+                      </p>
+                      <div className="text-[11px] text-slate-600 dark:text-slate-400 space-y-1">
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-500 font-medium">{tt("port_label", "Port / Exit:")}</span>
-                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[170px]">
-                            {formData.loading_port_name || formData.origin_airport_name || formData.exit_border_port_name || tt("origin_port_border_fallback", "Origin Port / Border")}
+                          <span className="text-slate-400">{tt("port_label", "Port / Exit:")}</span>
+                          <span className="font-medium text-slate-800 dark:text-slate-200 truncate max-w-[130px]">
+                            {formData.loading_port_name || formData.origin_airport_name || formData.exit_border_port_name || "—"}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-500 font-medium">{tt("facility_colon", "Facility:")}</span>
-                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[170px]">
-                            {formData.loading_source_name || tt("origin_facility_fallback", "Origin Facility")}
+                          <span className="text-slate-400">{tt("facility_colon", "Facility:")}</span>
+                          <span className="font-medium text-slate-800 dark:text-slate-200 truncate max-w-[130px]">
+                            {formData.loading_source_name || "—"}
                           </span>
                         </div>
                       </div>
-
-                      {/* Planned Pickup Date Footer */}
-                      <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-400">
-                        <span className="text-slate-500 font-medium">{tt("planned_pickup_badge", "Planned Pickup:")}</span>
-                        <span className="font-mono font-bold text-slate-900 dark:text-white">
-                          {formData.planned_pickup_date || "—"}
-                        </span>
+                      <div className="pt-1.5 border-t border-slate-200/60 dark:border-slate-800 flex items-center justify-between text-[10.5px]">
+                        <span className="text-slate-400">{tt("planned_pickup_badge", "Pickup:")}</span>
+                        <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{formData.planned_pickup_date || "—"}</span>
                       </div>
                     </div>
 
-                    {/* Stage 2: Customs & Border Transit */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-slate-800">
-                        <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 text-xs">
-                          <span className="flex h-5 w-5 items-center justify-center rounded-md bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300">
-                            <Anchor className="h-3 w-3" />
-                          </span>
-                          <span>{tt("option2_border_customs", "2. BORDER & CUSTOMS")}</span>
-                        </div>
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800">
+                    {/* Stage 2: Customs & Border */}
+                    <div className="rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-850/50 p-2.5 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+                          {tt("stage_border_customs", "2. BORDER & CLEARANCE")}
+                        </span>
+                        <span className="text-[9.5px] font-bold text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-950 px-1.5 py-0.2 rounded">
                           {customsStageLabel(lang, formData.movement_type)}
                         </span>
                       </div>
-
-                      {/* Prominent Checkpoint */}
-                      <div className="leading-relaxed space-y-0.5 pt-0.5">
-                        <p className="font-black text-slate-900 dark:text-white text-sm tracking-tight truncate">
-                          {formData.entry_border_port_name || formData.exit_border_port_name || tt("border_checkpoint_fallback", "Border Checkpoint")}
-                        </p>
-                        <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                          {tt("customs_transit_point", "Customs Clearance & Corridor")}
-                        </p>
-                      </div>
-
-                      {/* Clean Details List */}
-                      <div className="pt-1.5 space-y-1.5 text-[11.5px] text-slate-600 dark:text-slate-400">
+                      <p className="font-bold text-slate-800 dark:text-slate-100 text-xs truncate">
+                        {formData.entry_border_port_name || formData.exit_border_port_name || tt("border_corridor", "Border Corridor")}
+                      </p>
+                      <div className="text-[11px] text-slate-600 dark:text-slate-400 space-y-1">
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-500 font-medium">{tt("clearance_colon", "Clearance:")}</span>
-                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[170px]">
+                          <span className="text-slate-400">{tt("clearance_colon", "Clearance:")}</span>
+                          <span className="font-medium text-slate-800 dark:text-slate-200 truncate max-w-[130px]">
                             {formData.customs_clearance_office || customsStageLabel(lang, formData.movement_type)}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-500 font-medium flex items-center gap-1">
-                            <Route className="h-3 w-3 text-slate-400" />
-                            <span>{tt("route_via_colon", "Route Via:")}</span>
-                          </span>
-                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[170px]" title={formData.route_name || tt("direct_customs_corridor", "Direct Customs Corridor")}>
-                            {formData.route_name || (String(formData.movement_type).includes("transit") ? tt("bonded_highway_fallback", "Bonded Highway") : tt("direct_route_short", "Direct Route"))}
+                          <span className="text-slate-400">{tt("corridor_type", "Type:")}</span>
+                          <span className="font-medium text-slate-800 dark:text-slate-200 truncate max-w-[130px]">
+                            {String(formData.movement_type).includes("transit") ? tt("bonded_highway_fallback", "Bonded Highway") : tt("direct_route_short", "Direct Route")}
                           </span>
                         </div>
                       </div>
-
-                      {/* Planned Dispatch Date Footer */}
-                      <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-400">
-                        <span className="text-slate-500 font-medium">{tt("planned_dispatch_badge", "Planned Dispatch:")}</span>
-                        <span className="font-mono font-bold text-slate-900 dark:text-white">
-                          {formData.planned_dispatch_date || "—"}
-                        </span>
+                      <div className="pt-1.5 border-t border-slate-200/60 dark:border-slate-800 flex items-center justify-between text-[10.5px]">
+                        <span className="text-slate-400">{tt("planned_dispatch_badge", "Dispatch:")}</span>
+                        <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{formData.planned_dispatch_date || "—"}</span>
                       </div>
                     </div>
 
-                    {/* Stage 3: Destination & Receiving */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-slate-800">
-                        <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 text-xs">
-                          <span className="flex h-5 w-5 items-center justify-center rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-                            <Globe2 className="h-3 w-3" />
-                          </span>
-                          <span>{tt("option3_final_destination", "3. FINAL DESTINATION")}</span>
-                        </div>
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800">
+                    {/* Stage 3: Destination */}
+                    <div className="rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-850/50 p-2.5 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+                          {tt("stage_destination", "3. FINAL DESTINATION")}
+                        </span>
+                        <span className="text-[9.5px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-1.5 py-0.2 rounded">
                           {tt("destination", "Destination")}
                         </span>
                       </div>
-
-                      {/* Prominent Target Country */}
-                      <div className="leading-relaxed space-y-0.5 pt-0.5">
-                        <p className="font-black text-slate-900 dark:text-white text-sm tracking-tight truncate">
-                          {formData.receiving_country_name || tt("target_country_fallback", "Target Country")}
-                        </p>
-                        <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                          {tt("destination_delivery_point", "Receiving Port / Destination City")}
-                        </p>
-                      </div>
-
-                      {/* Clean Details List */}
-                      <div className="pt-1.5 space-y-1.5 text-[11.5px] text-slate-600 dark:text-slate-400">
+                      <p className="font-bold text-slate-800 dark:text-slate-100 text-xs">
+                        {formData.receiving_country_name || tt("target_country_fallback", "Target Country")}
+                      </p>
+                      <div className="text-[11px] text-slate-600 dark:text-slate-400 space-y-1">
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-500 font-medium">{tt("dest_label", "Port/City:")}</span>
-                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[170px]">
-                            {formData.destination_port_name || formData.destination_city || tt("destination_port_city_fallback", "Destination Port / City")}
+                          <span className="text-slate-400">{tt("dest_port_city", "Port/City:")}</span>
+                          <span className="font-medium text-slate-800 dark:text-slate-200 truncate max-w-[130px]">
+                            {formData.destination_port_name || formData.destination_airport_name || formData.destination_city || "—"}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-500 font-medium">{tt("delivery_colon", "Delivery:")}</span>
-                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[170px]">
+                          <span className="text-slate-400">{tt("delivery_wh", "Delivery:")}</span>
+                          <span className="font-medium text-slate-800 dark:text-slate-200 truncate max-w-[130px]">
                             {formData.final_delivery_location || tt("target_warehouse_fallback", "Target Warehouse")}
                           </span>
                         </div>
                       </div>
-
-                      {/* Planned Arrival Date Footer */}
-                      <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-400">
-                        <span className="text-slate-500 font-medium">{tt("planned_arrival_badge", "Planned Arrival:")}</span>
-                        <span className="font-mono font-bold text-slate-900 dark:text-white">
-                          {formData.planned_arrival_date || "—"}
-                        </span>
+                      <div className="pt-1.5 border-t border-slate-200/60 dark:border-slate-800 flex items-center justify-between text-[10.5px]">
+                        <span className="text-slate-400">{tt("planned_arrival_badge", "Arrival:")}</span>
+                        <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{formData.planned_arrival_date || "—"}</span>
                       </div>
                     </div>
                   </div>
+
+                  {/* Route Leg Handler Status Row (Audio 7: "aur aage live report mein bhi dikhana chahiye") */}
+                  {(() => {
+                    const primaryLeg = (formData.legs?.[0] || {}) as any;
+                    const isPartner = primaryLeg?.handlerType === "external_partner" || primaryLeg?.handler_type === "external_partner" || Boolean(primaryLeg?.partnerName);
+                    return (
+                      <div className="rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-850/70 p-2.5 flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <div className="flex items-center gap-2">
+                          <span className={`flex h-6 w-6 items-center justify-center rounded-lg text-white ${isPartner ? "bg-indigo-600" : "bg-blue-600"}`}>
+                            {isPartner ? <Users className="h-3.5 w-3.5" /> : <Building2 className="h-3.5 w-3.5" />}
+                          </span>
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <span className="font-bold text-slate-800 dark:text-slate-200">
+                              {isPartner ? tt("handler_external_partner", "External Partner:") : tt("handler_our_branch", "Route Leg Handler:")}
+                            </span>
+                            {isPartner ? (
+                              <>
+                                <span className="font-bold text-indigo-700 dark:text-indigo-300">
+                                  {primaryLeg?.partnerName || "External Partner"}
+                                </span>
+                                {primaryLeg?.partnerType && (
+                                  <span className="text-[10px] text-slate-500 capitalize">
+                                    ({String(primaryLeg.partnerType).replace("_", " ")})
+                                  </span>
+                                )}
+                                {primaryLeg?.partnerAccountNumber && (
+                                  <span className="text-[10px] font-mono text-slate-500">
+                                    [{primaryLeg.partnerAccountNumber}]
+                                  </span>
+                                )}
+                                <span className={`text-[9.5px] px-1.5 py-0.2 rounded font-bold ${
+                                  primaryLeg?.hasPortalAccess
+                                    ? "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300"
+                                    : "bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300"
+                                }`}>
+                                  {primaryLeg?.hasPortalAccess ? "Portal Online" : "Offline"}
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                <span className="font-bold text-blue-700 dark:text-blue-300">
+                                  {primaryLeg?.branchName || "Company Branch Office"}
+                                </span>
+                                {primaryLeg?.branchCountryName && (
+                                  <span className="text-[10px] text-slate-500">
+                                    ({primaryLeg.branchCountryName})
+                                  </span>
+                                )}
+                                <span className="text-slate-300 dark:text-slate-600">•</span>
+                                <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 dark:text-emerald-300 font-semibold">
+                                  <UserCheck className="h-3 w-3" />
+                                  <span>{primaryLeg?.assignedUserName || tt("pending_operator", "Pending Operator")}</span>
+                                </span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+
+                        {primaryLeg?.insuranceRequired && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/60 px-2 py-0.5 rounded border border-teal-200 dark:border-teal-800">
+                            <ShieldCheck className="h-3 w-3" />
+                            <span>{tt("cargo_insurance_active", "Cargo Insurance Active")}</span>
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Route legs: one line per leg — mode, from → to, handler / partner account, road truck */}
@@ -5863,6 +5838,8 @@ function Step1BookingCustomer({
   trucksList,
   warehousesList,
   goodsMasterList,
+  countryBranches,
+  cityBranches,
   assignableUsers,
   handlePartyChange,
   handleLoadingCountryChange,
@@ -5911,6 +5888,8 @@ function Step1BookingCustomer({
   trucksList?: any[];
   warehousesList?: any[];
   goodsMasterList?: any[];
+  countryBranches?: { id: string; name: string; countryId: string; code?: string | null }[];
+  cityBranches?: { id: string; name: string; countryBranchId: string; code?: string | null }[];
   assignableUsers?: { id: string; name: string }[];
   handlePartyChange: (roleKey: PartyRoleKey, next: PartySelection) => void;
   handleLoadingCountryChange: (countryId: string) => void;
@@ -6331,474 +6310,205 @@ function Step1BookingCustomer({
             ) : null}
           </div>
 
-          {/* ROW 2: Movement Type, Shipment Mode & Operation Type (3-Column Interactive Modal Triggers) */}
+          {/* ROW 2: Movement Type, Shipment Mode & Operation Type (Clean Dropdown Selectors matching Customer Account style) */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {/* 1. Movement Type Modal Trigger */}
-            <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-1.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs flex flex-col justify-between">
+            {/* 1. Movement Type Dropdown Card */}
+            <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
               <div>
-                <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                     <Repeat2 className="h-4 w-4 text-purple-600" />
                     <span>{tt("movement_type_route", "Movement Type")} *</span>
-                  </span>
-                  <span className="text-[10px] text-purple-600 dark:text-purple-400 font-mono font-bold uppercase">
+                  </label>
+                  <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200/70 dark:border-purple-800">
                     {formData.movement_type || "import"}
                   </span>
-                </label>
-                <p className="mt-1 text-[11px] text-slate-500 capitalize">
-                  {movementTypeLabel(lang, formData.movement_type)}
-                </p>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <div className="relative flex-1">
+                    <select
+                      value={formData.movement_type || "import"}
+                      onChange={(e) => {
+                        const val = e.target.value as any;
+                        setFormData((c) => ({ ...c, movement_type: val }));
+                        setMovementModalOpen(true);
+                      }}
+                      className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-2 focus:ring-purple-500/20"
+                    >
+                      <option value="import">{tt("opt_import", "Import (Foreign ➔ Domestic)")}</option>
+                      <option value="export">{tt("opt_export", "Export (Domestic ➔ Foreign)")}</option>
+                      <option value="transit">{tt("opt_transit", "Transit (Foreign ➔ Foreign)")}</option>
+                      <option value="up_transit">{tt("opt_up_transit", "Up-Transit (Bonded Corridor)")}</option>
+                      <option value="re_export">{tt("opt_re_export", "Re-Export (Cross Trade)")}</option>
+                      <option value="domestic">{tt("opt_domestic", "Domestic / Internal Transfer")}</option>
+                    </select>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setMovementModalOpen(true)}
+                    className="h-9 px-2.5 rounded-xl border border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100 dark:border-purple-800 dark:bg-purple-950/50 dark:text-purple-300 transition shrink-0 flex items-center justify-center shadow-2xs"
+                    title={tt("open_movement_modal", "Configure Movement Details (Parda)")}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setMovementModalOpen(true)}
-                className="mt-2 inline-flex items-center justify-between w-full rounded-xl border border-purple-200 bg-purple-50/70 px-3 py-1.5 text-xs font-bold text-purple-700 hover:bg-purple-100 dark:border-purple-800 dark:bg-purple-950/40 dark:text-purple-300 transition"
-              >
-                <span>{tt("select_movement_type", "Choose Movement Type")}</span>
-                <ChevronRight className="h-3.5 w-3.5" />
-              </button>
+
+              {/* Tag summary underneath dropdown */}
+              <div className="flex flex-wrap items-center gap-1.5 pt-1.5 text-xs text-slate-600 dark:text-slate-300 border-t border-slate-100 dark:border-slate-800/60">
+                <span className="font-bold text-slate-900 dark:text-white capitalize">
+                  {movementTypeLabel(lang, formData.movement_type)}
+                </span>
+                <span className="text-slate-300 dark:text-slate-600">•</span>
+                <span className="text-[11px] text-slate-500 truncate">
+                  {movementFlowLabel(lang, formData.movement_type)}
+                </span>
+              </div>
             </div>
 
-            {/* 2. Shipment / Package Type Modal Trigger */}
-            <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-1.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs flex flex-col justify-between">
+            {/* 2. Shipment / Package Type Dropdown Card */}
+            <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
               <div>
-                <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                     <Ship className="h-4 w-4 text-blue-600" />
                     <span>{tt("shipping_transport_mode", "Shipment Mode")} *</span>
-                  </span>
-                  <span className="text-[10px] text-blue-600 dark:text-blue-400 font-mono font-bold uppercase">
+                  </label>
+                  <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200/70 dark:border-blue-800">
                     {formData.transport_mode ? formData.transport_mode.replace("by_", "") : "sea"}
                   </span>
-                </label>
-                <p className="mt-1 text-[11px] text-slate-500 capitalize">
-                  {formData.transport_mode === "by_sea" ? "🚢 By Sea (Ocean Vessel)" :
-                   formData.transport_mode === "by_air" ? "✈️ By Air (Air Freight)" :
-                   formData.transport_mode === "by_road" ? "🚛 By Road (Truck / Trailer)" :
-                   formData.transport_mode === "by_rail" ? "🚆 By Train (Rail Freight)" : "By Sea"} • {formData.shipment_type || "FCL"}
-                </p>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <div className="relative flex-1">
+                    <select
+                      value={formData.transport_mode || "by_sea"}
+                      onChange={(e) => {
+                        const mode = e.target.value as any;
+                        setFormData((c) => ({ ...c, transport_mode: mode }));
+                        setShipmentModalOpen(true);
+                      }}
+                      className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20"
+                    >
+                      <option value="by_sea">{tt("opt_sea", "🚢 By Sea (Ocean Vessel)")}</option>
+                      <option value="by_road">{tt("opt_road", "🚛 By Road (Truck / Trailer)")}</option>
+                      <option value="by_air">{tt("opt_air", "✈️ By Air (Air Freight)")}</option>
+                      <option value="by_rail">{tt("opt_rail", "🚆 By Rail (Rail Freight)")}</option>
+                    </select>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShipmentModalOpen(true)}
+                    className="h-9 px-2.5 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950/50 dark:text-blue-300 transition shrink-0 flex items-center justify-center shadow-2xs"
+                    title={tt("open_shipment_modal", "Configure Shipment Mode (Parda)")}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setShipmentModalOpen(true)}
-                className="mt-2 inline-flex items-center justify-between w-full rounded-xl border border-blue-200 bg-blue-50/70 px-3 py-1.5 text-xs font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300 transition"
-              >
-                <span>{tt("select_shipment_type", "Choose Shipment Mode")}</span>
-                <ChevronRight className="h-3.5 w-3.5" />
-              </button>
+
+              {/* Tag summary underneath dropdown */}
+              <div className="flex flex-wrap items-center gap-1.5 pt-1.5 text-xs text-slate-600 dark:text-slate-300 border-t border-slate-100 dark:border-slate-800/60">
+                <span className="font-bold text-slate-900 dark:text-white capitalize">
+                  {transportModeLabel(lang, formData.transport_mode)}
+                </span>
+                <span className="text-slate-300 dark:text-slate-600">•</span>
+                <span className="text-[11px] font-semibold text-blue-600 dark:text-blue-400">
+                  {formData.shipment_type || "FCL"}
+                </span>
+                <span className="text-slate-300 dark:text-slate-600">•</span>
+                <span className="text-[11px] text-slate-500 truncate">
+                  {transportModeDescLabel(lang, formData.transport_mode)}
+                </span>
+              </div>
             </div>
 
-            {/* 3. Operation Type Modal Trigger */}
-            <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-1.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs flex flex-col justify-between">
+            {/* 3. Operation Type Dropdown Card */}
+            <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
               <div>
-                <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                     <Boxes className="h-4 w-4 text-amber-600" />
                     <span>{tt("operation_type_label", "Operation Type")} *</span>
-                  </span>
-                  <span className="text-[10px] text-amber-600 dark:text-amber-400 font-mono font-bold uppercase">
+                  </label>
+                  <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200/70 dark:border-amber-800">
                     {(formData as any).operation_type || (formData.movement_type === "transit" || formData.movement_type === "up_transit" ? "transit" : formData.movement_type === "re_export" ? "re_export" : "direct")}
                   </span>
-                </label>
-                <p className="mt-1 text-[11px] text-slate-500 capitalize">
-                  {(formData as any).operation_type === "transit" || formData.movement_type === "transit" || formData.movement_type === "up_transit"
-                    ? "Transit (Customs Bonded)"
-                    : (formData as any).operation_type === "re_export" || formData.movement_type === "re_export"
-                    ? "Re-Export (Cross Trade)"
-                    : "Direct Import / Delivery"}
-                </p>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <div className="relative flex-1">
+                    <select
+                      value={(formData as any).operation_type || (formData.movement_type === "transit" || formData.movement_type === "up_transit" ? "transit" : formData.movement_type === "re_export" ? "re_export" : "direct")}
+                      onChange={(e) => {
+                        const op = e.target.value;
+                        setFormData((c) => ({
+                          ...c,
+                          operation_type: op,
+                          movement_type: op === "transit" ? "up_transit" : op === "re_export" ? "re_export" : "import"
+                        }));
+                        setOperationModalOpen(true);
+                      }}
+                      className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-2 focus:ring-amber-500/20"
+                    >
+                      <option value="direct">{tt("opt_direct", "Direct Import / Delivery")}</option>
+                      <option value="transit">{tt("opt_transit_bonded", "Customs Bonded Transit")}</option>
+                      <option value="re_export">{tt("opt_re_export_cross", "Re-Export (Cross Trade)")}</option>
+                      <option value="cross_stuffing">{tt("opt_cross_stuffing", "Cross-Stuffing / Terminal Hub")}</option>
+                    </select>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setOperationModalOpen(true)}
+                    className="h-9 px-2.5 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300 transition shrink-0 flex items-center justify-center shadow-2xs"
+                    title={tt("open_operation_modal", "Configure Operation Type (Parda)")}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setOperationModalOpen(true)}
-                className="mt-2 inline-flex items-center justify-between w-full rounded-xl border border-amber-200 bg-amber-50/70 px-3 py-1.5 text-xs font-bold text-amber-700 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300 transition"
-              >
-                <span>{tt("select_operation_type", "Choose Operation Type")}</span>
-                <ChevronRight className="h-3.5 w-3.5" />
-              </button>
+
+              {/* Tag summary underneath dropdown */}
+              <div className="flex flex-wrap items-center gap-1.5 pt-1.5 text-xs text-slate-600 dark:text-slate-300 border-t border-slate-100 dark:border-slate-800/60">
+                <span className="font-bold text-slate-900 dark:text-white capitalize">
+                  {(formData as any).operation_type === "transit" || formData.movement_type === "transit" || formData.movement_type === "up_transit"
+                    ? "Transit Bonded"
+                    : (formData as any).operation_type === "re_export" || formData.movement_type === "re_export"
+                    ? "Re-Export"
+                    : (formData as any).operation_type === "cross_stuffing"
+                    ? "Cross-Stuffing"
+                    : "Direct Import"}
+                </span>
+                <span className="text-slate-300 dark:text-slate-600">•</span>
+                <span className="text-[11px] text-slate-500 truncate">
+                  {(formData as any).operation_type === "transit" || formData.movement_type === "transit" || formData.movement_type === "up_transit"
+                    ? "Customs Bonded Corridor"
+                    : (formData as any).operation_type === "re_export" || formData.movement_type === "re_export"
+                    ? "Third-Country Transfer"
+                    : "Standard Direct Leg"}
+                </span>
+              </div>
             </div>
           </div>
 
           {/* DYNAMIC MOVEMENT & LOCATION SPECIFICATIONS BASED ON MOVEMENT TYPE */}
-          {formData.movement_type === "import" && (
-            <div className="rounded-xl border border-sky-200 bg-sky-50/40 p-3.5 space-y-3 dark:border-sky-900/60 dark:bg-sky-950/20">
-              <div className="flex items-center justify-between border-b border-sky-200/60 pb-1.5 dark:border-sky-900/60">
-                <div className="flex items-center gap-1.5 text-xs font-black uppercase text-sky-800 dark:text-sky-300">
-                  <Ship className="h-4 w-4 text-sky-600" />
-                  <span>{tt("import_movement_route", "Import Movement & Location Setup")}</span>
-                </div>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-sky-100 dark:bg-sky-900/60 text-sky-700 dark:text-sky-300">
-                  {tt("import_clearance_badge", "Import Clearance")}
-                </span>
-              </div>
-
-              {/* Import scenario: collect from the foreign origin, or clear goods that already arrived */}
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  {tt("import_scenario_label", "Import Scenario")} *
-                </label>
-                <select
-                  value={formData.import_scenario}
-                  onChange={(e) => setFormData((c) => ({ ...c, import_scenario: e.target.value as "collect_from_origin" | "arrived_at_entry" }))}
-                  className={selectClass}
-                >
-                  <option value="collect_from_origin">{tt("import_scn_origin", "Collect goods from the foreign origin and arrange the journey")}</option>
-                  <option value="arrived_at_entry">{tt("import_scn_arrived", "Goods already arrived at the entry border / port — clear and arrange onward delivery")}</option>
-                </select>
-              </div>
-
-              {/* Row 1: Foreign Origin Country & Port of Loading */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {tt("foreign_origin_country", "Loading Country (Origin)")} *
-                  </label>
-                  <select
-                    value={formData.loading_country_id}
-                    onChange={(e) => handleLoadingCountryChange(e.target.value)}
-                    className={selectClass}
-                  >
-                    <option value="">— {tt("select_origin_country", "Select Origin Country")} —</option>
-                    {countries.map((c) => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className={arrivedAtEntry ? "hidden" : ""}>
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {locLabel("loading")}
-                  </label>
-                  <select
-                    value={formData.loading_port_id}
-                    onChange={(e) => handleLoadingPortChange(e.target.value)}
-                    className={selectClass}
-                  >
-                    <option value="">— {tt("loc_select_generic", "Select location")} —</option>
-                    {portsFor(formData.loading_country_id, formData.loading_port_id).map((p) => (
-                      <option key={p.id} value={p.id}>{p.port_name}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Row 2: Entry Sea Port / Border Port & Entry Date */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {locLabel("entry")} *
-                  </label>
-                  <select
-                    value={formData.entry_border_port_id}
-                    onChange={(e) => {
-                      const p = ports.find((item) => item.id === e.target.value);
-                      setFormData((c) => ({
-                        ...c,
-                        entry_border_port_id: e.target.value,
-                        entry_border_port_name: p?.port_name || ""
-                      }));
-                    }}
-                    className={selectClass}
-                  >
-                    <option value="">— {tt("loc_select_generic", "Select location")} —</option>
-                    {portsFor(formData.receiving_country_id, formData.entry_border_port_id).map((p) => (
-                      <option key={p.id} value={p.id}>{p.port_name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {arrivedAtEntry ? tt("arrived_on_date", "Arrival Date at Entry") : tt("expected_border_entry_date", "Expected Border Entry Date")}
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.border_entry_date}
-                    onChange={(e) => setFormData((c) => ({ ...c, border_entry_date: e.target.value }))}
-                    className={inputClass}
-                  />
-                </div>
-              </div>
-
-              {/* Row 3: Customs Clearance Office & Destination City */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {tt("customs_clearance_point", "Customs Clearance Point / Port")}
-                  </label>
-                  <input
-                    type="text"
-                    placeholder={tt("ph_customs_point", "e.g. Karachi Custom House / Torkham Customs")}
-                    value={formData.customs_point_text || ""}
-                    onChange={(e) => setFormData((c) => ({ ...c, customs_point_text: e.target.value }))}
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {tt("destination_delivery_city", "Destination Delivery City")}
-                  </label>
-                  <input
-                    type="text"
-                    placeholder={tt("ph_destination_city_pk", "e.g. Lahore / Islamabad / Peshawar")}
-                    value={formData.destination_city}
-                    onChange={(e) => setFormData((c) => ({ ...c, destination_city: e.target.value }))}
-                    className={inputClass}
-                  />
-                </div>
-              </div>
-
-              {/* Row 4: Final Delivery Location / Warehouse */}
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  {tt("final_delivery_location", "Final Destination / Warehouse Address")}
-                </label>
-                <input
-                  type="text"
-                  placeholder={tt("ph_final_delivery", "e.g. Consignee Warehouse, Plot 14, Industrial Area")}
-                  value={formData.final_delivery_location}
-                  onChange={(e) => setFormData((c) => ({ ...c, final_delivery_location: e.target.value }))}
-                  className={inputClass}
-                />
-              </div>
-            </div>
-          )}
-
-          {(formData.movement_type === "export" || formData.movement_type === "re_export") && (
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-3.5 space-y-3 dark:border-emerald-900/60 dark:bg-emerald-950/20">
-              <div className="flex items-center justify-between border-b border-emerald-200/60 pb-1.5 dark:border-emerald-900/60">
-                <div className="flex items-center gap-1.5 text-xs font-black uppercase text-emerald-800 dark:text-emerald-300">
-                  <Repeat2 className="h-4 w-4 text-emerald-600" />
-                  <span>{formData.movement_type === "re_export" ? tt("reexport_movement_route", "Re-export Movement & Location Setup") : tt("export_movement_route", "Export Movement & Location Setup")}</span>
-                </div>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300">
-                  {formData.movement_type === "re_export" ? tt("reexport_clearance_badge", "Re-export Clearance") : tt("export_clearance_badge", "Export Clearance")}
-                </span>
-              </div>
-
-              {/* Row 1: Origin Loading City / Factory & Exit Border / Port of Loading */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {tt("origin_loading_city_location", "Origin Loading City / Location")} *
-                  </label>
-                  <input
-                    type="text"
-                    placeholder={tt("ph_origin_loading_city", "e.g. Lahore / Sialkot Factory")}
-                    value={formData.loading_source_name}
-                    onChange={(e) => setFormData((c) => ({ ...c, loading_source_name: e.target.value }))}
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {locLabel("exit")} *
-                  </label>
-                  <select
-                    value={formData.exit_border_port_id || formData.loading_port_id}
-                    onChange={(e) => {
-                      const p = ports.find((item) => item.id === e.target.value);
-                      setFormData((c) => ({
-                        ...c,
-                        exit_border_port_id: e.target.value,
-                        exit_border_port_name: p?.port_name || "",
-                        loading_port_id: e.target.value,
-                        loading_port_name: p?.port_name || ""
-                      }));
-                    }}
-                    className={selectClass}
-                  >
-                    <option value="">— {tt("loc_select_generic", "Select location")} —</option>
-                    {portsFor(formData.loading_country_id, formData.exit_border_port_id || formData.loading_port_id).map((p) => (
-                      <option key={p.id} value={p.id}>{p.port_name}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Row 2: Planned Border Exit Date & Export Customs Point */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {tt("planned_border_exit_date", "Planned Border Exit Date")}
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.planned_border_exit_date}
-                    onChange={(e) => setFormData((c) => ({ ...c, planned_border_exit_date: e.target.value }))}
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {tt("export_customs_point", "Export Customs Point")}
-                  </label>
-                  <input
-                    type="text"
-                    placeholder={tt("ph_export_customs", "e.g. Port Qasim Export Customs")}
-                    value={formData.customs_point_text || ""}
-                    onChange={(e) => setFormData((c) => ({ ...c, customs_point_text: e.target.value }))}
-                    className={inputClass}
-                  />
-                </div>
-              </div>
-
-              {/* Row 3: Destination Country & Foreign Port of Discharge */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {tt("destination_country", "Final Destination Country")} *
-                  </label>
-                  <select
-                    value={formData.receiving_country_id}
-                    onChange={(e) => handleReceivingCountryChange(e.target.value)}
-                    className={selectClass}
-                  >
-                    <option value="">— {tt("select_destination_country", "Select Destination Country")} —</option>
-                    {countries.map((c) => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {locLabel("discharge")}
-                  </label>
-                  <select
-                    value={formData.destination_port_id}
-                    onChange={(e) => handleDestinationPortChange(e.target.value)}
-                    className={selectClass}
-                  >
-                    <option value="">— {tt("loc_select_generic", "Select location")} —</option>
-                    {portsFor(formData.receiving_country_id, formData.destination_port_id).map((p) => (
-                      <option key={p.id} value={p.id}>{p.port_name}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {(formData.movement_type === "transit" || formData.movement_type === "up_transit" || formData.movement_type === "down_transit") && (
-            <div className="rounded-xl border border-purple-200 bg-purple-50/40 p-3.5 space-y-3 dark:border-purple-900/60 dark:bg-purple-950/20">
-              <div className="flex items-center justify-between border-b border-purple-200/60 pb-1.5 dark:border-purple-900/60">
-                <div className="flex items-center gap-1.5 text-xs font-black uppercase text-purple-800 dark:text-purple-300">
-                  <Repeat2 className="h-4 w-4 text-purple-600" />
-                  <span>{tt("bonded_transit_movement", "Bonded Transit Movement Setup")}</span>
-                </div>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 uppercase">
-                  {movementTypeLabel(lang, formData.movement_type)}
-                </span>
-              </div>
-
-              {/* Row 1: Entry Border / Port & Loading Country */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {tt("loading_origin_country", "Origin Country")} *
-                  </label>
-                  <select
-                    value={formData.loading_country_id}
-                    onChange={(e) => handleLoadingCountryChange(e.target.value)}
-                    className={selectClass}
-                  >
-                    <option value="">— {tt("select_country_generic", "Select Country")} —</option>
-                    {countries.map((c) => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {locLabel("entry")} *
-                  </label>
-                  <select
-                    value={formData.entry_border_port_id}
-                    onChange={(e) => {
-                      const p = ports.find((item) => item.id === e.target.value);
-                      setFormData((c) => ({
-                        ...c,
-                        entry_border_port_id: e.target.value,
-                        entry_border_port_name: p?.port_name || ""
-                      }));
-                    }}
-                    className={selectClass}
-                  >
-                    <option value="">— {tt("loc_select_generic", "Select location")} —</option>
-                    {portsFor("", formData.entry_border_port_id).map((p) => (
-                      <option key={p.id} value={p.id}>{p.port_name}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Row 2: Exit Border Checkpoint & Planned Exit Date */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {tt("exit_border_checkpoint", "Exit Border Checkpoint")} *
-                  </label>
-                  <select
-                    value={formData.exit_border_port_id}
-                    onChange={(e) => {
-                      const p = ports.find((item) => item.id === e.target.value);
-                      setFormData((c) => ({
-                        ...c,
-                        exit_border_port_id: e.target.value,
-                        exit_border_port_name: p?.port_name || ""
-                      }));
-                    }}
-                    className={selectClass}
-                  >
-                    <option value="">— {tt("select_exit_border", "Select Exit Border")} —</option>
-                    {portsFor("", formData.exit_border_port_id).map((p) => (
-                      <option key={p.id} value={p.id}>{p.port_name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {tt("planned_border_exit_date", "Planned Border Exit Date")}
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.planned_border_exit_date}
-                    onChange={(e) => setFormData((c) => ({ ...c, planned_border_exit_date: e.target.value }))}
-                    className={inputClass}
-                  />
-                </div>
-              </div>
-
-              {/* Row 3: Final Transit Destination Country & City */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {tt("transit_destination_country", "Final Destination Country")} *
-                  </label>
-                  <select
-                    value={formData.receiving_country_id}
-                    onChange={(e) => handleReceivingCountryChange(e.target.value)}
-                    className={selectClass}
-                  >
-                    <option value="">— {tt("select_country_generic", "Select Country")} —</option>
-                    {countries.map((c) => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {tt("destination_city_label", "Destination City")}
-                  </label>
-                  <input
-                    type="text"
-                    placeholder={tt("ph_destination_city_af", "e.g. Kabul / Kandahar / Mazar-i-Sharif")}
-                    value={formData.destination_city}
-                    onChange={(e) => setFormData((c) => ({ ...c, destination_city: e.target.value }))}
-                    className={inputClass}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
+          <CustomerOrderMovementSpecs
+            lang={lang}
+            formData={formData}
+            setFormData={setFormData}
+            countries={countries}
+            ports={ports}
+            handleLoadingCountryChange={handleLoadingCountryChange}
+            handleLoadingPortChange={handleLoadingPortChange}
+            handleReceivingCountryChange={handleReceivingCountryChange}
+            handleDestinationPortChange={handleDestinationPortChange}
+            portsFor={portsFor}
+            locLabel={locLabel}
+            selectClass={selectClass}
+            inputClass={inputClass}
+            tt={tt}
+          />
 
           {/* Route Corridor Builder Banner Modal Trigger */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-2xl border border-blue-200 bg-gradient-to-r from-blue-50/90 via-sky-50/60 to-white p-3.5 shadow-2xs dark:border-blue-900/60 dark:from-blue-950/40 dark:via-slate-900 dark:to-slate-900">
@@ -6867,6 +6577,10 @@ function Step1BookingCustomer({
                 setFormData((c) => ({ ...c, route_name: routeName, legs }));
               }}
               countries={countries.map((c) => ({ id: c.id, name: c.name }))}
+              countryBranches={countryBranches}
+              cityBranches={cityBranches}
+              assignableUsers={assignableUsers}
+              ports={ports.map((p) => ({ id: p.id, port_name: p.port_name, country_id: p.country_id || undefined }))}
               ledgers={accounts.map((a) => ({ id: a.id, name: a.name, code: a.code, currency: a.currency || undefined }))}
               lang={lang}
             />
