@@ -18,10 +18,13 @@ import {
   Building2,
   ShieldCheck,
   AlertTriangle,
-  ExternalLink
+  ExternalLink,
+  Pencil,
+  Users
 } from "lucide-react";
 import { t } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { CustomerOrderRouteStopModal } from "@/features/clearing-agent/components/customer-order-route-stop-modal";
 
 export type RouteStop = {
   id?: string;
@@ -360,18 +363,30 @@ export function CustomerOrderRouteBuilder({
     syncRoute([], true);
   };
 
-  const handleAddStop = () => {
-    const newStop: RouteStop = {
-      id: `stop-${Date.now()}`,
-      countryId: "",
-      countryName: "",
-      locationName: "",
-      mode: "by_road",
-      handlerType: "our_branch"
-    };
-    const nextStops = [...stops, newStop];
+  const [stopModalOpen, setStopModalOpen] = useState(false);
+  const [stopModalMode, setStopModalMode] = useState<"add" | "edit">("add");
+  const [selectedStopIdx, setSelectedStopIdx] = useState<number>(0);
+
+  const handleOpenAddModal = () => {
+    setStopModalMode("add");
+    setSelectedStopIdx(stops.length);
+    setStopModalOpen(true);
+  };
+
+  const handleOpenEditModal = (idx: number) => {
+    setStopModalMode("edit");
+    setSelectedStopIdx(idx);
+    setStopModalOpen(true);
+  };
+
+  const handleSaveModalStop = (stopData: RouteStop, isEdit: boolean, index?: number) => {
+    let nextStops: RouteStop[];
+    if (isEdit && typeof index === "number" && index >= 0 && index < stops.length) {
+      nextStops = stops.map((s, i) => (i === index ? stopData : s));
+    } else {
+      nextStops = [...stops, stopData];
+    }
     setStops(nextStops);
-    setExpandedStopIdx(nextStops.length - 1);
     syncRoute(nextStops, false);
   };
 
@@ -415,10 +430,10 @@ export function CustomerOrderRouteBuilder({
             <span>{tt("direct_route_btn", "Direct Route (No Transit Stops)")}</span>
           </button>
 
-          {/* Add Stop Button */}
+          {/* Add Stop Button - Opens Full Modal */}
           <button
             type="button"
-            onClick={handleAddStop}
+            onClick={handleOpenAddModal}
             className="inline-flex items-center gap-1 rounded-lg border border-sky-300 bg-white px-2.5 py-1 text-xs font-bold text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:bg-slate-800 dark:text-sky-300 shadow-2xs transition"
           >
             <Plus className="h-3 w-3" />
@@ -440,16 +455,25 @@ export function CustomerOrderRouteBuilder({
           {stops.map((st, idx) => (
             <React.Fragment key={st.id || idx}>
               <ArrowRight className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-              <span className="rounded bg-sky-100/80 dark:bg-sky-950 px-2 py-0.5 text-sky-800 dark:text-sky-300 inline-flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => handleOpenEditModal(idx)}
+                className="rounded-lg bg-sky-100/90 hover:bg-sky-200 dark:bg-sky-950 dark:hover:bg-sky-900 px-2 py-0.5 text-sky-800 dark:text-sky-300 inline-flex items-center gap-1 transition text-left cursor-pointer ring-1 ring-sky-300/40 dark:ring-sky-800"
+                title={tt("click_to_edit_stop", "Click to edit stop in modal")}
+              >
                 {getModeIcon(st.mode)}
-                <span>{st.locationName || st.countryName || `Stop ${idx + 1}`}</span>
+                <span className="font-bold">{st.locationName || st.countryName || `Stop ${idx + 1}`}</span>
                 {st.handlerType === "external_partner" ? (
-                  <span className="rounded bg-indigo-200/70 dark:bg-indigo-900 px-1 text-[9px] font-bold text-indigo-900 dark:text-indigo-200">
+                  <span className="rounded bg-indigo-200/80 dark:bg-indigo-900 px-1 py-0.2 text-[9px] font-bold text-indigo-900 dark:text-indigo-200">
                     Ext: {st.partnerName || "Partner"}
                   </span>
-                ) : null}
-                <span className="text-[9px] font-mono opacity-70">({getModeLabel(st.mode)})</span>
-              </span>
+                ) : (
+                  <span className="rounded bg-blue-200/80 dark:bg-blue-900 px-1 py-0.2 text-[9px] font-bold text-blue-900 dark:text-blue-200">
+                    Branch
+                  </span>
+                )}
+                <Pencil className="h-2.5 w-2.5 opacity-60 ml-0.5" />
+              </button>
             </React.Fragment>
           ))}
 
@@ -590,220 +614,94 @@ export function CustomerOrderRouteBuilder({
         </div>
       )}
 
-      {/* Stop Configuration Rows */}
+      {/* Intermediate Transit Waypoints / Crossings Cards */}
       {stops.length > 0 ? (
         <div className="space-y-2 pt-1">
-          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-            {tt("intermediate_stops_list", "Intermediate Transit Waypoints / Crossings:")}
+          <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+            <span>{tt("intermediate_stops_list", "Intermediate Transit Waypoints / Crossings:")}</span>
+            <span className="text-[10px] text-sky-700 dark:text-sky-300 font-bold bg-sky-50 dark:bg-sky-950 px-2 py-0.5 rounded-full border border-sky-200 dark:border-sky-800">
+              {stops.length} {stops.length === 1 ? tt("stop_single", "Stop") : tt("stops_plural", "Stops")}
+            </span>
           </div>
-          {stops.map((st, idx) => (
-            <div
-              key={st.id || idx}
-              className="rounded-lg border border-slate-200 bg-white p-2.5 dark:border-slate-800 dark:bg-slate-850 space-y-2"
-            >
-              <div className="grid grid-cols-1 sm:grid-cols-[auto_1.5fr_1.5fr_1fr_auto_auto] gap-2 items-center">
-                <div className="flex items-center justify-center h-6 w-6 rounded-full bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300 font-mono text-xs font-bold">
-                  {idx + 1}
-                </div>
 
-                {/* Country */}
-                <div>
-                  <select
-                    value={st.countryId}
-                    onChange={(e) => {
-                      const c = countries.find((item) => item.id === e.target.value);
-                      handleUpdateStop(idx, {
-                        countryId: e.target.value,
-                        countryName: c?.name || ""
-                      });
-                    }}
-                    className="w-full h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                  >
-                    <option value="">— Select Country —</option>
-                    {countries.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Location / Port / Border */}
-                <div>
-                  <input
-                    type="text"
-                    placeholder={tt("ph_stop_location", "Port, City or Border (e.g. Bandar Abbas, Dogharoon)")}
-                    value={st.locationName}
-                    onChange={(e) => handleUpdateStop(idx, { locationName: e.target.value })}
-                    className="w-full h-8 rounded-lg border border-slate-200 bg-white px-2.5 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                  />
-                </div>
-
-                {/* Transport Mode */}
-                <div>
-                  <select
-                    value={st.mode}
-                    onChange={(e) => handleUpdateStop(idx, { mode: e.target.value as any })}
-                    className="w-full h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs font-bold text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                  >
-                    <option value="by_road">{tt("opt_road_truck", "Road (Truck)")}</option>
-                    <option value="by_sea">{tt("opt_sea_vessel", "Sea (Vessel)")}</option>
-                    <option value="by_air">{tt("opt_air_flight", "Air (Flight)")}</option>
-                    <option value="by_rail">{tt("opt_rail_train", "Rail (Train)")}</option>
-                  </select>
-                </div>
-
-                {/* Handler Type Toggle Button */}
-                <button
-                  type="button"
-                  onClick={() => setExpandedStopIdx(expandedStopIdx === idx ? null : idx)}
-                  className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold border transition ${
-                    st.handlerType === "external_partner"
-                      ? "border-indigo-300 bg-indigo-50 text-indigo-700 dark:border-indigo-800 dark:bg-indigo-950 dark:text-indigo-300"
-                      : "border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                  }`}
-                >
-                  <Building2 className="h-3 w-3" />
-                  <span>{st.handlerType === "external_partner" ? tt("handler_external_partner", "External Partner") : tt("handler_our_branch", "Our Branch")}</span>
-                  {expandedStopIdx === idx ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-                </button>
-
-                {/* Remove button */}
-                <button
-                  type="button"
-                  onClick={() => handleRemoveStop(idx)}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40"
-                  title={tt("remove_stop", "Remove Stop")}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
-
-              {/* Expandable Partner Details for this Stop */}
-              {expandedStopIdx === idx && (
-                <div className="rounded-lg bg-slate-50 p-2.5 border border-slate-200 dark:bg-slate-800/60 dark:border-slate-700 space-y-2 text-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                      {tt("leg_handler_config", "Leg Handler Configuration:")}
-                    </span>
-                    <div className="flex items-center rounded border border-slate-200 p-0.5 dark:border-slate-700">
-                      <button
-                        type="button"
-                        onClick={() => handleUpdateStop(idx, { handlerType: "our_branch" })}
-                        className={`px-2 py-0.5 text-[11px] font-bold rounded transition ${
-                          st.handlerType !== "external_partner"
-                            ? "bg-blue-600 text-white"
-                            : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
-                        }`}
-                      >
-                        {tt("handler_our_branch", "Our Branch")}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleUpdateStop(idx, { handlerType: "external_partner" })}
-                        className={`px-2 py-0.5 text-[11px] font-bold rounded transition ${
-                          st.handlerType === "external_partner"
-                            ? "bg-indigo-600 text-white"
-                            : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
-                        }`}
-                      >
-                        {tt("handler_external_partner", "External Partner")}
-                      </button>
-                    </div>
+          <div className="space-y-2">
+            {stops.map((st, idx) => (
+              <div
+                key={st.id || idx}
+                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-850 shadow-2xs hover:border-sky-300 transition"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center h-8 w-8 rounded-xl bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300 font-mono text-xs font-black shadow-2xs shrink-0">
+                    {idx + 1}
                   </div>
-
-                  <label className="flex items-center gap-2 pt-1">
-                    <input
-                      type="checkbox"
-                      checked={Boolean(st.insuranceRequired)}
-                      onChange={(e) => handleUpdateStop(idx, { insuranceRequired: e.target.checked })}
-                      className="h-3.5 w-3.5 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
-                    />
-                    <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
-                      {tt("insurance_required_toggle", "Cargo insurance required for this leg")}
-                    </span>
-                  </label>
-
-                  {st.handlerType === "external_partner" && (
-                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 pt-1 border-t border-slate-200 dark:border-slate-700">
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">
-                          {tt("partner_type_label", "Partner Type *")}
-                        </label>
-                        <select
-                          value={st.partnerType || ""}
-                          onChange={(e) => handleUpdateStop(idx, { partnerType: e.target.value })}
-                          className="w-full h-8 rounded border border-slate-200 bg-white px-2 text-xs dark:border-slate-700 dark:bg-slate-800"
-                        >
-                          <option value="">-- Select Partner Type --</option>
-                          <option value="customs_agent">{tt("pt_customs_agent", "Customs Clearing Agent")}</option>
-                          <option value="transporter">{tt("pt_transporter", "Transporter / Trucking Carrier")}</option>
-                          <option value="shipping_provider">{tt("pt_shipping_provider", "Shipping Line / Sea Provider")}</option>
-                          <option value="airline">{tt("pt_airline", "Airline / Air Freight")}</option>
-                          <option value="railway">{tt("pt_railway", "Railway Operator")}</option>
-                          <option value="other_partner">{tt("pt_other_partner", "Other External Partner")}</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">
-                          {tt("partner_name_label", "Partner / Provider Name *")}
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="e.g. Apex Clearing Kabul"
-                          value={st.partnerName || ""}
-                          onChange={(e) => handleUpdateStop(idx, { partnerName: e.target.value })}
-                          className="w-full h-8 rounded border border-slate-200 bg-white px-2.5 text-xs dark:border-slate-700 dark:bg-slate-800"
-                        />
-                      </div>
-
-                      <div>
-                        <div className="flex justify-between items-center mb-0.5">
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase">
-                            {tt("provider_account_master", "Provider Account *")}
-                          </label>
-                          <a
-                            href="/dashboard/accounts/setup"
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-[9px] font-bold text-indigo-600 hover:underline dark:text-indigo-400"
-                          >
-                            {tt("open_accounts", "Account Master →")}
-                          </a>
-                        </div>
-                        <select
-                          value={st.partnerAccountId || ""}
-                          onChange={(e) => {
-                            const row = activeLedgers.find((l) => l.id === e.target.value);
-                            handleUpdateStop(idx, {
-                              partnerAccountId: e.target.value,
-                              partnerAccountNumber: row?.code || ""
-                            });
-                          }}
-                          className="w-full h-8 rounded border border-slate-200 bg-white px-2 text-xs dark:border-slate-700 dark:bg-slate-800"
-                        >
-                          <option value="">-- Select Account Master Ledger --</option>
-                          {activeLedgers.map((l) => (
-                            <option key={l.id} value={l.id}>
-                              {l.code ? `[${l.code}] ` : ""}{l.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      {!st.partnerAccountId && (
-                        <div className="col-span-3 text-[11px] text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
-                          <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-                          <span>{tt("select_ledger_notice", "Select an Account Master ledger. Registered account required before bills can be posted.")}</span>
-                        </div>
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-black text-xs text-slate-900 dark:text-white">
+                        {st.locationName || `Stop ${idx + 1}`}
+                      </span>
+                      {st.countryName && (
+                        <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                          ({st.countryName})
+                        </span>
+                      )}
+                      {st.customsPoint && (
+                        <span className="rounded bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[9.5px] font-mono text-slate-600 dark:text-slate-300">
+                          {st.customsPoint}
+                        </span>
                       )}
                     </div>
-                  )}
+                    <div className="flex flex-wrap items-center gap-2 mt-1">
+                      <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10.5px] font-bold text-slate-700 dark:text-slate-300">
+                        {getModeIcon(st.mode)}
+                        <span>{getModeLabel(st.mode)}</span>
+                      </span>
+
+                      {st.handlerType === "external_partner" ? (
+                        <span className="inline-flex items-center gap-1 rounded-md bg-indigo-100 dark:bg-indigo-950/60 px-2 py-0.5 text-[10.5px] font-bold text-indigo-700 dark:text-indigo-300">
+                          <Users className="h-3 w-3" />
+                          <span>Ext: {st.partnerName || "Partner"}</span>
+                          {st.partnerAccountNumber && (
+                            <span className="font-mono text-[9px] opacity-75">[{st.partnerAccountNumber}]</span>
+                          )}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 rounded-md bg-blue-100 dark:bg-blue-950/60 px-2 py-0.5 text-[10.5px] font-bold text-blue-700 dark:text-blue-300">
+                          <Building2 className="h-3 w-3" />
+                          <span>{tt("handler_our_branch", "Our Branch")}</span>
+                        </span>
+                      )}
+
+                      {st.insuranceRequired && (
+                        <span className="inline-flex items-center gap-1 rounded-md bg-teal-100 dark:bg-teal-950/60 px-2 py-0.5 text-[10px] font-bold text-teal-700 dark:text-teal-300">
+                          <ShieldCheck className="h-3 w-3" />
+                          <span>{tt("insurance_short", "Insured")}</span>
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              )}
-            </div>
-          ))}
+
+                <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
+                  <button
+                    type="button"
+                    onClick={() => handleOpenEditModal(idx)}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 transition"
+                  >
+                    <Pencil className="h-3 w-3" />
+                    <span>{tt("edit_stop_btn", "Edit Details")}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveStop(idx)}
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition"
+                    title={tt("remove_stop", "Remove Stop")}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       ) : (
         <div className="text-[11px] text-slate-500 italic py-1">
@@ -813,6 +711,21 @@ export function CustomerOrderRouteBuilder({
           )}
         </div>
       )}
+
+      {/* Full Modal / Parda for Adding / Editing Stops */}
+      <CustomerOrderRouteStopModal
+        open={stopModalOpen}
+        onClose={() => setStopModalOpen(false)}
+        lang={lang}
+        mode={stopModalMode}
+        stopIndex={selectedStopIdx}
+        initialValues={stopModalMode === "edit" ? stops[selectedStopIdx] : undefined}
+        countries={countries}
+        ledgers={activeLedgers}
+        originName={loadingCityName || loadingCountryName || "Origin"}
+        destinationName={destinationCityName || receivingCountryName || "Destination"}
+        onSave={handleSaveModalStop}
+      />
     </div>
   );
 }

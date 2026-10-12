@@ -7063,123 +7063,71 @@ function Step1BookingCustomer({
               );
             })()}
 
-            {/* Truck Assignment Mode 3-Way Selector */}
-            <div className="space-y-1.5">
+            {/* Truck Assignment Mode Dropdown & Modal Triggers */}
+            <div className="space-y-2">
               <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400">
                 {tt("truck_assignment_mode_label", "Truck Assignment Mode")} *
               </label>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                {/* Option 1: Permanent Truck */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFormData((c) => ({
-                      ...c,
-                      truck_assignment_mode: "permanent",
-                      truck_registration_type: "registered"
-                    }));
-                    setFleetPickerOpen(true);
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                <select
+                  value={formData.truck_assignment_mode || "permanent"}
+                  onChange={(e) => {
+                    const modeVal = e.target.value;
+                    if (modeVal === "permanent") {
+                      setFormData((c) => ({
+                        ...c,
+                        truck_assignment_mode: "permanent",
+                        truck_registration_type: "registered"
+                      }));
+                      setFleetPickerOpen(true);
+                    } else if (modeVal === "hired") {
+                      setFormData((c) => ({
+                        ...c,
+                        truck_assignment_mode: "hired",
+                        truck_registration_type: "temporary",
+                        truck_id: ""
+                      }));
+                      setExternalTruckOpen(true);
+                    } else if (modeVal === "later") {
+                      setFormData((c) => ({
+                        ...c,
+                        truck_assignment_mode: "later",
+                        truck_id: "",
+                        truck_number: "TO BE ASSIGNED",
+                        truck_driver_name: "",
+                        truck_driver_mobile: "",
+                        truck_transport_company: ""
+                      }));
+                    }
                   }}
-                  className={`p-3 rounded-xl border text-left transition flex flex-col justify-between ${
-                    formData.truck_assignment_mode === "permanent"
-                      ? "border-blue-500 bg-blue-50/70 ring-2 ring-blue-500/20 dark:bg-blue-950/40"
-                      : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900"
-                  }`}
+                  className={selectClass}
                 >
-                  <div className="flex items-center justify-between pb-1.5">
-                    <div className="flex items-center gap-1.5">
-                      <Truck className="h-4 w-4 text-blue-600" />
-                      <span className="text-xs font-black text-slate-800 dark:text-slate-200">
-                        {tt("permanent_truck_opt", "Permanent Truck")}
-                      </span>
-                    </div>
-                    {formData.truck_assignment_mode === "permanent" && (
-                      <span className="flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-white text-[9px]">✓</span>
-                    )}
-                  </div>
-                  <p className="text-[10.5px] text-slate-500">
-                    {tt("from_fleet_master", "From Company Fleet Master database")}
-                  </p>
-                  <div className="mt-2 text-[11px] font-bold text-blue-600 hover:underline">
-                    {formData.truck_id ? `${tt("selected", "Selected")}: ${formData.truck_number}` : `${tt("browse_fleet_master", "Browse Fleet Master")} →`}
-                  </div>
-                </button>
+                  <option value="permanent">{tt("permanent_truck_opt", "Permanent Truck (Fleet Master)")}</option>
+                  <option value="hired">{tt("external_truck_opt", "Other / External Truck (Contractor)")}</option>
+                  <option value="later">{tt("assign_later_opt", "Assign Later (Unblock Booking)")}</option>
+                </select>
 
-                {/* Option 2: Other / External Truck */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFormData((c) => ({
-                      ...c,
-                      truck_assignment_mode: "hired",
-                      truck_registration_type: "temporary",
-                      truck_id: ""
-                    }));
-                    setExternalTruckOpen(true);
-                  }}
-                  className={`p-3 rounded-xl border text-left transition flex flex-col justify-between ${
-                    formData.truck_assignment_mode === "hired"
-                      ? "border-amber-500 bg-amber-50/70 ring-2 ring-amber-500/20 dark:bg-amber-950/40"
-                      : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900"
-                  }`}
-                >
-                  <div className="flex items-center justify-between pb-1.5">
-                    <div className="flex items-center gap-1.5">
-                      <Truck className="h-4 w-4 text-amber-600" />
-                      <span className="text-xs font-black text-slate-800 dark:text-slate-200">
-                        {tt("external_truck_opt", "Other / External")}
-                      </span>
-                    </div>
-                    {formData.truck_assignment_mode === "hired" && (
-                      <span className="flex h-4 w-4 items-center justify-center rounded-full bg-amber-600 text-white text-[9px]">✓</span>
-                    )}
-                  </div>
-                  <p className="text-[10.5px] text-slate-500">
-                    {tt("contractor_truck_desc", "Contractor or one-trip truck (Not in Fleet Master)")}
-                  </p>
-                  <div className="mt-2 text-[11px] font-bold text-amber-600 hover:underline">
-                    {formData.truck_number && formData.truck_number !== "TO BE ASSIGNED" ? `${tt("selected", "Selected")}: ${formData.truck_number}` : `${tt("select_add_truck", "Select / Add Truck")} →`}
-                  </div>
-                </button>
+                {formData.truck_assignment_mode === "permanent" && (
+                  <button
+                    type="button"
+                    onClick={() => setFleetPickerOpen(true)}
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs shadow-blue-600/20 hover:bg-blue-700 transition shrink-0"
+                  >
+                    <Truck className="h-3.5 w-3.5" />
+                    <span>{tt("browse_fleet_master", "Browse Fleet Master")}</span>
+                  </button>
+                )}
 
-                {/* Option 3: Assign Later */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFormData((c) => ({
-                      ...c,
-                      truck_assignment_mode: "later",
-                      truck_id: "",
-                      truck_number: "TO BE ASSIGNED",
-                      truck_driver_name: "",
-                      truck_driver_mobile: "",
-                      truck_transport_company: ""
-                    }));
-                  }}
-                  className={`p-3 rounded-xl border text-left transition flex flex-col justify-between ${
-                    formData.truck_assignment_mode === "later"
-                      ? "border-slate-500 bg-slate-100 ring-2 ring-slate-500/20 dark:bg-slate-800"
-                      : "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900"
-                  }`}
-                >
-                  <div className="flex items-center justify-between pb-1.5">
-                    <div className="flex items-center gap-1.5">
-                      <Clock className="h-4 w-4 text-slate-600 dark:text-slate-400" />
-                      <span className="text-xs font-black text-slate-800 dark:text-slate-200">
-                        {tt("assign_later_opt", "Assign Later")}
-                      </span>
-                    </div>
-                    {formData.truck_assignment_mode === "later" && (
-                      <span className="flex h-4 w-4 items-center justify-center rounded-full bg-slate-600 text-white text-[9px]">✓</span>
-                    )}
-                  </div>
-                  <p className="text-[10.5px] text-slate-500">
-                    {tt("assign_later_desc", "Unblock booking without locking dispatch vehicle")}
-                  </p>
-                  <div className="mt-2 text-[11px] font-bold text-slate-500">
-                    {formData.truck_assignment_mode === "later" ? "✓ Unblocked" : tt("set_pending", "Set pending")}
-                  </div>
-                </button>
+                {formData.truck_assignment_mode === "hired" && (
+                  <button
+                    type="button"
+                    onClick={() => setExternalTruckOpen(true)}
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-amber-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs shadow-amber-600/20 hover:bg-amber-700 transition shrink-0"
+                  >
+                    <Truck className="h-3.5 w-3.5" />
+                    <span>{tt("select_add_truck", "Select / Add External Truck")}</span>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -7246,113 +7194,17 @@ function Step1BookingCustomer({
                   </div>
                 )}
               </div>
+            ) : formData.truck_assignment_mode === "later" ? (
+              <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-800/50 flex items-center justify-between text-xs shadow-2xs">
+                <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-semibold">
+                  <Clock className="h-4 w-4 text-slate-500" />
+                  <span>{tt("assign_later_active_msg", "Dispatch vehicle assignment deferred. Booking is unblocked to proceed.")}</span>
+                </div>
+                <span className="rounded-full bg-slate-200 px-2.5 py-0.5 text-[10px] font-bold text-slate-700 dark:bg-slate-700 dark:text-slate-200">
+                  {tt("status_pending", "Pending Assignment")}
+                </span>
+              </div>
             ) : null}
-
-            {/* Additional Fleet & Operational Parameters */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 pt-3 border-t border-slate-100 dark:border-slate-800">
-              <div>
-                <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                  {tt("vehicle_type_label", "Vehicle Type *")}
-                </label>
-                <select
-                  value={formData.truck_vehicle_type || "Container Trailer"}
-                  onChange={(e) => setFormData((c) => ({ ...c, truck_vehicle_type: e.target.value }))}
-                  className={selectClass}
-                >
-                  <option value="Container Trailer">{tt("vehicle_type_container", "Container Trailer (40ft / 20ft)")}</option>
-                  <option value="Flatbed Truck">{tt("vehicle_type_flatbed", "Flatbed Truck (Open Body)")}</option>
-                  <option value="Box Truck">{tt("vehicle_type_box_truck", "Box Truck / Covered Van")}</option>
-                  <option value="Tanker">{tt("vehicle_type_tanker", "Liquid Tanker")}</option>
-                  <option value="Lowbed Trailer">{tt("vehicle_type_lowbed", "Lowbed Heavy Equipment Trailer")}</option>
-                  <option value="Reefer">{tt("vehicle_type_reefer", "Refrigerated (Reefer) Truck")}</option>
-                  <option value="Pickup">{tt("vehicle_type_pickup", "Pickup / Light Commercial Vehicle")}</option>
-                  <option value="Other">{tt("vehicle_type_other", "Other Specialized Transport")}</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                  {tt("transport_co_label", "Transport Co / Contractor")}
-                </label>
-                <input
-                  type="text"
-                  placeholder={tt("ph_transport_co", "e.g. Al-Fatah Goods Transport")}
-                  value={formData.truck_transport_company || ""}
-                  onChange={(e) => setFormData((c) => ({ ...c, truck_transport_company: e.target.value }))}
-                  className={inputClass}
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                  {tt("arrival_datetime_label", "Arrival Date & Time")}
-                </label>
-                <input
-                  type="datetime-local"
-                  value={formData.truck_arrival_time || ""}
-                  onChange={(e) => setFormData((c) => ({ ...c, truck_arrival_time: e.target.value }))}
-                  className={inputClass}
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                  {tt("loading_terminal_label", "Loading Location / Terminal")}
-                </label>
-                <input
-                  type="text"
-                  placeholder={tt("ph_loading_terminal", "e.g. Jebel Ali Gate 4 / Karachi Terminal Yard")}
-                  value={formData.truck_loading_location || ""}
-                  onChange={(e) => setFormData((c) => ({ ...c, truck_loading_location: e.target.value }))}
-                  className={inputClass}
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                  {tt("truck_op_status_label", "Truck Operational Status")}
-                </label>
-                <select
-                  value={formData.truck_status || "Pending"}
-                  onChange={(e) => setFormData((c) => ({ ...c, truck_status: e.target.value }))}
-                  className={selectClass}
-                >
-                  <option value="Pending">{tt("truck_status_pending", "Pending Assignment")}</option>
-                  <option value="At Gate">{tt("truck_status_at_gate", "At Gate / Terminal")}</option>
-                  <option value="In Transit">{tt("truck_status_in_transit", "In Transit")}</option>
-                  <option value="Loading">{tt("truck_status_loading", "Loading Cargo")}</option>
-                  <option value="Dispatched">{tt("truck_status_dispatched", "Dispatched / Released")}</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1 flex items-center gap-1.5">
-                  <FileText className="h-3.5 w-3.5 text-blue-600" />
-                  <span>{tt("truck_document_photos", "Truck Document / Photos")}</span>
-                </label>
-                <input
-                  type="file"
-                  accept="image/*,.pdf"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = () => {
-                      setFormData((c) => ({
-                        ...c,
-                        truck_photo_url: reader.result as string,
-                        truck_photo_name: file.name
-                      }));
-                    };
-                    reader.readAsDataURL(file);
-                  }}
-                  className="text-[11px] text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-[11px] file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-950/40 dark:file:text-blue-300"
-                />
-                {formData.truck_photo_name ? (
-                  <span className="text-[10px] text-emerald-600 font-bold block mt-1">✓ {formData.truck_photo_name} attached</span>
-                ) : null}
-              </div>
-            </div>
           </div>
 
           <CustomerOrderTempTruckModal
