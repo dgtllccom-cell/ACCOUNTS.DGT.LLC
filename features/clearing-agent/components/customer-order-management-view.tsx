@@ -4668,6 +4668,8 @@ export function CustomerOrderManagementView() {
                       trucksList={trucksList}
                       warehousesList={warehousesList}
                       goodsMasterList={goodsMasterList}
+                      countryBranches={countryBranches}
+                      cityBranches={cityBranches}
                       assignableUsers={assignableUsers}
                       onSelectSubStep={(sub) => {
                         setStep1SubStep(sub);
@@ -5864,6 +5866,8 @@ function Step1BookingCustomer({
   trucksList,
   warehousesList,
   goodsMasterList,
+  countryBranches,
+  cityBranches,
   assignableUsers,
   handlePartyChange,
   handleLoadingCountryChange,
@@ -5912,6 +5916,8 @@ function Step1BookingCustomer({
   trucksList?: any[];
   warehousesList?: any[];
   goodsMasterList?: any[];
+  countryBranches?: { id: string; name: string; countryId: string; code?: string | null }[];
+  cityBranches?: { id: string; name: string; countryBranchId: string; code?: string | null }[];
   assignableUsers?: { id: string; name: string }[];
   handlePartyChange: (roleKey: PartyRoleKey, next: PartySelection) => void;
   handleLoadingCountryChange: (countryId: string) => void;
@@ -6505,6 +6511,10 @@ function Step1BookingCustomer({
                 setFormData((c) => ({ ...c, route_name: routeName, legs }));
               }}
               countries={countries.map((c) => ({ id: c.id, name: c.name }))}
+              countryBranches={countryBranches}
+              cityBranches={cityBranches}
+              assignableUsers={assignableUsers}
+              ports={ports.map((p) => ({ id: p.id, port_name: p.port_name, country_id: p.country_id || undefined }))}
               ledgers={accounts.map((a) => ({ id: a.id, name: a.name, code: a.code, currency: a.currency || undefined }))}
               lang={lang}
             />
