@@ -30,9 +30,10 @@ const MODE_PRESETS: Record<string, Record<string, string[]>> = {
   by_road: {
     PK: ["Torkham Border", "Chaman Border", "Taftan Border", "Khunjerab / Sost", "Wagah Border"],
     AE: ["Ghuwaifat (KSA Border)", "Hatta (Oman Border)", "Mezyad (Oman Border)"],
-    AF: ["Torkham Border", "Spin Boldak / Chaman", "Islam Qala (Iran)", "Hairatan (Uzbekistan)", "Shir Khan Bandar"],
-    IR: ["Mirjaveh Border", "Dogharoon Border", "Bazargan (Turkey)", "Astara (Azerbaijan)"],
-    IN: ["Attari / Wagah Border", "Petrapole (Bangladesh)", "Raxaul (Nepal)"]
+    AF: ["Torkham Border", "Spin Boldak / Chaman", "Islam Qala (Iran)", "Hairatan (Uzbekistan)", "Nimroz / Zaranj Border", "Shir Khan Bandar"],
+    IR: ["Milak Border (Nimroz / Zaranj)", "Mirjaveh Border", "Dogharoon Border", "Bazargan (Turkey)", "Astara (Azerbaijan)"],
+    IN: ["Attari / Wagah Border", "Petrapole (Bangladesh)", "Raxaul (Nepal)"],
+    UZ: ["Termez / Hairatan Border", "Ayritom Border"]
   },
   by_sea: {
     PK: ["Karachi Port (KPT)", "Port Qasim (PQA)", "Gwadar Port"],
@@ -44,9 +45,10 @@ const MODE_PRESETS: Record<string, Record<string, string[]>> = {
   by_air: {
     PK: ["Air Freight Unit (AFU) Karachi", "Islamabad Air Cargo", "Lahore Allama Iqbal Cargo"],
     AE: ["Dubai Cargo Village (DXB)", "Al Maktoum DWC Cargo", "Abu Dhabi Cargo Terminal"],
-    AF: ["Kabul Hamid Karzai Cargo", "Mazar-i-Sharif Airport"],
+    AF: ["Kabul Hamid Karzai Cargo", "Mazar-i-Sharif Airport", "Kandahar Airport Cargo"],
     IR: ["Tehran Imam Khomeini Cargo Terminal", "Mashhad Airport Cargo"],
-    IN: ["Delhi IGI Cargo Terminal", "Mumbai Air Cargo Complex"]
+    IN: ["Delhi IGI Cargo Terminal (New Delhi Airport)", "Mumbai Air Cargo Complex"],
+    UZ: ["Tashkent International Airport Cargo"]
   },
   by_rail: {
     PK: ["Azakhel Dry Port (Rail)", "Lahore Dry Port (Rail)", "Prem Nagar Inland Port"],

@@ -89,21 +89,30 @@ const COUNTRY_PORT_PRESETS: Record<string, { name: string; mode: string }[]> = {
     { name: "Spin Boldak / Chaman", mode: "road" },
     { name: "Islam Qala (Iran Border)", mode: "road" },
     { name: "Hairatan (Uzbekistan Border)", mode: "road" },
+    { name: "Nimroz / Zaranj (Milak Border)", mode: "road" },
     { name: "Shir Khan Bandar (Tajikistan)", mode: "road" },
-    { name: "Zaranj Border", mode: "road" }
+    { name: "Zaranj Border", mode: "road" },
+    { name: "Kandahar Airport Cargo", mode: "air" }
   ],
   // Iran
   IR: [
     { name: "Bandar Abbas (Shahid Rajaee)", mode: "sea" },
+    { name: "Milak Border (Nimroz / Zaranj)", mode: "road" },
     { name: "Chabahar Port", mode: "sea" },
     { name: "Mirjaveh Border", mode: "road" },
     { name: "Dogharoon Border", mode: "road" }
+  ],
+  // Uzbekistan
+  UZ: [
+    { name: "Termez / Hairatan Border", mode: "road" },
+    { name: "Tashkent International Airport", mode: "air" }
   ],
   // India
   IN: [
     { name: "Nhava Sheva (JNPT)", mode: "sea" },
     { name: "Mundra Port", mode: "sea" },
     { name: "Attari / Wagah Border", mode: "road" },
+    { name: "Delhi IGI Cargo Terminal (New Delhi Airport)", mode: "air" },
     { name: "Chennai Port", mode: "sea" }
   ]
 };
