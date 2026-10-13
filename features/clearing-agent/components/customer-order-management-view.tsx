@@ -4801,9 +4801,9 @@ export function CustomerOrderManagementView() {
               />
             </div>
           ) : (
-            <div className={`grid grid-cols-1 gap-5 ${showLiveReport ? "xl:grid-cols-[minmax(0,1fr)_360px] 2xl:grid-cols-[minmax(0,1fr)_400px]" : "max-w-5xl mx-auto"} xl:items-start`} dir="ltr">
-              {/* PRIMARY COLUMN: The Form Workspace */}
-              <div dir={isRtl ? "rtl" : "ltr"} className="space-y-4 min-w-0">
+            <div className={`grid grid-cols-1 gap-5 ${showLiveReport ? "lg:grid-cols-12 xl:grid-cols-12 2xl:grid-cols-12" : "max-w-5xl mx-auto"} items-start`} dir="ltr">
+              {/* PRIMARY COLUMN: The Form Workspace (Entry packet - compact) */}
+              <div dir={isRtl ? "rtl" : "ltr"} className={`space-y-4 min-w-0 ${showLiveReport ? "lg:col-span-5 xl:col-span-5 2xl:col-span-5" : "w-full"}`}>
                 <div className="rounded-xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                   {(currentStep === 1 || currentStep === 2 || currentStep === 3) && (
                     <Step1BookingCustomer
@@ -4891,9 +4891,9 @@ export function CustomerOrderManagementView() {
               </div>
             </div>
 
-            {/* RIGHT COLUMN: The Live Customer Order Report Panel */}
+            {/* RIGHT COLUMN: The Live Customer Order Report Panel (Full Size & Prominent) */}
             {showLiveReport && (
-              <div dir={isRtl ? "rtl" : "ltr"} className="space-y-4 xl:sticky xl:top-3 h-fit max-h-[calc(100vh-1.5rem)] overflow-y-auto rounded-2xl bg-slate-50/70 p-2 pr-1 dark:bg-slate-950/30">
+              <div dir={isRtl ? "rtl" : "ltr"} className="space-y-4 lg:col-span-7 xl:col-span-7 2xl:col-span-7 min-w-0 xl:sticky xl:top-3 h-fit max-h-[calc(100vh-1.5rem)] overflow-y-auto rounded-2xl bg-slate-50/70 p-2 pr-1 dark:bg-slate-950/30">
               {/* Live Report Card Container */}
               <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-4">
                 {/* Header with Title, Subtitle, and Action Buttons (Back, Print, PDF, Live) */}
@@ -4978,7 +4978,7 @@ export function CustomerOrderManagementView() {
                         <p className="text-[11px] font-medium text-slate-500">
                           {tt("entry_number", "Entry Number")}
                         </p>
-                        <p className="font-mono font-black text-blue-600 dark:text-blue-400 text-xl tracking-wider">
+                        <p className="font-mono font-black text-blue-600 dark:text-blue-400 text-lg sm:text-xl tracking-wider truncate">
                           {formData.order_no || formData.entry_serial || "CL-ORD-0001"}
                         </p>
                       </div>
@@ -5034,7 +5034,7 @@ export function CustomerOrderManagementView() {
                       <div className="space-y-1.5 text-[11.5px]">
                         <div className="flex items-center justify-between">
                           <span className="text-slate-500">{tt("customer", "Customer")}</span>
-                          <span className="font-bold text-slate-900 dark:text-white truncate max-w-[170px]">
+                          <span className="font-bold text-slate-900 dark:text-white truncate max-w-[220px]">
                             {selectedCustomerInfo?.customer_name || formData.customer_name || "Sample Customer"}
                           </span>
                         </div>
@@ -5052,7 +5052,7 @@ export function CustomerOrderManagementView() {
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-slate-500">{tt("receiving_customer", "Receiving Customer")}</span>
-                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[170px]">
+                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[220px]">
                             {(formData as any).receiving_customer_name || "XYZ Imports LLC"}
                           </span>
                         </div>
@@ -5196,7 +5196,7 @@ export function CustomerOrderManagementView() {
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-slate-500">{tt("place_port", "Place / Port")}</span>
-                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[130px]">
+                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[180px]">
                             {formData.loading_place || formData.loading_source_name || "Kandahar Warehouse"}
                           </span>
                         </div>
@@ -5274,7 +5274,7 @@ export function CustomerOrderManagementView() {
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-slate-500">{tt("receiving_location", "Receiving Location")}</span>
-                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[130px]">
+                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[180px]">
                             {formData.receiving_place || "Chaman Warehouse"}
                           </span>
                         </div>
