@@ -300,7 +300,9 @@ const URDU_CANONICAL_CORRECTIONS: Array<[RegExp, string]> = [
 /** Transliterate a proper noun (place/person name) into the target script. English passes through unchanged. */
 export function transliterateProperNoun(text: string, lang: SupportedLanguage): string {
   const trimmed = text.trim();
-  if (!trimmed || lang === "en") return trimmed;
+  if (!trimmed) return trimmed;
+  // English view of a name that was typed in Arabic / Urdu / Persian / Pashto script → Latin (never leave source-script text in the English UI).
+  if (lang === "en") return /[؀-ۿ]/.test(trimmed) ? transliterateToLatin(trimmed) : trimmed;
 
   // 1. Check full multi-word phrase in authentic dictionary
   const fullKey = trimmed.toLowerCase();
@@ -417,6 +419,8 @@ export function transliterateToLatin(text: string): string {
   }
   // Collapse accidental double spaces/letters from the char-by-char pass and title-case words.
   let latin = out.replace(/\s+/g, " ").trim();
+  // Arabic punctuation -> Latin punctuation (an English view never keeps stray source-script marks)
+  latin = latin.replace(/،/g, ",").replace(/؛/g, ";").replace(/؟/g, "?");
 
   // Readability pass: Perso-Arabic script omits short vowels, so the raw char map
   // yields consonant clusters ("Mhmd", "Ywsf"). Fix the most common Islamic name

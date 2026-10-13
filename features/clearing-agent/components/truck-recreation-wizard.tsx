@@ -51,6 +51,8 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { transliterateProperNoun, transliterateToLatin } from "@/lib/i18n/transliteration";
+import "./truck-registration.css";
 import { PersonPicker } from "@/components/erp/person-picker";
 import { CompanyPicker } from "@/features/companies/components/company-picker";
 import { Party360Modal } from "@/features/customers/components/party-360-modal";
@@ -240,12 +242,12 @@ const EMPTY_FORM = {
   chassisNumber: "",
   engineNumber: "",
   registrationNumber: "",
-  truckType: "Trailer Truck",
+  truckType: "",
   make: "",
-  manufacturingYear: "2022",
-  color: "White",
-  fuelType: "Diesel",
-  capacity: "25",
+  manufacturingYear: "",
+  color: "",
+  fuelType: "",
+  capacity: "",
   registrationExpiryDate: "",
   insuranceProvider: "",
   insuranceExpiryDate: "",
@@ -267,11 +269,11 @@ const EMPTY_FORM = {
   driverWhatsapp: "",
   driverEmail: "",
   driverLicenseNo: "",
-  driverLicenseType: "HTV (Heavy Transport)",
+  driverLicenseType: "",
   driverLicenseIssueDate: "",
   driverLicenseExpiry: "",
-  driverIssuingAuthority: "Balochistan Transport Dept",
-  driverMaritalStatus: "Married",
+  driverIssuingAuthority: "",
+  driverMaritalStatus: "",
   addDriverLocation: "yes",
   driverCountry: "",
   driverState: "",
@@ -301,6 +303,23 @@ export function TruckRecreationWizard({
   const isRtl = ["ur", "ar", "fa", "ps"].includes(activeLang);
   const tt = (key: string, fallback: string) => t(activeLang, key as never, fallback);
 
+  // Names / addresses are stored in the script they were typed in. Everything the user READS (picker, Live Report, View Report, print)
+  // is shown in the language selected on screen; the stored record is never rewritten by this.
+  const ARABIC_SCRIPT = /[\u0600-\u06FF]/;
+  const nameText = (raw?: string | null): string => {
+    const v = String(raw ?? "").trim();
+    if (!v) return "";
+    if (activeLang === "en") return ARABIC_SCRIPT.test(v) ? transliterateToLatin(v) : v;
+    return transliterateProperNoun(v, activeLang);
+  };
+  const stepOf = (n: number) => tt("trk.w_step_n_of_total", "Step {n} of {total}").replace("{n}", String(n)).replace("{total}", "5");
+  const stepAlert = (text: string) => {
+    setMessage({ kind: "error", text });
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  /** Language the server must resolve record names in: ALWAYS what is on screen (never the possibly stale cookie). */
+  const langQ = `lang=${encodeURIComponent(activeLang)}`;
+
   const [view, setView] = useState<ViewMode>("list");
   const [form, setForm] = useState(EMPTY_FORM);
   const [contacts, setContacts] = useState<ContactEntry[]>([
@@ -320,6 +339,40 @@ export function TruckRecreationWizard({
   const [viewModalTab, setViewModalTab] = useState<"full" | "owner" | "vehicle" | "transporter" | "driver" | "documents">("full");
   const [viewMenuOpen, setViewMenuOpen] = useState(false);
   const viewMenuRef = useRef<HTMLDivElement>(null);
+
+  /** A4 print / Save-as-PDF of the report that is on screen: the report HTML is copied into a clean iframe (own @page A4 rules,
+   *  light colours, two-column layout forced) so nothing from the app shell is printed and nothing is cut at the page edge. */
+  function printReportA4(sourceId: string) {
+    const src = typeof document !== "undefined" ? document.getElementById(sourceId) : null;
+    if (!src) return;
+    const iframe = document.createElement("iframe");
+    iframe.setAttribute("aria-hidden", "true");
+    iframe.style.cssText = "position:fixed;inset-inline-end:0;bottom:0;width:0;height:0;border:0;visibility:hidden";
+    document.body.appendChild(iframe);
+    const doc = iframe.contentDocument;
+    if (!doc) { iframe.remove(); return; }
+    const head = Array.from(document.querySelectorAll('link[rel="stylesheet"], style')).map((n) => n.outerHTML).join("");
+    const title = tt("trk.registered_truck_title", "Clearing Truck Registration");
+    doc.open();
+    doc.write(
+      '<!doctype html><html lang="' + activeLang + '" dir="' + dir + '"><head><meta charset="utf-8"><title>' + title + "</title>" + head +
+      "<style>" +
+      "@page{size:A4 portrait;margin:10mm}" +
+      "html,body{background:#fff!important;color:#0f172a;margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}" +
+      ".trk-a4{width:100%;max-width:190mm;margin:0 auto}" +
+      ".trk-a4 .trk-print-hide{display:none!important}" +
+      ".trk-a4 .rounded-2xl,.trk-a4 .rounded-3xl{break-inside:avoid;page-break-inside:avoid}" +
+      ".trk-a4 *{max-width:100%;overflow-wrap:anywhere}" +
+      ".trk-a4 img{max-width:100%}" +
+      "</style></head><body><div class=\"trk-a4\">" + src.innerHTML + "</div></body></html>"
+    );
+    doc.close();
+    const run = () => {
+      try { iframe.contentWindow?.focus(); iframe.contentWindow?.print(); } finally { setTimeout(() => iframe.remove(), 2000); }
+    };
+    // wait for the copied stylesheets / images before the print dialog opens
+    setTimeout(run, 700);
+  }
 
   // Step-by-Step Wizard state (1: Owner, 2: Truck, 3: Transporter & Company, 4: Driver, 5: Documents)
   const [activeStep, setActiveStep] = useState<number>(1);
@@ -418,18 +471,30 @@ export function TruckRecreationWizard({
     setPage(1);
   }, [query, statusFilter, pageSize]);
 
-  // Lookup details for Owner
+  // ── Linked-record lookups ──────────────────────────────────────────────────────────────────────────
+  // DISPLAY copy  (…?lang=<language on screen>) feeds the Live Report / View / print and is fetched again when the language changes.
+  // RAW copy      (…?raw=1) is the record exactly as it was entered: it pre-fills the form and is what gets SAVED, so a display
+  //               translation can never overwrite the original name.
+  const [ownerRaw, setOwnerRaw] = useState<any | null>(null);
+  const [companyRaw, setCompanyRaw] = useState<any | null>(null);
+  const [driverRaw, setDriverRaw] = useState<any | null>(null);
+
   useEffect(() => {
     if (!form.ownerId || form.hasOwner === "no") {
       setOwnerDetails(null);
+      setOwnerRaw(null);
       return;
     }
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`/api/erp/customers/${encodeURIComponent(form.ownerId)}`).then((r) => r.json());
+        const [res, raw] = await Promise.all([
+          fetch(`/api/erp/customers/${encodeURIComponent(form.ownerId)}?${langQ}`).then((r) => r.json()),
+          fetch(`/api/erp/customers/${encodeURIComponent(form.ownerId)}?raw=1`).then((r) => r.json()),
+        ]);
         if (cancelled) return;
         if (res?.data?.customer) setOwnerDetails(res.data.customer);
+        if (raw?.data?.customer) setOwnerRaw(raw.data.customer);
       } catch {
         /* ignore */
       }
@@ -437,21 +502,26 @@ export function TruckRecreationWizard({
     return () => {
       cancelled = true;
     };
-  }, [form.ownerId, form.hasOwner]);
+  }, [form.ownerId, form.hasOwner, activeLang]);
 
-  // Lookup details for Company
   useEffect(() => {
     if (!form.companyId || form.companyLink === "no") {
       setCompanyDetails(null);
+      setCompanyRaw(null);
       return;
     }
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`/api/erp/companies/${encodeURIComponent(form.companyId)}`).then((r) => r.json());
+        const [res, raw] = await Promise.all([
+          fetch(`/api/erp/companies/${encodeURIComponent(form.companyId)}?${langQ}`).then((r) => r.json()),
+          fetch(`/api/erp/companies/${encodeURIComponent(form.companyId)}?raw=1`).then((r) => r.json()),
+        ]);
         if (cancelled) return;
         const comp = res?.data?.company || res?.company;
         if (comp) setCompanyDetails(comp);
+        const rawComp = raw?.data?.company || raw?.company;
+        if (rawComp) setCompanyRaw(rawComp);
       } catch {
         /* ignore */
       }
@@ -459,9 +529,8 @@ export function TruckRecreationWizard({
     return () => {
       cancelled = true;
     };
-  }, [form.companyId, form.companyLink]);
+  }, [form.companyId, form.companyLink, activeLang]);
 
-  // Lookup details for Transporter
   useEffect(() => {
     if (!form.transporterId) {
       setTransporterDetails(null);
@@ -470,7 +539,7 @@ export function TruckRecreationWizard({
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`/api/erp/customers/${encodeURIComponent(form.transporterId)}`).then((r) => r.json());
+        const res = await fetch(`/api/erp/customers/${encodeURIComponent(form.transporterId)}?${langQ}`).then((r) => r.json());
         if (cancelled) return;
         if (res?.data?.customer) setTransporterDetails(res.data.customer);
       } catch {
@@ -480,9 +549,19 @@ export function TruckRecreationWizard({
     return () => {
       cancelled = true;
     };
-  }, [form.transporterId]);
+  }, [form.transporterId, activeLang]);
 
-  // Lookup details for Driver
+  function withDriverLicense(customer: any, registrations: any[], contactRows: any[]): CustomerDetails {
+    const c: CustomerDetails = { ...customer, registrations: registrations || [], contacts: contactRows || [] };
+    // Try to extract license number from registrations if not directly on customer
+    const dlReg = c.registrations?.find((r) =>
+      ["driving_license", "driving_licence", "license", "licence", "dl"].includes((r.registration_type || "").toLowerCase().trim())
+    );
+    if (!c.license_no && dlReg?.registration_value) c.license_no = dlReg.registration_value;
+    return c;
+  }
+
+  // Driver — display copy (follows the language on screen)
   useEffect(() => {
     if (!form.driverId || form.driverType !== "permanent") {
       setDriverDetails(null);
@@ -491,25 +570,32 @@ export function TruckRecreationWizard({
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`/api/erp/customers/${encodeURIComponent(form.driverId)}`).then((r) => r.json());
+        const res = await fetch(`/api/erp/customers/${encodeURIComponent(form.driverId)}?${langQ}`).then((r) => r.json());
+        if (cancelled) return;
+        if (res?.data?.customer) setDriverDetails(withDriverLicense(res.data.customer, res.data.registrations, res.data.contacts));
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [form.driverId, form.driverType, activeLang]);
+
+  // Driver — RAW copy: pre-fills the form once per selected driver (original script, no invented defaults, never language-dependent)
+  useEffect(() => {
+    if (!form.driverId || form.driverType !== "permanent") {
+      setDriverRaw(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/erp/customers/${encodeURIComponent(form.driverId)}?raw=1`).then((r) => r.json());
         if (cancelled) return;
         if (res?.data?.customer) {
-          const c: CustomerDetails = {
-            ...res.data.customer,
-            registrations: res.data.registrations || [],
-            contacts: res.data.contacts || [],
-          };
-          // Try to extract license number from registrations if not directly on customer
-          const dlReg = c.registrations?.find((r) =>
-            ["driving_license", "driving_licence", "license", "licence", "dl"].includes(
-              (r.registration_type || "").toLowerCase().trim()
-            )
-          );
-          if (!c.license_no && dlReg?.registration_value) {
-            c.license_no = dlReg.registration_value;
-          }
-
-          setDriverDetails(c);
+          const c = withDriverLicense(res.data.customer, res.data.registrations, res.data.contacts);
+          setDriverRaw(c);
           setForm((prev) => ({
             ...prev,
             driverMobile: prev.driverMobile || c.mobile || c.whatsapp || "",
@@ -520,11 +606,11 @@ export function TruckRecreationWizard({
             driverFatherName: prev.driverFatherName || c.father_name || "",
             driverDob: prev.driverDob || (c as any).date_of_birth || "",
             driverCnic: prev.driverCnic || c.cnic || "",
-            driverNationality: prev.driverNationality || (c as any).nationality || c.country_name || c.country || "",
-            driverLicenseType: prev.driverLicenseType || (c as any).license_type || "HTV (Heavy Transport)",
+            driverNationality: prev.driverNationality || (c as any).nationality || "",
+            driverLicenseType: prev.driverLicenseType || (c as any).license_type || "",
             driverLicenseIssueDate: prev.driverLicenseIssueDate || (c as any).license_issue_date || "",
-            driverIssuingAuthority: prev.driverIssuingAuthority || (c as any).issuing_authority || "Balochistan Transport Dept",
-            driverMaritalStatus: prev.driverMaritalStatus || (c as any).marital_status || "Married",
+            driverIssuingAuthority: prev.driverIssuingAuthority || (c as any).issuing_authority || "",
+            driverMaritalStatus: prev.driverMaritalStatus || (c as any).marital_status || "",
             driverCountry: prev.driverCountry || c.country_name || c.country || "",
             driverState: prev.driverState || c.state_province_name || c.state || "",
             driverCity: prev.driverCity || c.city_name || c.city || "",
@@ -600,7 +686,7 @@ export function TruckRecreationWizard({
     const file = e.target.files?.[0];
     if (!file) return;
     if (!["image/jpeg", "image/png"].includes(file.type) || file.size > 5 * 1024 * 1024) {
-      alert("Please upload a JPG or PNG image under 5 MB.");
+      stepAlert(tt("trk.w_alert_photo", "Please upload a JPG or PNG image under 5 MB."));
       e.target.value = "";
       return;
     }
@@ -646,6 +732,9 @@ export function TruckRecreationWizard({
     setCompanyDetails(null);
     setTransporterDetails(null);
     setDriverDetails(null);
+    setOwnerRaw(null);
+    setCompanyRaw(null);
+    setDriverRaw(null);
   }
 
   function openNewRegistration() {
@@ -657,6 +746,7 @@ export function TruckRecreationWizard({
   }
 
   function backToList() {
+    clearTruckDraft();
     resetForm();
     setMessage(null);
     setView("list");
@@ -712,12 +802,12 @@ export function TruckRecreationWizard({
       status: row.status || "active",
       registrationDate: (row.created_at || "").slice(0, 10) || new Date().toISOString().slice(0, 10),
       registrationNumber: row.registration_number || "",
-      truckType: row.truck_type || "Trailer Truck",
+      truckType: row.truck_type || "",
       make: row.make || "",
-      manufacturingYear: row.manufacturing_year ? String(row.manufacturing_year) : "2022",
-      color: row.color || "White",
-      fuelType: row.fuel_type || "Diesel",
-      capacity: row.capacity || "25",
+      manufacturingYear: row.manufacturing_year ? String(row.manufacturing_year) : "",
+      color: row.color || "",
+      fuelType: row.fuel_type || "",
+      capacity: row.capacity || "",
       registrationExpiryDate: row.registration_expiry_date || "",
       insuranceProvider: extraNotes.insuranceProvider || "",
       insuranceExpiryDate: row.insurance_expiry_date || "",
@@ -730,6 +820,36 @@ export function TruckRecreationWizard({
     setView("form");
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   }
+
+  // ── In-progress registration survives a language switch / reload / step navigation (sessionStorage of this tab) ──
+  const TRUCK_DRAFT_KEY = "dgt-trk-draft-v2";
+  const [draftChecked, setDraftChecked] = useState(false);
+  function clearTruckDraft() {
+    try { sessionStorage.removeItem(TRUCK_DRAFT_KEY); } catch { /* ignore */ }
+  }
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(TRUCK_DRAFT_KEY);
+      if (raw) {
+        const d = JSON.parse(raw);
+        if (d && d.form) {
+          setForm({ ...EMPTY_FORM, ...d.form });
+          if (Array.isArray(d.contacts) && d.contacts.length) setContacts(d.contacts);
+          setActiveStep(Number(d.activeStep) >= 1 && Number(d.activeStep) <= 5 ? Number(d.activeStep) : 1);
+          setEditingId(d.editingId || null);
+          setView("form");
+        }
+      }
+    } catch { /* ignore */ }
+    setDraftChecked(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    if (!draftChecked || view !== "form") return;
+    try {
+      sessionStorage.setItem(TRUCK_DRAFT_KEY, JSON.stringify({ form, contacts, activeStep, editingId }));
+    } catch { /* ignore */ }
+  }, [draftChecked, view, form, contacts, activeStep, editingId]);
 
   // Save Draft to LocalStorage
   function handleSaveDraft() {
@@ -837,7 +957,7 @@ export function TruckRecreationWizard({
       const firstValidContact = contacts.find((c) => c.value.trim().length > 0)?.value.trim() || form.driverMobile.trim() || null;
       const driverName =
         form.driverType === "permanent"
-          ? driverDetails?.customer_name || null
+          ? driverRaw?.customer_name || driverDetails?.customer_name || null
           : form.temporaryDriverName.trim() || null;
 
       const extraMetadata = {
@@ -855,7 +975,7 @@ export function TruckRecreationWizard({
         driverLicenseType: form.driverLicenseType.trim() || null,
         driverLicenseIssueDate: form.driverLicenseIssueDate || null,
         driverIssuingAuthority: form.driverIssuingAuthority.trim() || null,
-        driverMaritalStatus: form.driverMaritalStatus || "Married",
+        driverMaritalStatus: form.driverMaritalStatus || null,
         userNotes: form.remarks.trim() || null,
       };
 
@@ -866,10 +986,10 @@ export function TruckRecreationWizard({
         chassis_number: form.chassisNumber.trim(),
         engine_number: form.engineNumber.trim(),
         owner_person_id: form.hasOwner === "yes" && form.ownerId ? form.ownerId : null,
-        owner_name: form.hasOwner === "yes" ? ownerDetails?.customer_name || null : null,
-        owner_mobile: form.hasOwner === "yes" ? ownerDetails?.mobile || ownerDetails?.whatsapp || null : null,
+        owner_name: form.hasOwner === "yes" ? ownerRaw?.customer_name || ownerDetails?.customer_name || null : null,
+        owner_mobile: form.hasOwner === "yes" ? ownerRaw?.mobile || ownerDetails?.mobile || ownerDetails?.whatsapp || null : null,
         transport_company_id: form.companyLink === "yes" && form.companyId ? form.companyId : null,
-        transport_company: form.companyLink === "yes" ? companyDetails?.name || null : null,
+        transport_company: form.companyLink === "yes" ? companyRaw?.name || companyDetails?.name || null : null,
         transporter_person_id: form.transporterId ? form.transporterId : null,
         driver_person_id: form.driverType === "permanent" && form.driverId ? form.driverId : null,
         driver_name: driverName,
@@ -906,6 +1026,7 @@ export function TruckRecreationWizard({
       } catch {
         /* ignore */
       }
+      clearTruckDraft();
       resetForm();
       setView("list");
       await loadList();
@@ -980,32 +1101,24 @@ export function TruckRecreationWizard({
       ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
       : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300";
 
-  // Date formatter matching Option 1 (e.g. 13 Oct 2026)
+  // Report date: "13 Oct 2026" in English; month names in the selected language otherwise (Latin digits, so numbers never change).
   function formatReportDate(iso?: string | null): string {
     if (!iso) return "—";
+    const s0 = String(iso).trim();
+    if (!s0) return "—";
     try {
-      const s = String(iso).trim();
-      if (!s) return "—";
-      if (/^[0-9]{1,2}\s+[A-Za-z]{3}\s+[0-9]{4}$/.test(s)) return s;
-      const parts = s.split(/[-/]/);
-      if (parts.length === 3 && parts[0].length === 4) {
-        const year = Number(parts[0]);
-        const month = Number(parts[1]) - 1;
-        const day = Number(parts[2]);
-        const d = new Date(Date.UTC(year, month, day));
-        if (!isNaN(d.getTime())) {
-          const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-          return `${String(day).padStart(2, "0")} ${months[month]} ${year}`;
-        }
+      let d: Date | null = null;
+      const ymd = s0.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+      if (ymd) d = new Date(Date.UTC(Number(ymd[1]), Number(ymd[2]) - 1, Number(ymd[3])));
+      else {
+        const t0 = new Date(s0);
+        if (!isNaN(t0.getTime())) d = new Date(Date.UTC(t0.getFullYear(), t0.getMonth(), t0.getDate()));
       }
-      const d = new Date(s);
-      if (!isNaN(d.getTime())) {
-        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        return `${String(d.getDate()).padStart(2, "0")} ${months[d.getMonth()]} ${d.getFullYear()}`;
-      }
-      return s;
+      if (!d || isNaN(d.getTime())) return s0;
+      const locale = ({ en: "en-GB", ur: "ur-PK", ar: "ar", fa: "fa-IR", ps: "ps-AF" } as Record<string, string>)[activeLang] || "en-GB";
+      return new Intl.DateTimeFormat(`${locale}-u-nu-latn`, { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" }).format(d);
     } catch {
-      return iso;
+      return s0;
     }
   }
 
@@ -1027,7 +1140,7 @@ export function TruckRecreationWizard({
     const displayValue = raw !== "" ? raw : "—";
     const isDash = displayValue === "—";
     return (
-      <div className="flex items-center justify-between text-[11px] leading-tight py-1 border-b border-slate-200/60 dark:border-slate-800/60 last:border-b-0 gap-1.5">
+      <div className="flex items-center justify-between gap-3 text-[13px] leading-snug py-1.5 border-b border-slate-200/60 dark:border-slate-800/60 last:border-b-0 gap-1.5">
         <div className="flex items-center gap-1.5 shrink-0 min-w-0">
           {Icon && <Icon className={`h-3.5 w-3.5 shrink-0 ${iconColor}`} />}
           <span className="text-slate-600 dark:text-slate-400 font-semibold truncate">{label}</span>
@@ -1102,85 +1215,109 @@ export function TruckRecreationWizard({
     </div>
   );
 
-  // Owner Information Resolution
-  const ownerRegNo = ownerDetails?.person_code || ownerDetails?.code || (form.hasOwner === "yes" && form.ownerId ? "OWN-0001" : "—");
-  const ownerFullName = ownerDetails?.customer_name || "—";
-  const ownerFirstName = ownerDetails?.first_name || (ownerDetails?.customer_name ? ownerDetails.customer_name.split(" ")[0] : "—");
-  const ownerLastName = ownerDetails?.last_name || (ownerDetails?.customer_name && ownerDetails.customer_name.split(" ").length > 1 ? ownerDetails.customer_name.split(" ").slice(1).join(" ") : "—");
-  const ownerFatherName = ownerDetails?.father_name || "—";
-  const ownerCnic = ownerDetails?.cnic || ownerDetails?.registrations?.find((r) => /cnic|id|national/i.test(r.registration_type || ""))?.registration_value || "—";
-  const ownerNationality = (ownerDetails as any)?.nationality || ownerDetails?.country_name || ownerDetails?.country || (form.ownerId ? "Pakistani" : "—");
-  const ownerMobile = ownerDetails?.mobile || "—";
-  const ownerWhatsapp = ownerDetails?.whatsapp || ownerDetails?.mobile || "—";
-  const ownerEmail = ownerDetails?.email || "—";
-  const ownerCountry = ownerDetails?.country_name || ownerDetails?.country || "—";
-  const ownerState = ownerDetails?.state_province_name || ownerDetails?.state || "—";
-  const ownerCity = ownerDetails?.city_name || ownerDetails?.city || "—";
-  const ownerAddress = ownerDetails?.address || "—";
+  // ── Report values ─────────────────────────────────────────────────────────────────────────────
+  // Rules: names/addresses are shown in the language on screen (nm), codes / numbers / phones are NEVER touched, and a missing
+  // value is "—" — nothing is invented. The stored record keeps the original text (see handleSubmit: raw copies).
+  const DASH = "—";
+  const nm = (v?: string | null) => nameText(v) || DASH;
+  const val = (v?: string | number | null) => (v !== undefined && v !== null && String(v).trim() !== "" ? String(v).trim() : DASH);
+  /** Known English choice values (select options saved as such) shown in the language on screen. */
+  const KNOWN_CHOICES: Record<string, [string, string]> = {
+    "Truck Owner": ["trk.w_truck_owner", "Truck Owner"],
+    "Trailer Truck": ["trk.w_trailer_truck", "Trailer Truck"],
+    "Container Truck": ["trk.w_container_truck", "Container Truck"],
+    "Flatbed Truck": ["trk.w_flatbed_truck", "Flatbed Truck"],
+    "Box Truck": ["trk.w_box_truck", "Box Truck"],
+    White: ["trk.w_white", "White"],
+    Blue: ["trk.w_blue", "Blue"],
+    Black: ["trk.w_black", "Black"],
+    Red: ["trk.w_red", "Red"],
+    Silver: ["trk.w_silver", "Silver"],
+    Diesel: ["trk.w_diesel", "Diesel"],
+    Petrol: ["trk.w_petrol", "Petrol"],
+    Electric: ["trk.w_electric", "Electric"],
+    Hybrid: ["trk.w_hybrid", "Hybrid"],
+    Married: ["trk.w_married", "Married"],
+    Single: ["trk.w_single", "Single"],
+  };
+  const choice = (v?: string | null, category?: string) => {
+    const raw = String(v ?? "").trim();
+    if (!raw) return DASH;
+    const opt = truckOptions.find((o) => o.code === raw && (!category || o.category === category));
+    if (opt) return optionLabel(opt);
+    const known = KNOWN_CHOICES[raw];
+    if (known) return tt(known[0], known[1]);
+    return nm(raw);
+  };
 
-  // Company Information Resolution
-  const companyName = companyDetails?.name || "—";
-  const companyBusinessName = companyDetails?.legal_name || companyDetails?.trade_name || (form.companyLink === "yes" && form.companyId ? "A&C Transport Services" : "—");
-  const companyRegNo = companyDetails?.company_code || (form.companyLink === "yes" && form.companyId ? "CMP/GLB/000000003" : "—");
-  const companyNtn = companyDetails?.tax_number || companyDetails?.registrations?.find((r) => /tax|ntn|trn/i.test(r.type || ""))?.value || (form.companyLink === "yes" && form.companyId ? "3222711-66" : "—");
-  const companyLicenseNo = companyDetails?.registrations?.find((r) => /license|licence/i.test(r.type || ""))?.value || companyDetails?.registration_number || (form.companyLink === "yes" && form.companyId ? "TRN-2026-4587" : "—");
-  const companyBusinessType = (companyDetails as any)?.business_type || (form.companyLink === "yes" && form.companyId ? "Transport & Logistics" : "—");
-  const companyCountry = companyDetails?.country_name || (form.companyLink === "yes" && form.companyId ? "Pakistan" : "—");
-  const companyState = companyDetails?.state_name || (form.companyLink === "yes" && form.companyId ? "Balochistan" : "—");
-  const companyCity = companyDetails?.city_name || (form.companyLink === "yes" && form.companyId ? "Chaman" : "—");
-  const companyAddress = companyDetails?.address || "—";
-  const companyPhoneNum = companyPhone(companyDetails) || "—";
-  const companyWhatsappNum = companyDetails?.contacts?.find((c) => /whatsapp/i.test(c.type || ""))?.value || companyPhone(companyDetails) || "—";
-  const companyEmailAddr = companyEmail(companyDetails) || "—";
-  const companyRegDate = (companyDetails as any)?.created_at ? (companyDetails as any).created_at.slice(0, 10) : (form.companyId ? form.registrationDate : "—");
+  // Owner
+  const ownerRawName = ownerRaw?.customer_name || ownerDetails?.customer_name || "";
+  const ownerRegNo = val(ownerDetails?.person_code || ownerDetails?.code);
+  const ownerFullName = nm(ownerDetails?.customer_name || ownerRawName);
+  const ownerFirstName = nm(ownerRaw?.first_name || ownerDetails?.first_name || ownerRawName.split(/\s+/)[0]);
+  const ownerLastName = nm(ownerRaw?.last_name || ownerDetails?.last_name || ownerRawName.split(/\s+/).slice(1).join(" "));
+  const ownerFatherName = nm(ownerRaw?.father_name || ownerDetails?.father_name);
+  const ownerCnic = val(ownerDetails?.cnic || ownerDetails?.registrations?.find((r) => /cnic|id|national/i.test(r.registration_type || ""))?.registration_value);
+  const ownerNationality = nm((ownerRaw as any)?.nationality || (ownerDetails as any)?.nationality);
+  const ownerMobile = val(ownerDetails?.mobile);
+  const ownerWhatsapp = val(ownerDetails?.whatsapp || ownerDetails?.mobile);
+  const ownerEmail = val(ownerDetails?.email);
+  const ownerCountry = val(ownerDetails?.country_name || ownerDetails?.country);
+  const ownerState = val(ownerDetails?.state_province_name || ownerDetails?.state);
+  const ownerCity = val(ownerDetails?.city_name || ownerDetails?.city);
+  const ownerAddress = nm(ownerRaw?.address || ownerDetails?.address);
 
-  // Driver Information Resolution
+  // Company
+  const companyName = nm(companyDetails?.name);
+  const companyBusinessName = nm(companyDetails?.legal_name || companyDetails?.trade_name);
+  const companyRegNo = val(companyDetails?.company_code);
+  const companyNtn = val(companyDetails?.tax_number || companyDetails?.registrations?.find((r) => /tax|ntn|trn/i.test(r.type || ""))?.value);
+  const companyLicenseNo = val(companyDetails?.registrations?.find((r) => /license|licence/i.test(r.type || ""))?.value || companyDetails?.registration_number);
+  const companyBusinessType = nm((companyDetails as any)?.business_type);
+  const companyCountry = val(companyDetails?.country_name);
+  const companyState = val(companyDetails?.state_name);
+  const companyCity = val(companyDetails?.city_name);
+  const companyAddress = nm(companyRaw?.address || companyDetails?.address);
+  const companyPhoneNum = val(companyPhone(companyDetails));
+  const companyWhatsappNum = val(companyDetails?.contacts?.find((c) => /whatsapp/i.test(c.type || ""))?.value || companyPhone(companyDetails));
+  const companyEmailAddr = val(companyEmail(companyDetails));
+  const companyRegDate = (companyDetails as any)?.created_at ? (companyDetails as any).created_at.slice(0, 10) : "";
+
+  // Driver
   const isPermanentDriver = form.driverType === "permanent";
   const effectiveDriverPhoto = isPermanentDriver ? (driverDetails?.photo_url || driverPhotoUrl) : driverPhotoUrl;
-  const driverRegNo = isPermanentDriver ? (driverDetails?.person_code || driverDetails?.code || (form.driverId ? "DRV-0001" : "—")) : "DRV-TEMP";
-  const driverFullName = isPermanentDriver ? (driverDetails?.customer_name || "—") : (form.temporaryDriverName || "—");
-  const driverFirstName = isPermanentDriver
-    ? (driverDetails?.first_name || (driverDetails?.customer_name ? driverDetails.customer_name.split(" ")[0] : "—"))
-    : (form.temporaryDriverFirstName || (form.temporaryDriverName ? form.temporaryDriverName.split(" ")[0] : "—"));
-  const driverLastName = isPermanentDriver
-    ? (driverDetails?.last_name || (driverDetails?.customer_name && driverDetails.customer_name.split(" ").length > 1 ? driverDetails.customer_name.split(" ").slice(1).join(" ") : "—"))
-    : (form.temporaryDriverLastName || (form.temporaryDriverName && form.temporaryDriverName.split(" ").length > 1 ? form.temporaryDriverName.split(" ").slice(1).join(" ") : "—"));
-  const driverFatherName = isPermanentDriver ? (driverDetails?.father_name || form.driverFatherName || "—") : (form.driverFatherName || "—");
-  const driverDob = isPermanentDriver ? ((driverDetails as any)?.date_of_birth || form.driverDob || "—") : (form.driverDob || "—");
-  const driverCnic = isPermanentDriver
-    ? (driverDetails?.cnic || driverDetails?.registrations?.find((r) => /cnic|id|national/i.test(r.registration_type || ""))?.registration_value || form.driverCnic || "—")
-    : (form.driverCnic || "—");
-  const driverNationality = isPermanentDriver
-    ? ((driverDetails as any)?.nationality || driverDetails?.country_name || driverDetails?.country || form.driverNationality || (form.driverId ? "Pakistani" : "—"))
-    : (form.driverNationality || form.driverCountry || (form.temporaryDriverName ? "Pakistani" : "—"));
-
-  const driverMobile = isPermanentDriver
-    ? (driverDetails?.mobile || form.driverMobile || "—")
-    : (form.driverMobile || contacts.find((c) => c.type === "Mobile")?.value || "—");
-  const driverWhatsapp = isPermanentDriver
-    ? (driverDetails?.whatsapp || driverDetails?.mobile || form.driverWhatsapp || "—")
-    : (contacts.find((c) => c.type === "WhatsApp")?.value || form.driverWhatsapp || form.driverMobile || "—");
-  const driverEmail = isPermanentDriver
-    ? (driverDetails?.email || form.driverEmail || "—")
-    : (contacts.find((c) => c.type === "Email")?.value || form.driverEmail || "—");
-
-  const driverLicenseNumber = isPermanentDriver ? (driverDetails?.license_no || form.driverLicenseNo || "—") : (form.driverLicenseNo || "—");
-  const driverLicenseType = isPermanentDriver ? ((driverDetails as any)?.license_type || form.driverLicenseType || "HTV (Heavy Transport)") : (form.driverLicenseType || "HTV (Heavy Transport)");
-  const driverIssueDate = isPermanentDriver ? ((driverDetails as any)?.license_issue_date || form.driverLicenseIssueDate || "—") : (form.driverLicenseIssueDate || "—");
-  const driverExpiryDate = isPermanentDriver ? (driverDetails?.license_expiry || form.driverLicenseExpiry || "—") : (form.driverLicenseExpiry || "—");
-  const driverIssuingAuthority = isPermanentDriver ? ((driverDetails as any)?.issuing_authority || form.driverIssuingAuthority || "Balochistan Transport Dept") : (form.driverIssuingAuthority || "Balochistan Transport Dept");
-  const driverMaritalStatus = isPermanentDriver ? ((driverDetails as any)?.marital_status || form.driverMaritalStatus || "Married") : (form.driverMaritalStatus || "Married");
+  const driverRawName = isPermanentDriver ? (driverRaw?.customer_name || driverDetails?.customer_name || "") : (form.temporaryDriverName || "");
+  const driverRegNo = isPermanentDriver ? val(driverDetails?.person_code || driverDetails?.code) : DASH;
+  const driverFullName = nm(isPermanentDriver ? (driverDetails?.customer_name || driverRawName) : form.temporaryDriverName);
+  const driverFirstName = nm(isPermanentDriver
+    ? (driverRaw?.first_name || driverDetails?.first_name || driverRawName.split(/\s+/)[0])
+    : (form.temporaryDriverFirstName || driverRawName.split(/\s+/)[0]));
+  const driverLastName = nm(isPermanentDriver
+    ? (driverRaw?.last_name || driverDetails?.last_name || driverRawName.split(/\s+/).slice(1).join(" "))
+    : (form.temporaryDriverLastName || driverRawName.split(/\s+/).slice(1).join(" ")));
+  const driverFatherName = nm(form.driverFatherName || driverRaw?.father_name || driverDetails?.father_name);
+  const driverDob = isPermanentDriver ? ((driverDetails as any)?.date_of_birth || form.driverDob || "") : (form.driverDob || "");
+  const driverCnic = val(form.driverCnic || (isPermanentDriver ? (driverDetails?.cnic || driverDetails?.registrations?.find((r) => /cnic|id|national/i.test(r.registration_type || ""))?.registration_value) : ""));
+  const driverNationality = nm(form.driverNationality || (isPermanentDriver ? (driverRaw as any)?.nationality : ""));
+  const driverMobile = val(isPermanentDriver
+    ? (driverDetails?.mobile || form.driverMobile)
+    : (form.driverMobile || contacts.find((c) => c.type === "Mobile")?.value));
+  const driverWhatsapp = val(isPermanentDriver
+    ? (driverDetails?.whatsapp || driverDetails?.mobile || form.driverWhatsapp)
+    : (contacts.find((c) => c.type === "WhatsApp")?.value || form.driverWhatsapp || form.driverMobile));
+  const driverEmail = val(isPermanentDriver
+    ? (driverDetails?.email || form.driverEmail)
+    : (contacts.find((c) => c.type === "Email")?.value || form.driverEmail));
+  const driverLicenseNumber = val(form.driverLicenseNo || (isPermanentDriver ? driverDetails?.license_no : ""));
+  const driverLicenseType = nm(form.driverLicenseType);
+  const driverIssueDate = form.driverLicenseIssueDate || "";
+  const driverExpiryDate = form.driverLicenseExpiry || (isPermanentDriver ? driverDetails?.license_expiry || "" : "");
+  const driverIssuingAuthority = nm(form.driverIssuingAuthority);
+  const driverMaritalStatus = choice(form.driverMaritalStatus);
 
   // Full Live Report Content (OPTION 1: DGT ERP TRANSPORT REGISTRATION PROFILE)
   const fullLiveReportContent = (
     <div className="space-y-4">
-      {/* OPTION 1 FLOATING PILL */}
-      <div className="flex justify-center -mb-2">
-        <span className="rounded-full bg-[#0b3b75] text-white px-5 py-0.5 text-[11px] font-black tracking-widest uppercase shadow-sm border border-blue-400/40">
-          OPTION 1
-        </span>
-      </div>
-
       {/* TOP HEADER BANNER */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0284c7] via-[#0369a1] to-[#0b3b75] p-3.5 sm:p-4 text-white shadow-md border border-sky-400/30">
         {/* Background Cargo Ship & Port Silhouette Graphic */}
@@ -1206,10 +1343,10 @@ export function TruckRecreationWizard({
               DGT ERP
             </div>
             <div className="mt-1 text-xs sm:text-sm font-black tracking-wide text-white uppercase drop-shadow-xs">
-              TRANSPORT REGISTRATION PROFILE
+              {tt("trk.w_transport_registration_profile", "TRANSPORT REGISTRATION PROFILE")}
             </div>
             <div className="text-[10px] sm:text-[11px] font-medium text-sky-100 tracking-tight">
-              Owner - Company - Truck - Driver (Complete Information)
+              {tt("trk.w_owner_company_truck_driver_complete_in", "Owner - Company - Truck - Driver (Complete Information)")}
             </div>
           </div>
         </div>
@@ -1224,7 +1361,7 @@ export function TruckRecreationWizard({
               <Building2 className="h-3.5 w-3.5 text-white" />
             </div>
             <span className="text-xs sm:text-sm font-black uppercase tracking-wider">
-              1. TRANSPORT OWNER & COMPANY DETAILS
+              {tt("trk.w_1_transport_owner_and_company_details", "1. TRANSPORT OWNER & COMPANY DETAILS")}
             </span>
           </div>
           <button
@@ -1232,60 +1369,60 @@ export function TruckRecreationWizard({
             onClick={() => scrollToSection("ownerCard")}
             className="text-[10px] font-bold text-sky-200 hover:text-white underline"
           >
-            Edit
+            {tt("trk.w_edit", "Edit")}
           </button>
         </div>
 
         {/* Card Content - 2 Columns */}
-        <div className="p-3 sm:p-4 grid grid-cols-1 md:grid-cols-2 gap-4 divide-y md:divide-y-0 md:divide-x md:divide-sky-200/80 dark:divide-slate-800 rtl:md:divide-x-reverse">
+        <div className="p-3 sm:p-4 trk-two-col gap-4">
           {/* Left: OWNER INFORMATION */}
-          <div className="space-y-0.5 md:pr-3 rtl:md:pl-3">
+          <div className="space-y-0.5">
             <div className="flex items-center gap-1.5 pb-2 mb-1.5 border-b border-sky-200/70 dark:border-slate-800 text-[#0b5394] dark:text-sky-300">
               <User className="h-4 w-4" />
               <span className="text-xs font-black uppercase tracking-wider">
-                OWNER INFORMATION
+                {tt("trk.w_owner_information", "OWNER INFORMATION")}
               </span>
             </div>
-            <Option1Row icon={CreditCard} iconColor="text-[#0b5394] dark:text-sky-400" label="Registration No." value={ownerRegNo} />
-            <Option1Row icon={UserCheck} iconColor="text-[#0b5394] dark:text-sky-400" label="Owner Type" value={form.ownerType || "Truck Owner"} />
-            <Option1Row icon={User} iconColor="text-[#0b5394] dark:text-sky-400" label="Full Name" value={ownerFullName} />
-            <Option1Row icon={User} iconColor="text-[#0b5394] dark:text-sky-400" label="First Name" value={ownerFirstName} />
-            <Option1Row icon={User} iconColor="text-[#0b5394] dark:text-sky-400" label="Last Name" value={ownerLastName} />
-            <Option1Row icon={User} iconColor="text-[#0b5394] dark:text-sky-400" label="Father's Name" value={ownerFatherName} />
-            <Option1Row icon={CreditCard} iconColor="text-[#0b5394] dark:text-sky-400" label="CNIC / ID No." value={ownerCnic} />
-            <Option1Row icon={Globe} iconColor="text-[#0b5394] dark:text-sky-400" label="Nationality" value={ownerNationality} />
-            <Option1Row icon={Phone} iconColor="text-[#0b5394] dark:text-sky-400" label="Mobile Number" value={ownerMobile} />
-            <Option1Row icon={Phone} iconColor="text-[#0b5394] dark:text-sky-400" label="WhatsApp Number" value={ownerWhatsapp} />
-            <Option1Row icon={Mail} iconColor="text-[#0b5394] dark:text-sky-400" label="Email Address" value={ownerEmail} />
-            <Option1Row icon={Globe} iconColor="text-[#0b5394] dark:text-sky-400" label="Country" value={ownerCountry} />
-            <Option1Row icon={MapPin} iconColor="text-[#0b5394] dark:text-sky-400" label="State / Province" value={ownerState} />
-            <Option1Row icon={Building2} iconColor="text-[#0b5394] dark:text-sky-400" label="City" value={ownerCity} />
-            <Option1Row icon={MapPin} iconColor="text-[#0b5394] dark:text-sky-400" label="Final Address" value={ownerAddress} />
+            <Option1Row icon={CreditCard} iconColor="text-[#0b5394] dark:text-sky-400" label={tt("trk.w_registration_no", "Registration No.")} value={ownerRegNo} />
+            <Option1Row icon={UserCheck} iconColor="text-[#0b5394] dark:text-sky-400" label={tt("trk.w_owner_type", "Owner Type")} value={choice(form.ownerType || "Truck Owner")} />
+            <Option1Row icon={User} iconColor="text-[#0b5394] dark:text-sky-400" label={tt("trk.w_full_name", "Full Name")} value={ownerFullName} />
+            <Option1Row icon={User} iconColor="text-[#0b5394] dark:text-sky-400" label={tt("trk.w_first_name", "First Name")} value={ownerFirstName} />
+            <Option1Row icon={User} iconColor="text-[#0b5394] dark:text-sky-400" label={tt("trk.w_last_name", "Last Name")} value={ownerLastName} />
+            <Option1Row icon={User} iconColor="text-[#0b5394] dark:text-sky-400" label={tt("trk.w_father_s_name", "Father's Name")} value={ownerFatherName} />
+            <Option1Row icon={CreditCard} iconColor="text-[#0b5394] dark:text-sky-400" label={tt("trk.w_cnic_id_no", "CNIC / ID No.")} value={ownerCnic} />
+            <Option1Row icon={Globe} iconColor="text-[#0b5394] dark:text-sky-400" label={tt("trk.w_nationality", "Nationality")} value={ownerNationality} />
+            <Option1Row icon={Phone} iconColor="text-[#0b5394] dark:text-sky-400" label={tt("trk.w_mobile_number", "Mobile Number")} value={ownerMobile} />
+            <Option1Row icon={Phone} iconColor="text-[#0b5394] dark:text-sky-400" label={tt("trk.w_whatsapp_number", "WhatsApp Number")} value={ownerWhatsapp} />
+            <Option1Row icon={Mail} iconColor="text-[#0b5394] dark:text-sky-400" label={tt("trk.w_email_address", "Email Address")} value={ownerEmail} />
+            <Option1Row icon={Globe} iconColor="text-[#0b5394] dark:text-sky-400" label={tt("trk.w_country", "Country")} value={ownerCountry} />
+            <Option1Row icon={MapPin} iconColor="text-[#0b5394] dark:text-sky-400" label={tt("trk.w_state_province", "State / Province")} value={ownerState} />
+            <Option1Row icon={Building2} iconColor="text-[#0b5394] dark:text-sky-400" label={tt("trk.w_city", "City")} value={ownerCity} />
+            <Option1Row icon={MapPin} iconColor="text-[#0b5394] dark:text-sky-400" label={tt("trk.w_final_address", "Final Address")} value={ownerAddress} />
           </div>
 
           {/* Right: COMPANY INFORMATION */}
-          <div className="space-y-0.5 md:pl-3 pt-3 md:pt-0 rtl:md:pr-3 rtl:md:pl-0">
+          <div className="space-y-0.5">
             <div className="flex items-center gap-1.5 pb-2 mb-1.5 border-b border-sky-200/70 dark:border-slate-800 text-[#0b5394] dark:text-sky-300">
               <Building2 className="h-4 w-4" />
               <span className="text-xs font-black uppercase tracking-wider">
-                COMPANY INFORMATION
+                {tt("trk.w_company_information", "COMPANY INFORMATION")}
               </span>
             </div>
-            <Option1Row icon={Building2} iconColor="text-[#0b5394] dark:text-sky-400" label="Company Name" value={companyName} />
-            <Option1Row icon={Briefcase} iconColor="text-[#0b5394] dark:text-sky-400" label="Business Name" value={companyBusinessName} />
-            <Option1Row icon={CreditCard} iconColor="text-[#0b5394] dark:text-sky-400" label="Registration No." value={companyRegNo} />
-            <Option1Row icon={Landmark} iconColor="text-[#0b5394] dark:text-sky-400" label="NTN / Tax No." value={companyNtn} />
-            <Option1Row icon={Shield} iconColor="text-[#0b5394] dark:text-sky-400" label="License No." value={companyLicenseNo} />
-            <Option1Row icon={TruckIcon} iconColor="text-[#0b5394] dark:text-sky-400" label="Business Type" value={companyBusinessType} />
-            <Option1Row icon={Globe} iconColor="text-[#0b5394] dark:text-sky-400" label="Country" value={companyCountry} />
-            <Option1Row icon={MapPin} iconColor="text-[#0b5394] dark:text-sky-400" label="State / Province" value={companyState} />
-            <Option1Row icon={Building2} iconColor="text-[#0b5394] dark:text-sky-400" label="City" value={companyCity} />
-            <Option1Row icon={MapPin} iconColor="text-[#0b5394] dark:text-sky-400" label="Final Address" value={companyAddress} />
-            <Option1Row icon={Phone} iconColor="text-[#0b5394] dark:text-sky-400" label="Phone Number" value={companyPhoneNum} />
-            <Option1Row icon={Phone} iconColor="text-[#0b5394] dark:text-sky-400" label="WhatsApp Number" value={companyWhatsappNum} />
-            <Option1Row icon={Mail} iconColor="text-[#0b5394] dark:text-sky-400" label="Email Address" value={companyEmailAddr} />
-            <Option1Row icon={Calendar} iconColor="text-[#0b5394] dark:text-sky-400" label="Registration Date" value={formatReportDate(companyRegDate)} />
-            <Option1Row icon={CheckCircle2} iconColor="text-[#0b5394] dark:text-sky-400" label="Status" badge={<Option1ActiveBadge status={statusLabel(form.status)} />} />
+            <Option1Row icon={Building2} iconColor="text-[#0b5394] dark:text-sky-400" label={tt("trk.w_company_name", "Company Name")} value={companyName} />
+            <Option1Row icon={Briefcase} iconColor="text-[#0b5394] dark:text-sky-400" label={tt("trk.w_business_name", "Business Name")} value={companyBusinessName} />
+            <Option1Row icon={CreditCard} iconColor="text-[#0b5394] dark:text-sky-400" label={tt("trk.w_registration_no", "Registration No.")} value={companyRegNo} />
+            <Option1Row icon={Landmark} iconColor="text-[#0b5394] dark:text-sky-400" label={tt("trk.w_ntn_tax_no", "NTN / Tax No.")} value={companyNtn} />
+            <Option1Row icon={Shield} iconColor="text-[#0b5394] dark:text-sky-400" label={tt("trk.w_license_no", "License No.")} value={companyLicenseNo} />
+            <Option1Row icon={TruckIcon} iconColor="text-[#0b5394] dark:text-sky-400" label={tt("trk.w_business_type", "Business Type")} value={companyBusinessType} />
+            <Option1Row icon={Globe} iconColor="text-[#0b5394] dark:text-sky-400" label={tt("trk.w_country", "Country")} value={companyCountry} />
+            <Option1Row icon={MapPin} iconColor="text-[#0b5394] dark:text-sky-400" label={tt("trk.w_state_province", "State / Province")} value={companyState} />
+            <Option1Row icon={Building2} iconColor="text-[#0b5394] dark:text-sky-400" label={tt("trk.w_city", "City")} value={companyCity} />
+            <Option1Row icon={MapPin} iconColor="text-[#0b5394] dark:text-sky-400" label={tt("trk.w_final_address", "Final Address")} value={companyAddress} />
+            <Option1Row icon={Phone} iconColor="text-[#0b5394] dark:text-sky-400" label={tt("trk.w_phone_number", "Phone Number")} value={companyPhoneNum} />
+            <Option1Row icon={Phone} iconColor="text-[#0b5394] dark:text-sky-400" label={tt("trk.w_whatsapp_number", "WhatsApp Number")} value={companyWhatsappNum} />
+            <Option1Row icon={Mail} iconColor="text-[#0b5394] dark:text-sky-400" label={tt("trk.w_email_address", "Email Address")} value={companyEmailAddr} />
+            <Option1Row icon={Calendar} iconColor="text-[#0b5394] dark:text-sky-400" label={tt("trk.w_registration_date", "Registration Date")} value={formatReportDate(companyRegDate)} />
+            <Option1Row icon={CheckCircle2} iconColor="text-[#0b5394] dark:text-sky-400" label={tt("trk.w_status", "Status")} badge={<Option1ActiveBadge status={statusLabel(form.status)} />} />
           </div>
         </div>
       </div>
@@ -1299,7 +1436,7 @@ export function TruckRecreationWizard({
               <TruckIcon className="h-3.5 w-3.5 text-white" />
             </div>
             <span className="text-xs sm:text-sm font-black uppercase tracking-wider">
-              2. TRUCK DETAILS
+              {tt("trk.w_2_truck_details", "2. TRUCK DETAILS")}
             </span>
           </div>
           <div className="flex items-center gap-3">
@@ -1317,36 +1454,36 @@ export function TruckRecreationWizard({
               onClick={() => scrollToSection("vehicleCard")}
               className="text-[10px] font-bold text-emerald-200 hover:text-white underline"
             >
-              Edit
+              {tt("trk.w_edit", "Edit")}
             </button>
           </div>
         </div>
 
         {/* Card Content - 2 Columns */}
-        <div className="p-3 sm:p-4 grid grid-cols-1 md:grid-cols-2 gap-4 divide-y md:divide-y-0 md:divide-x md:divide-emerald-200/80 dark:divide-slate-800 rtl:md:divide-x-reverse">
+        <div className="p-3 sm:p-4 trk-two-col gap-4">
           {/* Left: Identification & Specs */}
-          <div className="space-y-0.5 md:pr-3 rtl:md:pl-3">
-            <Option1Row icon={CreditCard} iconColor="text-[#00875a] dark:text-emerald-400" label="Truck Registration No." value={form.truckNumber} />
-            <Option1Row icon={TruckIcon} iconColor="text-[#00875a] dark:text-emerald-400" label="Truck Type" value={form.truckType} />
-            <Option1Row icon={Tag} iconColor="text-[#00875a] dark:text-emerald-400" label="Truck Name / Nickname" value={form.truckName} />
-            <Option1Row icon={Shield} iconColor="text-[#00875a] dark:text-emerald-400" label="Make / Brand" value={form.make} />
-            <Option1Row icon={Settings} iconColor="text-[#00875a] dark:text-emerald-400" label="Model" value={form.truckModel} />
-            <Option1Row icon={Calendar} iconColor="text-[#00875a] dark:text-emerald-400" label="Year" value={form.manufacturingYear} />
-            <Option1Row icon={Palette} iconColor="text-[#00875a] dark:text-emerald-400" label="Color" value={form.color} />
+          <div className="space-y-0.5">
+            <Option1Row icon={CreditCard} iconColor="text-[#00875a] dark:text-emerald-400" label={tt("trk.w_truck_registration_no", "Truck Registration No.")} value={form.truckNumber} />
+            <Option1Row icon={TruckIcon} iconColor="text-[#00875a] dark:text-emerald-400" label={tt("trk.w_truck_type", "Truck Type")} value={choice(form.truckType, "truck_type")} />
+            <Option1Row icon={Tag} iconColor="text-[#00875a] dark:text-emerald-400" label={tt("trk.w_truck_name_nickname", "Truck Name / Nickname")} value={nm(form.truckName)} />
+            <Option1Row icon={Shield} iconColor="text-[#00875a] dark:text-emerald-400" label={tt("trk.w_make_brand", "Make / Brand")} value={form.make} />
+            <Option1Row icon={Settings} iconColor="text-[#00875a] dark:text-emerald-400" label={tt("trk.w_model", "Model")} value={form.truckModel} />
+            <Option1Row icon={Calendar} iconColor="text-[#00875a] dark:text-emerald-400" label={tt("trk.w_year", "Year")} value={form.manufacturingYear} />
+            <Option1Row icon={Palette} iconColor="text-[#00875a] dark:text-emerald-400" label={tt("trk.w_color", "Color")} value={choice(form.color, "color")} />
           </div>
 
           {/* Right: Technical, Insurance & Compliance */}
-          <div className="space-y-0.5 md:pl-3 pt-3 md:pt-0 rtl:md:pr-3 rtl:md:pl-0">
-            <Option1Row icon={Fuel} iconColor="text-[#00875a] dark:text-emerald-400" label="Fuel Type" value={form.fuelType} />
-            <Option1Row icon={Scale} iconColor="text-[#00875a] dark:text-emerald-400" label="Capacity (Tons)" value={form.capacity ? `${form.capacity} Tons` : null} />
-            <Option1Row icon={CreditCard} iconColor="text-[#00875a] dark:text-emerald-400" label="Chassis No." value={form.chassisNumber} />
-            <Option1Row icon={Landmark} iconColor="text-[#00875a] dark:text-emerald-400" label="Engine No." value={form.engineNumber} />
-            <Option1Row icon={FileText} iconColor="text-[#00875a] dark:text-emerald-400" label="Registration No." value={form.registrationNumber} />
-            <Option1Row icon={Calendar} iconColor="text-[#00875a] dark:text-emerald-400" label="Registration Expiry" value={formatReportDate(form.registrationExpiryDate)} />
-            <Option1Row icon={ShieldCheck} iconColor="text-[#00875a] dark:text-emerald-400" label="Insurance Provider" value={form.insuranceProvider} />
-            <Option1Row icon={Calendar} iconColor="text-[#00875a] dark:text-emerald-400" label="Insurance Expiry" value={formatReportDate(form.insuranceExpiryDate)} />
-            <Option1Row icon={CheckCircle2} iconColor="text-[#00875a] dark:text-emerald-400" label="Fitness / Technical Expiry" value={formatReportDate(form.fitnessCertificateExpiryDate)} />
-            <Option1Row icon={CheckCircle2} iconColor="text-[#00875a] dark:text-emerald-400" label="Status" badge={<Option1ActiveBadge status={statusLabel(form.status)} />} />
+          <div className="space-y-0.5">
+            <Option1Row icon={Fuel} iconColor="text-[#00875a] dark:text-emerald-400" label={tt("trk.w_fuel_type", "Fuel Type")} value={choice(form.fuelType, "fuel_type")} />
+            <Option1Row icon={Scale} iconColor="text-[#00875a] dark:text-emerald-400" label={tt("trk.w_capacity_tons", "Capacity (Tons)")} value={form.capacity ? `${form.capacity} ${tt("trk.w_tons", "Tons")}` : null} />
+            <Option1Row icon={CreditCard} iconColor="text-[#00875a] dark:text-emerald-400" label={tt("trk.w_chassis_no", "Chassis No.")} value={form.chassisNumber} />
+            <Option1Row icon={Landmark} iconColor="text-[#00875a] dark:text-emerald-400" label={tt("trk.w_engine_no", "Engine No.")} value={form.engineNumber} />
+            <Option1Row icon={FileText} iconColor="text-[#00875a] dark:text-emerald-400" label={tt("trk.w_registration_no", "Registration No.")} value={form.registrationNumber} />
+            <Option1Row icon={Calendar} iconColor="text-[#00875a] dark:text-emerald-400" label={tt("trk.w_registration_expiry", "Registration Expiry")} value={formatReportDate(form.registrationExpiryDate)} />
+            <Option1Row icon={ShieldCheck} iconColor="text-[#00875a] dark:text-emerald-400" label={tt("trk.w_insurance_provider", "Insurance Provider")} value={form.insuranceProvider} />
+            <Option1Row icon={Calendar} iconColor="text-[#00875a] dark:text-emerald-400" label={tt("trk.w_insurance_expiry", "Insurance Expiry")} value={formatReportDate(form.insuranceExpiryDate)} />
+            <Option1Row icon={CheckCircle2} iconColor="text-[#00875a] dark:text-emerald-400" label={tt("trk.w_fitness_technical_expiry", "Fitness / Technical Expiry")} value={formatReportDate(form.fitnessCertificateExpiryDate)} />
+            <Option1Row icon={CheckCircle2} iconColor="text-[#00875a] dark:text-emerald-400" label={tt("trk.w_status", "Status")} badge={<Option1ActiveBadge status={statusLabel(form.status)} />} />
           </div>
         </div>
       </div>
@@ -1360,7 +1497,7 @@ export function TruckRecreationWizard({
               <UserCheck className="h-3.5 w-3.5 text-white" />
             </div>
             <span className="text-xs sm:text-sm font-black uppercase tracking-wider">
-              3. DRIVER DETAILS
+              {tt("trk.w_3_driver_details", "3. DRIVER DETAILS")}
             </span>
           </div>
           <button
@@ -1368,12 +1505,12 @@ export function TruckRecreationWizard({
             onClick={() => scrollToSection("driverCard")}
             className="text-[10px] font-bold text-amber-200 hover:text-white underline"
           >
-            Edit
+            {tt("trk.w_edit", "Edit")}
           </button>
         </div>
 
         {/* Card Content - Photo on Left + 2 Sub-Columns */}
-        <div className="p-3 sm:p-4 flex flex-col md:flex-row gap-4 items-start">
+        <div className="trk-driver-row gap-4 p-3 sm:p-4">
           {/* Driver Photo Avatar Frame */}
           <div className="flex flex-col items-center shrink-0 mx-auto md:mx-0">
             <div className="relative h-28 w-24 sm:h-32 sm:w-28 overflow-hidden rounded-2xl border-2 border-amber-300/90 bg-gradient-to-b from-sky-100 to-sky-200 shadow-sm dark:border-amber-700/60 dark:from-slate-800 dark:to-slate-900 flex items-center justify-center">
@@ -1401,36 +1538,36 @@ export function TruckRecreationWizard({
               )}
             </div>
             <span className="mt-1 text-[9px] font-bold text-amber-700 dark:text-amber-300 uppercase tracking-wider">
-              {form.driverType === "permanent" ? "Permanent" : "Temporary"}
+              {form.driverType === "permanent" ? tt("trk.w_permanent", "Permanent") : tt("trk.w_temporary", "Temporary")}
             </span>
           </div>
 
           {/* 2 Sub-Columns */}
-          <div className="flex-1 w-full grid grid-cols-1 md:grid-cols-2 gap-4 divide-y md:divide-y-0 md:divide-x md:divide-amber-200/80 dark:divide-slate-800 rtl:md:divide-x-reverse">
+          <div className="trk-two-col w-full min-w-0 flex-1 gap-4">
             {/* Sub-column 1: Personal Details */}
-            <div className="space-y-0.5 md:pr-3 rtl:md:pl-3">
-              <Option1Row icon={CreditCard} iconColor="text-[#f26522] dark:text-amber-400" label="Driver Registration No." value={driverRegNo} />
-              <Option1Row icon={User} iconColor="text-[#f26522] dark:text-amber-400" label="Full Name" value={driverFullName} />
-              <Option1Row icon={User} iconColor="text-[#f26522] dark:text-amber-400" label="First Name" value={driverFirstName} />
-              <Option1Row icon={User} iconColor="text-[#f26522] dark:text-amber-400" label="Last Name" value={driverLastName} />
-              <Option1Row icon={User} iconColor="text-[#f26522] dark:text-amber-400" label="Father's Name" value={driverFatherName} />
-              <Option1Row icon={Calendar} iconColor="text-[#f26522] dark:text-amber-400" label="Date of Birth" value={formatReportDate(driverDob)} />
-              <Option1Row icon={CreditCard} iconColor="text-[#f26522] dark:text-amber-400" label="CNIC / ID No." value={driverCnic} />
-              <Option1Row icon={Globe} iconColor="text-[#f26522] dark:text-amber-400" label="Nationality" value={driverNationality} />
+            <div className="space-y-0.5">
+              <Option1Row icon={CreditCard} iconColor="text-[#f26522] dark:text-amber-400" label={tt("trk.w_driver_registration_no", "Driver Registration No.")} value={driverRegNo} />
+              <Option1Row icon={User} iconColor="text-[#f26522] dark:text-amber-400" label={tt("trk.w_full_name", "Full Name")} value={driverFullName} />
+              <Option1Row icon={User} iconColor="text-[#f26522] dark:text-amber-400" label={tt("trk.w_first_name", "First Name")} value={driverFirstName} />
+              <Option1Row icon={User} iconColor="text-[#f26522] dark:text-amber-400" label={tt("trk.w_last_name", "Last Name")} value={driverLastName} />
+              <Option1Row icon={User} iconColor="text-[#f26522] dark:text-amber-400" label={tt("trk.w_father_s_name", "Father's Name")} value={driverFatherName} />
+              <Option1Row icon={Calendar} iconColor="text-[#f26522] dark:text-amber-400" label={tt("trk.w_date_of_birth", "Date of Birth")} value={formatReportDate(driverDob)} />
+              <Option1Row icon={CreditCard} iconColor="text-[#f26522] dark:text-amber-400" label={tt("trk.w_cnic_id_no", "CNIC / ID No.")} value={driverCnic} />
+              <Option1Row icon={Globe} iconColor="text-[#f26522] dark:text-amber-400" label={tt("trk.w_nationality", "Nationality")} value={driverNationality} />
             </div>
 
             {/* Sub-column 2: Contact & License Details */}
-            <div className="space-y-0.5 md:pl-3 pt-3 md:pt-0 rtl:md:pr-3 rtl:md:pl-0">
-              <Option1Row icon={Phone} iconColor="text-[#f26522] dark:text-amber-400" label="Mobile Number" value={driverMobile} />
-              <Option1Row icon={Phone} iconColor="text-[#f26522] dark:text-amber-400" label="WhatsApp Number" value={driverWhatsapp} />
-              <Option1Row icon={Mail} iconColor="text-[#f26522] dark:text-amber-400" label="Email Address" value={driverEmail} />
-              <Option1Row icon={CreditCard} iconColor="text-[#f26522] dark:text-amber-400" label="License Number" value={driverLicenseNumber} />
-              <Option1Row icon={TruckIcon} iconColor="text-[#f26522] dark:text-amber-400" label="License Type" value={driverLicenseType} />
-              <Option1Row icon={Calendar} iconColor="text-[#f26522] dark:text-amber-400" label="Issue Date" value={formatReportDate(driverIssueDate)} />
-              <Option1Row icon={Calendar} iconColor="text-[#f26522] dark:text-amber-400" label="Expiry Date" value={formatReportDate(driverExpiryDate)} />
-              <Option1Row icon={Landmark} iconColor="text-[#f26522] dark:text-amber-400" label="Issuing Authority" value={driverIssuingAuthority} />
-              <Option1Row icon={Users} iconColor="text-[#f26522] dark:text-amber-400" label="Marital Status" value={driverMaritalStatus} />
-              <Option1Row icon={CheckCircle2} iconColor="text-[#f26522] dark:text-amber-400" label="Current Status" badge={<Option1ActiveBadge status={statusLabel(form.status)} />} />
+            <div className="space-y-0.5">
+              <Option1Row icon={Phone} iconColor="text-[#f26522] dark:text-amber-400" label={tt("trk.w_mobile_number", "Mobile Number")} value={driverMobile} />
+              <Option1Row icon={Phone} iconColor="text-[#f26522] dark:text-amber-400" label={tt("trk.w_whatsapp_number", "WhatsApp Number")} value={driverWhatsapp} />
+              <Option1Row icon={Mail} iconColor="text-[#f26522] dark:text-amber-400" label={tt("trk.w_email_address", "Email Address")} value={driverEmail} />
+              <Option1Row icon={CreditCard} iconColor="text-[#f26522] dark:text-amber-400" label={tt("trk.w_license_number", "License Number")} value={driverLicenseNumber} />
+              <Option1Row icon={TruckIcon} iconColor="text-[#f26522] dark:text-amber-400" label={tt("trk.w_license_type", "License Type")} value={driverLicenseType} />
+              <Option1Row icon={Calendar} iconColor="text-[#f26522] dark:text-amber-400" label={tt("trk.w_issue_date", "Issue Date")} value={formatReportDate(driverIssueDate)} />
+              <Option1Row icon={Calendar} iconColor="text-[#f26522] dark:text-amber-400" label={tt("trk.w_expiry_date", "Expiry Date")} value={formatReportDate(driverExpiryDate)} />
+              <Option1Row icon={Landmark} iconColor="text-[#f26522] dark:text-amber-400" label={tt("trk.w_issuing_authority", "Issuing Authority")} value={driverIssuingAuthority} />
+              <Option1Row icon={Users} iconColor="text-[#f26522] dark:text-amber-400" label={tt("trk.w_marital_status", "Marital Status")} value={driverMaritalStatus} />
+              <Option1Row icon={CheckCircle2} iconColor="text-[#f26522] dark:text-amber-400" label={tt("trk.w_current_status", "Current Status")} badge={<Option1ActiveBadge status={statusLabel(form.status)} />} />
             </div>
           </div>
         </div>
@@ -1442,7 +1579,7 @@ export function TruckRecreationWizard({
           <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-2 dark:border-slate-800">
             <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
               <FileText className="h-3.5 w-3.5 text-blue-600" />
-              Attached Session Documents ({documents.length})
+              {tt("trk.w_attached_session_documents", "Attached Session Documents")} ({documents.length})
             </span>
           </div>
           <div className="space-y-1.5">
@@ -1451,10 +1588,10 @@ export function TruckRecreationWizard({
                 <span className="truncate font-medium text-slate-700 dark:text-slate-300 max-w-[200px]">{d.name}</span>
                 <div className="flex items-center gap-2 shrink-0">
                   <a href={d.url} target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold text-blue-600 hover:underline">
-                    View
+                    {tt("trk.w_view", "View")}
                   </a>
                   <a href={d.url} download={d.name} className="text-[11px] font-bold text-blue-600 hover:underline">
-                    Download
+                    {tt("trk.w_download", "Download")}
                   </a>
                 </div>
               </div>
@@ -1466,7 +1603,7 @@ export function TruckRecreationWizard({
   );
 
   return (
-    <div className="space-y-5" dir={dir}>
+    <div className="dgt-trk space-y-5" dir={dir}>
       {/* LIST VIEW */}
       {view === "list" && (
         <>
@@ -1730,7 +1867,7 @@ export function TruckRecreationWizard({
                     <tr>
                       <td colSpan={11} className="p-8 text-center text-slate-400">
                         <Loader2 className="mx-auto h-6 w-6 animate-spin text-blue-600" />
-                        <span className="mt-2 block font-medium">Loading...</span>
+                        <span className="mt-2 block font-medium">{tt("trk.w_loading", "Loading...")}</span>
                       </td>
                     </tr>
                   ) : paginatedRows.length === 0 ? (
@@ -1881,15 +2018,15 @@ export function TruckRecreationWizard({
             </div>
           </div>
 
-          {/* STEP-BY-STEP INTERACTIVE WIZARD PROGRESS BAR */}
-          <div className="rounded-2xl border border-slate-200/90 bg-white p-3 sm:p-3.5 shadow-xs dark:border-slate-800 dark:bg-slate-900">
-            <div className="flex items-center justify-between gap-2 pb-2.5 mb-2.5 border-b border-slate-100 dark:border-slate-800">
-              <div className="flex items-center gap-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-600 text-white font-mono text-xs font-black shadow-xs">
+          {/* STEP-BY-STEP INTERACTIVE WIZARD PROGRESS BAR (large, clear, language-aware) */}
+          <nav aria-label={tt("trk.w_steps_nav", "Registration steps")} className="dgt-trk-stepper rounded-2xl border border-slate-200/90 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900 sm:p-5">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3 dark:border-slate-800">
+              <div className="flex min-w-0 items-center gap-3">
+                <span className="flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-xl bg-blue-600 font-mono text-[20px] font-black text-white shadow-xs">
                   {activeStep}
                 </span>
-                <span className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider">
-                  Step {activeStep} of 5: {
+                <span className="text-[16px] font-black uppercase tracking-wide text-slate-800 dark:text-slate-100 sm:text-[19px]">
+                  {stepOf(activeStep)}: {
                     activeStep === 1 ? cleanTitle(tt("trk.section_owner", "Owner Details"), "Owner Details") :
                     activeStep === 2 ? cleanTitle(tt("trk.section_truck_details", "Truck Details"), "Truck Details") :
                     activeStep === 3 ? cleanTitle(tt("trk.section_transporter", "Transporter Details"), "Transporter Details") :
@@ -1898,69 +2035,69 @@ export function TruckRecreationWizard({
                   }
                 </span>
               </div>
-              <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400">
-                {Math.round((activeStep / 5) * 100)}% Complete
+              <span className="text-[16px] font-bold text-blue-600 dark:text-blue-400" dir="ltr">
+                {Math.round((activeStep / 5) * 100)}% <span dir={dir}>{tt("trk.w_complete", "Complete")}</span>
               </span>
             </div>
 
-            {/* Progress Bar Track */}
-            <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mb-3">
+            <div className="mb-4 h-[10px] w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round((activeStep / 5) * 100)}>
               <div
-                className="h-full bg-gradient-to-r from-blue-600 via-sky-500 to-emerald-500 transition-all duration-300 rounded-full"
-                style={{ width: `${(activeStep / 5) * 100}%` }}
+                className="h-full rounded-full bg-gradient-to-r from-blue-600 via-sky-500 to-emerald-500 transition-all duration-300"
+                style={{ width: `${(activeStep / 5) * 100}%`, marginInlineStart: 0 }}
               />
             </div>
 
-            {/* Interactive Step Buttons */}
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+            <ol className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-5">
               {[
-                { step: 1, title: cleanTitle(tt("trk.section_owner", "Owner Details"), "Owner Details"), sub: "Owner info", icon: User },
-                { step: 2, title: cleanTitle(tt("trk.section_truck_details", "Truck Details"), "Truck Details"), sub: "Specs & vehicle", icon: TruckIcon },
-                { step: 3, title: cleanTitle(tt("trk.section_transporter", "Transporter Details"), "Transporter Details"), sub: "Company link", icon: Building2 },
-                { step: 4, title: cleanTitle(tt("trk.section_driver", "Driver Details"), "Driver Details"), sub: "Driver & photo", icon: UserCheck },
-                { step: 5, title: cleanTitle(tt("trk.truck_docs", "Truck Documents"), "Truck Documents"), sub: "Upload & register", icon: FileText },
+                { step: 1, title: cleanTitle(tt("trk.section_owner", "Owner Details"), "Owner Details"), sub: tt("trk.w_step_sub_owner", "Owner info"), icon: User },
+                { step: 2, title: cleanTitle(tt("trk.section_truck_details", "Truck Details"), "Truck Details"), sub: tt("trk.w_step_sub_truck", "Specs & vehicle"), icon: TruckIcon },
+                { step: 3, title: cleanTitle(tt("trk.section_transporter", "Transporter Details"), "Transporter Details"), sub: tt("trk.w_step_sub_transporter", "Company link"), icon: Building2 },
+                { step: 4, title: cleanTitle(tt("trk.section_driver", "Driver Details"), "Driver Details"), sub: tt("trk.w_step_sub_driver", "Driver & photo"), icon: UserCheck },
+                { step: 5, title: cleanTitle(tt("trk.truck_docs", "Truck Documents"), "Truck Documents"), sub: tt("trk.w_step_sub_docs", "Upload & register"), icon: FileText },
               ].map((st) => {
                 const isCurrent = activeStep === st.step;
                 const isCompleted = activeStep > st.step;
                 return (
-                  <button
-                    key={st.step}
-                    type="button"
-                    onClick={() => {
-                      if (st.step > activeStep && activeStep === 2 && !form.truckNumber.trim()) {
-                        alert("Please enter Truck Number first.");
-                        return;
-                      }
-                      setActiveStep(st.step);
-                    }}
-                    className={`flex items-center gap-2 rounded-xl p-2 text-start transition border ${
-                      isCurrent
-                        ? "border-blue-500 bg-blue-50/80 text-blue-700 shadow-2xs dark:border-blue-700 dark:bg-blue-950/60 dark:text-blue-300"
-                        : isCompleted
-                        ? "border-emerald-200 bg-emerald-50/50 text-emerald-800 hover:bg-emerald-100/60 dark:border-emerald-900/40 dark:bg-emerald-950/30 dark:text-emerald-300"
-                        : "border-slate-200/70 bg-slate-50/40 text-slate-600 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-400"
-                    }`}
-                  >
-                    <div
-                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-xs font-black transition ${
+                  <li key={st.step}>
+                    <button
+                      type="button"
+                      aria-current={isCurrent ? "step" : undefined}
+                      onClick={() => {
+                        if (st.step > activeStep && activeStep === 2 && !form.truckNumber.trim()) {
+                          stepAlert(tt("trk.w_alert_truck_first", "Please enter Truck Number first."));
+                          return;
+                        }
+                        setActiveStep(st.step);
+                      }}
+                      className={`flex min-h-[64px] w-full items-center gap-3 rounded-xl border p-3 text-start transition ${
                         isCurrent
-                          ? "bg-blue-600 text-white shadow-2xs"
+                          ? "border-blue-500 bg-blue-50/80 text-blue-700 shadow-2xs dark:border-blue-700 dark:bg-blue-950/60 dark:text-blue-300"
                           : isCompleted
-                          ? "bg-emerald-600 text-white"
-                          : "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+                          ? "border-emerald-200 bg-emerald-50/50 text-emerald-800 hover:bg-emerald-100/60 dark:border-emerald-900/40 dark:bg-emerald-950/30 dark:text-emerald-300"
+                          : "border-slate-200/70 bg-slate-50/40 text-slate-600 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-400"
                       }`}
                     >
-                      {isCompleted ? <Check className="h-3.5 w-3.5" /> : st.step}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="truncate text-xs font-bold">{st.title}</div>
-                      <div className="truncate text-[10px] text-slate-400 hidden xl:block">{st.sub}</div>
-                    </div>
-                  </button>
+                      <span
+                        className={`flex h-[40px] w-[40px] shrink-0 items-center justify-center rounded-lg text-[16px] font-black transition ${
+                          isCurrent
+                            ? "bg-blue-600 text-white shadow-2xs"
+                            : isCompleted
+                            ? "bg-emerald-600 text-white"
+                            : "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+                        }`}
+                      >
+                        {isCompleted ? <Check className="h-4 w-4" /> : st.step}
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block text-[15px] font-bold leading-tight">{st.title}</span>
+                        <span className="block text-[13px] leading-tight text-slate-500 dark:text-slate-400">{st.sub}</span>
+                      </span>
+                    </button>
+                  </li>
                 );
               })}
-            </div>
-          </div>
+            </ol>
+          </nav>
 
           {message && (
             <div
@@ -1975,7 +2112,7 @@ export function TruckRecreationWizard({
           )}
 
           {/* MAIN 2-COLUMN LAYOUT: Compact Form (Left) & Sticky Live Truck Report (Right) */}
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 items-start">
+          <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-12 xl:gap-7">
             {/* LEFT FORM COLUMN (Col 5) */}
             <form onSubmit={handleSubmit} className="space-y-4 lg:col-span-5">
               {/* CARD 1: Owner / Customer Selection (Optional) */}
@@ -1994,15 +2131,15 @@ export function TruckRecreationWizard({
                     <div>
                       <h2 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-1.5">
                         <span>{cleanTitle(tt("trk.section_owner", "Truck Owner Information"), "Truck Owner Information")}</span>
-                        <span className="text-[10px] font-normal text-slate-400">(Optional)</span>
+                        <span className="text-xs font-normal text-slate-400">{tt("trk.w_optional", "(Optional)")}</span>
                       </h2>
-                      <p className="text-[10.5px] text-slate-500 dark:text-slate-400">
-                        Select an existing owner/customer account. Registered details appear below.
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        {tt("trk.w_select_an_existing_owner_customer_acco", "Select an existing owner/customer account. Registered details appear below.")}
                       </p>
                     </div>
                   </div>
-                  <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200/60 dark:border-blue-900/60">
-                    Step 1 of 5
+                  <span className="rounded-full bg-blue-50 px-3 py-1.5 text-[13px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200/60 dark:border-blue-900/60">
+                    {stepOf(1)}
                   </span>
                 </div>
 
@@ -2021,7 +2158,7 @@ export function TruckRecreationWizard({
                     <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-2.5 text-[11px] text-blue-800 dark:border-blue-900/40 dark:bg-blue-950/20 dark:text-blue-300 flex items-start gap-2">
                       <HelpCircle className="h-4 w-4 shrink-0 text-blue-600 mt-0.5" />
                       <span>
-                        If there is no owner, leave blank (Without Owner) and continue with truck registration.
+                        {tt("trk.w_if_there_is_no_owner_leave_blank_witho", "If there is no owner, leave blank (Without Owner) and continue with truck registration.")}
                       </span>
                     </div>
                   </div>
@@ -2035,26 +2172,26 @@ export function TruckRecreationWizard({
                           </div>
                           <div>
                             <div className="text-xs font-black text-slate-900 dark:text-white">
-                              {ownerDetails.customer_name}
+                              {nm(ownerDetails.customer_name)}
                             </div>
                             <div className="text-[10px] text-blue-700 dark:text-blue-300 font-bold uppercase">
-                              REGISTERED OWNER
+                              {tt("trk.w_registered_owner", "REGISTERED OWNER")}
                             </div>
                           </div>
                         </div>
                         <button
                           type="button"
-                          onClick={() => setParty360({ customerId: form.ownerId, name: ownerDetails.customer_name || "" })}
+                          onClick={() => setParty360({ customerId: form.ownerId, name: nm(ownerDetails.customer_name) === "—" ? "" : nm(ownerDetails.customer_name) })}
                           className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-white px-2.5 py-1 text-[11px] font-bold text-blue-700 shadow-2xs hover:bg-blue-50 dark:border-blue-800 dark:bg-slate-900 dark:text-blue-300"
                         >
                           <Eye className="h-3 w-3" /> {tt("trk.view_owner_details", "View Owner Details")}
                         </button>
                       </div>
                       <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px]">
-                        <div className="flex justify-between py-0.5"><span className="text-slate-500">ID / Code:</span> <b className="text-slate-800 dark:text-slate-100">{ownerDetails.person_code || ownerDetails.code || "—"}</b></div>
-                        <div className="flex justify-between py-0.5"><span className="text-slate-500">Mobile:</span> <b className="text-slate-800 dark:text-slate-100">{ownerDetails.mobile || "—"}</b></div>
-                        <div className="flex justify-between py-0.5"><span className="text-slate-500">WhatsApp:</span> <b className="text-slate-800 dark:text-slate-100">{ownerDetails.whatsapp || "—"}</b></div>
-                        <div className="flex justify-between py-0.5"><span className="text-slate-500">Address:</span> <b className="text-slate-800 dark:text-slate-100 truncate">{ownerDetails.address || "—"}</b></div>
+                        <div className="flex justify-between py-0.5"><span className="text-slate-500">{tt("trk.w_id_code_colon", "ID / Code:")}</span> <b className="text-slate-800 dark:text-slate-100">{ownerDetails.person_code || ownerDetails.code || "—"}</b></div>
+                        <div className="flex justify-between py-0.5"><span className="text-slate-500">{tt("trk.w_mobile_colon", "Mobile:")}</span> <b className="text-slate-800 dark:text-slate-100">{ownerDetails.mobile || "—"}</b></div>
+                        <div className="flex justify-between py-0.5"><span className="text-slate-500">{tt("trk.w_whatsapp_colon", "WhatsApp:")}</span> <b className="text-slate-800 dark:text-slate-100">{ownerDetails.whatsapp || "—"}</b></div>
+                        <div className="flex justify-between py-0.5"><span className="text-slate-500">{tt("trk.w_address_colon", "Address:")}</span> <b className="text-slate-800 dark:text-slate-100 truncate">{nm(ownerDetails.address)}</b></div>
                       </div>
                     </div>
                   )}
@@ -2065,7 +2202,7 @@ export function TruckRecreationWizard({
                   <button
                     type="button"
                     onClick={backToList}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 shadow-2xs transition"
+                    className="inline-flex min-h-[46px] items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-[15px] font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 shadow-2xs transition"
                   >
                     <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
                     <span>{tt("common.back", "Back to List")}</span>
@@ -2074,9 +2211,9 @@ export function TruckRecreationWizard({
                   <button
                     type="button"
                     onClick={() => setActiveStep(2)}
-                    className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-black text-white shadow-md shadow-blue-600/25 hover:bg-blue-700 transition"
+                    className="inline-flex min-h-[46px] items-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-[15px] font-black text-white shadow-md shadow-blue-600/25 hover:bg-blue-700 transition"
                   >
-                    <span>Next: Truck Details</span>
+                    <span>{tt("trk.w_next_truck_details", "Next: Truck Details")}</span>
                     <ArrowRight className="h-4 w-4 rtl:rotate-180" />
                   </button>
                 </div>
@@ -2098,13 +2235,13 @@ export function TruckRecreationWizard({
                       <h2 className="text-sm font-black text-slate-900 dark:text-white">
                         {cleanTitle(tt("trk.section_truck_details", "Truck Details"), "Truck Details")}
                       </h2>
-                      <p className="text-[10.5px] text-slate-500 dark:text-slate-400">
-                        Enter truck identification and physical specifications.
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        {tt("trk.w_enter_truck_identification_and_physica", "Enter truck identification and physical specifications.")}
                       </p>
                     </div>
                   </div>
-                  <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200/60 dark:border-blue-900/60">
-                    Step 2 of 5
+                  <span className="rounded-full bg-blue-50 px-3 py-1.5 text-[13px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200/60 dark:border-blue-900/60">
+                    {stepOf(2)}
                   </span>
                 </div>
 
@@ -2119,7 +2256,7 @@ export function TruckRecreationWizard({
                           required
                           value={form.truckNumber}
                           onChange={(e) => setForm((p) => ({ ...p, truckNumber: e.target.value }))}
-                          placeholder="e.g. TKB 861"
+                          placeholder={tt("trk.w_enter_truck_number", "Enter truck number")}
                           className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                         />
                       </label>
@@ -2132,10 +2269,11 @@ export function TruckRecreationWizard({
                           onChange={(e) => setForm((p) => ({ ...p, truckType: e.target.value }))}
                           className="h-9 w-full rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                         >
-                          <option value="Trailer Truck">Trailer Truck</option>
-                          <option value="Container Truck">Container Truck</option>
-                          <option value="Flatbed Truck">Flatbed Truck</option>
-                          <option value="Box Truck">Box Truck</option>
+                          <option value="">{tt("trk.w_select", "— Select —")}</option>
+                          <option value="Trailer Truck">{tt("trk.w_trailer_truck", "Trailer Truck")}</option>
+                          <option value="Container Truck">{tt("trk.w_container_truck", "Container Truck")}</option>
+                          <option value="Flatbed Truck">{tt("trk.w_flatbed_truck", "Flatbed Truck")}</option>
+                          <option value="Box Truck">{tt("trk.w_box_truck", "Box Truck")}</option>
                           {truckTypeOptions.map((o) => (
                             <option key={o.id} value={o.code}>
                               {optionLabel(o)}
@@ -2150,7 +2288,7 @@ export function TruckRecreationWizard({
                         <input
                           value={form.truckName}
                           onChange={(e) => setForm((p) => ({ ...p, truckName: e.target.value }))}
-                          placeholder="e.g. Al-Fatah Express"
+                          placeholder={tt("trk.w_enter_truck_name_or_nickname", "Enter truck name or nickname")}
                           className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                         />
                       </label>
@@ -2160,23 +2298,23 @@ export function TruckRecreationWizard({
                     <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
                       <label className="space-y-1 text-xs">
                         <span className="font-bold text-slate-700 dark:text-slate-300">
-                          Make / Brand
+                          {tt("trk.w_make_brand", "Make / Brand")}
                         </span>
                         <input
                           value={form.make}
                           onChange={(e) => setForm((p) => ({ ...p, make: e.target.value }))}
-                          placeholder="e.g. Mercedes Benz, Hino"
+                          placeholder={tt("trk.w_enter_make_brand", "Enter make / brand")}
                           className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                         />
                       </label>
                       <label className="space-y-1 text-xs">
                         <span className="font-bold text-slate-700 dark:text-slate-300">
-                          Model
+                          {tt("trk.w_model", "Model")}
                         </span>
                         <input
                           value={form.truckModel}
                           onChange={(e) => setForm((p) => ({ ...p, truckModel: e.target.value }))}
-                          placeholder="e.g. Actros 1845"
+                          placeholder={tt("trk.w_enter_model", "Enter model")}
                           className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                         />
                       </label>
@@ -2200,11 +2338,12 @@ export function TruckRecreationWizard({
                           onChange={(e) => setForm((p) => ({ ...p, color: e.target.value }))}
                           className="h-9 w-full rounded-xl border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                         >
-                          <option value="White">White</option>
-                          <option value="Blue">Blue</option>
-                          <option value="Black">Black</option>
-                          <option value="Red">Red</option>
-                          <option value="Silver">Silver</option>
+                          <option value="">{tt("trk.w_select", "— Select —")}</option>
+                          <option value="White">{tt("trk.w_white", "White")}</option>
+                          <option value="Blue">{tt("trk.w_blue", "Blue")}</option>
+                          <option value="Black">{tt("trk.w_black", "Black")}</option>
+                          <option value="Red">{tt("trk.w_red", "Red")}</option>
+                          <option value="Silver">{tt("trk.w_silver", "Silver")}</option>
                           {colorOptions.map((o) => (
                             <option key={o.id} value={o.code}>
                               {optionLabel(o)}
@@ -2247,7 +2386,7 @@ export function TruckRecreationWizard({
                         <input
                           value={form.registrationNumber}
                           onChange={(e) => setForm((p) => ({ ...p, registrationNumber: e.target.value }))}
-                          placeholder="e.g. Qq-1234-XYZ"
+                          placeholder={tt("trk.w_enter_registration_number", "Enter registration number")}
                           className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                         />
                       </label>
@@ -2272,10 +2411,11 @@ export function TruckRecreationWizard({
                           onChange={(e) => setForm((p) => ({ ...p, fuelType: e.target.value }))}
                           className="h-9 w-full rounded-xl border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                         >
-                          <option value="Diesel">Diesel</option>
-                          <option value="Petrol">Petrol</option>
-                          <option value="Electric">Electric</option>
-                          <option value="Hybrid">Hybrid</option>
+                          <option value="">{tt("trk.w_select", "— Select —")}</option>
+                          <option value="Diesel">{tt("trk.w_diesel", "Diesel")}</option>
+                          <option value="Petrol">{tt("trk.w_petrol", "Petrol")}</option>
+                          <option value="Electric">{tt("trk.w_electric", "Electric")}</option>
+                          <option value="Hybrid">{tt("trk.w_hybrid", "Hybrid")}</option>
                           {fuelTypeOptions.map((o) => (
                             <option key={o.id} value={o.code}>
                               {optionLabel(o)}
@@ -2293,11 +2433,11 @@ export function TruckRecreationWizard({
                         />
                       </label>
                       <label className="space-y-1 text-xs">
-                        <span className="font-bold text-slate-700 dark:text-slate-300">Insurance Provider</span>
+                        <span className="font-bold text-slate-700 dark:text-slate-300">{tt("trk.w_insurance_provider", "Insurance Provider")}</span>
                         <input
                           value={form.insuranceProvider}
                           onChange={(e) => setForm((p) => ({ ...p, insuranceProvider: e.target.value }))}
-                          placeholder="e.g. TPL Insurance"
+                          placeholder={tt("trk.w_enter_insurance_provider", "Enter insurance provider")}
                           className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                         />
                       </label>
@@ -2311,7 +2451,7 @@ export function TruckRecreationWizard({
                         />
                       </label>
                       <label className="space-y-1 text-xs">
-                        <span className="font-bold text-slate-700 dark:text-slate-300">Fitness Expiry</span>
+                        <span className="font-bold text-slate-700 dark:text-slate-300">{tt("trk.w_fitness_expiry", "Fitness Expiry")}</span>
                         <input
                           type="date"
                           value={form.fitnessCertificateExpiryDate}
@@ -2327,24 +2467,24 @@ export function TruckRecreationWizard({
                   <button
                     type="button"
                     onClick={() => setActiveStep(1)}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 shadow-2xs transition"
+                    className="inline-flex min-h-[46px] items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-[15px] font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 shadow-2xs transition"
                   >
                     <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
-                    <span>Back: Owner Details</span>
+                    <span>{tt("trk.w_back_owner_details", "Back: Owner Details")}</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => {
                       if (!form.truckNumber.trim()) {
-                        alert("Please enter Truck Number to continue.");
+                        stepAlert(tt("trk.w_alert_truck_continue", "Please enter Truck Number to continue."));
                         return;
                       }
                       setActiveStep(3);
                     }}
-                    className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-black text-white shadow-md shadow-blue-600/25 hover:bg-blue-700 transition"
+                    className="inline-flex min-h-[46px] items-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-[15px] font-black text-white shadow-md shadow-blue-600/25 hover:bg-blue-700 transition"
                   >
-                    <span>Next: Transporter Details</span>
+                    <span>{tt("trk.w_next_transporter_details", "Next: Transporter Details")}</span>
                     <ArrowRight className="h-4 w-4 rtl:rotate-180" />
                   </button>
                 </div>
@@ -2366,13 +2506,13 @@ export function TruckRecreationWizard({
                       <h2 className="text-sm font-black text-slate-900 dark:text-white">
                         {cleanTitle(tt("trk.section_transporter", "Transporter Information"), "Transporter Information")}
                       </h2>
-                      <p className="text-[10.5px] text-slate-500 dark:text-slate-400">
-                        Select a transporter person/contractor and/or link a transport company.
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        {tt("trk.w_select_a_transporter_person_contractor", "Select a transporter person/contractor and/or link a transport company.")}
                       </p>
                     </div>
                   </div>
-                  <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200/60 dark:border-blue-900/60">
-                    Step 3 of 5
+                  <span className="rounded-full bg-blue-50 px-3 py-1.5 text-[13px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200/60 dark:border-blue-900/60">
+                    {stepOf(3)}
                   </span>
                 </div>
 
@@ -2398,26 +2538,26 @@ export function TruckRecreationWizard({
                             </div>
                             <div>
                               <div className="text-xs font-black text-slate-900 dark:text-white">
-                                {transporterDetails.customer_name}
+                                {nm(transporterDetails.customer_name)}
                               </div>
                               <div className="text-[10px] text-blue-700 dark:text-blue-300 font-bold uppercase">
-                                REGISTERED TRANSPORTER
+                                {tt("trk.w_registered_transporter", "REGISTERED TRANSPORTER")}
                               </div>
                             </div>
                           </div>
                         </div>
                         <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px]">
-                          <div className="flex justify-between py-0.5"><span className="text-slate-500">Transporter Code:</span> <b className="text-slate-800 dark:text-slate-100">{transporterDetails.person_code || transporterDetails.code || "—"}</b></div>
-                          <div className="flex justify-between py-0.5"><span className="text-slate-500">Mobile:</span> <b className="text-slate-800 dark:text-slate-100">{transporterDetails.mobile || "—"}</b></div>
-                          <div className="flex justify-between py-0.5"><span className="text-slate-500">WhatsApp:</span> <b className="text-slate-800 dark:text-slate-100">{transporterDetails.whatsapp || "—"}</b></div>
-                          <div className="flex justify-between py-0.5"><span className="text-slate-500">Address:</span> <b className="text-slate-800 dark:text-slate-100 truncate">{transporterDetails.address || "—"}</b></div>
+                          <div className="flex justify-between py-0.5"><span className="text-slate-500">{tt("trk.w_transporter_code_colon", "Transporter Code:")}</span> <b className="text-slate-800 dark:text-slate-100">{transporterDetails.person_code || transporterDetails.code || "—"}</b></div>
+                          <div className="flex justify-between py-0.5"><span className="text-slate-500">{tt("trk.w_mobile_colon", "Mobile:")}</span> <b className="text-slate-800 dark:text-slate-100">{transporterDetails.mobile || "—"}</b></div>
+                          <div className="flex justify-between py-0.5"><span className="text-slate-500">{tt("trk.w_whatsapp_colon", "WhatsApp:")}</span> <b className="text-slate-800 dark:text-slate-100">{transporterDetails.whatsapp || "—"}</b></div>
+                          <div className="flex justify-between py-0.5"><span className="text-slate-500">{tt("trk.w_address_colon", "Address:")}</span> <b className="text-slate-800 dark:text-slate-100 truncate">{nm(transporterDetails.address)}</b></div>
                         </div>
                       </div>
                     )}
 
                     {/* Link Company Radio */}
                     <div className="flex items-center gap-4 text-xs font-bold text-slate-700 dark:text-slate-300 pt-1">
-                      <span>Link a company?</span>
+                      <span>{tt("trk.w_link_a_company_q", "Link a company?")}</span>
                       <label className="flex items-center gap-1.5 cursor-pointer">
                         <input
                           type="radio"
@@ -2427,7 +2567,7 @@ export function TruckRecreationWizard({
                           onChange={() => setForm((p) => ({ ...p, companyLink: "yes" }))}
                           className="text-blue-600"
                         />
-                        <span>Yes</span>
+                        <span>{tt("trk.w_yes", "Yes")}</span>
                       </label>
                       <label className="flex items-center gap-1.5 cursor-pointer">
                         <input
@@ -2446,14 +2586,14 @@ export function TruckRecreationWizard({
                       <div className="space-y-3">
                         <div className="grid grid-cols-1 sm:grid-cols-[140px_1fr] gap-3">
                           <label className="space-y-1 text-xs">
-                            <span className="font-bold text-slate-700 dark:text-slate-300">Company Type</span>
+                            <span className="font-bold text-slate-700 dark:text-slate-300">{tt("trk.w_company_type", "Company Type")}</span>
                             <select
                               value={form.companyType}
                               onChange={(e) => setForm((p) => ({ ...p, companyType: e.target.value }))}
                               className="h-9 w-full rounded-xl border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-800 outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                             >
-                              <option value="transporter">Transporter Company</option>
-                              <option value="shippingLine">Shipping Line Company</option>
+                              <option value="transporter">{tt("trk.w_transporter_company", "Transporter Company")}</option>
+                              <option value="shippingLine">{tt("trk.w_shipping_line_company", "Shipping Line Company")}</option>
                             </select>
                           </label>
 
@@ -2476,23 +2616,23 @@ export function TruckRecreationWizard({
                                 </div>
                                 <div>
                                   <div className="text-xs font-black text-slate-900 dark:text-white">
-                                    {companyDetails.name}
+                                    {nm(companyDetails.name)}
                                   </div>
                                   <div className="text-[10px] text-blue-700 dark:text-blue-300 font-bold uppercase">
-                                    REGISTERED COMPANY
+                                    {tt("trk.w_registered_company", "REGISTERED COMPANY")}
                                   </div>
                                 </div>
                               </div>
                             </div>
                             <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px]">
-                              <div className="flex justify-between py-0.5"><span className="text-slate-500">Company Code:</span> <b className="text-slate-800 dark:text-slate-100">{companyDetails.company_code || "—"}</b></div>
-                              <div className="flex justify-between py-0.5"><span className="text-slate-500">Legal Name:</span> <b className="text-slate-800 dark:text-slate-100">{companyDetails.legal_name || companyDetails.trade_name || "—"}</b></div>
-                              <div className="flex justify-between py-0.5"><span className="text-slate-500">Registration / TRN:</span> <b className="text-slate-800 dark:text-slate-100">{companyRegNumber(companyDetails) || "—"}</b></div>
-                              <div className="flex justify-between py-0.5"><span className="text-slate-500">Owner Name:</span> <b className="text-slate-800 dark:text-slate-100">{companyDetails.owner_name || "—"}</b></div>
-                              <div className="flex justify-between py-0.5"><span className="text-slate-500">Phone / Mobile:</span> <b className="text-slate-800 dark:text-slate-100">{companyPhone(companyDetails) || "—"}</b></div>
-                              <div className="flex justify-between py-0.5"><span className="text-slate-500">Email:</span> <b className="text-slate-800 dark:text-slate-100">{companyEmail(companyDetails) || "—"}</b></div>
-                              <div className="flex justify-between py-0.5"><span className="text-slate-500">City / Country:</span> <b className="text-slate-800 dark:text-slate-100">{[companyDetails.city_name, companyDetails.country_name].filter(Boolean).join(", ") || "—"}</b></div>
-                              <div className="flex justify-between py-0.5 sm:col-span-2"><span className="text-slate-500">Address:</span> <b className="text-slate-800 dark:text-slate-100 truncate">{companyDetails.address || "—"}</b></div>
+                              <div className="flex justify-between py-0.5"><span className="text-slate-500">{tt("trk.w_company_code_colon", "Company Code:")}</span> <b className="text-slate-800 dark:text-slate-100">{companyDetails.company_code || "—"}</b></div>
+                              <div className="flex justify-between py-0.5"><span className="text-slate-500">{tt("trk.w_legal_name_colon", "Legal Name:")}</span> <b className="text-slate-800 dark:text-slate-100">{nm(companyDetails.legal_name || companyDetails.trade_name)}</b></div>
+                              <div className="flex justify-between py-0.5"><span className="text-slate-500">{tt("trk.w_registration_trn_colon", "Registration / TRN:")}</span> <b className="text-slate-800 dark:text-slate-100">{companyRegNumber(companyDetails) || "—"}</b></div>
+                              <div className="flex justify-between py-0.5"><span className="text-slate-500">{tt("trk.w_owner_name_colon", "Owner Name:")}</span> <b className="text-slate-800 dark:text-slate-100">{nm(companyDetails.owner_name)}</b></div>
+                              <div className="flex justify-between py-0.5"><span className="text-slate-500">{tt("trk.w_phone_mobile_colon", "Phone / Mobile:")}</span> <b className="text-slate-800 dark:text-slate-100">{companyPhone(companyDetails) || "—"}</b></div>
+                              <div className="flex justify-between py-0.5"><span className="text-slate-500">{tt("trk.w_email_colon", "Email:")}</span> <b className="text-slate-800 dark:text-slate-100">{companyEmail(companyDetails) || "—"}</b></div>
+                              <div className="flex justify-between py-0.5"><span className="text-slate-500">{tt("trk.w_city_country_colon", "City / Country:")}</span> <b className="text-slate-800 dark:text-slate-100">{[companyDetails.city_name, companyDetails.country_name].filter(Boolean).join(", ") || "—"}</b></div>
+                              <div className="flex justify-between py-0.5 sm:col-span-2"><span className="text-slate-500">{tt("trk.w_address_colon", "Address:")}</span> <b className="text-slate-800 dark:text-slate-100 truncate">{nm(companyDetails.address)}</b></div>
                             </div>
                           </div>
                         )}
@@ -2505,18 +2645,18 @@ export function TruckRecreationWizard({
                   <button
                     type="button"
                     onClick={() => setActiveStep(2)}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 shadow-2xs transition"
+                    className="inline-flex min-h-[46px] items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-[15px] font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 shadow-2xs transition"
                   >
                     <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
-                    <span>Back: Truck Details</span>
+                    <span>{tt("trk.w_back_truck_details", "Back: Truck Details")}</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setActiveStep(4)}
-                    className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-black text-white shadow-md shadow-blue-600/25 hover:bg-blue-700 transition"
+                    className="inline-flex min-h-[46px] items-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-[15px] font-black text-white shadow-md shadow-blue-600/25 hover:bg-blue-700 transition"
                   >
-                    <span>Next: Driver Details</span>
+                    <span>{tt("trk.w_next_driver_details", "Next: Driver Details")}</span>
                     <ArrowRight className="h-4 w-4 rtl:rotate-180" />
                   </button>
                 </div>
@@ -2537,10 +2677,10 @@ export function TruckRecreationWizard({
                     <div>
                       <h2 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-1.5">
                         <span>{cleanTitle(tt("trk.section_driver", "Driver Information"), "Driver Information")}</span>
-                        <span className="text-[10px] font-normal text-slate-400">(Optional)</span>
+                        <span className="text-xs font-normal text-slate-400">{tt("trk.w_optional", "(Optional)")}</span>
                       </h2>
-                      <p className="text-[10.5px] text-slate-500 dark:text-slate-400">
-                        Select a permanent driver or enter temporary driver details.
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        {tt("trk.w_select_a_permanent_driver_or_enter_tem", "Select a permanent driver or enter temporary driver details.")}
                       </p>
                     </div>
                   </div>
@@ -2555,7 +2695,7 @@ export function TruckRecreationWizard({
                           onChange={() => setForm((p) => ({ ...p, driverType: "permanent" }))}
                           className="text-blue-600"
                         />
-                        <span>Permanent</span>
+                        <span>{tt("trk.w_permanent", "Permanent")}</span>
                       </label>
                       <label className="flex items-center gap-1 cursor-pointer">
                         <input
@@ -2566,11 +2706,11 @@ export function TruckRecreationWizard({
                           onChange={() => setForm((p) => ({ ...p, driverType: "temporary" }))}
                           className="text-blue-600"
                         />
-                        <span>Temporary</span>
+                        <span>{tt("trk.w_temporary", "Temporary")}</span>
                       </label>
                     </div>
-                    <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200/60 dark:border-blue-900/60">
-                      Step 4 of 5
+                    <span className="rounded-full bg-blue-50 px-3 py-1.5 text-[13px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200/60 dark:border-blue-900/60">
+                      {stepOf(4)}
                     </span>
                   </div>
                 </div>
@@ -2587,7 +2727,7 @@ export function TruckRecreationWizard({
                           onChange={() => setForm((p) => ({ ...p, driverType: "permanent" }))}
                           className="text-blue-600"
                         />
-                        <span>Permanent Driver</span>
+                        <span>{tt("trk.w_permanent_driver", "Permanent Driver")}</span>
                       </label>
                       <label className="flex items-center gap-1 cursor-pointer">
                         <input
@@ -2598,7 +2738,7 @@ export function TruckRecreationWizard({
                           onChange={() => setForm((p) => ({ ...p, driverType: "temporary" }))}
                           className="text-blue-600"
                         />
-                        <span>Temporary Driver</span>
+                        <span>{tt("trk.w_temporary_driver", "Temporary Driver")}</span>
                       </label>
                     </div>
 
@@ -2647,7 +2787,7 @@ export function TruckRecreationWizard({
                                 </div>
                                 <div>
                                   <div className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-2">
-                                    <span>{driverDetails.customer_name}</span>
+                                    <span>{nm(driverDetails.customer_name)}</span>
                                     {driverDetails.person_code && (
                                       <span className="font-mono text-[10px] text-blue-700 dark:text-blue-300">
                                         ({driverDetails.person_code})
@@ -2656,7 +2796,7 @@ export function TruckRecreationWizard({
                                   </div>
                                   <div className="flex items-center gap-2 mt-0.5">
                                     <span className="text-[10px] text-blue-700 dark:text-blue-300 font-bold uppercase tracking-wider">
-                                      REGISTERED DRIVER
+                                      {tt("trk.w_registered_driver", "REGISTERED DRIVER")}
                                     </span>
                                     <span className={`inline-block rounded-md px-1.5 py-0.2 text-[9px] font-bold ${statusBadgeClasses(form.status)}`}>
                                       {statusLabel(form.status)}
@@ -2668,45 +2808,45 @@ export function TruckRecreationWizard({
 
                             <div className="mt-2.5 grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px]">
                               <div className="flex justify-between py-0.5">
-                                <span className="text-slate-500">License Number:</span>
+                                <span className="text-slate-500">{tt("trk.w_license_number_colon", "License Number:")}</span>
                                 <b className="text-slate-800 dark:text-slate-100 font-mono">
                                   {driverDetails.license_no || form.driverLicenseNo || "—"}
                                 </b>
                               </div>
                               <div className="flex justify-between py-0.5">
-                                <span className="text-slate-500">License Expiry:</span>
+                                <span className="text-slate-500">{tt("trk.w_license_expiry_colon", "License Expiry:")}</span>
                                 <b className="text-slate-800 dark:text-slate-100">
                                   {driverDetails.license_expiry || form.driverLicenseExpiry || "—"}
                                 </b>
                               </div>
                               <div className="flex justify-between py-0.5">
-                                <span className="text-slate-500">Mobile:</span>
+                                <span className="text-slate-500">{tt("trk.w_mobile_colon", "Mobile:")}</span>
                                 <b className="text-slate-800 dark:text-slate-100 font-mono">
                                   {driverDetails.mobile || "—"}
                                 </b>
                               </div>
                               <div className="flex justify-between py-0.5">
-                                <span className="text-slate-500">WhatsApp:</span>
+                                <span className="text-slate-500">{tt("trk.w_whatsapp_colon", "WhatsApp:")}</span>
                                 <b className="text-slate-800 dark:text-slate-100 font-mono">
                                   {driverDetails.whatsapp || "—"}
                                 </b>
                               </div>
                               <div className="flex justify-between py-0.5">
-                                <span className="text-slate-500">Email:</span>
+                                <span className="text-slate-500">{tt("trk.w_email_colon", "Email:")}</span>
                                 <b className="text-slate-800 dark:text-slate-100 truncate">
                                   {driverDetails.email || "—"}
                                 </b>
                               </div>
                               <div className="flex justify-between py-0.5">
-                                <span className="text-slate-500">City / Country:</span>
+                                <span className="text-slate-500">{tt("trk.w_city_country_colon", "City / Country:")}</span>
                                 <b className="text-slate-800 dark:text-slate-100">
                                   {[driverDetails.city_name || driverDetails.city, driverDetails.country_name || driverDetails.country].filter(Boolean).join(", ") || "—"}
                                 </b>
                               </div>
                               <div className="flex justify-between py-0.5 sm:col-span-2">
-                                <span className="text-slate-500">Address:</span>
+                                <span className="text-slate-500">{tt("trk.w_address_colon", "Address:")}</span>
                                 <b className="text-slate-800 dark:text-slate-100 truncate">
-                                  {driverDetails.address || "—"}
+                                  {nm(driverDetails.address)}
                                 </b>
                               </div>
                             </div>
@@ -2728,10 +2868,10 @@ export function TruckRecreationWizard({
                           </div>
                           <div className="min-w-0 flex-1">
                             <strong className="block text-xs font-black text-slate-800 dark:text-slate-200">
-                              Driver photograph
+                              {tt("trk.w_driver_photograph", "Driver photograph")}
                             </strong>
                             <p className="mt-0.5 text-[10.5px] text-slate-500">
-                              Add driver photo first, then complete driver details.
+                              {tt("trk.w_add_driver_photo_first_then_complete_d", "Add driver photo first, then complete driver details.")}
                             </p>
                             <div className="mt-2 flex flex-wrap items-center gap-2">
                               <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-blue-200 bg-white px-2.5 py-1 text-xs font-bold text-blue-700 shadow-2xs hover:bg-blue-50 dark:border-blue-800 dark:bg-slate-900 dark:text-blue-300">
@@ -2828,18 +2968,18 @@ export function TruckRecreationWizard({
 
                           <label className="space-y-1 text-xs block">
                             <span className="font-bold text-slate-700 dark:text-slate-300">
-                              Father's Name
+                              {tt("trk.w_father_s_name", "Father's Name")}
                             </span>
                             <input
                               value={form.driverFatherName}
                               onChange={(e) => setForm((p) => ({ ...p, driverFatherName: e.target.value }))}
-                              placeholder="e.g. Gulam Attar"
+                              placeholder={tt("trk.w_enter_father_s_name", "Enter father's name")}
                               className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                             />
                           </label>
 
                           <label className="space-y-1 text-xs">
-                            <span className="font-bold text-slate-700 dark:text-slate-300">CNIC / ID No.</span>
+                            <span className="font-bold text-slate-700 dark:text-slate-300">{tt("trk.w_cnic_id_no", "CNIC / ID No.")}</span>
                             <input
                               value={form.driverCnic}
                               onChange={(e) => setForm((p) => ({ ...p, driverCnic: e.target.value }))}
@@ -2852,7 +2992,7 @@ export function TruckRecreationWizard({
                         {/* Temporary Driver Personal & License Specs */}
                         <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
                           <label className="space-y-1 text-xs">
-                            <span className="font-bold text-slate-700 dark:text-slate-300">Date of Birth</span>
+                            <span className="font-bold text-slate-700 dark:text-slate-300">{tt("trk.w_date_of_birth", "Date of Birth")}</span>
                             <input
                               type="date"
                               value={form.driverDob}
@@ -2862,24 +3002,25 @@ export function TruckRecreationWizard({
                           </label>
 
                           <label className="space-y-1 text-xs">
-                            <span className="font-bold text-slate-700 dark:text-slate-300">Nationality</span>
+                            <span className="font-bold text-slate-700 dark:text-slate-300">{tt("trk.w_nationality", "Nationality")}</span>
                             <input
                               value={form.driverNationality}
                               onChange={(e) => setForm((p) => ({ ...p, driverNationality: e.target.value }))}
-                              placeholder="e.g. Pakistani"
+                              placeholder={tt("trk.w_enter_nationality", "Enter nationality")}
                               className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                             />
                           </label>
 
                           <label className="space-y-1 text-xs">
-                            <span className="font-bold text-slate-700 dark:text-slate-300">Marital Status</span>
+                            <span className="font-bold text-slate-700 dark:text-slate-300">{tt("trk.w_marital_status", "Marital Status")}</span>
                             <select
                               value={form.driverMaritalStatus}
                               onChange={(e) => setForm((p) => ({ ...p, driverMaritalStatus: e.target.value }))}
                               className="h-9 w-full rounded-xl border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                             >
-                              <option value="Married">Married</option>
-                              <option value="Single">Single</option>
+                              <option value="">{tt("trk.w_select", "— Select —")}</option>
+                          <option value="Married">{tt("trk.w_married", "Married")}</option>
+                              <option value="Single">{tt("trk.w_single", "Single")}</option>
                             </select>
                           </label>
 
@@ -2911,17 +3052,17 @@ export function TruckRecreationWizard({
                           </label>
 
                           <label className="space-y-1 text-xs">
-                            <span className="font-bold text-slate-700 dark:text-slate-300">License Type</span>
+                            <span className="font-bold text-slate-700 dark:text-slate-300">{tt("trk.w_license_type", "License Type")}</span>
                             <input
                               value={form.driverLicenseType}
                               onChange={(e) => setForm((p) => ({ ...p, driverLicenseType: e.target.value }))}
-                              placeholder="e.g. HTV (Heavy Transport)"
+                              placeholder={tt("trk.w_enter_license_type", "Enter license type")}
                               className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                             />
                           </label>
 
                           <label className="space-y-1 text-xs">
-                            <span className="font-bold text-slate-700 dark:text-slate-300">Issue Date</span>
+                            <span className="font-bold text-slate-700 dark:text-slate-300">{tt("trk.w_issue_date", "Issue Date")}</span>
                             <input
                               type="date"
                               value={form.driverLicenseIssueDate}
@@ -2943,11 +3084,11 @@ export function TruckRecreationWizard({
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                           <label className="space-y-1 text-xs">
-                            <span className="font-bold text-slate-700 dark:text-slate-300">Issuing Authority</span>
+                            <span className="font-bold text-slate-700 dark:text-slate-300">{tt("trk.w_issuing_authority", "Issuing Authority")}</span>
                             <input
                               value={form.driverIssuingAuthority}
                               onChange={(e) => setForm((p) => ({ ...p, driverIssuingAuthority: e.target.value }))}
-                              placeholder="e.g. Balochistan Transport Dept"
+                              placeholder={tt("trk.w_enter_issuing_authority", "Enter issuing authority")}
                               className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                             />
                           </label>
@@ -2966,7 +3107,7 @@ export function TruckRecreationWizard({
                                 onChange={() => setForm((p) => ({ ...p, addDriverLocation: "yes" }))}
                                 className="text-blue-600"
                               />
-                              <span>Yes (Add Location)</span>
+                              <span>{tt("trk.w_yes_add_location", "Yes (Add Location)")}</span>
                             </label>
                             <label className="flex items-center gap-1.5 cursor-pointer">
                               <input
@@ -2977,7 +3118,7 @@ export function TruckRecreationWizard({
                                 onChange={() => setForm((p) => ({ ...p, addDriverLocation: "no" }))}
                                 className="text-blue-600"
                               />
-                              <span>No (Not Required)</span>
+                              <span>{tt("trk.w_no_not_required", "No (Not Required)")}</span>
                             </label>
                           </div>
 
@@ -2993,7 +3134,7 @@ export function TruckRecreationWizard({
                                 />
                               </label>
                               <label className="space-y-1 text-xs">
-                                <span className="font-bold text-slate-600 dark:text-slate-400">State / Province</span>
+                                <span className="font-bold text-slate-600 dark:text-slate-400">{tt("trk.w_state_province", "State / Province")}</span>
                                 <input
                                   value={form.driverState}
                                   onChange={(e) => setForm((p) => ({ ...p, driverState: e.target.value }))}
@@ -3031,18 +3172,18 @@ export function TruckRecreationWizard({
                   <button
                     type="button"
                     onClick={() => setActiveStep(3)}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 shadow-2xs transition"
+                    className="inline-flex min-h-[46px] items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-[15px] font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 shadow-2xs transition"
                   >
                     <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
-                    <span>Back: Transporter Details</span>
+                    <span>{tt("trk.w_back_transporter_details", "Back: Transporter Details")}</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setActiveStep(5)}
-                    className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-black text-white shadow-md shadow-blue-600/25 hover:bg-blue-700 transition"
+                    className="inline-flex min-h-[46px] items-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-[15px] font-black text-white shadow-md shadow-blue-600/25 hover:bg-blue-700 transition"
                   >
-                    <span>Next: Documents & Review</span>
+                    <span>{tt("trk.w_next_documents_and_review", "Next: Documents & Review")}</span>
                     <ArrowRight className="h-4 w-4 rtl:rotate-180" />
                   </button>
                 </div>
@@ -3063,15 +3204,15 @@ export function TruckRecreationWizard({
                     <div>
                       <h2 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-1.5">
                         <span>{cleanTitle(tt("trk.truck_docs", "Truck Documents"), "Truck Documents")}</span>
-                        <span className="text-[10px] font-normal text-slate-400">(Optional)</span>
+                        <span className="text-xs font-normal text-slate-400">{tt("trk.w_optional", "(Optional)")}</span>
                       </h2>
-                      <p className="text-[10.5px] text-slate-500 dark:text-slate-400">
-                        Upload registration, insurance, driver licence and save registration.
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        {tt("trk.w_upload_registration_insurance_driver_l", "Upload registration, insurance, driver licence and save registration.")}
                       </p>
                     </div>
                   </div>
-                  <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200/60 dark:border-blue-900/60">
-                    Step 5 of 5
+                  <span className="rounded-full bg-blue-50 px-3 py-1.5 text-[13px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200/60 dark:border-blue-900/60">
+                    {stepOf(5)}
                   </span>
                 </div>
 
@@ -3094,7 +3235,7 @@ export function TruckRecreationWizard({
                     >
                       <UploadCloud className="h-8 w-8 text-blue-500" />
                       <div className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                        Drag & drop files here, or click to upload
+                        {tt("trk.w_drag_and_drop_files_here_or_click_to_u", "Drag & drop files here, or click to upload")}
                       </div>
                       <div className="text-[10.5px] text-slate-400">
                         PDF, JPG, PNG · Max 10 MB each · Session preview
@@ -3126,7 +3267,7 @@ export function TruckRecreationWizard({
                       <div className="mt-3 space-y-1.5">
                         {documents.length === 0 ? (
                           <div className="text-center text-xs text-slate-400 py-2">
-                            No documents added
+                            {tt("trk.w_no_documents_added", "No documents added")}
                           </div>
                         ) : (
                           documents.map((doc) => (
@@ -3148,20 +3289,20 @@ export function TruckRecreationWizard({
                                   rel="noopener noreferrer"
                                   className="text-[11px] font-bold text-blue-600 hover:underline"
                                 >
-                                  View
+                                  {tt("trk.w_view", "View")}
                                 </a>
                                 <a
                                   href={doc.url}
                                   download={doc.name}
                                   className="text-[11px] font-bold text-blue-600 hover:underline"
                                 >
-                                  Download
+                                  {tt("trk.w_download", "Download")}
                                 </a>
                                 <button
                                   type="button"
                                   onClick={() => handleRemoveDocument(doc.id)}
                                   className="p-1 text-slate-400 hover:text-rose-600"
-                                  title="Remove file"
+                                  title={tt("trk.w_remove_file", "Remove file")}
                                 >
                                   <X className="h-3.5 w-3.5" />
                                 </button>
@@ -3185,17 +3326,17 @@ export function TruckRecreationWizard({
                   <button
                     type="button"
                     onClick={() => setActiveStep(4)}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 shadow-2xs transition"
+                    className="inline-flex min-h-[46px] items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-[15px] font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 shadow-2xs transition"
                   >
                     <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
-                    <span>Back: Driver Details</span>
+                    <span>{tt("trk.w_back_driver_details", "Back: Driver Details")}</span>
                   </button>
 
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={handleSaveDraft}
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 shadow-2xs transition"
+                      className="inline-flex min-h-[46px] items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-[15px] font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 shadow-2xs transition"
                     >
                       <Save className="h-4 w-4 text-blue-600" />
                       <span>{tt("trk.save_draft", "Save Draft")}</span>
@@ -3204,7 +3345,7 @@ export function TruckRecreationWizard({
                     <button
                       type="submit"
                       disabled={saving}
-                      className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-xs font-black text-white shadow-md shadow-blue-600/25 hover:bg-blue-700 disabled:opacity-50 transition"
+                      className="inline-flex min-h-[46px] items-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-[15px] font-black text-white shadow-md shadow-blue-600/25 hover:bg-blue-700 disabled:opacity-50 transition"
                     >
                       {saving ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -3220,48 +3361,54 @@ export function TruckRecreationWizard({
               </section>
             </form>
 
-            {/* RIGHT STICKY LIVE TRUCK REPORT COLUMN (Col 7) */}
+            {/* RIGHT STICKY LIVE TRUCK REPORT COLUMN */}
             <div className="lg:col-span-7">
-              <aside className="rounded-3xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:sticky lg:top-6 overflow-hidden">
-                {/* Header */}
-                <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/80 px-4 py-3.5 dark:border-slate-800 dark:bg-slate-800/40">
-                  <div className="flex items-center gap-2.5">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
-                      <FileText className="h-4 w-4" />
+              <aside className="dgt-trk-report-card overflow-hidden rounded-3xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:sticky lg:top-4">
+                {/* Header + clear actions */}
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 bg-slate-50/80 px-4 py-3.5 dark:border-slate-800 dark:bg-slate-800/40 sm:px-5">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
+                      <FileText className="h-5 w-5" />
                     </div>
-                    <div>
-                      <h3 className="text-xs font-black text-slate-900 dark:text-white">
+                    <div className="min-w-0">
+                      <h3 className="text-base font-black text-slate-900 dark:text-white">
                         {tt("trk.live_report_title", "Live Truck Report")}
                       </h3>
-                      <p className="text-[10px] text-slate-400">
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
                         {tt("trk.live_report_sub", "Registration preview — updates as you type")}
                       </p>
                     </div>
                   </div>
-                  <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[9px] font-bold text-blue-700 border border-blue-200/60 dark:bg-blue-950/60 dark:text-blue-300">
-                    LIVE PREVIEW
-                  </span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-full border border-blue-200/60 bg-blue-50 px-2.5 py-1 text-[11px] font-bold text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
+                      {tt("trk.w_live_preview", "LIVE PREVIEW")}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => { setViewModalTab("full"); setViewModalOpen(true); }}
+                      className="inline-flex min-h-[42px] items-center gap-2 rounded-xl border border-blue-300 bg-white px-4 py-2 text-[15px] font-bold text-blue-700 shadow-2xs transition hover:bg-blue-50 dark:border-blue-800 dark:bg-slate-800 dark:text-blue-300"
+                    >
+                      <Eye className="h-4 w-4" />
+                      <span>{tt("trk.w_view_report", "View Report")}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => printReportA4("trk-live-report")}
+                      className="inline-flex min-h-[42px] items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-[15px] font-black text-white shadow-md shadow-blue-600/25 transition hover:bg-blue-700"
+                    >
+                      <Printer className="h-4 w-4" />
+                      <span>{tt("trk.w_print_pdf", "Print / PDF")}</span>
+                    </button>
+                  </div>
                 </div>
 
-                {/* Content */}
-                <div className="p-3.5 max-h-[calc(100vh-180px)] overflow-y-auto">
+                {/* Report */}
+                <div id="trk-live-report" className="dgt-trk-report max-h-[calc(100vh-190px)] overflow-y-auto p-4 sm:p-5">
                   {fullLiveReportContent}
                 </div>
 
-                {/* Bottom Action Bar */}
-                <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/80 px-4 py-2.5 text-[10px] text-slate-400 dark:border-slate-800 dark:bg-slate-800/40">
-                  <span>Live form preview · central ERP</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setViewModalTab("full");
-                      setViewModalOpen(true);
-                    }}
-                    className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-blue-700 shadow-2xs hover:bg-blue-50 dark:border-slate-700 dark:bg-slate-800 dark:text-blue-300"
-                  >
-                    <Eye className="h-3.5 w-3.5" />
-                    <span>View Report</span>
-                  </button>
+                <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/80 px-5 py-2.5 text-xs text-slate-400 dark:border-slate-800 dark:bg-slate-800/40">
+                  <span>{tt("trk.w_live_form_preview_central_erp", "Live form preview · central ERP")}</span>
                 </div>
               </aside>
             </div>
@@ -3272,7 +3419,7 @@ export function TruckRecreationWizard({
       {/* OVERLAY MODAL: VIEW REPORT DIALOG */}
       {viewModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs">
-          <div className="relative w-full max-w-5xl max-h-[92vh] flex flex-col rounded-3xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900 animate-in fade-in zoom-in-95">
+          <div className="relative w-full max-w-6xl max-h-[94vh] flex flex-col rounded-3xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900 animate-in fade-in zoom-in-95">
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 dark:border-slate-800">
               <div className="flex items-center gap-2.5">
@@ -3281,31 +3428,32 @@ export function TruckRecreationWizard({
                 </div>
                 <div>
                   <h2 className="text-sm font-black text-slate-900 dark:text-white">
-                    {viewModalTab === "full" && "DGT ERP · Transport Registration Profile (Option 1)"}
+                    {viewModalTab === "full" && tt("trk.w_report_profile_title", "DGT ERP · Transport Registration Profile")}
                     {viewModalTab === "owner" && cleanTitle(tt("trk.section_owner", "Owner Details"), "Owner Details")}
                     {viewModalTab === "vehicle" && cleanTitle(tt("trk.section_truck_details", "Truck Details"), "Truck Details")}
                     {viewModalTab === "transporter" && cleanTitle(tt("trk.section_transporter", "Transporter Details"), "Transporter Details")}
                     {viewModalTab === "driver" && cleanTitle(tt("trk.section_driver", "Driver Details"), "Driver Details")}
-                    {viewModalTab === "documents" && "Documents"}
+                    {viewModalTab === "documents" && tt("trk.w_documents", "Documents")}
                   </h2>
                   <p className="text-[10.5px] text-slate-400">
-                    Complete owner, company, truck and driver registration live overview
+                    {tt("trk.w_complete_owner_company_truck_and_drive", "Complete owner, company, truck and driver registration live overview")}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => window.print()}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                  onClick={() => printReportA4("trk-modal-report")}
+                  className="inline-flex min-h-[42px] items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-[15px] font-black text-white shadow-md shadow-blue-600/25 hover:bg-blue-700"
                 >
-                  <Printer className="h-3.5 w-3.5 text-blue-600" />
-                  <span>Print</span>
+                  <Printer className="h-4 w-4" />
+                  <span>{tt("trk.w_print_pdf", "Print / PDF")}</span>
                 </button>
                 <button
                   type="button"
+                  aria-label={tt("trk.w_close", "Close")}
                   onClick={() => setViewModalOpen(false)}
-                  className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600 dark:border-slate-800 dark:hover:bg-slate-800"
+                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600 dark:border-slate-800 dark:hover:bg-slate-800"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -3313,16 +3461,16 @@ export function TruckRecreationWizard({
             </div>
 
             {/* Modal Body */}
-            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+            <div id="trk-modal-report" className="dgt-trk-report flex-1 space-y-4 overflow-y-auto p-5">
               {viewModalTab === "full" && fullLiveReportContent}
 
               {viewModalTab === "owner" && (
                 <LiveReportSection title={`1. ${cleanTitle(tt("trk.section_owner", "Truck Owner Information"), "Truck Owner Information")}`} icon={User}>
-                  <LiveReportRow label={tt("common.name", "Name")} value={ownerDetails?.customer_name || "—"} />
+                  <LiveReportRow label={tt("common.name", "Name")} value={nm(ownerDetails?.customer_name)} />
                   <LiveReportRow label={tt("trk.owner_code_label", "Owner Code")} value={ownerDetails?.person_code || ownerDetails?.code || "—"} />
                   <LiveReportRow label={tt("common.mobile", "Mobile")} value={ownerDetails?.mobile || "—"} />
-                  <LiveReportRow label="WhatsApp" value={ownerDetails?.whatsapp || "—"} />
-                  <LiveReportRow label={tt("common.address", "Address")} value={ownerDetails?.address || "—"} />
+                  <LiveReportRow label={tt("trk.w_whatsapp_number", "WhatsApp Number")} value={ownerDetails?.whatsapp || "—"} />
+                  <LiveReportRow label={tt("common.address", "Address")} value={nm(ownerDetails?.address)} />
                 </LiveReportSection>
               )}
 
@@ -3346,28 +3494,28 @@ export function TruckRecreationWizard({
                 <LiveReportSection title={`3. ${cleanTitle(tt("trk.section_transporter", "Transporter Information"), "Transporter Information")}`} icon={Building2}>
                   {transporterDetails && (
                     <div className="mb-3 rounded-xl border border-slate-100 bg-slate-50/50 p-2.5 dark:border-slate-800 dark:bg-slate-800/30">
-                      <div className="text-xs font-black text-slate-800 dark:text-slate-100">{transporterDetails.customer_name}</div>
+                      <div className="text-xs font-black text-slate-800 dark:text-slate-100">{nm(transporterDetails.customer_name)}</div>
                       <LiveReportRow label={tt("trk.transporter_code_label", "Transporter Code")} value={transporterDetails.person_code || transporterDetails.code} />
                       <LiveReportRow label={tt("common.mobile", "Mobile")} value={transporterDetails.mobile} />
                       <LiveReportRow label={tt("common.whatsapp", "WhatsApp")} value={transporterDetails.whatsapp} />
-                      <LiveReportRow label={tt("common.address", "Address")} value={transporterDetails.address} />
+                      <LiveReportRow label={tt("common.address", "Address")} value={nm(transporterDetails.address)} />
                     </div>
                   )}
                   {companyDetails && (
                     <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-2.5 dark:border-slate-800 dark:bg-slate-800/30">
-                      <div className="text-xs font-black text-slate-800 dark:text-slate-100">{companyDetails.name}</div>
+                      <div className="text-xs font-black text-slate-800 dark:text-slate-100">{nm(companyDetails.name)}</div>
                       <LiveReportRow label={tt("trk.company_code_label", "Company Code")} value={companyDetails.company_code} />
-                      <LiveReportRow label={tt("c360.legal_name", "Legal / Trade Name")} value={companyDetails.legal_name || companyDetails.trade_name} />
+                      <LiveReportRow label={tt("c360.legal_name", "Legal / Trade Name")} value={nm(companyDetails.legal_name || companyDetails.trade_name)} />
                       <LiveReportRow label={tt("ctm.trn_reg_no", "Registration / TRN")} value={companyRegNumber(companyDetails)} />
-                      <LiveReportRow label={tt("sed.f_owner_name", "Owner Name")} value={companyDetails.owner_name} />
+                      <LiveReportRow label={tt("sed.f_owner_name", "Owner Name")} value={nm(companyDetails.owner_name)} />
                       <LiveReportRow label={tt("common.phone", "Phone / Mobile")} value={companyPhone(companyDetails)} />
                       <LiveReportRow label={tt("common.email", "Email")} value={companyEmail(companyDetails)} />
                       <LiveReportRow label={tt("common.city", "City / Country")} value={[companyDetails.city_name, companyDetails.country_name].filter(Boolean).join(", ")} />
-                      <LiveReportRow label={tt("common.address", "Address")} value={companyDetails.address} />
+                      <LiveReportRow label={tt("common.address", "Address")} value={nm(companyDetails.address)} />
                     </div>
                   )}
                   {!transporterDetails && !companyDetails && (
-                    <div className="p-2 text-center text-xs text-slate-400 italic">No transporter or company linked</div>
+                    <div className="p-2 text-center text-xs text-slate-400 italic">{tt("trk.w_no_transporter_or_company_linked", "No transporter or company linked")}</div>
                   )}
                 </LiveReportSection>
               )}
@@ -3376,7 +3524,7 @@ export function TruckRecreationWizard({
                 <LiveReportSection title={`4. ${cleanTitle(tt("trk.section_driver", "Driver Information"), "Driver Information")}`} icon={UserCheck}>
                   <LiveReportRow
                     label={tt("trk.driver_name_label", "Driver Name")}
-                    value={form.driverType === "permanent" ? driverDetails?.customer_name : form.temporaryDriverName}
+                    value={nm(form.driverType === "permanent" ? driverDetails?.customer_name : form.temporaryDriverName)}
                   />
                   <LiveReportRow
                     label={tt("trk.license_no", "Driving License Number")}
@@ -3402,7 +3550,7 @@ export function TruckRecreationWizard({
                       {(driverDetails?.city_name || driverDetails?.city || driverDetails?.country_name || driverDetails?.country || driverDetails?.address) && (
                         <LiveReportRow
                           label={tt("common.location", "Location")}
-                          value={[driverDetails.city_name || driverDetails.city, driverDetails.state_province_name || driverDetails.state, driverDetails.country_name || driverDetails.country, driverDetails.address].filter(Boolean).join(", ")}
+                          value={[driverDetails.city_name || driverDetails.city, driverDetails.state_province_name || driverDetails.state, driverDetails.country_name || driverDetails.country, nm(driverDetails.address) === "—" ? "" : nm(driverDetails.address)].filter(Boolean).join(", ")}
                         />
                       )}
                     </>
@@ -3415,7 +3563,7 @@ export function TruckRecreationWizard({
                       {form.addDriverLocation === "yes" && (form.driverCountry || form.driverCity || form.driverAddress) && (
                         <LiveReportRow
                           label={tt("common.location", "Location")}
-                          value={[form.driverCountry, form.driverState, form.driverCity, form.driverAddress].filter(Boolean).join(", ") || "—"}
+                          value={[form.driverCountry, form.driverState, form.driverCity, nm(form.driverAddress) === "—" ? "" : nm(form.driverAddress)].filter(Boolean).join(", ") || "—"}
                         />
                       )}
                     </>
@@ -3424,10 +3572,10 @@ export function TruckRecreationWizard({
               )}
 
               {viewModalTab === "documents" && (
-                <LiveReportSection title="5. Documents" icon={FileText}>
+                <LiveReportSection title={tt("trk.w_5_documents", "5. Documents")} icon={FileText}>
                   {documents.length === 0 ? (
                     <div className="p-2 text-center text-xs text-slate-400">
-                      No documents uploaded yet.
+                      {tt("trk.w_no_documents_uploaded_yet", "No documents uploaded yet.")}
                     </div>
                   ) : (
                     <div className="space-y-1.5 pt-1">
@@ -3436,10 +3584,10 @@ export function TruckRecreationWizard({
                           <span className="truncate font-medium text-slate-700 dark:text-slate-300">{d.name}</span>
                           <div className="flex items-center gap-2">
                             <a href={d.url} target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-blue-600 hover:underline">
-                              View
+                              {tt("trk.w_view", "View")}
                             </a>
                             <a href={d.url} download={d.name} className="text-xs font-bold text-blue-600 hover:underline">
-                              Download
+                              {tt("trk.w_download", "Download")}
                             </a>
                           </div>
                         </div>
@@ -3453,14 +3601,14 @@ export function TruckRecreationWizard({
             {/* Modal Footer */}
             <div className="flex items-center justify-between border-t border-slate-100 px-5 py-3 dark:border-slate-800">
               <span className="text-[11px] text-slate-400">
-                Design preview synced with active form inputs
+                {tt("trk.w_design_preview_synced_with_active_form", "Design preview synced with active form inputs")}
               </span>
               <button
                 type="button"
                 onClick={() => setViewModalOpen(false)}
                 className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow hover:bg-blue-700"
               >
-                Close
+                {tt("trk.w_close", "Close")}
               </button>
             </div>
           </div>

@@ -1,0 +1,42 @@
+/*
+ * Clearing Truck Registration — layout / readability skin (design only; no data, validation or posting logic).
+ * Scoped to .dgt-trk (the wizard root). Logical properties throughout so the screen mirrors in UR / AR / FA / PS.
+ */
+
+/* ───────── report two-column blocks: work on screen AND in the A4 print copy (viewport-independent) ───────── */
+.trk-two-col { display: grid; grid-template-columns: minmax(0, 1fr); }
+.trk-two-col > * + * { border-top: 1px solid rgb(186 230 253 / 0.8); padding-top: 0.75rem; margin-top: 0.75rem; }
+@media (min-width: 640px), print {
+  .trk-two-col { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .trk-two-col > * + * { border-top: 0; padding-top: 0; margin-top: 0; border-inline-start: 1px solid rgb(186 230 253 / 0.8); padding-inline-start: 0.75rem; }
+  .trk-two-col > :first-child { padding-inline-end: 0.75rem; }
+}
+.trk-driver-row { display: flex; flex-direction: column; align-items: center; }
+@media (min-width: 640px), print { .trk-driver-row { flex-direction: row; align-items: flex-start; } }
+
+/* ───────── form column: comfortable controls and labels ───────── */
+.dgt-trk form input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]),
+.dgt-trk form select { min-height: 44px; font-size: 15px; }
+.dgt-trk form textarea { font-size: 15px; }
+.dgt-trk form label > span:first-child { font-size: 14px; }
+.dgt-trk form h2 { font-size: 18px; line-height: 1.3; }
+.dgt-trk form button.group { min-height: 44px; }
+.dgt-trk form button.group span.truncate { font-size: 15px; }
+.dgt-trk form [class*="text-[10px]"] { font-size: 13px; }
+.dgt-trk form [class*="text-[11px]"] { font-size: 14px; }
+
+/* ───────── live report: readable section headings ───────── */
+.dgt-trk-report .tracking-wider { font-size: 14px; }
+.dgt-trk-report-card { min-width: 0; }
+
+/* ───────── very wide screens: scale the whole screen up instead of leaving empty space ───────── */
+@supports (zoom: 1) {
+  @media (min-width: 1900px) { .dgt-trk { zoom: 1.12; } }
+  @media (min-width: 2300px) { .dgt-trk { zoom: 1.28; } }
+  @media (min-width: 2900px) { .dgt-trk { zoom: 1.5; } }
+}
+
+/* ───────── phones / small tablets ───────── */
+@media (max-width: 640px) {
+  .dgt-trk form button[type="button"], .dgt-trk form button[type="submit"] { min-height: 44px; }
+}
