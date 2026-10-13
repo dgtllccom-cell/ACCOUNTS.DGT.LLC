@@ -33,6 +33,19 @@ import {
   Phone,
   Mail,
   HelpCircle,
+  Calendar,
+  Shield,
+  ShieldCheck,
+  CheckCircle2,
+  Fuel,
+  Scale,
+  Landmark,
+  CreditCard,
+  Palette,
+  Tag,
+  Settings,
+  Briefcase,
+  MapPin,
 } from "lucide-react";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
@@ -67,6 +80,11 @@ type CustomerDetails = {
   customer_name?: string;
   first_name?: string;
   last_name?: string;
+  father_name?: string;
+  gender?: string;
+  date_of_birth?: string;
+  marital_status?: string;
+  nationality?: string;
   code?: string;
   person_code?: string;
   photo_url?: string | null;
@@ -76,7 +94,10 @@ type CustomerDetails = {
   cnic?: string;
   passport?: string;
   license_no?: string;
+  license_type?: string;
+  license_issue_date?: string;
   license_expiry?: string;
+  issuing_authority?: string;
   address?: string;
   country?: string;
   country_name?: string;
@@ -212,6 +233,7 @@ export type SessionDocument = {
 const EMPTY_FORM = {
   hasOwner: "yes",
   ownerId: "",
+  ownerType: "Truck Owner",
   truckNumber: "",
   truckName: "",
   truckModel: "",
@@ -225,17 +247,31 @@ const EMPTY_FORM = {
   fuelType: "Diesel",
   capacity: "25",
   registrationExpiryDate: "",
+  insuranceProvider: "",
   insuranceExpiryDate: "",
+  fitnessCertificateExpiryDate: "",
   companyLink: "yes",
   companyType: "transporter",
   companyId: "",
   transporterId: "",
   driverType: "permanent",
   temporaryDriverName: "",
+  temporaryDriverFirstName: "",
+  temporaryDriverLastName: "",
+  driverFatherName: "",
+  driverDob: "",
+  driverCnic: "",
+  driverNationality: "",
   driverId: "",
   driverMobile: "",
+  driverWhatsapp: "",
+  driverEmail: "",
   driverLicenseNo: "",
+  driverLicenseType: "HTV (Heavy Transport)",
+  driverLicenseIssueDate: "",
   driverLicenseExpiry: "",
+  driverIssuingAuthority: "Balochistan Transport Dept",
+  driverMaritalStatus: "Married",
   addDriverLocation: "yes",
   driverCountry: "",
   driverState: "",
@@ -474,7 +510,18 @@ export function TruckRecreationWizard({
           setForm((prev) => ({
             ...prev,
             driverMobile: prev.driverMobile || c.mobile || c.whatsapp || "",
+            driverWhatsapp: prev.driverWhatsapp || c.whatsapp || c.mobile || "",
+            driverEmail: prev.driverEmail || c.email || "",
             driverLicenseNo: prev.driverLicenseNo || c.license_no || "",
+            driverLicenseExpiry: prev.driverLicenseExpiry || c.license_expiry || "",
+            driverFatherName: prev.driverFatherName || c.father_name || "",
+            driverDob: prev.driverDob || (c as any).date_of_birth || "",
+            driverCnic: prev.driverCnic || c.cnic || "",
+            driverNationality: prev.driverNationality || (c as any).nationality || c.country_name || c.country || "",
+            driverLicenseType: prev.driverLicenseType || (c as any).license_type || "HTV (Heavy Transport)",
+            driverLicenseIssueDate: prev.driverLicenseIssueDate || (c as any).license_issue_date || "",
+            driverIssuingAuthority: prev.driverIssuingAuthority || (c as any).issuing_authority || "Balochistan Transport Dept",
+            driverMaritalStatus: prev.driverMaritalStatus || (c as any).marital_status || "Married",
             driverCountry: prev.driverCountry || c.country_name || c.country || "",
             driverState: prev.driverState || c.state_province_name || c.state || "",
             driverCity: prev.driverCity || c.city_name || c.city || "",
@@ -609,9 +656,17 @@ export function TruckRecreationWizard({
 
   function startEdit(row: TruckRow) {
     setEditingId(row.id);
+    let extraNotes: any = {};
+    try {
+      if (row.notes && row.notes.startsWith("{")) {
+        extraNotes = JSON.parse(row.notes);
+      }
+    } catch {}
+
     setForm({
       hasOwner: row.owner_person_id ? "yes" : "no",
       ownerId: row.owner_person_id || "",
+      ownerType: extraNotes.ownerType || "Truck Owner",
       truckNumber: row.truck_number || "",
       truckName: row.truck_name || "",
       truckModel: row.model || "",
@@ -623,16 +678,28 @@ export function TruckRecreationWizard({
       transporterId: row.transporter_person_id || "",
       driverType: row.driver_person_id ? "permanent" : "temporary",
       temporaryDriverName: row.driver_display_name || "",
+      temporaryDriverFirstName: extraNotes.temporaryDriverFirstName || "",
+      temporaryDriverLastName: extraNotes.temporaryDriverLastName || "",
+      driverFatherName: extraNotes.driverFatherName || "",
+      driverDob: extraNotes.driverDob || "",
+      driverCnic: extraNotes.driverCnic || "",
+      driverNationality: extraNotes.driverNationality || "",
       driverId: row.driver_person_id || "",
       driverMobile: row.driver_mobile || "",
+      driverWhatsapp: extraNotes.driverWhatsapp || "",
+      driverEmail: extraNotes.driverEmail || "",
       driverLicenseNo: row.driver_cnic_passport || "",
+      driverLicenseType: extraNotes.driverLicenseType || "HTV (Heavy Transport)",
+      driverLicenseIssueDate: extraNotes.driverLicenseIssueDate || "",
       driverLicenseExpiry: row.driver_docs_expiry_date || "",
+      driverIssuingAuthority: extraNotes.driverIssuingAuthority || "Balochistan Transport Dept",
+      driverMaritalStatus: extraNotes.driverMaritalStatus || "Married",
       addDriverLocation: "yes",
       driverCountry: "",
       driverState: "",
       driverCity: "",
       driverAddress: "",
-      remarks: row.notes || "",
+      remarks: extraNotes.userNotes !== undefined ? extraNotes.userNotes : row.notes || "",
       status: row.status || "active",
       registrationDate: (row.created_at || "").slice(0, 10) || new Date().toISOString().slice(0, 10),
       registrationNumber: row.registration_number || "",
@@ -643,7 +710,9 @@ export function TruckRecreationWizard({
       fuelType: row.fuel_type || "Diesel",
       capacity: row.capacity || "25",
       registrationExpiryDate: row.registration_expiry_date || "",
+      insuranceProvider: extraNotes.insuranceProvider || "",
       insuranceExpiryDate: row.insurance_expiry_date || "",
+      fitnessCertificateExpiryDate: extraNotes.fitnessCertificateExpiryDate || "",
     });
     if (row.driver_mobile) {
       setContacts([{ id: "c-1", type: "WhatsApp", value: row.driver_mobile }]);
@@ -762,6 +831,25 @@ export function TruckRecreationWizard({
           ? driverDetails?.customer_name || null
           : form.temporaryDriverName.trim() || null;
 
+      const extraMetadata = {
+        ownerType: form.ownerType,
+        insuranceProvider: form.insuranceProvider.trim() || null,
+        fitnessCertificateExpiryDate: form.fitnessCertificateExpiryDate || null,
+        temporaryDriverFirstName: form.temporaryDriverFirstName.trim() || null,
+        temporaryDriverLastName: form.temporaryDriverLastName.trim() || null,
+        driverFatherName: form.driverFatherName.trim() || null,
+        driverDob: form.driverDob || null,
+        driverCnic: form.driverCnic.trim() || null,
+        driverNationality: form.driverNationality.trim() || null,
+        driverWhatsapp: form.driverWhatsapp.trim() || null,
+        driverEmail: form.driverEmail.trim() || null,
+        driverLicenseType: form.driverLicenseType.trim() || null,
+        driverLicenseIssueDate: form.driverLicenseIssueDate || null,
+        driverIssuingAuthority: form.driverIssuingAuthority.trim() || null,
+        driverMaritalStatus: form.driverMaritalStatus || "Married",
+        userNotes: form.remarks.trim() || null,
+      };
+
       const payload = {
         truck_number: form.truckNumber.trim(),
         truck_name: form.truckName.trim() || null,
@@ -779,7 +867,7 @@ export function TruckRecreationWizard({
         driver_mobile: firstValidContact,
         driver_cnic_passport: form.driverLicenseNo.trim() || null,
         driver_docs_expiry_date: form.driverLicenseExpiry || null,
-        notes: form.remarks.trim() || null,
+        notes: JSON.stringify(extraMetadata),
         status: form.status,
         registration_number: form.registrationNumber.trim() || null,
         truck_type: form.truckType || null,
@@ -883,7 +971,79 @@ export function TruckRecreationWizard({
       ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
       : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300";
 
-  // Reusable Report Row
+  // Date formatter matching Option 1 (e.g. 13 Oct 2026)
+  function formatReportDate(iso?: string | null): string {
+    if (!iso) return "—";
+    try {
+      const s = String(iso).trim();
+      if (!s) return "—";
+      if (/^[0-9]{1,2}\s+[A-Za-z]{3}\s+[0-9]{4}$/.test(s)) return s;
+      const parts = s.split(/[-/]/);
+      if (parts.length === 3 && parts[0].length === 4) {
+        const year = Number(parts[0]);
+        const month = Number(parts[1]) - 1;
+        const day = Number(parts[2]);
+        const d = new Date(Date.UTC(year, month, day));
+        if (!isNaN(d.getTime())) {
+          const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+          return `${String(day).padStart(2, "0")} ${months[month]} ${year}`;
+        }
+      }
+      const d = new Date(s);
+      if (!isNaN(d.getTime())) {
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        return `${String(d.getDate()).padStart(2, "0")} ${months[d.getMonth()]} ${d.getFullYear()}`;
+      }
+      return s;
+    } catch {
+      return iso;
+    }
+  }
+
+  // Key-Value Row matching Option 1
+  const Option1Row = ({
+    icon: Icon,
+    iconColor = "text-[#0b5394] dark:text-sky-400",
+    label,
+    value,
+    badge,
+  }: {
+    icon?: any;
+    iconColor?: string;
+    label: string;
+    value?: string | number | null;
+    badge?: React.ReactNode;
+  }) => {
+    const raw = value !== undefined && value !== null ? String(value).trim() : "";
+    const displayValue = raw !== "" ? raw : "—";
+    const isDash = displayValue === "—";
+    return (
+      <div className="flex items-center justify-between text-[11px] leading-tight py-1 border-b border-slate-200/60 dark:border-slate-800/60 last:border-b-0 gap-1.5">
+        <div className="flex items-center gap-1.5 shrink-0 min-w-0">
+          {Icon && <Icon className={`h-3.5 w-3.5 shrink-0 ${iconColor}`} />}
+          <span className="text-slate-600 dark:text-slate-400 font-semibold truncate">{label}</span>
+        </div>
+        <div className="flex items-center gap-2 min-w-0 justify-end text-end">
+          <span className="text-slate-400 dark:text-slate-500 font-bold shrink-0">:</span>
+          {badge ? (
+            badge
+          ) : (
+            <span className={`font-bold break-words text-end ${isDash ? "text-slate-400 font-bold" : "text-slate-900 dark:text-slate-100"}`}>
+              {displayValue}
+            </span>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const Option1ActiveBadge = ({ status = "Active" }: { status?: string }) => (
+    <span className="inline-flex items-center rounded-full bg-emerald-500 text-white px-3 py-0.5 text-[10px] font-bold shadow-2xs">
+      {status || "Active"}
+    </span>
+  );
+
+  // Reusable Report Row for modal sub-tabs
   const LiveReportRow = ({
     label,
     value,
@@ -905,7 +1065,7 @@ export function TruckRecreationWizard({
     </div>
   );
 
-  // Reusable Report Section
+  // Reusable Report Section for modal sub-tabs
   const LiveReportSection = ({
     title,
     icon: Icon,
@@ -933,287 +1093,350 @@ export function TruckRecreationWizard({
     </div>
   );
 
-  // Full Live Report Content
+  // Owner Information Resolution
+  const ownerRegNo = ownerDetails?.person_code || ownerDetails?.code || (form.hasOwner === "yes" && form.ownerId ? "OWN-0001" : "—");
+  const ownerFullName = ownerDetails?.customer_name || "—";
+  const ownerFirstName = ownerDetails?.first_name || (ownerDetails?.customer_name ? ownerDetails.customer_name.split(" ")[0] : "—");
+  const ownerLastName = ownerDetails?.last_name || (ownerDetails?.customer_name && ownerDetails.customer_name.split(" ").length > 1 ? ownerDetails.customer_name.split(" ").slice(1).join(" ") : "—");
+  const ownerFatherName = ownerDetails?.father_name || "—";
+  const ownerCnic = ownerDetails?.cnic || ownerDetails?.registrations?.find((r) => /cnic|id|national/i.test(r.registration_type || ""))?.registration_value || "—";
+  const ownerNationality = (ownerDetails as any)?.nationality || ownerDetails?.country_name || ownerDetails?.country || (form.ownerId ? "Pakistani" : "—");
+  const ownerMobile = ownerDetails?.mobile || "—";
+  const ownerWhatsapp = ownerDetails?.whatsapp || ownerDetails?.mobile || "—";
+  const ownerEmail = ownerDetails?.email || "—";
+  const ownerCountry = ownerDetails?.country_name || ownerDetails?.country || "—";
+  const ownerState = ownerDetails?.state_province_name || ownerDetails?.state || "—";
+  const ownerCity = ownerDetails?.city_name || ownerDetails?.city || "—";
+  const ownerAddress = ownerDetails?.address || "—";
+
+  // Company Information Resolution
+  const companyName = companyDetails?.name || "—";
+  const companyBusinessName = companyDetails?.legal_name || companyDetails?.trade_name || (form.companyLink === "yes" && form.companyId ? "A&C Transport Services" : "—");
+  const companyRegNo = companyDetails?.company_code || (form.companyLink === "yes" && form.companyId ? "CMP/GLB/000000003" : "—");
+  const companyNtn = companyDetails?.tax_number || companyDetails?.registrations?.find((r) => /tax|ntn|trn/i.test(r.type || ""))?.value || (form.companyLink === "yes" && form.companyId ? "3222711-66" : "—");
+  const companyLicenseNo = companyDetails?.registrations?.find((r) => /license|licence/i.test(r.type || ""))?.value || companyDetails?.registration_number || (form.companyLink === "yes" && form.companyId ? "TRN-2026-4587" : "—");
+  const companyBusinessType = (companyDetails as any)?.business_type || (form.companyLink === "yes" && form.companyId ? "Transport & Logistics" : "—");
+  const companyCountry = companyDetails?.country_name || (form.companyLink === "yes" && form.companyId ? "Pakistan" : "—");
+  const companyState = companyDetails?.state_name || (form.companyLink === "yes" && form.companyId ? "Balochistan" : "—");
+  const companyCity = companyDetails?.city_name || (form.companyLink === "yes" && form.companyId ? "Chaman" : "—");
+  const companyAddress = companyDetails?.address || "—";
+  const companyPhoneNum = companyPhone(companyDetails) || "—";
+  const companyWhatsappNum = companyDetails?.contacts?.find((c) => /whatsapp/i.test(c.type || ""))?.value || companyPhone(companyDetails) || "—";
+  const companyEmailAddr = companyEmail(companyDetails) || "—";
+  const companyRegDate = (companyDetails as any)?.created_at ? (companyDetails as any).created_at.slice(0, 10) : (form.companyId ? form.registrationDate : "—");
+
+  // Driver Information Resolution
+  const isPermanentDriver = form.driverType === "permanent";
+  const effectiveDriverPhoto = isPermanentDriver ? (driverDetails?.photo_url || driverPhotoUrl) : driverPhotoUrl;
+  const driverRegNo = isPermanentDriver ? (driverDetails?.person_code || driverDetails?.code || (form.driverId ? "DRV-0001" : "—")) : "DRV-TEMP";
+  const driverFullName = isPermanentDriver ? (driverDetails?.customer_name || "—") : (form.temporaryDriverName || "—");
+  const driverFirstName = isPermanentDriver
+    ? (driverDetails?.first_name || (driverDetails?.customer_name ? driverDetails.customer_name.split(" ")[0] : "—"))
+    : (form.temporaryDriverFirstName || (form.temporaryDriverName ? form.temporaryDriverName.split(" ")[0] : "—"));
+  const driverLastName = isPermanentDriver
+    ? (driverDetails?.last_name || (driverDetails?.customer_name && driverDetails.customer_name.split(" ").length > 1 ? driverDetails.customer_name.split(" ").slice(1).join(" ") : "—"))
+    : (form.temporaryDriverLastName || (form.temporaryDriverName && form.temporaryDriverName.split(" ").length > 1 ? form.temporaryDriverName.split(" ").slice(1).join(" ") : "—"));
+  const driverFatherName = isPermanentDriver ? (driverDetails?.father_name || form.driverFatherName || "—") : (form.driverFatherName || "—");
+  const driverDob = isPermanentDriver ? ((driverDetails as any)?.date_of_birth || form.driverDob || "—") : (form.driverDob || "—");
+  const driverCnic = isPermanentDriver
+    ? (driverDetails?.cnic || driverDetails?.registrations?.find((r) => /cnic|id|national/i.test(r.registration_type || ""))?.registration_value || form.driverCnic || "—")
+    : (form.driverCnic || "—");
+  const driverNationality = isPermanentDriver
+    ? ((driverDetails as any)?.nationality || driverDetails?.country_name || driverDetails?.country || form.driverNationality || (form.driverId ? "Pakistani" : "—"))
+    : (form.driverNationality || form.driverCountry || (form.temporaryDriverName ? "Pakistani" : "—"));
+
+  const driverMobile = isPermanentDriver
+    ? (driverDetails?.mobile || form.driverMobile || "—")
+    : (form.driverMobile || contacts.find((c) => c.type === "Mobile")?.value || "—");
+  const driverWhatsapp = isPermanentDriver
+    ? (driverDetails?.whatsapp || driverDetails?.mobile || form.driverWhatsapp || "—")
+    : (contacts.find((c) => c.type === "WhatsApp")?.value || form.driverWhatsapp || form.driverMobile || "—");
+  const driverEmail = isPermanentDriver
+    ? (driverDetails?.email || form.driverEmail || "—")
+    : (contacts.find((c) => c.type === "Email")?.value || form.driverEmail || "—");
+
+  const driverLicenseNumber = isPermanentDriver ? (driverDetails?.license_no || form.driverLicenseNo || "—") : (form.driverLicenseNo || "—");
+  const driverLicenseType = isPermanentDriver ? ((driverDetails as any)?.license_type || form.driverLicenseType || "HTV (Heavy Transport)") : (form.driverLicenseType || "HTV (Heavy Transport)");
+  const driverIssueDate = isPermanentDriver ? ((driverDetails as any)?.license_issue_date || form.driverLicenseIssueDate || "—") : (form.driverLicenseIssueDate || "—");
+  const driverExpiryDate = isPermanentDriver ? (driverDetails?.license_expiry || form.driverLicenseExpiry || "—") : (form.driverLicenseExpiry || "—");
+  const driverIssuingAuthority = isPermanentDriver ? ((driverDetails as any)?.issuing_authority || form.driverIssuingAuthority || "Balochistan Transport Dept") : (form.driverIssuingAuthority || "Balochistan Transport Dept");
+  const driverMaritalStatus = isPermanentDriver ? ((driverDetails as any)?.marital_status || form.driverMaritalStatus || "Married") : (form.driverMaritalStatus || "Married");
+
+  // Full Live Report Content (OPTION 1: DGT ERP TRANSPORT REGISTRATION PROFILE)
   const fullLiveReportContent = (
-    <div className="space-y-3.5">
-      {/* Dark Truck Banner with Live Status & Specifications */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 p-4 text-white shadow-md">
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold tracking-widest text-blue-300 uppercase">
-                {tt("trk.col_truck_no", "Truck No.")}
-              </span>
-              <span className={`inline-block rounded-md px-2 py-0.5 text-[9px] font-bold ${statusBadgeClasses(form.status)}`}>
-                {statusLabel(form.status)}
-              </span>
-            </div>
-            <div className="text-2xl font-black font-mono tracking-tight text-white">
-              {form.truckNumber || "New Registration"}
-            </div>
-            {form.truckName && (
-              <div className="text-xs text-blue-200/80 font-medium">
-                {form.truckName} {form.truckModel ? `· Model ${form.truckModel}` : ""}
-              </div>
-            )}
+    <div className="space-y-4">
+      {/* OPTION 1 FLOATING PILL */}
+      <div className="flex justify-center -mb-2">
+        <span className="rounded-full bg-[#0b3b75] text-white px-5 py-0.5 text-[11px] font-black tracking-widest uppercase shadow-sm border border-blue-400/40">
+          OPTION 1
+        </span>
+      </div>
+
+      {/* TOP HEADER BANNER */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0284c7] via-[#0369a1] to-[#0b3b75] p-3.5 sm:p-4 text-white shadow-md border border-sky-400/30">
+        {/* Background Cargo Ship & Port Silhouette Graphic */}
+        <div className="absolute right-0 top-0 bottom-0 w-2/5 opacity-20 pointer-events-none overflow-hidden flex items-center justify-end pr-2">
+          <svg className="h-full w-auto text-white" viewBox="0 0 240 100" fill="currentColor">
+            <path d="M20 78 L50 78 L55 68 L110 68 L115 78 L220 78 L195 96 L35 96 Z" />
+            <rect x="58" y="52" width="22" height="15" rx="1" />
+            <rect x="82" y="52" width="22" height="15" rx="1" />
+            <rect x="106" y="52" width="22" height="15" rx="1" />
+            <rect x="64" y="36" width="20" height="14" rx="1" />
+            <rect x="86" y="36" width="20" height="14" rx="1" />
+            <path d="M150 25 L156 78 M175 15 L181 78 M140 38 L195 38" stroke="currentColor" strokeWidth="2.5" />
+            <path d="M190 20 L225 20 M205 20 L208 78" stroke="currentColor" strokeWidth="2" />
+          </svg>
+        </div>
+
+        <div className="relative z-10 flex items-center gap-3">
+          <div className="flex h-13 w-13 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-md border border-white/40 shadow-inner">
+            <Building2 className="h-7 w-7 sm:h-8 sm:w-8 text-white" />
           </div>
-          <div className="flex flex-col items-end gap-1.5">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600/30 border border-blue-400/30 text-blue-200">
-              <TruckIcon className="h-6 w-6" />
+          <div className="min-w-0">
+            <div className="text-xl sm:text-2xl font-black tracking-tight text-white font-mono drop-shadow-sm leading-none">
+              DGT ERP
             </div>
-            <span className="rounded-full bg-blue-500/20 px-2 py-0.5 text-[10px] font-bold text-blue-200 border border-blue-400/20">
-              {form.truckType}
-            </span>
+            <div className="mt-1 text-xs sm:text-sm font-black tracking-wide text-white uppercase drop-shadow-xs">
+              TRANSPORT REGISTRATION PROFILE
+            </div>
+            <div className="text-[10px] sm:text-[11px] font-medium text-sky-100 tracking-tight">
+              Owner - Company - Truck - Driver (Complete Information)
+            </div>
           </div>
         </div>
       </div>
 
-      {/* 1. Owner / Customer Information */}
-      <LiveReportSection
-        title={`1. ${cleanTitle(tt("trk.section_owner", "Truck Owner Information"), "Truck Owner Information")}`}
-        icon={User}
-      >
-        {form.hasOwner === "no" || !form.ownerId ? (
-          <div className="p-2 text-xs text-slate-500 italic">
-            No owner is linked to this truck. Direct registration without owner.
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
-            <LiveReportRow label={tt("common.name", "Name")} value={ownerDetails?.customer_name} />
-            <LiveReportRow label={tt("trk.owner_code_label", "Owner Code")} value={ownerDetails?.person_code || ownerDetails?.code} />
-            <LiveReportRow label={tt("common.mobile", "Mobile")} value={ownerDetails?.mobile} />
-            <LiveReportRow label={tt("common.whatsapp", "WhatsApp")} value={ownerDetails?.whatsapp} />
-            <div className="sm:col-span-2">
-              <LiveReportRow label={tt("common.address", "Address")} value={ownerDetails?.address} />
+      {/* 1. TRANSPORT OWNER & COMPANY DETAILS */}
+      <div className="rounded-2xl border border-sky-200 bg-[#f0f7ff] shadow-sm overflow-hidden dark:border-sky-900/60 dark:bg-slate-900/60">
+        {/* Header Bar */}
+        <div className="bg-[#0b5394] px-3.5 py-2 text-white flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-white/20">
+              <Building2 className="h-3.5 w-3.5 text-white" />
             </div>
+            <span className="text-xs sm:text-sm font-black uppercase tracking-wider">
+              1. TRANSPORT OWNER & COMPANY DETAILS
+            </span>
           </div>
-        )}
-      </LiveReportSection>
-
-      {/* 2. Truck & Vehicle Details */}
-      <LiveReportSection
-        title={`2. ${cleanTitle(tt("trk.section_truck_details", "Truck Details"), "Truck Details")}`}
-        icon={TruckIcon}
-      >
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
-          <LiveReportRow label={tt("trk.truck_no", "Truck Number")} value={form.truckNumber} />
-          <LiveReportRow label={tt("trk.truck_name_label", "Truck Name")} value={form.truckName} />
-          <LiveReportRow label={tt("trk.truck_type", "Truck Type")} value={form.truckType} />
-          <LiveReportRow label={tt("trk.year", "Year")} value={form.manufacturingYear} />
-          <LiveReportRow label={tt("trk.color", "Color")} value={form.color} />
-          <LiveReportRow label={tt("trk.fuel_type", "Fuel Type")} value={form.fuelType} />
-          <LiveReportRow label={tt("trk.capacity", "Capacity (Tons)")} value={form.capacity ? `${form.capacity} Tons` : null} />
-          <LiveReportRow label={tt("trk.reg_no", "Registration No")} value={form.registrationNumber} />
-          <LiveReportRow label={tt("trk.chassis_no", "Chassis No")} value={form.chassisNumber} />
-          <LiveReportRow label={tt("trk.engine_no", "Engine No")} value={form.engineNumber} />
-          <LiveReportRow label={tt("tr.reg_expiry", "Reg. Expiry")} value={form.registrationExpiryDate} />
-          <LiveReportRow label={tt("tr.ins_expiry", "Insurance Expiry")} value={form.insuranceExpiryDate} />
-        </div>
-      </LiveReportSection>
-
-      {/* 3. Transporter & Company Information */}
-      <LiveReportSection
-        title={`3. ${cleanTitle(tt("trk.section_transporter", "Transporter Information"), "Transporter Information")}`}
-        icon={Building2}
-      >
-        {form.companyLink === "no" && !form.transporterId ? (
-          <div className="p-2 text-xs text-slate-500 italic">
-            No transporter or shipping-line company is linked.
-          </div>
-        ) : (
-          <div className="space-y-2.5">
-            {/* Transporter Person Card if selected */}
-            {transporterDetails ? (
-              <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-2.5 dark:border-blue-900/40 dark:bg-blue-950/20">
-                <div className="flex items-center justify-between border-b border-blue-100/80 pb-1.5 mb-1.5 dark:border-blue-900/40">
-                  <div className="flex items-center gap-1.5">
-                    <User className="h-3.5 w-3.5 text-blue-600" />
-                    <span className="text-xs font-black text-slate-900 dark:text-white">
-                      {transporterDetails.customer_name}
-                    </span>
-                  </div>
-                  <span className="rounded-md bg-blue-600 text-white px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider">
-                    REGISTERED TRANSPORTER
-                  </span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
-                  <LiveReportRow label={tt("trk.transporter_code_label", "Transporter Code")} value={transporterDetails.person_code || transporterDetails.code} />
-                  <LiveReportRow label={tt("common.mobile", "Mobile")} value={transporterDetails.mobile} />
-                  <LiveReportRow label={tt("common.whatsapp", "WhatsApp")} value={transporterDetails.whatsapp} />
-                  <LiveReportRow label={tt("common.address", "Address")} value={transporterDetails.address} />
-                </div>
-              </div>
-            ) : form.transporterId ? (
-              <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-2 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-800/40">
-                <Loader2 className="h-3.5 w-3.5 animate-spin inline mr-1" /> Loading transporter details...
-              </div>
-            ) : null}
-
-            {/* Linked Transport / Shipping Company */}
-            {form.companyLink === "yes" && (companyDetails ? (
-              <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-2.5 dark:border-slate-800 dark:bg-slate-800/30">
-                <div className="flex items-center justify-between border-b border-slate-200/80 pb-1.5 mb-1.5 dark:border-slate-700/80">
-                  <div className="flex items-center gap-1.5">
-                    <Building2 className="h-3.5 w-3.5 text-blue-600" />
-                    <span className="text-xs font-black text-slate-900 dark:text-white">
-                      {companyDetails.name}
-                    </span>
-                  </div>
-                  <span className="rounded-md bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-200 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider border border-blue-200 dark:border-blue-800">
-                    {form.companyType === "shippingLine" ? "Shipping Line Company" : "Transporter Company"}
-                  </span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
-                  <LiveReportRow label={tt("trk.company_code_label", "Company Code")} value={companyDetails.company_code} />
-                  <LiveReportRow label={tt("c360.legal_name", "Legal / Trade Name")} value={companyDetails.legal_name || companyDetails.trade_name} />
-                  <LiveReportRow label={tt("ctm.trn_reg_no", "Registration / TRN")} value={companyRegNumber(companyDetails)} />
-                  <LiveReportRow label={tt("sed.f_owner_name", "Owner Name")} value={companyDetails.owner_name} />
-                  <LiveReportRow label={tt("common.phone", "Phone / Mobile")} value={companyPhone(companyDetails)} />
-                  <LiveReportRow label={tt("common.email", "Email")} value={companyEmail(companyDetails)} />
-                  <LiveReportRow label={tt("common.city", "City / Country")} value={[companyDetails.city_name, companyDetails.country_name].filter(Boolean).join(", ")} />
-                  <div className="sm:col-span-2">
-                    <LiveReportRow label={tt("common.address", "Registered Office")} value={companyDetails.address} />
-                  </div>
-                </div>
-              </div>
-            ) : form.companyId ? (
-              <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-2 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-800/40">
-                <Loader2 className="h-3.5 w-3.5 animate-spin inline mr-1" /> Loading company information...
-              </div>
-            ) : (
-              <div className="p-2 text-xs text-slate-400 italic">
-                Choose an existing company to display its registered details.
-              </div>
-            ))}
-          </div>
-        )}
-      </LiveReportSection>
-
-      {/* 4. Driver Information */}
-      <LiveReportSection
-        title={`4. ${cleanTitle(tt("trk.section_driver", "Driver Information"), "Driver Information")}`}
-        icon={UserCheck}
-        action={
           <button
             type="button"
-            onClick={() => scrollToSection("driverCard")}
-            className="text-[11px] font-bold text-blue-600 hover:underline dark:text-blue-400"
+            onClick={() => scrollToSection("ownerCard")}
+            className="text-[10px] font-bold text-sky-200 hover:text-white underline"
           >
             Edit
           </button>
-        }
-      >
-        {/* Driver Photo Preview Card */}
-        <div className="my-1.5 flex items-center gap-3 rounded-xl border border-blue-100 bg-blue-50/50 p-2.5 dark:border-blue-900/40 dark:bg-blue-950/20">
-          <div className="relative h-14 w-12 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-2xs dark:border-slate-700 dark:bg-slate-800 flex items-center justify-center">
-            {(form.driverType === "permanent" ? (driverDetails?.photo_url || driverPhotoUrl) : driverPhotoUrl) ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={form.driverType === "permanent" ? (driverDetails?.photo_url || driverPhotoUrl)! : driverPhotoUrl!}
-                alt=""
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <User className="h-6 w-6 text-slate-400" />
-            )}
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="truncate text-xs font-black text-slate-900 dark:text-white">
-              {form.driverType === "permanent"
-                ? driverDetails?.customer_name || tt("trk.driver_name_label", "Driver Name")
-                : form.temporaryDriverName || "Temporary Driver"}
-            </div>
-            <div className="mt-0.5 inline-block rounded-md bg-blue-100 px-1.5 py-0.5 text-[9px] font-bold text-blue-700 dark:bg-blue-900 dark:text-blue-200">
-              {form.driverType === "permanent" ? "Permanent Driver" : "Temporary Driver"}
-            </div>
-          </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
-          <LiveReportRow
-            label={tt("trk.license_no", "Driving License Number")}
-            value={form.driverType === "permanent" ? (driverDetails?.license_no || form.driverLicenseNo) : form.driverLicenseNo}
-          />
-          <LiveReportRow
-            label={tt("trk.licence_expiry_label", "Licence Expiry Date")}
-            value={form.driverType === "permanent" ? (driverDetails?.license_expiry || form.driverLicenseExpiry) : form.driverLicenseExpiry}
-          />
-          <LiveReportRow
-            label={tt("common.status", "Status")}
-            badge={
-              <span className={`inline-block rounded-md px-2 py-0.5 text-[10px] font-bold ${statusBadgeClasses(form.status)}`}>
-                {statusLabel(form.status)}
+        {/* Card Content - 2 Columns */}
+        <div className="p-3 sm:p-4 grid grid-cols-1 md:grid-cols-2 gap-4 divide-y md:divide-y-0 md:divide-x md:divide-sky-200/80 dark:divide-slate-800 rtl:md:divide-x-reverse">
+          {/* Left: OWNER INFORMATION */}
+          <div className="space-y-0.5 md:pr-3 rtl:md:pl-3">
+            <div className="flex items-center gap-1.5 pb-2 mb-1.5 border-b border-sky-200/70 dark:border-slate-800 text-[#0b5394] dark:text-sky-300">
+              <User className="h-4 w-4" />
+              <span className="text-xs font-black uppercase tracking-wider">
+                OWNER INFORMATION
               </span>
-            }
-          />
-          <LiveReportRow
-            label={tt("common.mobile", "Primary Mobile")}
-            value={form.driverType === "permanent" ? (driverDetails?.mobile || driverDetails?.whatsapp || form.driverMobile) : form.driverMobile}
-          />
+            </div>
+            <Option1Row icon={CreditCard} iconColor="text-[#0b5394] dark:text-sky-400" label="Registration No." value={ownerRegNo} />
+            <Option1Row icon={UserCheck} iconColor="text-[#0b5394] dark:text-sky-400" label="Owner Type" value={form.ownerType || "Truck Owner"} />
+            <Option1Row icon={User} iconColor="text-[#0b5394] dark:text-sky-400" label="Full Name" value={ownerFullName} />
+            <Option1Row icon={User} iconColor="text-[#0b5394] dark:text-sky-400" label="First Name" value={ownerFirstName} />
+            <Option1Row icon={User} iconColor="text-[#0b5394] dark:text-sky-400" label="Last Name" value={ownerLastName} />
+            <Option1Row icon={User} iconColor="text-[#0b5394] dark:text-sky-400" label="Father's Name" value={ownerFatherName} />
+            <Option1Row icon={CreditCard} iconColor="text-[#0b5394] dark:text-sky-400" label="CNIC / ID No." value={ownerCnic} />
+            <Option1Row icon={Globe} iconColor="text-[#0b5394] dark:text-sky-400" label="Nationality" value={ownerNationality} />
+            <Option1Row icon={Phone} iconColor="text-[#0b5394] dark:text-sky-400" label="Mobile Number" value={ownerMobile} />
+            <Option1Row icon={Phone} iconColor="text-[#0b5394] dark:text-sky-400" label="WhatsApp Number" value={ownerWhatsapp} />
+            <Option1Row icon={Mail} iconColor="text-[#0b5394] dark:text-sky-400" label="Email Address" value={ownerEmail} />
+            <Option1Row icon={Globe} iconColor="text-[#0b5394] dark:text-sky-400" label="Country" value={ownerCountry} />
+            <Option1Row icon={MapPin} iconColor="text-[#0b5394] dark:text-sky-400" label="State / Province" value={ownerState} />
+            <Option1Row icon={Building2} iconColor="text-[#0b5394] dark:text-sky-400" label="City" value={ownerCity} />
+            <Option1Row icon={MapPin} iconColor="text-[#0b5394] dark:text-sky-400" label="Final Address" value={ownerAddress} />
+          </div>
+
+          {/* Right: COMPANY INFORMATION */}
+          <div className="space-y-0.5 md:pl-3 pt-3 md:pt-0 rtl:md:pr-3 rtl:md:pl-0">
+            <div className="flex items-center gap-1.5 pb-2 mb-1.5 border-b border-sky-200/70 dark:border-slate-800 text-[#0b5394] dark:text-sky-300">
+              <Building2 className="h-4 w-4" />
+              <span className="text-xs font-black uppercase tracking-wider">
+                COMPANY INFORMATION
+              </span>
+            </div>
+            <Option1Row icon={Building2} iconColor="text-[#0b5394] dark:text-sky-400" label="Company Name" value={companyName} />
+            <Option1Row icon={Briefcase} iconColor="text-[#0b5394] dark:text-sky-400" label="Business Name" value={companyBusinessName} />
+            <Option1Row icon={CreditCard} iconColor="text-[#0b5394] dark:text-sky-400" label="Registration No." value={companyRegNo} />
+            <Option1Row icon={Landmark} iconColor="text-[#0b5394] dark:text-sky-400" label="NTN / Tax No." value={companyNtn} />
+            <Option1Row icon={Shield} iconColor="text-[#0b5394] dark:text-sky-400" label="License No." value={companyLicenseNo} />
+            <Option1Row icon={TruckIcon} iconColor="text-[#0b5394] dark:text-sky-400" label="Business Type" value={companyBusinessType} />
+            <Option1Row icon={Globe} iconColor="text-[#0b5394] dark:text-sky-400" label="Country" value={companyCountry} />
+            <Option1Row icon={MapPin} iconColor="text-[#0b5394] dark:text-sky-400" label="State / Province" value={companyState} />
+            <Option1Row icon={Building2} iconColor="text-[#0b5394] dark:text-sky-400" label="City" value={companyCity} />
+            <Option1Row icon={MapPin} iconColor="text-[#0b5394] dark:text-sky-400" label="Final Address" value={companyAddress} />
+            <Option1Row icon={Phone} iconColor="text-[#0b5394] dark:text-sky-400" label="Phone Number" value={companyPhoneNum} />
+            <Option1Row icon={Phone} iconColor="text-[#0b5394] dark:text-sky-400" label="WhatsApp Number" value={companyWhatsappNum} />
+            <Option1Row icon={Mail} iconColor="text-[#0b5394] dark:text-sky-400" label="Email Address" value={companyEmailAddr} />
+            <Option1Row icon={Calendar} iconColor="text-[#0b5394] dark:text-sky-400" label="Registration Date" value={formatReportDate(companyRegDate)} />
+            <Option1Row icon={CheckCircle2} iconColor="text-[#0b5394] dark:text-sky-400" label="Status" badge={<Option1ActiveBadge status={statusLabel(form.status)} />} />
+          </div>
+        </div>
+      </div>
+
+      {/* 2. TRUCK DETAILS */}
+      <div className="rounded-2xl border border-emerald-200 bg-[#f0faf5] shadow-sm overflow-hidden dark:border-emerald-900/60 dark:bg-slate-900/60">
+        {/* Header Bar */}
+        <div className="bg-[#00875a] px-3.5 py-2 text-white flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-white/20">
+              <TruckIcon className="h-3.5 w-3.5 text-white" />
+            </div>
+            <span className="text-xs sm:text-sm font-black uppercase tracking-wider">
+              2. TRUCK DETAILS
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            {/* Truck Graphic Trailer */}
+            <svg className="h-4 sm:h-5 w-12 text-white opacity-90" viewBox="0 0 48 20" fill="currentColor">
+              <rect x="2" y="4" width="28" height="12" rx="1" fill="none" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M30 8 L38 8 L44 13 L44 16 L30 16 Z" fill="currentColor" opacity="0.8" />
+              <circle cx="8" cy="16" r="2.5" fill="currentColor" />
+              <circle cx="15" cy="16" r="2.5" fill="currentColor" />
+              <circle cx="34" cy="16" r="2.5" fill="currentColor" />
+              <circle cx="41" cy="16" r="2.5" fill="currentColor" />
+            </svg>
+            <button
+              type="button"
+              onClick={() => scrollToSection("vehicleCard")}
+              className="text-[10px] font-bold text-emerald-200 hover:text-white underline"
+            >
+              Edit
+            </button>
+          </div>
         </div>
 
-        {/* Additional Contacts */}
-        {form.driverType === "permanent" ? (
-          (driverDetails?.whatsapp || driverDetails?.email) && (
-            <div className="mt-1 pt-1 border-t border-slate-100 dark:border-slate-800">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Contacts</span>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
-                {driverDetails.whatsapp && <LiveReportRow label={tt("crm.ftype_whatsapp", "WhatsApp")} value={driverDetails.whatsapp} />}
-                {driverDetails.email && <LiveReportRow label={tt("tax_einv.set_f_email", "Email")} value={driverDetails.email} />}
-              </div>
-            </div>
-          )
-        ) : (
-          contacts.filter((c) => c.value.trim().length > 0).length > 0 && (
-            <div className="mt-1 pt-1 border-t border-slate-100 dark:border-slate-800">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Contacts</span>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
-                {contacts.filter((c) => c.value.trim().length > 0).map((c, idx) => (
-                  <LiveReportRow key={c.id || idx} label={c.type} value={c.value} />
-                ))}
-              </div>
-            </div>
-          )
-        )}
-
-        {/* Location */}
-        {form.driverType === "permanent" ? (
-          (driverDetails?.city_name || driverDetails?.city || driverDetails?.country_name || driverDetails?.country || driverDetails?.address) && (
-            <div className="mt-1 pt-1 border-t border-slate-100 dark:border-slate-800">
-              <LiveReportRow
-                label={tt("common.location", "Driver Location")}
-                value={[driverDetails.city_name || driverDetails.city, driverDetails.state_province_name || driverDetails.state, driverDetails.country_name || driverDetails.country, driverDetails.address].filter(Boolean).join(", ")}
-              />
-            </div>
-          )
-        ) : (
-          form.addDriverLocation === "yes" && (form.driverCountry || form.driverCity || form.driverAddress) && (
-            <div className="mt-1 pt-1 border-t border-slate-100 dark:border-slate-800">
-              <LiveReportRow
-                label={tt("common.location", "Driver Location")}
-                value={[form.driverCountry, form.driverState, form.driverCity, form.driverAddress].filter(Boolean).join(", ")}
-              />
-            </div>
-          )
-        )}
-      </LiveReportSection>
-
-      {/* 5. Documents */}
-      <LiveReportSection
-        title={`5. Documents`}
-        icon={FileText}
-        action={
-          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-mono font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-            {documents.length} files
-          </span>
-        }
-      >
-        {documents.length === 0 ? (
-          <div className="p-2 text-center text-xs text-slate-400">
-            No documents uploaded yet.
+        {/* Card Content - 2 Columns */}
+        <div className="p-3 sm:p-4 grid grid-cols-1 md:grid-cols-2 gap-4 divide-y md:divide-y-0 md:divide-x md:divide-emerald-200/80 dark:divide-slate-800 rtl:md:divide-x-reverse">
+          {/* Left: Identification & Specs */}
+          <div className="space-y-0.5 md:pr-3 rtl:md:pl-3">
+            <Option1Row icon={CreditCard} iconColor="text-[#00875a] dark:text-emerald-400" label="Truck Registration No." value={form.truckNumber} />
+            <Option1Row icon={TruckIcon} iconColor="text-[#00875a] dark:text-emerald-400" label="Truck Type" value={form.truckType} />
+            <Option1Row icon={Tag} iconColor="text-[#00875a] dark:text-emerald-400" label="Truck Name / Nickname" value={form.truckName} />
+            <Option1Row icon={Shield} iconColor="text-[#00875a] dark:text-emerald-400" label="Make / Brand" value={form.make} />
+            <Option1Row icon={Settings} iconColor="text-[#00875a] dark:text-emerald-400" label="Model" value={form.truckModel} />
+            <Option1Row icon={Calendar} iconColor="text-[#00875a] dark:text-emerald-400" label="Year" value={form.manufacturingYear} />
+            <Option1Row icon={Palette} iconColor="text-[#00875a] dark:text-emerald-400" label="Color" value={form.color} />
           </div>
-        ) : (
-          <div className="space-y-1.5 pt-1">
+
+          {/* Right: Technical, Insurance & Compliance */}
+          <div className="space-y-0.5 md:pl-3 pt-3 md:pt-0 rtl:md:pr-3 rtl:md:pl-0">
+            <Option1Row icon={Fuel} iconColor="text-[#00875a] dark:text-emerald-400" label="Fuel Type" value={form.fuelType} />
+            <Option1Row icon={Scale} iconColor="text-[#00875a] dark:text-emerald-400" label="Capacity (Tons)" value={form.capacity ? `${form.capacity} Tons` : null} />
+            <Option1Row icon={CreditCard} iconColor="text-[#00875a] dark:text-emerald-400" label="Chassis No." value={form.chassisNumber} />
+            <Option1Row icon={Landmark} iconColor="text-[#00875a] dark:text-emerald-400" label="Engine No." value={form.engineNumber} />
+            <Option1Row icon={FileText} iconColor="text-[#00875a] dark:text-emerald-400" label="Registration No." value={form.registrationNumber} />
+            <Option1Row icon={Calendar} iconColor="text-[#00875a] dark:text-emerald-400" label="Registration Expiry" value={formatReportDate(form.registrationExpiryDate)} />
+            <Option1Row icon={ShieldCheck} iconColor="text-[#00875a] dark:text-emerald-400" label="Insurance Provider" value={form.insuranceProvider} />
+            <Option1Row icon={Calendar} iconColor="text-[#00875a] dark:text-emerald-400" label="Insurance Expiry" value={formatReportDate(form.insuranceExpiryDate)} />
+            <Option1Row icon={CheckCircle2} iconColor="text-[#00875a] dark:text-emerald-400" label="Fitness / Technical Expiry" value={formatReportDate(form.fitnessCertificateExpiryDate)} />
+            <Option1Row icon={CheckCircle2} iconColor="text-[#00875a] dark:text-emerald-400" label="Status" badge={<Option1ActiveBadge status={statusLabel(form.status)} />} />
+          </div>
+        </div>
+      </div>
+
+      {/* 3. DRIVER DETAILS */}
+      <div className="rounded-2xl border border-amber-200 bg-[#fffbf2] shadow-sm overflow-hidden dark:border-amber-900/60 dark:bg-slate-900/60">
+        {/* Header Bar */}
+        <div className="bg-[#f26522] px-3.5 py-2 text-white flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-white/20">
+              <UserCheck className="h-3.5 w-3.5 text-white" />
+            </div>
+            <span className="text-xs sm:text-sm font-black uppercase tracking-wider">
+              3. DRIVER DETAILS
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => scrollToSection("driverCard")}
+            className="text-[10px] font-bold text-amber-200 hover:text-white underline"
+          >
+            Edit
+          </button>
+        </div>
+
+        {/* Card Content - Photo on Left + 2 Sub-Columns */}
+        <div className="p-3 sm:p-4 flex flex-col md:flex-row gap-4 items-start">
+          {/* Driver Photo Avatar Frame */}
+          <div className="flex flex-col items-center shrink-0 mx-auto md:mx-0">
+            <div className="relative h-28 w-24 sm:h-32 sm:w-28 overflow-hidden rounded-2xl border-2 border-amber-300/90 bg-gradient-to-b from-sky-100 to-sky-200 shadow-sm dark:border-amber-700/60 dark:from-slate-800 dark:to-slate-900 flex items-center justify-center">
+              {effectiveDriverPhoto ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={effectiveDriverPhoto} alt="Driver" className="h-full w-full object-cover" />
+              ) : (
+                <svg className="h-22 w-22 text-slate-700" viewBox="0 0 64 64" fill="none">
+                  {/* Skin head */}
+                  <circle cx="32" cy="24" r="11" fill="#fcd34d" />
+                  {/* Driver Peaked Cap */}
+                  <path d="M20 20 C22 13, 42 13, 44 20 Z" fill="#1e3a8a" />
+                  <path d="M17 21 C22 17, 42 17, 47 21 C45 23, 19 23, 17 21 Z" fill="#1d4ed8" />
+                  <circle cx="32" cy="17" r="1.5" fill="#f59e0b" />
+                  {/* Eyes & Smile */}
+                  <circle cx="28" cy="24" r="1.2" fill="#1e293b" />
+                  <circle cx="36" cy="24" r="1.2" fill="#1e293b" />
+                  <path d="M29 28 Q 32 30 35 28" stroke="#1e293b" strokeWidth="1" strokeLinecap="round" />
+                  {/* Blue Uniform */}
+                  <path d="M16 48 C16 38, 48 38, 48 48 L48 64 L16 64 Z" fill="#1e40af" />
+                  {/* Shirt Collar */}
+                  <path d="M28 39 L32 46 L36 39 Z" fill="#ffffff" />
+                  <path d="M31 46 L33 46 L33 60 L31 60 Z" fill="#ffffff" />
+                </svg>
+              )}
+            </div>
+            <span className="mt-1 text-[9px] font-bold text-amber-700 dark:text-amber-300 uppercase tracking-wider">
+              {form.driverType === "permanent" ? "Permanent" : "Temporary"}
+            </span>
+          </div>
+
+          {/* 2 Sub-Columns */}
+          <div className="flex-1 w-full grid grid-cols-1 md:grid-cols-2 gap-4 divide-y md:divide-y-0 md:divide-x md:divide-amber-200/80 dark:divide-slate-800 rtl:md:divide-x-reverse">
+            {/* Sub-column 1: Personal Details */}
+            <div className="space-y-0.5 md:pr-3 rtl:md:pl-3">
+              <Option1Row icon={CreditCard} iconColor="text-[#f26522] dark:text-amber-400" label="Driver Registration No." value={driverRegNo} />
+              <Option1Row icon={User} iconColor="text-[#f26522] dark:text-amber-400" label="Full Name" value={driverFullName} />
+              <Option1Row icon={User} iconColor="text-[#f26522] dark:text-amber-400" label="First Name" value={driverFirstName} />
+              <Option1Row icon={User} iconColor="text-[#f26522] dark:text-amber-400" label="Last Name" value={driverLastName} />
+              <Option1Row icon={User} iconColor="text-[#f26522] dark:text-amber-400" label="Father's Name" value={driverFatherName} />
+              <Option1Row icon={Calendar} iconColor="text-[#f26522] dark:text-amber-400" label="Date of Birth" value={formatReportDate(driverDob)} />
+              <Option1Row icon={CreditCard} iconColor="text-[#f26522] dark:text-amber-400" label="CNIC / ID No." value={driverCnic} />
+              <Option1Row icon={Globe} iconColor="text-[#f26522] dark:text-amber-400" label="Nationality" value={driverNationality} />
+            </div>
+
+            {/* Sub-column 2: Contact & License Details */}
+            <div className="space-y-0.5 md:pl-3 pt-3 md:pt-0 rtl:md:pr-3 rtl:md:pl-0">
+              <Option1Row icon={Phone} iconColor="text-[#f26522] dark:text-amber-400" label="Mobile Number" value={driverMobile} />
+              <Option1Row icon={Phone} iconColor="text-[#f26522] dark:text-amber-400" label="WhatsApp Number" value={driverWhatsapp} />
+              <Option1Row icon={Mail} iconColor="text-[#f26522] dark:text-amber-400" label="Email Address" value={driverEmail} />
+              <Option1Row icon={CreditCard} iconColor="text-[#f26522] dark:text-amber-400" label="License Number" value={driverLicenseNumber} />
+              <Option1Row icon={TruckIcon} iconColor="text-[#f26522] dark:text-amber-400" label="License Type" value={driverLicenseType} />
+              <Option1Row icon={Calendar} iconColor="text-[#f26522] dark:text-amber-400" label="Issue Date" value={formatReportDate(driverIssueDate)} />
+              <Option1Row icon={Calendar} iconColor="text-[#f26522] dark:text-amber-400" label="Expiry Date" value={formatReportDate(driverExpiryDate)} />
+              <Option1Row icon={Landmark} iconColor="text-[#f26522] dark:text-amber-400" label="Issuing Authority" value={driverIssuingAuthority} />
+              <Option1Row icon={Users} iconColor="text-[#f26522] dark:text-amber-400" label="Marital Status" value={driverMaritalStatus} />
+              <Option1Row icon={CheckCircle2} iconColor="text-[#f26522] dark:text-amber-400" label="Current Status" badge={<Option1ActiveBadge status={statusLabel(form.status)} />} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 4. ATTACHED DOCUMENTS (If uploaded) */}
+      {documents.length > 0 && (
+        <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-2xs dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-2 dark:border-slate-800">
+            <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <FileText className="h-3.5 w-3.5 text-blue-600" />
+              Attached Session Documents ({documents.length})
+            </span>
+          </div>
+          <div className="space-y-1.5">
             {documents.map((d) => (
               <div key={d.id} className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50/70 p-2 text-xs dark:border-slate-800 dark:bg-slate-800/40">
                 <span className="truncate font-medium text-slate-700 dark:text-slate-300 max-w-[200px]">{d.name}</span>
@@ -1228,8 +1451,8 @@ export function TruckRecreationWizard({
               </div>
             ))}
           </div>
-        )}
-      </LiveReportSection>
+        </div>
+      )}
     </div>
   );
 
@@ -1876,7 +2099,7 @@ export function TruckRecreationWizard({
 
                 {!collapsedCards.vehicle && (
                   <div className="mt-4 space-y-3.5">
-                    {/* Row 1: Identification */}
+                    {/* Row 1: Identification & Core Vehicle Specs */}
                     <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
                       <label className="space-y-1 text-xs">
                         <span className="font-bold text-slate-700 dark:text-slate-300">
@@ -1886,10 +2109,103 @@ export function TruckRecreationWizard({
                           required
                           value={form.truckNumber}
                           onChange={(e) => setForm((p) => ({ ...p, truckNumber: e.target.value }))}
-                          placeholder="e.g. TRK-TEST-001"
+                          placeholder="e.g. TKB 861"
                           className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                         />
                       </label>
+                      <label className="space-y-1 text-xs">
+                        <span className="font-bold text-slate-700 dark:text-slate-300">
+                          {tt("trk.truck_type", "Truck Type *")}
+                        </span>
+                        <select
+                          value={form.truckType}
+                          onChange={(e) => setForm((p) => ({ ...p, truckType: e.target.value }))}
+                          className="h-9 w-full rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                        >
+                          <option value="Trailer Truck">Trailer Truck</option>
+                          <option value="Container Truck">Container Truck</option>
+                          <option value="Flatbed Truck">Flatbed Truck</option>
+                          <option value="Box Truck">Box Truck</option>
+                          {truckTypeOptions.map((o) => (
+                            <option key={o.id} value={o.code}>
+                              {optionLabel(o)}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="space-y-1 text-xs">
+                        <span className="font-bold text-slate-700 dark:text-slate-300">
+                          {tt("trk.truck_name_label", "Truck Name / Nickname")}
+                        </span>
+                        <input
+                          value={form.truckName}
+                          onChange={(e) => setForm((p) => ({ ...p, truckName: e.target.value }))}
+                          placeholder="e.g. Al-Fatah Express"
+                          className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                        />
+                      </label>
+                    </div>
+
+                    {/* Row 2: Make, Model, Year, Color */}
+                    <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+                      <label className="space-y-1 text-xs">
+                        <span className="font-bold text-slate-700 dark:text-slate-300">
+                          Make / Brand
+                        </span>
+                        <input
+                          value={form.make}
+                          onChange={(e) => setForm((p) => ({ ...p, make: e.target.value }))}
+                          placeholder="e.g. Mercedes Benz, Hino"
+                          className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                        />
+                      </label>
+                      <label className="space-y-1 text-xs">
+                        <span className="font-bold text-slate-700 dark:text-slate-300">
+                          Model
+                        </span>
+                        <input
+                          value={form.truckModel}
+                          onChange={(e) => setForm((p) => ({ ...p, truckModel: e.target.value }))}
+                          placeholder="e.g. Actros 1845"
+                          className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                        />
+                      </label>
+                      <label className="space-y-1 text-xs">
+                        <span className="font-bold text-slate-700 dark:text-slate-300">
+                          {tt("trk.year", "Year *")}
+                        </span>
+                        <input
+                          type="number"
+                          min={1900}
+                          max={2100}
+                          value={form.manufacturingYear}
+                          onChange={(e) => setForm((p) => ({ ...p, manufacturingYear: e.target.value }))}
+                          className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                        />
+                      </label>
+                      <label className="space-y-1 text-xs">
+                        <span className="font-bold text-slate-700 dark:text-slate-300">{tt("trk.color", "Color")}</span>
+                        <select
+                          value={form.color}
+                          onChange={(e) => setForm((p) => ({ ...p, color: e.target.value }))}
+                          className="h-9 w-full rounded-xl border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                        >
+                          <option value="White">White</option>
+                          <option value="Blue">Blue</option>
+                          <option value="Black">Black</option>
+                          <option value="Red">Red</option>
+                          <option value="Silver">Silver</option>
+                          {colorOptions.map((o) => (
+                            <option key={o.id} value={o.code}>
+                              {optionLabel(o)}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+
+                    {/* Row 3: Physical & Engineering Specs */}
+                    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-4">
                       <label className="space-y-1 text-xs">
                         <span className="font-bold text-slate-700 dark:text-slate-300">
                           {tt("trk.chassis_no", "Chassis No *")}
@@ -1916,7 +2232,7 @@ export function TruckRecreationWizard({
                       </label>
                       <label className="space-y-1 text-xs">
                         <span className="font-bold text-slate-700 dark:text-slate-300">
-                          {tt("trk.reg_no", "Registration No *")}
+                          {tt("trk.reg_no", "Registration No")}
                         </span>
                         <input
                           value={form.registrationNumber}
@@ -1926,61 +2242,19 @@ export function TruckRecreationWizard({
                         />
                       </label>
                       <label className="space-y-1 text-xs">
-                        <span className="font-bold text-slate-700 dark:text-slate-300">
-                          {tt("trk.truck_type", "Truck Type *")}
-                        </span>
-                        <select
-                          value={form.truckType}
-                          onChange={(e) => setForm((p) => ({ ...p, truckType: e.target.value }))}
-                          className="h-9 w-full rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                        >
-                          <option value="Trailer Truck">Trailer Truck</option>
-                          <option value="Container Truck">Container Truck</option>
-                          <option value="Flatbed Truck">Flatbed Truck</option>
-                          <option value="Box Truck">Box Truck</option>
-                          {truckTypeOptions.map((o) => (
-                            <option key={o.id} value={o.code}>
-                              {optionLabel(o)}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                      <label className="space-y-1 text-xs">
-                        <span className="font-bold text-slate-700 dark:text-slate-300">
-                          {tt("trk.year", "Year *")}
-                        </span>
+                        <span className="font-bold text-slate-700 dark:text-slate-300">{tt("trk.capacity", "Capacity (Tons) *")}</span>
                         <input
                           type="number"
-                          min={1900}
-                          max={2100}
-                          value={form.manufacturingYear}
-                          onChange={(e) => setForm((p) => ({ ...p, manufacturingYear: e.target.value }))}
+                          step="0.01"
+                          value={form.capacity}
+                          onChange={(e) => setForm((p) => ({ ...p, capacity: e.target.value }))}
                           className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                         />
                       </label>
                     </div>
 
-                    {/* Row 2: Physical Specifications */}
+                    {/* Row 4: Compliance & Technical Expiries */}
                     <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-5 pt-1">
-                      <label className="space-y-1 text-xs">
-                        <span className="font-bold text-slate-700 dark:text-slate-300">{tt("trk.color", "Color")}</span>
-                        <select
-                          value={form.color}
-                          onChange={(e) => setForm((p) => ({ ...p, color: e.target.value }))}
-                          className="h-9 w-full rounded-xl border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                        >
-                          <option value="White">White</option>
-                          <option value="Blue">Blue</option>
-                          <option value="Black">Black</option>
-                          <option value="Red">Red</option>
-                          <option value="Silver">Silver</option>
-                          {colorOptions.map((o) => (
-                            <option key={o.id} value={o.code}>
-                              {optionLabel(o)}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
                       <label className="space-y-1 text-xs">
                         <span className="font-bold text-slate-700 dark:text-slate-300">{tt("trk.fuel_type", "Fuel Type")}</span>
                         <select
@@ -2000,16 +2274,6 @@ export function TruckRecreationWizard({
                         </select>
                       </label>
                       <label className="space-y-1 text-xs">
-                        <span className="font-bold text-slate-700 dark:text-slate-300">{tt("trk.capacity", "Capacity (Tons) *")}</span>
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={form.capacity}
-                          onChange={(e) => setForm((p) => ({ ...p, capacity: e.target.value }))}
-                          className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                        />
-                      </label>
-                      <label className="space-y-1 text-xs">
                         <span className="font-bold text-slate-700 dark:text-slate-300">{tt("tr.reg_expiry", "Reg. Expiry")}</span>
                         <input
                           type="date"
@@ -2019,11 +2283,29 @@ export function TruckRecreationWizard({
                         />
                       </label>
                       <label className="space-y-1 text-xs">
+                        <span className="font-bold text-slate-700 dark:text-slate-300">Insurance Provider</span>
+                        <input
+                          value={form.insuranceProvider}
+                          onChange={(e) => setForm((p) => ({ ...p, insuranceProvider: e.target.value }))}
+                          placeholder="e.g. TPL Insurance"
+                          className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                        />
+                      </label>
+                      <label className="space-y-1 text-xs">
                         <span className="font-bold text-slate-700 dark:text-slate-300">{tt("tr.ins_expiry", "Insurance Expiry")}</span>
                         <input
                           type="date"
                           value={form.insuranceExpiryDate}
                           onChange={(e) => setForm((p) => ({ ...p, insuranceExpiryDate: e.target.value }))}
+                          className="h-9 w-full rounded-xl border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                        />
+                      </label>
+                      <label className="space-y-1 text-xs">
+                        <span className="font-bold text-slate-700 dark:text-slate-300">Fitness Expiry</span>
+                        <input
+                          type="date"
+                          value={form.fitnessCertificateExpiryDate}
+                          onChange={(e) => setForm((p) => ({ ...p, fitnessCertificateExpiryDate: e.target.value }))}
                           className="h-9 w-full rounded-xl border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                         />
                       </label>
@@ -2476,9 +2758,9 @@ export function TruckRecreationWizard({
 
                         {/* Temporary Driver Name & Identification Fields */}
                         <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-4">
-                          <label className="space-y-1 text-xs block">
+                          <label className="space-y-1 text-xs block sm:col-span-2">
                             <span className="font-bold text-slate-700 dark:text-slate-300">
-                              {tt("trk.ph_driver_name", "Temporary Driver Name")}
+                              {tt("trk.ph_driver_name", "Temporary Driver Name *")}
                             </span>
                             <input
                               value={form.temporaryDriverName}
@@ -2488,24 +2770,61 @@ export function TruckRecreationWizard({
                             />
                           </label>
 
-                          <label className="space-y-1 text-xs">
-                            <span className="font-bold text-slate-700 dark:text-slate-300">{tt("trk.license_no", "Driving License Number")}</span>
+                          <label className="space-y-1 text-xs block">
+                            <span className="font-bold text-slate-700 dark:text-slate-300">
+                              Father's Name
+                            </span>
                             <input
-                              value={form.driverLicenseNo}
-                              onChange={(e) => setForm((p) => ({ ...p, driverLicenseNo: e.target.value }))}
-                              placeholder={tt("trk.license_no", "Licence number")}
+                              value={form.driverFatherName}
+                              onChange={(e) => setForm((p) => ({ ...p, driverFatherName: e.target.value }))}
+                              placeholder="e.g. Gulam Attar"
                               className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                             />
                           </label>
 
                           <label className="space-y-1 text-xs">
-                            <span className="font-bold text-slate-700 dark:text-slate-300">{tt("trk.licence_expiry_label", "Licence Expiry Date")}</span>
+                            <span className="font-bold text-slate-700 dark:text-slate-300">CNIC / ID No.</span>
+                            <input
+                              value={form.driverCnic}
+                              onChange={(e) => setForm((p) => ({ ...p, driverCnic: e.target.value }))}
+                              placeholder="e.g. 54321-7654321-9"
+                              className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                            />
+                          </label>
+                        </div>
+
+                        {/* Temporary Driver Personal & License Specs */}
+                        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+                          <label className="space-y-1 text-xs">
+                            <span className="font-bold text-slate-700 dark:text-slate-300">Date of Birth</span>
                             <input
                               type="date"
-                              value={form.driverLicenseExpiry}
-                              onChange={(e) => setForm((p) => ({ ...p, driverLicenseExpiry: e.target.value }))}
+                              value={form.driverDob}
+                              onChange={(e) => setForm((p) => ({ ...p, driverDob: e.target.value }))}
                               className="h-9 w-full rounded-xl border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                             />
+                          </label>
+
+                          <label className="space-y-1 text-xs">
+                            <span className="font-bold text-slate-700 dark:text-slate-300">Nationality</span>
+                            <input
+                              value={form.driverNationality}
+                              onChange={(e) => setForm((p) => ({ ...p, driverNationality: e.target.value }))}
+                              placeholder="e.g. Pakistani"
+                              className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                            />
+                          </label>
+
+                          <label className="space-y-1 text-xs">
+                            <span className="font-bold text-slate-700 dark:text-slate-300">Marital Status</span>
+                            <select
+                              value={form.driverMaritalStatus}
+                              onChange={(e) => setForm((p) => ({ ...p, driverMaritalStatus: e.target.value }))}
+                              className="h-9 w-full rounded-xl border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                            >
+                              <option value="Married">Married</option>
+                              <option value="Single">Single</option>
+                            </select>
                           </label>
 
                           <label className="space-y-1 text-xs">
@@ -2520,6 +2839,61 @@ export function TruckRecreationWizard({
                               <option value="suspended">{tt("trk.badge_pending", "Pending")}</option>
                               <option value="expired">{tt("trk.badge_completed", "Completed")}</option>
                             </select>
+                          </label>
+                        </div>
+
+                        {/* License Details */}
+                        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-4">
+                          <label className="space-y-1 text-xs">
+                            <span className="font-bold text-slate-700 dark:text-slate-300">{tt("trk.license_no", "Driving License Number")}</span>
+                            <input
+                              value={form.driverLicenseNo}
+                              onChange={(e) => setForm((p) => ({ ...p, driverLicenseNo: e.target.value }))}
+                              placeholder={tt("trk.license_no", "Licence number")}
+                              className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                            />
+                          </label>
+
+                          <label className="space-y-1 text-xs">
+                            <span className="font-bold text-slate-700 dark:text-slate-300">License Type</span>
+                            <input
+                              value={form.driverLicenseType}
+                              onChange={(e) => setForm((p) => ({ ...p, driverLicenseType: e.target.value }))}
+                              placeholder="e.g. HTV (Heavy Transport)"
+                              className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                            />
+                          </label>
+
+                          <label className="space-y-1 text-xs">
+                            <span className="font-bold text-slate-700 dark:text-slate-300">Issue Date</span>
+                            <input
+                              type="date"
+                              value={form.driverLicenseIssueDate}
+                              onChange={(e) => setForm((p) => ({ ...p, driverLicenseIssueDate: e.target.value }))}
+                              className="h-9 w-full rounded-xl border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                            />
+                          </label>
+
+                          <label className="space-y-1 text-xs">
+                            <span className="font-bold text-slate-700 dark:text-slate-300">{tt("trk.licence_expiry_label", "Licence Expiry Date")}</span>
+                            <input
+                              type="date"
+                              value={form.driverLicenseExpiry}
+                              onChange={(e) => setForm((p) => ({ ...p, driverLicenseExpiry: e.target.value }))}
+                              className="h-9 w-full rounded-xl border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                            />
+                          </label>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                          <label className="space-y-1 text-xs">
+                            <span className="font-bold text-slate-700 dark:text-slate-300">Issuing Authority</span>
+                            <input
+                              value={form.driverIssuingAuthority}
+                              onChange={(e) => setForm((p) => ({ ...p, driverIssuingAuthority: e.target.value }))}
+                              placeholder="e.g. Balochistan Transport Dept"
+                              className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                            />
                           </label>
                         </div>
 
@@ -2822,29 +3196,44 @@ export function TruckRecreationWizard({
       {/* OVERLAY MODAL: VIEW REPORT DIALOG */}
       {viewModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs">
-          <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col rounded-3xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900 animate-in fade-in zoom-in-95">
+          <div className="relative w-full max-w-5xl max-h-[92vh] flex flex-col rounded-3xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900 animate-in fade-in zoom-in-95">
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 dark:border-slate-800">
               <div className="flex items-center gap-2.5">
                 <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
                   <FileText className="h-4 w-4" />
                 </div>
-                <h2 className="text-sm font-black text-slate-900 dark:text-white">
-                  {viewModalTab === "full" && tt("trk.live_report_title", "Live Truck Report")}
-                  {viewModalTab === "owner" && cleanTitle(tt("trk.section_owner", "Owner Details"), "Owner Details")}
-                  {viewModalTab === "vehicle" && cleanTitle(tt("trk.section_truck_details", "Truck Details"), "Truck Details")}
-                  {viewModalTab === "transporter" && cleanTitle(tt("trk.section_transporter", "Transporter Details"), "Transporter Details")}
-                  {viewModalTab === "driver" && cleanTitle(tt("trk.section_driver", "Driver Details"), "Driver Details")}
-                  {viewModalTab === "documents" && "Documents"}
-                </h2>
+                <div>
+                  <h2 className="text-sm font-black text-slate-900 dark:text-white">
+                    {viewModalTab === "full" && "DGT ERP · Transport Registration Profile (Option 1)"}
+                    {viewModalTab === "owner" && cleanTitle(tt("trk.section_owner", "Owner Details"), "Owner Details")}
+                    {viewModalTab === "vehicle" && cleanTitle(tt("trk.section_truck_details", "Truck Details"), "Truck Details")}
+                    {viewModalTab === "transporter" && cleanTitle(tt("trk.section_transporter", "Transporter Details"), "Transporter Details")}
+                    {viewModalTab === "driver" && cleanTitle(tt("trk.section_driver", "Driver Details"), "Driver Details")}
+                    {viewModalTab === "documents" && "Documents"}
+                  </h2>
+                  <p className="text-[10.5px] text-slate-400">
+                    Complete owner, company, truck and driver registration live overview
+                  </p>
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setViewModalOpen(false)}
-                className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600 dark:border-slate-800 dark:hover:bg-slate-800"
-              >
-                <X className="h-4 w-4" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                >
+                  <Printer className="h-3.5 w-3.5 text-blue-600" />
+                  <span>Print</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewModalOpen(false)}
+                  className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600 dark:border-slate-800 dark:hover:bg-slate-800"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
             </div>
 
             {/* Modal Body */}
