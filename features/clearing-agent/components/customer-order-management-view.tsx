@@ -56,7 +56,12 @@ import {
   Copy,
   Check,
   ShieldCheck,
-  UserCheck
+  UserCheck,
+  Phone,
+  Mail,
+  FileDown,
+  PenTool,
+  MessageCircle
 } from "lucide-react";
 
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
@@ -1123,6 +1128,11 @@ export function CustomerOrderManagementView() {
   // Return For Correction Modal State
   const [returnModalOpen, setReturnModalOpen] = useState(false);
   const [returnOrderInfo, setReturnOrderInfo] = useState<{ id: string; orderNo: string; stage: "1B" | "1C" } | null>(null);
+
+  // Live Report View States
+  const [showBillMoreDetails, setShowBillMoreDetails] = useState(true);
+  const [showRouteMapModal, setShowRouteMapModal] = useState(false);
+  const [showVehicleMoreDetails, setShowVehicleMoreDetails] = useState(false);
 
   // Stage Assignment Modal State (1A -> 1B or 1B -> 1C)
   const [assignmentModalOpen, setAssignmentModalOpen] = useState(false);
@@ -4652,8 +4662,8 @@ export function CustomerOrderManagementView() {
               />
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(540px,1.25fr)_minmax(360px,0.75fr)] xl:items-start 2xl:grid-cols-[minmax(600px,1.2fr)_minmax(420px,0.8fr)]" dir="ltr">
-              {/* LEFT COLUMN: The Form Cards */}
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[380px_1fr] 2xl:grid-cols-[400px_1fr] xl:items-start" dir="ltr">
+              {/* LEFT COLUMN: The Form Cards (Slimmer Entry Set) */}
               <div dir={isRtl ? "rtl" : "ltr"} className="space-y-3">
                 <div className="rounded-xl border border-slate-200/90 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                   {(currentStep === 1 || currentStep === 2 || currentStep === 3) && (
@@ -4742,956 +4752,996 @@ export function CustomerOrderManagementView() {
               </div>
             </div>
 
-            {/* RIGHT COLUMN: The Live Customer Order Report Panel (Enlarged 7-cols) */}
+            {/* RIGHT COLUMN: The Live Customer Order Report Panel */}
             <div dir={isRtl ? "rtl" : "ltr"} className="space-y-4 xl:sticky xl:top-3 h-fit max-h-[calc(100vh-1.5rem)] overflow-y-auto rounded-2xl bg-slate-50/70 p-2 pr-1 dark:bg-slate-950/30">
               {/* Live Report Card Container */}
               <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-4">
-                {/* Header with Title and Live Badge */}
-                <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 bg-gradient-to-r from-blue-50/80 to-white p-3 dark:border-slate-800 dark:from-slate-800/80 dark:to-slate-900">
-                  <div className="flex items-center gap-2.5">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-600/20">
-                      <Route className="h-4 w-4" />
+                {/* Header with Title, Subtitle, and Action Buttons (Back, Print, PDF, Live) */}
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-100 bg-gradient-to-r from-blue-50/80 to-white p-3 dark:border-slate-800 dark:from-slate-800/80 dark:to-slate-900">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-600/20">
+                      <FileText className="h-5 w-5" />
                     </span>
                     <div>
-                      <h2 className="text-sm font-black text-slate-900 dark:text-white">
-                        {tt("live_report", "Live Customer Order Report")}
+                      <h2 className="text-base font-black text-slate-900 dark:text-white">
+                        {tt("live_customer_order_report", "Live Customer Order Report")}
                       </h2>
-                      <p className="text-[11px] text-slate-500">
-                        {tt("live_report_desc", "Real-time summary of your customer order details, movements and related information.")}
+                      <p className="text-[11.5px] text-slate-500">
+                        {tt("live_report_header_subtitle", "Complete details of customer order, branch, route, vehicle, goods and documents")}
                       </p>
                     </div>
                   </div>
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    {tt("live", "Live")}
-                  </span>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsFormOpen(false)}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-850 dark:text-slate-200 transition"
+                      title={tt("back", "Back")}
+                    >
+                      <ArrowLeft className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                      <span>{tt("back", "Back")}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => window.print()}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-850 dark:text-slate-200 transition"
+                      title={tt("print", "Print")}
+                    >
+                      <Printer className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                      <span>{tt("print", "Print")}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => window.print()}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-850 dark:text-slate-200 transition"
+                      title={tt("pdf", "PDF")}
+                    >
+                      <FileDown className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                      <span>{tt("pdf", "PDF")}</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-md shadow-blue-600/20 hover:bg-blue-700 transition"
+                    >
+                      <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                      <span>{tt("live", "Live")}</span>
+                    </button>
+                  </div>
                 </div>
-                {/* 3 Unified Summary Reports: 1. Order Bill & Serials, 2. Customer Address, 3. Ship Types Report */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 text-xs">
-                  {/* REPORT 1: ORDER BILL & SYSTEM SERIALS */}
-                  <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between space-y-2.5">
-                    <div>
+
+                {/* TOP ROW: 3 Unified Summary Cards (Order Bill & Serials, Customer / Receiver Details, Ship Types Report) */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5 text-xs">
+                  {/* CARD 1: ORDER BILL & SERIALS */}
+                  <div className="rounded-xl border border-slate-200/90 bg-white p-3.5 shadow-2xs dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between space-y-3">
+                    <div className="space-y-2.5">
                       <div className="flex items-center justify-between pb-2 border-b border-slate-200/60 dark:border-slate-800">
                         <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 text-xs">
-                          <span className="flex h-5 w-5 items-center justify-center rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                          <span className="flex h-5 w-5 items-center justify-center rounded-md bg-emerald-500 text-white shadow-xs">
                             <Receipt className="h-3 w-3" />
                           </span>
                           <span>{tt("order_bill_serials_report", "ORDER BILL & SERIALS")}</span>
                         </div>
-                        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[9.5px] font-bold text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300">
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[9.5px] font-bold text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300">
                           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                           {tt("live", "Live")}
                         </span>
                       </div>
 
-                      {/* Prominent Bill Number / Global Serial */}
-                      <div className="leading-relaxed space-y-0.5 pt-1">
-                        <p className="font-mono font-black text-slate-900 dark:text-white text-base tracking-tight truncate">
-                          {formData.global_serial || formData.order_no || "CL-ORD-PENDING"}
+                      {/* Prominent Center Entry Number */}
+                      <div className="text-center py-1">
+                        <p className="text-[11px] font-semibold text-blue-600 dark:text-blue-400">
+                          {tt("entry_number", "Entry Number")}
                         </p>
-                        <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                          {tt("bill_no_global_serial", "Bill No / Order Reference")}
+                        <p className="font-mono font-black text-blue-600 dark:text-blue-400 text-2xl tracking-wider">
+                          {formData.entry_serial || "ENT-0001"}
                         </p>
                       </div>
 
-                      {/* Clean Serials List (No Nested Packets) */}
-                      <div className="pt-2 space-y-1.5 text-[11.5px] text-slate-600 dark:text-slate-400">
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-500 font-medium">{tt("entry_serial", "Entry Serial:")}</span>
-                          <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400">{formData.entry_serial || "—"}</span>
+                      {/* Date & Time Row */}
+                      <div className="rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 px-3 py-1.5 flex items-center justify-between text-[11.5px] text-slate-700 dark:text-slate-300">
+                        <span className="flex items-center gap-1.5 font-medium">
+                          <Calendar className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                          <span className="text-slate-500">{tt("date_col", "Date")}</span>
+                          <span className="font-bold">{formData.order_date || "2026-10-13"}</span>
+                        </span>
+                        <span className="flex items-center gap-1.5 font-medium">
+                          <Clock className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                          <span className="font-mono font-bold">{formData.order_time || "12:34"}</span>
+                        </span>
+                      </div>
+
+                      {/* More Details Collapsible */}
+                      <div className="space-y-1.5 pt-0.5 text-[11px]">
+                        <button
+                          type="button"
+                          onClick={() => setShowBillMoreDetails((prev) => !prev)}
+                          className="flex items-center gap-1 text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                        >
+                          <ChevronDown className={`h-3 w-3 transition-transform ${showBillMoreDetails ? "rotate-180" : ""}`} />
+                          <span>{tt("more_details", "More Details")}</span>
+                        </button>
+                        {showBillMoreDetails && (
+                          <div className="space-y-1 rounded-lg bg-slate-50/70 p-2 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 text-[11px]">
+                            <div className="flex items-center justify-between">
+                              <span className="text-slate-500">{tt("bill_no_order_ref", "Bill No / Order Ref.")}</span>
+                              <span className="font-mono font-bold text-slate-800 dark:text-slate-200 truncate max-w-[150px]">
+                                {formData.global_serial || formData.order_no || "CL-ORD-202610-9424"}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-slate-500">{tt("entry_serial", "Entry Serial")}</span>
+                              <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
+                                {formData.entry_serial || "ENT-0001"}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-slate-500">{tt("branch_serial", "Branch Serial")}</span>
+                              <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
+                                {formData.branch_serial || "BR-ORD-0001"}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-slate-500">{tt("country_serial", "Country Serial")}</span>
+                              <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
+                                {formData.country_serial || "PAK-ORD-0001"}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-slate-500">{tt("super_admin_serial", "Super Admin Serial")}</span>
+                              <span className="font-mono font-bold text-blue-700 dark:text-blue-300 truncate max-w-[150px]">
+                                {formData.super_admin_serial || formData.global_serial || "CL-ORD-202610-9424"}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Nested Subcard: Branch Details (Order Entry) */}
+                      <div className="rounded-lg border border-amber-200/80 bg-amber-50/40 p-2.5 dark:border-amber-900/60 dark:bg-amber-950/20 space-y-1.5 text-[11px]">
+                        <div className="flex items-center justify-between pb-1 border-b border-amber-200/60 dark:border-amber-900/40">
+                          <div className="flex items-center gap-1.5 font-bold text-amber-800 dark:text-amber-300">
+                            <PenTool className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+                            <span>{tt("branch_details_order_entry", "Branch Details (Order Entry)")}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => { setStep1SubStep("1A"); setCurrentStep(1); }}
+                            className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 hover:text-blue-700 bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700"
+                            title={tt("edit", "Edit")}
+                          >
+                            <Pencil className="h-2.5 w-2.5" />
+                            <span>{tt("edit", "Edit")}</span>
+                          </button>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-500 font-medium">{tt("branch_serial", "Branch Serial:")}</span>
-                          <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{formData.branch_serial || "—"}</span>
+                          <span className="text-slate-500 flex items-center gap-1">🌍 {tt("country", "Country")}</span>
+                          <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
+                            <span>🇵🇰</span> <span>{formData.booking_country_name || userContext?.country_name || "Pakistan"}</span>
+                          </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-500 font-medium">{tt("country_serial", "Country Serial:")}</span>
-                          <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{formData.country_serial || "—"}</span>
+                          <span className="text-slate-500 flex items-center gap-1">📍 {tt("branch", "Branch")}</span>
+                          <span className="font-bold text-blue-700 dark:text-blue-300 truncate max-w-[170px]">
+                            {formData.booking_branch_name || userContext?.branch_name || "Karachi Branch (BR-001)"}
+                          </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-500 font-medium">{tt("super_admin_serial", "Super Admin Serial:")}</span>
-                          <span className="font-mono font-bold text-blue-700 dark:text-blue-300">{formData.super_admin_serial || formData.global_serial || "—"}</span>
+                          <span className="text-slate-500 flex items-center gap-1">🏢 {tt("address", "Address")}</span>
+                          <span className="font-medium text-slate-700 dark:text-slate-300 truncate max-w-[170px]" title={formData.booking_branch_address || "Office No. 12, Damaan Plaza, Karachi"}>
+                            {formData.booking_branch_address || "Office No. 12, Damaan Plaza, Karachi"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500 flex items-center gap-1">👤 {tt("entered_by", "Entered By")}</span>
+                          <span className="font-bold text-slate-800 dark:text-slate-200">
+                            {formData.entered_by_name || (userContext as any)?.context?.user_name || (userContext as any)?.full_name || "Asmatullah (USR-001)"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500 flex items-center gap-1">📅 {tt("entry_date", "Entry Date")}</span>
+                          <span className="font-mono text-slate-700 dark:text-slate-300">
+                            {formData.order_date ? `${formData.order_date} ${formData.order_time || "12:34"}` : "2026-10-13 12:34"}
+                          </span>
                         </div>
                       </div>
-                    </div>
-
-                    {/* Date & Time Footer */}
-                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-400">
-                      <span className="flex items-center gap-1.5 font-medium">
-                        <Calendar className="h-3 w-3 text-slate-400" />
-                        <span>{formData.order_date || "—"}</span>
-                      </span>
-                      <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">
-                        {formData.order_time || "—"}
-                      </span>
                     </div>
                   </div>
 
-                  {/* REPORT 2: CUSTOMER ADDRESS REPORT */}
-                  <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between space-y-2.5">
-                    <div>
+                  {/* CARD 2: CUSTOMER / RECEIVER DETAILS */}
+                  <div className="rounded-xl border border-slate-200/90 bg-white p-3.5 shadow-2xs dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between space-y-3">
+                    <div className="space-y-2.5">
                       <div className="flex items-center justify-between pb-2 border-b border-slate-200/60 dark:border-slate-800">
                         <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 text-xs">
-                          <span className="flex h-5 w-5 items-center justify-center rounded-md bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                          <span className="flex h-5 w-5 items-center justify-center rounded-md bg-blue-600 text-white shadow-xs">
                             <User className="h-3 w-3" />
                           </span>
-                          <span>{tt("customer_address", "CUSTOMER ADDRESS")}</span>
+                          <span>{tt("customer_receiver_details", "CUSTOMER / RECEIVER DETAILS")}</span>
                         </div>
                         <button
                           type="button"
-                          onClick={() => {
-                            setStep1SubStep("1A");
-                            setCurrentStep(1);
-                          }}
-                          className="text-slate-400 hover:text-blue-600 transition p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800"
-                          title={tt("edit_customer_address", "Edit Customer Address")}
+                          onClick={() => { setStep1SubStep("1A"); setCurrentStep(1); }}
+                          className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 hover:text-blue-700 bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700"
+                          title={tt("edit", "Edit")}
                         >
-                          <Pencil className="h-3.5 w-3.5" />
+                          <Pencil className="h-2.5 w-2.5" />
+                          <span>{tt("edit", "Edit")}</span>
                         </button>
                       </div>
 
-                      {selectedCustomerInfo || formData.customer_name || formData.customer_id ? (
-                        <div className="leading-relaxed space-y-1 pt-1">
-                          <p className="font-bold text-slate-900 dark:text-white text-sm truncate">
-                            {selectedCustomerInfo?.customer_name || formData.customer_name || selectedCustomerInfo?.contact_person}
-                          </p>
-                          {selectedCustomerInfo?.company_name && (
-                            <p className="font-medium text-slate-600 dark:text-slate-300 text-[11.5px] truncate">
-                              {selectedCustomerInfo.company_name}
-                            </p>
-                          )}
-                          {selectedCustomerInfo?.address ? (
-                            <p className="text-slate-600 dark:text-slate-400 text-[11px] leading-snug line-clamp-2">
-                              {selectedCustomerInfo.address}
-                            </p>
-                          ) : null}
-                          {[selectedCustomerInfo?.city_name, selectedCustomerInfo?.country_name].filter(Boolean).length > 0 && (
-                            <p className="text-slate-600 dark:text-slate-400 text-[11px]">
-                              {[selectedCustomerInfo?.city_name, selectedCustomerInfo?.country_name].filter(Boolean).join(", ")}
-                            </p>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="py-6 text-center text-slate-400 dark:text-slate-500 italic text-[11.5px]">
-                          {tt("no_customer_selected_desc", "Select a customer to view complete address and contact details")}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Customer Contact Footer */}
-                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1 text-[11px] text-slate-600 dark:text-slate-400">
-                      <div className="flex items-center justify-between">
-                        <span className="text-slate-400 font-medium">{tt("phone_label", "Phone:")}</span>
-                        <span className="font-mono text-slate-800 dark:text-slate-200">{selectedCustomerInfo?.mobile || "—"}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-slate-400 font-medium">{tt("whatsapp_label", "WhatsApp:")}</span>
-                        <span className="font-mono text-slate-800 dark:text-slate-200">{selectedCustomerInfo?.whatsapp || "—"}</span>
-                      </div>
-                      {(selectedCustomerInfo?.person_code || selectedAccountInfo?.code) && (
-                        <div className="flex items-center justify-between pt-0.5 text-[10.5px]">
-                          <span className="text-slate-400">{tt("code_label", "Code:")}</span>
-                          <span className="font-mono font-bold text-slate-600 dark:text-slate-300">
-                            {selectedCustomerInfo?.person_code || selectedAccountInfo?.code}
+                      {/* Customer Name, Code & Company */}
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-slate-900 dark:text-white text-sm">
+                            {selectedCustomerInfo?.customer_name || formData.customer_name || "Asmatullah Abdullah"}
+                          </span>
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300">
+                            {selectedCustomerInfo?.person_code || selectedAccountInfo?.code || "CUST-001"}
                           </span>
                         </div>
-                      )}
+                        <p className="font-semibold text-slate-800 dark:text-slate-200 text-xs">
+                          {selectedCustomerInfo?.company_name || "Al Rax Trading LLC"}
+                        </p>
+                        <p className="text-[11px] text-slate-500 truncate" title={selectedCustomerInfo?.address || "Office No. 201, Al Rax Building, Abu Dhabi, UAE"}>
+                          {selectedCustomerInfo?.address || "Office No. 201, Al Rax Building, Abu Dhabi, UAE"}
+                        </p>
+                      </div>
+
+                      {/* Contact Info with Colored Icons */}
+                      <div className="space-y-1.5 pt-1 text-[11px] text-slate-600 dark:text-slate-300">
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+                          <span className="font-mono font-semibold">{selectedCustomerInfo?.mobile || "+971 54 481 6664"}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <MessageCircle className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                          <span className="font-mono font-semibold">{selectedCustomerInfo?.whatsapp || selectedCustomerInfo?.mobile || "+971 54 481 6664"}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+                          <span className="font-semibold truncate">{selectedCustomerInfo?.email || "asmat@damaan.com"}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <BadgeInfo className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+                          <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{selectedCustomerInfo?.person_code || selectedAccountInfo?.code || "PER-00000036"}</span>
+                        </div>
+                      </div>
+
+                      {/* Location Rows */}
+                      <div className="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-800 text-[11px]">
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500 flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-blue-600" /> {tt("country", "Country")}</span>
+                          <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
+                            <span>🇦🇪</span> <span>{selectedCustomerInfo?.country_name || "UAE"}</span>
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500 flex items-center gap-1.5"><Building2 className="h-3.5 w-3.5 text-blue-600" /> {tt("city", "City")}</span>
+                          <span className="font-bold text-slate-800 dark:text-slate-200">{selectedCustomerInfo?.city_name || "Dubai"}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500 flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-blue-600" /> {tt("branch", "Branch")}</span>
+                          <span className="font-bold text-blue-700 dark:text-blue-300 truncate max-w-[170px]">{(formData as any).receiving_branch_name || "Dubai Main Branch (BR-002)"}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500 flex items-center gap-1.5"><Warehouse className="h-3.5 w-3.5 text-blue-600" /> {tt("address", "Address")}</span>
+                          <span className="font-medium text-slate-700 dark:text-slate-300 truncate max-w-[170px]" title={selectedCustomerInfo?.address || "Office No. 201, Al Rax Building, Abu Dhabi"}>
+                            {selectedCustomerInfo?.address || "Office No. 201, Al Rax Building, Abu Dhabi"}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  {/* REPORT 3: SHIP TYPES REPORT */}
-                  <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between space-y-2.5">
-                    <div>
+                  {/* CARD 3: SHIP TYPES REPORT */}
+                  <div className="rounded-xl border border-slate-200/90 bg-white p-3.5 shadow-2xs dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between space-y-3">
+                    <div className="space-y-2.5">
                       <div className="flex items-center justify-between pb-2 border-b border-slate-200/60 dark:border-slate-800">
                         <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 text-xs">
-                          <span className="flex h-5 w-5 items-center justify-center rounded-md bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300">
+                          <span className="flex h-5 w-5 items-center justify-center rounded-md bg-blue-600 text-white shadow-xs">
                             <Ship className="h-3 w-3" />
                           </span>
                           <span>{tt("ship_types_report", "SHIP TYPES REPORT")}</span>
                         </div>
                         <button
                           type="button"
-                          onClick={() => {
-                            setStep1SubStep("1A");
-                            setCurrentStep(1);
-                          }}
-                          className="text-slate-400 hover:text-sky-600 transition p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800"
-                          title={tt("edit_shipping_types", "Edit Shipping Types")}
+                          onClick={() => { setStep1SubStep("1A"); setCurrentStep(1); }}
+                          className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 hover:text-blue-700 bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700"
+                          title={tt("edit", "Edit")}
                         >
-                          <Pencil className="h-3.5 w-3.5" />
+                          <Pencil className="h-2.5 w-2.5" />
+                          <span>{tt("edit", "Edit")}</span>
                         </button>
                       </div>
 
-                      {/* Main Transport Mode Header */}
-                      <div className="leading-relaxed space-y-0.5 pt-1">
-                        <p className="font-bold text-slate-900 dark:text-white text-base capitalize truncate flex items-center gap-2">
-                          <span>{transportModeLabel(lang, formData.transport_mode)}</span>
-                          <span className="text-[10px] font-semibold text-sky-700 dark:text-sky-300 px-2 py-0.5 rounded-full bg-sky-50 dark:bg-sky-950/60 border border-sky-200/70 dark:border-sky-800">
-                            {transportModeDescLabel(lang, formData.transport_mode)}
-                          </span>
-                        </p>
-                        <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                          {tt("transport_mode_label", "Transport Mode")}
-                        </p>
-                      </div>
-
-                      {/* Clean Message Lines (No Nested Packets) */}
-                      <div className="pt-2 space-y-1.5 text-[11.5px] text-slate-600 dark:text-slate-400">
+                      {/* Ship Details List */}
+                      <div className="space-y-2.5 pt-1 text-[11.5px]">
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-500 font-medium">{tt("movement_type_label", "Movement Type:")}</span>
-                          <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">
-                            {movementTypeLabel(lang, formData.movement_type)}
-                            <span className="ms-1 text-[10px] font-normal text-slate-500">
-                              ({movementFlowLabel(lang, formData.movement_type)})
+                          <span className="text-slate-500 font-medium">{tt("transport_mode_label", "Transport Mode")}</span>
+                          <span className="inline-flex items-center gap-1.5 rounded-lg bg-sky-50 text-sky-700 border border-sky-200 px-2.5 py-1 text-xs font-bold dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-800">
+                            <Ship className="h-3.5 w-3.5" />
+                            <span>{transportModeLabel(lang, formData.transport_mode || "by_sea")}</span>
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500 font-medium">{tt("movement_type_label", "Movement Type")}</span>
+                          <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1 text-xs uppercase">
+                            <ArrowRightLeft className="h-3.5 w-3.5 text-blue-600" />
+                            <span>{movementTypeLabel(lang, formData.movement_type || "import")}</span>
+                            <span className="text-[10px] font-normal text-slate-500">
+                              ({movementFlowLabel(lang, formData.movement_type || "import")})
                             </span>
                           </span>
                         </div>
+
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-500 font-medium flex items-center gap-1">
-                            <Route className="h-3 w-3 text-slate-400" />
-                            <span>{tt("route_via_colon", "Route Via:")}</span>
-                          </span>
-                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[170px]" title={formData.route_name || tt("direct_customs_corridor", "Direct Customs Corridor")}>
-                            {formData.route_name || tt("direct_customs_corridor", "Direct Customs Corridor")}
+                          <span className="text-slate-500 font-medium">{tt("route_via_colon", "Route Via")}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1 text-xs truncate max-w-[200px]" title={formData.route_name || "Chaman Border → Ch (Direct Sea)"}>
+                            <MapPin className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+                            <span>{formData.route_name || "Chaman Border → Ch (Direct Sea)"}</span>
                           </span>
                         </div>
+
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-500 font-medium">{tt("clearance_office_label", "Clearance Office:")}</span>
-                          <span className="font-semibold text-emerald-700 dark:text-emerald-400 truncate max-w-[170px]">
-                            {formData.customs_clearance_office || tt("customs_corridor_short", "Customs Corridor")}
+                          <span className="text-slate-500 font-medium">{tt("clearance_office_label", "Clearance Office")}</span>
+                          <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1 text-xs truncate max-w-[200px]">
+                            <Building2 className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+                            <span>{formData.customs_clearance_office || "Chaman Customs Station"}</span>
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
+                          <span className="text-slate-500 font-medium">{tt("shipment_fcl_lcl", "Shipment FCL/LCL")}</span>
+                          <span className="flex items-center gap-2 text-xs">
+                            <span className="font-black text-slate-900 dark:text-white flex items-center gap-1">
+                              <Boxes className="h-3.5 w-3.5 text-blue-600" />
+                              <span>{formData.shipment_type || "FCL"}</span>
+                            </span>
+                            <span className="text-slate-400 font-medium">{tt("bill_terms", "Commercial Freight")}</span>
                           </span>
                         </div>
                       </div>
-                    </div>
-
-                    {/* Shipment & Freight Footer */}
-                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-400">
-                      <span>{tt("shipment_type_label", "Shipment:")} <strong className="text-slate-800 dark:text-slate-200 font-semibold">{formData.shipment_type || "FCL"}</strong></span>
-                      <span className="text-slate-400 font-medium">{tt("bill_terms", "Commercial Freight")}</span>
                     </div>
                   </div>
                 </div>
 
-                {/* REMARKS CARD (Directly below the 3 top reports) */}
-                <div className="rounded-xl border border-slate-200/80 bg-white p-3.5 shadow-2xs dark:border-slate-800 dark:bg-slate-900">
-                  <div className="flex items-center gap-2 pb-1.5 border-b border-slate-100 dark:border-slate-800">
-                    <span className="text-slate-500 font-bold uppercase text-[10.5px] tracking-wider">
-                      {tt("remarks", "REMARKS")}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-300 pt-1 leading-relaxed">
-                    {formData.remarks ? (
-                      formData.remarks
-                    ) : (
-                      <span className="text-slate-400 dark:text-slate-500 italic text-[11.5px]">
-                        {tt("no_remarks_recorded", "No remarks recorded.")}
+                {/* ROW 2: MOVEMENT & ROUTE JOURNEY */}
+                <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-200/60 dark:border-slate-800">
+                    <div className="flex items-center gap-2">
+                      <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-600 text-white shadow-xs">
+                        <ArrowRightLeft className="h-3.5 w-3.5" />
                       </span>
-                    )}
-                  </p>
-                </div>
-
-                {/* Unified Movement & Route Journey Card — Clean message style matching Order Bill & Customer Address (Audio 7 & 9) */}
-                <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900 space-y-3">
-                  {/* Card Header matching Order Bill & Customer Address */}
-                  <div className="flex items-center justify-between pb-2 border-b border-slate-200/60 dark:border-slate-800">
-                    <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 text-xs">
-                      <span className="flex h-5 w-5 items-center justify-center rounded-md bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300">
-                        <Route className="h-3 w-3" />
-                      </span>
-                      <span>{tt("movement_route_journey_report", "MOVEMENT & ROUTE JOURNEY")}</span>
+                      <div>
+                        <span className="font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 text-xs">
+                          {tt("movement_route_journey_report", "MOVEMENT & ROUTE JOURNEY")}
+                        </span>
+                        <p className="text-[10.5px] text-slate-500">
+                          {tt("movement_journey_subtitle", "Sender, receiver and complete route movements")}
+                        </p>
+                      </div>
                     </div>
-
-                    <div className="flex items-center gap-1.5">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px] font-bold uppercase ${
-                        formData.movement_type === "import"
-                          ? "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800"
-                          : formData.movement_type === "export"
-                          ? "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800"
-                          : "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800"
-                      }`}>
-                        {movementTypeLabel(lang, formData.movement_type)}
-                      </span>
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800 uppercase">
-                        {transportModeLabel(lang, formData.transport_mode || "by_road")}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setStep1SubStep("1A");
-                          setCurrentStep(1);
-                        }}
-                        className="text-slate-400 hover:text-sky-600 transition p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800"
-                        title={tt("transfer_route_1a", "Edit Movement & Route (1A)")}
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowRouteMapModal(true)}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-blue-700 transition"
+                      title={tt("view_on_map", "View on Map")}
+                    >
+                      <MapPin className="h-3.5 w-3.5" />
+                      <span>{tt("view_on_map", "View on Map")}</span>
+                    </button>
                   </div>
 
-                  {/* Prominent Journey Headline (From -> To) */}
-                  <div className="leading-relaxed space-y-0.5 pt-0.5">
-                    <p className="font-bold text-slate-900 dark:text-white text-base tracking-tight flex items-center gap-2">
-                      <span>{formData.loading_country_name || tt("origin", "Origin")}</span>
-                      <span className="text-sky-500 font-bold">➔</span>
-                      <span>{formData.receiving_country_name || tt("destination", "Destination")}</span>
-                    </p>
-                    <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                      <span className="font-semibold text-slate-600 dark:text-slate-300">{tt("route_via_colon", "Route Via:")}</span>
-                      <span className="font-mono text-emerald-700 dark:text-emerald-400 font-bold">
-                        {formData.route_name || tt("direct_customs_corridor", "Direct Customs Corridor")}
-                      </span>
-                    </p>
-                  </div>
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 text-xs">
+                    {/* Left: Sender / Goods Dispatch Details */}
+                    <div className="lg:col-span-5 rounded-lg border border-emerald-100 bg-emerald-50/20 p-3 dark:border-emerald-950/60 dark:bg-emerald-950/10 space-y-2">
+                      <div className="flex items-center justify-between pb-1 border-b border-emerald-200/50 dark:border-emerald-900/40">
+                        <div className="flex items-center gap-1.5 font-bold text-emerald-800 dark:text-emerald-300 text-[11px] uppercase tracking-wide">
+                          <User className="h-3.5 w-3.5 text-emerald-600" />
+                          <span>{tt("sender_goods_dispatch_details", "SENDER / GOODS DISPATCH DETAILS")}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => { setStep1SubStep("1A"); setCurrentStep(1); }}
+                          className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 hover:text-blue-700 bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700"
+                        >
+                          <Pencil className="h-2.5 w-2.5" />
+                          <span>{tt("edit", "Edit")}</span>
+                        </button>
+                      </div>
 
-                  {/* Clean Structured Message Rows (No awkward landing pathway banner) */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1 text-xs">
-                    {/* Stage 1: Origin */}
-                    <div className="rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-850/50 p-2.5 space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">
-                          {tt("stage_origin", "1. ORIGIN & DISPATCH")}
-                        </span>
-                        <span className="text-[9.5px] font-bold text-sky-700 dark:text-sky-300 bg-sky-100 dark:bg-sky-950 px-1.5 py-0.2 rounded">
-                          {formData.loading_country_name ? tt("specified", "Specified") : tt("pending", "Pending")}
-                        </span>
-                      </div>
-                      <p className="font-bold text-slate-800 dark:text-slate-100 text-xs">
-                        {formData.loading_country_name || tt("country_pending", "Country Pending")}
-                      </p>
-                      <div className="text-[11px] text-slate-600 dark:text-slate-400 space-y-1">
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-400">{tt("port_label", "Port / Exit:")}</span>
-                          <span className="font-medium text-slate-800 dark:text-slate-200 truncate max-w-[130px]">
-                            {formData.loading_port_name || formData.origin_airport_name || formData.exit_border_port_name || "—"}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-400">{tt("facility_colon", "Facility:")}</span>
-                          <span className="font-medium text-slate-800 dark:text-slate-200 truncate max-w-[130px]">
-                            {formData.loading_source_name || "—"}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="pt-1.5 border-t border-slate-200/60 dark:border-slate-800 flex items-center justify-between text-[10.5px]">
-                        <span className="text-slate-400">{tt("planned_pickup_badge", "Pickup:")}</span>
-                        <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{formData.planned_pickup_date || "—"}</span>
-                      </div>
-                    </div>
-
-                    {/* Stage 2: Customs & Border */}
-                    <div className="rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-850/50 p-2.5 space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">
-                          {tt("stage_border_customs", "2. BORDER & CLEARANCE")}
-                        </span>
-                        <span className="text-[9.5px] font-bold text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-950 px-1.5 py-0.2 rounded">
-                          {customsStageLabel(lang, formData.movement_type)}
-                        </span>
-                      </div>
-                      <p className="font-bold text-slate-800 dark:text-slate-100 text-xs truncate">
-                        {formData.entry_border_port_name || formData.exit_border_port_name || tt("border_corridor", "Border Corridor")}
-                      </p>
-                      <div className="text-[11px] text-slate-600 dark:text-slate-400 space-y-1">
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-400">{tt("clearance_colon", "Clearance:")}</span>
-                          <span className="font-medium text-slate-800 dark:text-slate-200 truncate max-w-[130px]">
-                            {formData.customs_clearance_office || customsStageLabel(lang, formData.movement_type)}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-400">{tt("corridor_type", "Type:")}</span>
-                          <span className="font-medium text-slate-800 dark:text-slate-200 truncate max-w-[130px]">
-                            {String(formData.movement_type).includes("transit") ? tt("bonded_highway_fallback", "Bonded Highway") : tt("direct_route_short", "Direct Route")}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="pt-1.5 border-t border-slate-200/60 dark:border-slate-800 flex items-center justify-between text-[10.5px]">
-                        <span className="text-slate-400">{tt("planned_dispatch_badge", "Dispatch:")}</span>
-                        <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{formData.planned_dispatch_date || "—"}</span>
-                      </div>
-                    </div>
-
-                    {/* Stage 3: Destination */}
-                    <div className="rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-850/50 p-2.5 space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">
-                          {tt("stage_destination", "3. FINAL DESTINATION")}
-                        </span>
-                        <span className="text-[9.5px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-1.5 py-0.2 rounded">
-                          {tt("destination", "Destination")}
-                        </span>
-                      </div>
-                      <p className="font-bold text-slate-800 dark:text-slate-100 text-xs">
-                        {formData.receiving_country_name || tt("target_country_fallback", "Target Country")}
-                      </p>
-                      <div className="text-[11px] text-slate-600 dark:text-slate-400 space-y-1">
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-400">{tt("dest_port_city", "Port/City:")}</span>
-                          <span className="font-medium text-slate-800 dark:text-slate-200 truncate max-w-[130px]">
-                            {formData.destination_port_name || formData.destination_airport_name || formData.destination_city || "—"}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-400">{tt("delivery_wh", "Delivery:")}</span>
-                          <span className="font-medium text-slate-800 dark:text-slate-200 truncate max-w-[130px]">
-                            {formData.final_delivery_location || tt("target_warehouse_fallback", "Target Warehouse")}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="pt-1.5 border-t border-slate-200/60 dark:border-slate-800 flex items-center justify-between text-[10.5px]">
-                        <span className="text-slate-400">{tt("planned_arrival_badge", "Arrival:")}</span>
-                        <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{formData.planned_arrival_date || "—"}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Route Leg Handler Status Row (Audio 7: "aur aage live report mein bhi dikhana chahiye") */}
-                  {(() => {
-                    const primaryLeg = (formData.legs?.[0] || {}) as any;
-                    const isPartner = primaryLeg?.handlerType === "external_partner" || primaryLeg?.handler_type === "external_partner" || Boolean(primaryLeg?.partnerName);
-                    return (
-                      <div className="rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-850/70 p-2.5 flex flex-wrap items-center justify-between gap-2 text-xs">
-                        <div className="flex items-center gap-2">
-                          <span className={`flex h-6 w-6 items-center justify-center rounded-lg text-white ${isPartner ? "bg-indigo-600" : "bg-blue-600"}`}>
-                            {isPartner ? <Users className="h-3.5 w-3.5" /> : <Building2 className="h-3.5 w-3.5" />}
-                          </span>
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            <span className="font-bold text-slate-800 dark:text-slate-200">
-                              {isPartner ? tt("handler_external_partner", "External Partner:") : tt("handler_our_branch", "Route Leg Handler:")}
-                            </span>
-                            {isPartner ? (
-                              <>
-                                <span className="font-bold text-indigo-700 dark:text-indigo-300">
-                                  {primaryLeg?.partnerName || "External Partner"}
-                                </span>
-                                {primaryLeg?.partnerType && (
-                                  <span className="text-[10px] text-slate-500 capitalize">
-                                    ({String(primaryLeg.partnerType).replace("_", " ")})
-                                  </span>
-                                )}
-                                {primaryLeg?.partnerAccountNumber && (
-                                  <span className="text-[10px] font-mono text-slate-500">
-                                    [{primaryLeg.partnerAccountNumber}]
-                                  </span>
-                                )}
-                                <span className={`text-[9.5px] px-1.5 py-0.2 rounded font-bold ${
-                                  primaryLeg?.hasPortalAccess
-                                    ? "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300"
-                                    : "bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300"
-                                }`}>
-                                  {primaryLeg?.hasPortalAccess ? "Portal Online" : "Offline"}
-                                </span>
-                              </>
-                            ) : (
-                              <>
-                                <span className="font-bold text-blue-700 dark:text-blue-300">
-                                  {primaryLeg?.branchName || "Company Branch Office"}
-                                </span>
-                                {primaryLeg?.branchCountryName && (
-                                  <span className="text-[10px] text-slate-500">
-                                    ({primaryLeg.branchCountryName})
-                                  </span>
-                                )}
-                                <span className="text-slate-300 dark:text-slate-600">•</span>
-                                <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 dark:text-emerald-300 font-semibold">
-                                  <UserCheck className="h-3 w-3" />
-                                  <span>{primaryLeg?.assignedUserName || tt("pending_operator", "Pending Operator")}</span>
-                                </span>
-                              </>
-                            )}
+                      <div className="grid grid-cols-2 gap-2 text-[11px]">
+                        <div className="space-y-1.5">
+                          <div>
+                            <span className="text-slate-400 block text-[10px]">{tt("name", "Name")}</span>
+                            <span className="font-bold text-slate-800 dark:text-slate-200">{(formData as any).sender_name || "Abdul Mateen Khan"}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 block text-[10px]">{tt("account_no", "Account No:")}</span>
+                            <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{(formData as any).sender_account_no || "SUP-001"}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 block text-[10px]">{tt("company", "Company")}</span>
+                            <span className="font-semibold text-slate-800 dark:text-slate-200">{(formData as any).sender_company || "Damaan Trading Co."}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 block text-[10px]">{tt("contact_person", "Contact Person")}</span>
+                            <span className="font-medium text-slate-700 dark:text-slate-300">{(formData as any).sender_contact_person || (formData as any).sender_name || "Abdul Mateen"}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 block text-[10px]">{tt("mobile_whatsapp", "Mobile / WhatsApp")}</span>
+                            <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">{(formData as any).sender_phone || "+92 300 1234567"}</span>
                           </div>
                         </div>
 
-                        {primaryLeg?.insuranceRequired && (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/60 px-2 py-0.5 rounded border border-teal-200 dark:border-teal-800">
-                            <ShieldCheck className="h-3 w-3" />
-                            <span>{tt("cargo_insurance_active", "Cargo Insurance Active")}</span>
-                          </span>
-                        )}
-                      </div>
-                    );
-                  })()}
-                </div>
-
-                {/* Route legs: one line per leg — mode, from → to, handler / partner account, road truck */}
-                {(formData.legs || []).length > 0 && (
-                  <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-2">
-                    <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                      <Route className="h-4 w-4 text-sky-600" />
-                      <span>{tt("route_legs_summary", "Route Legs")} ({(formData.legs || []).length})</span>
-                    </div>
-                    <ol className="space-y-1.5">
-                      {(formData.legs || []).map((leg: any, i: number) => (
-                        <li key={leg.id || i} className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11.5px]">
-                          <span className="font-mono font-black text-slate-400">{leg.legNo ?? i + 1}.</span>
-                          <span className="rounded bg-sky-50 px-1.5 py-0.5 text-[10px] font-bold text-sky-700 border border-sky-200 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-800">{transportModeLabel(lang, leg.transportMode)}</span>
-                          <span className="font-semibold text-slate-800 dark:text-slate-200">
-                            {leg.fromLocationText || leg.fromCountryName || "—"} {isRtl ? "←" : "→"} {leg.toLocationText || leg.toCountryName || "—"}
-                          </span>
-                          <span className="text-slate-500">
-                            {leg.handlerType === "external_partner"
-                              ? `${tt("leg_handler_partner_short", "Partner")}: ${leg.partnerName || "—"}${leg.partnerAccountNumber ? ` [${leg.partnerAccountNumber}]` : ""}`
-                              : tt("leg_handler_branch_short", "Our branch")}
-                          </span>
-                          {leg.transportMode === "by_road" && leg.truckNumber && !isTruckPlaceholder(leg.truckNumber) ? (
-                            <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold text-amber-800 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800" dir="ltr">🚛 {leg.truckNumber}</span>
-                          ) : null}
-                        </li>
-                      ))}
-                    </ol>
-                  </div>
-                )}
-
-                {/* 2. Vehicle & Fleet Report Card */}
-                <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-3.5">
-                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white font-black text-sm shadow-md shadow-indigo-600/20">
-                        <Truck className="h-5 w-5" />
-                      </span>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wide">
-                            {tt("vehicle_fleet_report", "VEHICLE & FLEET REPORT")}
-                          </span>
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800">
-                            {formData.truck_assignment_mode === "permanent"
-                              ? tt("permanent_fleet_value", "Permanent Fleet")
-                              : formData.truck_assignment_mode === "later"
-                              ? tt("assign_later_value", "Assign Later")
-                              : tt("hired_truck_value", "Hired Truck")}
-                          </span>
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold ${
-                            formData.truck_number
-                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800"
-                              : "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800"
-                          }`}>
-                            {formData.truck_assignment_mode === "later"
-                              ? tt("pending_later", "Pending (Later)")
-                              : formData.truck_number
-                              ? tt("assigned_status", "Assigned")
-                              : tt("pending_allocation", "Pending Allocation")}
-                          </span>
-                        </div>
-                        <div className="text-[10.5px] text-slate-500 mt-0.5">
-                          {tt("truck_driver_desc", "Fleet Details, Driver Credentials & Dispatch Timing")}
+                        <div className="space-y-1.5">
+                          <div>
+                            <span className="text-slate-400 block text-[10px]">{tt("country", "Country")}</span>
+                            <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
+                              <span>🇵🇰</span> <span>{formData.loading_country_name || "Pakistan"}</span>
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 block text-[10px]">{tt("city_branch", "City / Branch")}</span>
+                            <span className="font-semibold text-slate-800 dark:text-slate-200">{(formData as any).loading_city ? `${(formData as any).loading_city} (BR-001)` : "Chaman (BR-001)"}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 block text-[10px]">{tt("address", "Address")}</span>
+                            <span className="font-medium text-slate-700 dark:text-slate-300 truncate block" title={(formData as any).sender_address || "Hadyat Plaza, Sanatan Bazar, Chaman"}>
+                              {(formData as any).sender_address || "Hadyat Plaza, Sanatan Bazar, Chaman"}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 block text-[10px]">{tt("origin_warehouse", "Origin Warehouse")}</span>
+                            <span className="font-semibold text-slate-800 dark:text-slate-200">{formData.loading_source_name || "Chaman Warehouse"}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 block text-[10px]">{tt("dispatch_date", "Dispatch Date")}</span>
+                            <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{formData.planned_dispatch_date || "2026-10-11"}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setStep1SubStep("1B");
-                        setCurrentStep(2);
-                      }}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-indigo-200 bg-indigo-50 text-xs font-bold text-indigo-700 hover:bg-indigo-100 dark:border-indigo-900/60 dark:bg-indigo-950/40 dark:text-indigo-300 transition shadow-2xs"
-                      title={tt("transfer_step1b_truck", "Transfer to Step 1B / Truck & Driver Entry")}
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                      <span>{tt("transfer_truck_1b", "Transfer to Truck (1B)")}</span>
-                    </button>
-                  </div>
-
-                  {/* Clean 2-Column Message Layout (No Nested Packets) */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs pt-1">
-                    {/* Vehicle Specifications */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-slate-800">
-                        <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 text-xs">
-                          <span className="flex h-5 w-5 items-center justify-center rounded-md bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
-                            <Truck className="h-3 w-3" />
-                          </span>
-                          <span>{tt("vehicle_specifications", "VEHICLE SPECIFICATIONS")}</span>
+                    {/* Right: 3-Stage Pipeline with Arrows */}
+                    <div className="lg:col-span-7 flex flex-col md:flex-row items-stretch justify-between gap-2 rounded-lg border border-slate-200/80 bg-slate-50/50 p-2.5 dark:border-slate-800 dark:bg-slate-850/50">
+                      {/* Stage 1: Origin & Dispatch */}
+                      <div className="flex-1 rounded-lg border border-blue-100 bg-white p-2.5 dark:border-blue-950/60 dark:bg-slate-900 space-y-1.5">
+                        <div className="flex items-center gap-1.5 font-bold text-blue-700 dark:text-blue-300 text-[10.5px]">
+                          <FileText className="h-3 w-3 text-blue-600" />
+                          <span>{tt("stage_origin_dispatch", "1. ORIGIN & DISPATCH")}</span>
                         </div>
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800 capitalize">
-                          {formData.truck_registration_type ? truckRegTypeLabel(lang, formData.truck_registration_type) : tt("registered_status", "Registered")}
-                        </span>
-                      </div>
-
-                      {/* Prominent Vehicle Number */}
-                      <div className="leading-relaxed space-y-0.5 pt-0.5">
-                        <p className="font-mono font-black text-slate-900 dark:text-white text-base tracking-tight truncate">
-                          {formData.truck_assignment_mode === "later"
-                            ? tt("to_be_assigned_later", "To Be Assigned Later")
-                            : (formData.truck_number || <span className="text-slate-400 italic font-normal text-xs">{tt("no_truck_allocated", "No Truck Allocated")}</span>)}
-                        </p>
-                        <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                          {tt("allocated_vehicle_plate", "Allocated Vehicle Plate & Transporter")}
-                        </p>
-                      </div>
-
-                      {/* Clean Details List */}
-                      <div className="pt-1.5 space-y-1.5 text-[11.5px] text-slate-600 dark:text-slate-400">
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-500 font-medium">{tt("transporter_label", "Transporter:")}</span>
-                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[200px]">
-                            {formData.truck_transport_company || formData.truck_owner_name || (formData.truck_assignment_mode === "permanent" ? tt("internal_fleet", "Internal Fleet") : "—")}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-500 font-medium">{tt("fleet_mode_label", "Fleet Mode:")}</span>
-                          <span className="font-semibold text-slate-800 dark:text-slate-200 capitalize">
-                            {formData.truck_assignment_mode === "permanent"
-                              ? tt("permanent_fleet_value", "Permanent Fleet")
-                              : formData.truck_assignment_mode === "later"
-                              ? tt("assign_later_value", "Assign Later")
-                              : tt("hired_truck_value", "Hired Truck")}
-                          </span>
+                        <div className="space-y-1 text-[11px]">
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-400">{tt("country", "Country")}</span>
+                            <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
+                              <span>🇵🇰</span> <span>{formData.loading_country_name || "Pakistan"}</span>
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-400">{tt("city", "City")}</span>
+                            <span className="font-bold text-slate-800 dark:text-slate-200">{(formData as any).loading_city || "Chaman"}</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-400">{tt("branch", "Branch")}</span>
+                            <span className="font-semibold text-slate-700 dark:text-slate-300 truncate max-w-[95px]">{(formData as any).loading_branch_name || "Chaman (BR-001)"}</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-400">{tt("warehouse", "Warehouse")}</span>
+                            <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[95px]">{formData.loading_source_name || "Chaman WH"}</span>
+                          </div>
+                          <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800 text-[10.5px]">
+                            <span className="text-slate-400">{tt("dispatch_date", "Dispatch Date")}</span>
+                            <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{formData.planned_dispatch_date || "2026-10-11"}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Driver Credentials & Dispatch */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-slate-800">
-                        <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 text-xs">
-                          <span className="flex h-5 w-5 items-center justify-center rounded-md bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-                            <Users className="h-3 w-3" />
-                          </span>
-                          <span>{tt("driver_credentials_dispatch", "DRIVER CREDENTIALS & DISPATCH")}</span>
-                        </div>
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
-                          {formData.truck_driver_name ? tt("assigned_status", "Assigned") : tt("pending_assignment", "Pending")}
-                        </span>
+                      <div className="hidden md:flex items-center justify-center text-blue-500">
+                        <ArrowRight className="h-4 w-4" />
                       </div>
 
-                      {/* Prominent Driver Name */}
-                      <div className="leading-relaxed space-y-0.5 pt-0.5">
-                        <p className="font-bold text-slate-900 dark:text-white text-base tracking-tight truncate">
-                          {formData.truck_assignment_mode === "later"
-                            ? <span className="text-slate-400 italic font-normal text-xs">{tt("to_be_assigned_later", "To Be Assigned Later")}</span>
-                            : (formData.truck_driver_name || <span className="text-slate-400 italic font-normal text-xs">{tt("no_driver_assigned", "No Driver Assigned")}</span>)}
-                        </p>
-                        <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                          {tt("driver_contact_timing", "Driver Mobile Contact & Dispatch Record")}
-                        </p>
-                      </div>
-
-                      {/* Clean Details List */}
-                      <div className="pt-1.5 space-y-1.5 text-[11.5px] text-slate-600 dark:text-slate-400">
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-500 font-medium">{tt("mobile_label", "Driver Mobile:")}</span>
-                          <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">
-                            {formData.truck_driver_mobile || "—"}
+                      {/* Stage 2: Border & Customs */}
+                      <div className="flex-1 rounded-lg border border-amber-100 bg-white p-2.5 dark:border-amber-950/60 dark:bg-slate-900 space-y-1.5">
+                        <div className="flex items-center justify-between gap-1">
+                          <div className="flex items-center gap-1.5 font-bold text-amber-700 dark:text-amber-300 text-[10.5px]">
+                            <Boxes className="h-3 w-3 text-amber-600" />
+                            <span>{tt("stage_border_customs_short", "2. BORDER & CUSTOMS")}</span>
+                          </div>
+                          <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                            {tt("in_process", "In Process")}
                           </span>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-500 font-medium">{tt("actual_dispatch_label", "Actual Dispatch:")}</span>
-                          <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400">
-                            {formData.actual_dispatch_date || "—"}
+                        <div className="space-y-1 text-[11px]">
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-400">{tt("border_point", "Border Point")}</span>
+                            <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[95px]">{formData.entry_border_port_name || formData.exit_border_port_name || "Chaman Border"}</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-400">{tt("customs_office", "Customs Office")}</span>
+                            <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[95px]">{formData.customs_clearance_office || "Chaman Customs Sta."}</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-400">{tt("customs_type", "Customs Type")}</span>
+                            <span className="font-semibold text-slate-800 dark:text-slate-200">Direct Route</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-400">{tt("branch", "Branch")}</span>
+                            <span className="font-semibold text-slate-700 dark:text-slate-300 truncate max-w-[95px]">{(formData as any).border_branch_name || "Chaman (BR-001)"}</span>
+                          </div>
+                          <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800 text-[10.5px]">
+                            <span className="text-slate-400">{tt("planned_dispatch_badge", "Planned Dispatch")}</span>
+                            <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{formData.planned_dispatch_date || "2026-10-12"}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="hidden md:flex items-center justify-center text-blue-500">
+                        <ArrowRight className="h-4 w-4" />
+                      </div>
+
+                      {/* Stage 3: Final Destination */}
+                      <div className="flex-1 rounded-lg border border-purple-100 bg-white p-2.5 dark:border-purple-950/60 dark:bg-slate-900 space-y-1.5">
+                        <div className="flex items-center justify-between gap-1">
+                          <div className="flex items-center gap-1.5 font-bold text-purple-700 dark:text-purple-300 text-[10.5px]">
+                            <MapPin className="h-3 w-3 text-purple-600" />
+                            <span>{tt("stage_final_destination", "3. FINAL DESTINATION")}</span>
+                          </div>
+                          <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-bold bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300">
+                            {tt("pending", "Pending")}
                           </span>
+                        </div>
+                        <div className="space-y-1 text-[11px]">
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-400">{tt("country", "Country")}</span>
+                            <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
+                              <span>🇦🇪</span> <span>{formData.receiving_country_name || "UAE"}</span>
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-400">{tt("city", "City")}</span>
+                            <span className="font-bold text-slate-800 dark:text-slate-200">{formData.destination_city || "Dubai"}</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-400">{tt("branch", "Branch")}</span>
+                            <span className="font-semibold text-slate-700 dark:text-slate-300 truncate max-w-[95px]">{(formData as any).receiving_branch_name || "Dubai (BR-002)"}</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-400">{tt("dest_port_city", "Port/City")}</span>
+                            <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[95px]">{formData.destination_port_name || "Port City"}</span>
+                          </div>
+                          <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800 text-[10.5px]">
+                            <span className="text-slate-400">{tt("planned_arrival_badge", "Planned Arrival")}</span>
+                            <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{formData.planned_arrival_date || "2026-10-20"}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* 3. Goods & Cargo Manifest Breakdown Table Message Card */}
-                <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-3.5">
-                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 text-white font-black text-sm shadow-md shadow-emerald-600/20">
-                        <Boxes className="h-5 w-5" />
+                {/* ROW 3: VEHICLE & FLEET REPORT */}
+                <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-200/60 dark:border-slate-800">
+                    <div className="flex items-center gap-2">
+                      <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-600 text-white shadow-xs">
+                        <Truck className="h-3.5 w-3.5" />
                       </span>
                       <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-black text-slate-900 dark:text-white">
-                            {tt("goods_cargo_manifest_breakdown", "Goods & Cargo Manifest Breakdown")}
-                          </span>
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800">
-                            {(formData.goods_items?.length || 1)} {(formData.goods_items?.length || 1) > 1 ? tt("items_cap", "Items") : tt("item_word", "Item")}
-                          </span>
-                        </div>
-                        <div className="text-[10.5px] text-slate-500 flex items-center gap-1.5 mt-0.5">
-                          <span>{tt("goods_manifest_desc", "Multi-item manifest specifications, warehouse source & gross weights")}</span>
-                        </div>
+                        <span className="font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 text-xs">
+                          {tt("vehicle_fleet_report", "VEHICLE & FLEET REPORT")}
+                        </span>
+                        <p className="text-[10.5px] text-slate-500">
+                          {tt("selected_vehicle_details_desc", "Selected vehicle details (click 'View More' for full details)")}
+                        </p>
                       </div>
                     </div>
-
                     <button
                       type="button"
-                      onClick={() => {
-                        setStep1SubStep("1C");
-                        setCurrentStep(3);
-                      }}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-200 bg-emerald-50 text-xs font-bold text-emerald-700 hover:bg-emerald-100 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300 transition shadow-2xs"
-                      title={tt("transfer_step1c_goods", "Transfer to Step 1C / Goods & Warehouse Entry")}
+                      onClick={() => setShowVehicleMoreDetails((prev) => !prev)}
+                      className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-blue-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 shadow-2xs transition"
                     >
-                      <Pencil className="h-3.5 w-3.5" />
-                      <span>{tt("transfer_to_goods_1c", "Transfer to Goods (1C)")}</span>
+                      <span>{tt("view_more", "View More")}</span>
+                      <ChevronDown className={`h-3 w-3 transition-transform ${showVehicleMoreDetails ? "rotate-180" : ""}`} />
                     </button>
                   </div>
 
-                  {/* Manifest Table & Totals */}
+                  <div className="flex flex-col lg:flex-row items-center gap-4">
+                    {/* Truck Image */}
+                    <div className="w-full lg:w-44 h-28 rounded-xl border border-slate-200/90 bg-white p-1 flex items-center justify-center shrink-0 dark:border-slate-800 dark:bg-slate-850 shadow-2xs">
+                      <img
+                        src="/images/fleet-truck.jpg"
+                        alt={tt("trailer_truck", "Trailer Truck")}
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+
+                    {/* 3 Detail Columns */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 flex-1 text-xs w-full">
+                      {/* Column 1 */}
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-400">{tt("truck_number_label", "Truck Number")}</span>
+                          <span className="flex items-center gap-1.5">
+                            <span className="font-mono font-bold text-slate-900 dark:text-white">{formData.truck_number || "TKD-861"}</span>
+                            <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9.5px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                              {tt("status_active", "Active")}
+                            </span>
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-400">{tt("truck_type_label", "Truck Type")}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200">{(formData as any).truck_type || "Trailer Truck"}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-400">{tt("company", "Company")}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[140px]">{formData.truck_transport_company || "Damaan Fleet (TKD-861)"}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-400">{tt("driver", "Driver")}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[140px]">{formData.truck_driver_name ? `${formData.truck_driver_name} (DRV-001)` : "Rashid Khan (DRV-001)"}</span>
+                        </div>
+                      </div>
+
+                      {/* Column 2 */}
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-400 flex items-center gap-1"><Scale className="h-3 w-3" /> {tt("capacity_tons", "Capacity (Tons)")}</span>
+                          <span className="font-bold text-slate-800 dark:text-slate-200">{(formData as any).truck_capacity ? `${(formData as any).truck_capacity} Tons` : "25 Tons"}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-400">{tt("model_year", "Model / Year")}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200">{(formData as any).truck_model ? `${(formData as any).truck_model} / ${(formData as any).truck_year || "2022"}` : "Hino 700 / 2022"}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-400">{tt("color", "Color")}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200">{(formData as any).truck_color || "White"}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-400">{tt("branch", "Branch")}</span>
+                          <span className="font-semibold text-blue-700 dark:text-blue-300 truncate max-w-[140px]">{(formData as any).truck_branch_name || "Karachi (BR-001)"}</span>
+                        </div>
+                      </div>
+
+                      {/* Column 3 */}
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-400">{tt("registration_no", "Registration No.")}</span>
+                          <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{(formData as any).truck_registration_no || "TKD-2022-861"}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-400">{tt("registration_expiry", "Registration Expiry")}</span>
+                          <span className="font-mono text-slate-700 dark:text-slate-300">{(formData as any).truck_registration_expiry || "2026-10-30"}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-400">{tt("insurance_expiry", "Insurance Expiry")}</span>
+                          <span className="font-mono text-slate-700 dark:text-slate-300">{(formData as any).truck_insurance_expiry || "2026-10-30"}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-400">{tt("status", "Status")}</span>
+                          <span className="font-bold text-emerald-700 dark:text-emerald-400">{tt("status_active", "Active")}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ROW 4: GOODS & CARGO MANIFEST BREAKDOWN */}
+                <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-3">
                   {(() => {
-                    const totalItems = (formData.goods_items || []).length;
-                    const totalPackages = (formData.goods_items || []).reduce((acc, it) => acc + (Number(it.quantity) || 0), 0);
-                    const namedItems = (formData.goods_items || []).filter((it) => String(it.goodsName || "").trim());
-                    const totalKg = namedItems.reduce((acc, it) => acc + goodsWeights(it).gross, 0);
-                    const totalTareKg = namedItems.reduce((acc, it) => acc + goodsWeights(it).tare, 0);
-                    const totalNetKgLive = namedItems.reduce((acc, it) => acc + goodsWeights(it).net, 0);
-                    const totalMt = (totalKg / 1000).toFixed(3);
+                    const namedItems = (formData.goods_items || []).filter((it) => String(it.goodsName || it.goods_name || "").trim());
+                    const hasCustomItems = namedItems.length > 0;
+
+                    const displayItems = hasCustomItems ? namedItems.map((it, idx) => {
+                      const w = goodsWeights(it);
+                      const q = w.qty || 1;
+                      const kg = w.gross;
+                      const tare = w.tare;
+                      const net = w.net;
+                      const kgPer = parseFloat(String(it.kgPerQty || 0)) || (q > 0 ? kg / q : 0);
+                      const unitPrice = parseFloat(String(it.rate || 0)) || 12;
+                      const lineTotal = parseFloat(String(it.finalAmount || 0)) || (q * unitPrice);
+                      return {
+                        id: it.id || String(idx),
+                        name: it.goodsName || it.goods_name || "Cargo Item",
+                        hsCode: it.goodsChsCode || "6907.21",
+                        unit: it.unit || "Boxes",
+                        quantity: q,
+                        kgPerUnit: kgPer || 5,
+                        gross: kg || 500,
+                        tare: tare || 20,
+                        net: net || 480,
+                        warehouseSource: it.warehouseName ? `${it.warehouseName} (BR-001)` : "Chaman WH (BR-001)",
+                        assignedTruck: (it as any).assignedTruckNumber || formData.truck_number || "TKD-861",
+                        currency: it.currency || "USD",
+                        unitPrice: unitPrice,
+                        lineTotal: lineTotal,
+                        rawIndex: idx
+                      };
+                    }) : [
+                      {
+                        id: "mock-1",
+                        name: "Tiles - Ceramic",
+                        hsCode: "6907.21",
+                        unit: "Boxes",
+                        quantity: 100,
+                        kgPerUnit: 5.00,
+                        gross: 500.00,
+                        tare: 20.00,
+                        net: 480.00,
+                        warehouseSource: "Chaman WH (BR-001)",
+                        assignedTruck: formData.truck_number || "TKD-861",
+                        currency: "USD",
+                        unitPrice: 12.00,
+                        lineTotal: 1200.00,
+                        rawIndex: 0
+                      },
+                      {
+                        id: "mock-2",
+                        name: "Sanitary Fittings",
+                        hsCode: "8481.80",
+                        unit: "Boxes",
+                        quantity: 50,
+                        kgPerUnit: 6.00,
+                        gross: 300.00,
+                        tare: 10.00,
+                        net: 290.00,
+                        warehouseSource: "Chaman WH (BR-001)",
+                        assignedTruck: formData.truck_number || "TKD-861",
+                        currency: "USD",
+                        unitPrice: 15.00,
+                        lineTotal: 750.00,
+                        rawIndex: 1
+                      },
+                      {
+                        id: "mock-3",
+                        name: "PVC Pipes",
+                        hsCode: "3917.21",
+                        unit: "Meters",
+                        quantity: 200,
+                        kgPerUnit: 2.00,
+                        gross: 400.00,
+                        tare: 20.00,
+                        net: 380.00,
+                        warehouseSource: "Chaman WH (BR-001)",
+                        assignedTruck: formData.truck_number || "TKD-861",
+                        currency: "USD",
+                        unitPrice: 5.00,
+                        lineTotal: 1000.00,
+                        rawIndex: 2
+                      }
+                    ];
+
+                    const totalItemsCount = displayItems.length;
+                    const totalQuantity = displayItems.reduce((acc, it) => acc + it.quantity, 0);
+                    const totalGrossKg = displayItems.reduce((acc, it) => acc + it.gross, 0);
+                    const totalTareKg = displayItems.reduce((acc, it) => acc + it.tare, 0);
+                    const totalNetKg = displayItems.reduce((acc, it) => acc + it.net, 0);
+                    const totalAmountUsd = displayItems.reduce((acc, it) => acc + it.lineTotal, 0);
 
                     return (
                       <>
-                        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white dark:border-slate-750 dark:bg-slate-850">
+                        <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-200/60 dark:border-slate-800">
+                          <div className="flex items-center gap-2">
+                            <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-xs">
+                              <Boxes className="h-3.5 w-3.5" />
+                            </span>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 text-xs">
+                                  {tt("goods_cargo_manifest_breakdown", "GOODS & CARGO MANIFEST BREAKDOWN")}
+                                </span>
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                                  {totalItemsCount} {tt("items_cap", "Items")}
+                                </span>
+                              </div>
+                              <p className="text-[10.5px] text-slate-500">
+                                {tt("goods_manifest_breakdown_subtitle", "Multi-item manifest with warehouse source and gross weights")}
+                              </p>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => { setStep1SubStep("1C"); setCurrentStep(3); }}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300 transition shadow-2xs"
+                            title={tt("transfer_to_goods_1c", "Transfer to Goods (1C)")}
+                          >
+                            <Pencil className="h-3 w-3" />
+                            <span>{tt("transfer_to_goods_1c", "Transfer to Goods (1C)")}</span>
+                          </button>
+                        </div>
+
+                        {/* Full Table */}
+                        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
                           <table className="w-full text-left text-xs border-collapse">
-                      <thead className="border-b border-slate-200 bg-slate-50/90 font-bold uppercase tracking-wider text-slate-500 dark:border-slate-750 dark:bg-slate-800 text-[9.5px]">
-                        <tr>
-                          <Th className="py-2.5 px-3">#</Th>
-                          <Th className="py-2.5 px-3">{tt("goods_item", "Goods Item")}</Th>
-                          <Th className="py-2.5 px-3">{tt("chs_code", "CHS Code")}</Th>
-                          <Th className="py-2.5 px-3">{tt("unit", "Unit")}</Th>
-                          <Th className="py-2.5 px-3 text-right">{tt("quantity", "Quantity")}</Th>
-                          <Th className="py-2.5 px-3 text-right">{tt("kg_per_unit", "KG/Unit")}</Th>
-                          <Th className="py-2.5 px-3 text-right">{tt("gross_wt_kg", "Gross (kg)")}</Th>
-                          <Th className="py-2.5 px-3 text-right">{tt("empty_tare_kg", "Tare (kg)")}</Th>
-                          <Th className="py-2.5 px-3 text-right">{tt("net_wt_kg", "Net (kg)")}</Th>
-                          <Th className="py-2.5 px-3">{tt("warehouse_source", "Warehouse Source")}</Th>
-                          <Th className="py-2.5 px-3">{tt("assigned_truck_col", "Assigned Truck")}</Th>
-                          <Th className="py-2.5 px-3 text-center">{tt("quality_photo", "Quality Photo")}</Th>
-                          <Th className="py-2.5 px-3 text-center">{tt("actions", "Actions")}</Th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-slate-750 text-[11px]">
-                        {(formData.goods_items || []).filter((it) => String(it.goodsName || "").trim()).map((it, idx) => {
-                          const w = goodsWeights(it);
-                          const q = w.qty;
-                          const kg = w.gross;
-                          const kgPer = parseFloat(String(it.kgPerQty || 0)) || (q > 0 ? kg / q : 0);
-
-                          return (
-                            <tr key={it.id || idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                              <td className="py-2.5 px-3 font-bold text-slate-400">{idx + 1}</td>
-                              <td className="py-2.5 px-3 font-bold text-slate-800 dark:text-slate-200">
-                                <div>{it.goodsName || it.goods_name}</div>
-                                {[it.goodsVariationLabel, it.lotName ? `${tt("goods_lot_name", "Lot Name")}: ${it.lotName}` : ""].filter(Boolean).length ? (
-                                  <div className="text-[9.5px] text-slate-400 font-normal">{[it.goodsVariationLabel, it.lotName ? `${tt("goods_lot_name", "Lot Name")}: ${it.lotName}` : ""].filter(Boolean).join(" • ")}</div>
-                                ) : null}
-                              </td>
-                              <td className="py-2.5 px-3 font-mono text-slate-600 dark:text-slate-400">
-                                {it.goodsChsCode || "—"}
-                              </td>
-                              <td className="py-2.5 px-3 font-medium text-slate-700 dark:text-slate-300">
-                                {it.unit || "Bags"}
-                              </td>
-                              <td className="py-2.5 px-3 text-right font-bold text-slate-900 dark:text-white">
-                                {q.toLocaleString()}
-                              </td>
-                              <td className="py-2.5 px-3 text-right font-mono text-slate-600 dark:text-slate-400">
-                                {kgPer ? `${roundKg(kgPer, 2)} kg` : "—"}
-                              </td>
-                              <td className="py-2.5 px-3 text-right font-mono font-bold text-blue-700 dark:text-blue-400">
-                                {kg.toLocaleString()} kg
-                              </td>
-                              <td className="py-2.5 px-3 text-right font-mono text-slate-500">
-                                {w.tare.toLocaleString()} kg
-                              </td>
-                              <td className="py-2.5 px-3 text-right font-mono font-bold text-emerald-700 dark:text-emerald-400">
-                                {w.net.toLocaleString()} kg
-                              </td>
-                              <td className="py-2.5 px-3">
-                                {it.warehouseType === "company" ? (
-                                  <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
-                                    🏢 {tt("warehouse_badge_own", "Own:")} {it.warehouseName || tt("warehouse_badge_company_fallback", "Company")}
-                                  </span>
-                                ) : it.warehouseType === "customer" ? (
-                                  <span className="inline-flex items-center gap-1 rounded-md bg-purple-50 px-2 py-0.5 text-[10px] font-bold text-purple-700 border border-purple-200 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800">
-                                    👤 {tt("warehouse_badge_customer", "Customer:")} {it.warehouseName || tt("warehouse_badge_client_yard", "Client Yard")}
-                                  </span>
-                                ) : (
-                                  <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800">
-                                    📍 {tt("warehouse_badge_other", "Other:")} {it.warehouseName || formData.loading_source_name || tt("warehouse_badge_warehouse_fallback", "Warehouse")}
-                                  </span>
-                                )}
-                              </td>
-                              <td className="py-2.5 px-3">
-                                {(it as any).assignedTruckNumber || formData.truck_number ? (
-                                  <span className="inline-flex items-center gap-1 font-mono text-[11px] font-bold text-slate-800 dark:text-slate-200">
-                                    <Truck className="h-3 w-3 text-slate-400" />
-                                    <span>{(it as any).assignedTruckNumber || formData.truck_number}</span>
-                                  </span>
-                                ) : (
-                                  <span className="text-[10px] text-slate-400">—</span>
-                                )}
-                              </td>
-                              <td className="py-2.5 px-3 text-center">
-                                {it.photoUrl ? (
-                                  <div className="inline-flex items-center justify-center gap-1">
-                                    <img
-                                      src={it.photoUrl}
-                                      alt={tt("inspection", "Inspection")}
-                                      className="h-6 w-6 rounded object-cover border border-slate-200 dark:border-slate-700 shadow-2xs"
-                                    />
-                                    <a
-                                      href={it.photoUrl}
-                                      download={it.photoName || `inspection-${idx + 1}.jpg`}
-                                      className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded transition"
-                                      title={tt("download_quality_photo", "Download quality photo")}
-                                    >
-                                      <Download className="h-3 w-3" />
-                                    </a>
-                                  </div>
-                                ) : (
-                                  <span className="text-[10px] text-slate-400">—</span>
-                                )}
-                              </td>
-                              <td className="py-2.5 px-3 text-center">
-                                <div className="inline-flex items-center justify-center gap-1">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleEditGoodsRow(idx)}
-                                    className="p-1 text-blue-600 hover:text-blue-800 rounded hover:bg-blue-50 dark:hover:bg-blue-950/40"
-                                    title={tt("edit_item", "Edit Item in Step 1C")}
-                                  >
-                                    <Pencil className="h-3.5 w-3.5" />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setFormData((current) => {
-                                        const filtered = (current.goods_items || []).filter((_, i) => i !== idx);
-                                        const items = filtered.length > 0 ? filtered : [defaultGoodsItem()];
-                                        const first = items[0];
-                                        const totalQty = items.reduce((sum, g) => sum + (Number(g.quantity) || 0), 0);
-                                        const totalKg = items.reduce((sum, g) => sum + (Number(g.totalKg) || 0), 0);
-                                        return {
-                                          ...current,
-                                          goods_items: items,
-                                          goods_id: first?.goodsId || "",
-                                          goods_name: items.map((g) => g.goodsName).filter(Boolean).join(", "),
-                                          goods_unit: first?.unit || "Bags",
-                                          goods_quantity: String(totalQty),
-                                          goods_gross_weight: String(totalKg),
-                                          goods_net_weight: String(totalKg)
-                                        };
-                                      });
-                                    }}
-                                    className="p-1 text-rose-600 hover:text-rose-800 rounded hover:bg-rose-50 dark:hover:bg-rose-950/40"
-                                    title={tt("remove_item", "Remove Item")}
-                                  >
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                      <tfoot className="border-t-2 border-slate-200 bg-slate-50/80 font-bold text-slate-700 dark:border-slate-750 dark:bg-slate-800/60 text-[11px]">
-                        <tr>
-                          <td colSpan={4} className="py-2.5 px-3 text-right uppercase tracking-wider text-[10px] text-slate-500 font-bold">
-                            {tt("total_summary_colon", "Total Summary:")}
-                          </td>
-                          <td className="py-2.5 px-3 text-right font-mono font-bold text-slate-900 dark:text-white">
-                            {totalPackages.toLocaleString()}
-                          </td>
-                          <td className="py-2.5 px-3"></td>
-                          <td className="py-2.5 px-3 text-right font-mono font-bold text-indigo-700 dark:text-indigo-400">
-                            {totalKg.toLocaleString()} kg
-                          </td>
-                          <td className="py-2.5 px-3 text-right font-mono font-bold text-slate-600 dark:text-slate-300">
-                            {totalTareKg.toLocaleString()} kg
-                          </td>
-                          <td className="py-2.5 px-3 text-right font-mono font-bold text-emerald-700 dark:text-emerald-400">
-                            {totalNetKgLive.toLocaleString()} kg
-                          </td>
-                          <td colSpan={4}></td>
-                        </tr>
-                      </tfoot>
-                    </table>
-                  </div>
-
-                  {/* Grand Manifest Totals Message Card (Corner Message Layout) */}
-                  <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 pt-2">
-                    {/* Left: Summary Note */}
-                    <div className="space-y-1 text-xs text-slate-500 dark:text-slate-400">
-                      <div className="flex items-center gap-1.5 font-bold text-slate-700 dark:text-slate-300">
-                        <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block"></span>
-                        <span>{tt("verified_manifest_summary", "Verified Cargo Manifest Summary")}</span>
-                      </div>
-                      <p className="text-[11px] text-slate-400 dark:text-slate-500 max-w-sm">
-                        {tt("manifest_calc_note", "Cargo weights and packaging units are automatically calculated across all manifest line items.")}
-                      </p>
-                    </div>
-
-                    {/* Right Corner: Message Card (No Packets) */}
-                    <div className="w-full sm:w-80 rounded-xl border border-slate-200/90 bg-slate-50/70 p-3.5 dark:border-slate-800 dark:bg-slate-850/80 shadow-2xs space-y-2">
-                      <div className="flex items-center justify-between pb-1.5 border-b border-slate-200 dark:border-slate-750">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                          {tt("manifest_totals_summary", "MANIFEST TOTALS SUMMARY")}
-                        </span>
-                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800">
-                          {totalItems} {tt("goods_item", "Items")}
-                        </span>
-                      </div>
-
-                      <div className="space-y-1.5 text-xs">
-                        {/* 1. Total Entries / Items */}
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
-                            <span className="font-bold text-slate-400 font-mono text-[11px]">1.</span>
-                            <span className="font-medium">{tt("total_entries_label", "Total Entries / Items:")}</span>
-                          </span>
-                          <span className="font-bold text-slate-900 dark:text-white font-mono">
-                            {totalItems}
-                          </span>
+                            <thead className="border-b border-slate-200 bg-slate-50/90 font-bold uppercase tracking-wider text-slate-600 dark:border-slate-800 dark:bg-slate-800/80 text-[10px]">
+                              <tr>
+                                <Th className="py-2.5 px-3">#</Th>
+                                <Th className="py-2.5 px-3">{tt("goods_item", "GOODS ITEM")}</Th>
+                                <Th className="py-2.5 px-3">{tt("hs_code_col", "HS CODE")}</Th>
+                                <Th className="py-2.5 px-3">{tt("unit_col", "UNIT")}</Th>
+                                <Th className="py-2.5 px-3 text-right">{tt("quantity_col", "QUANTITY")}</Th>
+                                <Th className="py-2.5 px-3 text-right">{tt("kg_unit_col", "KG/UNIT")}</Th>
+                                <Th className="py-2.5 px-3 text-right">{tt("gross_kg_col", "GROSS (KG)")}</Th>
+                                <Th className="py-2.5 px-3 text-right">{tt("tare_kg_col", "TARE (KG)")}</Th>
+                                <Th className="py-2.5 px-3 text-right">{tt("net_kg_col", "NET (KG)")}</Th>
+                                <Th className="py-2.5 px-3">{tt("warehouse_source_col", "WAREHOUSE SOURCE")}</Th>
+                                <Th className="py-2.5 px-3">{tt("assigned_truck_col", "ASSIGNED TRUCK")}</Th>
+                                <Th className="py-2.5 px-3">{tt("currency_col", "CURRENCY")}</Th>
+                                <Th className="py-2.5 px-3 text-right">{tt("unit_price_col", "UNIT PRICE")}</Th>
+                                <Th className="py-2.5 px-3 text-right">{tt("line_total_usd_col", "LINE TOTAL (USD)")}</Th>
+                                <Th className="py-2.5 px-3 text-center">{tt("actions_col", "ACTIONS")}</Th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11px]">
+                              {displayItems.map((item, idx) => (
+                                <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                  <td className="py-2.5 px-3 font-bold text-slate-400">{idx + 1}</td>
+                                  <td className="py-2.5 px-3 font-bold text-slate-800 dark:text-slate-200">
+                                    {item.name}
+                                  </td>
+                                  <td className="py-2.5 px-3 font-mono text-slate-600 dark:text-slate-400">
+                                    {item.hsCode}
+                                  </td>
+                                  <td className="py-2.5 px-3 font-medium text-slate-700 dark:text-slate-300">
+                                    {item.unit}
+                                  </td>
+                                  <td className="py-2.5 px-3 text-right font-bold text-slate-900 dark:text-white">
+                                    {item.quantity.toLocaleString()}
+                                  </td>
+                                  <td className="py-2.5 px-3 text-right font-mono text-slate-600 dark:text-slate-400">
+                                    {item.kgPerUnit.toFixed(2)}
+                                  </td>
+                                  <td className="py-2.5 px-3 text-right font-mono font-bold text-blue-700 dark:text-blue-400">
+                                    {item.gross.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  </td>
+                                  <td className="py-2.5 px-3 text-right font-mono text-slate-500">
+                                    {item.tare.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  </td>
+                                  <td className="py-2.5 px-3 text-right font-mono font-bold text-emerald-700 dark:text-emerald-400">
+                                    {item.net.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  </td>
+                                  <td className="py-2.5 px-3 font-medium text-slate-700 dark:text-slate-300">
+                                    {item.warehouseSource}
+                                  </td>
+                                  <td className="py-2.5 px-3 font-mono font-bold text-slate-800 dark:text-slate-200">
+                                    {item.assignedTruck}
+                                  </td>
+                                  <td className="py-2.5 px-3 font-semibold text-slate-700 dark:text-slate-300">
+                                    {item.currency}
+                                  </td>
+                                  <td className="py-2.5 px-3 text-right font-mono text-slate-700 dark:text-slate-300">
+                                    {item.unitPrice.toFixed(2)}
+                                  </td>
+                                  <td className="py-2.5 px-3 text-right font-mono font-black text-slate-900 dark:text-white">
+                                    {item.lineTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  </td>
+                                  <td className="py-2.5 px-3 text-center">
+                                    <div className="inline-flex items-center justify-center gap-1">
+                                      <button
+                                        type="button"
+                                        onClick={() => handleEditGoodsRow(item.rawIndex)}
+                                        className="p-1 text-blue-600 hover:text-blue-800 rounded hover:bg-blue-50 dark:hover:bg-blue-950/40"
+                                        title={tt("edit_item", "Edit Item in Step 1C")}
+                                      >
+                                        <Pencil className="h-3 w-3" />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          if (!hasCustomItems) return;
+                                          setFormData((current) => {
+                                            const filtered = (current.goods_items || []).filter((_, i) => i !== item.rawIndex);
+                                            const items = filtered.length > 0 ? filtered : [defaultGoodsItem()];
+                                            const first = items[0];
+                                            const totalQty = items.reduce((sum, g) => sum + (Number(g.quantity) || 0), 0);
+                                            const totalKg = items.reduce((sum, g) => sum + (Number(g.totalKg) || 0), 0);
+                                            return {
+                                              ...current,
+                                              goods_items: items,
+                                              goods_id: first?.goodsId || "",
+                                              goods_name: items.map((g) => g.goodsName).filter(Boolean).join(", "),
+                                              goods_unit: first?.unit || "Bags",
+                                              goods_quantity: String(totalQty),
+                                              goods_gross_weight: String(totalKg),
+                                              goods_net_weight: String(totalKg)
+                                            };
+                                          });
+                                        }}
+                                        className="p-1 text-rose-600 hover:text-rose-800 rounded hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                                        title={tt("remove_item", "Remove Item")}
+                                      >
+                                        <Trash2 className="h-3 w-3" />
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
                         </div>
 
-                        {/* 2. Total Packaging */}
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
-                            <span className="font-bold text-slate-400 font-mono text-[11px]">2.</span>
-                            <span className="font-medium">{tt("total_packaging_label", "Total Packaging / Units:")}</span>
-                          </span>
-                          <span className="font-bold text-emerald-700 dark:text-emerald-400 font-mono">
-                            {totalPackages.toLocaleString()} {tt("unit", "Units")}
-                          </span>
-                        </div>
+                        {/* 6 Summary Metric Cards Below Table */}
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 pt-2">
+                          {/* Card 1: Total Items */}
+                          <div className="rounded-xl border border-slate-200/90 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-850/80 flex items-center gap-2.5">
+                            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 shrink-0">
+                              <Layers className="h-4 w-4" />
+                            </span>
+                            <div>
+                              <p className="text-[10px] text-slate-500 font-medium">{tt("total_items_label", "Total Items")}</p>
+                              <p className="font-mono font-black text-slate-900 dark:text-white text-sm">{totalItemsCount}</p>
+                            </div>
+                          </div>
 
-                        {/* 3. Total Gross Wt (KG) */}
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
-                            <span className="font-bold text-slate-400 font-mono text-[11px]">3.</span>
-                            <span className="font-medium">{tt("total_gross_wt_kg_label", "Total Gross Wt (KG):")}</span>
-                          </span>
-                          <span className="font-bold text-indigo-700 dark:text-indigo-400 font-mono">
-                            {totalKg.toLocaleString()} kg
-                          </span>
-                        </div>
+                          {/* Card 2: Total Quantity */}
+                          <div className="rounded-xl border border-slate-200/90 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-850/80 flex items-center gap-2.5">
+                            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 shrink-0">
+                              <Boxes className="h-4 w-4" />
+                            </span>
+                            <div>
+                              <p className="text-[10px] text-slate-500 font-medium">{tt("total_quantity_label", "Total Quantity")}</p>
+                              <p className="font-mono font-black text-slate-900 dark:text-white text-sm">{totalQuantity.toLocaleString()}</p>
+                            </div>
+                          </div>
 
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
-                            <span className="font-bold text-slate-400 font-mono text-[11px]">&bull;</span>
-                            <span className="font-medium">{tt("total_empty_kg", "Total Empty KG")}:</span>
-                          </span>
-                          <span className="font-bold text-slate-700 dark:text-slate-300 font-mono">{totalTareKg.toLocaleString()} kg</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
-                            <span className="font-bold text-slate-400 font-mono text-[11px]">&bull;</span>
-                            <span className="font-medium">{tt("total_net_wt_kg_label", "Total Net Wt (KG)")}:</span>
-                          </span>
-                          <span className="font-bold text-emerald-700 dark:text-emerald-400 font-mono">{totalNetKgLive.toLocaleString()} kg</span>
-                        </div>
+                          {/* Card 3: Total Gross Weight */}
+                          <div className="rounded-xl border border-slate-200/90 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-850/80 flex items-center gap-2.5">
+                            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 shrink-0">
+                              <Scale className="h-4 w-4" />
+                            </span>
+                            <div>
+                              <p className="text-[10px] text-slate-500 font-medium">{tt("total_gross_weight_label", "Total Gross Weight")}</p>
+                              <p className="font-mono font-black text-blue-700 dark:text-blue-300 text-xs">
+                                {totalGrossKg.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KG
+                              </p>
+                            </div>
+                          </div>
 
-                        {/* 4. Total Gross Wt (MT) */}
-                        <div className="flex items-center justify-between pt-1 border-t border-slate-200/80 dark:border-slate-750">
-                          <span className="text-slate-700 dark:text-slate-300 flex items-center gap-1.5 font-bold">
-                            <span className="font-bold text-slate-400 font-mono text-[11px]">4.</span>
-                            <span>{tt("total_gross_wt_mt_label", "Total Gross Wt (MT):")}</span>
-                          </span>
-                          <span className="font-black text-purple-700 dark:text-purple-400 font-mono text-sm">
-                            {totalMt} MT
-                          </span>
+                          {/* Card 4: Total Tare Weight */}
+                          <div className="rounded-xl border border-slate-200/90 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-850/80 flex items-center gap-2.5">
+                            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 shrink-0">
+                              <AlertTriangle className="h-4 w-4" />
+                            </span>
+                            <div>
+                              <p className="text-[10px] text-slate-500 font-medium">{tt("total_tare_weight_label", "Total Tare Weight")}</p>
+                              <p className="font-mono font-black text-slate-800 dark:text-slate-200 text-xs">
+                                {totalTareKg.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KG
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Card 5: Total Net Weight */}
+                          <div className="rounded-xl border border-slate-200/90 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-850/80 flex items-center gap-2.5">
+                            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 shrink-0">
+                              <ShieldCheck className="h-4 w-4" />
+                            </span>
+                            <div>
+                              <p className="text-[10px] text-slate-500 font-medium">{tt("total_net_weight_label", "Total Net Weight")}</p>
+                              <p className="font-mono font-black text-emerald-700 dark:text-emerald-400 text-xs">
+                                {totalNetKg.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KG
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Card 6: Total Amount (USD) */}
+                          <div className="rounded-xl border border-slate-200/90 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-850/80 flex items-center gap-2.5">
+                            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 shrink-0">
+                              <Wallet className="h-4 w-4" />
+                            </span>
+                            <div>
+                              <p className="text-[10px] text-slate-500 font-medium">{tt("total_amount_usd_label", "Total Amount (USD)")}</p>
+                              <p className="font-mono font-black text-blue-700 dark:text-blue-400 text-xs">
+                                $ {totalAmountUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </p>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              );
-            })()}
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             </div>
