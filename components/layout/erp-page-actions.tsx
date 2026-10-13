@@ -135,6 +135,8 @@ export function ErpPageActions({ children, backLink, title: titleOverride, subti
     pathname === "/dashboard/bill-cost-profit/reports" ||
     pathname?.startsWith("/dashboard/purchase/local-purchase") ||
     pathname?.startsWith("/dashboard/clearing-agent/customer-order") ||
+    pathname?.startsWith("/dashboard/clearing-agent/truck-registration") ||
+    pathname?.startsWith("/dashboard/clearing-agent/truck-recreation") ||
     pathname?.startsWith("/dashboard/new-entry/users/all") ||
     pathname?.startsWith("/dashboard/communication-center") ||
     pathname?.startsWith("/dashboard/messages") ||
