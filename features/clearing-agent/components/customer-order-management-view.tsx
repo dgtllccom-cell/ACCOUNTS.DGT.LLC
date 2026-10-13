@@ -61,7 +61,10 @@ import {
   Mail,
   FileDown,
   PenTool,
-  MessageCircle
+  MessageCircle,
+  Flag,
+  Upload,
+  Info
 } from "lucide-react";
 
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
@@ -197,6 +200,7 @@ type RouteLeg = {
   toGateName?: string;
   customsOfficeId?: string;
   customsOfficeName?: string;
+  customsTreatment?: string;
   transportMode: LegTransportMode | "";
   responsibleCountryBranchId: string;
   responsibleCityBranchId: string;
@@ -308,6 +312,7 @@ type CustomerRow = {
   company_name: string | null;
   contact_person: string | null;
   mobile: string | null;
+  phone?: string | null;
   whatsapp: string | null;
   email: string | null;
   address: string | null;
@@ -665,10 +670,51 @@ const EMPTY_FORM = {
   customer_id: "",
   customer_name: "",
   shipment_type: "FCL",
-  transport_mode: "by_sea" as TransportMode,
-  shipment_mode: "by_sea" as TransportMode,
+  transport_mode: "by_road" as TransportMode,
+  shipment_mode: "by_road" as TransportMode,
   movement_type: "import" as MovementType,
   import_scenario: "collect_from_origin" as "collect_from_origin" | "arrived_at_entry",
+  operation_type: "import",
+  movement_scenario: "import_re_export",
+  service_type: "standard",
+  cargo_type: "general_cargo",
+  incoterms: "CIF",
+
+  // Booking details
+  booking_country_name: "",
+  booking_branch_name: "",
+  booking_branch_address: "",
+  entered_by_name: "",
+
+  // 1A Loading & Exit (Origin)
+  loading_date: new Date().toISOString().split("T")[0],
+  loading_place: "Kandahar Warehouse",
+  loading_customs_required: true,
+  loading_customs_name: "Spin Boldak Customs",
+  loading_customs_port_border: "Spin Boldak",
+  loading_customs_handled_by: "our_branch" as "our_branch" | "external_agent",
+  loading_customs_branch_id: "",
+  loading_customs_branch_name: "",
+  loading_customs_user_id: "",
+  loading_customs_user_name: "",
+
+  // 1A Receiving & Entry (Destination)
+  receiving_date: new Date(Date.now() + 86400000).toISOString().split("T")[0],
+  receiving_place: "Chaman Warehouse",
+  receiving_customs_required: true,
+  receiving_customs_name: "Chaman Customs",
+  receiving_customs_port_border: "Chaman",
+  receiving_customs_handled_by: "external_agent" as "our_branch" | "external_agent",
+  receiving_customs_agent_account_id: "",
+  receiving_customs_agent_account_name: "",
+  receiving_customs_branch_id: "",
+  receiving_customs_branch_name: "",
+  receiving_customs_user_id: "",
+  receiving_customs_user_name: "",
+
+  // 1A Final Destination
+  final_destination_state: "Balochistan",
+  final_destination_city: "Quetta",
 
   // 1B Truck & Pre-Carriage
   truck_assignment_mode: "permanent" as "permanent" | "hired" | "later",
@@ -4911,131 +4957,53 @@ export function CustomerOrderManagementView() {
                     <div className="space-y-2.5">
                       <div className="flex items-center justify-between pb-2 border-b border-slate-200/60 dark:border-slate-800">
                         <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 text-xs">
-                          <span className="flex h-5 w-5 items-center justify-center rounded-md bg-emerald-500 text-white shadow-xs">
+                          <span className="flex h-5 w-5 items-center justify-center rounded-md bg-blue-600 text-white shadow-xs">
                             <Receipt className="h-3 w-3" />
                           </span>
                           <span>{tt("order_bill_serials_report", "ORDER BILL & SERIALS")}</span>
                         </div>
-                        <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[9.5px] font-bold text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300">
-                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                          {tt("live", "Live")}
-                        </span>
+                        <button
+                          type="button"
+                          onClick={() => { setStep1SubStep("1A"); setCurrentStep(1); }}
+                          className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 hover:text-blue-700 bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 shadow-2xs transition"
+                          title={tt("edit", "Edit")}
+                        >
+                          <Pencil className="h-2.5 w-2.5" />
+                          <span>{tt("edit", "Edit")}</span>
+                        </button>
                       </div>
 
                       {/* Prominent Center Entry Number */}
-                      <div className="text-center py-1">
-                        <p className="text-[11px] font-semibold text-blue-600 dark:text-blue-400">
+                      <div className="py-0.5">
+                        <p className="text-[11px] font-medium text-slate-500">
                           {tt("entry_number", "Entry Number")}
                         </p>
-                        <p className="font-mono font-black text-blue-600 dark:text-blue-400 text-2xl tracking-wider">
-                          {formData.entry_serial || "ENT-0001"}
+                        <p className="font-mono font-black text-blue-600 dark:text-blue-400 text-xl tracking-wider">
+                          {formData.order_no || formData.entry_serial || "CL-ORD-0001"}
                         </p>
                       </div>
 
-                      {/* Date & Time Row */}
-                      <div className="rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 px-3 py-1.5 flex items-center justify-between text-[11.5px] text-slate-700 dark:text-slate-300">
-                        <span className="flex items-center gap-1.5 font-medium">
-                          <Calendar className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                          <span className="text-slate-500">{tt("date_col", "Date")}</span>
-                          <span className="font-bold">{formData.order_date || "2026-10-13"}</span>
-                        </span>
-                        <span className="flex items-center gap-1.5 font-medium">
-                          <Clock className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                          <span className="font-mono font-bold">{formData.order_time || "12:34"}</span>
-                        </span>
-                      </div>
-
-                      {/* More Details Collapsible */}
-                      <div className="space-y-1.5 pt-0.5 text-[11px]">
-                        <button
-                          type="button"
-                          onClick={() => setShowBillMoreDetails((prev) => !prev)}
-                          className="flex items-center gap-1 text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline"
-                        >
-                          <ChevronDown className={`h-3 w-3 transition-transform ${showBillMoreDetails ? "rotate-180" : ""}`} />
-                          <span>{tt("more_details", "More Details")}</span>
-                        </button>
-                        {showBillMoreDetails && (
-                          <div className="space-y-1 rounded-lg bg-slate-50/70 p-2 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 text-[11px]">
-                            <div className="flex items-center justify-between">
-                              <span className="text-slate-500">{tt("bill_no_order_ref", "Bill No / Order Ref.")}</span>
-                              <span className="font-mono font-bold text-slate-800 dark:text-slate-200 truncate max-w-[150px]">
-                                {formData.global_serial || formData.order_no || "CL-ORD-202610-9424"}
-                              </span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-slate-500">{tt("entry_serial", "Entry Serial")}</span>
-                              <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                                {formData.entry_serial || "ENT-0001"}
-                              </span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-slate-500">{tt("branch_serial", "Branch Serial")}</span>
-                              <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                                {formData.branch_serial || "BR-ORD-0001"}
-                              </span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-slate-500">{tt("country_serial", "Country Serial")}</span>
-                              <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                                {formData.country_serial || "PAK-ORD-0001"}
-                              </span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-slate-500">{tt("super_admin_serial", "Super Admin Serial")}</span>
-                              <span className="font-mono font-bold text-blue-700 dark:text-blue-300 truncate max-w-[150px]">
-                                {formData.super_admin_serial || formData.global_serial || "CL-ORD-202610-9424"}
-                              </span>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Nested Subcard: Branch Details (Order Entry) */}
-                      <div className="rounded-lg border border-amber-200/80 bg-amber-50/40 p-2.5 dark:border-amber-900/60 dark:bg-amber-950/20 space-y-1.5 text-[11px]">
-                        <div className="flex items-center justify-between pb-1 border-b border-amber-200/60 dark:border-amber-900/40">
-                          <div className="flex items-center gap-1.5 font-bold text-amber-800 dark:text-amber-300">
-                            <PenTool className="h-3 w-3 text-amber-600 dark:text-amber-400" />
-                            <span>{tt("branch_details_order_entry", "Branch Details (Order Entry)")}</span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => { setStep1SubStep("1A"); setCurrentStep(1); }}
-                            className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 hover:text-blue-700 bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700"
-                            title={tt("edit", "Edit")}
-                          >
-                            <Pencil className="h-2.5 w-2.5" />
-                            <span>{tt("edit", "Edit")}</span>
-                          </button>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-500 flex items-center gap-1">🌍 {tt("country", "Country")}</span>
-                          <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
-                            <span>🇵🇰</span> <span>{formData.booking_country_name || userContext?.country_name || "Pakistan"}</span>
+                      {/* Serials Breakdown */}
+                      <div className="space-y-1.5 pt-1 border-t border-slate-100 dark:border-slate-800 text-[11.5px]">
+                        <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                          {tt("more_details", "More Details")}
+                        </p>
+                        <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
+                          <span>{tt("country_serial", "Country Serial")}</span>
+                          <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
+                            {formData.country_serial || "1"}
                           </span>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-500 flex items-center gap-1">📍 {tt("branch", "Branch")}</span>
-                          <span className="font-bold text-blue-700 dark:text-blue-300 truncate max-w-[170px]">
-                            {formData.booking_branch_name || userContext?.branch_name || "Karachi Branch (BR-001)"}
+                        <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
+                          <span>{tt("branch_serial", "Branch Serial")}</span>
+                          <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
+                            {formData.branch_serial || "1"}
                           </span>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-500 flex items-center gap-1">🏢 {tt("address", "Address")}</span>
-                          <span className="font-medium text-slate-700 dark:text-slate-300 truncate max-w-[170px]" title={formData.booking_branch_address || "Office No. 12, Damaan Plaza, Karachi"}>
-                            {formData.booking_branch_address || "Office No. 12, Damaan Plaza, Karachi"}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-500 flex items-center gap-1">👤 {tt("entered_by", "Entered By")}</span>
-                          <span className="font-bold text-slate-800 dark:text-slate-200">
-                            {formData.entered_by_name || (userContext as any)?.context?.user_name || (userContext as any)?.full_name || "Asmatullah (USR-001)"}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-500 flex items-center gap-1">📅 {tt("entry_date", "Entry Date")}</span>
-                          <span className="font-mono text-slate-700 dark:text-slate-300">
-                            {formData.order_date ? `${formData.order_date} ${formData.order_time || "12:34"}` : "2026-10-13 12:34"}
+                        <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
+                          <span>{tt("entry_serial", "Entry Serial")}</span>
+                          <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
+                            {formData.entry_serial || "1"}
                           </span>
                         </div>
                       </div>
@@ -5047,7 +5015,7 @@ export function CustomerOrderManagementView() {
                     <div className="space-y-2.5">
                       <div className="flex items-center justify-between pb-2 border-b border-slate-200/60 dark:border-slate-800">
                         <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 text-xs">
-                          <span className="flex h-5 w-5 items-center justify-center rounded-md bg-blue-600 text-white shadow-xs">
+                          <span className="flex h-5 w-5 items-center justify-center rounded-md bg-emerald-600 text-white shadow-xs">
                             <User className="h-3 w-3" />
                           </span>
                           <span>{tt("customer_receiver_details", "CUSTOMER / RECEIVER DETAILS")}</span>
@@ -5055,7 +5023,7 @@ export function CustomerOrderManagementView() {
                         <button
                           type="button"
                           onClick={() => { setStep1SubStep("1A"); setCurrentStep(1); }}
-                          className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 hover:text-blue-700 bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700"
+                          className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 hover:text-blue-700 bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 shadow-2xs transition"
                           title={tt("edit", "Edit")}
                         >
                           <Pencil className="h-2.5 w-2.5" />
@@ -5063,64 +5031,47 @@ export function CustomerOrderManagementView() {
                         </button>
                       </div>
 
-                      {/* Customer Name, Code & Company */}
-                      <div className="space-y-0.5">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-slate-900 dark:text-white text-sm">
-                            {selectedCustomerInfo?.customer_name || formData.customer_name || "Asmatullah Abdullah"}
-                          </span>
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300">
-                            {selectedCustomerInfo?.person_code || selectedAccountInfo?.code || "CUST-001"}
-                          </span>
-                        </div>
-                        <p className="font-semibold text-slate-800 dark:text-slate-200 text-xs">
-                          {selectedCustomerInfo?.company_name || "Al Rax Trading LLC"}
-                        </p>
-                        <p className="text-[11px] text-slate-500 truncate" title={selectedCustomerInfo?.address || "Office No. 201, Al Rax Building, Abu Dhabi, UAE"}>
-                          {selectedCustomerInfo?.address || "Office No. 201, Al Rax Building, Abu Dhabi, UAE"}
-                        </p>
-                      </div>
-
-                      {/* Contact Info with Colored Icons */}
-                      <div className="space-y-1.5 pt-1 text-[11px] text-slate-600 dark:text-slate-300">
-                        <div className="flex items-center gap-2">
-                          <Phone className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
-                          <span className="font-mono font-semibold">{selectedCustomerInfo?.mobile || "+971 54 481 6664"}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <MessageCircle className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                          <span className="font-mono font-semibold">{selectedCustomerInfo?.whatsapp || selectedCustomerInfo?.mobile || "+971 54 481 6664"}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Mail className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
-                          <span className="font-semibold truncate">{selectedCustomerInfo?.email || "asmat@damaan.com"}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <BadgeInfo className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
-                          <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{selectedCustomerInfo?.person_code || selectedAccountInfo?.code || "PER-00000036"}</span>
-                        </div>
-                      </div>
-
-                      {/* Location Rows */}
-                      <div className="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-800 text-[11px]">
+                      <div className="space-y-1.5 text-[11.5px]">
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-500 flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-blue-600" /> {tt("country", "Country")}</span>
-                          <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
-                            <span>🇦🇪</span> <span>{selectedCustomerInfo?.country_name || "UAE"}</span>
+                          <span className="text-slate-500">{tt("customer", "Customer")}</span>
+                          <span className="font-bold text-slate-900 dark:text-white truncate max-w-[170px]">
+                            {selectedCustomerInfo?.customer_name || formData.customer_name || "Sample Customer"}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-500 flex items-center gap-1.5"><Building2 className="h-3.5 w-3.5 text-blue-600" /> {tt("city", "City")}</span>
-                          <span className="font-bold text-slate-800 dark:text-slate-200">{selectedCustomerInfo?.city_name || "Dubai"}</span>
+                          <span className="text-slate-500">{tt("account_no", "Account No.")}</span>
+                          <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
+                            {selectedCustomerInfo?.person_code || selectedAccountInfo?.code || "CUS-001"}
+                          </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-500 flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-blue-600" /> {tt("branch", "Branch")}</span>
-                          <span className="font-bold text-blue-700 dark:text-blue-300 truncate max-w-[170px]">{(formData as any).receiving_branch_name || "Dubai Main Branch (BR-002)"}</span>
+                          <span className="text-slate-500">{tt("movement_type_label", "Movement Type")}</span>
+                          <span className="font-bold text-blue-600 dark:text-blue-400 capitalize">
+                            {formData.movement_type || "Import"}
+                          </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-500 flex items-center gap-1.5"><Warehouse className="h-3.5 w-3.5 text-blue-600" /> {tt("address", "Address")}</span>
-                          <span className="font-medium text-slate-700 dark:text-slate-300 truncate max-w-[170px]" title={selectedCustomerInfo?.address || "Office No. 201, Al Rax Building, Abu Dhabi"}>
-                            {selectedCustomerInfo?.address || "Office No. 201, Al Rax Building, Abu Dhabi"}
+                          <span className="text-slate-500">{tt("receiving_customer", "Receiving Customer")}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[170px]">
+                            {(formData as any).receiving_customer_name || "XYZ Imports LLC"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">{tt("receiving_country", "Receiving Country")}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200">
+                            {formData.receiving_country_name || "Pakistan"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">{tt("contact_person", "Contact Person")}</span>
+                          <span className="font-medium text-slate-700 dark:text-slate-300">
+                            {(formData as any).receiver_contact_person || "Ali Khan"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">{tt("phone_email", "Phone / Email")}</span>
+                          <span className="font-mono text-slate-700 dark:text-slate-300">
+                            {(formData as any).receiver_phone || "+92 300 1234567"}
                           </span>
                         </div>
                       </div>
@@ -5132,7 +5083,7 @@ export function CustomerOrderManagementView() {
                     <div className="space-y-2.5">
                       <div className="flex items-center justify-between pb-2 border-b border-slate-200/60 dark:border-slate-800">
                         <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 text-xs">
-                          <span className="flex h-5 w-5 items-center justify-center rounded-md bg-blue-600 text-white shadow-xs">
+                          <span className="flex h-5 w-5 items-center justify-center rounded-md bg-amber-500 text-white shadow-xs">
                             <Ship className="h-3 w-3" />
                           </span>
                           <span>{tt("ship_types_report", "SHIP TYPES REPORT")}</span>
@@ -5140,7 +5091,7 @@ export function CustomerOrderManagementView() {
                         <button
                           type="button"
                           onClick={() => { setStep1SubStep("1A"); setCurrentStep(1); }}
-                          className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 hover:text-blue-700 bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700"
+                          className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 hover:text-blue-700 bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 shadow-2xs transition"
                           title={tt("edit", "Edit")}
                         >
                           <Pencil className="h-2.5 w-2.5" />
@@ -5148,51 +5099,57 @@ export function CustomerOrderManagementView() {
                         </button>
                       </div>
 
-                      {/* Ship Details List */}
-                      <div className="space-y-2.5 pt-1 text-[11.5px]">
+                      <div className="space-y-1.5 text-[11.5px]">
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-500 font-medium">{tt("transport_mode_label", "Transport Mode")}</span>
-                          <span className="inline-flex items-center gap-1.5 rounded-lg bg-sky-50 text-sky-700 border border-sky-200 px-2.5 py-1 text-xs font-bold dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-800">
-                            <Ship className="h-3.5 w-3.5" />
-                            <span>{transportModeLabel(lang, formData.transport_mode || "by_sea")}</span>
+                          <span className="text-slate-500">{tt("operation_type_col", "Operation Type")}</span>
+                          <span className="font-bold text-blue-600 dark:text-blue-400 capitalize">
+                            {(formData as any).operation_type || "Import"}
                           </span>
                         </div>
-
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-500 font-medium">{tt("movement_type_label", "Movement Type")}</span>
-                          <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1 text-xs uppercase">
-                            <ArrowRightLeft className="h-3.5 w-3.5 text-blue-600" />
-                            <span>{movementTypeLabel(lang, formData.movement_type || "import")}</span>
-                            <span className="text-[10px] font-normal text-slate-500">
-                              ({movementFlowLabel(lang, formData.movement_type || "import")})
-                            </span>
+                          <span className="text-slate-500">{tt("movement_scenario_col", "Movement Scenario")}</span>
+                          <span className="font-semibold text-amber-600 dark:text-amber-400">
+                            {(formData as any).movement_scenario || "Import → Re-export"}
                           </span>
                         </div>
-
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-500 font-medium">{tt("route_via_colon", "Route Via")}</span>
-                          <span className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1 text-xs truncate max-w-[200px]" title={formData.route_name || "Chaman Border → Ch (Direct Sea)"}>
-                            <MapPin className="h-3.5 w-3.5 text-blue-600 shrink-0" />
-                            <span>{formData.route_name || "Chaman Border → Ch (Direct Sea)"}</span>
+                          <span className="text-slate-500">{tt("transport_mode_col", "Transport Mode")}</span>
+                          <span className="font-bold text-blue-600 dark:text-blue-400">
+                            {formData.transport_mode === "by_road" ? "By Road" : formData.transport_mode === "by_sea" ? "By Sea" : formData.transport_mode === "by_air" ? "By Air" : "By Road"}
                           </span>
                         </div>
-
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-500 font-medium">{tt("clearance_office_label", "Clearance Office")}</span>
-                          <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1 text-xs truncate max-w-[200px]">
-                            <Building2 className="h-3.5 w-3.5 text-blue-600 shrink-0" />
-                            <span>{formData.customs_clearance_office || "Chaman Customs Station"}</span>
+                          <span className="text-slate-500">{tt("service_type_col", "Service Type")}</span>
+                          <span className="font-medium text-slate-800 dark:text-slate-200">
+                            {(formData as any).service_type || "Standard"}
                           </span>
                         </div>
-
-                        <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
-                          <span className="text-slate-500 font-medium">{tt("shipment_fcl_lcl", "Shipment FCL/LCL")}</span>
-                          <span className="flex items-center gap-2 text-xs">
-                            <span className="font-black text-slate-900 dark:text-white flex items-center gap-1">
-                              <Boxes className="h-3.5 w-3.5 text-blue-600" />
-                              <span>{formData.shipment_type || "FCL"}</span>
-                            </span>
-                            <span className="text-slate-400 font-medium">{tt("bill_terms", "Commercial Freight")}</span>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">{tt("cargo_type_col", "Cargo Type")}</span>
+                          <span className="font-medium text-amber-600 dark:text-amber-400">
+                            {(formData as any).cargo_type || "General Cargo"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">{tt("incoterms_col", "Incoterms")}</span>
+                          <span className="font-mono font-bold text-blue-700 dark:text-blue-300">
+                            {(formData as any).incoterms || "CIF"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800">
+                          <span className="text-slate-500">{tt("total_packages_col", "Total Packages")}</span>
+                          <span className="font-bold text-blue-600 dark:text-blue-400">
+                            {(formData.goods_items && formData.goods_items.length > 0 && formData.goods_items[0].goodsName)
+                              ? (formData.goods_items.reduce((s, g) => s + (Number(g.quantity) || 0), 0) || 100)
+                              : 100}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">{tt("total_gross_weight_col", "Total Gross Weight")}</span>
+                          <span className="font-bold text-slate-900 dark:text-white">
+                            {(formData.goods_items && formData.goods_items.length > 0 && formData.goods_items[0].goodsName)
+                              ? `${(formData.goods_items.reduce((s, g) => s + (Number(g.grossWeight || g.totalKg) || 0), 0) || 1000).toLocaleString()} kg`
+                              : "1,000 kg"}
                           </span>
                         </div>
                       </div>
@@ -5205,231 +5162,263 @@ export function CustomerOrderManagementView() {
                   <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-200/60 dark:border-slate-800">
                     <div className="flex items-center gap-2">
                       <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-600 text-white shadow-xs">
-                        <ArrowRightLeft className="h-3.5 w-3.5" />
+                        <Route className="h-3.5 w-3.5" />
                       </span>
-                      <div>
-                        <span className="font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 text-xs">
-                          {tt("movement_route_journey_report", "MOVEMENT & ROUTE JOURNEY")}
-                        </span>
-                        <p className="text-[10.5px] text-slate-500">
-                          {tt("movement_journey_subtitle", "Sender, receiver and complete route movements")}
-                        </p>
-                      </div>
+                      <span className="font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 text-xs">
+                        {tt("movement_route_journey_report", "MOVEMENT & ROUTE JOURNEY")}
+                      </span>
                     </div>
                     <button
                       type="button"
                       onClick={() => setShowRouteMapModal(true)}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-blue-700 transition"
-                      title={tt("view_on_map", "View on Map")}
+                      className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-blue-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 shadow-2xs transition"
                     >
-                      <MapPin className="h-3.5 w-3.5" />
-                      <span>{tt("view_on_map", "View on Map")}</span>
+                      <span>{tt("view_more", "View More")}</span>
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 text-xs">
-                    {/* Left: Sender / Goods Dispatch Details */}
-                    <div className="lg:col-span-5 rounded-lg border border-emerald-100 bg-emerald-50/20 p-3 dark:border-emerald-950/60 dark:bg-emerald-950/10 space-y-2">
-                      <div className="flex items-center justify-between pb-1 border-b border-emerald-200/50 dark:border-emerald-900/40">
-                        <div className="flex items-center gap-1.5 font-bold text-emerald-800 dark:text-emerald-300 text-[11px] uppercase tracking-wide">
-                          <User className="h-3.5 w-3.5 text-emerald-600" />
-                          <span>{tt("sender_goods_dispatch_details", "SENDER / GOODS DISPATCH DETAILS")}</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => { setStep1SubStep("1A"); setCurrentStep(1); }}
-                          className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 hover:text-blue-700 bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700"
-                        >
-                          <Pencil className="h-2.5 w-2.5" />
-                          <span>{tt("edit", "Edit")}</span>
-                        </button>
+                  {/* 3 Horizontal Columns */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                    {/* Stage 1: Origin & Loading */}
+                    <div className="rounded-xl border border-sky-100 bg-sky-50/30 p-3 dark:border-sky-950/60 dark:bg-slate-850/50 space-y-2">
+                      <div className="flex items-center gap-2 font-bold text-sky-800 dark:text-sky-300 text-xs">
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white text-[10px] font-black">
+                          1
+                        </span>
+                        <span>{tt("origin_loading_stage", "Origin & Loading")}</span>
                       </div>
-
-                      <div className="grid grid-cols-2 gap-2 text-[11px]">
-                        <div className="space-y-1.5">
-                          <div>
-                            <span className="text-slate-400 block text-[10px]">{tt("name", "Name")}</span>
-                            <span className="font-bold text-slate-800 dark:text-slate-200">{(formData as any).sender_name || "Abdul Mateen Khan"}</span>
-                          </div>
-                          <div>
-                            <span className="text-slate-400 block text-[10px]">{tt("account_no", "Account No:")}</span>
-                            <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{(formData as any).sender_account_no || "SUP-001"}</span>
-                          </div>
-                          <div>
-                            <span className="text-slate-400 block text-[10px]">{tt("company", "Company")}</span>
-                            <span className="font-semibold text-slate-800 dark:text-slate-200">{(formData as any).sender_company || "Damaan Trading Co."}</span>
-                          </div>
-                          <div>
-                            <span className="text-slate-400 block text-[10px]">{tt("contact_person", "Contact Person")}</span>
-                            <span className="font-medium text-slate-700 dark:text-slate-300">{(formData as any).sender_contact_person || (formData as any).sender_name || "Abdul Mateen"}</span>
-                          </div>
-                          <div>
-                            <span className="text-slate-400 block text-[10px]">{tt("mobile_whatsapp", "Mobile / WhatsApp")}</span>
-                            <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">{(formData as any).sender_phone || "+92 300 1234567"}</span>
-                          </div>
+                      <div className="space-y-1.5 text-[11px] pt-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">{tt("country", "Country")}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200">
+                            {formData.loading_country_name || "Afghanistan"}
+                          </span>
                         </div>
-
-                        <div className="space-y-1.5">
-                          <div>
-                            <span className="text-slate-400 block text-[10px]">{tt("country", "Country")}</span>
-                            <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
-                              <span>🇵🇰</span> <span>{formData.loading_country_name || "Pakistan"}</span>
-                            </span>
-                          </div>
-                          <div>
-                            <span className="text-slate-400 block text-[10px]">{tt("city_branch", "City / Branch")}</span>
-                            <span className="font-semibold text-slate-800 dark:text-slate-200">{(formData as any).loading_city ? `${(formData as any).loading_city} (BR-001)` : "Chaman (BR-001)"}</span>
-                          </div>
-                          <div>
-                            <span className="text-slate-400 block text-[10px]">{tt("address", "Address")}</span>
-                            <span className="font-medium text-slate-700 dark:text-slate-300 truncate block" title={(formData as any).sender_address || "Hadyat Plaza, Sanatan Bazar, Chaman"}>
-                              {(formData as any).sender_address || "Hadyat Plaza, Sanatan Bazar, Chaman"}
-                            </span>
-                          </div>
-                          <div>
-                            <span className="text-slate-400 block text-[10px]">{tt("origin_warehouse", "Origin Warehouse")}</span>
-                            <span className="font-semibold text-slate-800 dark:text-slate-200">{formData.loading_source_name || "Chaman Warehouse"}</span>
-                          </div>
-                          <div>
-                            <span className="text-slate-400 block text-[10px]">{tt("dispatch_date", "Dispatch Date")}</span>
-                            <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{formData.planned_dispatch_date || "2026-10-11"}</span>
-                          </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">{tt("place_port", "Place / Port")}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[130px]">
+                            {formData.loading_place || formData.loading_source_name || "Kandahar Warehouse"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">{tt("loading_date", "Loading Date")}</span>
+                          <span className="font-mono text-slate-800 dark:text-slate-200">
+                            {formData.loading_date || formData.planned_dispatch_date || "14 Oct 2026"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">{tt("exit_border", "Exit Border")}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200">
+                            {formData.exit_border_port_name || "Spin Boldak"}
+                          </span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Right: 3-Stage Pipeline with Arrows */}
-                    <div className="lg:col-span-7 flex flex-col md:flex-row items-stretch justify-between gap-2 rounded-lg border border-slate-200/80 bg-slate-50/50 p-2.5 dark:border-slate-800 dark:bg-slate-850/50">
-                      {/* Stage 1: Origin & Dispatch */}
-                      <div className="flex-1 rounded-lg border border-blue-100 bg-white p-2.5 dark:border-blue-950/60 dark:bg-slate-900 space-y-1.5">
-                        <div className="flex items-center gap-1.5 font-bold text-blue-700 dark:text-blue-300 text-[10.5px]">
-                          <FileText className="h-3 w-3 text-blue-600" />
-                          <span>{tt("stage_origin_dispatch", "1. ORIGIN & DISPATCH")}</span>
-                        </div>
-                        <div className="space-y-1 text-[11px]">
-                          <div className="flex items-center justify-between">
-                            <span className="text-slate-400">{tt("country", "Country")}</span>
-                            <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
-                              <span>🇵🇰</span> <span>{formData.loading_country_name || "Pakistan"}</span>
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-slate-400">{tt("city", "City")}</span>
-                            <span className="font-bold text-slate-800 dark:text-slate-200">{(formData as any).loading_city || "Chaman"}</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-slate-400">{tt("branch", "Branch")}</span>
-                            <span className="font-semibold text-slate-700 dark:text-slate-300 truncate max-w-[95px]">{(formData as any).loading_branch_name || "Chaman (BR-001)"}</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-slate-400">{tt("warehouse", "Warehouse")}</span>
-                            <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[95px]">{formData.loading_source_name || "Chaman WH"}</span>
-                          </div>
-                          <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800 text-[10.5px]">
-                            <span className="text-slate-400">{tt("dispatch_date", "Dispatch Date")}</span>
-                            <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{formData.planned_dispatch_date || "2026-10-11"}</span>
-                          </div>
-                        </div>
+                    {/* Stage 2: Border & Transport */}
+                    <div className="rounded-xl border border-purple-100 bg-purple-50/30 p-3 dark:border-purple-950/60 dark:bg-slate-850/50 space-y-2">
+                      <div className="flex items-center gap-2 font-bold text-purple-800 dark:text-purple-300 text-xs">
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-purple-600 text-white text-[10px] font-black">
+                          2
+                        </span>
+                        <span>{tt("border_transport_stage", "Border & Transport")}</span>
                       </div>
-
-                      <div className="hidden md:flex items-center justify-center text-blue-500">
-                        <ArrowRight className="h-4 w-4" />
-                      </div>
-
-                      {/* Stage 2: Border & Customs */}
-                      <div className="flex-1 rounded-lg border border-amber-100 bg-white p-2.5 dark:border-amber-950/60 dark:bg-slate-900 space-y-1.5">
-                        <div className="flex items-center justify-between gap-1">
-                          <div className="flex items-center gap-1.5 font-bold text-amber-700 dark:text-amber-300 text-[10.5px]">
-                            <Boxes className="h-3 w-3 text-amber-600" />
-                            <span>{tt("stage_border_customs_short", "2. BORDER & CUSTOMS")}</span>
-                          </div>
-                          <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-                            {tt("in_process", "In Process")}
+                      <div className="space-y-1.5 text-[11px] pt-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">{tt("transport_mode", "Transport Mode")}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200">
+                            {formData.transport_mode === "by_road" ? "By Road" : "By Road"}
                           </span>
                         </div>
-                        <div className="space-y-1 text-[11px]">
-                          <div className="flex items-center justify-between">
-                            <span className="text-slate-400">{tt("border_point", "Border Point")}</span>
-                            <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[95px]">{formData.entry_border_port_name || formData.exit_border_port_name || "Chaman Border"}</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-slate-400">{tt("customs_office", "Customs Office")}</span>
-                            <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[95px]">{formData.customs_clearance_office || "Chaman Customs Sta."}</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-slate-400">{tt("customs_type", "Customs Type")}</span>
-                            <span className="font-semibold text-slate-800 dark:text-slate-200">Direct Route</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-slate-400">{tt("branch", "Branch")}</span>
-                            <span className="font-semibold text-slate-700 dark:text-slate-300 truncate max-w-[95px]">{(formData as any).border_branch_name || "Chaman (BR-001)"}</span>
-                          </div>
-                          <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800 text-[10.5px]">
-                            <span className="text-slate-400">{tt("planned_dispatch_badge", "Planned Dispatch")}</span>
-                            <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{formData.planned_dispatch_date || "2026-10-12"}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="hidden md:flex items-center justify-center text-blue-500">
-                        <ArrowRight className="h-4 w-4" />
-                      </div>
-
-                      {/* Stage 3: Final Destination */}
-                      <div className="flex-1 rounded-lg border border-purple-100 bg-white p-2.5 dark:border-purple-950/60 dark:bg-slate-900 space-y-1.5">
-                        <div className="flex items-center justify-between gap-1">
-                          <div className="flex items-center gap-1.5 font-bold text-purple-700 dark:text-purple-300 text-[10.5px]">
-                            <MapPin className="h-3 w-3 text-purple-600" />
-                            <span>{tt("stage_final_destination", "3. FINAL DESTINATION")}</span>
-                          </div>
-                          <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-bold bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300">
-                            {tt("pending", "Pending")}
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">{tt("vehicle_type", "Vehicle Type")}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200">
+                            {(formData as any).truck_type || "Container Truck"}
                           </span>
                         </div>
-                        <div className="space-y-1 text-[11px]">
-                          <div className="flex items-center justify-between">
-                            <span className="text-slate-400">{tt("country", "Country")}</span>
-                            <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
-                              <span>🇦🇪</span> <span>{formData.receiving_country_name || "UAE"}</span>
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-slate-400">{tt("city", "City")}</span>
-                            <span className="font-bold text-slate-800 dark:text-slate-200">{formData.destination_city || "Dubai"}</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-slate-400">{tt("branch", "Branch")}</span>
-                            <span className="font-semibold text-slate-700 dark:text-slate-300 truncate max-w-[95px]">{(formData as any).receiving_branch_name || "Dubai (BR-002)"}</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-slate-400">{tt("dest_port_city", "Port/City")}</span>
-                            <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[95px]">{formData.destination_port_name || "Port City"}</span>
-                          </div>
-                          <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800 text-[10.5px]">
-                            <span className="text-slate-400">{tt("planned_arrival_badge", "Planned Arrival")}</span>
-                            <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{formData.planned_arrival_date || "2026-10-20"}</span>
-                          </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">{tt("route", "Route")}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200">
+                            {formData.exit_border_port_name || "Spin Boldak"} → {formData.entry_border_port_name || "Chaman"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">{tt("estimated_transit", "Estimated Transit")}</span>
+                          <span className="font-medium text-slate-800 dark:text-slate-200">
+                            1–2 Days
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Stage 3: Destination & Receiving */}
+                    <div className="rounded-xl border border-emerald-100 bg-emerald-50/30 p-3 dark:border-emerald-950/60 dark:bg-slate-850/50 space-y-2">
+                      <div className="flex items-center gap-2 font-bold text-emerald-800 dark:text-emerald-300 text-xs">
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white text-[10px] font-black">
+                          3
+                        </span>
+                        <span>{tt("dest_receiving_stage", "Destination & Receiving")}</span>
+                      </div>
+                      <div className="space-y-1.5 text-[11px] pt-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">{tt("country", "Country")}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200">
+                            {formData.receiving_country_name || "Pakistan"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">{tt("entry_border", "Entry Border")}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200">
+                            {formData.entry_border_port_name || "Chaman"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">{tt("receiving_location", "Receiving Location")}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[130px]">
+                            {formData.receiving_place || "Chaman Warehouse"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">{tt("receiving_date", "Receiving Date")}</span>
+                          <span className="font-mono text-slate-800 dark:text-slate-200">
+                            {formData.receiving_date || "15 Oct 2026"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800">
+                          <span className="text-slate-500">{tt("final_destination", "Final Destination")}</span>
+                          <span className="font-bold text-slate-900 dark:text-white">
+                            {formData.final_destination_city || "Quetta"}
+                          </span>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* ROW 3: VEHICLE & FLEET REPORT */}
+                {/* ROW 3: CUSTOMS • LOADING & RECEIVING */}
+                <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-200/60 dark:border-slate-800">
+                    <div className="flex items-center gap-2">
+                      <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-600 text-white shadow-xs">
+                        <Building2 className="h-3.5 w-3.5" />
+                      </span>
+                      <span className="font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 text-xs">
+                        {tt("customs_loading_receiving_title", "CUSTOMS • LOADING & RECEIVING")}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-blue-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 shadow-2xs transition"
+                    >
+                      <span>{tt("view_more", "View More")}</span>
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                    {/* Left: Loading Customs (Origin) */}
+                    <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-2 dark:border-slate-800 dark:bg-slate-850">
+                      <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white text-xs">
+                          <Building2 className="h-4 w-4 text-emerald-600" />
+                          <span>{tt("loading_customs_origin", "Loading Customs (Origin)")}</span>
+                        </div>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                          ● {tt("required_yes", "Required: Yes")}
+                        </span>
+                      </div>
+
+                      <div className="space-y-1.5 text-[11px] pt-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">{tt("customs_name", "Customs Name")}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200">
+                            {formData.loading_customs_name || "Spin Boldak Customs"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">{tt("customs_port_border", "Customs Port / Border")}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200">
+                            {formData.loading_customs_port_border || "Spin Boldak"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">{tt("handled_by", "Handled By")}</span>
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10.5px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                            {formData.loading_customs_handled_by === "external_agent" ? "External Agent" : "Our Branch"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">{tt("branch", "Branch")}</span>
+                          <span className="font-medium text-amber-600 dark:text-amber-400">
+                            {formData.loading_customs_branch_name || "Pending selection"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">{tt("responsible_user", "Responsible User")}</span>
+                          <span className="font-medium text-amber-600 dark:text-amber-400">
+                            {formData.loading_customs_user_name || "Pending selection"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right: Receiving Customs (Destination) */}
+                    <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-2 dark:border-slate-800 dark:bg-slate-850">
+                      <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white text-xs">
+                          <Building2 className="h-4 w-4 text-purple-600" />
+                          <span>{tt("receiving_customs_dest", "Receiving Customs (Destination)")}</span>
+                        </div>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                          ● {tt("required_yes", "Required: Yes")}
+                        </span>
+                      </div>
+
+                      <div className="space-y-1.5 text-[11px] pt-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">{tt("customs_name", "Customs Name")}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200">
+                            {formData.receiving_customs_name || "Chaman Customs"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">{tt("customs_port_border", "Customs Port / Border")}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200">
+                            {formData.receiving_customs_port_border || "Chaman"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">{tt("handled_by", "Handled By")}</span>
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10.5px] font-bold bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300">
+                            {formData.receiving_customs_handled_by === "our_branch" ? "Our Branch" : "External Agent"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">{tt("agent_account", "Agent Account")}</span>
+                          <span className="font-medium text-amber-600 dark:text-amber-400">
+                            {formData.receiving_customs_agent_account_name || "Pending selection"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">{tt("bill_status", "Bill Status")}</span>
+                          <span className="font-medium text-slate-600 dark:text-slate-300">
+                            Draft after save
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ROW 4: VEHICLE & FLEET REPORT */}
                 <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-3">
                   <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-200/60 dark:border-slate-800">
                     <div className="flex items-center gap-2">
                       <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-600 text-white shadow-xs">
                         <Truck className="h-3.5 w-3.5" />
                       </span>
-                      <div>
-                        <span className="font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 text-xs">
-                          {tt("vehicle_fleet_report", "VEHICLE & FLEET REPORT")}
-                        </span>
-                        <p className="text-[10.5px] text-slate-500">
-                          {tt("selected_vehicle_details_desc", "Selected vehicle details (click 'View More' for full details)")}
-                        </p>
-                      </div>
+                      <span className="font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 text-xs">
+                        {tt("vehicle_fleet_report", "VEHICLE & FLEET REPORT")}
+                      </span>
                     </div>
                     <button
                       type="button"
@@ -5442,86 +5431,93 @@ export function CustomerOrderManagementView() {
                   </div>
 
                   <div className="flex flex-col lg:flex-row items-center gap-4">
-                    {/* Truck Image */}
-                    <div className="w-full lg:w-44 h-28 rounded-xl border border-slate-200/90 bg-white p-1 flex items-center justify-center shrink-0 dark:border-slate-800 dark:bg-slate-850 shadow-2xs">
+                    {/* Truck Image Thumbnail */}
+                    <div className="w-full lg:w-48 h-28 rounded-xl border border-slate-200/90 bg-white p-1 flex items-center justify-center shrink-0 dark:border-slate-800 dark:bg-slate-850 shadow-2xs overflow-hidden">
                       <img
                         src="/images/fleet-truck.jpg"
                         alt={tt("trailer_truck", "Trailer Truck")}
-                        className="w-full h-full object-contain"
+                        className="w-full h-full object-cover rounded-lg"
                       />
                     </div>
 
-                    {/* 3 Detail Columns */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 flex-1 text-xs w-full">
-                      {/* Column 1 */}
-                      <div className="space-y-1.5">
+                    {/* Columns */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 flex-1 text-xs w-full">
+                      {/* Left Column */}
+                      <div className="space-y-1.5 text-[11px]">
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-400">{tt("truck_number_label", "Truck Number")}</span>
-                          <span className="flex items-center gap-1.5">
-                            <span className="font-mono font-bold text-slate-900 dark:text-white">{formData.truck_number || "TKD-861"}</span>
-                            <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9.5px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                              {tt("status_active", "Active")}
+                          <span className="text-slate-500">{tt("truck_vehicle_no", "Truck / Vehicle No.")}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-bold text-slate-900 dark:text-white">
+                              {formData.truck_number || "XYZ-786"}
                             </span>
+                            <button
+                              type="button"
+                              onClick={() => { setStep1SubStep("1B"); setCurrentStep(2); }}
+                              className="text-blue-600 hover:text-blue-800 font-bold inline-flex items-center gap-0.5"
+                            >
+                              <Pencil className="h-2.5 w-2.5" />
+                              <span>{tt("edit", "Edit")}</span>
+                            </button>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">{tt("driver_name", "Driver Name")}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200">
+                            {formData.truck_driver_name || "Muhammad Farooq"}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-400">{tt("truck_type_label", "Truck Type")}</span>
-                          <span className="font-semibold text-slate-800 dark:text-slate-200">{(formData as any).truck_type || "Trailer Truck"}</span>
+                          <span className="text-slate-500">{tt("cnic_id", "CNIC / ID")}</span>
+                          <span className="font-mono text-slate-700 dark:text-slate-300">
+                            {(formData as any).truck_driver_cnic || "42201-1234567-1"}
+                          </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-400">{tt("company", "Company")}</span>
-                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[140px]">{formData.truck_transport_company || "Damaan Fleet (TKD-861)"}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-400">{tt("driver", "Driver")}</span>
-                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[140px]">{formData.truck_driver_name ? `${formData.truck_driver_name} (DRV-001)` : "Rashid Khan (DRV-001)"}</span>
-                        </div>
-                      </div>
-
-                      {/* Column 2 */}
-                      <div className="space-y-1.5">
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-400 flex items-center gap-1"><Scale className="h-3 w-3" /> {tt("capacity_tons", "Capacity (Tons)")}</span>
-                          <span className="font-bold text-slate-800 dark:text-slate-200">{(formData as any).truck_capacity ? `${(formData as any).truck_capacity} Tons` : "25 Tons"}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-400">{tt("model_year", "Model / Year")}</span>
-                          <span className="font-semibold text-slate-800 dark:text-slate-200">{(formData as any).truck_model ? `${(formData as any).truck_model} / ${(formData as any).truck_year || "2022"}` : "Hino 700 / 2022"}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-400">{tt("color", "Color")}</span>
-                          <span className="font-semibold text-slate-800 dark:text-slate-200">{(formData as any).truck_color || "White"}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-400">{tt("branch", "Branch")}</span>
-                          <span className="font-semibold text-blue-700 dark:text-blue-300 truncate max-w-[140px]">{(formData as any).truck_branch_name || "Karachi (BR-001)"}</span>
+                          <span className="text-slate-500">{tt("contact_no", "Contact No.")}</span>
+                          <span className="font-mono text-slate-800 dark:text-slate-200">
+                            {formData.truck_driver_mobile || "+92 345 6789012"}
+                          </span>
                         </div>
                       </div>
 
-                      {/* Column 3 */}
-                      <div className="space-y-1.5">
+                      {/* Right Column */}
+                      <div className="space-y-1.5 text-[11px]">
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-400">{tt("registration_no", "Registration No.")}</span>
-                          <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{(formData as any).truck_registration_no || "TKD-2022-861"}</span>
+                          <span className="text-slate-500">{tt("transport_company", "Transport Company")}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[140px]">
+                            {formData.truck_transport_company || "Pak Trans Logistics"}
+                          </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-400">{tt("registration_expiry", "Registration Expiry")}</span>
-                          <span className="font-mono text-slate-700 dark:text-slate-300">{(formData as any).truck_registration_expiry || "2026-10-30"}</span>
+                          <span className="text-slate-500">{tt("fleet_type", "Fleet Type")}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200">
+                            {(formData as any).fleet_type || "Container Truck"}
+                          </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-400">{tt("insurance_expiry", "Insurance Expiry")}</span>
-                          <span className="font-mono text-slate-700 dark:text-slate-300">{(formData as any).truck_insurance_expiry || "2026-10-30"}</span>
+                          <span className="text-slate-500">{tt("trailer_type", "Trailer Type")}</span>
+                          <span className="font-semibold text-slate-800 dark:text-slate-200">
+                            {(formData as any).trailer_type || "40 ft Container"}
+                          </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-400">{tt("status", "Status")}</span>
-                          <span className="font-bold text-emerald-700 dark:text-emerald-400">{tt("status_active", "Active")}</span>
+                          <span className="text-slate-500">{tt("driver_license", "Driver License")}</span>
+                          <span className="font-mono text-slate-800 dark:text-slate-200">
+                            {(formData as any).driver_license || "LTV-12345"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">{tt("gps_tracking", "GPS Tracking")}</span>
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                            ● {tt("status_active", "Active")}
+                          </span>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* ROW 4: GOODS & CARGO MANIFEST BREAKDOWN */}
+                {/* ROW 5: GOODS & CARGO MANIFEST BREAKDOWN */}
                 <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-3">
                   {(() => {
                     const namedItems = (formData.goods_items || []).filter((it) => String(it.goodsName || it.goods_name || "").trim());
@@ -5539,80 +5535,60 @@ export function CustomerOrderManagementView() {
                       return {
                         id: it.id || String(idx),
                         name: it.goodsName || it.goods_name || "Cargo Item",
-                        hsCode: it.goodsChsCode || "6907.21",
-                        unit: it.unit || "Boxes",
-                        quantity: q,
-                        kgPerUnit: kgPer || 5,
-                        gross: kg || 500,
-                        tare: tare || 20,
-                        net: net || 480,
-                        warehouseSource: it.warehouseName ? `${it.warehouseName} (BR-001)` : "Chaman WH (BR-001)",
-                        assignedTruck: (it as any).assignedTruckNumber || formData.truck_number || "TKD-861",
-                        currency: it.currency || "USD",
-                        unitPrice: unitPrice,
-                        lineTotal: lineTotal,
+                        hsCode: it.goodsChsCode || "5208.51",
+                        packageType: it.unit || "Cartons",
+                        packages: q,
+                        gross: kg || 600,
+                        net: net || 580,
+                        volume: 12.5,
+                        remarks: it.qualityReport || "Garments",
                         rawIndex: idx
                       };
                     }) : [
                       {
                         id: "mock-1",
-                        name: "Tiles - Ceramic",
-                        hsCode: "6907.21",
-                        unit: "Boxes",
-                        quantity: 100,
-                        kgPerUnit: 5.00,
-                        gross: 500.00,
-                        tare: 20.00,
-                        net: 480.00,
-                        warehouseSource: "Chaman WH (BR-001)",
-                        assignedTruck: formData.truck_number || "TKD-861",
-                        currency: "USD",
-                        unitPrice: 12.00,
-                        lineTotal: 1200.00,
+                        name: "Textile Fabrics",
+                        hsCode: "5208.51",
+                        packageType: "Cartons",
+                        packages: 60,
+                        gross: 600,
+                        net: 580,
+                        volume: 12.5,
+                        remarks: "Garments",
                         rawIndex: 0
                       },
                       {
                         id: "mock-2",
-                        name: "Sanitary Fittings",
-                        hsCode: "8481.80",
-                        unit: "Boxes",
-                        quantity: 50,
-                        kgPerUnit: 6.00,
-                        gross: 300.00,
-                        tare: 10.00,
-                        net: 290.00,
-                        warehouseSource: "Chaman WH (BR-001)",
-                        assignedTruck: formData.truck_number || "TKD-861",
-                        currency: "USD",
-                        unitPrice: 15.00,
-                        lineTotal: 750.00,
+                        name: "Plastic Household Items",
+                        hsCode: "3924.10",
+                        packageType: "Cartons",
+                        packages: 30,
+                        gross: 250,
+                        net: 240,
+                        volume: 8.0,
+                        remarks: "General Goods",
                         rawIndex: 1
                       },
                       {
                         id: "mock-3",
-                        name: "PVC Pipes",
-                        hsCode: "3917.21",
-                        unit: "Meters",
-                        quantity: 200,
-                        kgPerUnit: 2.00,
-                        gross: 400.00,
-                        tare: 20.00,
-                        net: 380.00,
-                        warehouseSource: "Chaman WH (BR-001)",
-                        assignedTruck: formData.truck_number || "TKD-861",
-                        currency: "USD",
-                        unitPrice: 5.00,
-                        lineTotal: 1000.00,
+                        name: "Steel Parts",
+                        hsCode: "7308.90",
+                        packageType: "Pallets",
+                        packages: 10,
+                        gross: 150,
+                        net: 140,
+                        volume: 5.0,
+                        remarks: "Machinery Parts",
                         rawIndex: 2
                       }
                     ];
 
                     const totalItemsCount = displayItems.length;
-                    const totalQuantity = displayItems.reduce((acc, it) => acc + it.quantity, 0);
+                    const totalPackages = displayItems.reduce((acc, it) => acc + it.packages, 0);
                     const totalGrossKg = displayItems.reduce((acc, it) => acc + it.gross, 0);
-                    const totalTareKg = displayItems.reduce((acc, it) => acc + it.tare, 0);
                     const totalNetKg = displayItems.reduce((acc, it) => acc + it.net, 0);
-                    const totalAmountUsd = displayItems.reduce((acc, it) => acc + it.lineTotal, 0);
+                    const totalVolume = displayItems.reduce((acc, it) => acc + it.volume, 0);
+                    const avgWtPerPkg = totalPackages > 0 ? (totalGrossKg / totalPackages).toFixed(1) : "10.0";
 
                     return (
                       <>
@@ -5621,135 +5597,58 @@ export function CustomerOrderManagementView() {
                             <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-xs">
                               <Boxes className="h-3.5 w-3.5" />
                             </span>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 text-xs">
-                                  {tt("goods_cargo_manifest_breakdown", "GOODS & CARGO MANIFEST BREAKDOWN")}
-                                </span>
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                                  {totalItemsCount} {tt("items_cap", "Items")}
-                                </span>
-                              </div>
-                              <p className="text-[10.5px] text-slate-500">
-                                {tt("goods_manifest_breakdown_subtitle", "Multi-item manifest with warehouse source and gross weights")}
-                              </p>
-                            </div>
+                            <span className="font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 text-xs">
+                              {tt("goods_manifest_title", `GOODS & CARGO MANIFEST BREAKDOWN (${totalItemsCount} ITEMS)`)}
+                            </span>
                           </div>
 
                           <button
                             type="button"
                             onClick={() => { setStep1SubStep("1C"); setCurrentStep(3); }}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300 transition shadow-2xs"
-                            title={tt("transfer_to_goods_1c", "Transfer to Goods (1C)")}
+                            className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-blue-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 shadow-2xs transition"
                           >
-                            <Pencil className="h-3 w-3" />
-                            <span>{tt("transfer_to_goods_1c", "Transfer to Goods (1C)")}</span>
+                            <span>{tt("view_more", "View More")}</span>
                           </button>
                         </div>
 
-                        {/* Full Table */}
+                        {/* Manifest Table */}
                         <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
                           <table className="w-full text-left text-xs border-collapse">
                             <thead className="border-b border-slate-200 bg-slate-50/90 font-bold uppercase tracking-wider text-slate-600 dark:border-slate-800 dark:bg-slate-800/80 text-[10px]">
                               <tr>
                                 <Th className="py-2.5 px-3">#</Th>
-                                <Th className="py-2.5 px-3">{tt("goods_item", "GOODS ITEM")}</Th>
-                                <Th className="py-2.5 px-3">{tt("hs_code_col", "HS CODE")}</Th>
-                                <Th className="py-2.5 px-3">{tt("unit_col", "UNIT")}</Th>
-                                <Th className="py-2.5 px-3 text-right">{tt("quantity_col", "QUANTITY")}</Th>
-                                <Th className="py-2.5 px-3 text-right">{tt("kg_unit_col", "KG/UNIT")}</Th>
-                                <Th className="py-2.5 px-3 text-right">{tt("gross_kg_col", "GROSS (KG)")}</Th>
-                                <Th className="py-2.5 px-3 text-right">{tt("tare_kg_col", "TARE (KG)")}</Th>
-                                <Th className="py-2.5 px-3 text-right">{tt("net_kg_col", "NET (KG)")}</Th>
-                                <Th className="py-2.5 px-3">{tt("warehouse_source_col", "WAREHOUSE SOURCE")}</Th>
-                                <Th className="py-2.5 px-3">{tt("assigned_truck_col", "ASSIGNED TRUCK")}</Th>
-                                <Th className="py-2.5 px-3">{tt("currency_col", "CURRENCY")}</Th>
-                                <Th className="py-2.5 px-3 text-right">{tt("unit_price_col", "UNIT PRICE")}</Th>
-                                <Th className="py-2.5 px-3 text-right">{tt("line_total_usd_col", "LINE TOTAL (USD)")}</Th>
-                                <Th className="py-2.5 px-3 text-center">{tt("actions_col", "ACTIONS")}</Th>
+                                <Th className="py-2.5 px-3">{tt("product_description", "Product Description")}</Th>
+                                <Th className="py-2.5 px-3">{tt("hs_code_col", "HS Code")}</Th>
+                                <Th className="py-2.5 px-3">{tt("package_type_col", "Package Type")}</Th>
+                                <Th className="py-2.5 px-3 text-right">{tt("packages_col", "Packages")}</Th>
+                                <Th className="py-2.5 px-3 text-right">{tt("gross_wt_kg_col", "Gross Weight (kg)")}</Th>
+                                <Th className="py-2.5 px-3 text-right">{tt("net_wt_kg_col", "Net Weight (kg)")}</Th>
+                                <Th className="py-2.5 px-3 text-right">{tt("volume_m3_col", "Volume (m³)")}</Th>
+                                <Th className="py-2.5 px-3">{tt("remarks_col", "Remarks")}</Th>
+                                <Th className="py-2.5 px-3 text-center">{tt("actions_col", "Actions")}</Th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11px]">
                               {displayItems.map((item, idx) => (
                                 <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                                  <td className="py-2.5 px-3 font-bold text-slate-400">{idx + 1}</td>
-                                  <td className="py-2.5 px-3 font-bold text-slate-800 dark:text-slate-200">
-                                    {item.name}
-                                  </td>
-                                  <td className="py-2.5 px-3 font-mono text-slate-600 dark:text-slate-400">
-                                    {item.hsCode}
-                                  </td>
-                                  <td className="py-2.5 px-3 font-medium text-slate-700 dark:text-slate-300">
-                                    {item.unit}
-                                  </td>
-                                  <td className="py-2.5 px-3 text-right font-bold text-slate-900 dark:text-white">
-                                    {item.quantity.toLocaleString()}
-                                  </td>
-                                  <td className="py-2.5 px-3 text-right font-mono text-slate-600 dark:text-slate-400">
-                                    {item.kgPerUnit.toFixed(2)}
-                                  </td>
-                                  <td className="py-2.5 px-3 text-right font-mono font-bold text-blue-700 dark:text-blue-400">
-                                    {item.gross.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                  </td>
-                                  <td className="py-2.5 px-3 text-right font-mono text-slate-500">
-                                    {item.tare.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                  </td>
-                                  <td className="py-2.5 px-3 text-right font-mono font-bold text-emerald-700 dark:text-emerald-400">
-                                    {item.net.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                  </td>
-                                  <td className="py-2.5 px-3 font-medium text-slate-700 dark:text-slate-300">
-                                    {item.warehouseSource}
-                                  </td>
-                                  <td className="py-2.5 px-3 font-mono font-bold text-slate-800 dark:text-slate-200">
-                                    {item.assignedTruck}
-                                  </td>
-                                  <td className="py-2.5 px-3 font-semibold text-slate-700 dark:text-slate-300">
-                                    {item.currency}
-                                  </td>
-                                  <td className="py-2.5 px-3 text-right font-mono text-slate-700 dark:text-slate-300">
-                                    {item.unitPrice.toFixed(2)}
-                                  </td>
-                                  <td className="py-2.5 px-3 text-right font-mono font-black text-slate-900 dark:text-white">
-                                    {item.lineTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                  </td>
-                                  <td className="py-2.5 px-3 text-center">
-                                    <div className="inline-flex items-center justify-center gap-1">
-                                      <button
-                                        type="button"
-                                        onClick={() => handleEditGoodsRow(item.rawIndex)}
-                                        className="p-1 text-blue-600 hover:text-blue-800 rounded hover:bg-blue-50 dark:hover:bg-blue-950/40"
-                                        title={tt("edit_item", "Edit Item in Step 1C")}
-                                      >
-                                        <Pencil className="h-3 w-3" />
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          if (!hasCustomItems) return;
-                                          setFormData((current) => {
-                                            const filtered = (current.goods_items || []).filter((_, i) => i !== item.rawIndex);
-                                            const items = filtered.length > 0 ? filtered : [defaultGoodsItem()];
-                                            const first = items[0];
-                                            const totalQty = items.reduce((sum, g) => sum + (Number(g.quantity) || 0), 0);
-                                            const totalKg = items.reduce((sum, g) => sum + (Number(g.totalKg) || 0), 0);
-                                            return {
-                                              ...current,
-                                              goods_items: items,
-                                              goods_id: first?.goodsId || "",
-                                              goods_name: items.map((g) => g.goodsName).filter(Boolean).join(", "),
-                                              goods_unit: first?.unit || "Bags",
-                                              goods_quantity: String(totalQty),
-                                              goods_gross_weight: String(totalKg),
-                                              goods_net_weight: String(totalKg)
-                                            };
-                                          });
-                                        }}
-                                        className="p-1 text-rose-600 hover:text-rose-800 rounded hover:bg-rose-50 dark:hover:bg-rose-950/40"
-                                        title={tt("remove_item", "Remove Item")}
-                                      >
-                                        <Trash2 className="h-3 w-3" />
-                                      </button>
-                                    </div>
+                                  <td className="py-2 px-3 font-medium text-slate-400">{idx + 1}</td>
+                                  <td className="py-2 px-3 font-semibold text-slate-800 dark:text-slate-200">{item.name}</td>
+                                  <td className="py-2 px-3 font-mono text-slate-600 dark:text-slate-400">{item.hsCode}</td>
+                                  <td className="py-2 px-3 text-slate-700 dark:text-slate-300">{item.packageType}</td>
+                                  <td className="py-2 px-3 text-right font-bold text-slate-900 dark:text-white">{item.packages}</td>
+                                  <td className="py-2 px-3 text-right font-mono text-slate-800 dark:text-slate-200">{item.gross}</td>
+                                  <td className="py-2 px-3 text-right font-mono text-slate-800 dark:text-slate-200">{item.net}</td>
+                                  <td className="py-2 px-3 text-right font-mono text-slate-800 dark:text-slate-200">{item.volume.toFixed(1)}</td>
+                                  <td className="py-2 px-3 text-slate-600 dark:text-slate-400">{item.remarks}</td>
+                                  <td className="py-2 px-3 text-center">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleEditGoodsRow(item.rawIndex)}
+                                      className="inline-flex items-center gap-1 text-[10.5px] font-bold text-blue-600 hover:text-blue-800"
+                                    >
+                                      <Pencil className="h-3 w-3" />
+                                      <span>{tt("edit", "Edit")}</span>
+                                    </button>
                                   </td>
                                 </tr>
                               ))}
@@ -5757,80 +5656,66 @@ export function CustomerOrderManagementView() {
                           </table>
                         </div>
 
-                        {/* 6 Summary Metric Cards Below Table */}
+                        {/* 6 Bottom Metric Stat Badges */}
                         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 pt-2">
-                          {/* Card 1: Total Items */}
-                          <div className="rounded-xl border border-slate-200/90 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-850/80 flex items-center gap-2.5">
-                            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 shrink-0">
-                              <Layers className="h-4 w-4" />
+                          {/* Badge 1: Total Packages */}
+                          <div className="rounded-xl border border-sky-200 bg-sky-50/50 p-2.5 dark:border-sky-900/60 dark:bg-slate-850/70 text-center">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-sky-700 dark:text-sky-300 block">
+                              {tt("total_packages_badge", "Total Packages")}
                             </span>
-                            <div>
-                              <p className="text-[10px] text-slate-500 font-medium">{tt("total_items_label", "Total Items")}</p>
-                              <p className="font-mono font-black text-slate-900 dark:text-white text-sm">{totalItemsCount}</p>
-                            </div>
+                            <span className="font-mono font-black text-blue-600 dark:text-blue-400 text-base">
+                              {totalPackages}
+                            </span>
                           </div>
 
-                          {/* Card 2: Total Quantity */}
-                          <div className="rounded-xl border border-slate-200/90 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-850/80 flex items-center gap-2.5">
-                            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 shrink-0">
-                              <Boxes className="h-4 w-4" />
+                          {/* Badge 2: Gross Weight */}
+                          <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-2.5 dark:border-emerald-900/60 dark:bg-slate-850/70 text-center">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300 block">
+                              {tt("gross_weight_badge", "Gross Weight")}
                             </span>
-                            <div>
-                              <p className="text-[10px] text-slate-500 font-medium">{tt("total_quantity_label", "Total Quantity")}</p>
-                              <p className="font-mono font-black text-slate-900 dark:text-white text-sm">{totalQuantity.toLocaleString()}</p>
-                            </div>
+                            <span className="font-mono font-black text-emerald-700 dark:text-emerald-400 text-base">
+                              {totalGrossKg.toLocaleString()} kg
+                            </span>
                           </div>
 
-                          {/* Card 3: Total Gross Weight */}
-                          <div className="rounded-xl border border-slate-200/90 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-850/80 flex items-center gap-2.5">
-                            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 shrink-0">
-                              <Scale className="h-4 w-4" />
+                          {/* Badge 3: Net Weight */}
+                          <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-2.5 dark:border-amber-900/60 dark:bg-slate-850/70 text-center">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300 block">
+                              {tt("net_weight_badge", "Net Weight")}
                             </span>
-                            <div>
-                              <p className="text-[10px] text-slate-500 font-medium">{tt("total_gross_weight_label", "Total Gross Weight")}</p>
-                              <p className="font-mono font-black text-blue-700 dark:text-blue-300 text-xs">
-                                {totalGrossKg.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KG
-                              </p>
-                            </div>
+                            <span className="font-mono font-black text-amber-700 dark:text-amber-400 text-base">
+                              {totalNetKg.toLocaleString()} kg
+                            </span>
                           </div>
 
-                          {/* Card 4: Total Tare Weight */}
-                          <div className="rounded-xl border border-slate-200/90 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-850/80 flex items-center gap-2.5">
-                            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 shrink-0">
-                              <AlertTriangle className="h-4 w-4" />
+                          {/* Badge 4: Total Volume */}
+                          <div className="rounded-xl border border-purple-200 bg-purple-50/50 p-2.5 dark:border-purple-900/60 dark:bg-slate-850/70 text-center">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-purple-700 dark:text-purple-300 block">
+                              {tt("total_volume_badge", "Total Volume")}
                             </span>
-                            <div>
-                              <p className="text-[10px] text-slate-500 font-medium">{tt("total_tare_weight_label", "Total Tare Weight")}</p>
-                              <p className="font-mono font-black text-slate-800 dark:text-slate-200 text-xs">
-                                {totalTareKg.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KG
-                              </p>
-                            </div>
+                            <span className="font-mono font-black text-purple-700 dark:text-purple-400 text-base">
+                              {totalVolume.toFixed(1)} m³
+                            </span>
                           </div>
 
-                          {/* Card 5: Total Net Weight */}
-                          <div className="rounded-xl border border-slate-200/90 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-850/80 flex items-center gap-2.5">
-                            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 shrink-0">
-                              <ShieldCheck className="h-4 w-4" />
+                          {/* Badge 5: Total Items */}
+                          <div className="rounded-xl border border-rose-200 bg-rose-50/50 p-2.5 dark:border-rose-900/60 dark:bg-slate-850/70 text-center">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-rose-700 dark:text-rose-300 block">
+                              {tt("total_items_badge", "Total Items")}
                             </span>
-                            <div>
-                              <p className="text-[10px] text-slate-500 font-medium">{tt("total_net_weight_label", "Total Net Weight")}</p>
-                              <p className="font-mono font-black text-emerald-700 dark:text-emerald-400 text-xs">
-                                {totalNetKg.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KG
-                              </p>
-                            </div>
+                            <span className="font-mono font-black text-rose-700 dark:text-rose-400 text-base">
+                              {totalItemsCount}
+                            </span>
                           </div>
 
-                          {/* Card 6: Total Amount (USD) */}
-                          <div className="rounded-xl border border-slate-200/90 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-850/80 flex items-center gap-2.5">
-                            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 shrink-0">
-                              <Wallet className="h-4 w-4" />
+                          {/* Badge 6: Average Wt / Pkg */}
+                          <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-2.5 dark:border-blue-900/60 dark:bg-slate-850/70 text-center">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300 block">
+                              {tt("avg_wt_pkg_badge", "Average Wt / Pkg")}
                             </span>
-                            <div>
-                              <p className="text-[10px] text-slate-500 font-medium">{tt("total_amount_usd_label", "Total Amount (USD)")}</p>
-                              <p className="font-mono font-black text-blue-700 dark:text-blue-400 text-xs">
-                                $ {totalAmountUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                              </p>
-                            </div>
+                            <span className="font-mono font-black text-blue-600 dark:text-blue-400 text-base">
+                              {avgWtPerPkg} kg
+                            </span>
                           </div>
                         </div>
                       </>
@@ -6122,6 +6007,9 @@ function Step1BookingCustomer({
   const [fleetPickerOpen, setFleetPickerOpen] = useState(false);
   const [externalTruckOpen, setExternalTruckOpen] = useState(false);
   const [warehouseModalOpen, setWarehouseModalOpen] = useState(false);
+  const [viewCustomerModalOpen, setViewCustomerModalOpen] = useState(false);
+  const [showAdvancedCorridor, setShowAdvancedCorridor] = useState(false);
+  const [selectedAssigneeId, setSelectedAssigneeId] = useState("");
   const [internalDraftGoodsItem, setInternalDraftGoodsItem] = useState<CustomerOrderGoodsItem>(defaultGoodsItem());
   const [internalEditingGoodsIdx, setInternalEditingGoodsIdx] = useState<number | null>(null);
 
@@ -6355,55 +6243,70 @@ function Step1BookingCustomer({
 
   return (
     <div className="space-y-4 animate-in fade-in duration-150">
-      {/* Dynamic 1A / 1B / 1C Sub-step Navigator */}
-      <div className="grid grid-cols-3 gap-1 p-1 rounded-2xl bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 shadow-xs">
+      {/* 3 Step Top Progress Navigator matching Mockup */}
+      <div className="flex items-center justify-between px-3 sm:px-6 py-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xs">
+        {/* Step 1: Customer & Route */}
         <button
           type="button"
           onClick={() => selectSub("1A")}
-          title={tt("tab_1a", "1A — Customer & Route")}
-          className={`flex items-center justify-center gap-1.5 py-2 px-1.5 sm:px-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all ${
-            step1SubStep === "1A"
-              ? "bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 shadow-sm border border-blue-200/80 dark:border-blue-900/80"
-              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/40"
-          }`}
+          className="flex flex-col sm:flex-row items-center gap-1.5 sm:gap-2 group cursor-pointer text-left"
         >
-          <Users className={`h-3.5 w-3.5 shrink-0 ${step1SubStep === "1A" ? "text-blue-600 dark:text-blue-400" : "text-slate-400"}`} />
-          <span className="truncate">{tt("tab_1a", "1A — Customer & Route")}</span>
-          {formData.customer_id ? <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" /> : null}
+          <span className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-black transition-all ${
+            step1SubStep === "1A"
+              ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/30 ring-2 ring-emerald-500/20"
+              : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 group-hover:bg-slate-200"
+          }`}>
+            1
+          </span>
+          <span className={`text-[11px] sm:text-xs font-bold transition-colors ${
+            step1SubStep === "1A" ? "text-emerald-700 dark:text-emerald-400" : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+          }`}>
+            {tt("step_customer_route", "Customer & Route")}
+          </span>
         </button>
 
+        <div className="h-0.5 flex-1 mx-2 sm:mx-4 bg-slate-200 dark:bg-slate-800" />
+
+        {/* Step 2: Truck & Loading */}
         <button
           type="button"
           onClick={() => selectSub("1B")}
-          title={tt("tab_1b", "1B — Truck & Transport")}
-          className={`flex items-center justify-center gap-1.5 py-2 px-1.5 sm:px-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all ${
-            step1SubStep === "1B"
-              ? "bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 shadow-sm border border-blue-200/80 dark:border-blue-900/80"
-              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/40"
-          }`}
+          className="flex flex-col sm:flex-row items-center gap-1.5 sm:gap-2 group cursor-pointer text-left"
         >
-          <Truck className={`h-3.5 w-3.5 shrink-0 ${step1SubStep === "1B" ? "text-blue-600 dark:text-blue-400" : "text-slate-400"}`} />
-          <span className="truncate">{tt("tab_1b", "1B — Truck & Transport")}</span>
-          {formData.truck_number || formData.truck_assignment_mode === "later" ? (
-            <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" />
-          ) : null}
+          <span className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-black transition-all ${
+            step1SubStep === "1B"
+              ? "bg-blue-600 text-white shadow-md shadow-blue-500/30 ring-2 ring-blue-500/20"
+              : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 group-hover:bg-slate-200"
+          }`}>
+            2
+          </span>
+          <span className={`text-[11px] sm:text-xs font-bold transition-colors ${
+            step1SubStep === "1B" ? "text-blue-700 dark:text-blue-400" : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+          }`}>
+            {tt("step_truck_loading", "Truck & Loading")}
+          </span>
         </button>
 
+        <div className="h-0.5 flex-1 mx-2 sm:mx-4 bg-slate-200 dark:bg-slate-800" />
+
+        {/* Step 3: Goods & Package */}
         <button
           type="button"
           onClick={() => selectSub("1C")}
-          title={tt("tab_1c", "1C — Goods Entry")}
-          className={`flex items-center justify-center gap-1.5 py-2 px-1.5 sm:px-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all ${
-            step1SubStep === "1C"
-              ? "bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 shadow-sm border border-blue-200/80 dark:border-blue-900/80"
-              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/40"
-          }`}
+          className="flex flex-col sm:flex-row items-center gap-1.5 sm:gap-2 group cursor-pointer text-left"
         >
-          <Boxes className={`h-3.5 w-3.5 shrink-0 ${step1SubStep === "1C" ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400"}`} />
-          <span className="truncate">{tt("tab_1c", "1C — Goods Entry")}</span>
-          {(formData.goods_items || []).filter((g) => String(g.goodsName || "").trim()).length > 0 ? (
-            <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" />
-          ) : null}
+          <span className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-black transition-all ${
+            step1SubStep === "1C"
+              ? "bg-blue-600 text-white shadow-md shadow-blue-500/30 ring-2 ring-blue-500/20"
+              : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 group-hover:bg-slate-200"
+          }`}>
+            3
+          </span>
+          <span className={`text-[11px] sm:text-xs font-bold transition-colors ${
+            step1SubStep === "1C" ? "text-blue-700 dark:text-blue-400" : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+          }`}>
+            {tt("step_goods_package", "Goods & Package")}
+          </span>
         </button>
       </div>
 
@@ -6411,368 +6314,908 @@ function Step1BookingCustomer({
       {/* 1A — CUSTOMER ACCOUNT, MOVEMENT TYPE & SEQUENCED MULTI-LEG ROUTE          */}
       {/* ========================================================================= */}
       {step1SubStep === "1A" && (
-        <div className="space-y-3.5 animate-in fade-in duration-150">
-          {/* Multimodal Sea-Road Notice when By Sea is selected */}
-          {formData.transport_mode === "by_sea" && (
-            <div className="rounded-xl border border-blue-200/90 bg-blue-50/70 p-2.5 text-xs text-blue-900 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-200 shadow-2xs">
-              <div className="flex items-center gap-1.5 font-bold">
-                <Truck className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
-                <span>{tt("sea_drayage_feeder_title", "Multimodal Sea-Road Drayage (Port Transfer Truck)")}</span>
+        <div className="space-y-4 animate-in fade-in duration-150">
+          {/* TOP ROW: Customer Selection with View Button & Operation Type */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            {/* Customer Selector */}
+            <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-1.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+              <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                <Users className="h-3.5 w-3.5 text-blue-600" />
+                <span>{tt("select_customer_label", "Select Customer")} *</span>
+              </label>
+
+              <div className="flex items-center gap-2">
+                <div className="flex-1">
+                  <SearchSelect
+                    label=""
+                    value={formData.customer_id}
+                    options={customerOptions}
+                    placeholder={tt("select_customer_account_ph", "Select Customer (e.g. Sample Customer)...")}
+                    onValueChange={handleCustomerSelection}
+                    disabled={loading}
+                    searchPlaceholder="Search customer by name, code or mobile..."
+                    emptyLabel="No matching customers found"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setViewCustomerModalOpen(true)}
+                  disabled={!formData.customer_id}
+                  className="inline-flex items-center gap-1 h-9 px-3 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 disabled:opacity-40 disabled:pointer-events-none dark:border-blue-900 dark:bg-blue-950/50 dark:text-blue-300 text-xs font-bold transition shadow-2xs shrink-0"
+                  title={tt("view_customer_details", "View Customer Details")}
+                >
+                  <Eye className="h-3.5 w-3.5" />
+                  <span>{tt("view_btn", "View")}</span>
+                </button>
               </div>
-              <p className="mt-1 text-[11px] text-blue-800/80 dark:text-blue-300/80 leading-relaxed">
-                {tt("sea_drayage_feeder_desc", "For Ocean Freight (By Sea), road haulage is required for initial port drayage / loading pickup and final delivery from port to destination warehouse.")}
+
+              {selectedCustomer || selectedAccount ? (
+                <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">
+                    {selectedCustomer?.customer_name || selectedAccount?.name}
+                  </span>
+                  <span>•</span>
+                  <span className="font-mono">{selectedAccount?.code || selectedCustomer?.person_code || "CUS-001"}</span>
+                  <span>•</span>
+                  <span className="font-bold text-emerald-600">
+                    {selectedAccount?.currency || "USD"} {Number(selectedAccount?.current_balance || 0).toLocaleString()}
+                  </span>
+                </div>
+              ) : null}
+            </div>
+
+            {/* Operation Type */}
+            <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-1.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+              <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                <Boxes className="h-3.5 w-3.5 text-blue-600" />
+                <span>{tt("operation_type_star", "Operation Type")} *</span>
+              </label>
+              <select
+                value={(formData as any).operation_type || (formData.movement_type === "transit" || formData.movement_type === "up_transit" ? "transit" : formData.movement_type === "re_export" ? "re_export" : "import")}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setFormData((c) => ({
+                    ...c,
+                    operation_type: val,
+                    movement_type: val === "transit" ? "up_transit" : val === "re_export" ? "re_export" : (val as any)
+                  }));
+                }}
+                className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20"
+              >
+                <option value="import">{tt("opt_import", "Import")}</option>
+                <option value="export">{tt("opt_export", "Export")}</option>
+                <option value="transit">{tt("opt_transit", "Transit")}</option>
+                <option value="in_transit">{tt("opt_in_transit", "In-Transit")}</option>
+                <option value="re_export">{tt("opt_re_export", "Re-Export")}</option>
+                <option value="domestic">{tt("opt_domestic", "Domestic")}</option>
+              </select>
+              <p className="text-[10.5px] text-slate-400">
+                {tt("op_type_sub", "Primary customs regime and declaration flow")}
               </p>
             </div>
-          )}
-
-          {/* Customer Account SearchSelect */}
-          <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                  <Users className="h-4 w-4 text-blue-600" />
-                  <span>{tt("customer_account_label", "Customer Account")} *</span>
-                </label>
-                {formData.customer_name ? (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
-                    ✓ {formData.customer_name}
-                  </span>
-                ) : null}
-              </div>
-
-              <SearchSelect
-                label=""
-                value={formData.customer_id}
-                options={customerOptions}
-                placeholder={tt("select_customer_account_ph", "Select Customer Account...")}
-                onValueChange={handleCustomerSelection}
-                disabled={loading}
-                searchPlaceholder="Search customer by name, code or mobile..."
-                emptyLabel="No matching customers found"
-              />
-            </div>
-
-            {/* Tag summary underneath input */}
-            {selectedCustomer || selectedAccount ? (
-              <div className="flex flex-wrap items-center gap-2 pt-2 text-xs text-slate-600 dark:text-slate-300 border-t border-slate-100 dark:border-slate-800/60 mt-1">
-                <span className="font-bold text-slate-900 dark:text-white">
-                  {selectedCustomer?.customer_name || selectedAccount?.name}
-                </span>
-                <span className="text-slate-300 dark:text-slate-600">•</span>
-                <span className="font-mono text-slate-500">
-                  {tt("code_label", "Code:")} {selectedAccount?.code || selectedCustomer?.person_code || "—"}
-                </span>
-                <span className="text-slate-300 dark:text-slate-600">•</span>
-                <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                  {tt("bal_short", "Bal:")} {selectedAccount?.currency || "USD"} {Number(selectedAccount?.current_balance || 0).toLocaleString()}
-                </span>
-                <span className="text-slate-300 dark:text-slate-600">•</span>
-                <span className="text-slate-500">
-                  {selectedCustomer?.city_name ? `${selectedCustomer.city_name}, ` : ""}{selectedCustomer?.country_name || ""}
-                </span>
-              </div>
-            ) : null}
           </div>
 
-          {/* ROW 2: Movement Type, Shipment Mode & Operation Type (Clean Dropdown Selectors matching Customer Account style) */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {/* 1. Movement Type Dropdown Card */}
-            <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
-              <div>
-                <div className="flex items-center justify-between gap-1 mb-1.5">
-                  <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                    <Repeat2 className="h-4 w-4 text-purple-600 shrink-0" />
-                    <span>{tt("movement_type", "Movement Type")} *</span>
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setMovementModalOpen(true)}
-                    className="h-6 w-6 rounded-lg border border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100 dark:border-purple-800 dark:bg-purple-950/50 dark:text-purple-300 transition shrink-0 flex items-center justify-center shadow-2xs"
-                    title={tt("open_movement_modal", "Configure Movement Details (Parda)")}
-                  >
-                    <Pencil className="h-3 w-3" />
-                  </button>
-                </div>
-
-                <div className="relative">
-                  <select
-                    value={formData.movement_type || "import"}
-                    onChange={(e) => {
-                      const val = e.target.value as any;
-                      setFormData((c) => ({ ...c, movement_type: val }));
-                      setMovementModalOpen(true);
-                    }}
-                    className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-2 focus:ring-purple-500/20"
-                  >
-                    <option value="import">{tt("opt_import", "Import")}</option>
-                    <option value="export">{tt("opt_export", "Export")}</option>
-                    <option value="transit">{tt("opt_transit", "Transit")}</option>
-                    <option value="up_transit">{tt("opt_up_transit", "Up-Transit")}</option>
-                    <option value="re_export">{tt("opt_re_export", "Re-Export")}</option>
-                    <option value="domestic">{tt("opt_domestic", "Domestic")}</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Tag summary underneath dropdown */}
-              <div className="flex items-center justify-between gap-1 pt-1.5 text-xs text-slate-600 dark:text-slate-300 border-t border-slate-100 dark:border-slate-800/60">
-                <span className="text-[10px] font-mono font-bold uppercase px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200/70 dark:border-purple-800">
-                  {formData.movement_type || "import"}
-                </span>
-                <span className="text-[10.5px] text-slate-500 font-medium truncate">
-                  {movementFlowLabel(lang, formData.movement_type)}
-                </span>
-              </div>
+          {/* ROW 2: Transport Mode & Movement Scenario */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            {/* Transport Mode */}
+            <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-1.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+              <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                <Truck className="h-3.5 w-3.5 text-blue-600" />
+                <span>{tt("transport_mode_star", "Transport Mode")} *</span>
+              </label>
+              <select
+                value={formData.transport_mode || "by_road"}
+                onChange={(e) => {
+                  const m = e.target.value as any;
+                  setFormData((c) => ({ ...c, transport_mode: m }));
+                }}
+                className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20"
+              >
+                <option value="by_road">{tt("opt_road_full", "By Road")}</option>
+                <option value="by_sea">{tt("opt_sea_full", "By Sea")}</option>
+                <option value="by_air">{tt("opt_air_full", "By Air")}</option>
+                <option value="by_rail">{tt("opt_rail_full", "By Rail")}</option>
+              </select>
+              <p className="text-[10.5px] text-slate-400">
+                {formData.transport_mode === "by_road" ? "Overland trucking & border crossings" : "Multimodal logistics corridor"}
+              </p>
             </div>
 
-            {/* 2. Shipment / Package Type Dropdown Card */}
-            <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
-              <div>
-                <div className="flex items-center justify-between gap-1 mb-1.5">
-                  <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                    <Ship className="h-4 w-4 text-blue-600 shrink-0" />
-                    <span>{tt("transport_mode", "Transport Mode")} *</span>
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setShipmentModalOpen(true)}
-                    className="h-6 w-6 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950/50 dark:text-blue-300 transition shrink-0 flex items-center justify-center shadow-2xs"
-                    title={tt("open_shipment_modal", "Configure Shipment Mode (Parda)")}
-                  >
-                    <Pencil className="h-3 w-3" />
-                  </button>
-                </div>
-
-                <div className="relative">
-                  <select
-                    value={formData.transport_mode || "by_sea"}
-                    onChange={(e) => {
-                      const mode = e.target.value as any;
-                      setFormData((c) => ({ ...c, transport_mode: mode }));
-                      setShipmentModalOpen(true);
-                    }}
-                    className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20"
-                  >
-                    <option value="by_sea">{tt("opt_sea", "🚢 By Sea")}</option>
-                    <option value="by_road">{tt("opt_road", "🚛 By Road")}</option>
-                    <option value="by_air">{tt("opt_air", "✈️ By Air")}</option>
-                    <option value="by_rail">{tt("opt_rail", "🚆 By Rail")}</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Tag summary underneath dropdown */}
-              <div className="flex items-center justify-between gap-1 pt-1.5 text-xs text-slate-600 dark:text-slate-300 border-t border-slate-100 dark:border-slate-800/60">
-                <div className="flex items-center gap-1 shrink-0">
-                  <span className="text-[10px] font-mono font-bold uppercase px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200/70 dark:border-blue-800">
-                    {formData.transport_mode ? formData.transport_mode.replace("by_", "") : "sea"}
-                  </span>
-                  <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400">
-                    {formData.shipment_type || "FCL"}
-                  </span>
-                </div>
-                <span className="text-[10.5px] text-slate-500 font-medium truncate">
-                  {transportModeDescLabel(lang, formData.transport_mode)}
-                </span>
-              </div>
-            </div>
-
-            {/* 3. Operation Type Dropdown Card */}
-            <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
-              <div>
-                <div className="flex items-center justify-between gap-1 mb-1.5">
-                  <label className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                    <Boxes className="h-4 w-4 text-amber-600 shrink-0" />
-                    <span>{tt("operation_type_label", "Operation Type")} *</span>
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setOperationModalOpen(true)}
-                    className="h-6 w-6 rounded-lg border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300 transition shrink-0 flex items-center justify-center shadow-2xs"
-                    title={tt("open_operation_modal", "Configure Operation Type (Parda)")}
-                  >
-                    <Pencil className="h-3 w-3" />
-                  </button>
-                </div>
-
-                <div className="relative">
-                  <select
-                    value={(formData as any).operation_type || (formData.movement_type === "transit" || formData.movement_type === "up_transit" ? "transit" : formData.movement_type === "re_export" ? "re_export" : "direct")}
-                    onChange={(e) => {
-                      const op = e.target.value;
-                      setFormData((c) => ({
-                        ...c,
-                        operation_type: op,
-                        movement_type: op === "transit" ? "up_transit" : op === "re_export" ? "re_export" : "import"
-                      }));
-                      setOperationModalOpen(true);
-                    }}
-                    className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-2 focus:ring-amber-500/20"
-                  >
-                    <option value="direct">{tt("opt_direct", "Direct Delivery")}</option>
-                    <option value="transit">{tt("opt_transit_bonded", "Bonded Transit")}</option>
-                    <option value="re_export">{tt("opt_re_export_cross", "Re-Export")}</option>
-                    <option value="cross_stuffing">{tt("opt_cross_stuffing", "Cross-Stuffing")}</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Tag summary underneath dropdown */}
-              <div className="flex items-center justify-between gap-1 pt-1.5 text-xs text-slate-600 dark:text-slate-300 border-t border-slate-100 dark:border-slate-800/60">
-                <span className="text-[10px] font-mono font-bold uppercase px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200/70 dark:border-amber-800 shrink-0">
-                  {(formData as any).operation_type || (formData.movement_type === "transit" || formData.movement_type === "up_transit" ? "transit" : formData.movement_type === "re_export" ? "re_export" : "direct")}
-                </span>
-                <span className="text-[10.5px] text-slate-500 font-medium truncate">
-                  {(formData as any).operation_type === "transit" || formData.movement_type === "transit" || formData.movement_type === "up_transit"
-                    ? "Customs Bonded Corridor"
-                    : (formData as any).operation_type === "re_export" || formData.movement_type === "re_export"
-                    ? "Third-Country Transfer"
-                    : "Standard Direct Leg"}
-                </span>
-              </div>
+            {/* Movement Scenario */}
+            <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-1.5 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+              <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                <ArrowRightLeft className="h-3.5 w-3.5 text-blue-600" />
+                <span>{tt("movement_scenario_star", "Movement Scenario")} *</span>
+              </label>
+              <select
+                value={(formData as any).movement_scenario || "Import → Re-export"}
+                onChange={(e) => {
+                  const sc = e.target.value;
+                  setFormData((c) => ({ ...c, movement_scenario: sc }));
+                }}
+                className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20"
+              >
+                <option value="Import → Re-export">{tt("scenario_import_reexport", "Import → Re-export")}</option>
+                <option value="Direct Import">{tt("scenario_direct_import", "Direct Import")}</option>
+                <option value="Transit Corridor">{tt("scenario_transit_corridor", "Transit Corridor")}</option>
+                <option value="Cross Stuffing">{tt("scenario_cross_stuffing", "Cross Stuffing")}</option>
+                <option value="Port to Warehouse">{tt("scenario_port_to_warehouse", "Port to Warehouse")}</option>
+                <option value="Border Clearance">{tt("scenario_border_clearance", "Border Clearance")}</option>
+              </select>
+              <p className="text-[10.5px] text-slate-400">
+                {tt("movement_scenario_sub", "Routing policy and intermediate handling points")}
+              </p>
             </div>
           </div>
 
-          {/* DYNAMIC MOVEMENT & LOCATION SPECIFICATIONS BASED ON MOVEMENT TYPE */}
-          <CustomerOrderMovementSpecs
-            lang={lang}
-            formData={formData}
-            setFormData={setFormData}
-            countries={countries}
-            ports={ports}
-            handleLoadingCountryChange={handleLoadingCountryChange}
-            handleLoadingPortChange={handleLoadingPortChange}
-            handleReceivingCountryChange={handleReceivingCountryChange}
-            handleDestinationPortChange={handleDestinationPortChange}
-            portsFor={portsFor}
-            locLabel={locLabel}
-            selectClass={selectClass}
-            inputClass={inputClass}
-            tt={tt}
-          />
-
-          {/* Route Corridor Builder Banner Modal Trigger */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-2xl border border-blue-200 bg-gradient-to-r from-blue-50/90 via-sky-50/60 to-white p-3.5 shadow-2xs dark:border-blue-900/60 dark:from-blue-950/40 dark:via-slate-900 dark:to-slate-900">
-            <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-600/25">
-                <Route className="h-5 w-5" />
+          {/* CARD 1: Loading & Exit (Origin) - Blue Accent Card */}
+          <div className="rounded-2xl border border-sky-200 dark:border-sky-900/60 bg-white dark:bg-slate-900 shadow-xs overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center gap-3 p-3.5 sm:p-4 bg-sky-50/70 dark:bg-sky-950/30 border-b border-sky-100 dark:border-sky-900/50">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-xs">
+                <Upload className="h-5 w-5" />
               </span>
               <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
-                    {tt("corridor_builder_title", "Route Corridor Builder")}
-                  </span>
-                  <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[9.5px] font-black text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-                    {(formData.legs || []).length} {tt("legs_count", "Legs")}
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">
-                  {formData.route_name ? (
-                    <span className="font-bold text-blue-700 dark:text-blue-300">{formData.route_name}</span>
-                  ) : (
-                    tt("corridor_builder_desc", "Configure multimodal route, origin / destination gates and transit legs.")
-                  )}
+                <h3 className="font-bold text-slate-900 dark:text-white text-sm">
+                  {tt("loading_exit_origin_title", "Loading & Exit (Origin)")}
+                </h3>
+                <p className="text-xs text-slate-500">
+                  {tt("loading_exit_origin_sub", "Cargo loading location and exit details from origin country")}
                 </p>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => setCorridorModalOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs shadow-blue-600/20 hover:bg-blue-700 transition shrink-0"
-            >
-              <Route className="h-3.5 w-3.5" />
-              <span>{tt("open_corridor_modal", "Open Route Corridor Builder")}</span>
-            </button>
+
+            <div className="p-3.5 sm:p-4 space-y-4">
+              {/* 4 Location & Date Fields */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    {tt("country_of_origin", "Country of Origin")} *
+                  </label>
+                  <select
+                    value={formData.loading_country_id || ""}
+                    onChange={(e) => {
+                      const cId = e.target.value;
+                      const cName = countries.find((c) => c.id === cId)?.name || "";
+                      setFormData((c) => ({ ...c, loading_country_id: cId, loading_country_name: cName }));
+                      handleLoadingCountryChange(cId);
+                    }}
+                    className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
+                  >
+                    <option value="">{tt("select_country", "Select country...")}</option>
+                    {countries.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                    {!countries.some((c) => c.name?.toLowerCase() === "afghanistan") && (
+                      <option value="afghanistan">{tt("country_afghanistan", "Afghanistan")}</option>
+                    )}
+                    {!countries.some((c) => c.name?.toLowerCase() === "pakistan") && (
+                      <option value="pakistan">{tt("country_pakistan", "Pakistan")}</option>
+                    )}
+                    {!countries.some((c) => c.name?.toLowerCase() === "united arab emirates") && (
+                      <option value="uae">{tt("country_uae", "United Arab Emirates")}</option>
+                    )}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    {tt("loading_place_port", "Loading Place / Port")} *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.loading_place || formData.loading_source_name || ""}
+                    onChange={(e) => setFormData((c) => ({ ...c, loading_place: e.target.value, loading_source_name: e.target.value }))}
+                    placeholder="e.g. Kandahar Warehouse"
+                    className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
+                  >
+                  </input>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    {tt("loading_date", "Loading Date")} *
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.loading_date || formData.planned_dispatch_date || ""}
+                    onChange={(e) => setFormData((c) => ({ ...c, loading_date: e.target.value, planned_dispatch_date: e.target.value }))}
+                    className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    {tt("exit_border_port", "Exit Border / Port")} *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.exit_border_port_name || ""}
+                    onChange={(e) => setFormData((c) => ({ ...c, exit_border_port_name: e.target.value }))}
+                    placeholder="e.g. Spin Boldak"
+                    className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
+                  />
+                </div>
+              </div>
+
+              {/* Nested Green Box: Loading Customs Required? */}
+              <div className="rounded-xl border border-emerald-200 dark:border-emerald-800/80 bg-emerald-50/40 dark:bg-emerald-950/20 p-3.5 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-start gap-2">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-md bg-emerald-600 text-white shrink-0 mt-0.5">
+                      <Building2 className="h-3.5 w-3.5" />
+                    </span>
+                    <div>
+                      <span className="font-bold text-emerald-900 dark:text-emerald-200 text-xs">
+                        {tt("loading_customs_required_q", "Loading Customs Required?")}
+                      </span>
+                      <p className="text-[11px] text-emerald-700/80 dark:text-emerald-400/80">
+                        {tt("loading_customs_sub", `For export clearance at origin (${formData.loading_country_name || "Afghanistan"})`)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Yes / No Toggle */}
+                  <div className="inline-flex rounded-xl bg-white dark:bg-slate-900 p-0.5 border border-emerald-200 dark:border-emerald-800 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setFormData((c) => ({ ...c, loading_customs_required: true }))}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                        formData.loading_customs_required !== false
+                          ? "bg-blue-600 text-white shadow-xs"
+                          : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
+                      }`}
+                    >
+                      <span>●</span> {tt("yes", "Yes")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData((c) => ({ ...c, loading_customs_required: false }))}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                        formData.loading_customs_required === false
+                          ? "bg-slate-700 text-white shadow-xs"
+                          : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
+                      }`}
+                    >
+                      <span>○</span> {tt("no", "No")}
+                    </button>
+                  </div>
+                </div>
+
+                {formData.loading_customs_required !== false && (
+                  <div className="pt-2 border-t border-emerald-200/60 dark:border-emerald-800/40 space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          {tt("customs_name", "Customs Name")} *
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.loading_customs_name || ""}
+                          onChange={(e) => setFormData((c) => ({ ...c, loading_customs_name: e.target.value }))}
+                          placeholder="e.g. Spin Boldak Customs"
+                          className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          {tt("customs_port_border", "Customs Port / Border")} *
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.loading_customs_port_border || ""}
+                          onChange={(e) => setFormData((c) => ({ ...c, loading_customs_port_border: e.target.value }))}
+                          placeholder="e.g. Spin Boldak"
+                          className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          {tt("handled_by", "Handled By")} *
+                        </label>
+                        <div className="inline-flex w-full rounded-xl bg-white dark:bg-slate-800 p-0.5 border border-slate-200 dark:border-slate-700">
+                          <button
+                            type="button"
+                            onClick={() => setFormData((c) => ({ ...c, loading_customs_handled_by: "our_branch" }))}
+                            className={`flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                              (formData.loading_customs_handled_by || "our_branch") === "our_branch"
+                                ? "bg-blue-600 text-white shadow-xs"
+                                : "text-slate-600 hover:text-slate-900 dark:text-slate-300"
+                            }`}
+                          >
+                            <Building2 className="h-3.5 w-3.5" />
+                            <span>{tt("our_branch", "Our Branch")}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setFormData((c) => ({ ...c, loading_customs_handled_by: "external_agent" }))}
+                            className={`flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                              formData.loading_customs_handled_by === "external_agent"
+                                ? "bg-purple-600 text-white shadow-xs"
+                                : "text-slate-600 hover:text-slate-900 dark:text-slate-300"
+                            }`}
+                          >
+                            <Users className="h-3.5 w-3.5" />
+                            <span>{tt("external_agent", "External Agent")}</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {formData.loading_customs_handled_by !== "external_agent" ? (
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                            {tt("select_our_branch", "Select Our Branch")} *
+                          </label>
+                          <select
+                            value={formData.loading_customs_branch_id || ""}
+                            onChange={(e) => {
+                              const bId = e.target.value;
+                              const bName = countryBranches?.find((b) => b.id === bId)?.name || cityBranches?.find((b) => b.id === bId)?.name || "";
+                              setFormData((c) => ({ ...c, loading_customs_branch_id: bId, loading_customs_branch_name: bName }));
+                            }}
+                            className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                          >
+                            <option value="">{tt("choose_branch", "Choose branch")}</option>
+                            {(countryBranches || []).map((b) => (
+                              <option key={b.id} value={b.id}>{b.name}</option>
+                            ))}
+                            {(cityBranches || []).map((b) => (
+                              <option key={b.id} value={b.id}>{b.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                      ) : (
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                            {tt("external_agent_account", "External Agent Account")} *
+                          </label>
+                          <select
+                            value={formData.loading_customs_user_id || ""}
+                            onChange={(e) => {
+                              const aId = e.target.value;
+                              const aName = accounts.find((a) => a.id === aId)?.name || "";
+                              setFormData((c) => ({ ...c, loading_customs_user_id: aId, loading_customs_user_name: aName }));
+                            }}
+                            className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                          >
+                            <option value="">{tt("select_agent_account", "Select agent account...")}</option>
+                            {accounts.map((a) => (
+                              <option key={a.id} value={a.id}>{a.name} ({a.code || "ACC"})</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                    </div>
+
+                    {formData.loading_customs_handled_by !== "external_agent" && (
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          {tt("responsible_user", "Responsible User")} *
+                        </label>
+                        <select
+                          value={formData.loading_customs_user_id || ""}
+                          onChange={(e) => {
+                            const uId = e.target.value;
+                            const uName = assignableUsers?.find((u) => u.id === uId)?.name || "";
+                            setFormData((c) => ({ ...c, loading_customs_user_id: uId, loading_customs_user_name: uName }));
+                          }}
+                          className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                        >
+                          <option value="">{tt("choose_authorized_user", "Choose authorized user")}</option>
+                          {(assignableUsers || []).map((u) => (
+                            <option key={u.id} value={u.id}>{u.name}</option>
+                          ))}
+                        </select>
+                        <p className="mt-1 text-[10.5px] text-blue-600 dark:text-blue-400 flex items-center gap-1 font-medium">
+                          <Info className="h-3 w-3" />
+                          <span>{tt("assigned_branch_user_msg", "Assigned to selected branch and user.")}</span>
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
-          {/* SEQUENCED MULTI-LEG ROUTE CORRIDOR BUILDER */}
-          <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
-            <CustomerOrderRouteBuilder
-              routeName={formData.route_name}
-              transportMode={formData.transport_mode}
-              loadingCountryId={formData.loading_country_id}
-              loadingCountryName={
-                countries.find((c) => c.id === formData.loading_country_id)?.name ||
-                formData.loading_country_name ||
-                ""
-              }
-              receivingCountryId={formData.receiving_country_id}
-              receivingCountryName={
-                countries.find((c) => c.id === formData.receiving_country_id)?.name ||
-                formData.receiving_country_name ||
-                ""
-              }
-              loadingCityName={
-                loadingCities.find((c) => c.id === formData.loading_city_id)?.name ||
-                formData.loading_city_name ||
-                formData.loading_source_name ||
-                ""
-              }
-              destinationCityName={
-                receivingCities.find((c) => c.id === formData.receiving_city_id)?.name ||
-                formData.destination_city ||
-                ""
-              }
-              legs={formData.legs || []}
-              onChange={(routeName, legs) => {
-                setFormData((c) => ({ ...c, route_name: routeName, legs }));
-              }}
-              countries={countries.map((c) => ({ id: c.id, name: c.name }))}
-              countryBranches={countryBranches}
-              cityBranches={cityBranches}
-              assignableUsers={assignableUsers}
-              ports={ports.map((p) => ({ id: p.id, port_name: p.port_name, country_id: p.country_id || undefined }))}
-              ledgers={accounts.map((a) => ({ id: a.id, name: a.name, code: a.code, currency: a.currency || undefined }))}
-              lang={lang}
-            />
+          {/* CARD 2: Receiving & Entry (Destination) - Purple Accent Card */}
+          <div className="rounded-2xl border border-purple-200 dark:border-purple-900/60 bg-white dark:bg-slate-900 shadow-xs overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center gap-3 p-3.5 sm:p-4 bg-purple-50/70 dark:bg-purple-950/30 border-b border-purple-100 dark:border-purple-900/50">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-600 text-white shadow-xs">
+                <Download className="h-5 w-5" />
+              </span>
+              <div>
+                <h3 className="font-bold text-slate-900 dark:text-white text-sm">
+                  {tt("receiving_entry_dest_title", "Receiving & Entry (Destination)")}
+                </h3>
+                <p className="text-xs text-slate-500">
+                  {tt("receiving_entry_dest_sub", "Cargo receiving location and entry details at destination country")}
+                </p>
+              </div>
+            </div>
+
+            <div className="p-3.5 sm:p-4 space-y-4">
+              {/* 4 Location & Date Fields */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    {tt("receiving_country", "Receiving Country")} *
+                  </label>
+                  <select
+                    value={formData.receiving_country_id || ""}
+                    onChange={(e) => {
+                      const cId = e.target.value;
+                      const cName = countries.find((c) => c.id === cId)?.name || "";
+                      setFormData((c) => ({ ...c, receiving_country_id: cId, receiving_country_name: cName }));
+                      handleReceivingCountryChange(cId);
+                    }}
+                    className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20"
+                  >
+                    <option value="">{tt("select_country", "Select country...")}</option>
+                    {countries.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                    {!countries.some((c) => c.name?.toLowerCase() === "pakistan") && (
+                      <option value="pakistan">{tt("country_pakistan", "Pakistan")}</option>
+                    )}
+                    {!countries.some((c) => c.name?.toLowerCase() === "afghanistan") && (
+                      <option value="afghanistan">{tt("country_afghanistan", "Afghanistan")}</option>
+                    )}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    {tt("entry_border_port", "Entry Border / Port")} *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.entry_border_port_name || ""}
+                    onChange={(e) => setFormData((c) => ({ ...c, entry_border_port_name: e.target.value }))}
+                    placeholder="e.g. Chaman"
+                    className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    {tt("receiving_date", "Receiving Date")} *
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.receiving_date || formData.planned_arrival_date || ""}
+                    onChange={(e) => setFormData((c) => ({ ...c, receiving_date: e.target.value, planned_arrival_date: e.target.value }))}
+                    className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    {tt("receiving_location", "Receiving Location")} *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.receiving_place || formData.destination_city || ""}
+                    onChange={(e) => setFormData((c) => ({ ...c, receiving_place: e.target.value }))}
+                    placeholder="e.g. Chaman Warehouse"
+                    className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20"
+                  />
+                </div>
+              </div>
+
+              {/* Nested Green Box: Receiving Customs Required? */}
+              <div className="rounded-xl border border-emerald-200 dark:border-emerald-800/80 bg-emerald-50/40 dark:bg-emerald-950/20 p-3.5 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-start gap-2">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-md bg-emerald-600 text-white shrink-0 mt-0.5">
+                      <Building2 className="h-3.5 w-3.5" />
+                    </span>
+                    <div>
+                      <span className="font-bold text-emerald-900 dark:text-emerald-200 text-xs">
+                        {tt("receiving_customs_required_q", "Receiving Customs Required?")}
+                      </span>
+                      <p className="text-[11px] text-emerald-700/80 dark:text-emerald-400/80">
+                        {tt("receiving_customs_sub", `For import clearance at destination (${formData.receiving_country_name || "Pakistan"})`)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Yes / No Toggle */}
+                  <div className="inline-flex rounded-xl bg-white dark:bg-slate-900 p-0.5 border border-emerald-200 dark:border-emerald-800 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setFormData((c) => ({ ...c, receiving_customs_required: true }))}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                        formData.receiving_customs_required !== false
+                          ? "bg-blue-600 text-white shadow-xs"
+                          : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
+                      }`}
+                    >
+                      <span>●</span> {tt("yes", "Yes")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData((c) => ({ ...c, receiving_customs_required: false }))}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                        formData.receiving_customs_required === false
+                          ? "bg-slate-700 text-white shadow-xs"
+                          : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
+                      }`}
+                    >
+                      <span>○</span> {tt("no", "No")}
+                    </button>
+                  </div>
+                </div>
+
+                {formData.receiving_customs_required !== false && (
+                  <div className="pt-2 border-t border-emerald-200/60 dark:border-emerald-800/40 space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          {tt("customs_name", "Customs Name")} *
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.receiving_customs_name || ""}
+                          onChange={(e) => setFormData((c) => ({ ...c, receiving_customs_name: e.target.value }))}
+                          placeholder="e.g. Chaman Customs"
+                          className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          {tt("customs_port_border", "Customs Port / Border")} *
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.receiving_customs_port_border || ""}
+                          onChange={(e) => setFormData((c) => ({ ...c, receiving_customs_port_border: e.target.value }))}
+                          placeholder="e.g. Chaman"
+                          className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          {tt("handled_by", "Handled By")} *
+                        </label>
+                        <div className="inline-flex w-full rounded-xl bg-white dark:bg-slate-800 p-0.5 border border-slate-200 dark:border-slate-700">
+                          <button
+                            type="button"
+                            onClick={() => setFormData((c) => ({ ...c, receiving_customs_handled_by: "our_branch" }))}
+                            className={`flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                              formData.receiving_customs_handled_by === "our_branch"
+                                ? "bg-blue-600 text-white shadow-xs"
+                                : "text-slate-600 hover:text-slate-900 dark:text-slate-300"
+                            }`}
+                          >
+                            <Building2 className="h-3.5 w-3.5" />
+                            <span>{tt("our_branch", "Our Branch")}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setFormData((c) => ({ ...c, receiving_customs_handled_by: "external_agent" }))}
+                            className={`flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                              (formData.receiving_customs_handled_by || "external_agent") === "external_agent"
+                                ? "bg-blue-600 text-white shadow-xs"
+                                : "text-slate-600 hover:text-slate-900 dark:text-slate-300"
+                            }`}
+                          >
+                            <Users className="h-3.5 w-3.5" />
+                            <span>{tt("external_agent", "External Agent")}</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {formData.receiving_customs_handled_by === "our_branch" ? (
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                            {tt("select_our_branch", "Select Our Branch")} *
+                          </label>
+                          <select
+                            value={formData.receiving_customs_branch_id || ""}
+                            onChange={(e) => {
+                              const bId = e.target.value;
+                              const bName = countryBranches?.find((b) => b.id === bId)?.name || cityBranches?.find((b) => b.id === bId)?.name || "";
+                              setFormData((c) => ({ ...c, receiving_customs_branch_id: bId, receiving_customs_branch_name: bName }));
+                            }}
+                            className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                          >
+                            <option value="">{tt("choose_branch", "Choose branch")}</option>
+                            {(countryBranches || []).map((b) => (
+                              <option key={b.id} value={b.id}>{b.name}</option>
+                            ))}
+                            {(cityBranches || []).map((b) => (
+                              <option key={b.id} value={b.id}>{b.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                      ) : (
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                            {tt("existing_agent_account", "Existing Agent Account")} *
+                          </label>
+                          <select
+                            value={formData.receiving_customs_agent_account_id || ""}
+                            onChange={(e) => {
+                              const aId = e.target.value;
+                              const aName = accounts.find((a) => a.id === aId)?.name || "";
+                              setFormData((c) => ({ ...c, receiving_customs_agent_account_id: aId, receiving_customs_agent_account_name: aName }));
+                            }}
+                            className="w-full h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                          >
+                            <option value="">{tt("select_existing_account", "Select existing account")}</option>
+                            {accounts.map((a) => (
+                              <option key={a.id} value={a.id}>{a.name} ({a.code || "ACC"})</option>
+                            ))}
+                          </select>
+                          <p className="mt-1 text-[10.5px] text-blue-600 dark:text-blue-400 flex items-center gap-1 font-medium">
+                            <Info className="h-3 w-3" />
+                            <span>{tt("linked_draft_msg", "Linked draft in existing Clearing Agent Bill menu.")}</span>
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
-          {/* ORDER-LEVEL CARGO & ROUTE INSURANCE (covers a single leg or a leg range) */}
-          {activeOrder?.id && (formData.legs || []).length > 0 && (
-            <CustomerOrderInsurancePanel
-              orderId={activeOrder.id}
-              legs={(formData.legs || []).map((l: any) => ({ legNo: l.legNo }))}
-              ledgers={accounts.map((a) => ({ id: a.id, name: a.name, code: a.code, currency: a.currency || undefined }))}
-              lang={lang}
-            />
-          )}
+          {/* FINAL DESTINATION ROW */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-4 dark:border-slate-800 dark:bg-slate-900 shadow-2xs space-y-3">
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+              <Flag className="h-4 w-4 text-blue-600" />
+              <span>{tt("final_destination_title", "Final Destination")}</span>
+            </div>
 
-          {/* 1A Action Footer */}
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
-            <button
-              type="button"
-              onClick={onSaveDraft}
-              disabled={saving}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 shadow-2xs transition"
-            >
-              <Save className="h-3.5 w-3.5 text-slate-500" />
-              <span>{t(lang, "comv.save_draft", "Save Draft")}</span>
-            </button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  {tt("state_province", "State / Province")} *
+                </label>
+                <input
+                  type="text"
+                  value={formData.final_destination_state || ""}
+                  onChange={(e) => setFormData((c) => ({ ...c, final_destination_state: e.target.value }))}
+                  placeholder="e.g. Balochistan"
+                  className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
+                />
+              </div>
 
-            <div className="flex items-center gap-2">
-              {onAssignStage1A && (
-                <button
-                  type="button"
-                  onClick={onAssignStage1A}
-                  disabled={saving}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-blue-300 bg-blue-50 px-3.5 py-2 text-xs font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950/60 dark:text-blue-300 shadow-2xs transition"
-                >
-                  <Users className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                  <span>{tt("assign_to_another_user", "Assign to Another User")}</span>
-                </button>
-              )}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  {tt("city_star", "City")} *
+                </label>
+                <input
+                  type="text"
+                  value={formData.final_destination_city || formData.destination_city || ""}
+                  onChange={(e) => setFormData((c) => ({ ...c, final_destination_city: e.target.value, destination_city: e.target.value }))}
+                  placeholder="e.g. Quetta"
+                  className="w-full h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/20"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* ACTION BUTTONS & ASSIGNMENT PANEL */}
+          <div className="space-y-3 pt-2">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={onSaveDraft}
+                disabled={saving}
+                className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 shadow-2xs transition"
+              >
+                <Save className="h-4 w-4 text-emerald-600" />
+                <span>{tt("save_draft_btn", "Save Draft")}</span>
+              </button>
 
               <button
                 type="button"
                 onClick={onAdvanceToStep2}
                 disabled={saving}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-700 shadow-xs shadow-blue-600/25 transition"
+                className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-black text-white hover:bg-emerald-700 shadow-md shadow-emerald-600/25 transition cursor-pointer"
               >
-                <span>{tt("continue_to_1b", "Continue Myself (Go to 1B)")}</span>
+                <span>{tt("save_continue_step1b", "Save & Continue Myself ➔ Step 1B")}</span>
                 <ChevronRight className="h-4 w-4" />
               </button>
             </div>
+
+            {/* Save & Assign to User Bar */}
+            <div className="rounded-xl border border-blue-200/80 bg-blue-50/50 p-3 dark:border-blue-900/60 dark:bg-blue-950/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white shadow-xs shrink-0">
+                  <Users className="h-4 w-4" />
+                </span>
+                <div>
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-white">
+                    {tt("save_assign_user_title", "Save & Assign to User")}
+                  </h4>
+                  <p className="text-[11px] text-slate-500">
+                    {tt("save_assign_user_desc", "Save this order and create a task to assign to Step 1B: Truck & Loading")}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <select
+                  value={selectedAssigneeId}
+                  onChange={(e) => setSelectedAssigneeId(e.target.value)}
+                  className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                >
+                  <option value="">{tt("choose_authorized_user", "Choose authorized user")}</option>
+                  {(assignableUsers || []).map((u) => (
+                    <option key={u.id} value={u.id}>{u.name}</option>
+                  ))}
+                </select>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (onAssignStage1A) {
+                      onAssignStage1A();
+                    } else {
+                      onAdvanceToStep2();
+                    }
+                  }}
+                  disabled={saving || !selectedAssigneeId}
+                  className="h-9 px-4 rounded-xl bg-blue-600 text-white font-bold text-xs hover:bg-blue-700 disabled:opacity-40 transition shadow-xs"
+                >
+                  {tt("assign_btn", "Assign")}
+                </button>
+              </div>
+            </div>
           </div>
+
+          {/* ADVANCED ROUTE CORRIDOR BUILDER & INSURANCE ACCORDION */}
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={() => setShowAdvancedCorridor((prev) => !prev)}
+              className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-200/80 bg-slate-50 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-850 dark:text-slate-300 transition"
+            >
+              <span className="flex items-center gap-2">
+                <Route className="h-4 w-4 text-blue-600" />
+                <span>{tt("advanced_corridor_toggle", "Advanced Route Corridor Builder & Insurance (Optional Leg Configuration)")}</span>
+              </span>
+              <ChevronDown className={`h-4 w-4 transition-transform ${showAdvancedCorridor ? "rotate-180" : ""}`} />
+            </button>
+
+            {showAdvancedCorridor && (
+              <div className="mt-3 space-y-3.5 border-t border-slate-100 dark:border-slate-800 pt-3">
+                <div className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-2 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+                  <CustomerOrderRouteBuilder
+                    routeName={formData.route_name}
+                    transportMode={formData.transport_mode}
+                    loadingCountryId={formData.loading_country_id}
+                    loadingCountryName={
+                      countries.find((c) => c.id === formData.loading_country_id)?.name ||
+                      formData.loading_country_name ||
+                      ""
+                    }
+                    receivingCountryId={formData.receiving_country_id}
+                    receivingCountryName={
+                      countries.find((c) => c.id === formData.receiving_country_id)?.name ||
+                      formData.receiving_country_name ||
+                      ""
+                    }
+                    loadingCityName={
+                      loadingCities.find((c) => c.id === formData.loading_city_id)?.name ||
+                      formData.loading_city_name ||
+                      formData.loading_source_name ||
+                      ""
+                    }
+                    destinationCityName={
+                      receivingCities.find((c) => c.id === formData.receiving_city_id)?.name ||
+                      formData.destination_city ||
+                      ""
+                    }
+                    legs={formData.legs || []}
+                    onChange={(routeName, legs) => {
+                      setFormData((c) => ({ ...c, route_name: routeName, legs }));
+                    }}
+                    countries={countries.map((c) => ({ id: c.id, name: c.name }))}
+                    countryBranches={countryBranches}
+                    cityBranches={cityBranches}
+                    assignableUsers={assignableUsers}
+                    ports={ports.map((p) => ({ id: p.id, port_name: p.port_name, country_id: p.country_id || undefined }))}
+                    ledgers={accounts.map((a) => ({ id: a.id, name: a.name, code: a.code, currency: a.currency || undefined }))}
+                    lang={lang}
+                  />
+                </div>
+
+                {activeOrder?.id && (formData.legs || []).length > 0 && (
+                  <CustomerOrderInsurancePanel
+                    orderId={activeOrder.id}
+                    legs={(formData.legs || []).map((l: any) => ({ legNo: l.legNo }))}
+                    ledgers={accounts.map((a) => ({ id: a.id, name: a.name, code: a.code, currency: a.currency || undefined }))}
+                    lang={lang}
+                  />
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* VIEW CUSTOMER DETAILS MODAL */}
+          <SimpleModal
+            isOpen={viewCustomerModalOpen}
+            onClose={() => setViewCustomerModalOpen(false)}
+            title={tt("customer_profile_title", "Customer Profile Details")}
+          >
+            <div className="space-y-4 p-4 text-xs">
+              <div className="flex items-center gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+                <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600 text-white font-black text-lg">
+                  {(formData.customer_name || selectedCustomer?.customer_name || "C")[0]?.toUpperCase()}
+                </span>
+                <div>
+                  <h3 className="font-bold text-slate-900 dark:text-white text-base">
+                    {formData.customer_name || selectedCustomer?.customer_name || selectedAccount?.name || "Sample Customer"}
+                  </h3>
+                  <p className="font-mono text-slate-500">
+                    {selectedAccount?.code || selectedCustomer?.person_code || "CUS-001"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+                  <span className="text-slate-400 block text-[10px] uppercase font-bold">{tt("mobile_phone", "Mobile / Phone")}</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">
+                    {selectedCustomer?.mobile || selectedCustomer?.phone || "+92 300 1234567"}
+                  </span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+                  <span className="text-slate-400 block text-[10px] uppercase font-bold">{tt("email", "Email")}</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">
+                    {selectedCustomer?.email || "customer@example.com"}
+                  </span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+                  <span className="text-slate-400 block text-[10px] uppercase font-bold">{tt("country", "Country")}</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">
+                    {selectedCustomer?.country_name || "Pakistan"}
+                  </span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+                  <span className="text-slate-400 block text-[10px] uppercase font-bold">{tt("city", "City")}</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">
+                    {selectedCustomer?.city_name || "Quetta"}
+                  </span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 col-span-2">
+                  <span className="text-slate-400 block text-[10px] uppercase font-bold">{tt("address", "Address")}</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">
+                    {selectedCustomer?.address || "Commercial Plaza, M.A. Jinnah Road, Quetta"}
+                  </span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 col-span-2">
+                  <span className="text-slate-400 block text-[10px] uppercase font-bold">{tt("current_balance", "Current Balance")}</span>
+                  <span className="font-bold text-emerald-600 text-sm">
+                    {selectedAccount?.currency || "USD"} {Number(selectedAccount?.current_balance || 0).toLocaleString()}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-3 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setViewCustomerModalOpen(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold hover:bg-slate-300 transition"
+                >
+                  {tt("close", "Close")}
+                </button>
+              </div>
+            </div>
+          </SimpleModal>
         </div>
       )}
 
