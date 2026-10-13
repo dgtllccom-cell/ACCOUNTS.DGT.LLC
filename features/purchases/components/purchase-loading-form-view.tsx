@@ -80,9 +80,18 @@ export function PurchaseLoadingFormView() {
   useEffect(() => {
     if (orders.length > 0 && !selectedPO) {
       const searchParams = new URLSearchParams(window.location.search);
-      const poNo = searchParams.get("purchaseOrderNo");
-      if (poNo) {
-        const match = orders.find(o => o.purchase_order_no === poNo);
+      const rawPoNo = searchParams.get("purchaseOrderNo") || searchParams.get("poNo") || searchParams.get("orderNo");
+      const poNo = rawPoNo;
+      if (rawPoNo) {
+        const cleanPoNo = rawPoNo.trim().toLowerCase();
+        const match = orders.find(o => {
+          const po1 = String(o.purchase_order_no || "").trim().toLowerCase();
+          const po2 = String(o.purchase_contract_no || "").trim().toLowerCase();
+          const po3 = String(o.form_data?.form?.purchaseOrderNo || "").trim().toLowerCase();
+          const po4 = String(o.form_data?.form?.manualBillNumber || o.form_data?.form?.billNo || "").trim().toLowerCase();
+          const po5 = String(o.id || "").trim().toLowerCase();
+          return po1 === cleanPoNo || po2 === cleanPoNo || po3 === cleanPoNo || po4 === cleanPoNo || po5 === cleanPoNo;
+        });
         if (match) {
           setSelectedPO(match);
           setActiveTab("load");
@@ -162,8 +171,14 @@ export function PurchaseLoadingFormView() {
       const blNumbers = poRecords.map(r => r.report_payload?.blNumber || "").join(" ").toLowerCase();
       const containerNumbers = poRecords.map(r => r.container_number || "").join(" ").toLowerCase();
       return row.purchase_order_no?.toLowerCase().includes(q) || 
+             row.purchase_contract_no?.toLowerCase().includes(q) ||
+             form.purchaseContractNo?.toLowerCase().includes(q) ||
+             form.manualBillNumber?.toLowerCase().includes(q) ||
+             form.billNo?.toLowerCase().includes(q) ||
              row.supplierName?.toLowerCase().includes(q) || 
+             form.purchaseAccountName?.toLowerCase().includes(q) ||
              form.salesAccountName?.toLowerCase().includes(q) ||
+             form.goodsName?.toLowerCase().includes(q) ||
              blNumbers.includes(q) ||
              containerNumbers.includes(q);
     });
