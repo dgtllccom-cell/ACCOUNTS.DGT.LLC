@@ -35,6 +35,7 @@ import { TaskHandoverModal } from "@/features/transfer-center/components/task-ha
 import { useSetActiveRecord } from "@/lib/support/active-record-context";
 import { VoiceFormFill } from "@/components/voice-form-fill";
 import { LocalPurchaseApprovedHeader } from "@/features/purchases/components/local-purchase-approved-header";
+import { UnifiedActionMenu } from "@/components/ui/unified-action-menu";
 import "@/components/purchase-ui/purchase-table-skin.css";
 
 function downloadLocalPurchasesCsv(rows: any[], lang: string) {
@@ -4807,102 +4808,60 @@ export function LocalPurchaseView({
                                   return <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">{row.status}</span>;
                                 })()}
                               </td>
-                              <td className="px-3 py-2 text-center relative" onClick={(e) => e.stopPropagation()}>
-                                <div className="relative inline-block text-left">
-                                  <button
-                                    type="button"
-                                    onClick={() => setOpenActionRowId(prev => prev === row.id ? null : row.id)}
-                                    className="h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center transition shadow-2xs cursor-pointer mx-auto"
-                                    title={tr("Actions")}
-                                  >
-                                    <MoreVertical className="h-3.5 w-3.5" />
-                                  </button>
-
-                                  {openActionRowId === row.id && (
-                                    <div className="absolute end-0 top-full mt-1 w-36 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-1.5 shadow-xl z-50 animate-in fade-in space-y-0.5 text-xs font-semibold text-left">
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          setOpenActionRowId(null);
-                                          if (row.raw) setSelectedRowForVoucher(row.raw);
-                                        }}
-                                        className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/40 text-slate-700 dark:text-slate-200 hover:text-blue-600 text-xs font-medium transition cursor-pointer"
-                                      >
-                                        <Eye className="h-3.5 w-3.5 text-blue-500" />
-                                        <span>{tr("View Voucher")}</span>
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          setOpenActionRowId(null);
-                                          if (row.raw?.id) router.push(`/dashboard/purchase/local-purchase/${row.raw.id}/goods-transfer`);
-                                        }}
-                                        className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-950/40 text-slate-700 dark:text-slate-200 hover:text-indigo-600 text-xs font-medium transition cursor-pointer"
-                                      >
-                                        <Package className="h-3.5 w-3.5 text-indigo-500" />
-                                        <span>{t(lang, "gtj.menu_journal", "Goods Transfer Journal")}</span>
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          setOpenActionRowId(null);
-                                          if (row.raw?.id) router.push(`/dashboard/purchase/local-purchase/${row.raw.id}`);
-                                        }}
-                                        className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-medium transition cursor-pointer"
-                                      >
-                                        <FileText className="h-3.5 w-3.5 text-slate-500" />
-                                        <span>{t(lang, "gtj.menu_lifecycle", "Lifecycle report")}</span>
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          setOpenActionRowId(null);
-                                          loadRowIntoForm(row.raw);
-                                        }}
-                                        className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-sky-50 dark:hover:bg-sky-950/40 text-slate-700 dark:text-slate-200 hover:text-sky-600 text-xs font-medium transition cursor-pointer"
-                                      >
-                                        <Edit3 className="h-3.5 w-3.5 text-sky-500" />
-                                        <span>{tr("Edit Bill")}</span>
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          setOpenActionRowId(null);
-                                          if (row.raw) {
-                                            setHandoverTargetRow(row.raw);
-                                            setHandoverModalOpen(true);
-                                          }
-                                        }}
-                                        className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-slate-700 dark:text-slate-200 hover:text-emerald-600 text-xs font-medium transition cursor-pointer"
-                                      >
-                                        <Share2 className="h-3.5 w-3.5 text-emerald-500" />
-                                        <span>{tr("Handover")}</span>
-                                      </button>
-                                      <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
-                                      <button
-                                        type="button"
-                                        onClick={async () => {
-                                          setOpenActionRowId(null);
-                                          if (!confirm(t(lang, "lp.reg_delete_confirm", "Are you sure you want to delete this purchase entry?"))) return;
-                                          if (row.raw?.id) {
-                                            try {
-                                              const res = await fetch(`/api/erp/purchases/local-purchase?id=${row.raw.id}`, { method: "DELETE" });
-                                              const data = await res.json();
-                                              if (!res.ok || !data.ok) throw new Error(data.error?.message || "Failed to delete.");
-                                              setPurchases((prev: any[]) => prev.filter((p: any) => p.id !== row.raw.id));
-                                            } catch (err: any) {
-                                              alert(err.message);
-                                            }
-                                          }
-                                        }}
-                                        className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 text-xs font-medium transition cursor-pointer"
-                                      >
-                                        <Trash2 className="h-3.5 w-3.5 text-rose-500" />
-                                        <span>{tr("Delete")}</span>
-                                      </button>
-                                    </div>
-                                  )}
-                                </div>
+                              <td className="px-3 py-2 text-center" onClick={(e) => e.stopPropagation()}>
+                                <UnifiedActionMenu
+                                  align="right"
+                                  ariaLabel={`Actions for ${row.voucherNo}`}
+                                  buttonClassName="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition shadow-2xs cursor-pointer mx-auto"
+                                  onView={() => {
+                                    if (row.raw) setSelectedRowForVoucher(row.raw);
+                                  }}
+                                  onEdit={() => {
+                                    loadRowIntoForm(row.raw);
+                                  }}
+                                  customItems={[
+                                    {
+                                      key: "goods-transfer",
+                                      label: t(lang, "gtj.menu_journal", "Goods Transfer Journal"),
+                                      icon: <Package className="h-3.5 w-3.5 text-indigo-500" />,
+                                      onClick: () => {
+                                        if (row.raw?.id) router.push(`/dashboard/purchase/local-purchase/${row.raw.id}/goods-transfer`);
+                                      }
+                                    },
+                                    {
+                                      key: "lifecycle",
+                                      label: t(lang, "gtj.menu_lifecycle", "Lifecycle report"),
+                                      icon: <FileText className="h-3.5 w-3.5 text-slate-500" />,
+                                      onClick: () => {
+                                        if (row.raw?.id) router.push(`/dashboard/purchase/local-purchase/${row.raw.id}`);
+                                      }
+                                    },
+                                    {
+                                      key: "handover",
+                                      label: tr("Handover"),
+                                      icon: <Share2 className="h-3.5 w-3.5 text-emerald-500" />,
+                                      onClick: () => {
+                                        if (row.raw) {
+                                          setHandoverTargetRow(row.raw);
+                                          setHandoverModalOpen(true);
+                                        }
+                                      }
+                                    }
+                                  ]}
+                                  onDelete={async () => {
+                                    if (!confirm(t(lang, "lp.reg_delete_confirm", "Are you sure you want to delete this purchase entry?"))) return;
+                                    if (row.raw?.id) {
+                                      try {
+                                        const res = await fetch(`/api/erp/purchases/local-purchase?id=${row.raw.id}`, { method: "DELETE" });
+                                        const data = await res.json();
+                                        if (!res.ok || !data.ok) throw new Error(data.error?.message || "Failed to delete.");
+                                        setPurchases((prev: any[]) => prev.filter((p: any) => p.id !== row.raw.id));
+                                      } catch (err: any) {
+                                        alert(err.message);
+                                      }
+                                    }
+                                  }}
+                                />
                               </td>
                             </tr>
                           );
@@ -5209,102 +5168,60 @@ export function LocalPurchaseView({
                                 return <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">{row.status}</span>;
                               })()}
                             </td>
-                            <td className="px-3 py-2 text-center relative" onClick={(e) => e.stopPropagation()}>
-                              <div className="relative inline-block text-left">
-                                <button
-                                  type="button"
-                                  onClick={() => setOpenActionRowId(prev => prev === row.id ? null : row.id)}
-                                  className="h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center transition shadow-2xs cursor-pointer mx-auto"
-                                  title={tr("Actions")}
-                                >
-                                  <MoreVertical className="h-3.5 w-3.5" />
-                                </button>
-
-                                {openActionRowId === row.id && (
-                                  <div className="absolute end-0 top-full mt-1 w-36 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-1.5 shadow-xl z-50 animate-in fade-in space-y-0.5 text-xs font-semibold text-left">
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setOpenActionRowId(null);
-                                        if (row.raw) setSelectedRowForVoucher(row.raw);
-                                      }}
-                                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/40 text-slate-700 dark:text-slate-200 hover:text-blue-600 text-xs font-medium transition cursor-pointer"
-                                    >
-                                      <Eye className="h-3.5 w-3.5 text-blue-500" />
-                                      <span>{tr("View Voucher")}</span>
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setOpenActionRowId(null);
-                                        if (row.raw?.id) router.push(`/dashboard/purchase/local-purchase/${row.raw.id}/goods-transfer`);
-                                      }}
-                                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-950/40 text-slate-700 dark:text-slate-200 hover:text-indigo-600 text-xs font-medium transition cursor-pointer"
-                                    >
-                                      <Package className="h-3.5 w-3.5 text-indigo-500" />
-                                      <span>{t(lang, "gtj.menu_journal", "Goods Transfer Journal")}</span>
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setOpenActionRowId(null);
-                                        if (row.raw?.id) router.push(`/dashboard/purchase/local-purchase/${row.raw.id}`);
-                                      }}
-                                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-medium transition cursor-pointer"
-                                    >
-                                      <FileText className="h-3.5 w-3.5 text-slate-500" />
-                                      <span>{t(lang, "gtj.menu_lifecycle", "Lifecycle report")}</span>
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setOpenActionRowId(null);
-                                        loadRowIntoForm(row.raw);
-                                      }}
-                                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-sky-50 dark:hover:bg-sky-950/40 text-slate-700 dark:text-slate-200 hover:text-sky-600 text-xs font-medium transition cursor-pointer"
-                                    >
-                                      <Edit3 className="h-3.5 w-3.5 text-sky-500" />
-                                      <span>{tr("Edit Bill")}</span>
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setOpenActionRowId(null);
-                                        if (row.raw) {
-                                          setHandoverTargetRow(row.raw);
-                                          setHandoverModalOpen(true);
-                                        }
-                                      }}
-                                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-slate-700 dark:text-slate-200 hover:text-emerald-600 text-xs font-medium transition cursor-pointer"
-                                    >
-                                      <Share2 className="h-3.5 w-3.5 text-emerald-500" />
-                                      <span>{tr("Handover")}</span>
-                                    </button>
-                                    <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
-                                    <button
-                                      type="button"
-                                      onClick={async () => {
-                                        setOpenActionRowId(null);
-                                        if (!confirm(t(lang, "lp.reg_delete_confirm", "Are you sure you want to delete this purchase entry?"))) return;
-                                        if (row.raw?.id) {
-                                          try {
-                                            const res = await fetch(`/api/erp/purchases/local-purchase?id=${row.raw.id}`, { method: "DELETE" });
-                                            const data = await res.json();
-                                            if (!res.ok || !data.ok) throw new Error(data.error?.message || "Failed to delete.");
-                                            setPurchases((prev: any[]) => prev.filter((p: any) => p.id !== row.raw.id));
-                                          } catch (err: any) {
-                                            alert(err.message);
-                                          }
-                                        }
-                                      }}
-                                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 text-xs font-medium transition cursor-pointer"
-                                    >
-                                      <Trash2 className="h-3.5 w-3.5 text-rose-500" />
-                                      <span>{tr("Delete")}</span>
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
+                            <td className="px-3 py-2 text-center" onClick={(e) => e.stopPropagation()}>
+                              <UnifiedActionMenu
+                                align="right"
+                                ariaLabel={`Actions for ${row.voucherNo}`}
+                                buttonClassName="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition shadow-2xs cursor-pointer mx-auto"
+                                onView={() => {
+                                  if (row.raw) setSelectedRowForVoucher(row.raw);
+                                }}
+                                onEdit={() => {
+                                  loadRowIntoForm(row.raw);
+                                }}
+                                customItems={[
+                                  {
+                                    key: "goods-transfer",
+                                    label: t(lang, "gtj.menu_journal", "Goods Transfer Journal"),
+                                    icon: <Package className="h-3.5 w-3.5 text-indigo-500" />,
+                                    onClick: () => {
+                                      if (row.raw?.id) router.push(`/dashboard/purchase/local-purchase/${row.raw.id}/goods-transfer`);
+                                    }
+                                  },
+                                  {
+                                    key: "lifecycle",
+                                    label: t(lang, "gtj.menu_lifecycle", "Lifecycle report"),
+                                    icon: <FileText className="h-3.5 w-3.5 text-slate-500" />,
+                                    onClick: () => {
+                                      if (row.raw?.id) router.push(`/dashboard/purchase/local-purchase/${row.raw.id}`);
+                                    }
+                                  },
+                                  {
+                                    key: "handover",
+                                    label: tr("Handover"),
+                                    icon: <Share2 className="h-3.5 w-3.5 text-emerald-500" />,
+                                    onClick: () => {
+                                      if (row.raw) {
+                                        setHandoverTargetRow(row.raw);
+                                        setHandoverModalOpen(true);
+                                      }
+                                    }
+                                  }
+                                ]}
+                                onDelete={async () => {
+                                  if (!confirm(t(lang, "lp.reg_delete_confirm", "Are you sure you want to delete this purchase entry?"))) return;
+                                  if (row.raw?.id) {
+                                    try {
+                                      const res = await fetch(`/api/erp/purchases/local-purchase?id=${row.raw.id}`, { method: "DELETE" });
+                                      const data = await res.json();
+                                      if (!res.ok || !data.ok) throw new Error(data.error?.message || "Failed to delete.");
+                                      setPurchases((prev: any[]) => prev.filter((p: any) => p.id !== row.raw.id));
+                                    } catch (err: any) {
+                                      alert(err.message);
+                                    }
+                                  }
+                                }}
+                              />
                             </td>
                           </tr>
                         );
