@@ -65,18 +65,35 @@ import { Th } from "@/components/ui/translated-th";
 type CustomerDetails = {
   id: string;
   customer_name?: string;
+  first_name?: string;
+  last_name?: string;
   code?: string;
   person_code?: string;
+  photo_url?: string | null;
   mobile?: string;
   whatsapp?: string;
   email?: string;
   cnic?: string;
   passport?: string;
   license_no?: string;
+  license_expiry?: string;
   address?: string;
   country?: string;
+  country_name?: string;
   state?: string;
+  state_province_name?: string;
   city?: string;
+  city_name?: string;
+  is_active?: boolean;
+  registrations?: Array<{
+    registration_type?: string;
+    registration_value?: string;
+  }>;
+  contacts?: Array<{
+    contact_type?: string;
+    contact_value?: string;
+    is_primary?: boolean;
+  }>;
 };
 
 type CompanyDetails = {
@@ -438,15 +455,29 @@ export function TruckRecreationWizard({
         const res = await fetch(`/api/erp/customers/${encodeURIComponent(form.driverId)}`).then((r) => r.json());
         if (cancelled) return;
         if (res?.data?.customer) {
-          const c: CustomerDetails = res.data.customer;
+          const c: CustomerDetails = {
+            ...res.data.customer,
+            registrations: res.data.registrations || [],
+            contacts: res.data.contacts || [],
+          };
+          // Try to extract license number from registrations if not directly on customer
+          const dlReg = c.registrations?.find((r) =>
+            ["driving_license", "driving_licence", "license", "licence", "dl"].includes(
+              (r.registration_type || "").toLowerCase().trim()
+            )
+          );
+          if (!c.license_no && dlReg?.registration_value) {
+            c.license_no = dlReg.registration_value;
+          }
+
           setDriverDetails(c);
           setForm((prev) => ({
             ...prev,
             driverMobile: prev.driverMobile || c.mobile || c.whatsapp || "",
             driverLicenseNo: prev.driverLicenseNo || c.license_no || "",
-            driverCountry: prev.driverCountry || c.country || "",
-            driverState: prev.driverState || c.state || "",
-            driverCity: prev.driverCity || c.city || "",
+            driverCountry: prev.driverCountry || c.country_name || c.country || "",
+            driverState: prev.driverState || c.state_province_name || c.state || "",
+            driverCity: prev.driverCity || c.city_name || c.city || "",
             driverAddress: prev.driverAddress || c.address || "",
           }));
           // Pre-populate contacts row if empty
@@ -1062,13 +1093,26 @@ export function TruckRecreationWizard({
       <LiveReportSection
         title={`4. ${cleanTitle(tt("trk.section_driver", "Driver Information"), "Driver Information")}`}
         icon={UserCheck}
+        action={
+          <button
+            type="button"
+            onClick={() => scrollToSection("driverCard")}
+            className="text-[11px] font-bold text-blue-600 hover:underline dark:text-blue-400"
+          >
+            Edit
+          </button>
+        }
       >
         {/* Driver Photo Preview Card */}
         <div className="my-1.5 flex items-center gap-3 rounded-xl border border-blue-100 bg-blue-50/50 p-2.5 dark:border-blue-900/40 dark:bg-blue-950/20">
           <div className="relative h-14 w-12 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-2xs dark:border-slate-700 dark:bg-slate-800 flex items-center justify-center">
-            {driverPhotoUrl ? (
+            {(form.driverType === "permanent" ? (driverDetails?.photo_url || driverPhotoUrl) : driverPhotoUrl) ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={driverPhotoUrl} alt="Driver" className="h-full w-full object-cover" />
+              <img
+                src={form.driverType === "permanent" ? (driverDetails?.photo_url || driverPhotoUrl)! : driverPhotoUrl!}
+                alt=""
+                className="h-full w-full object-cover"
+              />
             ) : (
               <User className="h-6 w-6 text-slate-400" />
             )}
@@ -1086,8 +1130,14 @@ export function TruckRecreationWizard({
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
-          <LiveReportRow label={tt("trk.license_no", "Driving License Number")} value={form.driverLicenseNo} />
-          <LiveReportRow label={tt("trk.licence_expiry_label", "Licence Expiry Date")} value={form.driverLicenseExpiry} />
+          <LiveReportRow
+            label={tt("trk.license_no", "Driving License Number")}
+            value={form.driverType === "permanent" ? (driverDetails?.license_no || form.driverLicenseNo) : form.driverLicenseNo}
+          />
+          <LiveReportRow
+            label={tt("trk.licence_expiry_label", "Licence Expiry Date")}
+            value={form.driverType === "permanent" ? (driverDetails?.license_expiry || form.driverLicenseExpiry) : form.driverLicenseExpiry}
+          />
           <LiveReportRow
             label={tt("common.status", "Status")}
             badge={
@@ -1096,28 +1146,55 @@ export function TruckRecreationWizard({
               </span>
             }
           />
-          <LiveReportRow label={tt("common.mobile", "Primary Mobile")} value={form.driverMobile || driverDetails?.mobile} />
+          <LiveReportRow
+            label={tt("common.mobile", "Primary Mobile")}
+            value={form.driverType === "permanent" ? (driverDetails?.mobile || driverDetails?.whatsapp || form.driverMobile) : form.driverMobile}
+          />
         </div>
 
         {/* Additional Contacts */}
-        {contacts.filter((c) => c.value.trim().length > 0).length > 0 && (
-          <div className="mt-1 pt-1 border-t border-slate-100 dark:border-slate-800">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Contacts</span>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
-              {contacts.filter((c) => c.value.trim().length > 0).map((c, idx) => (
-                <LiveReportRow key={c.id || idx} label={c.type} value={c.value} />
-              ))}
+        {form.driverType === "permanent" ? (
+          (driverDetails?.whatsapp || driverDetails?.email) && (
+            <div className="mt-1 pt-1 border-t border-slate-100 dark:border-slate-800">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Contacts</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+                {driverDetails.whatsapp && <LiveReportRow label={tt("crm.ftype_whatsapp", "WhatsApp")} value={driverDetails.whatsapp} />}
+                {driverDetails.email && <LiveReportRow label={tt("tax_einv.set_f_email", "Email")} value={driverDetails.email} />}
+              </div>
             </div>
-          </div>
+          )
+        ) : (
+          contacts.filter((c) => c.value.trim().length > 0).length > 0 && (
+            <div className="mt-1 pt-1 border-t border-slate-100 dark:border-slate-800">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Contacts</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+                {contacts.filter((c) => c.value.trim().length > 0).map((c, idx) => (
+                  <LiveReportRow key={c.id || idx} label={c.type} value={c.value} />
+                ))}
+              </div>
+            </div>
+          )
         )}
 
-        {form.addDriverLocation === "yes" && (form.driverCountry || form.driverCity || form.driverAddress) && (
-          <div className="mt-1 pt-1 border-t border-slate-100 dark:border-slate-800">
-            <LiveReportRow
-              label={tt("common.location", "Driver Location")}
-              value={[form.driverCountry, form.driverState, form.driverCity, form.driverAddress].filter(Boolean).join(", ")}
-            />
-          </div>
+        {/* Location */}
+        {form.driverType === "permanent" ? (
+          (driverDetails?.city_name || driverDetails?.city || driverDetails?.country_name || driverDetails?.country || driverDetails?.address) && (
+            <div className="mt-1 pt-1 border-t border-slate-100 dark:border-slate-800">
+              <LiveReportRow
+                label={tt("common.location", "Driver Location")}
+                value={[driverDetails.city_name || driverDetails.city, driverDetails.state_province_name || driverDetails.state, driverDetails.country_name || driverDetails.country, driverDetails.address].filter(Boolean).join(", ")}
+              />
+            </div>
+          )
+        ) : (
+          form.addDriverLocation === "yes" && (form.driverCountry || form.driverCity || form.driverAddress) && (
+            <div className="mt-1 pt-1 border-t border-slate-100 dark:border-slate-800">
+              <LiveReportRow
+                label={tt("common.location", "Driver Location")}
+                value={[form.driverCountry, form.driverState, form.driverCity, form.driverAddress].filter(Boolean).join(", ")}
+              />
+            </div>
+          )
         )}
       </LiveReportSection>
 
@@ -2187,233 +2264,336 @@ export function TruckRecreationWizard({
                       </label>
                     </div>
 
-                    {/* Driver Photograph Upload Control */}
-                    <div className="flex items-center gap-3.5 rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50/60 to-white p-3 dark:border-blue-950/60 dark:from-blue-950/20 dark:to-slate-900">
-                      <div className="relative h-18 w-16 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xs dark:border-slate-700 dark:bg-slate-800 flex items-center justify-center">
-                        {driverPhotoUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={driverPhotoUrl} alt="Driver preview" className="h-full w-full object-cover" />
-                        ) : (
-                          <User className="h-8 w-8 text-blue-300" />
+                    {form.driverType === "permanent" ? (
+                      /* PERMANENT DRIVER FLOW: Clean dropdown + Status + Registered Driver details card */
+                      <div className="space-y-3.5">
+                        <div className="grid grid-cols-1 sm:grid-cols-[1fr_160px] gap-3">
+                          <div>
+                            <PersonPicker
+                              label={tt("trk.driver_name_label", "Driver Name *")}
+                              value={form.driverId}
+                              onValueChange={(id) => setForm((p) => ({ ...p, driverId: id }))}
+                              placeholder={tt("trk.search_driver_ph", "Search driver...")}
+                              lang={activeLang}
+                              createLabel={tt("trk.new_driver", "+ New Driver")}
+                            />
+                          </div>
+
+                          <label className="space-y-1 text-xs">
+                            <span className="font-bold text-slate-700 dark:text-slate-300">{tt("common.status", "Status")}</span>
+                            <select
+                              value={form.status}
+                              onChange={(e) => setForm((p) => ({ ...p, status: e.target.value }))}
+                              className="h-9 w-full rounded-xl border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                            >
+                              <option value="active">{tt("common.active", "Active")}</option>
+                              <option value="inactive">{tt("common.inactive", "Inactive")}</option>
+                              <option value="suspended">{tt("trk.badge_pending", "Pending")}</option>
+                              <option value="expired">{tt("trk.badge_completed", "Completed")}</option>
+                            </select>
+                          </label>
+                        </div>
+
+                        {/* Rich Registered Driver Preview Card */}
+                        {form.driverId && driverDetails && (
+                          <div className="rounded-2xl border border-blue-100 bg-blue-50/40 p-3.5 dark:border-blue-900/40 dark:bg-blue-950/20">
+                            <div className="flex items-center justify-between border-b border-blue-100/80 pb-2.5 dark:border-blue-900/40">
+                              <div className="flex items-center gap-3">
+                                <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border border-blue-200 bg-white shadow-2xs dark:border-blue-800 dark:bg-slate-800 flex items-center justify-center">
+                                  {driverDetails.photo_url ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img src={driverDetails.photo_url} alt="Driver" className="h-full w-full object-cover" />
+                                  ) : (
+                                    <User className="h-6 w-6 text-blue-500" />
+                                  )}
+                                </div>
+                                <div>
+                                  <div className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-2">
+                                    <span>{driverDetails.customer_name}</span>
+                                    {driverDetails.person_code && (
+                                      <span className="font-mono text-[10px] text-blue-700 dark:text-blue-300">
+                                        ({driverDetails.person_code})
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-2 mt-0.5">
+                                    <span className="text-[10px] text-blue-700 dark:text-blue-300 font-bold uppercase tracking-wider">
+                                      REGISTERED DRIVER
+                                    </span>
+                                    <span className={`inline-block rounded-md px-1.5 py-0.2 text-[9px] font-bold ${statusBadgeClasses(form.status)}`}>
+                                      {statusLabel(form.status)}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="mt-2.5 grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px]">
+                              <div className="flex justify-between py-0.5">
+                                <span className="text-slate-500">License Number:</span>
+                                <b className="text-slate-800 dark:text-slate-100 font-mono">
+                                  {driverDetails.license_no || form.driverLicenseNo || "—"}
+                                </b>
+                              </div>
+                              <div className="flex justify-between py-0.5">
+                                <span className="text-slate-500">License Expiry:</span>
+                                <b className="text-slate-800 dark:text-slate-100">
+                                  {driverDetails.license_expiry || form.driverLicenseExpiry || "—"}
+                                </b>
+                              </div>
+                              <div className="flex justify-between py-0.5">
+                                <span className="text-slate-500">Mobile:</span>
+                                <b className="text-slate-800 dark:text-slate-100 font-mono">
+                                  {driverDetails.mobile || "—"}
+                                </b>
+                              </div>
+                              <div className="flex justify-between py-0.5">
+                                <span className="text-slate-500">WhatsApp:</span>
+                                <b className="text-slate-800 dark:text-slate-100 font-mono">
+                                  {driverDetails.whatsapp || "—"}
+                                </b>
+                              </div>
+                              <div className="flex justify-between py-0.5">
+                                <span className="text-slate-500">Email:</span>
+                                <b className="text-slate-800 dark:text-slate-100 truncate">
+                                  {driverDetails.email || "—"}
+                                </b>
+                              </div>
+                              <div className="flex justify-between py-0.5">
+                                <span className="text-slate-500">City / Country:</span>
+                                <b className="text-slate-800 dark:text-slate-100">
+                                  {[driverDetails.city_name || driverDetails.city, driverDetails.country_name || driverDetails.country].filter(Boolean).join(", ") || "—"}
+                                </b>
+                              </div>
+                              <div className="flex justify-between py-0.5 sm:col-span-2">
+                                <span className="text-slate-500">Address:</span>
+                                <b className="text-slate-800 dark:text-slate-100 truncate">
+                                  {driverDetails.address || "—"}
+                                </b>
+                              </div>
+                            </div>
+                          </div>
                         )}
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <strong className="block text-xs font-black text-slate-800 dark:text-slate-200">
-                          Driver photograph
-                        </strong>
-                        <p className="mt-0.5 text-[10.5px] text-slate-500">
-                          Add driver photo first, then complete driver details.
-                        </p>
-                        <div className="mt-2 flex flex-wrap items-center gap-2">
-                          <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-blue-200 bg-white px-2.5 py-1 text-xs font-bold text-blue-700 shadow-2xs hover:bg-blue-50 dark:border-blue-800 dark:bg-slate-900 dark:text-blue-300">
-                            <Plus className="h-3 w-3" /> Add Driver Photo
-                            <input
-                              type="file"
-                              accept="image/jpeg,image/png"
-                              onChange={handleDriverPhotoUpload}
-                              className="sr-only"
-                            />
-                          </label>
-                          <span className="text-[10px] text-slate-400">
-                            {driverPhotoName || "📎 Photograph attachment · JPG/PNG ≤ 5 MB"}
-                          </span>
+                    ) : (
+                      /* TEMPORARY DRIVER FLOW: Manual photo upload + Multi contacts + Manual name & license + Location */
+                      <div className="space-y-4">
+                        {/* Driver Photograph Upload Control */}
+                        <div className="flex items-center gap-3.5 rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50/60 to-white p-3 dark:border-blue-950/60 dark:from-blue-950/20 dark:to-slate-900">
+                          <div className="relative h-18 w-16 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xs dark:border-slate-700 dark:bg-slate-800 flex items-center justify-center">
+                            {driverPhotoUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={driverPhotoUrl} alt="Driver preview" className="h-full w-full object-cover" />
+                            ) : (
+                              <User className="h-8 w-8 text-blue-300" />
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <strong className="block text-xs font-black text-slate-800 dark:text-slate-200">
+                              Driver photograph
+                            </strong>
+                            <p className="mt-0.5 text-[10.5px] text-slate-500">
+                              Add driver photo first, then complete driver details.
+                            </p>
+                            <div className="mt-2 flex flex-wrap items-center gap-2">
+                              <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-blue-200 bg-white px-2.5 py-1 text-xs font-bold text-blue-700 shadow-2xs hover:bg-blue-50 dark:border-blue-800 dark:bg-slate-900 dark:text-blue-300">
+                                <Plus className="h-3 w-3" /> Add Driver Photo
+                                <input
+                                  type="file"
+                                  accept="image/jpeg,image/png"
+                                  onChange={handleDriverPhotoUpload}
+                                  className="sr-only"
+                                />
+                              </label>
+                              <span className="text-[10px] text-slate-400">
+                                {driverPhotoName || "📎 Photograph attachment · JPG/PNG ≤ 5 MB"}
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
 
-                    {/* Driver Contacts: Up to 10 Repeatable Rows */}
-                    <details className="rounded-2xl border border-slate-200 bg-slate-50/50 p-3.5 dark:border-slate-800 dark:bg-slate-800/20 open:bg-white dark:open:bg-slate-900 transition">
-                      <summary className="cursor-pointer text-xs font-bold text-blue-700 dark:text-blue-300 flex items-center justify-between select-none">
-                        <span className="flex items-center gap-1.5">
-                          <Phone className="h-3.5 w-3.5" />
-                          <span>+ Contacts · WhatsApp / Mobile / Email</span>
-                        </span>
-                        <span className="text-[10px] font-mono text-slate-400">
-                          {contacts.length} / 10 contacts
-                        </span>
-                      </summary>
+                        {/* Driver Contacts: Up to 10 Repeatable Rows */}
+                        <details className="rounded-2xl border border-slate-200 bg-slate-50/50 p-3.5 dark:border-slate-800 dark:bg-slate-800/20 open:bg-white dark:open:bg-slate-900 transition">
+                          <summary className="cursor-pointer text-xs font-bold text-blue-700 dark:text-blue-300 flex items-center justify-between select-none">
+                            <span className="flex items-center gap-1.5">
+                              <Phone className="h-3.5 w-3.5" />
+                              <span>+ Contacts · WhatsApp / Mobile / Email</span>
+                            </span>
+                            <span className="text-[10px] font-mono text-slate-400">
+                              {contacts.length} / 10 contacts
+                            </span>
+                          </summary>
 
-                      <div className="mt-3 space-y-2">
-                        {contacts.map((contact, index) => {
-                          const isEmail = contact.type === "Email";
-                          return (
-                            <div key={contact.id} className="grid grid-cols-[100px_1fr_32px] gap-2 items-center">
-                              <select
-                                value={contact.type}
-                                onChange={(e) => handleContactTypeChange(index, e.target.value as ContactType)}
-                                className="h-8.5 rounded-xl border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-800 outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                              >
-                                <option value="WhatsApp">WhatsApp</option>
-                                <option value="Mobile">Mobile</option>
-                                <option value="Phone">Phone</option>
-                                <option value="Email">Email</option>
-                              </select>
-                              <input
-                                type={isEmail ? "email" : "tel"}
-                                value={contact.value}
-                                onChange={(e) => handleContactValueChange(index, e.target.value)}
-                                placeholder={isEmail ? "Email address" : "Number with country code"}
-                                className="h-8.5 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                              />
+                          <div className="mt-3 space-y-2">
+                            {contacts.map((contact, index) => {
+                              const isEmail = contact.type === "Email";
+                              return (
+                                <div key={contact.id} className="grid grid-cols-[100px_1fr_32px] gap-2 items-center">
+                                  <select
+                                    value={contact.type}
+                                    onChange={(e) => handleContactTypeChange(index, e.target.value as ContactType)}
+                                    className="h-8.5 rounded-xl border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-800 outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                                  >
+                                    <option value="WhatsApp">{tt("crm.ftype_whatsapp", "WhatsApp")}</option>
+                                    <option value="Mobile">{tt("purchase.f_mobile_number", "Mobile")}</option>
+                                    <option value="Phone">{tt("tax_einv.set_f_phone", "Phone")}</option>
+                                    <option value="Email">{tt("tax_einv.set_f_email", "Email")}</option>
+                                  </select>
+                                  <input
+                                    type={isEmail ? "email" : "tel"}
+                                    value={contact.value}
+                                    onChange={(e) => handleContactValueChange(index, e.target.value)}
+                                    placeholder={isEmail ? tt("tax_einv.set_f_email", "Email address") : tt("purchase.f_mobile_number", "Number with country code")}
+                                    className="h-8.5 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveContact(index)}
+                                    className="flex h-8.5 w-8 items-center justify-center rounded-xl border border-slate-200 text-slate-400 hover:bg-rose-50 hover:text-rose-600 dark:border-slate-700 dark:hover:bg-rose-950/40"
+                                    title={tt("common.remove", "Remove contact")}
+                                  >
+                                    <X className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+                              );
+                            })}
+
+                            <div className="flex items-center justify-between pt-1">
+                              <span className="text-[10.5px] text-slate-400">
+                                {contacts.length >= 10 ? "Maximum 10 contacts reached" : "Repeated types allowed"}
+                              </span>
                               <button
                                 type="button"
-                                onClick={() => handleRemoveContact(index)}
-                                className="flex h-8.5 w-8 items-center justify-center rounded-xl border border-slate-200 text-slate-400 hover:bg-rose-50 hover:text-rose-600 dark:border-slate-700 dark:hover:bg-rose-950/40"
-                                title="Remove contact"
+                                disabled={contacts.length >= 10}
+                                onClick={handleAddContact}
+                                className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700 hover:bg-blue-100 disabled:opacity-40 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-300"
                               >
-                                <X className="h-3.5 w-3.5" />
+                                <Plus className="h-3 w-3" /> Add Contact
                               </button>
                             </div>
-                          );
-                        })}
+                          </div>
+                        </details>
 
-                        <div className="flex items-center justify-between pt-1">
-                          <span className="text-[10.5px] text-slate-400">
-                            {contacts.length >= 10 ? "Maximum 10 contacts reached" : "Repeated types allowed"}
-                          </span>
-                          <button
-                            type="button"
-                            disabled={contacts.length >= 10}
-                            onClick={handleAddContact}
-                            className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700 hover:bg-blue-100 disabled:opacity-40 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-300"
-                          >
-                            <Plus className="h-3 w-3" /> Add Contact
-                          </button>
-                        </div>
-                      </div>
-                    </details>
-
-                    {/* Driver Name & Identification Fields */}
-                    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-4">
-                      <div className="sm:col-span-1">
-                        {form.driverType === "permanent" ? (
-                          <PersonPicker
-                            label={tt("trk.driver_name_label", "Driver Name *")}
-                            value={form.driverId}
-                            onValueChange={(id) => setForm((p) => ({ ...p, driverId: id }))}
-                            placeholder={tt("trk.search_driver_ph", "Search driver...")}
-                            lang={activeLang}
-                            createLabel={tt("trk.new_driver", "+ New Driver")}
-                          />
-                        ) : (
+                        {/* Temporary Driver Name & Identification Fields */}
+                        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-4">
                           <label className="space-y-1 text-xs block">
                             <span className="font-bold text-slate-700 dark:text-slate-300">
-                              Temporary Driver Name
+                              {tt("trk.ph_driver_name", "Temporary Driver Name")}
                             </span>
                             <input
                               value={form.temporaryDriverName}
                               onChange={(e) => setForm((p) => ({ ...p, temporaryDriverName: e.target.value }))}
-                              placeholder="Enter temporary driver name..."
+                              placeholder={tt("trk.ph_driver_name", "Enter temporary driver name...")}
                               className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                             />
                           </label>
-                        )}
-                      </div>
 
-                      <label className="space-y-1 text-xs">
-                        <span className="font-bold text-slate-700 dark:text-slate-300">{tt("trk.license_no", "Driving License Number")}</span>
-                        <input
-                          value={form.driverLicenseNo}
-                          onChange={(e) => setForm((p) => ({ ...p, driverLicenseNo: e.target.value }))}
-                          placeholder="Licence number"
-                          className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                        />
-                      </label>
-
-                      <label className="space-y-1 text-xs">
-                        <span className="font-bold text-slate-700 dark:text-slate-300">{tt("trk.licence_expiry_label", "Licence Expiry Date")}</span>
-                        <input
-                          type="date"
-                          value={form.driverLicenseExpiry}
-                          onChange={(e) => setForm((p) => ({ ...p, driverLicenseExpiry: e.target.value }))}
-                          className="h-9 w-full rounded-xl border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                        />
-                      </label>
-
-                      <label className="space-y-1 text-xs">
-                        <span className="font-bold text-slate-700 dark:text-slate-300">{tt("common.status", "Status")}</span>
-                        <select
-                          value={form.status}
-                          onChange={(e) => setForm((p) => ({ ...p, status: e.target.value }))}
-                          className="h-9 w-full rounded-xl border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                        >
-                          <option value="active">{tt("common.active", "Active")}</option>
-                          <option value="inactive">{tt("common.inactive", "Inactive")}</option>
-                          <option value="suspended">{tt("trk.badge_pending", "Pending")}</option>
-                          <option value="expired">{tt("trk.badge_completed", "Completed")}</option>
-                        </select>
-                      </label>
-                    </div>
-
-                    {/* Location Management for Driver */}
-                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-                      <div className="flex items-center gap-4 text-xs font-bold text-slate-700 dark:text-slate-300 mb-2.5">
-                        <span>Location Management for Driver</span>
-                        <label className="flex items-center gap-1.5 cursor-pointer">
-                          <input
-                            type="radio"
-                            name="addDriverLocation"
-                            value="yes"
-                            checked={form.addDriverLocation === "yes"}
-                            onChange={() => setForm((p) => ({ ...p, addDriverLocation: "yes" }))}
-                            className="text-blue-600"
-                          />
-                          <span>Yes (Add Location)</span>
-                        </label>
-                        <label className="flex items-center gap-1.5 cursor-pointer">
-                          <input
-                            type="radio"
-                            name="addDriverLocation"
-                            value="no"
-                            checked={form.addDriverLocation === "no"}
-                            onChange={() => setForm((p) => ({ ...p, addDriverLocation: "no" }))}
-                            className="text-blue-600"
-                          />
-                          <span>No (Not Required)</span>
-                        </label>
-                      </div>
-
-                      {form.addDriverLocation === "yes" && (
-                        <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
                           <label className="space-y-1 text-xs">
-                            <span className="font-bold text-slate-600 dark:text-slate-400">{tt("common.country", "Country")}</span>
+                            <span className="font-bold text-slate-700 dark:text-slate-300">{tt("trk.license_no", "Driving License Number")}</span>
                             <input
-                              value={form.driverCountry}
-                              onChange={(e) => setForm((p) => ({ ...p, driverCountry: e.target.value }))}
-                              placeholder="Country"
-                              className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                              value={form.driverLicenseNo}
+                              onChange={(e) => setForm((p) => ({ ...p, driverLicenseNo: e.target.value }))}
+                              placeholder={tt("trk.license_no", "Licence number")}
+                              className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                             />
                           </label>
+
                           <label className="space-y-1 text-xs">
-                            <span className="font-bold text-slate-600 dark:text-slate-400">State / Province</span>
+                            <span className="font-bold text-slate-700 dark:text-slate-300">{tt("trk.licence_expiry_label", "Licence Expiry Date")}</span>
                             <input
-                              value={form.driverState}
-                              onChange={(e) => setForm((p) => ({ ...p, driverState: e.target.value }))}
-                              placeholder="State / province"
-                              className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                              type="date"
+                              value={form.driverLicenseExpiry}
+                              onChange={(e) => setForm((p) => ({ ...p, driverLicenseExpiry: e.target.value }))}
+                              className="h-9 w-full rounded-xl border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                             />
                           </label>
+
                           <label className="space-y-1 text-xs">
-                            <span className="font-bold text-slate-600 dark:text-slate-400">{tt("common.city", "City")}</span>
-                            <input
-                              value={form.driverCity}
-                              onChange={(e) => setForm((p) => ({ ...p, driverCity: e.target.value }))}
-                              placeholder="City"
-                              className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                            />
-                          </label>
-                          <label className="space-y-1 text-xs">
-                            <span className="font-bold text-slate-600 dark:text-slate-400">{tt("common.address", "Full Address")}</span>
-                            <input
-                              value={form.driverAddress}
-                              onChange={(e) => setForm((p) => ({ ...p, driverAddress: e.target.value }))}
-                              placeholder="Enter full address..."
-                              className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                            />
+                            <span className="font-bold text-slate-700 dark:text-slate-300">{tt("common.status", "Status")}</span>
+                            <select
+                              value={form.status}
+                              onChange={(e) => setForm((p) => ({ ...p, status: e.target.value }))}
+                              className="h-9 w-full rounded-xl border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                            >
+                              <option value="active">{tt("common.active", "Active")}</option>
+                              <option value="inactive">{tt("common.inactive", "Inactive")}</option>
+                              <option value="suspended">{tt("trk.badge_pending", "Pending")}</option>
+                              <option value="expired">{tt("trk.badge_completed", "Completed")}</option>
+                            </select>
                           </label>
                         </div>
-                      )}
-                    </div>
+
+                        {/* Location Management for Driver */}
+                        <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+                          <div className="flex items-center gap-4 text-xs font-bold text-slate-700 dark:text-slate-300 mb-2.5">
+                            <span>{tt("nav.location_form", "Location Management for Driver")}</span>
+                            <label className="flex items-center gap-1.5 cursor-pointer">
+                              <input
+                                type="radio"
+                                name="addDriverLocation"
+                                value="yes"
+                                checked={form.addDriverLocation === "yes"}
+                                onChange={() => setForm((p) => ({ ...p, addDriverLocation: "yes" }))}
+                                className="text-blue-600"
+                              />
+                              <span>Yes (Add Location)</span>
+                            </label>
+                            <label className="flex items-center gap-1.5 cursor-pointer">
+                              <input
+                                type="radio"
+                                name="addDriverLocation"
+                                value="no"
+                                checked={form.addDriverLocation === "no"}
+                                onChange={() => setForm((p) => ({ ...p, addDriverLocation: "no" }))}
+                                className="text-blue-600"
+                              />
+                              <span>No (Not Required)</span>
+                            </label>
+                          </div>
+
+                          {form.addDriverLocation === "yes" && (
+                            <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
+                              <label className="space-y-1 text-xs">
+                                <span className="font-bold text-slate-600 dark:text-slate-400">{tt("common.country", "Country")}</span>
+                                <input
+                                  value={form.driverCountry}
+                                  onChange={(e) => setForm((p) => ({ ...p, driverCountry: e.target.value }))}
+                                  placeholder={tt("lp.country_label", "Country")}
+                                  className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                                />
+                              </label>
+                              <label className="space-y-1 text-xs">
+                                <span className="font-bold text-slate-600 dark:text-slate-400">State / Province</span>
+                                <input
+                                  value={form.driverState}
+                                  onChange={(e) => setForm((p) => ({ ...p, driverState: e.target.value }))}
+                                  placeholder={tt("branch.row_state_province", "State / province")}
+                                  className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                                />
+                              </label>
+                              <label className="space-y-1 text-xs">
+                                <span className="font-bold text-slate-600 dark:text-slate-400">{tt("common.city", "City")}</span>
+                                <input
+                                  value={form.driverCity}
+                                  onChange={(e) => setForm((p) => ({ ...p, driverCity: e.target.value }))}
+                                  placeholder={tt("lp.city", "City")}
+                                  className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                                />
+                              </label>
+                              <label className="space-y-1 text-xs">
+                                <span className="font-bold text-slate-600 dark:text-slate-400">{tt("common.address", "Full Address")}</span>
+                                <input
+                                  value={form.driverAddress}
+                                  onChange={(e) => setForm((p) => ({ ...p, driverAddress: e.target.value }))}
+                                  placeholder={tt("trk.ph_driver_address", "Enter full address...")}
+                                  className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                                />
+                              </label>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </section>
@@ -2733,16 +2913,47 @@ export function TruckRecreationWizard({
                     label={tt("trk.driver_name_label", "Driver Name")}
                     value={form.driverType === "permanent" ? driverDetails?.customer_name : form.temporaryDriverName}
                   />
-                  <LiveReportRow label={tt("trk.license_no", "Driving License Number")} value={form.driverLicenseNo} />
-                  <LiveReportRow label={tt("trk.licence_expiry_label", "Licence Expiry Date")} value={form.driverLicenseExpiry} />
-                  {contacts.filter((c) => c.value.trim().length > 0).map((c, idx) => (
-                    <LiveReportRow key={c.id || idx} label={c.type} value={c.value} />
-                  ))}
-                  {form.addDriverLocation === "yes" && (
-                    <LiveReportRow
-                      label="Location"
-                      value={[form.driverCountry, form.driverState, form.driverCity, form.driverAddress].filter(Boolean).join(", ") || "—"}
-                    />
+                  <LiveReportRow
+                    label={tt("trk.license_no", "Driving License Number")}
+                    value={form.driverType === "permanent" ? (driverDetails?.license_no || form.driverLicenseNo) : form.driverLicenseNo}
+                  />
+                  <LiveReportRow
+                    label={tt("trk.licence_expiry_label", "Licence Expiry Date")}
+                    value={form.driverType === "permanent" ? (driverDetails?.license_expiry || form.driverLicenseExpiry) : form.driverLicenseExpiry}
+                  />
+                  <LiveReportRow
+                    label={tt("common.status", "Status")}
+                    badge={
+                      <span className={`inline-block rounded-md px-2 py-0.5 text-[10px] font-bold ${statusBadgeClasses(form.status)}`}>
+                        {statusLabel(form.status)}
+                      </span>
+                    }
+                  />
+                  {form.driverType === "permanent" ? (
+                    <>
+                      {driverDetails?.mobile && <LiveReportRow label={tt("common.mobile", "Primary Mobile")} value={driverDetails.mobile} />}
+                      {driverDetails?.whatsapp && <LiveReportRow label={tt("crm.ftype_whatsapp", "WhatsApp")} value={driverDetails.whatsapp} />}
+                      {driverDetails?.email && <LiveReportRow label={tt("tax_einv.set_f_email", "Email")} value={driverDetails.email} />}
+                      {(driverDetails?.city_name || driverDetails?.city || driverDetails?.country_name || driverDetails?.country || driverDetails?.address) && (
+                        <LiveReportRow
+                          label={tt("common.location", "Location")}
+                          value={[driverDetails.city_name || driverDetails.city, driverDetails.state_province_name || driverDetails.state, driverDetails.country_name || driverDetails.country, driverDetails.address].filter(Boolean).join(", ")}
+                        />
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      {form.driverMobile && <LiveReportRow label={tt("common.mobile", "Primary Mobile")} value={form.driverMobile} />}
+                      {contacts.filter((c) => c.value.trim().length > 0).map((c, idx) => (
+                        <LiveReportRow key={c.id || idx} label={c.type} value={c.value} />
+                      ))}
+                      {form.addDriverLocation === "yes" && (form.driverCountry || form.driverCity || form.driverAddress) && (
+                        <LiveReportRow
+                          label={tt("common.location", "Location")}
+                          value={[form.driverCountry, form.driverState, form.driverCity, form.driverAddress].filter(Boolean).join(", ") || "—"}
+                        />
+                      )}
+                    </>
                   )}
                 </LiveReportSection>
               )}
