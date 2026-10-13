@@ -380,6 +380,16 @@ export type CustomerOrderGoodsItem = {
   photoName?: string;
   remarks?: string;
 
+  allotName?: string;
+  wAcc?: string;
+  priceType?: string;
+  divideType?: string;
+  currency1?: string;
+  rate1?: string;
+  op?: string;
+  currency2?: string;
+  rate2?: string;
+
   // Compatibility fields for Live Report & UI
   goods_name?: string;
   qty_unit?: string;
@@ -474,6 +484,64 @@ function goodsWeights(g: Partial<CustomerOrderGoodsItem>) {
 }
 const roundKg = (n: number, digits = 3) => Number(n.toFixed(digits));
 
+function roundPrecision(val: number, decimals = 2): number {
+  const factor = Math.pow(10, decimals);
+  return Math.round((val + Number.EPSILON) * factor) / factor;
+}
+
+function calculateGoodsItemFinancials(g: Partial<CustomerOrderGoodsItem>) {
+  const qtyNo = Number(g.quantity) || 0;
+  const kgPerQty = Number(g.kgPerQty) || 0;
+  const rawGross = Number(g.grossWeight || g.totalKg) || 0;
+  const totalGrossWeight = rawGross > 0 ? rawGross : (qtyNo > 0 && kgPerQty > 0 ? qtyNo * kgPerQty : 0);
+
+  const emptyKgs = Number(g.emptyKgPerUnit) || 0;
+  const rawTare = Number(g.emptyWeight) || 0;
+  const totalEmptyWeight = rawTare > 0 ? rawTare : (qtyNo > 0 && emptyKgs > 0 ? qtyNo * emptyKgs : 0);
+
+  const netWeight = Math.max(0, totalGrossWeight - totalEmptyWeight);
+  const tons = netWeight > 0 ? Number((netWeight / 1000).toFixed(3)) : 0;
+
+  const rate1 = Math.max(0, Number(g.rate1 || g.rate) || 0);
+  const rate2 = Math.max(0, Number(g.rate2) || 0);
+  const op = g.op === "/" ? "/" : "*";
+  const priceType = g.priceType || "P/KGs";
+  const divideType = g.divideType || "D/KGs";
+
+  let primaryAmount = 0;
+  if (priceType === "P/TON") {
+    primaryAmount = tons * rate1;
+  } else if (priceType === "P/BAG" || priceType === "P/ITEM") {
+    primaryAmount = qtyNo * rate1;
+  } else {
+    if (divideType === "D/TON") {
+      primaryAmount = tons * rate1;
+    } else {
+      primaryAmount = netWeight * rate1;
+    }
+  }
+
+  let finalAmount = 0;
+  if (rate2 > 0) {
+    if (op === "/") {
+      finalAmount = primaryAmount / rate2;
+    } else {
+      finalAmount = primaryAmount * rate2;
+    }
+  } else {
+    finalAmount = primaryAmount;
+  }
+
+  return {
+    totalGrossWeight: roundPrecision(totalGrossWeight, 2),
+    totalEmptyWeight: roundPrecision(totalEmptyWeight, 2),
+    netWeight: roundPrecision(netWeight, 2),
+    tons: roundPrecision(tons, 3),
+    primaryAmount: roundPrecision(primaryAmount, 2),
+    finalAmount: roundPrecision(finalAmount, 2)
+  };
+}
+
 /** Customs wording follows the customs operation — an import is never labelled "In-Transit". */
 function customsStageLabel(lang: string, movement: string | null | undefined): string {
   const m = String(movement || "import").toLowerCase();
@@ -524,14 +592,23 @@ export function defaultGoodsItem(): CustomerOrderGoodsItem {
     totalKg: "",
     grossWeight: "",
     emptyWeight: "",
-    emptyKgPerUnit: "",
+    emptyKgPerUnit: "0.10",
     lotName: "",
     qualityRef: "",
     netWeight: "",
-    currency: "",
+    currency: "USD",
     rate: "",
     finalAmount: "",
     qualityReport: "",
+    allotName: "",
+    wAcc: "",
+    priceType: "P/KGs",
+    divideType: "D/KGs",
+    currency1: "USD",
+    rate1: "",
+    op: "*",
+    currency2: "PKR",
+    rate2: "",
     warehouseSourceType: "company_warehouse",
     warehouseId: "",
     warehouseName: "",
@@ -541,10 +618,10 @@ export function defaultGoodsItem(): CustomerOrderGoodsItem {
     remarks: "",
     goods_name: "",
     qty_unit: "Bags",
-    kg_per_qty: "50",
-    total_weight_kg: "50",
+    kg_per_qty: "",
+    total_weight_kg: "",
     packaging_type: "Bags",
-    bags_cartons: "1",
+    bags_cartons: "",
     warehouse_source: "company",
     warehouse_name: ""
   };
@@ -1056,6 +1133,7 @@ export function CustomerOrderManagementView() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
   const [step1SubStep, setStep1SubStep] = useState<"1A" | "1B" | "1C">("1A");
+  const [showLiveReport, setShowLiveReport] = useState<boolean>(true);
   const [orders, setOrders] = useState<ClearingCustomerOrderRow[]>([]);
   const [customers, setCustomers] = useState<CustomerRow[]>([]);
   const [accounts, setAccounts] = useState<AccountRow[]>([]);
@@ -4514,6 +4592,21 @@ export function CustomerOrderManagementView() {
 
               {/* Right: Actions, Save Draft, + New Order */}
               <div className="flex flex-wrap items-center gap-2 justify-end shrink-0">
+                {/* Live Report Toggle Button */}
+                <button
+                  type="button"
+                  onClick={() => setShowLiveReport((prev) => !prev)}
+                  className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition shadow-2xs ${
+                    showLiveReport
+                      ? "border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/60 dark:text-blue-300"
+                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                  }`}
+                  title={showLiveReport ? tt("hide_live_report_title", "Hide Live Report panel to maximize form width") : tt("show_live_report_title", "Show Live Report side panel")}
+                >
+                  <Eye className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                  <span>{showLiveReport ? tt("hide_live_report", "Live Report: ON") : tt("show_live_report", "Live Report: OFF")}</span>
+                </button>
+
                 {/* More Actions Dropdown */}
                 <div className="relative">
                   <button
@@ -4662,10 +4755,10 @@ export function CustomerOrderManagementView() {
               />
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[380px_1fr] 2xl:grid-cols-[400px_1fr] xl:items-start" dir="ltr">
-              {/* LEFT COLUMN: The Form Cards (Slimmer Entry Set) */}
-              <div dir={isRtl ? "rtl" : "ltr"} className="space-y-3">
-                <div className="rounded-xl border border-slate-200/90 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className={`grid grid-cols-1 gap-5 ${showLiveReport ? "xl:grid-cols-[minmax(0,1fr)_360px] 2xl:grid-cols-[minmax(0,1fr)_400px]" : "max-w-5xl mx-auto"} xl:items-start`} dir="ltr">
+              {/* PRIMARY COLUMN: The Form Workspace */}
+              <div dir={isRtl ? "rtl" : "ltr"} className="space-y-4 min-w-0">
+                <div className="rounded-xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                   {(currentStep === 1 || currentStep === 2 || currentStep === 3) && (
                     <Step1BookingCustomer
                       lang={lang}
@@ -4753,7 +4846,8 @@ export function CustomerOrderManagementView() {
             </div>
 
             {/* RIGHT COLUMN: The Live Customer Order Report Panel */}
-            <div dir={isRtl ? "rtl" : "ltr"} className="space-y-4 xl:sticky xl:top-3 h-fit max-h-[calc(100vh-1.5rem)] overflow-y-auto rounded-2xl bg-slate-50/70 p-2 pr-1 dark:bg-slate-950/30">
+            {showLiveReport && (
+              <div dir={isRtl ? "rtl" : "ltr"} className="space-y-4 xl:sticky xl:top-3 h-fit max-h-[calc(100vh-1.5rem)] overflow-y-auto rounded-2xl bg-slate-50/70 p-2 pr-1 dark:bg-slate-950/30">
               {/* Live Report Card Container */}
               <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900 space-y-4">
                 {/* Header with Title, Subtitle, and Action Buttons (Back, Print, PDF, Live) */}
@@ -5745,6 +5839,7 @@ export function CustomerOrderManagementView() {
                 </div>
               </div>
             </div>
+            )}
           </div>
         )}
       </div>
