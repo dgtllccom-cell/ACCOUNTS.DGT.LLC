@@ -9,7 +9,7 @@ const proc = spawnSync('ssh', [
   remoteCmd
 ], {
   encoding: 'utf8',
-  timeout: 180000
+  timeout: 300000
 });
 
 if (proc.stdout) process.stdout.write(proc.stdout);

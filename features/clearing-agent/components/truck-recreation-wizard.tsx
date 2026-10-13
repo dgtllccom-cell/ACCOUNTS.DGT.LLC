@@ -82,17 +82,60 @@ type CustomerDetails = {
 type CompanyDetails = {
   id: string;
   name?: string;
+  legal_name?: string;
+  trade_name?: string;
   company_code?: string;
+  owner_name?: string;
+  tax_number?: string;
+  registration_number?: string;
   country_name?: string;
+  state_name?: string;
   city_name?: string;
   address?: string;
-  contacts?: Array<{ type?: string; value?: string }>;
+  phone?: string;
+  mobile?: string;
+  email?: string;
+  contacts?: Array<{ type?: string; value?: string; isPrimary?: boolean }>;
+  registrations?: Array<{ type?: string; value?: string }>;
 };
 
-function companyPhone(company: CompanyDetails | null): string | undefined {
-  if (!company?.contacts?.length) return undefined;
-  const byType = (t: string) => company.contacts!.find((c) => (c.type || "").toLowerCase() === t)?.value;
-  return byType("office") || byType("mobile") || byType("whatsapp") || company.contacts[0]?.value;
+function cleanTitle(raw: string | undefined, fallback: string): string {
+  if (!raw) return fallback;
+  const stripped = raw.replace(/^[0-9۰-۹]+\s*[\.\:،-]?\s*/, "").trim();
+  return stripped || fallback;
+}
+
+function companyPhone(company: CompanyDetails | null | undefined): string | undefined {
+  if (!company) return undefined;
+  if (company.phone) return company.phone;
+  if (company.mobile) return company.mobile;
+  if (Array.isArray(company.contacts) && company.contacts.length > 0) {
+    const primary = company.contacts.find((c) => c.isPrimary)?.value;
+    if (primary) return primary;
+    const byType = (t: string) => company.contacts!.find((c) => (c.type || "").toLowerCase() === t)?.value;
+    return byType("office") || byType("mobile") || byType("phone") || byType("whatsapp") || company.contacts[0]?.value;
+  }
+  return undefined;
+}
+
+function companyEmail(company: CompanyDetails | null | undefined): string | undefined {
+  if (!company) return undefined;
+  if (company.email) return company.email;
+  if (Array.isArray(company.contacts) && company.contacts.length > 0) {
+    const byType = company.contacts.find((c) => (c.type || "").toLowerCase() === "email")?.value;
+    if (byType) return byType;
+  }
+  return undefined;
+}
+
+function companyRegNumber(company: CompanyDetails | null | undefined): string | undefined {
+  if (!company) return undefined;
+  if (company.registration_number) return company.registration_number;
+  if (company.tax_number) return company.tax_number;
+  if (Array.isArray(company.registrations) && company.registrations.length > 0) {
+    return company.registrations[0]?.value;
+  }
+  return undefined;
 }
 
 type TruckRow = {
@@ -351,7 +394,8 @@ export function TruckRecreationWizard({
       try {
         const res = await fetch(`/api/erp/companies/${encodeURIComponent(form.companyId)}`).then((r) => r.json());
         if (cancelled) return;
-        if (res?.data?.company) setCompanyDetails(res.data.company);
+        const comp = res?.data?.company || res?.company;
+        if (comp) setCompanyDetails(comp);
       } catch {
         /* ignore */
       }
@@ -363,7 +407,7 @@ export function TruckRecreationWizard({
 
   // Lookup details for Transporter
   useEffect(() => {
-    if (!form.transporterId || form.companyLink === "no") {
+    if (!form.transporterId) {
       setTransporterDetails(null);
       return;
     }
@@ -380,7 +424,7 @@ export function TruckRecreationWizard({
     return () => {
       cancelled = true;
     };
-  }, [form.transporterId, form.companyLink]);
+  }, [form.transporterId]);
 
   // Lookup details for Driver
   useEffect(() => {
@@ -698,7 +742,7 @@ export function TruckRecreationWizard({
         owner_mobile: form.hasOwner === "yes" ? ownerDetails?.mobile || ownerDetails?.whatsapp || null : null,
         transport_company_id: form.companyLink === "yes" && form.companyId ? form.companyId : null,
         transport_company: form.companyLink === "yes" ? companyDetails?.name || null : null,
-        transporter_person_id: form.companyLink === "yes" && form.transporterId ? form.transporterId : null,
+        transporter_person_id: form.transporterId ? form.transporterId : null,
         driver_person_id: form.driverType === "permanent" && form.driverId ? form.driverId : null,
         driver_name: driverName,
         driver_mobile: firstValidContact,
@@ -809,10 +853,24 @@ export function TruckRecreationWizard({
       : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300";
 
   // Reusable Report Row
-  const LiveReportRow = ({ label, value }: { label: string; value: string | null | undefined }) => (
-    <div className="grid grid-cols-[44%_56%] items-baseline border-b border-slate-100 py-1.5 text-[11px] last:border-0 dark:border-slate-800">
-      <span className="text-slate-500 font-medium">{label}</span>
-      <b className="text-slate-800 dark:text-slate-100 font-semibold break-all text-end sm:text-start">{value || "—"}</b>
+  const LiveReportRow = ({
+    label,
+    value,
+    badge,
+  }: {
+    label: string;
+    value?: string | number | null;
+    badge?: React.ReactNode;
+  }) => (
+    <div className="flex items-baseline justify-between gap-3 border-b border-slate-100 py-1.5 text-[11px] last:border-0 dark:border-slate-800/80">
+      <span className="text-slate-500 dark:text-slate-400 font-medium shrink-0">{label}:</span>
+      {badge ? (
+        <span className="text-end">{badge}</span>
+      ) : (
+        <b className="text-slate-800 dark:text-slate-100 font-semibold break-words text-end">
+          {value || "—"}
+        </b>
+      )}
     </div>
   );
 
@@ -821,93 +879,192 @@ export function TruckRecreationWizard({
     title,
     icon: Icon,
     children,
+    action,
   }: {
     title: string;
     icon: any;
     children: React.ReactNode;
+    action?: React.ReactNode;
   }) => (
-    <div className="mb-3 rounded-xl border border-slate-100 bg-white p-3 shadow-2xs dark:border-slate-800/80 dark:bg-slate-900">
-      <div className="mb-2 flex items-center gap-1.5 rounded-lg bg-blue-50/70 px-2.5 py-1 text-[10.5px] font-black uppercase tracking-wider text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
-        <Icon className="h-3.5 w-3.5 shrink-0" />
-        <span>{title}</span>
+    <div className="rounded-2xl border border-slate-200/90 bg-white p-3.5 shadow-2xs dark:border-slate-800 dark:bg-slate-900 transition">
+      <div className="mb-2.5 flex items-center justify-between border-b border-slate-100 pb-2 dark:border-slate-800">
+        <div className="flex items-center gap-2">
+          <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+            <Icon className="h-3.5 w-3.5" />
+          </div>
+          <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
+            {title}
+          </span>
+        </div>
+        {action}
       </div>
-      <div className="space-y-0.5 px-1">{children}</div>
+      <div className="space-y-0.5">{children}</div>
     </div>
   );
 
   // Full Live Report Content
   const fullLiveReportContent = (
-    <div className="space-y-3">
-      {/* Dark Truck Banner */}
-      <div className="rounded-2xl bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 p-4 text-white shadow-md">
+    <div className="space-y-3.5">
+      {/* Dark Truck Banner with Live Status & Specifications */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 p-4 text-white shadow-md">
         <div className="flex items-center justify-between">
-          <div>
-            <div className="text-[10px] font-bold tracking-widest text-blue-300 uppercase">
-              {tt("trk.col_truck_no", "Truck No.")}
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold tracking-widest text-blue-300 uppercase">
+                {tt("trk.col_truck_no", "Truck No.")}
+              </span>
+              <span className={`inline-block rounded-md px-2 py-0.5 text-[9px] font-bold ${statusBadgeClasses(form.status)}`}>
+                {statusLabel(form.status)}
+              </span>
             </div>
-            <div className="text-2xl font-black font-mono tracking-tight text-white mt-0.5">
+            <div className="text-2xl font-black font-mono tracking-tight text-white">
               {form.truckNumber || "New Registration"}
             </div>
+            {form.truckName && (
+              <div className="text-xs text-blue-200/80 font-medium">
+                {form.truckName} {form.truckModel ? `· Model ${form.truckModel}` : ""}
+              </div>
+            )}
           </div>
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600/30 border border-blue-400/30 text-blue-200">
-            <TruckIcon className="h-6 w-6" />
+          <div className="flex flex-col items-end gap-1.5">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600/30 border border-blue-400/30 text-blue-200">
+              <TruckIcon className="h-6 w-6" />
+            </div>
+            <span className="rounded-full bg-blue-500/20 px-2 py-0.5 text-[10px] font-bold text-blue-200 border border-blue-400/20">
+              {form.truckType}
+            </span>
           </div>
         </div>
       </div>
 
       {/* 1. Owner / Customer Information */}
-      <LiveReportSection title={`1. ${tt("trk.section_owner", "Truck Owner Information")}`} icon={User}>
-        {form.hasOwner === "no" ? (
+      <LiveReportSection
+        title={`1. ${cleanTitle(tt("trk.section_owner", "Truck Owner Information"), "Truck Owner Information")}`}
+        icon={User}
+      >
+        {form.hasOwner === "no" || !form.ownerId ? (
           <div className="p-2 text-xs text-slate-500 italic">
-            No owner is linked to this truck. Direct registration.
+            No owner is linked to this truck. Direct registration without owner.
           </div>
         ) : (
-          <>
-            <LiveReportRow label={tt("common.name", "Name")} value={ownerDetails?.customer_name || "—"} />
-            <LiveReportRow label={tt("trk.owner_code_label", "Owner Code")} value={ownerDetails?.person_code || ownerDetails?.code || "—"} />
-            <LiveReportRow label={tt("common.mobile", "Mobile")} value={ownerDetails?.mobile || "—"} />
-            <LiveReportRow label="WhatsApp" value={ownerDetails?.whatsapp || "—"} />
-            <LiveReportRow label={tt("common.address", "Address")} value={ownerDetails?.address || "—"} />
-          </>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+            <LiveReportRow label={tt("common.name", "Name")} value={ownerDetails?.customer_name} />
+            <LiveReportRow label={tt("trk.owner_code_label", "Owner Code")} value={ownerDetails?.person_code || ownerDetails?.code} />
+            <LiveReportRow label={tt("common.mobile", "Mobile")} value={ownerDetails?.mobile} />
+            <LiveReportRow label={tt("common.whatsapp", "WhatsApp")} value={ownerDetails?.whatsapp} />
+            <div className="sm:col-span-2">
+              <LiveReportRow label={tt("common.address", "Address")} value={ownerDetails?.address} />
+            </div>
+          </div>
         )}
       </LiveReportSection>
 
       {/* 2. Truck & Vehicle Details */}
-      <LiveReportSection title={`2. ${tt("trk.section_truck_details", "Truck Details")}`} icon={TruckIcon}>
-        <LiveReportRow label={tt("trk.truck_no", "Truck Number")} value={form.truckNumber} />
-        <LiveReportRow label={tt("trk.chassis_no", "Chassis No")} value={form.chassisNumber} />
-        <LiveReportRow label={tt("trk.engine_no", "Engine No")} value={form.engineNumber} />
-        <LiveReportRow label={tt("trk.reg_no", "Registration No")} value={form.registrationNumber} />
-        <LiveReportRow label={tt("trk.truck_type", "Truck Type")} value={form.truckType} />
-        <LiveReportRow label={tt("trk.year", "Year")} value={form.manufacturingYear} />
-        <LiveReportRow label={tt("trk.color", "Color")} value={form.color} />
-        <LiveReportRow label={tt("trk.fuel_type", "Fuel Type")} value={form.fuelType} />
-        <LiveReportRow label={tt("trk.capacity", "Capacity (Tons)")} value={form.capacity} />
-        <LiveReportRow label={tt("tr.reg_expiry", "Reg. Expiry")} value={form.registrationExpiryDate} />
-        <LiveReportRow label={tt("tr.ins_expiry", "Insurance Expiry")} value={form.insuranceExpiryDate} />
+      <LiveReportSection
+        title={`2. ${cleanTitle(tt("trk.section_truck_details", "Truck Details"), "Truck Details")}`}
+        icon={TruckIcon}
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+          <LiveReportRow label={tt("trk.truck_no", "Truck Number")} value={form.truckNumber} />
+          <LiveReportRow label={tt("trk.truck_name_label", "Truck Name")} value={form.truckName} />
+          <LiveReportRow label={tt("trk.truck_type", "Truck Type")} value={form.truckType} />
+          <LiveReportRow label={tt("trk.year", "Year")} value={form.manufacturingYear} />
+          <LiveReportRow label={tt("trk.color", "Color")} value={form.color} />
+          <LiveReportRow label={tt("trk.fuel_type", "Fuel Type")} value={form.fuelType} />
+          <LiveReportRow label={tt("trk.capacity", "Capacity (Tons)")} value={form.capacity ? `${form.capacity} Tons` : null} />
+          <LiveReportRow label={tt("trk.reg_no", "Registration No")} value={form.registrationNumber} />
+          <LiveReportRow label={tt("trk.chassis_no", "Chassis No")} value={form.chassisNumber} />
+          <LiveReportRow label={tt("trk.engine_no", "Engine No")} value={form.engineNumber} />
+          <LiveReportRow label={tt("tr.reg_expiry", "Reg. Expiry")} value={form.registrationExpiryDate} />
+          <LiveReportRow label={tt("tr.ins_expiry", "Insurance Expiry")} value={form.insuranceExpiryDate} />
+        </div>
       </LiveReportSection>
 
-      {/* 3. Transporter / Shipping Line */}
-      <LiveReportSection title={`3. ${tt("trk.section_transporter", "Transporter Information")}`} icon={Building2}>
-        {form.companyLink === "no" ? (
+      {/* 3. Transporter & Company Information */}
+      <LiveReportSection
+        title={`3. ${cleanTitle(tt("trk.section_transporter", "Transporter Information"), "Transporter Information")}`}
+        icon={Building2}
+      >
+        {form.companyLink === "no" && !form.transporterId ? (
           <div className="p-2 text-xs text-slate-500 italic">
             No transporter or shipping-line company is linked.
           </div>
         ) : (
-          <>
-            <LiveReportRow label={tt("trk.company_name_label", "Company Name")} value={companyDetails?.name || "—"} />
-            <LiveReportRow label={tt("trk.company_code_label", "Company Code")} value={companyDetails?.company_code || "—"} />
-            <LiveReportRow label={tt("common.phone", "Phone")} value={companyPhone(companyDetails) || "—"} />
-            <LiveReportRow label={tt("common.city", "City")} value={[companyDetails?.city_name, companyDetails?.country_name].filter(Boolean).join(", ") || "—"} />
-            <LiveReportRow label={tt("common.address", "Address")} value={companyDetails?.address || "—"} />
-          </>
+          <div className="space-y-2.5">
+            {/* Transporter Person Card if selected */}
+            {transporterDetails ? (
+              <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-2.5 dark:border-blue-900/40 dark:bg-blue-950/20">
+                <div className="flex items-center justify-between border-b border-blue-100/80 pb-1.5 mb-1.5 dark:border-blue-900/40">
+                  <div className="flex items-center gap-1.5">
+                    <User className="h-3.5 w-3.5 text-blue-600" />
+                    <span className="text-xs font-black text-slate-900 dark:text-white">
+                      {transporterDetails.customer_name}
+                    </span>
+                  </div>
+                  <span className="rounded-md bg-blue-600 text-white px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider">
+                    REGISTERED TRANSPORTER
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+                  <LiveReportRow label={tt("trk.transporter_code_label", "Transporter Code")} value={transporterDetails.person_code || transporterDetails.code} />
+                  <LiveReportRow label={tt("common.mobile", "Mobile")} value={transporterDetails.mobile} />
+                  <LiveReportRow label={tt("common.whatsapp", "WhatsApp")} value={transporterDetails.whatsapp} />
+                  <LiveReportRow label={tt("common.address", "Address")} value={transporterDetails.address} />
+                </div>
+              </div>
+            ) : form.transporterId ? (
+              <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-2 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-800/40">
+                <Loader2 className="h-3.5 w-3.5 animate-spin inline mr-1" /> Loading transporter details...
+              </div>
+            ) : null}
+
+            {/* Linked Transport / Shipping Company */}
+            {form.companyLink === "yes" && (companyDetails ? (
+              <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-2.5 dark:border-slate-800 dark:bg-slate-800/30">
+                <div className="flex items-center justify-between border-b border-slate-200/80 pb-1.5 mb-1.5 dark:border-slate-700/80">
+                  <div className="flex items-center gap-1.5">
+                    <Building2 className="h-3.5 w-3.5 text-blue-600" />
+                    <span className="text-xs font-black text-slate-900 dark:text-white">
+                      {companyDetails.name}
+                    </span>
+                  </div>
+                  <span className="rounded-md bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-200 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider border border-blue-200 dark:border-blue-800">
+                    {form.companyType === "shippingLine" ? "Shipping Line Company" : "Transporter Company"}
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+                  <LiveReportRow label={tt("trk.company_code_label", "Company Code")} value={companyDetails.company_code} />
+                  <LiveReportRow label={tt("c360.legal_name", "Legal / Trade Name")} value={companyDetails.legal_name || companyDetails.trade_name} />
+                  <LiveReportRow label={tt("ctm.trn_reg_no", "Registration / TRN")} value={companyRegNumber(companyDetails)} />
+                  <LiveReportRow label={tt("sed.f_owner_name", "Owner Name")} value={companyDetails.owner_name} />
+                  <LiveReportRow label={tt("common.phone", "Phone / Mobile")} value={companyPhone(companyDetails)} />
+                  <LiveReportRow label={tt("common.email", "Email")} value={companyEmail(companyDetails)} />
+                  <LiveReportRow label={tt("common.city", "City / Country")} value={[companyDetails.city_name, companyDetails.country_name].filter(Boolean).join(", ")} />
+                  <div className="sm:col-span-2">
+                    <LiveReportRow label={tt("common.address", "Registered Office")} value={companyDetails.address} />
+                  </div>
+                </div>
+              </div>
+            ) : form.companyId ? (
+              <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-2 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-800/40">
+                <Loader2 className="h-3.5 w-3.5 animate-spin inline mr-1" /> Loading company information...
+              </div>
+            ) : (
+              <div className="p-2 text-xs text-slate-400 italic">
+                Choose an existing company to display its registered details.
+              </div>
+            ))}
+          </div>
         )}
       </LiveReportSection>
 
       {/* 4. Driver Information */}
-      <LiveReportSection title={`4. ${tt("trk.section_driver", "Driver Information")}`} icon={UserCheck}>
+      <LiveReportSection
+        title={`4. ${cleanTitle(tt("trk.section_driver", "Driver Information"), "Driver Information")}`}
+        icon={UserCheck}
+      >
         {/* Driver Photo Preview Card */}
-        <div className="my-2 flex items-center gap-3 rounded-xl border border-blue-100 bg-blue-50/50 p-2.5 dark:border-blue-900/40 dark:bg-blue-950/20">
+        <div className="my-1.5 flex items-center gap-3 rounded-xl border border-blue-100 bg-blue-50/50 p-2.5 dark:border-blue-900/40 dark:bg-blue-950/20">
           <div className="relative h-14 w-12 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-2xs dark:border-slate-700 dark:bg-slate-800 flex items-center justify-center">
             {driverPhotoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -928,32 +1085,52 @@ export function TruckRecreationWizard({
           </div>
         </div>
 
-        <LiveReportRow label={tt("trk.license_no", "Driving License Number")} value={form.driverLicenseNo} />
-        <LiveReportRow label={tt("trk.licence_expiry_label", "Licence Expiry Date")} value={form.driverLicenseExpiry} />
-        <div className="grid grid-cols-[44%_56%] items-baseline border-b border-slate-100 py-1.5 text-[11px] last:border-0 dark:border-slate-800">
-          <span className="text-slate-500 font-medium">{tt("common.status", "Status")}</span>
-          <span className="text-end sm:text-start">
-            <span className={`inline-block rounded-md px-2 py-0.5 text-[10px] font-bold ${statusBadgeClasses(form.status)}`}>
-              {statusLabel(form.status)}
-            </span>
-          </span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+          <LiveReportRow label={tt("trk.license_no", "Driving License Number")} value={form.driverLicenseNo} />
+          <LiveReportRow label={tt("trk.licence_expiry_label", "Licence Expiry Date")} value={form.driverLicenseExpiry} />
+          <LiveReportRow
+            label={tt("common.status", "Status")}
+            badge={
+              <span className={`inline-block rounded-md px-2 py-0.5 text-[10px] font-bold ${statusBadgeClasses(form.status)}`}>
+                {statusLabel(form.status)}
+              </span>
+            }
+          />
+          <LiveReportRow label={tt("common.mobile", "Primary Mobile")} value={form.driverMobile || driverDetails?.mobile} />
         </div>
 
-        {/* Contacts */}
-        {contacts.filter((c) => c.value.trim().length > 0).map((c, idx) => (
-          <LiveReportRow key={c.id || idx} label={c.type} value={c.value} />
-        ))}
+        {/* Additional Contacts */}
+        {contacts.filter((c) => c.value.trim().length > 0).length > 0 && (
+          <div className="mt-1 pt-1 border-t border-slate-100 dark:border-slate-800">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Contacts</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+              {contacts.filter((c) => c.value.trim().length > 0).map((c, idx) => (
+                <LiveReportRow key={c.id || idx} label={c.type} value={c.value} />
+              ))}
+            </div>
+          </div>
+        )}
 
-        {form.addDriverLocation === "yes" && (
-          <LiveReportRow
-            label="Location"
-            value={[form.driverCountry, form.driverState, form.driverCity, form.driverAddress].filter(Boolean).join(", ") || "—"}
-          />
+        {form.addDriverLocation === "yes" && (form.driverCountry || form.driverCity || form.driverAddress) && (
+          <div className="mt-1 pt-1 border-t border-slate-100 dark:border-slate-800">
+            <LiveReportRow
+              label={tt("common.location", "Driver Location")}
+              value={[form.driverCountry, form.driverState, form.driverCity, form.driverAddress].filter(Boolean).join(", ")}
+            />
+          </div>
         )}
       </LiveReportSection>
 
       {/* 5. Documents */}
-      <LiveReportSection title="5. Documents" icon={FileText}>
+      <LiveReportSection
+        title={`5. Documents`}
+        icon={FileText}
+        action={
+          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-mono font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+            {documents.length} files
+          </span>
+        }
+      >
         {documents.length === 0 ? (
           <div className="p-2 text-center text-xs text-slate-400">
             No documents uploaded yet.
@@ -962,7 +1139,7 @@ export function TruckRecreationWizard({
           <div className="space-y-1.5 pt-1">
             {documents.map((d) => (
               <div key={d.id} className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50/70 p-2 text-xs dark:border-slate-800 dark:bg-slate-800/40">
-                <span className="truncate font-medium text-slate-700 dark:text-slate-300 max-w-[150px]">{d.name}</span>
+                <span className="truncate font-medium text-slate-700 dark:text-slate-300 max-w-[200px]">{d.name}</span>
                 <div className="flex items-center gap-2 shrink-0">
                   <a href={d.url} target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold text-blue-600 hover:underline">
                     View
@@ -1510,8 +1687,8 @@ export function TruckRecreationWizard({
 
           {/* MAIN 2-COLUMN LAYOUT: Compact Form (Left) & Sticky Live Truck Report (Right) */}
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 items-start">
-            {/* LEFT FORM COLUMN (Col 7) */}
-            <form onSubmit={handleSubmit} className="space-y-4 lg:col-span-7">
+            {/* LEFT FORM COLUMN (Col 5) */}
+            <form onSubmit={handleSubmit} className="space-y-4 lg:col-span-5">
               {/* CARD 1: Owner / Customer Selection (Optional) */}
               <section id="ownerCard" className="rounded-3xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 scroll-mt-20">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
@@ -1521,7 +1698,7 @@ export function TruckRecreationWizard({
                     </span>
                     <div>
                       <h2 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                        <span>{tt("trk.section_owner", "Truck Owner Information")}</span>
+                        <span>{cleanTitle(tt("trk.section_owner", "Truck Owner Information"), "Truck Owner Information")}</span>
                         <span className="text-[10px] font-normal text-slate-400">(Optional)</span>
                       </h2>
                       <p className="text-[10.5px] text-slate-500 dark:text-slate-400">
@@ -1604,7 +1781,7 @@ export function TruckRecreationWizard({
                     </span>
                     <div>
                       <h2 className="text-sm font-black text-slate-900 dark:text-white">
-                        {tt("trk.section_truck_details", "Truck Details")}
+                        {cleanTitle(tt("trk.section_truck_details", "Truck Details"), "Truck Details")}
                       </h2>
                       <p className="text-[10.5px] text-slate-500 dark:text-slate-400">
                         Enter truck identification and physical specifications.
@@ -1787,10 +1964,10 @@ export function TruckRecreationWizard({
                     </span>
                     <div>
                       <h2 className="text-sm font-black text-slate-900 dark:text-white">
-                        {tt("trk.section_transporter", "Transporter Information")}
+                        {cleanTitle(tt("trk.section_transporter", "Transporter Information"), "Transporter Information")}
                       </h2>
                       <p className="text-[10.5px] text-slate-500 dark:text-slate-400">
-                        Choose an existing company to display its registered details.
+                        Select a transporter person/contractor and/or link a transport company.
                       </p>
                     </div>
                   </div>
@@ -1805,8 +1982,46 @@ export function TruckRecreationWizard({
 
                 {!collapsedCards.transporter && (
                   <div className="mt-4 space-y-3.5">
+                    {/* Transporter Person Picker */}
+                    <div>
+                      <PersonPicker
+                        label={tt("trk.transporter_name_label", "Transporter Name") + " (Optional)"}
+                        value={form.transporterId}
+                        onValueChange={(id) => setForm((p) => ({ ...p, transporterId: id }))}
+                        placeholder={tt("trk.search_transporter_ph", "Search transporter person...")}
+                        lang={activeLang}
+                        createLabel="+ New Transporter"
+                      />
+                    </div>
+
+                    {form.transporterId && transporterDetails && (
+                      <div className="rounded-2xl border border-blue-100 bg-blue-50/40 p-3.5 dark:border-blue-900/40 dark:bg-blue-950/20">
+                        <div className="flex items-center justify-between border-b border-blue-100/80 pb-2 dark:border-blue-900/40">
+                          <div className="flex items-center gap-2">
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600 text-white font-black text-xs">
+                              <User className="h-4 w-4" />
+                            </div>
+                            <div>
+                              <div className="text-xs font-black text-slate-900 dark:text-white">
+                                {transporterDetails.customer_name}
+                              </div>
+                              <div className="text-[10px] text-blue-700 dark:text-blue-300 font-bold uppercase">
+                                REGISTERED TRANSPORTER
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px]">
+                          <div className="flex justify-between py-0.5"><span className="text-slate-500">Transporter Code:</span> <b className="text-slate-800 dark:text-slate-100">{transporterDetails.person_code || transporterDetails.code || "—"}</b></div>
+                          <div className="flex justify-between py-0.5"><span className="text-slate-500">Mobile:</span> <b className="text-slate-800 dark:text-slate-100">{transporterDetails.mobile || "—"}</b></div>
+                          <div className="flex justify-between py-0.5"><span className="text-slate-500">WhatsApp:</span> <b className="text-slate-800 dark:text-slate-100">{transporterDetails.whatsapp || "—"}</b></div>
+                          <div className="flex justify-between py-0.5"><span className="text-slate-500">Address:</span> <b className="text-slate-800 dark:text-slate-100 truncate">{transporterDetails.address || "—"}</b></div>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Link Company Radio */}
-                    <div className="flex items-center gap-4 text-xs font-bold text-slate-700 dark:text-slate-300">
+                    <div className="flex items-center gap-4 text-xs font-bold text-slate-700 dark:text-slate-300 pt-1">
                       <span>Link a company?</span>
                       <label className="flex items-center gap-1.5 cursor-pointer">
                         <input
@@ -1832,7 +2047,7 @@ export function TruckRecreationWizard({
                       </label>
                     </div>
 
-                    {form.companyLink === "yes" ? (
+                    {form.companyLink === "yes" && (
                       <div className="space-y-3">
                         <div className="grid grid-cols-1 sm:grid-cols-[140px_1fr] gap-3">
                           <label className="space-y-1 text-xs">
@@ -1876,16 +2091,16 @@ export function TruckRecreationWizard({
                             </div>
                             <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px]">
                               <div className="flex justify-between py-0.5"><span className="text-slate-500">Company Code:</span> <b className="text-slate-800 dark:text-slate-100">{companyDetails.company_code || "—"}</b></div>
-                              <div className="flex justify-between py-0.5"><span className="text-slate-500">Phone:</span> <b className="text-slate-800 dark:text-slate-100">{companyPhone(companyDetails) || "—"}</b></div>
+                              <div className="flex justify-between py-0.5"><span className="text-slate-500">Legal Name:</span> <b className="text-slate-800 dark:text-slate-100">{companyDetails.legal_name || companyDetails.trade_name || "—"}</b></div>
+                              <div className="flex justify-between py-0.5"><span className="text-slate-500">Registration / TRN:</span> <b className="text-slate-800 dark:text-slate-100">{companyRegNumber(companyDetails) || "—"}</b></div>
+                              <div className="flex justify-between py-0.5"><span className="text-slate-500">Owner Name:</span> <b className="text-slate-800 dark:text-slate-100">{companyDetails.owner_name || "—"}</b></div>
+                              <div className="flex justify-between py-0.5"><span className="text-slate-500">Phone / Mobile:</span> <b className="text-slate-800 dark:text-slate-100">{companyPhone(companyDetails) || "—"}</b></div>
+                              <div className="flex justify-between py-0.5"><span className="text-slate-500">Email:</span> <b className="text-slate-800 dark:text-slate-100">{companyEmail(companyDetails) || "—"}</b></div>
                               <div className="flex justify-between py-0.5"><span className="text-slate-500">City / Country:</span> <b className="text-slate-800 dark:text-slate-100">{[companyDetails.city_name, companyDetails.country_name].filter(Boolean).join(", ") || "—"}</b></div>
-                              <div className="flex justify-between py-0.5"><span className="text-slate-500">Address:</span> <b className="text-slate-800 dark:text-slate-100 truncate">{companyDetails.address || "—"}</b></div>
+                              <div className="flex justify-between py-0.5 sm:col-span-2"><span className="text-slate-500">Address:</span> <b className="text-slate-800 dark:text-slate-100 truncate">{companyDetails.address || "—"}</b></div>
                             </div>
                           </div>
                         )}
-                      </div>
-                    ) : (
-                      <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-3 text-xs text-slate-500 italic dark:border-slate-800 dark:bg-slate-800/30">
-                        No transporter or shipping-line company is linked.
                       </div>
                     )}
                   </div>
@@ -1901,7 +2116,7 @@ export function TruckRecreationWizard({
                     </span>
                     <div>
                       <h2 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                        <span>{tt("trk.section_driver", "Driver Information")}</span>
+                        <span>{cleanTitle(tt("trk.section_driver", "Driver Information"), "Driver Information")}</span>
                         <span className="text-[10px] font-normal text-slate-400">(Optional)</span>
                       </h2>
                       <p className="text-[10.5px] text-slate-500 dark:text-slate-400">
@@ -2375,8 +2590,8 @@ export function TruckRecreationWizard({
               </div>
             </form>
 
-            {/* RIGHT STICKY LIVE TRUCK REPORT COLUMN (Col 5) */}
-            <div className="lg:col-span-5">
+            {/* RIGHT STICKY LIVE TRUCK REPORT COLUMN (Col 7) */}
+            <div className="lg:col-span-7">
               <aside className="rounded-3xl border border-slate-200/90 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:sticky lg:top-6 overflow-hidden">
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/80 px-4 py-3.5 dark:border-slate-800 dark:bg-slate-800/40">
@@ -2436,10 +2651,10 @@ export function TruckRecreationWizard({
                 </div>
                 <h2 className="text-sm font-black text-slate-900 dark:text-white">
                   {viewModalTab === "full" && tt("trk.live_report_title", "Live Truck Report")}
-                  {viewModalTab === "owner" && tt("trk.section_owner", "Owner Details")}
-                  {viewModalTab === "vehicle" && tt("trk.section_truck_details", "Truck & Vehicle Details")}
-                  {viewModalTab === "transporter" && tt("trk.section_transporter", "Transporter Details")}
-                  {viewModalTab === "driver" && tt("trk.section_driver", "Driver Details")}
+                  {viewModalTab === "owner" && cleanTitle(tt("trk.section_owner", "Owner Details"), "Owner Details")}
+                  {viewModalTab === "vehicle" && cleanTitle(tt("trk.section_truck_details", "Truck Details"), "Truck Details")}
+                  {viewModalTab === "transporter" && cleanTitle(tt("trk.section_transporter", "Transporter Details"), "Transporter Details")}
+                  {viewModalTab === "driver" && cleanTitle(tt("trk.section_driver", "Driver Details"), "Driver Details")}
                   {viewModalTab === "documents" && "Documents"}
                 </h2>
               </div>
@@ -2457,7 +2672,7 @@ export function TruckRecreationWizard({
               {viewModalTab === "full" && fullLiveReportContent}
 
               {viewModalTab === "owner" && (
-                <LiveReportSection title={`1. ${tt("trk.section_owner", "Truck Owner Information")}`} icon={User}>
+                <LiveReportSection title={`1. ${cleanTitle(tt("trk.section_owner", "Truck Owner Information"), "Truck Owner Information")}`} icon={User}>
                   <LiveReportRow label={tt("common.name", "Name")} value={ownerDetails?.customer_name || "—"} />
                   <LiveReportRow label={tt("trk.owner_code_label", "Owner Code")} value={ownerDetails?.person_code || ownerDetails?.code || "—"} />
                   <LiveReportRow label={tt("common.mobile", "Mobile")} value={ownerDetails?.mobile || "—"} />
@@ -2467,7 +2682,7 @@ export function TruckRecreationWizard({
               )}
 
               {viewModalTab === "vehicle" && (
-                <LiveReportSection title={`2. ${tt("trk.section_truck_details", "Truck Details")}`} icon={TruckIcon}>
+                <LiveReportSection title={`2. ${cleanTitle(tt("trk.section_truck_details", "Truck Details"), "Truck Details")}`} icon={TruckIcon}>
                   <LiveReportRow label={tt("trk.truck_no", "Truck Number")} value={form.truckNumber} />
                   <LiveReportRow label={tt("trk.chassis_no", "Chassis No")} value={form.chassisNumber} />
                   <LiveReportRow label={tt("trk.engine_no", "Engine No")} value={form.engineNumber} />
@@ -2483,17 +2698,37 @@ export function TruckRecreationWizard({
               )}
 
               {viewModalTab === "transporter" && (
-                <LiveReportSection title={`3. ${tt("trk.section_transporter", "Transporter Information")}`} icon={Building2}>
-                  <LiveReportRow label={tt("trk.company_name_label", "Company Name")} value={companyDetails?.name || "—"} />
-                  <LiveReportRow label={tt("trk.company_code_label", "Company Code")} value={companyDetails?.company_code || "—"} />
-                  <LiveReportRow label={tt("common.phone", "Phone")} value={companyPhone(companyDetails) || "—"} />
-                  <LiveReportRow label={tt("common.city", "City")} value={[companyDetails?.city_name, companyDetails?.country_name].filter(Boolean).join(", ") || "—"} />
-                  <LiveReportRow label={tt("common.address", "Address")} value={companyDetails?.address || "—"} />
+                <LiveReportSection title={`3. ${cleanTitle(tt("trk.section_transporter", "Transporter Information"), "Transporter Information")}`} icon={Building2}>
+                  {transporterDetails && (
+                    <div className="mb-3 rounded-xl border border-slate-100 bg-slate-50/50 p-2.5 dark:border-slate-800 dark:bg-slate-800/30">
+                      <div className="text-xs font-black text-slate-800 dark:text-slate-100">{transporterDetails.customer_name}</div>
+                      <LiveReportRow label={tt("trk.transporter_code_label", "Transporter Code")} value={transporterDetails.person_code || transporterDetails.code} />
+                      <LiveReportRow label={tt("common.mobile", "Mobile")} value={transporterDetails.mobile} />
+                      <LiveReportRow label={tt("common.whatsapp", "WhatsApp")} value={transporterDetails.whatsapp} />
+                      <LiveReportRow label={tt("common.address", "Address")} value={transporterDetails.address} />
+                    </div>
+                  )}
+                  {companyDetails && (
+                    <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-2.5 dark:border-slate-800 dark:bg-slate-800/30">
+                      <div className="text-xs font-black text-slate-800 dark:text-slate-100">{companyDetails.name}</div>
+                      <LiveReportRow label={tt("trk.company_code_label", "Company Code")} value={companyDetails.company_code} />
+                      <LiveReportRow label={tt("c360.legal_name", "Legal / Trade Name")} value={companyDetails.legal_name || companyDetails.trade_name} />
+                      <LiveReportRow label={tt("ctm.trn_reg_no", "Registration / TRN")} value={companyRegNumber(companyDetails)} />
+                      <LiveReportRow label={tt("sed.f_owner_name", "Owner Name")} value={companyDetails.owner_name} />
+                      <LiveReportRow label={tt("common.phone", "Phone / Mobile")} value={companyPhone(companyDetails)} />
+                      <LiveReportRow label={tt("common.email", "Email")} value={companyEmail(companyDetails)} />
+                      <LiveReportRow label={tt("common.city", "City / Country")} value={[companyDetails.city_name, companyDetails.country_name].filter(Boolean).join(", ")} />
+                      <LiveReportRow label={tt("common.address", "Address")} value={companyDetails.address} />
+                    </div>
+                  )}
+                  {!transporterDetails && !companyDetails && (
+                    <div className="p-2 text-center text-xs text-slate-400 italic">No transporter or company linked</div>
+                  )}
                 </LiveReportSection>
               )}
 
               {viewModalTab === "driver" && (
-                <LiveReportSection title={`4. ${tt("trk.section_driver", "Driver Information")}`} icon={UserCheck}>
+                <LiveReportSection title={`4. ${cleanTitle(tt("trk.section_driver", "Driver Information"), "Driver Information")}`} icon={UserCheck}>
                   <LiveReportRow
                     label={tt("trk.driver_name_label", "Driver Name")}
                     value={form.driverType === "permanent" ? driverDetails?.customer_name : form.temporaryDriverName}
