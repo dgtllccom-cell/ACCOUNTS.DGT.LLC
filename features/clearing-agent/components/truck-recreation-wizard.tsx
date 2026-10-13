@@ -321,6 +321,9 @@ export function TruckRecreationWizard({
   const [viewMenuOpen, setViewMenuOpen] = useState(false);
   const viewMenuRef = useRef<HTMLDivElement>(null);
 
+  // Step-by-Step Wizard state (1: Owner, 2: Truck, 3: Transporter & Company, 4: Driver, 5: Documents)
+  const [activeStep, setActiveStep] = useState<number>(1);
+
   // Card collapse state
   const [collapsedCards, setCollapsedCards] = useState<Record<string, boolean>>({
     owner: false,
@@ -555,11 +558,14 @@ export function TruckRecreationWizard({
   }
 
   function scrollToSection(cardId: string) {
-    if (typeof document !== "undefined") {
-      const el = document.getElementById(cardId);
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
+    if (cardId === "ownerCard") setActiveStep(1);
+    else if (cardId === "vehicleCard") setActiveStep(2);
+    else if (cardId === "transporterCard") setActiveStep(3);
+    else if (cardId === "driverCard") setActiveStep(4);
+    else if (cardId === "documentsCard") setActiveStep(5);
+
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   }
 
@@ -635,6 +641,7 @@ export function TruckRecreationWizard({
     setDriverPhotoName(null);
     setDocuments([]);
     setEditingId(null);
+    setActiveStep(1);
     setOwnerDetails(null);
     setCompanyDetails(null);
     setTransporterDetails(null);
@@ -645,6 +652,7 @@ export function TruckRecreationWizard({
     resetForm();
     setMessage(null);
     setView("form");
+    setActiveStep(1);
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -656,6 +664,7 @@ export function TruckRecreationWizard({
 
   function startEdit(row: TruckRow) {
     setEditingId(row.id);
+    setActiveStep(1);
     let extraNotes: any = {};
     try {
       if (row.notes && row.notes.startsWith("{")) {
@@ -1861,75 +1870,7 @@ export function TruckRecreationWizard({
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800">
-                LIVE ERP SYNC
-              </span>
-
-              {/* View ⌄ Dropdown */}
-              <div className="relative" ref={viewMenuRef}>
-                <button
-                  type="button"
-                  onClick={() => setViewMenuOpen((v) => !v)}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50/70 px-3.5 py-2 text-xs font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900 dark:bg-blue-950/60 dark:text-blue-300 shadow-2xs"
-                >
-                  <Eye className="h-4 w-4" />
-                  <span>View</span>
-                  <ChevronDown className="h-3.5 w-3.5 opacity-70" />
-                </button>
-
-                {viewMenuOpen && (
-                  <div className="absolute right-0 top-full z-30 mt-1.5 w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl dark:border-slate-800 dark:bg-slate-900 animate-in fade-in slide-in-from-top-1">
-                    <div className="px-2 py-1 text-[9px] font-black tracking-wider text-slate-400 uppercase">
-                      REGISTRATION VIEWS
-                    </div>
-                    {[
-                      { key: "full", label: "Live Truck Report", icon: TruckIcon },
-                      { key: "owner", label: "Owner Details", icon: User },
-                      { key: "vehicle", label: "Truck & Vehicle", icon: TruckIcon },
-                      { key: "transporter", label: "Transporter Details", icon: Building2 },
-                      { key: "driver", label: "Driver Details", icon: UserCheck },
-                      { key: "documents", label: "Documents", icon: FileText },
-                    ].map((opt) => {
-                      const Icon = opt.icon;
-                      return (
-                        <button
-                          key={opt.key}
-                          type="button"
-                          onClick={() => {
-                            setViewModalTab(opt.key as any);
-                            setViewModalOpen(true);
-                            setViewMenuOpen(false);
-                          }}
-                          className="flex w-full items-center justify-between rounded-xl px-2.5 py-2 text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700 dark:text-slate-300 dark:hover:bg-slate-800 transition"
-                        >
-                          <span className="flex items-center gap-2">
-                            <Icon className="h-3.5 w-3.5 text-blue-600" />
-                            <span>{opt.label}</span>
-                          </span>
-                          <ChevronRight className="h-3.5 w-3.5 text-slate-400 rtl:rotate-180" />
-                        </button>
-                      );
-                    })}
-                    <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setViewMenuOpen(false);
-                        window.print();
-                      }}
-                      className="flex w-full items-center justify-between rounded-xl px-2.5 py-2 text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700 dark:text-slate-300 dark:hover:bg-slate-800 transition"
-                    >
-                      <span className="flex items-center gap-2">
-                        <Printer className="h-3.5 w-3.5 text-slate-500" />
-                        <span>Print Report</span>
-                      </span>
-                      <ChevronRight className="h-3.5 w-3.5 text-slate-400 rtl:rotate-180" />
-                    </button>
-                  </div>
-                )}
-              </div>
-
+            <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={backToList}
@@ -1940,37 +1881,85 @@ export function TruckRecreationWizard({
             </div>
           </div>
 
-          {/* 5-Step Bar across the top */}
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-5 rounded-2xl border border-slate-200/80 bg-white p-2 shadow-2xs dark:border-slate-800 dark:bg-slate-900">
-            {[
-              { id: "vehicleCard", num: 1, title: "Truck & Vehicle", sub: "Truck, chassis, engine" },
-              { id: "transporterCard", num: 2, title: "Transporter", sub: "Transporter / Company" },
-              { id: "driverCard", num: 3, title: "Driver", sub: "Driver & photo info" },
-              { id: "documentsCard", num: 4, title: "Documents", sub: "Upload documents" },
-              { id: "review", num: 5, title: "Review & Save", sub: "Confirm & register" },
-            ].map((st) => (
-              <button
-                key={st.id}
-                type="button"
-                onClick={() => {
-                  if (st.id === "review") {
-                    setViewModalTab("full");
-                    setViewModalOpen(true);
-                  } else {
-                    scrollToSection(st.id);
+          {/* STEP-BY-STEP INTERACTIVE WIZARD PROGRESS BAR */}
+          <div className="rounded-2xl border border-slate-200/90 bg-white p-3 sm:p-3.5 shadow-xs dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex items-center justify-between gap-2 pb-2.5 mb-2.5 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-600 text-white font-mono text-xs font-black shadow-xs">
+                  {activeStep}
+                </span>
+                <span className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider">
+                  Step {activeStep} of 5: {
+                    activeStep === 1 ? cleanTitle(tt("trk.section_owner", "Owner Details"), "Owner Details") :
+                    activeStep === 2 ? cleanTitle(tt("trk.section_truck_details", "Truck Details"), "Truck Details") :
+                    activeStep === 3 ? cleanTitle(tt("trk.section_transporter", "Transporter Details"), "Transporter Details") :
+                    activeStep === 4 ? cleanTitle(tt("trk.section_driver", "Driver Details"), "Driver Details") :
+                    cleanTitle(tt("trk.truck_docs", "Truck Documents"), "Truck Documents")
                   }
-                }}
-                className="flex items-center gap-2.5 rounded-xl p-2 text-start transition hover:bg-slate-50 dark:hover:bg-slate-800/50"
-              >
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-xs font-black text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-                  {st.num}
-                </div>
-                <div className="min-w-0">
-                  <div className="truncate text-xs font-bold text-slate-800 dark:text-slate-200">{st.title}</div>
-                  <div className="truncate text-[10px] text-slate-400 hidden xl:block">{st.sub}</div>
-                </div>
-              </button>
-            ))}
+                </span>
+              </div>
+              <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400">
+                {Math.round((activeStep / 5) * 100)}% Complete
+              </span>
+            </div>
+
+            {/* Progress Bar Track */}
+            <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mb-3">
+              <div
+                className="h-full bg-gradient-to-r from-blue-600 via-sky-500 to-emerald-500 transition-all duration-300 rounded-full"
+                style={{ width: `${(activeStep / 5) * 100}%` }}
+              />
+            </div>
+
+            {/* Interactive Step Buttons */}
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+              {[
+                { step: 1, title: cleanTitle(tt("trk.section_owner", "Owner Details"), "Owner Details"), sub: "Owner info", icon: User },
+                { step: 2, title: cleanTitle(tt("trk.section_truck_details", "Truck Details"), "Truck Details"), sub: "Specs & vehicle", icon: TruckIcon },
+                { step: 3, title: cleanTitle(tt("trk.section_transporter", "Transporter Details"), "Transporter Details"), sub: "Company link", icon: Building2 },
+                { step: 4, title: cleanTitle(tt("trk.section_driver", "Driver Details"), "Driver Details"), sub: "Driver & photo", icon: UserCheck },
+                { step: 5, title: cleanTitle(tt("trk.truck_docs", "Truck Documents"), "Truck Documents"), sub: "Upload & register", icon: FileText },
+              ].map((st) => {
+                const isCurrent = activeStep === st.step;
+                const isCompleted = activeStep > st.step;
+                return (
+                  <button
+                    key={st.step}
+                    type="button"
+                    onClick={() => {
+                      if (st.step > activeStep && activeStep === 2 && !form.truckNumber.trim()) {
+                        alert("Please enter Truck Number first.");
+                        return;
+                      }
+                      setActiveStep(st.step);
+                    }}
+                    className={`flex items-center gap-2 rounded-xl p-2 text-start transition border ${
+                      isCurrent
+                        ? "border-blue-500 bg-blue-50/80 text-blue-700 shadow-2xs dark:border-blue-700 dark:bg-blue-950/60 dark:text-blue-300"
+                        : isCompleted
+                        ? "border-emerald-200 bg-emerald-50/50 text-emerald-800 hover:bg-emerald-100/60 dark:border-emerald-900/40 dark:bg-emerald-950/30 dark:text-emerald-300"
+                        : "border-slate-200/70 bg-slate-50/40 text-slate-600 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-400"
+                    }`}
+                  >
+                    <div
+                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-xs font-black transition ${
+                        isCurrent
+                          ? "bg-blue-600 text-white shadow-2xs"
+                          : isCompleted
+                          ? "bg-emerald-600 text-white"
+                          : "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+                      }`}
+                    >
+                      {isCompleted ? <Check className="h-3.5 w-3.5" /> : st.step}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="truncate text-xs font-bold">{st.title}</div>
+                      <div className="truncate text-[10px] text-slate-400 hidden xl:block">{st.sub}</div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {message && (
@@ -1990,7 +1979,13 @@ export function TruckRecreationWizard({
             {/* LEFT FORM COLUMN (Col 5) */}
             <form onSubmit={handleSubmit} className="space-y-4 lg:col-span-5">
               {/* CARD 1: Owner / Customer Selection (Optional) */}
-              <section id="ownerCard" className="rounded-3xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 scroll-mt-20">
+              {/* CARD 1: Owner / Customer Selection (Optional) */}
+              <section
+                id="ownerCard"
+                className={`rounded-3xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 scroll-mt-20 ${
+                  activeStep === 1 ? "block" : "hidden"
+                }`}
+              >
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
                   <div className="flex items-center gap-2.5">
                     <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100 text-xs font-black text-blue-700 dark:bg-blue-950 dark:text-blue-300">
@@ -2006,74 +2001,94 @@ export function TruckRecreationWizard({
                       </p>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => toggleCollapse("owner")}
-                    className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                  >
-                    {collapsedCards.owner ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
-                  </button>
+                  <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200/60 dark:border-blue-900/60">
+                    Step 1 of 5
+                  </span>
                 </div>
 
-                {!collapsedCards.owner && (
-                  <div className="mt-4 space-y-3.5">
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1.2fr_1fr]">
-                      <div>
-                        <PersonPicker
-                          label={tt("trk.truck_owner_name_label", "Truck Owner Name *")}
-                          value={form.ownerId}
-                          onValueChange={(id) => setForm((p) => ({ ...p, ownerId: id, hasOwner: id ? "yes" : "no" }))}
-                          placeholder={tt("trk.search_owner_ph", "Search truck owner...")}
-                          lang={activeLang}
-                          createLabel={tt("trk.new_truck_owner", "+ New Truck Owner")}
-                        />
-                      </div>
-                      <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-2.5 text-[11px] text-blue-800 dark:border-blue-900/40 dark:bg-blue-950/20 dark:text-blue-300 flex items-start gap-2">
-                        <HelpCircle className="h-4 w-4 shrink-0 text-blue-600 mt-0.5" />
-                        <span>
-                          If there is no owner, leave blank (Without Owner) and continue with truck registration.
-                        </span>
-                      </div>
+                <div className="mt-4 space-y-3.5">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1.2fr_1fr]">
+                    <div>
+                      <PersonPicker
+                        label={tt("trk.truck_owner_name_label", "Truck Owner Name *")}
+                        value={form.ownerId}
+                        onValueChange={(id) => setForm((p) => ({ ...p, ownerId: id, hasOwner: id ? "yes" : "no" }))}
+                        placeholder={tt("trk.search_owner_ph", "Search truck owner...")}
+                        lang={activeLang}
+                        createLabel={tt("trk.new_truck_owner", "+ New Truck Owner")}
+                      />
                     </div>
+                    <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-2.5 text-[11px] text-blue-800 dark:border-blue-900/40 dark:bg-blue-950/20 dark:text-blue-300 flex items-start gap-2">
+                      <HelpCircle className="h-4 w-4 shrink-0 text-blue-600 mt-0.5" />
+                      <span>
+                        If there is no owner, leave blank (Without Owner) and continue with truck registration.
+                      </span>
+                    </div>
+                  </div>
 
-                    {form.ownerId && ownerDetails && (
-                      <div className="rounded-2xl border border-blue-100 bg-blue-50/40 p-3.5 dark:border-blue-900/40 dark:bg-blue-950/20">
-                        <div className="flex items-center justify-between border-b border-blue-100/80 pb-2 dark:border-blue-900/40">
-                          <div className="flex items-center gap-2">
-                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600 text-white font-black text-xs">
-                              <User className="h-4 w-4" />
+                  {form.ownerId && ownerDetails && (
+                    <div className="rounded-2xl border border-blue-100 bg-blue-50/40 p-3.5 dark:border-blue-900/40 dark:bg-blue-950/20">
+                      <div className="flex items-center justify-between border-b border-blue-100/80 pb-2 dark:border-blue-900/40">
+                        <div className="flex items-center gap-2">
+                          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600 text-white font-black text-xs">
+                            <User className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <div className="text-xs font-black text-slate-900 dark:text-white">
+                              {ownerDetails.customer_name}
                             </div>
-                            <div>
-                              <div className="text-xs font-black text-slate-900 dark:text-white">
-                                {ownerDetails.customer_name}
-                              </div>
-                              <div className="text-[10px] text-blue-700 dark:text-blue-300 font-bold uppercase">
-                                REGISTERED OWNER
-                              </div>
+                            <div className="text-[10px] text-blue-700 dark:text-blue-300 font-bold uppercase">
+                              REGISTERED OWNER
                             </div>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => setParty360({ customerId: form.ownerId, name: ownerDetails.customer_name || "" })}
-                            className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-white px-2.5 py-1 text-[11px] font-bold text-blue-700 shadow-2xs hover:bg-blue-50 dark:border-blue-800 dark:bg-slate-900 dark:text-blue-300"
-                          >
-                            <Eye className="h-3 w-3" /> {tt("trk.view_owner_details", "View Owner Details")}
-                          </button>
                         </div>
-                        <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px]">
-                          <div className="flex justify-between py-0.5"><span className="text-slate-500">ID / Code:</span> <b className="text-slate-800 dark:text-slate-100">{ownerDetails.person_code || ownerDetails.code || "—"}</b></div>
-                          <div className="flex justify-between py-0.5"><span className="text-slate-500">Mobile:</span> <b className="text-slate-800 dark:text-slate-100">{ownerDetails.mobile || "—"}</b></div>
-                          <div className="flex justify-between py-0.5"><span className="text-slate-500">WhatsApp:</span> <b className="text-slate-800 dark:text-slate-100">{ownerDetails.whatsapp || "—"}</b></div>
-                          <div className="flex justify-between py-0.5"><span className="text-slate-500">Address:</span> <b className="text-slate-800 dark:text-slate-100 truncate">{ownerDetails.address || "—"}</b></div>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setParty360({ customerId: form.ownerId, name: ownerDetails.customer_name || "" })}
+                          className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-white px-2.5 py-1 text-[11px] font-bold text-blue-700 shadow-2xs hover:bg-blue-50 dark:border-blue-800 dark:bg-slate-900 dark:text-blue-300"
+                        >
+                          <Eye className="h-3 w-3" /> {tt("trk.view_owner_details", "View Owner Details")}
+                        </button>
                       </div>
-                    )}
-                  </div>
-                )}
+                      <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px]">
+                        <div className="flex justify-between py-0.5"><span className="text-slate-500">ID / Code:</span> <b className="text-slate-800 dark:text-slate-100">{ownerDetails.person_code || ownerDetails.code || "—"}</b></div>
+                        <div className="flex justify-between py-0.5"><span className="text-slate-500">Mobile:</span> <b className="text-slate-800 dark:text-slate-100">{ownerDetails.mobile || "—"}</b></div>
+                        <div className="flex justify-between py-0.5"><span className="text-slate-500">WhatsApp:</span> <b className="text-slate-800 dark:text-slate-100">{ownerDetails.whatsapp || "—"}</b></div>
+                        <div className="flex justify-between py-0.5"><span className="text-slate-500">Address:</span> <b className="text-slate-800 dark:text-slate-100 truncate">{ownerDetails.address || "—"}</b></div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Step 1 Actions */}
+                <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-4 dark:border-slate-800">
+                  <button
+                    type="button"
+                    onClick={backToList}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 shadow-2xs transition"
+                  >
+                    <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
+                    <span>{tt("common.back", "Back to List")}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveStep(2)}
+                    className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-black text-white shadow-md shadow-blue-600/25 hover:bg-blue-700 transition"
+                  >
+                    <span>Next: Truck Details</span>
+                    <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+                  </button>
+                </div>
               </section>
 
               {/* CARD 2: Truck Registration Details (Combined Details & Physical Specs) */}
-              <section id="vehicleCard" className="rounded-3xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 scroll-mt-20">
+              <section
+                id="vehicleCard"
+                className={`rounded-3xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 scroll-mt-20 ${
+                  activeStep === 2 ? "block" : "hidden"
+                }`}
+              >
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
                   <div className="flex items-center gap-2.5">
                     <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100 text-xs font-black text-blue-700 dark:bg-blue-950 dark:text-blue-300">
@@ -2088,17 +2103,12 @@ export function TruckRecreationWizard({
                       </p>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => toggleCollapse("vehicle")}
-                    className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                  >
-                    {collapsedCards.vehicle ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
-                  </button>
+                  <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200/60 dark:border-blue-900/60">
+                    Step 2 of 5
+                  </span>
                 </div>
 
-                {!collapsedCards.vehicle && (
-                  <div className="mt-4 space-y-3.5">
+                <div className="mt-4 space-y-3.5">
                     {/* Row 1: Identification & Core Vehicle Specs */}
                     <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
                       <label className="space-y-1 text-xs">
@@ -2311,11 +2321,42 @@ export function TruckRecreationWizard({
                       </label>
                     </div>
                   </div>
-                )}
+
+                {/* Step 2 Actions */}
+                <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-4 dark:border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setActiveStep(1)}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 shadow-2xs transition"
+                  >
+                    <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
+                    <span>Back: Owner Details</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!form.truckNumber.trim()) {
+                        alert("Please enter Truck Number to continue.");
+                        return;
+                      }
+                      setActiveStep(3);
+                    }}
+                    className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-black text-white shadow-md shadow-blue-600/25 hover:bg-blue-700 transition"
+                  >
+                    <span>Next: Transporter Details</span>
+                    <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+                  </button>
+                </div>
               </section>
 
               {/* CARD 3: Transporter / Shipping Line Information */}
-              <section id="transporterCard" className="rounded-3xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 scroll-mt-20">
+              <section
+                id="transporterCard"
+                className={`rounded-3xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 scroll-mt-20 ${
+                  activeStep === 3 ? "block" : "hidden"
+                }`}
+              >
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
                   <div className="flex items-center gap-2.5">
                     <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100 text-xs font-black text-blue-700 dark:bg-blue-950 dark:text-blue-300">
@@ -2330,17 +2371,12 @@ export function TruckRecreationWizard({
                       </p>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => toggleCollapse("transporter")}
-                    className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                  >
-                    {collapsedCards.transporter ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
-                  </button>
+                  <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200/60 dark:border-blue-900/60">
+                    Step 3 of 5
+                  </span>
                 </div>
 
-                {!collapsedCards.transporter && (
-                  <div className="mt-4 space-y-3.5">
+                <div className="mt-4 space-y-3.5">
                     {/* Transporter Person Picker */}
                     <div>
                       <PersonPicker
@@ -2463,11 +2499,36 @@ export function TruckRecreationWizard({
                       </div>
                     )}
                   </div>
-                )}
+
+                {/* Step 3 Actions */}
+                <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-4 dark:border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setActiveStep(2)}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 shadow-2xs transition"
+                  >
+                    <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
+                    <span>Back: Truck Details</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveStep(4)}
+                    className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-black text-white shadow-md shadow-blue-600/25 hover:bg-blue-700 transition"
+                  >
+                    <span>Next: Driver Details</span>
+                    <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+                  </button>
+                </div>
               </section>
 
               {/* CARD 4: Driver Information (Optional) with Photo, Multi-Contacts, and Location */}
-              <section id="driverCard" className="rounded-3xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 scroll-mt-20">
+              <section
+                id="driverCard"
+                className={`rounded-3xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 scroll-mt-20 ${
+                  activeStep === 4 ? "block" : "hidden"
+                }`}
+              >
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
                   <div className="flex items-center gap-2.5">
                     <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100 text-xs font-black text-blue-700 dark:bg-blue-950 dark:text-blue-300">
@@ -2508,18 +2569,13 @@ export function TruckRecreationWizard({
                         <span>Temporary</span>
                       </label>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => toggleCollapse("driver")}
-                      className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                    >
-                      {collapsedCards.driver ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
-                    </button>
+                    <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200/60 dark:border-blue-900/60">
+                      Step 4 of 5
+                    </span>
                   </div>
                 </div>
 
-                {!collapsedCards.driver && (
-                  <div className="mt-4 space-y-4">
+                <div className="mt-4 space-y-4">
                     {/* Mobile Driver Type Radio */}
                     <div className="flex sm:hidden items-center gap-3 text-xs font-bold text-slate-700 dark:text-slate-300">
                       <label className="flex items-center gap-1 cursor-pointer">
@@ -2969,11 +3025,36 @@ export function TruckRecreationWizard({
                       </div>
                     )}
                   </div>
-                )}
+
+                {/* Step 4 Actions */}
+                <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-4 dark:border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setActiveStep(3)}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 shadow-2xs transition"
+                  >
+                    <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
+                    <span>Back: Transporter Details</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveStep(5)}
+                    className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-black text-white shadow-md shadow-blue-600/25 hover:bg-blue-700 transition"
+                  >
+                    <span>Next: Documents & Review</span>
+                    <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+                  </button>
+                </div>
               </section>
 
               {/* CARD 5: Documents (Optional) */}
-              <section id="documentsCard" className="rounded-3xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 scroll-mt-20">
+              <section
+                id="documentsCard"
+                className={`rounded-3xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 scroll-mt-20 ${
+                  activeStep === 5 ? "block" : "hidden"
+                }`}
+              >
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
                   <div className="flex items-center gap-2.5">
                     <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100 text-xs font-black text-blue-700 dark:bg-blue-950 dark:text-blue-300">
@@ -2981,25 +3062,20 @@ export function TruckRecreationWizard({
                     </span>
                     <div>
                       <h2 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                        <span>Documents</span>
+                        <span>{cleanTitle(tt("trk.truck_docs", "Truck Documents"), "Truck Documents")}</span>
                         <span className="text-[10px] font-normal text-slate-400">(Optional)</span>
                       </h2>
                       <p className="text-[10.5px] text-slate-500 dark:text-slate-400">
-                        Upload registration, insurance, driver licence and supporting files.
+                        Upload registration, insurance, driver licence and save registration.
                       </p>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => toggleCollapse("documents")}
-                    className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                  >
-                    {collapsedCards.documents ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
-                  </button>
+                  <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200/60 dark:border-blue-900/60">
+                    Step 5 of 5
+                  </span>
                 </div>
 
-                {!collapsedCards.documents && (
-                  <div className="mt-4 space-y-3.5">
+                <div className="mt-4 space-y-3.5">
                     {/* Drag & Drop Upload Zone */}
                     <label
                       onDragEnter={(e) => { e.preventDefault(); setIsDragging(true); }}
@@ -3103,45 +3179,45 @@ export function TruckRecreationWizard({
                       </div>
                     )}
                   </div>
-                )}
-              </section>
 
-              {/* Form Footer Actions */}
-              <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={backToList}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 shadow-2xs"
-                >
-                  <X className="h-4 w-4" /> {tt("common.cancel", "Cancel")}
-                </button>
-
-                <div className="flex items-center gap-2">
+                {/* Step 5 Final Actions */}
+                <div className="mt-6 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-4 dark:border-slate-800">
                   <button
                     type="button"
-                    onClick={handleSaveDraft}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 shadow-2xs"
+                    onClick={() => setActiveStep(4)}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 shadow-2xs transition"
                   >
-                    <Save className="h-4 w-4 text-blue-600" />
-                    <span>Save Draft</span>
+                    <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
+                    <span>Back: Driver Details</span>
                   </button>
 
-                  <button
-                    type="submit"
-                    disabled={saving}
-                    className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-xs font-black text-white shadow-md shadow-blue-600/25 hover:bg-blue-700 disabled:opacity-50 transition"
-                  >
-                    {saving ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <>
-                        <span>Save & Register</span>
-                        <ArrowRight className="h-4 w-4 rtl:rotate-180" />
-                      </>
-                    )}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleSaveDraft}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 shadow-2xs transition"
+                    >
+                      <Save className="h-4 w-4 text-blue-600" />
+                      <span>{tt("trk.save_draft", "Save Draft")}</span>
+                    </button>
+
+                    <button
+                      type="submit"
+                      disabled={saving}
+                      className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-xs font-black text-white shadow-md shadow-blue-600/25 hover:bg-blue-700 disabled:opacity-50 transition"
+                    >
+                      {saving ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <>
+                          <span>{tt("trk.submit", "Save & Register Truck")}</span>
+                          <Check className="h-4 w-4" />
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
-              </div>
+              </section>
             </form>
 
             {/* RIGHT STICKY LIVE TRUCK REPORT COLUMN (Col 7) */}
