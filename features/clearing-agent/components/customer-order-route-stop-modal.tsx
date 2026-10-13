@@ -24,6 +24,7 @@ import {
 import { t } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import type { RouteStop } from "@/features/clearing-agent/components/customer-order-route-builder";
+import { LocationPicker, GatePicker, CustomsOfficePicker } from "@/features/location-master/components/location-picker";
 
 // Mode-specific presets for quick filling
 const MODE_PRESETS: Record<string, Record<string, string[]>> = {
@@ -103,7 +104,12 @@ export function CustomerOrderRouteStopModal({
   );
   const [countryId, setCountryId] = useState(initialValues?.countryId || "");
   const [countryName, setCountryName] = useState(initialValues?.countryName || "");
+  const [locationId, setLocationId] = useState(initialValues?.locationId || "");
   const [locationName, setLocationName] = useState(initialValues?.locationName || "");
+  const [gateId, setGateId] = useState(initialValues?.gateId || "");
+  const [gateName, setGateName] = useState(initialValues?.gateName || "");
+  const [customsOfficeId, setCustomsOfficeId] = useState(initialValues?.customsOfficeId || "");
+  const [customsTreatment, setCustomsTreatment] = useState(initialValues?.customsTreatment || "import_duty_paid");
   const [customsPoint, setCustomsPoint] = useState(initialValues?.customsPoint || "");
 
   // Handler Type
@@ -135,7 +141,12 @@ export function CustomerOrderRouteStopModal({
       setTransportMode(initialValues.mode || "by_road");
       setCountryId(initialValues.countryId || "");
       setCountryName(initialValues.countryName || "");
+      setLocationId(initialValues.locationId || "");
       setLocationName(initialValues.locationName || "");
+      setGateId(initialValues.gateId || "");
+      setGateName(initialValues.gateName || "");
+      setCustomsOfficeId(initialValues.customsOfficeId || "");
+      setCustomsTreatment(initialValues.customsTreatment || "import_duty_paid");
       setCustomsPoint(initialValues.customsPoint || "");
       setHandlerType(initialValues.handlerType || "our_branch");
 
@@ -229,7 +240,12 @@ export function CustomerOrderRouteStopModal({
       id: initialValues?.id || `stop-${Date.now()}`,
       countryId,
       countryName,
+      locationId: locationId || undefined,
       locationName: locationName.trim(),
+      gateId: gateId || undefined,
+      gateName: gateName || undefined,
+      customsOfficeId: customsOfficeId || undefined,
+      customsTreatment: customsTreatment || undefined,
       customsPoint: customsPoint.trim(),
       mode: transportMode,
       handlerType,
@@ -416,7 +432,14 @@ export function CustomerOrderRouteStopModal({
                 </label>
                 <select
                   value={countryId}
-                  onChange={(e) => handleCountryChange(e.target.value)}
+                  onChange={(e) => {
+                    handleCountryChange(e.target.value);
+                    setLocationId("");
+                    setLocationName("");
+                    setGateId("");
+                    setGateName("");
+                    setCustomsOfficeId("");
+                  }}
                   className={selectClass}
                 >
                   <option value="">— {tt("select_country", "Select Country")} —</option>
@@ -438,66 +461,102 @@ export function CustomerOrderRouteStopModal({
                     ? tt("airport_label", "Airport / Air Cargo Terminal")
                     : tt("rail_terminal_label", "Rail Terminal / Dry Port")} *
                 </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {modePresets.length > 0 && (
-                    <select
-                      value={modePresets.includes(locationName) ? locationName : locationName ? "__custom__" : ""}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        if (val === "__custom__") return;
-                        setLocationName(val);
-                        if (!customsPoint) setCustomsPoint(val);
-                        if (errorMsg) setErrorMsg("");
-                      }}
-                      className={selectClass}
-                    >
-                      <option value="">— {tt("select_from_popular_borders", "Select Border / Port / Terminal")} —</option>
-                      {modePresets.map((preset, pIdx) => (
-                        <option key={pIdx} value={preset}>
-                          {preset}
-                        </option>
-                      ))}
-                      <option value="__custom__">✍️ {tt("enter_custom_below", "Other / Enter Name Below")}...</option>
-                    </select>
-                  )}
-                  <input
-                    type="text"
-                    placeholder={
-                      transportMode === "by_sea"
-                        ? "e.g. Karachi Port (KPT), Jebel Ali, Port Qasim, Bandar Abbas"
-                        : transportMode === "by_road"
-                        ? "e.g. Torkham Border, Chaman Border, Taftan, Dogharoon"
-                        : transportMode === "by_air"
-                        ? "e.g. Dubai Cargo Village (DXB), Karachi AFU"
-                        : "e.g. Azakhel Dry Port, Lahore Dry Port"
-                    }
-                    value={locationName}
-                    onChange={(e) => {
-                      setLocationName(e.target.value);
-                      if (errorMsg) setErrorMsg("");
-                    }}
-                    className={inputClass}
-                  />
-                </div>
-              </div>
-
-              <div className="sm:col-span-2">
-                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  {transportMode === "by_sea"
-                    ? tt("customs_wharf_label", "Port Terminal / Berth / Customs House")
-                    : transportMode === "by_road"
-                    ? tt("customs_border_label", "Customs Clearance Point / Border Terminal / Gate")
-                    : transportMode === "by_air"
-                    ? tt("customs_air_label", "Air Cargo Shed / AFU Customs Clearance Office")
-                    : tt("customs_rail_label", "Railway Customs Yard / Clearance Terminal")}
-                </label>
+                <LocationPicker
+                  countryId={countryId}
+                  transportMode={transportMode}
+                  value={locationId}
+                  onChange={(id, name) => {
+                    setLocationId(id);
+                    if (name) setLocationName(name);
+                    setGateId("");
+                    setGateName("");
+                    if (errorMsg) setErrorMsg("");
+                  }}
+                  label=""
+                />
                 <input
                   type="text"
-                  placeholder="e.g. Custom House Berth 4, NLC Gate 2, Freezone Terminal, Dry Port Yard"
-                  value={customsPoint}
-                  onChange={(e) => setCustomsPoint(e.target.value)}
-                  className={inputClass}
+                  placeholder={
+                    transportMode === "by_sea"
+                      ? "Custom port name if not in master..."
+                      : transportMode === "by_road"
+                      ? "Custom border name if not in master..."
+                      : "Custom location name..."
+                  }
+                  value={locationName}
+                  onChange={(e) => {
+                    setLocationName(e.target.value);
+                    if (errorMsg) setErrorMsg("");
+                  }}
+                  className={`mt-1.5 ${inputClass}`}
                 />
+              </div>
+
+              {/* Gate / Terminal Master Picker under location */}
+              {locationId && !locationId.startsWith("city:") ? (
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    {transportMode === "by_sea"
+                      ? tt("port_terminal_label", "Port Terminal / Berth (Master)")
+                      : tt("gate_terminal_label", "Gate / Terminal Crossing (Master)")}
+                  </label>
+                  <GatePicker
+                    locationId={locationId}
+                    value={gateId}
+                    onChange={(gid, gnm) => {
+                      setGateId(gid);
+                      setGateName(gnm);
+                      if (gnm && !customsPoint) setCustomsPoint(gnm);
+                    }}
+                    label=""
+                  />
+                </div>
+              ) : null}
+
+              {/* Central Customs Station & Treatment under country/location/gate */}
+              <div className="sm:col-span-2 rounded-xl border border-slate-200/90 bg-slate-50/70 p-3 space-y-2 dark:border-slate-800 dark:bg-slate-900/60">
+                <div className="flex items-center gap-1.5 text-xs font-bold uppercase text-slate-700 dark:text-slate-300">
+                  <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                  <span>{tt("customs_station_treatment", "Customs Office & Treatment (Master)")}</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                      {tt("customs_office_station", "Customs Station / Office")}
+                    </label>
+                    <CustomsOfficePicker
+                      countryId={countryId}
+                      locationId={locationId}
+                      value={customsOfficeId}
+                      onChange={(offId, off) => {
+                        setCustomsOfficeId(offId);
+                        if (off?.office_name) setCustomsPoint(off.office_name);
+                        if (off?.allowed_treatments && off.allowed_treatments.length > 0) {
+                          setCustomsTreatment(off.allowed_treatments[0]);
+                        }
+                      }}
+                      label=""
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                      {tt("customs_treatment_choice", "Customs Treatment")}
+                    </label>
+                    <select
+                      value={customsTreatment}
+                      onChange={(e) => setCustomsTreatment(e.target.value)}
+                      className={selectClass}
+                    >
+                      <option value="import_duty_paid">{t(lang, "treat_import_duty_paid", "Import - Duty Paid")}</option>
+                      <option value="export_clearance">{t(lang, "treat_export_clearance", "Export Clearance")}</option>
+                      <option value="transit_bonded">{t(lang, "treat_transit_bonded", "Transit (Bonded)")}</option>
+                      <option value="re_export">{t(lang, "treat_re_export", "Re-export")}</option>
+                      <option value="free_zone">{t(lang, "treat_free_zone", "Free Zone (JAFZA/Other)")}</option>
+                      <option value="local_clearance">{t(lang, "treat_local_clearance", "Local Clearance")}</option>
+                      <option value="no_duty_exempt">{t(lang, "treat_no_duty_exempt", "No Duty / Exempt")}</option>
+                    </select>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

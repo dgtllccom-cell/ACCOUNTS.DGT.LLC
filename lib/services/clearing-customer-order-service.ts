@@ -129,6 +129,10 @@ export type OrderLegInput = {
   // when a leg has no matched master location (see 20260922_dynamic_location_route_master.sql).
   fromLocationId?: string | null;
   toLocationId?: string | null;
+  fromGateId?: string | null;
+  toGateId?: string | null;
+  customsOfficeId?: string | null;
+  customsTreatment?: string | null;
   transportMode?: "by_sea" | "by_road" | "by_air" | "by_rail" | null;
   responsibleCountryBranchId?: string | null;
   responsibleCityBranchId?: string | null;
@@ -277,6 +281,10 @@ export function normalizeLegs(legs: OrderLegInput[] | undefined | null): OrderLe
       toLocationText: trimOrNull(leg.toLocationText),
       fromLocationId: trimOrNull(leg.fromLocationId),
       toLocationId: trimOrNull(leg.toLocationId),
+      fromGateId: trimOrNull(leg.fromGateId),
+      toGateId: trimOrNull(leg.toGateId),
+      customsOfficeId: trimOrNull(leg.customsOfficeId),
+      customsTreatment: trimOrNull(leg.customsTreatment),
       transportMode: LEG_TRANSPORT_MODES.has(String(leg.transportMode)) ? (leg.transportMode as OrderLegInput["transportMode"]) : null,
       responsibleCountryBranchId: trimOrNull(leg.responsibleCountryBranchId),
       responsibleCityBranchId: trimOrNull(leg.responsibleCityBranchId),
@@ -1062,6 +1070,10 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
             to_location_text: leg.toLocationText,
             from_location_id: leg.fromLocationId,
             to_location_id: leg.toLocationId,
+            from_gate_id: leg.fromGateId,
+            to_gate_id: leg.toGateId,
+            customs_office_id: leg.customsOfficeId,
+            customs_treatment: leg.customsTreatment,
             transport_mode: leg.transportMode,
             responsible_country_branch_id: leg.responsibleCountryBranchId,
             responsible_city_branch_id: leg.responsibleCityBranchId,

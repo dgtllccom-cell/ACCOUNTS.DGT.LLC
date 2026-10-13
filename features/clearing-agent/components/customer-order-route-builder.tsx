@@ -32,7 +32,12 @@ export type RouteStop = {
   id?: string;
   countryId: string;
   countryName: string;
+  locationId?: string;
   locationName: string;
+  gateId?: string;
+  gateName?: string;
+  customsOfficeId?: string;
+  customsTreatment?: string;
   mode: "by_sea" | "by_road" | "by_air" | "by_rail";
   customsPoint?: string;
   handlerType?: "our_branch" | "external_partner";
@@ -180,7 +185,12 @@ export function CustomerOrderRouteBuilder({
         id: leg.id || `stop-${idx}`,
         countryId: leg.toCountryId || leg.to_country_id || "",
         countryName: leg.toCountryName || leg.to_country_name || "",
+        locationId: leg.toLocationId || leg.to_location_id || "",
         locationName: leg.toLocationText || leg.to_location_text || leg.portOfDischarge || "",
+        gateId: leg.toGateId || leg.to_gate_id || "",
+        gateName: leg.toGateName || leg.to_gate_name || "",
+        customsOfficeId: leg.customsOfficeId || leg.customs_office_id || "",
+        customsTreatment: leg.customsTreatment || leg.customs_treatment || "",
         mode: (leg.transportMode || leg.transport_mode || "by_road") as any,
         customsPoint: leg.customsPointText || leg.customs_point_text || "",
         handlerType: leg.handlerType || leg.handler_type || (leg.partnerName || leg.partner_name ? "external_partner" : "our_branch"),
@@ -385,6 +395,10 @@ export function CustomerOrderRouteBuilder({
         toCountryName: st.countryName || null,
         fromLocationText: prevLocation,
         toLocationText: st.locationName || st.countryName,
+        toLocationId: st.locationId || null,
+        toGateId: st.gateId || null,
+        customsOfficeId: st.customsOfficeId || null,
+        customsTreatment: st.customsTreatment || null,
         transportMode: st.mode,
         customsPointText: st.customsPoint || null,
         handlerType: st.handlerType || "our_branch",

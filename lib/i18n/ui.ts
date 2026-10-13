@@ -11697,11 +11697,54 @@ export type UiKey =
   | "tbill.back"
   | "tbill.next"
   | "tbill.remove"
+  | "setmenu.t_route_location"
+  | "setmenu.d_route_location"
+  | "setmenu.badge_5tier"
+  | "locmaster.tab_locations"
+  | "locmaster.tab_terminals"
+  | "locmaster.tab_customs"
+  | "locmaster.tab_routes"
+  | "locmaster.tab_countries"
+  | "locmaster.type_free_zone"
+  | "locmaster.type_inland_depot"
+  | "locmaster.btn_add_gate"
+  | "locmaster.btn_add_customs"
+  | "locmaster.deactivate"
+  | "locmaster.activate"
+  | "comv.leg_from_gate"
+  | "comv.leg_to_gate"
+  | "comv.leg_customs_office"
+  | "comv.customs_clearance_title"
+  | "comv.customs_office_label"
+  | "comv.customs_treatment_label"
+  | "comv.select_treatment"
   | (string & {});
 
 type Dict = Record<string, string>;
 
 const en: Dict = {
+  "setmenu.t_route_location": "Route & Location Master Management",
+  "setmenu.d_route_location": "Central master hierarchy: Countries, Ports/Borders/Depots, Gates/Terminals, Customs Offices, and Multi-Leg Route Rules.",
+  "setmenu.badge_5tier": "5-Tier Master",
+  "locmaster.tab_locations": "Location Master",
+  "locmaster.tab_terminals": "Gate / Terminal Master",
+  "locmaster.tab_customs": "Customs Office & Treatment",
+  "locmaster.tab_routes": "Route Rules & Templates",
+  "locmaster.tab_countries": "Country Master",
+  "locmaster.type_free_zone": "Free Zone",
+  "locmaster.type_inland_depot": "Inland Depot",
+  "locmaster.btn_add_gate": "Add Gate / Terminal",
+  "locmaster.btn_add_customs": "Add Customs Station",
+  "locmaster.deactivate": "Deactivate",
+  "locmaster.activate": "Activate",
+  "comv.leg_from_gate": "From Gate / Terminal (Master)",
+  "comv.leg_to_gate": "To Gate / Terminal (Master)",
+  "comv.leg_customs_office": "Customs Office (Master)",
+  "comv.customs_clearance_title": "Customs Clearance & Treatment (Master)",
+  "comv.customs_office_label": "Customs Station / Office",
+  "comv.customs_treatment_label": "Customs Treatment Regime",
+  "comv.select_treatment": "Select Treatment...",
+
   "cef.step2_title": "Account / Customer Selection",
   "cef.step2_subtitle": "Select an account from the active branch or search across branches within the same country",
   "cef.same_branch_accounts": "Same Branch",
@@ -35657,6 +35700,27 @@ const en: Dict = {
 
 const ur: Dict = {
 ...en,
+  "setmenu.t_route_location": "روٹ اور لوکیشن ماسٹر مینجمنٹ",
+  "setmenu.d_route_location": "مرکزی ماسٹر درجہ بندی: ممالک، بندرگاہیں/سرحدیں، گیٹس/ٹرمینلز، کسٹمز دفاتر اور کثیر مرحلہ روٹ کے قواعد۔",
+  "setmenu.badge_5tier": "5-سطحی ماسٹر",
+  "locmaster.tab_locations": "لوکیشن ماسٹر",
+  "locmaster.tab_terminals": "گیٹ / ٹرمینل ماسٹر",
+  "locmaster.tab_customs": "کسٹمز آفس اور ٹریٹمنٹ",
+  "locmaster.tab_routes": "روٹ کے قواعد اور ٹیمپلیٹس",
+  "locmaster.tab_countries": "کنٹری ماسٹر",
+  "locmaster.type_free_zone": "فری زون",
+  "locmaster.type_inland_depot": "انلینڈ ڈپو",
+  "locmaster.btn_add_gate": "نیا گیٹ / ٹرمینل شامل کریں",
+  "locmaster.btn_add_customs": "کسٹمز اسٹیشن شامل کریں",
+  "locmaster.deactivate": "غیر فعال کریں",
+  "locmaster.activate": "فعال کریں",
+  "comv.leg_from_gate": "روانگی گیٹ / ٹرمینل (ماسٹر)",
+  "comv.leg_to_gate": "منزل کا گیٹ / ٹرمینل (ماسٹر)",
+  "comv.leg_customs_office": "کسٹمز آفس (ماسٹر)",
+  "comv.customs_clearance_title": "کسٹمز کلیئرنس اور ٹریٹمنٹ (ماسٹر)",
+  "comv.customs_office_label": "کسٹمز اسٹیشن / آفس",
+  "comv.customs_treatment_label": "کسٹمز ٹریٹمنٹ کا طریقہ کار",
+  "comv.select_treatment": "کسٹمز ٹریٹمنٹ منتخب کریں...",
   "cef.step2_title": "اکاؤنٹ / کسٹمر کا انتخاب",
   "cef.step2_subtitle": "فعال برانچ سے اکاؤنٹ منتخب کریں یا اسی ملک کی دوسری برانچز میں تلاش کریں",
   "cef.same_branch_accounts": "اسی برانچ کے اکاؤنٹس",
@@ -59582,6 +59646,27 @@ const ur: Dict = {
 
 const ar: Dict = {
 ...en,
+  "setmenu.t_route_location": "إدارة المسارات والمواقع الرئيسية",
+  "setmenu.d_route_location": "التسلسل الهرمي الرئيسي المركزي: الدول والموانئ/الحدود والبوابات/المحطات ومكاتب الجمارك وقواعد المسارات متعددة المراحل.",
+  "setmenu.badge_5tier": "رئيسي خماسي المستويات",
+  "locmaster.tab_locations": "سجل المواقع",
+  "locmaster.tab_terminals": "سجل البوابات والمحطات",
+  "locmaster.tab_customs": "مكتب الجمارك والمعاملات الجمركية",
+  "locmaster.tab_routes": "قواعد وقوالب المسارات",
+  "locmaster.tab_countries": "سجل الدول",
+  "locmaster.type_free_zone": "منطقة حرة",
+  "locmaster.type_inland_depot": "مستودع داخلي",
+  "locmaster.btn_add_gate": "إضافة بوابة / محطة",
+  "locmaster.btn_add_customs": "إضافة محطة جمركية",
+  "locmaster.deactivate": "تعطيل",
+  "locmaster.activate": "تفعيل",
+  "comv.leg_from_gate": "من البوابة / المحطة (الرئيسي)",
+  "comv.leg_to_gate": "إلى البوابة / المحطة (الرئيسي)",
+  "comv.leg_customs_office": "مكتب الجمارك (الرئيسي)",
+  "comv.customs_clearance_title": "التخليص والمعاملة الجمركية (الرئيسي)",
+  "comv.customs_office_label": "المحطة / المكتب الجمركي",
+  "comv.customs_treatment_label": "نظام المعاملة الجمركية",
+  "comv.select_treatment": "اختر المعاملة الجمركية...",
   "cef.step2_title": "اختيار الحساب / العميل",
   "cef.step2_subtitle": "حدد حساباً من الفرع النشط أو ابحث عبر الفروع داخل نفس البلد",
   "cef.same_branch_accounts": "نفس الفرع",
@@ -83508,6 +83593,27 @@ const ar: Dict = {
 
 const fa: Dict = {
 ...en,
+  "setmenu.t_route_location": "مدیریت مسیر و مکان اصلی",
+  "setmenu.d_route_location": "سلسله‌مراتب ارشد مرکزی: کشورها، بنادر/مرزها، گیت‌ها/ترمینال‌ها، دفاتر گمرکی و قوانین مسیرهای چندمرحله‌ای.",
+  "setmenu.badge_5tier": "ماسټر ۵ سطحی",
+  "locmaster.tab_locations": "مکان اصلی",
+  "locmaster.tab_terminals": "گیت و پایانه اصلی",
+  "locmaster.tab_customs": "دفتر گمرک و تعرفه‌ها",
+  "locmaster.tab_routes": "قوانین و الگوهای مسیر",
+  "locmaster.tab_countries": "کشورهای اصلی",
+  "locmaster.type_free_zone": "منطقه آزاد",
+  "locmaster.type_inland_depot": "انبار داخلی",
+  "locmaster.btn_add_gate": "افزودن گیت / پایانه",
+  "locmaster.btn_add_customs": "افزودن ایستگاه گمرکی",
+  "locmaster.deactivate": "غیرفعال کردن",
+  "locmaster.activate": "فعال کردن",
+  "comv.leg_from_gate": "از گیت / پایانه (اصلی)",
+  "comv.leg_to_gate": "به گیت / پایانه (اصلی)",
+  "comv.leg_customs_office": "دفتر گمرک (اصلی)",
+  "comv.customs_clearance_title": "ترخیص و امور گمرکی (اصلی)",
+  "comv.customs_office_label": "ایستگاه / دفتر گمرک",
+  "comv.customs_treatment_label": "رژیم معاملاتی گمرک",
+  "comv.select_treatment": "انتخاب روش گمرکی...",
   "cef.step2_title": "انتخاب حساب / مشتری",
   "cef.step2_subtitle": "حسابی را از شعبه فعال انتخاب کنید یا در بین شعب همان کشور جستجو نمایید",
   "cef.same_branch_accounts": "حساب‌های همان شعبه",
@@ -107433,6 +107539,27 @@ const fa: Dict = {
 
 const ps: Dict = {
 ...en,
+  "setmenu.t_route_location": "د لارې او موقعیت ماسټر مدیریت",
+  "setmenu.d_route_location": "مرکزي ماسټر درجه بندي: هیوادونه، بندرونه/سرحدونه، ګیټونه/ترمینلونه، ګمرکي دفترونه او د څو مرحلو لارې قواعد.",
+  "setmenu.badge_5tier": "۵ کچې ماسټر",
+  "locmaster.tab_locations": "د ځای ماسټر",
+  "locmaster.tab_terminals": "د دروازې / ترمینل ماسټر",
+  "locmaster.tab_customs": "ګمرکي دفتر او چلند",
+  "locmaster.tab_routes": "د لارې قواعد او نمونې",
+  "locmaster.tab_countries": "د هیوادونو ماسټر",
+  "locmaster.type_free_zone": "ازاده سیمه",
+  "locmaster.type_inland_depot": "داخلي ډیپو",
+  "locmaster.btn_add_gate": "نوې دروازه / ترمینل اضافه کړئ",
+  "locmaster.btn_add_customs": "ګمرکي سټیشن اضافه کړئ",
+  "locmaster.deactivate": "غیر فعال کړئ",
+  "locmaster.activate": "فعال کړئ",
+  "comv.leg_from_gate": "له دروازې / ترمینل څخه (ماسټر)",
+  "comv.leg_to_gate": "تر دروازې / ترمینل پورې (ماسټر)",
+  "comv.leg_customs_office": "ګمرکي دفتر (ماسټر)",
+  "comv.customs_clearance_title": "ګمرکي محصول او چلند (ماسټر)",
+  "comv.customs_office_label": "ګمرکي سټیشن / دفتر",
+  "comv.customs_treatment_label": "د ګمرکي چلند رژیم",
+  "comv.select_treatment": "ګمرکي چلند وټاکئ...",
   "cef.step2_title": "د حساب / پیرودونکي ټاکنه",
   "cef.step2_subtitle": "د فعالې څانګې څخه حساب وټاکئ یا په ورته هیواد کې د څانګو ترمنځ لټون وکړئ",
   "cef.same_branch_accounts": "د همدې څانګې حسابونه",

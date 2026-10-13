@@ -10,7 +10,8 @@ import { localizeRecordFields, wantsRawRecord } from "@/lib/i18n/localize-record
 
 const LOCATION_TYPES = [
   "seaport", "airport", "land_border", "railway_terminal",
-  "warehouse", "cross_stuffing", "city", "state", "country"
+  "warehouse", "cross_stuffing", "city", "state", "country",
+  "free_zone", "inland_depot"
 ] as const;
 
 /**

@@ -7,7 +7,7 @@ import {
   Anchor, Building2, Landmark, Mail, MapPin, Settings, SlidersHorizontal,
   Warehouse, Globe, Globe2, Search, Filter, ShieldCheck, Database, RefreshCcw,
   Sparkles, Layers, Activity, ChevronRight, Plus, ArrowUpRight,
-  LayoutDashboard, Users
+  LayoutDashboard, Users, Compass
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,7 @@ type SettingsItem = {
 
 const settingsItems: SettingsItem[] = [
   { title: "Company Setup", description: "Company incorporation, owner identification, contacts, and registrations.", href: "/dashboard/settings/company-setup" as Route, icon: Building2, category: "Core Setup", badge: "Essential", tKey: "setmenu.t_company", dKey: "setmenu.d_company", catKey: "setmenu.cat_core", bKey: "setmenu.badge_essential" },
+  { title: t("en", "setmenu.t_route_location", "Route & Location Master Management"), description: t("en", "setmenu.d_route_location", "Central master hierarchy: Countries, Ports/Borders/Depots, Gates/Terminals, Customs Offices, and Multi-Leg Route Rules."), href: "/dashboard/settings/location-master" as Route, icon: Compass, category: "Master Data", badge: "5-Tier Master", tKey: "setmenu.t_route_location", dKey: "setmenu.d_route_location", catKey: "setmenu.cat_master", bKey: "setmenu.badge_5tier" },
   { title: "Location Management", description: "Configure the global 4-level location hierarchy: Country, State, City, and Tehsil.", href: "/dashboard/settings/location" as Route, icon: MapPin, category: "Core Setup", badge: "Hierarchy", tKey: "setmenu.t_location", dKey: "setmenu.d_location", catKey: "setmenu.cat_core", bKey: "setmenu.badge_hierarchy" },
   { title: "Bank Master Form", description: "Create banks once and use them everywhere across accounts, payments, receipts, ledger, purchases, and reports.", href: "/dashboard/settings/bank" as Route, icon: Landmark, category: "Master Data", badge: "Financial", tKey: "setmenu.t_bank", dKey: "setmenu.d_bank", catKey: "setmenu.cat_master", bKey: "setmenu.badge_financial" },
   { title: "Customer Management", description: "Manage customer / owner master records used across sales, receipts, accounts, and reports.", href: "/dashboard/settings/customers" as Route, icon: Users, category: "Master Data", badge: "CRM", tKey: "setmenu.t_customer", dKey: "setmenu.d_customer", catKey: "setmenu.cat_master", bKey: "setmenu.badge_crm" },

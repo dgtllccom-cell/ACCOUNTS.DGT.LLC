@@ -72,7 +72,7 @@ import { GoodsPicker, type GoodsPickerValue } from "@/features/goods-master/comp
 import { WarehousePicker } from "@/features/warehouses/components/warehouse-picker";
 import { ClearingAgentPicker } from "@/features/shipping/components/clearing-agent-picker";
 import { ShippingLinePicker } from "@/features/shipping/components/shipping-line-picker";
-import { LocationPicker } from "@/features/location-master/components/location-picker";
+import { LocationPicker, GatePicker, CustomsOfficePicker } from "@/features/location-master/components/location-picker";
 import { useBranchUserContext, type BranchUserContext } from "@/lib/hooks/use-branch-user-context";
 import { DocumentAttachmentIcon } from "@/components/documents/document-attachment-icon";
 import { VoiceDictateButton } from "@/components/voice-dictate-button";
@@ -186,6 +186,12 @@ type RouteLeg = {
   toLocationText: string;
   fromLocationId: string;
   toLocationId: string;
+  fromGateId?: string;
+  fromGateName?: string;
+  toGateId?: string;
+  toGateName?: string;
+  customsOfficeId?: string;
+  customsOfficeName?: string;
   transportMode: LegTransportMode | "";
   responsibleCountryBranchId: string;
   responsibleCityBranchId: string;
@@ -252,7 +258,8 @@ type RouteLeg = {
 function emptyLeg(legNo: number, transportMode: LegTransportMode | "" = ""): RouteLeg {
   return {
     legNo, fromCountryId: "", fromCountryName: "", toCountryId: "", toCountryName: "",
-    fromLocationText: "", toLocationText: "", fromLocationId: "", toLocationId: "", transportMode,
+    fromLocationText: "", toLocationText: "", fromLocationId: "", toLocationId: "",
+    fromGateId: "", fromGateName: "", toGateId: "", toGateName: "", customsOfficeId: "", customsOfficeName: "", transportMode,
     responsibleCountryBranchId: "", responsibleCityBranchId: "", responsibleClearingAgentId: "",
     truckId: "", truckRegistrationType: "", truckNumber: "", truckDriverName: "", truckDriverMobile: "",
     shippingLineId: "", vesselName: "", voyageNumber: "", containerNumber: "", sealNumber: "", blNumber: "",
@@ -2019,6 +2026,9 @@ export function CustomerOrderManagementView() {
             toLocationText: leg.to_location_text || "",
             fromLocationId: leg.from_location_id || "",
             toLocationId: leg.to_location_id || "",
+            fromGateId: leg.from_gate_id || "",
+            toGateId: leg.to_gate_id || "",
+            customsOfficeId: leg.customs_office_id || "",
             transportMode: (leg.transport_mode as LegTransportMode) || "",
             responsibleCountryBranchId: leg.responsible_country_branch_id || "",
             responsibleCityBranchId: leg.responsible_city_branch_id || "",
@@ -2302,6 +2312,12 @@ export function CustomerOrderManagementView() {
               toCountryName: leg.toCountryName || null,
               fromLocationText: leg.fromLocationText || null,
               toLocationText: leg.toLocationText || null,
+              fromLocationId: leg.fromLocationId || null,
+              toLocationId: leg.toLocationId || null,
+              fromGateId: leg.fromGateId || null,
+              toGateId: leg.toGateId || null,
+              customsOfficeId: leg.customsOfficeId || null,
+              customsTreatment: leg.customsTreatment || leg.dutyTreatment || null,
               transportMode: leg.transportMode || null,
               responsibleCountryBranchId: leg.responsibleCountryBranchId || null,
               responsibleCityBranchId: leg.responsibleCityBranchId || null,
@@ -8354,10 +8370,20 @@ function Step3RouteVesselCustoms({
                       countryId={leg.fromCountryId}
                       transportMode={leg.transportMode}
                       value={leg.fromLocationId}
-                      onChange={(id, nm) => updateLeg(idx, { fromLocationId: id, fromLocationText: nm || leg.fromLocationText })}
+                      onChange={(id, nm) => updateLeg(idx, { fromLocationId: id, fromLocationText: nm || leg.fromLocationText, fromGateId: "", fromGateName: "" })}
                       label={t(lang, "comv.leg_from_location_master", "From Location (Master)")}
                     />
                   </div>
+                  {leg.fromLocationId && !leg.fromLocationId.startsWith("city:") ? (
+                    <div className="mt-1.5">
+                      <GatePicker
+                        locationId={leg.fromLocationId}
+                        value={leg.fromGateId}
+                        onChange={(gid, gnm) => updateLeg(idx, { fromGateId: gid, fromGateName: gnm })}
+                        label={t(lang, "comv.leg_from_gate", "From Gate / Terminal (Master)")}
+                      />
+                    </div>
+                  ) : null}
                 </div>
                 <div>
                   <label className="mb-1 block text-[11px] font-bold text-slate-600 dark:text-slate-400">{t(lang, "comv.leg_to", "To Country")}</label>
@@ -8386,10 +8412,20 @@ function Step3RouteVesselCustoms({
                       countryId={leg.toCountryId}
                       transportMode={leg.transportMode}
                       value={leg.toLocationId}
-                      onChange={(id, nm) => updateLeg(idx, { toLocationId: id, toLocationText: nm || leg.toLocationText })}
+                      onChange={(id, nm) => updateLeg(idx, { toLocationId: id, toLocationText: nm || leg.toLocationText, toGateId: "", toGateName: "" })}
                       label={t(lang, "comv.leg_to_location_master", "To Location (Master)")}
                     />
                   </div>
+                  {leg.toLocationId && !leg.toLocationId.startsWith("city:") ? (
+                    <div className="mt-1.5">
+                      <GatePicker
+                        locationId={leg.toLocationId}
+                        value={leg.toGateId}
+                        onChange={(gid, gnm) => updateLeg(idx, { toGateId: gid, toGateName: gnm })}
+                        label={t(lang, "comv.leg_to_gate", "To Gate / Terminal (Master)")}
+                      />
+                    </div>
+                  ) : null}
                 </div>
               </div>
 
@@ -8410,6 +8446,52 @@ function Step3RouteVesselCustoms({
                       {mode === "by_sea" ? tt("tm_by_sea", "Sea") : mode === "by_road" ? tt("tm_by_road", "Road") : mode === "by_air" ? tt("tm_by_air", "Air") : t(lang, "comv.tm_by_rail", "Rail")}
                     </button>
                   ))}
+                </div>
+              </div>
+
+              {/* Central Customs Office & Treatment Master under relevant country/location/gate */}
+              <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-3 dark:border-slate-800 dark:bg-slate-900 shadow-2xs">
+                <div className="flex items-center gap-1.5 border-b border-slate-100 pb-2 dark:border-slate-800">
+                  <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                  <span className="text-xs font-black uppercase text-slate-800 dark:text-slate-200">
+                    {t(lang, "comv.customs_clearance_title", "Customs Office & Treatment (Master)")}
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div>
+                    <CustomsOfficePicker
+                      countryId={leg.toCountryId || leg.fromCountryId}
+                      locationId={leg.toLocationId || leg.fromLocationId}
+                      value={leg.customsOfficeId}
+                      onChange={(officeId, office) => {
+                        updateLeg(idx, {
+                          customsOfficeId: officeId,
+                          customsPointText: office?.office_name || leg.customsPointText,
+                          customsTreatment: (office?.allowed_treatments && office.allowed_treatments.length > 0) ? office.allowed_treatments[0] : leg.customsTreatment
+                        });
+                      }}
+                      label={t(lang, "comv.customs_office_label", "Customs Office")}
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                      {t(lang, "comv.customs_treatment_label", "Customs Treatment")}
+                    </label>
+                    <select
+                      value={leg.customsTreatment || ""}
+                      onChange={(e) => updateLeg(idx, { customsTreatment: e.target.value })}
+                      className={selectClass}
+                    >
+                      <option value="">-- {t(lang, "comv.select_treatment", "Select Treatment")} --</option>
+                      <option value="import_duty_paid">{t(lang, "treat_import_duty_paid", "Import - Duty Paid")}</option>
+                      <option value="export_clearance">{t(lang, "treat_export_clearance", "Export Clearance")}</option>
+                      <option value="transit_bonded">{t(lang, "treat_transit_bonded", "Transit (Bonded)")}</option>
+                      <option value="re_export">{t(lang, "treat_re_export", "Re-export")}</option>
+                      <option value="free_zone">{t(lang, "treat_free_zone", "Free Zone (JAFZA/Other)")}</option>
+                      <option value="local_clearance">{t(lang, "treat_local_clearance", "Local Clearance")}</option>
+                      <option value="no_duty_exempt">{t(lang, "treat_no_duty_exempt", "No Duty / Exempt")}</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
@@ -8745,6 +8827,21 @@ function Step3RouteVesselCustoms({
                   value={leg.customsClearingAgentId}
                   onValueChange={(id) => updateLeg(idx, { customsClearingAgentId: id })}
                 />
+                <div className="mt-1.5">
+                  <CustomsOfficePicker
+                    countryId={leg.customsCountryId || leg.toCountryId || leg.fromCountryId}
+                    locationId={leg.toLocationId || leg.fromLocationId}
+                    value={leg.customsOfficeId}
+                    onChange={(offId, off) => {
+                      updateLeg(idx, {
+                        customsOfficeId: offId,
+                        customsOfficeName: off?.office_name || "",
+                        customsPointText: off?.office_name || leg.customsPointText
+                      });
+                    }}
+                    label={t(lang, "comv.leg_customs_office", "Customs Office (Master)")}
+                  />
+                </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="mb-1 block text-[11px] font-bold text-slate-600 dark:text-slate-400">{t(lang, "comv.clearance_type", "Clearance Type")}</label>
