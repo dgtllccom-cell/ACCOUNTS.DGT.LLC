@@ -38,5 +38,6 @@
 
 /* ───────── phones / small tablets ───────── */
 @media (max-width: 640px) {
-  .dgt-trk form button[type="button"], .dgt-trk form button[type="submit"], .dgt-trk-report-card button { min-height: 44px; }
+  /* the ERP-wide mobile rule ([data-erp-content] button:not(...) { min-height: 2.5rem }) is more specific — win on purpose */
+  .dgt-trk form button[type="button"], .dgt-trk form button[type="submit"], .dgt-trk-report-card button { min-height: 44px !important; }
 }

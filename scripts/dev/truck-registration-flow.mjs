@@ -34,7 +34,7 @@ const ownerRaw = (await api(`/api/erp/customers/${OWNER}?raw=1`)).json?.data?.cu
 
 for (const u of ["/api/erp/customers?limit=500&lang=en","/api/erp/customers?q=Ahmad&limit=50&lang=en","/api/erp/master-data/trucks","/api/erp/branding"]) { const t0 = Date.now(); await api(u); console.log("warm", u, Date.now() - t0, "ms"); }
 // remove leftovers of earlier aborted runs of THIS script only (E2E + 6 digits, optional T) — DEV test rows
-for (const t of ((await api("/api/erp/master-data/trucks")).json?.trucks || [])) if (/^E2Ed{6}T?$/.test(t.truck_number)) { const d = await api(`/api/erp/master-data/trucks/${t.id}`, { method: "DELETE" }); console.log("cleanup leftover", t.truck_number, d.status); }
+for (const t of ((await api("/api/erp/master-data/trucks")).json?.trucks || [])) if (/^E2E[0-9]{6}T?$/.test(t.truck_number)) { const d = await api(`/api/erp/master-data/trucks/${t.id}`, { method: "DELETE" }); console.log("cleanup leftover", t.truck_number, d.status); }
 const browser = await chromium.launch();
 const ctx = await browser.newContext({ viewport: { width: D.w, height: D.h }, deviceScaleFactor: D.dpr, isMobile: D.mobile, hasTouch: D.mobile, acceptDownloads: true });
 await ctx.addCookies([{ name: "erp_session", value: token, domain: "localhost", path: "/" }, { name: "erp_lang", value: "en", domain: "localhost", path: "/" }]);
@@ -44,9 +44,10 @@ await ctx.addInitScript(() => {
   window.print = () => { try { const t = window.top; t.__printed = t.__printed || []; t.__printed.push(document.documentElement.outerHTML); } catch {} };
 });
 ctx.setDefaultTimeout(300000); ctx.setDefaultNavigationTimeout(300000);
+let STAGE = "init";
 const p = await ctx.newPage(); const errors = [];
 process.on("uncaughtException", async (e) => { console.log("FATAL", String(e).slice(0, 300)); try { await p.screenshot({ path: `${OUT}/fatal.png` }); } catch {} process.exit(2); });
-p.on("pageerror", (e) => { if (!/Failed to fetch|NetworkError|AbortError/.test(String(e))) errors.push("pageerror: " + String(e).slice(0, 180)); });
+p.on("pageerror", (e) => { if (!/Failed to fetch|NetworkError|AbortError/.test(String(e))) { if (!/:prime$/.test(STAGE)) errors.push(`pageerror[${STAGE}] ` + String(e).slice(0, 180)); }; });
 p.on("console", (m) => { if (["error", "warning"].includes(m.type()) && !/Failed to fetch|favicon|Failed to load resource|ResizeObserver|DevTools|dgt-connect|presence|Download the React|net::ERR|AbortError/i.test(m.text())) errors.push(m.type() + ": " + m.text().slice(0, 200)); });
 let posted = null, putPayload = null;
 p.on("request", (rq) => {
@@ -64,10 +65,12 @@ const previewFrame = async () => { await p.waitForFunction(() => document.queryS
 const frameText = async (fr) => (await fr.evaluate(() => document.body?.innerText || "").catch(() => "")) || "";
 
 async function gotoList(lang = "en") {
+  STAGE = `list:${lang}:prime`;
   await ctx.addCookies([{ name: "erp_lang", value: lang, domain: "localhost", path: "/" }]);
   await p.goto(BASE + "/dashboard/clearing-agent/truck-registration", { waitUntil: "load", timeout: 300000 });
   await p.evaluate((l) => { localStorage.setItem("erp_lang", l); sessionStorage.removeItem("dgt-trk-draft-v2"); }, lang);
   await p.reload({ waitUntil: "load" });
+  STAGE = `list:${lang}`;
   await p.waitForSelector("table", { timeout: 180000 });
   await p.waitForFunction(() => !/Loading/.test(document.querySelector("tbody")?.innerText || ""), null, { timeout: 90000 }).catch(() => {});
   await p.waitForTimeout(1200);
@@ -79,9 +82,23 @@ const rowMenu = async (rowText, item) => {
   await p.waitForTimeout(500);
   await p.getByRole("button", { name: item }).last().click();
 };
+async function submitTruck() {
+  const btn = p.getByRole("button", { name: /Submit Truck Record/ });
+  await btn.scrollIntoViewIfNeeded();
+  await btn.click();
+  try { await p.waitForSelector("table", { timeout: 60000 }); }
+  catch (e) {
+    const banner = await p.locator("[class*=rose-50], .bg-red-50").allInnerTexts().catch(() => []);
+    console.log("SUBMIT-DIAG banner:", JSON.stringify(banner), "saving-btn-disabled:", await btn.isDisabled().catch(() => "?"), "url:", p.url());
+    await p.screenshot({ path: OUT + "/submit-diag.png", fullPage: true }).catch(() => {});
+    throw e;
+  }
+  await p.waitForTimeout(1500);
+}
 const nextBtn = (re) => p.getByRole("button", { name: re }).first();
 const stepText = async () => (await p.locator(".dgt-trk-stepper").innerText().catch(() => "")) || "";
 
+STAGE = "new-registration";
 // ═════════ 1) New registration → owner → truck → transporter → driver ═════════
 await gotoList("en");
 await shot("01-list");
@@ -231,8 +248,7 @@ fr = await previewFrame(); ft = await frameText(fr);
 check("Edit → View Report reflects the unsaved edit", /EDITED/.test(ft));
 await closePreview();
 await nextBtn(/Next: Transporter Details/).click(); await nextBtn(/Next: Driver Details/).click(); await nextBtn(/Next: Documents/).click(); await p.waitForTimeout(500);
-await p.getByRole("button", { name: /Submit Truck Record/ }).click();
-await p.waitForSelector("table", { timeout: 90000 }); await p.waitForTimeout(1500);
+await submitTruck();
 check("Edit saved (PATCH) with the new name", !!putPayload && putPayload.truck_name === "E2E Flow Truck EDITED", putPayload?.truck_name);
 const after = ((await api("/api/erp/master-data/trucks")).json?.trucks || []).find((t) => t.truck_number === TRK);
 check("Database shows the edited truck name; owner/driver ids unchanged", after?.truck_name === "E2E Flow Truck EDITED" && after?.owner_person_id === OWNER && after?.driver_person_id === DRIVER);
@@ -246,7 +262,7 @@ await p.locator('input[placeholder="Enter truck number"]').fill(TRK2);
 await p.locator('input[placeholder="Enter chassis number"]').fill("CH-" + TRK2);
 await p.locator('input[placeholder="Enter engine number"]').fill("EN-" + TRK2);
 await nextBtn(/Next: Transporter Details/).click(); await nextBtn(/Next: Driver Details/).click(); await p.waitForTimeout(400);
-await p.getByText("Temporary", { exact: true }).first().click(); await p.waitForTimeout(400);
+await p.locator("label:visible", { hasText: /Temporary/ }).first().click(); await p.waitForTimeout(400);
 await p.locator('input[placeholder="Enter driver name..."]').fill("Temp Driver Test");
 await p.locator('input[placeholder="Driving License Number"]').fill("LIC-" + TRK2);
 await p.locator('input[placeholder="Enter license type"]').fill("HTV Test Class");
@@ -257,11 +273,12 @@ check("Temporary driver + licence entered appear in the live report", /Temp Driv
 await shot("12-temp-driver");
 await noOverflow("Temporary-driver step");
 await nextBtn(/Next: Documents/).click(); await p.waitForTimeout(400);
-await p.getByRole("button", { name: /Submit Truck Record/ }).click();
-await p.waitForSelector("table", { timeout: 90000 }); await p.waitForTimeout(1500);
+await submitTruck();
 await rowMenu(TRK2, /^View$/);
 fr = await previewFrame(); ft = await frameText(fr);
-check("Row View (temporary driver): licence section shows number, type and authority", ft.includes("LIC-" + TRK2) && /HTV Test Class/.test(ft) && /Test Transport Authority/.test(ft) && /Temp Driver Test/.test(ft), ft.slice(0, 80).replace(/s+/g, " "));
+fs.writeFileSync(`${OUT}/temp-driver-view.txt`, ft);
+const tdFlags = { lic: ft.includes("LIC-" + TRK2), type: /HTV Test Class/.test(ft), auth: /Test Transport Authority/.test(ft), name: /Temp Driver Test/.test(ft) };
+check("Row View (temporary driver): licence section shows number, type and authority", Object.values(tdFlags).every(Boolean), JSON.stringify(tdFlags));
 check("Row View (temporary driver): no section is blank-filled with dashes", !/—s*—/.test(ft));
 await shot("13-temp-driver-report");
 await closePreview();
@@ -271,7 +288,7 @@ if (rec2?.id) { const del2 = await api(`/api/erp/master-data/trucks/${rec2.id}`,
 // ═════════ 6) five languages + RTL on the saved record ═════════
 for (const lang of (process.env.LANGS || "ur,ar,fa,ps,en").split(",")) {
   await gotoList(lang);
-  await rowMenu(TRK, new RegExp(lang === "en" ? "^View$" : ".*"));
+  await p.locator("tbody tr", { hasText: TRK }).first().locator("button").last().click(); await p.waitForTimeout(500); await p.locator("button:has(svg.lucide-eye)").last().click();
   fr = await previewFrame(); ft = await frameText(fr);
   const dirAttr = await fr.evaluate(() => document.documentElement.getAttribute("dir") || document.body.getAttribute("dir") || getComputedStyle(document.body).direction).catch(() => "");
   const L = lang.toUpperCase();

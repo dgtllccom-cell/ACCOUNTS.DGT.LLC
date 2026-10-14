@@ -203,6 +203,8 @@ type TruckRow = {
   transporter_display_name: string | null;
   driver_person_id: string | null;
   driver_display_name: string | null;
+  /** name typed for a temporary driver (no linked customer) — the API returns it as saved */
+  driver_name?: string | null;
   driver_mobile: string | null;
   driver_cnic_passport: string | null;
   driver_docs_expiry_date: string | null;
@@ -726,6 +728,7 @@ export function TruckRecreationWizard({
     try {
       if (row.notes && row.notes.startsWith("{")) extraNotes = JSON.parse(row.notes);
     } catch {}
+    const d10 = (v: unknown) => (v ? String(v).slice(0, 10) : "");
     return {
         hasOwner: row.owner_person_id ? "yes" : "no",
         ownerId: row.owner_person_id || "",
@@ -740,7 +743,7 @@ export function TruckRecreationWizard({
         companyId: row.transport_company_id || "",
         transporterId: row.transporter_person_id || "",
         driverType: row.driver_person_id ? "permanent" : "temporary",
-        temporaryDriverName: row.driver_display_name || "",
+        temporaryDriverName: row.driver_person_id ? row.driver_display_name || "" : row.driver_name || row.driver_display_name || "",
         temporaryDriverFirstName: extraNotes.temporaryDriverFirstName || "",
         temporaryDriverLastName: extraNotes.temporaryDriverLastName || "",
         driverFatherName: extraNotes.driverFatherName || "",
@@ -754,7 +757,7 @@ export function TruckRecreationWizard({
         driverLicenseNo: row.driver_cnic_passport || "",
         driverLicenseType: extraNotes.driverLicenseType || "",
         driverLicenseIssueDate: extraNotes.driverLicenseIssueDate || "",
-        driverLicenseExpiry: row.driver_docs_expiry_date || "",
+        driverLicenseExpiry: d10(row.driver_docs_expiry_date),
         driverIssuingAuthority: extraNotes.driverIssuingAuthority || "",
         driverMaritalStatus: extraNotes.driverMaritalStatus || "",
         addDriverLocation: "yes",
@@ -772,9 +775,9 @@ export function TruckRecreationWizard({
         color: row.color || "",
         fuelType: row.fuel_type || "",
         capacity: row.capacity || "",
-        registrationExpiryDate: row.registration_expiry_date || "",
+        registrationExpiryDate: d10(row.registration_expiry_date),
         insuranceProvider: extraNotes.insuranceProvider || "",
-        insuranceExpiryDate: row.insurance_expiry_date || "",
+        insuranceExpiryDate: d10(row.insurance_expiry_date),
         fitnessCertificateExpiryDate: extraNotes.fitnessCertificateExpiryDate || "",
       };
   }
@@ -952,7 +955,7 @@ export function TruckRecreationWizard({
     return rows.filter((r) => {
       const matchesQuery =
         !q ||
-        [r.truck_number, r.truck_name, r.model, r.owner_display_name, r.company_display_name, r.transporter_display_name, r.driver_display_name]
+        [r.truck_number, r.truck_name, r.model, r.owner_display_name, r.company_display_name, r.transporter_display_name, r.driver_display_name, r.driver_name]
           .some((v) => (v || "").toLowerCase().includes(q));
       const matchesStatus = statusFilter === "all" || r.status === statusFilter;
       return matchesQuery && matchesStatus;
@@ -1802,7 +1805,7 @@ export function TruckRecreationWizard({
                     model: r.model || "-",
                     company: r.company_display_name || "-",
                     transporter: r.transporter_display_name || "-",
-                    driver: r.driver_display_name || "-",
+                    driver: r.driver_display_name || (r.driver_name ? nameText(r.driver_name) : "") || "-",
                     mobile: r.driver_mobile || "-",
                     status: r.status,
                     reg_date: (r.created_at || "").slice(0, 10),
@@ -1873,7 +1876,7 @@ export function TruckRecreationWizard({
                           <td className="p-3 font-medium text-slate-600 dark:text-slate-300">{row.transporter_display_name || "—"}</td>
                         )}
                         <td className="p-3 font-semibold text-slate-800 dark:text-slate-200">
-                          {row.driver_display_name || "—"}
+                          {row.driver_display_name || (row.driver_name ? nameText(row.driver_name) : "") || "—"}
                         </td>
                         {visibleCols.mobile && (
                           <td className="p-3 font-mono text-slate-600 dark:text-slate-300">{row.driver_mobile || "—"}</td>
