@@ -38,5 +38,5 @@
 
 /* ───────── phones / small tablets ───────── */
 @media (max-width: 640px) {
-  .dgt-trk form button[type="button"], .dgt-trk form button[type="submit"] { min-height: 44px; }
+  .dgt-trk form button[type="button"], .dgt-trk form button[type="submit"], .dgt-trk-report-card button { min-height: 44px; }
 }

@@ -35860,6 +35860,7 @@ const en: Dict = {
   "trk.w_driving_license": "Driving License",
   "trk.w_driver_type": "Driver Type",
   "trk.w_download_pdf": "Download PDF",
+  "trk.w_temporary_driver_name": "Temporary Driver Name *",
 };
 
 const ur: Dict = {
@@ -59970,6 +59971,7 @@ const ur: Dict = {
   "trk.w_driving_license": "ڈرائیونگ لائسنس",
   "trk.w_driver_type": "ڈرائیور کی قسم",
   "trk.w_download_pdf": "پی ڈی ایف ڈاؤن لوڈ کریں",
+  "trk.w_temporary_driver_name": "عارضی ڈرائیور کا نام *",
 };
 
 const ar: Dict = {
@@ -84081,6 +84083,7 @@ const ar: Dict = {
   "trk.w_driving_license": "رخصة القيادة",
   "trk.w_driver_type": "نوع السائق",
   "trk.w_download_pdf": "تنزيل PDF",
+  "trk.w_temporary_driver_name": "اسم السائق المؤقت *",
 };
 
 const fa: Dict = {
@@ -108191,6 +108194,7 @@ const fa: Dict = {
   "trk.w_driving_license": "گواهینامه رانندگی",
   "trk.w_driver_type": "نوع راننده",
   "trk.w_download_pdf": "دانلود PDF",
+  "trk.w_temporary_driver_name": "نام راننده موقت *",
 };
 
 const ps: Dict = {
@@ -132308,6 +132312,7 @@ const ps: Dict = {
   "trk.w_driving_license": "د موټر چلولو جواز",
   "trk.w_driver_type": "د ډرایور ډول",
   "trk.w_download_pdf": "PDF ډاونلوډ کړئ",
+  "trk.w_temporary_driver_name": "د لنډمهاله ډرایور نوم *",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

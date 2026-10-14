@@ -56,7 +56,8 @@ import "./truck-registration.css";
 import { PersonPicker } from "@/components/erp/person-picker";
 import { CompanyPicker } from "@/features/companies/components/company-picker";
 import { Party360Modal } from "@/features/customers/components/party-360-modal";
-import { openMasterProfileReportWindow } from "@/lib/reports/open-master-profile-report-window";
+import { viewTruckReport, printTruckReport, downloadTruckPdf } from "@/lib/reports/master-profiles/truck-report-actions";
+import type { TruckProfileRecord } from "@/lib/reports/master-profiles/build-truck-profile";
 import { ReportActions } from "@/components/ui/report-actions";
 import { UnifiedActionMenu } from "@/components/ui/unified-action-menu";
 import { TruckAttachments } from "@/features/clearing-agent/components/truck-attachments";
@@ -334,45 +335,8 @@ export function TruckRecreationWizard({
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ kind: "success" | "error"; text: string } | null>(null);
 
-  // Overlay modal states
-  const [viewModalOpen, setViewModalOpen] = useState(false);
-  const [viewModalTab, setViewModalTab] = useState<"full" | "owner" | "vehicle" | "transporter" | "driver" | "documents">("full");
-  const [viewMenuOpen, setViewMenuOpen] = useState(false);
-  const viewMenuRef = useRef<HTMLDivElement>(null);
-
-  /** A4 print / Save-as-PDF of the report that is on screen: the report HTML is copied into a clean iframe (own @page A4 rules,
-   *  light colours, two-column layout forced) so nothing from the app shell is printed and nothing is cut at the page edge. */
-  function printReportA4(sourceId: string) {
-    const src = typeof document !== "undefined" ? document.getElementById(sourceId) : null;
-    if (!src) return;
-    const iframe = document.createElement("iframe");
-    iframe.setAttribute("aria-hidden", "true");
-    iframe.style.cssText = "position:fixed;inset-inline-end:0;bottom:0;width:0;height:0;border:0;visibility:hidden";
-    document.body.appendChild(iframe);
-    const doc = iframe.contentDocument;
-    if (!doc) { iframe.remove(); return; }
-    const head = Array.from(document.querySelectorAll('link[rel="stylesheet"], style')).map((n) => n.outerHTML).join("");
-    const title = tt("trk.registered_truck_title", "Clearing Truck Registration");
-    doc.open();
-    doc.write(
-      '<!doctype html><html lang="' + activeLang + '" dir="' + dir + '"><head><meta charset="utf-8"><title>' + title + "</title>" + head +
-      "<style>" +
-      "@page{size:A4 portrait;margin:10mm}" +
-      "html,body{background:#fff!important;color:#0f172a;margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}" +
-      ".trk-a4{width:100%;max-width:190mm;margin:0 auto}" +
-      ".trk-a4 .trk-print-hide{display:none!important}" +
-      ".trk-a4 .rounded-2xl,.trk-a4 .rounded-3xl{break-inside:avoid;page-break-inside:avoid}" +
-      ".trk-a4 *{max-width:100%;overflow-wrap:anywhere}" +
-      ".trk-a4 img{max-width:100%}" +
-      "</style></head><body><div class=\"trk-a4\">" + src.innerHTML + "</div></body></html>"
-    );
-    doc.close();
-    const run = () => {
-      try { iframe.contentWindow?.focus(); iframe.contentWindow?.print(); } finally { setTimeout(() => iframe.remove(), 2000); }
-    };
-    // wait for the copied stylesheets / images before the print dialog opens
-    setTimeout(run, 700);
-  }
+  // Report actions in flight ("view" | "print" | "pdf") — disables the buttons and shows a spinner
+  const [reportBusy, setReportBusy] = useState<null | "view" | "print" | "pdf">(null);
 
   // Step-by-Step Wizard state (1: Owner, 2: Truck, 3: Transporter & Company, 4: Driver, 5: Documents)
   const [activeStep, setActiveStep] = useState<number>(1);
@@ -443,7 +407,6 @@ export function TruckRecreationWizard({
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
       if (columnsRef.current && !columnsRef.current.contains(e.target as Node)) setColumnsOpen(false);
-      if (viewMenuRef.current && !viewMenuRef.current.contains(e.target as Node)) setViewMenuOpen(false);
     }
     document.addEventListener("mousedown", onDocClick);
     return () => document.removeEventListener("mousedown", onDocClick);
@@ -561,6 +524,30 @@ export function TruckRecreationWizard({
     return c;
   }
 
+  /** Fill the empty driver fields of `prev` from the driver's own (raw, original-script) record. */
+  function mergeDriverPrefill(prev: typeof EMPTY_FORM, c: CustomerDetails): typeof EMPTY_FORM {
+    return {
+      ...prev,
+      driverMobile: prev.driverMobile || c.mobile || c.whatsapp || "",
+      driverWhatsapp: prev.driverWhatsapp || c.whatsapp || c.mobile || "",
+      driverEmail: prev.driverEmail || c.email || "",
+      driverLicenseNo: prev.driverLicenseNo || c.license_no || "",
+      driverLicenseExpiry: prev.driverLicenseExpiry || c.license_expiry || "",
+      driverFatherName: prev.driverFatherName || c.father_name || "",
+      driverDob: prev.driverDob || (c as any).date_of_birth || "",
+      driverCnic: prev.driverCnic || c.cnic || "",
+      driverNationality: prev.driverNationality || (c as any).nationality || "",
+      driverLicenseType: prev.driverLicenseType || (c as any).license_type || "",
+      driverLicenseIssueDate: prev.driverLicenseIssueDate || (c as any).license_issue_date || "",
+      driverIssuingAuthority: prev.driverIssuingAuthority || (c as any).issuing_authority || "",
+      driverMaritalStatus: prev.driverMaritalStatus || (c as any).marital_status || "",
+      driverCountry: prev.driverCountry || c.country_name || c.country || "",
+      driverState: prev.driverState || c.state_province_name || c.state || "",
+      driverCity: prev.driverCity || c.city_name || c.city || "",
+      driverAddress: prev.driverAddress || c.address || "",
+    };
+  }
+
   // Driver — display copy (follows the language on screen)
   useEffect(() => {
     if (!form.driverId || form.driverType !== "permanent") {
@@ -596,26 +583,7 @@ export function TruckRecreationWizard({
         if (res?.data?.customer) {
           const c = withDriverLicense(res.data.customer, res.data.registrations, res.data.contacts);
           setDriverRaw(c);
-          setForm((prev) => ({
-            ...prev,
-            driverMobile: prev.driverMobile || c.mobile || c.whatsapp || "",
-            driverWhatsapp: prev.driverWhatsapp || c.whatsapp || c.mobile || "",
-            driverEmail: prev.driverEmail || c.email || "",
-            driverLicenseNo: prev.driverLicenseNo || c.license_no || "",
-            driverLicenseExpiry: prev.driverLicenseExpiry || c.license_expiry || "",
-            driverFatherName: prev.driverFatherName || c.father_name || "",
-            driverDob: prev.driverDob || (c as any).date_of_birth || "",
-            driverCnic: prev.driverCnic || c.cnic || "",
-            driverNationality: prev.driverNationality || (c as any).nationality || "",
-            driverLicenseType: prev.driverLicenseType || (c as any).license_type || "",
-            driverLicenseIssueDate: prev.driverLicenseIssueDate || (c as any).license_issue_date || "",
-            driverIssuingAuthority: prev.driverIssuingAuthority || (c as any).issuing_authority || "",
-            driverMaritalStatus: prev.driverMaritalStatus || (c as any).marital_status || "",
-            driverCountry: prev.driverCountry || c.country_name || c.country || "",
-            driverState: prev.driverState || c.state_province_name || c.state || "",
-            driverCity: prev.driverCity || c.city_name || c.city || "",
-            driverAddress: prev.driverAddress || c.address || "",
-          }));
+          setForm((prev) => mergeDriverPrefill(prev, c));
           // Pre-populate contacts row if empty
           if (c.mobile || c.whatsapp) {
             setContacts((prev) => {
@@ -752,67 +720,69 @@ export function TruckRecreationWizard({
     setView("list");
   }
 
+  /** The saved record as form state. Nothing is invented: a value the record does not have stays empty. */
+  function formFromRow(row: TruckRow): typeof EMPTY_FORM {
+    let extraNotes: any = {};
+    try {
+      if (row.notes && row.notes.startsWith("{")) extraNotes = JSON.parse(row.notes);
+    } catch {}
+    return {
+        hasOwner: row.owner_person_id ? "yes" : "no",
+        ownerId: row.owner_person_id || "",
+        ownerType: extraNotes.ownerType || "Truck Owner",
+        truckNumber: row.truck_number || "",
+        truckName: row.truck_name || "",
+        truckModel: row.model || "",
+        chassisNumber: row.chassis_number || "",
+        engineNumber: row.engine_number || "",
+        companyLink: row.transport_company_id || row.transporter_person_id ? "yes" : "no",
+        companyType: "transporter",
+        companyId: row.transport_company_id || "",
+        transporterId: row.transporter_person_id || "",
+        driverType: row.driver_person_id ? "permanent" : "temporary",
+        temporaryDriverName: row.driver_display_name || "",
+        temporaryDriverFirstName: extraNotes.temporaryDriverFirstName || "",
+        temporaryDriverLastName: extraNotes.temporaryDriverLastName || "",
+        driverFatherName: extraNotes.driverFatherName || "",
+        driverDob: extraNotes.driverDob || "",
+        driverCnic: extraNotes.driverCnic || "",
+        driverNationality: extraNotes.driverNationality || "",
+        driverId: row.driver_person_id || "",
+        driverMobile: row.driver_mobile || "",
+        driverWhatsapp: extraNotes.driverWhatsapp || "",
+        driverEmail: extraNotes.driverEmail || "",
+        driverLicenseNo: row.driver_cnic_passport || "",
+        driverLicenseType: extraNotes.driverLicenseType || "",
+        driverLicenseIssueDate: extraNotes.driverLicenseIssueDate || "",
+        driverLicenseExpiry: row.driver_docs_expiry_date || "",
+        driverIssuingAuthority: extraNotes.driverIssuingAuthority || "",
+        driverMaritalStatus: extraNotes.driverMaritalStatus || "",
+        addDriverLocation: "yes",
+        driverCountry: "",
+        driverState: "",
+        driverCity: "",
+        driverAddress: "",
+        remarks: String(extraNotes.userNotes !== undefined ? (extraNotes.userNotes ?? "") : row.notes || ""),
+        status: row.status || "active",
+        registrationDate: (row.created_at || "").slice(0, 10) || new Date().toISOString().slice(0, 10),
+        registrationNumber: row.registration_number || "",
+        truckType: row.truck_type || "",
+        make: row.make || "",
+        manufacturingYear: row.manufacturing_year ? String(row.manufacturing_year) : "",
+        color: row.color || "",
+        fuelType: row.fuel_type || "",
+        capacity: row.capacity || "",
+        registrationExpiryDate: row.registration_expiry_date || "",
+        insuranceProvider: extraNotes.insuranceProvider || "",
+        insuranceExpiryDate: row.insurance_expiry_date || "",
+        fitnessCertificateExpiryDate: extraNotes.fitnessCertificateExpiryDate || "",
+      };
+  }
+
   function startEdit(row: TruckRow) {
     setEditingId(row.id);
     setActiveStep(1);
-    let extraNotes: any = {};
-    try {
-      if (row.notes && row.notes.startsWith("{")) {
-        extraNotes = JSON.parse(row.notes);
-      }
-    } catch {}
-
-    setForm({
-      hasOwner: row.owner_person_id ? "yes" : "no",
-      ownerId: row.owner_person_id || "",
-      ownerType: extraNotes.ownerType || "Truck Owner",
-      truckNumber: row.truck_number || "",
-      truckName: row.truck_name || "",
-      truckModel: row.model || "",
-      chassisNumber: row.chassis_number || "",
-      engineNumber: row.engine_number || "",
-      companyLink: row.transport_company_id || row.transporter_person_id ? "yes" : "no",
-      companyType: "transporter",
-      companyId: row.transport_company_id || "",
-      transporterId: row.transporter_person_id || "",
-      driverType: row.driver_person_id ? "permanent" : "temporary",
-      temporaryDriverName: row.driver_display_name || "",
-      temporaryDriverFirstName: extraNotes.temporaryDriverFirstName || "",
-      temporaryDriverLastName: extraNotes.temporaryDriverLastName || "",
-      driverFatherName: extraNotes.driverFatherName || "",
-      driverDob: extraNotes.driverDob || "",
-      driverCnic: extraNotes.driverCnic || "",
-      driverNationality: extraNotes.driverNationality || "",
-      driverId: row.driver_person_id || "",
-      driverMobile: row.driver_mobile || "",
-      driverWhatsapp: extraNotes.driverWhatsapp || "",
-      driverEmail: extraNotes.driverEmail || "",
-      driverLicenseNo: row.driver_cnic_passport || "",
-      driverLicenseType: extraNotes.driverLicenseType || "HTV (Heavy Transport)",
-      driverLicenseIssueDate: extraNotes.driverLicenseIssueDate || "",
-      driverLicenseExpiry: row.driver_docs_expiry_date || "",
-      driverIssuingAuthority: extraNotes.driverIssuingAuthority || "Balochistan Transport Dept",
-      driverMaritalStatus: extraNotes.driverMaritalStatus || "Married",
-      addDriverLocation: "yes",
-      driverCountry: "",
-      driverState: "",
-      driverCity: "",
-      driverAddress: "",
-      remarks: extraNotes.userNotes !== undefined ? extraNotes.userNotes : row.notes || "",
-      status: row.status || "active",
-      registrationDate: (row.created_at || "").slice(0, 10) || new Date().toISOString().slice(0, 10),
-      registrationNumber: row.registration_number || "",
-      truckType: row.truck_type || "",
-      make: row.make || "",
-      manufacturingYear: row.manufacturing_year ? String(row.manufacturing_year) : "",
-      color: row.color || "",
-      fuelType: row.fuel_type || "",
-      capacity: row.capacity || "",
-      registrationExpiryDate: row.registration_expiry_date || "",
-      insuranceProvider: extraNotes.insuranceProvider || "",
-      insuranceExpiryDate: row.insurance_expiry_date || "",
-      fitnessCertificateExpiryDate: extraNotes.fitnessCertificateExpiryDate || "",
-    });
+    setForm(formFromRow(row));
     if (row.driver_mobile) {
       setContacts([{ id: "c-1", type: "WhatsApp", value: row.driver_mobile }]);
     }
@@ -875,73 +845,6 @@ export function TruckRecreationWizard({
     } catch {
       setMessage({ kind: "error", text: tt("common.error", "Something went wrong.") });
     }
-  }
-
-  function handleView(row: TruckRow, options?: { autoPrint?: boolean }) {
-    openMasterProfileReportWindow({
-      lang: activeLang,
-      title: tt("trk.registered_truck_title", "Clearing Truck Registration"),
-      subtitle: tt("trk.module_subtitle", "Truck master, owner, transporter, driver and reporting."),
-      name: row.truck_number,
-      status: row.status,
-      meta: [
-        { label: tt("trk.col_truck_no", "Truck No."), value: row.truck_number },
-        { label: tt("common.registration_date", "Registration Date"), value: (row.created_at || "").slice(0, 10) },
-        { label: tt("common.status", "Status"), value: row.status },
-        { label: tt("trk.col_branch", "Branch"), value: row.branch_display_name },
-      ],
-      sections: [
-        {
-          title: tt("trk.section_truck_details", "2. Truck Details"),
-          rows: [
-            { label: tt("trk.truck_owner_name_label", "Truck Owner Name *").replace(" *", ""), value: row.owner_display_name },
-            { label: tt("trk.truck_name_label", "Truck Name"), value: row.truck_name },
-            { label: tt("trk.model", "Model *").replace(" *", ""), value: row.model },
-            { label: tt("trk.chassis_no", "Chassis No *").replace(" *", ""), value: row.chassis_number },
-            { label: tt("trk.engine_no", "Engine No"), value: row.engine_number },
-          ],
-        },
-        {
-          title: tt("com.vehicle_specifications", "Vehicle Specifications"),
-          rows: [
-            { label: tt("trk.reg_no", "Registration No *").replace(" *", ""), value: row.registration_number },
-            { label: tt("trk.truck_type", "Truck Type *").replace(" *", ""), value: row.truck_type },
-            { label: tt("trk.make", "Make *").replace(" *", ""), value: row.make },
-            { label: tt("trk.year", "Year *").replace(" *", ""), value: row.manufacturing_year ? String(row.manufacturing_year) : null },
-            { label: tt("trk.color", "Color"), value: row.color },
-            { label: tt("trk.fuel_type", "Fuel Type"), value: row.fuel_type },
-            { label: tt("trk.capacity", "Capacity (Tons) *").replace(" *", ""), value: row.capacity },
-            { label: tt("tr.reg_expiry", "Reg. Expiry"), value: row.registration_expiry_date },
-            { label: tt("tr.ins_expiry", "Insurance Expiry"), value: row.insurance_expiry_date },
-          ],
-        },
-        {
-          title: tt("trk.section_company", "3. Registered Company"),
-          rows: [{ label: tt("trk.company_name_label", "Company Name"), value: row.company_display_name }],
-        },
-        {
-          title: tt("trk.section_transporter", "4. Transporter Information"),
-          rows: [{ label: tt("trk.transporter_name_label", "Transporter Name"), value: row.transporter_display_name }],
-        },
-        {
-          title: tt("trk.section_driver", "5. Driver Information"),
-          rows: [
-            { label: tt("trk.driver_name_label", "Driver Name *").replace(" *", ""), value: row.driver_display_name },
-            { label: tt("common.mobile", "Mobile"), value: row.driver_mobile },
-            { label: tt("trk.license_no", "Driving License Number"), value: row.driver_cnic_passport },
-            { label: tt("trk.licence_expiry_label", "Licence Expiry Date"), value: row.driver_docs_expiry_date },
-          ],
-        },
-        {
-          title: tt("trk.section_additional", "6. Additional Information"),
-          rows: [{ label: tt("trk.remarks", "Remarks (Optional)"), value: row.notes }],
-          fullWidth: true,
-        },
-      ],
-      reportIdPrefix: "TRUCK",
-      reportIdValue: row.entry_serial || row.truck_number,
-      autoPrint: options?.autoPrint ?? false,
-    });
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -1165,56 +1068,6 @@ export function TruckRecreationWizard({
     </span>
   );
 
-  // Reusable Report Row for modal sub-tabs
-  const LiveReportRow = ({
-    label,
-    value,
-    badge,
-  }: {
-    label: string;
-    value?: string | number | null;
-    badge?: React.ReactNode;
-  }) => (
-    <div className="flex items-baseline justify-between gap-3 border-b border-slate-100 py-1.5 text-[11px] last:border-0 dark:border-slate-800/80">
-      <span className="text-slate-500 dark:text-slate-400 font-medium shrink-0">{label}:</span>
-      {badge ? (
-        <span className="text-end">{badge}</span>
-      ) : (
-        <b className="text-slate-800 dark:text-slate-100 font-semibold break-words text-end">
-          {value || "—"}
-        </b>
-      )}
-    </div>
-  );
-
-  // Reusable Report Section for modal sub-tabs
-  const LiveReportSection = ({
-    title,
-    icon: Icon,
-    children,
-    action,
-  }: {
-    title: string;
-    icon: any;
-    children: React.ReactNode;
-    action?: React.ReactNode;
-  }) => (
-    <div className="rounded-2xl border border-slate-200/90 bg-white p-3.5 shadow-2xs dark:border-slate-800 dark:bg-slate-900 transition">
-      <div className="mb-2.5 flex items-center justify-between border-b border-slate-100 pb-2 dark:border-slate-800">
-        <div className="flex items-center gap-2">
-          <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-            <Icon className="h-3.5 w-3.5" />
-          </div>
-          <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
-            {title}
-          </span>
-        </div>
-        {action}
-      </div>
-      <div className="space-y-0.5">{children}</div>
-    </div>
-  );
-
   // ── Report values ─────────────────────────────────────────────────────────────────────────────
   // Rules: names/addresses are shown in the language on screen (nm), codes / numbers / phones are NEVER touched, and a missing
   // value is "—" — nothing is invented. The stored record keeps the original text (see handleSubmit: raw copies).
@@ -1250,6 +1103,18 @@ export function TruckRecreationWizard({
     return nm(raw);
   };
 
+  type ReportSrc = {
+    form: typeof EMPTY_FORM;
+    ownerDetails: CustomerDetails | null; ownerRaw: any;
+    companyDetails: CompanyDetails | null; companyRaw: any;
+    transporterDetails: CustomerDetails | null;
+    driverDetails: CustomerDetails | null; driverRaw: any;
+    contacts: ContactEntry[]; driverPhotoUrl: string | null;
+  };
+
+  /** Every value shown in the report, derived from ONE source object — the live screen and a saved list row use the same code. */
+  function deriveReport(src: ReportSrc) {
+    const { form, ownerDetails, ownerRaw, companyDetails, companyRaw, driverDetails, driverRaw, contacts, driverPhotoUrl } = src;
   // Owner
   const ownerRawName = ownerRaw?.customer_name || ownerDetails?.customer_name || "";
   const ownerRegNo = val(ownerDetails?.person_code || ownerDetails?.code);
@@ -1314,6 +1179,116 @@ export function TruckRecreationWizard({
   const driverExpiryDate = form.driverLicenseExpiry || (isPermanentDriver ? driverDetails?.license_expiry || "" : "");
   const driverIssuingAuthority = nm(form.driverIssuingAuthority);
   const driverMaritalStatus = choice(form.driverMaritalStatus);
+    return { ownerRawName, ownerRegNo, ownerFullName, ownerFirstName, ownerLastName, ownerFatherName, ownerCnic, ownerNationality, ownerMobile, ownerWhatsapp, ownerEmail, ownerCountry, ownerState, ownerCity, ownerAddress, companyName, companyBusinessName, companyRegNo, companyNtn, companyLicenseNo, companyBusinessType, companyCountry, companyState, companyCity, companyAddress, companyPhoneNum, companyWhatsappNum, companyEmailAddr, companyRegDate, isPermanentDriver, effectiveDriverPhoto, driverRawName, driverRegNo, driverFullName, driverFirstName, driverLastName, driverFatherName, driverDob, driverCnic, driverNationality, driverMobile, driverWhatsapp, driverEmail, driverLicenseNumber, driverLicenseType, driverIssueDate, driverExpiryDate, driverIssuingAuthority, driverMaritalStatus };
+  }
+
+  const liveSrc: ReportSrc = { form, ownerDetails, ownerRaw, companyDetails, companyRaw, transporterDetails, driverDetails, driverRaw, contacts, driverPhotoUrl };
+  const { ownerRawName, ownerRegNo, ownerFullName, ownerFirstName, ownerLastName, ownerFatherName, ownerCnic, ownerNationality, ownerMobile, ownerWhatsapp, ownerEmail, ownerCountry, ownerState, ownerCity, ownerAddress, companyName, companyBusinessName, companyRegNo, companyNtn, companyLicenseNo, companyBusinessType, companyCountry, companyState, companyCity, companyAddress, companyPhoneNum, companyWhatsappNum, companyEmailAddr, companyRegDate, isPermanentDriver, effectiveDriverPhoto, driverRawName, driverRegNo, driverFullName, driverFirstName, driverLastName, driverFatherName, driverDob, driverCnic, driverNationality, driverMobile, driverWhatsapp, driverEmail, driverLicenseNumber, driverLicenseType, driverIssueDate, driverExpiryDate, driverIssuingAuthority, driverMaritalStatus } = deriveReport(liveSrc);
+
+  const E = (v?: string | number | null): string => {
+    const x = v === undefined || v === null ? "" : String(v).trim();
+    return x === DASH ? "" : x;
+  };
+
+  /** The report document model — values already in the language on screen; empty strings for anything the record does not hold. */
+  function toTruckRecord(src: ReportSrc, extra: { branchName?: string | null; reportId?: string | null; registrationDate?: string | null } = {}): TruckProfileRecord {
+    const R = deriveReport(src);
+    const f = src.form;
+    const perm = f.driverType === "permanent";
+    const td = src.transporterDetails;
+    const dd = src.driverDetails;
+    const driverLoc = perm
+      ? { country: val(dd?.country_name || dd?.country), state: val(dd?.state_province_name || dd?.state), city: val(dd?.city_name || dd?.city), address: nm(dd?.address) }
+      : f.addDriverLocation === "yes"
+        ? { country: nm(f.driverCountry), state: nm(f.driverState), city: nm(f.driverCity), address: nm(f.driverAddress) }
+        : { country: DASH, state: DASH, city: DASH, address: DASH };
+    const photo = R.effectiveDriverPhoto || null;
+    return {
+      truckNumber: f.truckNumber.trim(),
+      statusLabel: statusLabel(f.status),
+      registrationDate: E(formatReportDate(extra.registrationDate ?? f.registrationDate)),
+      branchName: E(extra.branchName),
+      driverPhotoUrl: photo && /^(https?:|data:|blob:|\/)/.test(photo) ? photo : null,
+      reportId: E(extra.reportId) || f.truckNumber.trim(),
+      owner: {
+        regNo: E(R.ownerRegNo), type: E(choice(f.ownerType || "Truck Owner")), fullName: E(R.ownerFullName), fatherName: E(R.ownerFatherName),
+        cnic: E(R.ownerCnic), nationality: E(R.ownerNationality), mobile: E(R.ownerMobile), whatsapp: E(R.ownerWhatsapp), email: E(R.ownerEmail),
+        country: E(R.ownerCountry), state: E(R.ownerState), city: E(R.ownerCity), address: E(R.ownerAddress),
+      },
+      company: {
+        name: E(R.companyName), businessName: E(R.companyBusinessName), regNo: E(R.companyRegNo), ntn: E(R.companyNtn), licenseNo: E(R.companyLicenseNo),
+        businessType: E(R.companyBusinessType), country: E(R.companyCountry), state: E(R.companyState), city: E(R.companyCity), address: E(R.companyAddress),
+        phone: E(R.companyPhoneNum), whatsapp: E(R.companyWhatsappNum), email: E(R.companyEmailAddr), regDate: E(formatReportDate(R.companyRegDate)),
+      },
+      truck: {
+        truckNumber: f.truckNumber.trim(), type: E(choice(f.truckType, "truck_type")), name: E(nm(f.truckName)), make: E(f.make), model: E(f.truckModel),
+        year: E(f.manufacturingYear), color: E(choice(f.color, "color")), fuel: E(choice(f.fuelType, "fuel_type")),
+        capacity: f.capacity ? `${f.capacity} ${tt("trk.w_tons", "Tons")}` : "",
+        chassis: E(f.chassisNumber), engine: E(f.engineNumber), regNo: E(f.registrationNumber),
+        regExpiry: E(formatReportDate(f.registrationExpiryDate)), insuranceProvider: E(f.insuranceProvider),
+        insuranceExpiry: E(formatReportDate(f.insuranceExpiryDate)), fitnessExpiry: E(formatReportDate(f.fitnessCertificateExpiryDate)),
+      },
+      transporter: td
+        ? { name: E(nm(td.customer_name)), code: E(td.person_code || td.code), mobile: E(td.mobile), whatsapp: E(td.whatsapp), address: E(nm(td.address)) }
+        : {},
+      driver: {
+        kind: perm ? tt("trk.w_permanent", "Permanent") : tt("trk.w_temporary", "Temporary"),
+        regNo: E(R.driverRegNo), fullName: E(R.driverFullName), fatherName: E(R.driverFatherName), dob: E(formatReportDate(R.driverDob)),
+        cnic: E(R.driverCnic), nationality: E(R.driverNationality), marital: E(R.driverMaritalStatus), mobile: E(R.driverMobile),
+        whatsapp: E(R.driverWhatsapp), email: E(R.driverEmail),
+        country: E(driverLoc.country), state: E(driverLoc.state), city: E(driverLoc.city), address: E(driverLoc.address),
+        licenseNo: E(R.driverLicenseNumber), licenseType: E(R.driverLicenseType), issueDate: E(formatReportDate(R.driverIssueDate)),
+        expiryDate: E(formatReportDate(R.driverExpiryDate)), authority: E(R.driverIssuingAuthority),
+      },
+      remarks: (f.remarks || "").trim(),
+    };
+  }
+
+  const REPORT_ACTION = { view: viewTruckReport, print: printTruckReport, pdf: downloadTruckPdf } as const;
+  async function runReport(kind: "view" | "print" | "pdf", build: () => Promise<TruckProfileRecord>) {
+    if (reportBusy) return;
+    setReportBusy(kind);
+    try {
+      const record = await build();
+      await REPORT_ACTION[kind](record, activeLang);
+    } catch (err) {
+      console.error("[truck-report]", kind, err);
+      stepAlert(tt("common.error", "Something went wrong."));
+    } finally {
+      setReportBusy(null);
+    }
+  }
+  /** Live Truck Report (what is on screen right now). */
+  const runLiveReport = (kind: "view" | "print" | "pdf") => runReport(kind, async () => toTruckRecord(liveSrc));
+  /** A saved row from the list: its full record + linked owner / company / transporter / driver, in the language on screen. */
+  const runRowReport = (row: TruckRow, kind: "view" | "print" | "pdf") =>
+    runReport(kind, async () => {
+      const f0 = formFromRow(row);
+      const getJson = async (url: string) => { try { return await fetch(url).then((r) => r.json()); } catch { return null; } };
+      const [own, ownRaw, comp, compRaw, trans, drv, drvRaw] = await Promise.all([
+        f0.ownerId ? getJson(`/api/erp/customers/${encodeURIComponent(f0.ownerId)}?${langQ}`) : null,
+        f0.ownerId ? getJson(`/api/erp/customers/${encodeURIComponent(f0.ownerId)}?raw=1`) : null,
+        f0.companyId ? getJson(`/api/erp/companies/${encodeURIComponent(f0.companyId)}?${langQ}`) : null,
+        f0.companyId ? getJson(`/api/erp/companies/${encodeURIComponent(f0.companyId)}?raw=1`) : null,
+        f0.transporterId ? getJson(`/api/erp/customers/${encodeURIComponent(f0.transporterId)}?${langQ}`) : null,
+        f0.driverId && f0.driverType === "permanent" ? getJson(`/api/erp/customers/${encodeURIComponent(f0.driverId)}?${langQ}`) : null,
+        f0.driverId && f0.driverType === "permanent" ? getJson(`/api/erp/customers/${encodeURIComponent(f0.driverId)}?raw=1`) : null,
+      ]);
+      const driverRawC = drvRaw?.data?.customer ? withDriverLicense(drvRaw.data.customer, drvRaw.data.registrations, drvRaw.data.contacts) : null;
+      const src: ReportSrc = {
+        form: driverRawC ? mergeDriverPrefill(f0, driverRawC) : f0,
+        ownerDetails: own?.data?.customer ?? null,
+        ownerRaw: ownRaw?.data?.customer ?? null,
+        companyDetails: comp?.data?.company || comp?.company || null,
+        companyRaw: compRaw?.data?.company || compRaw?.company || null,
+        transporterDetails: trans?.data?.customer ?? null,
+        driverDetails: drv?.data?.customer ? withDriverLicense(drv.data.customer, drv.data.registrations, drv.data.contacts) : null,
+        driverRaw: driverRawC,
+        contacts: row.driver_mobile ? [{ id: "c-1", type: "WhatsApp", value: row.driver_mobile }] : [],
+        driverPhotoUrl: null,
+      };
+      return toTruckRecord(src, { branchName: row.branch_display_name, reportId: row.entry_serial || row.truck_number, registrationDate: (row.created_at || "").slice(0, 10) });
+    });
 
   // Full Live Report Content (OPTION 1: DGT ERP TRANSPORT REGISTRATION PROFILE)
   const fullLiveReportContent = (
@@ -1913,10 +1888,11 @@ export function TruckRecreationWizard({
                         )}
                         <td className="p-3 text-end">
                           <UnifiedActionMenu
-                            onView={() => handleView(row)}
+                            onView={() => runRowReport(row, "view")}
                             onEdit={() => startEdit(row)}
                             onDelete={() => handleDelete(row.id)}
-                            onPrint={() => handleView(row, { autoPrint: true })}
+                            onPrint={() => runRowReport(row, "print")}
+                            onExportPdf={() => runRowReport(row, "pdf")}
                           />
                         </td>
                       </tr>
@@ -1929,8 +1905,10 @@ export function TruckRecreationWizard({
             {/* Pagination */}
             <div className="flex flex-col items-center justify-between gap-3 pt-2 sm:flex-row">
               <div className="text-xs text-slate-500">
-                {tt("trk.showing_records", "Showing")} {filteredRows.length === 0 ? 0 : pageStart + 1} -{" "}
-                {Math.min(pageStart + pageSize, filteredRows.length)} / {filteredRows.length}
+                {tt("trk.showing_records", "Showing {from} to {to} of {total} records")
+                  .replace("{from}", String(filteredRows.length === 0 ? 0 : pageStart + 1))
+                  .replace("{to}", String(Math.min(pageStart + pageSize, filteredRows.length)))
+                  .replace("{total}", String(filteredRows.length))}
               </div>
               <div className="flex items-center gap-2">
                 <select
@@ -2144,7 +2122,7 @@ export function TruckRecreationWizard({
                 </div>
 
                 <div className="mt-4 space-y-3.5">
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1.2fr_1fr]">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
                     <div>
                       <PersonPicker
                         label={tt("trk.truck_owner_name_label", "Truck Owner Name *")}
@@ -2295,7 +2273,7 @@ export function TruckRecreationWizard({
                     </div>
 
                     {/* Row 2: Make, Model, Year, Color */}
-                    <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+                    <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 lg:grid-cols-2">
                       <label className="space-y-1 text-xs">
                         <span className="font-bold text-slate-700 dark:text-slate-300">
                           {tt("trk.w_make_brand", "Make / Brand")}
@@ -2354,7 +2332,7 @@ export function TruckRecreationWizard({
                     </div>
 
                     {/* Row 3: Physical & Engineering Specs */}
-                    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-4">
+                    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-4 lg:grid-cols-2">
                       <label className="space-y-1 text-xs">
                         <span className="font-bold text-slate-700 dark:text-slate-300">
                           {tt("trk.chassis_no", "Chassis No *")}
@@ -2745,7 +2723,7 @@ export function TruckRecreationWizard({
                     {form.driverType === "permanent" ? (
                       /* PERMANENT DRIVER FLOW: Clean dropdown + Status + Registered Driver details card */
                       <div className="space-y-3.5">
-                        <div className="grid grid-cols-1 sm:grid-cols-[1fr_160px] gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_160px] gap-3">
                           <div>
                             <PersonPicker
                               label={tt("trk.driver_name_label", "Driver Name *")}
@@ -2953,10 +2931,10 @@ export function TruckRecreationWizard({
                         </details>
 
                         {/* Temporary Driver Name & Identification Fields */}
-                        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-4">
+                        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-4 lg:grid-cols-2">
                           <label className="space-y-1 text-xs block sm:col-span-2">
                             <span className="font-bold text-slate-700 dark:text-slate-300">
-                              {tt("trk.ph_driver_name", "Temporary Driver Name *")}
+                              {tt("trk.w_temporary_driver_name", "Temporary Driver Name *")}
                             </span>
                             <input
                               value={form.temporaryDriverName}
@@ -2990,7 +2968,7 @@ export function TruckRecreationWizard({
                         </div>
 
                         {/* Temporary Driver Personal & License Specs */}
-                        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+                        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 lg:grid-cols-2">
                           <label className="space-y-1 text-xs">
                             <span className="font-bold text-slate-700 dark:text-slate-300">{tt("trk.w_date_of_birth", "Date of Birth")}</span>
                             <input
@@ -3040,7 +3018,7 @@ export function TruckRecreationWizard({
                         </div>
 
                         {/* License Details */}
-                        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-4">
+                        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-4 lg:grid-cols-2">
                           <label className="space-y-1 text-xs">
                             <span className="font-bold text-slate-700 dark:text-slate-300">{tt("trk.license_no", "Driving License Number")}</span>
                             <input
@@ -3123,7 +3101,7 @@ export function TruckRecreationWizard({
                           </div>
 
                           {form.addDriverLocation === "yes" && (
-                            <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
+                            <div className="grid grid-cols-1 sm:grid-cols-4 lg:grid-cols-2 gap-2.5">
                               <label className="space-y-1 text-xs">
                                 <span className="font-bold text-slate-600 dark:text-slate-400">{tt("common.country", "Country")}</span>
                                 <input
@@ -3385,19 +3363,33 @@ export function TruckRecreationWizard({
                     </span>
                     <button
                       type="button"
-                      onClick={() => { setViewModalTab("full"); setViewModalOpen(true); }}
-                      className="inline-flex min-h-[42px] items-center gap-2 rounded-xl border border-blue-300 bg-white px-4 py-2 text-[15px] font-bold text-blue-700 shadow-2xs transition hover:bg-blue-50 dark:border-blue-800 dark:bg-slate-800 dark:text-blue-300"
+                      disabled={reportBusy !== null}
+                      onClick={() => runLiveReport("view")}
+                      data-testid="trk-report-view"
+                      className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-blue-300 bg-white px-4 py-2 text-[15px] font-bold text-blue-700 shadow-2xs transition hover:bg-blue-50 dark:border-blue-800 dark:bg-slate-800 dark:text-blue-300 disabled:opacity-60"
                     >
-                      <Eye className="h-4 w-4" />
+                      {reportBusy === "view" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />}
                       <span>{tt("trk.w_view_report", "View Report")}</span>
                     </button>
                     <button
                       type="button"
-                      onClick={() => printReportA4("trk-live-report")}
-                      className="inline-flex min-h-[42px] items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-[15px] font-black text-white shadow-md shadow-blue-600/25 transition hover:bg-blue-700"
+                      disabled={reportBusy !== null}
+                      onClick={() => runLiveReport("print")}
+                      data-testid="trk-report-print"
+                      className="inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-[15px] font-black text-white shadow-md shadow-blue-600/25 transition hover:bg-blue-700 disabled:opacity-60"
                     >
-                      <Printer className="h-4 w-4" />
-                      <span>{tt("trk.w_print_pdf", "Print / PDF")}</span>
+                      {reportBusy === "print" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Printer className="h-4 w-4" />}
+                      <span>{tt("common.print", "Print")}</span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={reportBusy !== null}
+                      onClick={() => runLiveReport("pdf")}
+                      data-testid="trk-report-pdf"
+                      className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-blue-300 bg-white px-4 py-2 text-[15px] font-bold text-blue-700 shadow-2xs transition hover:bg-blue-50 dark:border-blue-800 dark:bg-slate-800 dark:text-blue-300 disabled:opacity-60"
+                    >
+                      {reportBusy === "pdf" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                      <span>{tt("trk.w_download_pdf", "Download PDF")}</span>
                     </button>
                   </div>
                 </div>
@@ -3414,205 +3406,6 @@ export function TruckRecreationWizard({
             </div>
           </div>
         </>
-      )}
-
-      {/* OVERLAY MODAL: VIEW REPORT DIALOG */}
-      {viewModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs">
-          <div className="relative w-full max-w-6xl max-h-[94vh] flex flex-col rounded-3xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900 animate-in fade-in zoom-in-95">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 dark:border-slate-800">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-                  <FileText className="h-4 w-4" />
-                </div>
-                <div>
-                  <h2 className="text-sm font-black text-slate-900 dark:text-white">
-                    {viewModalTab === "full" && tt("trk.w_report_profile_title", "DGT ERP · Transport Registration Profile")}
-                    {viewModalTab === "owner" && cleanTitle(tt("trk.section_owner", "Owner Details"), "Owner Details")}
-                    {viewModalTab === "vehicle" && cleanTitle(tt("trk.section_truck_details", "Truck Details"), "Truck Details")}
-                    {viewModalTab === "transporter" && cleanTitle(tt("trk.section_transporter", "Transporter Details"), "Transporter Details")}
-                    {viewModalTab === "driver" && cleanTitle(tt("trk.section_driver", "Driver Details"), "Driver Details")}
-                    {viewModalTab === "documents" && tt("trk.w_documents", "Documents")}
-                  </h2>
-                  <p className="text-[10.5px] text-slate-400">
-                    {tt("trk.w_complete_owner_company_truck_and_drive", "Complete owner, company, truck and driver registration live overview")}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => printReportA4("trk-modal-report")}
-                  className="inline-flex min-h-[42px] items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-[15px] font-black text-white shadow-md shadow-blue-600/25 hover:bg-blue-700"
-                >
-                  <Printer className="h-4 w-4" />
-                  <span>{tt("trk.w_print_pdf", "Print / PDF")}</span>
-                </button>
-                <button
-                  type="button"
-                  aria-label={tt("trk.w_close", "Close")}
-                  onClick={() => setViewModalOpen(false)}
-                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600 dark:border-slate-800 dark:hover:bg-slate-800"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-
-            {/* Modal Body */}
-            <div id="trk-modal-report" className="dgt-trk-report flex-1 space-y-4 overflow-y-auto p-5">
-              {viewModalTab === "full" && fullLiveReportContent}
-
-              {viewModalTab === "owner" && (
-                <LiveReportSection title={`1. ${cleanTitle(tt("trk.section_owner", "Truck Owner Information"), "Truck Owner Information")}`} icon={User}>
-                  <LiveReportRow label={tt("common.name", "Name")} value={nm(ownerDetails?.customer_name)} />
-                  <LiveReportRow label={tt("trk.owner_code_label", "Owner Code")} value={ownerDetails?.person_code || ownerDetails?.code || "—"} />
-                  <LiveReportRow label={tt("common.mobile", "Mobile")} value={ownerDetails?.mobile || "—"} />
-                  <LiveReportRow label={tt("trk.w_whatsapp_number", "WhatsApp Number")} value={ownerDetails?.whatsapp || "—"} />
-                  <LiveReportRow label={tt("common.address", "Address")} value={nm(ownerDetails?.address)} />
-                </LiveReportSection>
-              )}
-
-              {viewModalTab === "vehicle" && (
-                <LiveReportSection title={`2. ${cleanTitle(tt("trk.section_truck_details", "Truck Details"), "Truck Details")}`} icon={TruckIcon}>
-                  <LiveReportRow label={tt("trk.truck_no", "Truck Number")} value={form.truckNumber} />
-                  <LiveReportRow label={tt("trk.chassis_no", "Chassis No")} value={form.chassisNumber} />
-                  <LiveReportRow label={tt("trk.engine_no", "Engine No")} value={form.engineNumber} />
-                  <LiveReportRow label={tt("trk.reg_no", "Registration No")} value={form.registrationNumber} />
-                  <LiveReportRow label={tt("trk.truck_type", "Truck Type")} value={form.truckType} />
-                  <LiveReportRow label={tt("trk.year", "Year")} value={form.manufacturingYear} />
-                  <LiveReportRow label={tt("trk.color", "Color")} value={form.color} />
-                  <LiveReportRow label={tt("trk.fuel_type", "Fuel Type")} value={form.fuelType} />
-                  <LiveReportRow label={tt("trk.capacity", "Capacity (Tons)")} value={form.capacity} />
-                  <LiveReportRow label={tt("tr.reg_expiry", "Reg. Expiry")} value={form.registrationExpiryDate} />
-                  <LiveReportRow label={tt("tr.ins_expiry", "Insurance Expiry")} value={form.insuranceExpiryDate} />
-                </LiveReportSection>
-              )}
-
-              {viewModalTab === "transporter" && (
-                <LiveReportSection title={`3. ${cleanTitle(tt("trk.section_transporter", "Transporter Information"), "Transporter Information")}`} icon={Building2}>
-                  {transporterDetails && (
-                    <div className="mb-3 rounded-xl border border-slate-100 bg-slate-50/50 p-2.5 dark:border-slate-800 dark:bg-slate-800/30">
-                      <div className="text-xs font-black text-slate-800 dark:text-slate-100">{nm(transporterDetails.customer_name)}</div>
-                      <LiveReportRow label={tt("trk.transporter_code_label", "Transporter Code")} value={transporterDetails.person_code || transporterDetails.code} />
-                      <LiveReportRow label={tt("common.mobile", "Mobile")} value={transporterDetails.mobile} />
-                      <LiveReportRow label={tt("common.whatsapp", "WhatsApp")} value={transporterDetails.whatsapp} />
-                      <LiveReportRow label={tt("common.address", "Address")} value={nm(transporterDetails.address)} />
-                    </div>
-                  )}
-                  {companyDetails && (
-                    <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-2.5 dark:border-slate-800 dark:bg-slate-800/30">
-                      <div className="text-xs font-black text-slate-800 dark:text-slate-100">{nm(companyDetails.name)}</div>
-                      <LiveReportRow label={tt("trk.company_code_label", "Company Code")} value={companyDetails.company_code} />
-                      <LiveReportRow label={tt("c360.legal_name", "Legal / Trade Name")} value={nm(companyDetails.legal_name || companyDetails.trade_name)} />
-                      <LiveReportRow label={tt("ctm.trn_reg_no", "Registration / TRN")} value={companyRegNumber(companyDetails)} />
-                      <LiveReportRow label={tt("sed.f_owner_name", "Owner Name")} value={nm(companyDetails.owner_name)} />
-                      <LiveReportRow label={tt("common.phone", "Phone / Mobile")} value={companyPhone(companyDetails)} />
-                      <LiveReportRow label={tt("common.email", "Email")} value={companyEmail(companyDetails)} />
-                      <LiveReportRow label={tt("common.city", "City / Country")} value={[companyDetails.city_name, companyDetails.country_name].filter(Boolean).join(", ")} />
-                      <LiveReportRow label={tt("common.address", "Address")} value={nm(companyDetails.address)} />
-                    </div>
-                  )}
-                  {!transporterDetails && !companyDetails && (
-                    <div className="p-2 text-center text-xs text-slate-400 italic">{tt("trk.w_no_transporter_or_company_linked", "No transporter or company linked")}</div>
-                  )}
-                </LiveReportSection>
-              )}
-
-              {viewModalTab === "driver" && (
-                <LiveReportSection title={`4. ${cleanTitle(tt("trk.section_driver", "Driver Information"), "Driver Information")}`} icon={UserCheck}>
-                  <LiveReportRow
-                    label={tt("trk.driver_name_label", "Driver Name")}
-                    value={nm(form.driverType === "permanent" ? driverDetails?.customer_name : form.temporaryDriverName)}
-                  />
-                  <LiveReportRow
-                    label={tt("trk.license_no", "Driving License Number")}
-                    value={form.driverType === "permanent" ? (driverDetails?.license_no || form.driverLicenseNo) : form.driverLicenseNo}
-                  />
-                  <LiveReportRow
-                    label={tt("trk.licence_expiry_label", "Licence Expiry Date")}
-                    value={form.driverType === "permanent" ? (driverDetails?.license_expiry || form.driverLicenseExpiry) : form.driverLicenseExpiry}
-                  />
-                  <LiveReportRow
-                    label={tt("common.status", "Status")}
-                    badge={
-                      <span className={`inline-block rounded-md px-2 py-0.5 text-[10px] font-bold ${statusBadgeClasses(form.status)}`}>
-                        {statusLabel(form.status)}
-                      </span>
-                    }
-                  />
-                  {form.driverType === "permanent" ? (
-                    <>
-                      {driverDetails?.mobile && <LiveReportRow label={tt("common.mobile", "Primary Mobile")} value={driverDetails.mobile} />}
-                      {driverDetails?.whatsapp && <LiveReportRow label={tt("crm.ftype_whatsapp", "WhatsApp")} value={driverDetails.whatsapp} />}
-                      {driverDetails?.email && <LiveReportRow label={tt("tax_einv.set_f_email", "Email")} value={driverDetails.email} />}
-                      {(driverDetails?.city_name || driverDetails?.city || driverDetails?.country_name || driverDetails?.country || driverDetails?.address) && (
-                        <LiveReportRow
-                          label={tt("common.location", "Location")}
-                          value={[driverDetails.city_name || driverDetails.city, driverDetails.state_province_name || driverDetails.state, driverDetails.country_name || driverDetails.country, nm(driverDetails.address) === "—" ? "" : nm(driverDetails.address)].filter(Boolean).join(", ")}
-                        />
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      {form.driverMobile && <LiveReportRow label={tt("common.mobile", "Primary Mobile")} value={form.driverMobile} />}
-                      {contacts.filter((c) => c.value.trim().length > 0).map((c, idx) => (
-                        <LiveReportRow key={c.id || idx} label={c.type} value={c.value} />
-                      ))}
-                      {form.addDriverLocation === "yes" && (form.driverCountry || form.driverCity || form.driverAddress) && (
-                        <LiveReportRow
-                          label={tt("common.location", "Location")}
-                          value={[form.driverCountry, form.driverState, form.driverCity, nm(form.driverAddress) === "—" ? "" : nm(form.driverAddress)].filter(Boolean).join(", ") || "—"}
-                        />
-                      )}
-                    </>
-                  )}
-                </LiveReportSection>
-              )}
-
-              {viewModalTab === "documents" && (
-                <LiveReportSection title={tt("trk.w_5_documents", "5. Documents")} icon={FileText}>
-                  {documents.length === 0 ? (
-                    <div className="p-2 text-center text-xs text-slate-400">
-                      {tt("trk.w_no_documents_uploaded_yet", "No documents uploaded yet.")}
-                    </div>
-                  ) : (
-                    <div className="space-y-1.5 pt-1">
-                      {documents.map((d) => (
-                        <div key={d.id} className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50/70 p-2 text-xs dark:border-slate-800 dark:bg-slate-800/40">
-                          <span className="truncate font-medium text-slate-700 dark:text-slate-300">{d.name}</span>
-                          <div className="flex items-center gap-2">
-                            <a href={d.url} target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-blue-600 hover:underline">
-                              {tt("trk.w_view", "View")}
-                            </a>
-                            <a href={d.url} download={d.name} className="text-xs font-bold text-blue-600 hover:underline">
-                              {tt("trk.w_download", "Download")}
-                            </a>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </LiveReportSection>
-              )}
-            </div>
-
-            {/* Modal Footer */}
-            <div className="flex items-center justify-between border-t border-slate-100 px-5 py-3 dark:border-slate-800">
-              <span className="text-[11px] text-slate-400">
-                {tt("trk.w_design_preview_synced_with_active_form", "Design preview synced with active form inputs")}
-              </span>
-              <button
-                type="button"
-                onClick={() => setViewModalOpen(false)}
-                className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow hover:bg-blue-700"
-              >
-                {tt("trk.w_close", "Close")}
-              </button>
-            </div>
-          </div>
-        </div>
       )}
 
       {/* Party 360 View Modal */}
