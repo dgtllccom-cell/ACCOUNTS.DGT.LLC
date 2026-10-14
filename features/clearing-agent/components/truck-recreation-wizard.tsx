@@ -414,15 +414,21 @@ export function TruckRecreationWizard({
     return () => document.removeEventListener("mousedown", onDocClick);
   }, []);
 
-  async function loadList() {
+  /** Loads the registered trucks. A failed / interrupted request is retried (twice) and then reported — it is never shown as "no trucks". */
+  async function loadList(attempt = 0): Promise<void> {
     setLoadingList(true);
     try {
       const res = await fetch(`/api/erp/master-data/trucks?lang=${encodeURIComponent(activeLang)}`);
-      const json = await res.json();
-      setRows(json.trucks || []);
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !Array.isArray(json.trucks)) throw new Error(json?.error || `HTTP ${res.status}`);
+      setRows(json.trucks);
+      setLoadingList(false);
     } catch {
-      setRows([]);
-    } finally {
+      if (attempt < 2) {
+        await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
+        return loadList(attempt + 1);
+      }
+      setMessage({ kind: "error", text: tt("common.error", "Something went wrong.") });
       setLoadingList(false);
     }
   }

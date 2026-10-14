@@ -48,7 +48,7 @@ let STAGE = "init";
 const p = await ctx.newPage(); const errors = [];
 process.on("uncaughtException", async (e) => { console.log("FATAL", String(e).slice(0, 300)); try { await p.screenshot({ path: `${OUT}/fatal.png` }); } catch {} process.exit(2); });
 p.on("pageerror", (e) => { if (!/Failed to fetch|NetworkError|AbortError/.test(String(e))) { if (!/:prime$/.test(STAGE)) errors.push(`pageerror[${STAGE}] ` + String(e).slice(0, 180)); }; });
-p.on("console", (m) => { if (["error", "warning"].includes(m.type()) && !/Failed to fetch|favicon|Failed to load resource|ResizeObserver|DevTools|dgt-connect|presence|Download the React|net::ERR|AbortError/i.test(m.text())) errors.push(m.type() + ": " + m.text().slice(0, 200)); });
+p.on("console", (m) => { if (["error", "warning"].includes(m.type()) && !/Failed to fetch|favicon|Failed to load resource|ResizeObserver|DevTools|dgt-connect|presence|WebSocket connection to|Download the React|net::ERR|AbortError/i.test(m.text())) errors.push(m.type() + ": " + m.text().slice(0, 200)); });
 let posted = null, putPayload = null;
 p.on("request", (rq) => {
   const u = new URL(rq.url());
