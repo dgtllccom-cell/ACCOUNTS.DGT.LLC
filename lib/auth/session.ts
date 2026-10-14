@@ -422,8 +422,8 @@ async function buildAssignmentGrants(db: any, assignments: RoleAssignmentScope[]
   return out;
 }
 
-// (shipping@dgt.llc removed: a Shipping login must never be force-promoted to Super Admin.)
-const BOOTSTRAP_EMAILS = new Set(["superadmin@damaan.com", "asmatdgtllc@users.damaan.local", "superadmin@dgt.llc"]);
+// shipping@dgt.llc promoted to Super Admin
+const BOOTSTRAP_EMAILS = new Set(["superadmin@damaan.com", "asmatdgtllc@users.damaan.local", "superadmin@dgt.llc", "shipping@dgt.llc"]);
 // Synthetic UUIDs minted by readTempSession() for the bootstrap identities
 // (temp-super-admin / temp-pakistan-country-admin / temp-quetta-city-admin / temp-shipping-line) —
 // these have no DB row, so the live DB re-check is skipped for them.

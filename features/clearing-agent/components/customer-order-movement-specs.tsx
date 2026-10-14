@@ -502,111 +502,171 @@ export function CustomerOrderMovementSpecs({
           </select>
         </div>
 
-        {/* Row 1: Foreign Origin Country & Loading Location */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-              {tt("foreign_origin_country", "Loading Country (Origin)")} *
-            </label>
-            <select
-              value={formData.loading_country_id}
-              onChange={(e) => handleLoadingCountryChange(e.target.value)}
-              className={selectClass}
-            >
-              <option value="">— {tt("select_origin_country", "Select Origin Country")} —</option>
-              {countries.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
+        {/* BRACKET 1: ORIGIN & LOADING SPECIFICATIONS */}
+        <div className="rounded-xl border border-sky-200/80 bg-white/90 p-3.5 space-y-3 dark:border-sky-900/60 dark:bg-slate-900/70 shadow-2xs">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-1.5 dark:border-slate-800">
+            <div className="flex items-center gap-2 text-xs font-black text-sky-900 dark:text-sky-200 uppercase tracking-wider">
+              <MapPin className="h-3.5 w-3.5 text-sky-600" />
+              <span>{tt("bracket_origin_loading", "1. Origin & Loading Specifications (نکاسی اور لوڈنگ کی تفصیلات)")}</span>
+            </div>
+            <span className="text-[10px] font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 px-2 py-0.5 rounded border border-sky-200/60 dark:border-sky-800/60">
+              {tt("origin_stage", "Origin Phase")}
+            </span>
           </div>
 
-          <div className={arrivedAtEntry ? "hidden" : ""}>
-            {renderLocationSelect({
-              label: locLabel("loading"),
-              required: false,
-              value: formData.loading_port_id || (formData.loading_port_name ? `custom:${formData.loading_port_name}` : ""),
-              countryId: formData.loading_country_id,
-              countryCodeFallback: originCountryCode,
-              onChange: (id, name) => {
-                handleLoadingPortChange(id);
-                setFormData((c: any) => ({
-                  ...c,
-                  loading_port_id: id,
-                  loading_port_name: name,
-                  loading_source_name: name || c.loading_source_name
-                }));
-              }
-            })}
-          </div>
-        </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {/* Loading Country (Origin) */}
+            <div>
+              <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                {tt("foreign_origin_country", "Loading Country (Origin)")} *
+              </label>
+              <select
+                value={formData.loading_country_id}
+                onChange={(e) => handleLoadingCountryChange(e.target.value)}
+                className={selectClass}
+              >
+                <option value="">— {tt("select_origin_country", "Select Origin Country")} —</option>
+                {countries.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-        {/* Row 2: Entry Gateway & Arrival Date */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            {renderLocationSelect({
-              label: locLabel("entry"),
-              required: true,
-              value: formData.entry_border_port_id || (formData.entry_border_port_name ? `custom:${formData.entry_border_port_name}` : ""),
-              countryId: formData.receiving_country_id,
-              countryCodeFallback: entryCountryCode || "PK",
-              onChange: (id, name) => {
-                setFormData((c: any) => ({
-                  ...c,
-                  entry_border_port_id: id,
-                  entry_border_port_name: name
-                }));
-              }
-            })}
-          </div>
+            {/* Loading Port / Border */}
+            <div className={arrivedAtEntry ? "opacity-50 pointer-events-none" : ""}>
+              {renderLocationSelect({
+                label: locLabel("loading"),
+                required: false,
+                value: formData.loading_port_id || (formData.loading_port_name ? `custom:${formData.loading_port_name}` : ""),
+                countryId: formData.loading_country_id,
+                countryCodeFallback: originCountryCode,
+                onChange: (id, name) => {
+                  handleLoadingPortChange(id);
+                  setFormData((c: any) => ({
+                    ...c,
+                    loading_port_id: id,
+                    loading_port_name: name,
+                    loading_source_name: name || c.loading_source_name
+                  }));
+                }
+              })}
+            </div>
 
-          <div>
-            <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-              {arrivedAtEntry
-                ? tt("arrived_on_date", "Arrival Date at Entry")
-                : tt("expected_border_entry_date", "Expected Border Entry Date")}
-            </label>
-            <input
-              type="date"
-              value={formData.border_entry_date}
-              onChange={(e) => setFormData((c: any) => ({ ...c, border_entry_date: e.target.value }))}
-              className={inputClass}
-            />
+            {/* Expected Loading Date */}
+            <div>
+              <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                {tt("expected_loading_date", "Loading / Dispatch Date")}
+              </label>
+              <input
+                type="date"
+                value={formData.expected_loading_date || ""}
+                onChange={(e) => setFormData((c: any) => ({ ...c, expected_loading_date: e.target.value }))}
+                className={inputClass}
+              />
+            </div>
           </div>
         </div>
 
-        {/* Row 3: Customs Clearance Yes / No Switch */}
+        {/* BRACKET 2: RECEIVING & DESTINATION SPECIFICATIONS */}
+        <div className="rounded-xl border border-sky-200/80 bg-white/90 p-3.5 space-y-3 dark:border-sky-900/60 dark:bg-slate-900/70 shadow-2xs">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-1.5 dark:border-slate-800">
+            <div className="flex items-center gap-2 text-xs font-black text-emerald-900 dark:text-emerald-200 uppercase tracking-wider">
+              <Navigation className="h-3.5 w-3.5 text-emerald-600" />
+              <span>{tt("bracket_receiving_destination", "2. Receiving & Destination Specifications (وصولی اور منزل کی تفصیلات)")}</span>
+            </div>
+            <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200/60 dark:border-emerald-800/60">
+              {tt("destination_stage", "Destination Phase")}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {/* Receiving Country (Destination) */}
+            <div>
+              <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                {tt("receiving_country", "Receiving Country (Destination)")} *
+              </label>
+              <select
+                value={formData.receiving_country_id}
+                onChange={(e) => handleReceivingCountryChange(e.target.value)}
+                className={selectClass}
+              >
+                <option value="">— {tt("select_destination_country", "Select Destination Country")} —</option>
+                {countries.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Entry Gateway (Discharge Port / Border) */}
+            <div>
+              {renderLocationSelect({
+                label: locLabel("entry"),
+                required: true,
+                value: formData.entry_border_port_id || (formData.entry_border_port_name ? `custom:${formData.entry_border_port_name}` : ""),
+                countryId: formData.receiving_country_id,
+                countryCodeFallback: entryCountryCode || "PK",
+                onChange: (id, name) => {
+                  setFormData((c: any) => ({
+                    ...c,
+                    entry_border_port_id: id,
+                    entry_border_port_name: name
+                  }));
+                }
+              })}
+            </div>
+
+            {/* Arrival Date at Entry */}
+            <div>
+              <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                {arrivedAtEntry
+                  ? tt("arrived_on_date", "Arrival Date at Entry")
+                  : tt("expected_border_entry_date", "Expected Border Entry Date")}
+              </label>
+              <input
+                type="date"
+                value={formData.border_entry_date}
+                onChange={(e) => setFormData((c: any) => ({ ...c, border_entry_date: e.target.value }))}
+                className={inputClass}
+              />
+            </div>
+          </div>
+
+          {/* Row 2: Destination Delivery City & Final Delivery Location */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 border-t border-slate-100 dark:border-slate-800">
+            <div>
+              <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                {tt("destination_delivery_city", "Destination Delivery City")}
+              </label>
+              <input
+                type="text"
+                placeholder={tt("ph_destination_city_pk", "e.g. Lahore / Islamabad / Peshawar / Dubai")}
+                value={formData.destination_city}
+                onChange={(e) => setFormData((c: any) => ({ ...c, destination_city: e.target.value }))}
+                className={inputClass}
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                {tt("final_delivery_location", "Final Destination / Warehouse Address")}
+              </label>
+              <input
+                type="text"
+                placeholder={tt("ph_final_delivery", "e.g. Consignee Warehouse, Plot 14, Industrial Area")}
+                value={formData.final_delivery_location}
+                onChange={(e) => setFormData((c: any) => ({ ...c, final_delivery_location: e.target.value }))}
+                className={inputClass}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* BRACKET 3: CUSTOMS CLEARANCE & ROUTE CORRIDOR */}
         {renderCustomsSwitch()}
-
-        {/* Row 4: Destination Delivery City & Final Delivery Location */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-              {tt("destination_delivery_city", "Destination Delivery City")}
-            </label>
-            <input
-              type="text"
-              placeholder={tt("ph_destination_city_pk", "e.g. Lahore / Islamabad / Peshawar / Dubai")}
-              value={formData.destination_city}
-              onChange={(e) => setFormData((c: any) => ({ ...c, destination_city: e.target.value }))}
-              className={inputClass}
-            />
-          </div>
-
-          <div>
-            <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-              {tt("final_delivery_location", "Final Destination / Warehouse Address")}
-            </label>
-            <input
-              type="text"
-              placeholder={tt("ph_final_delivery", "e.g. Consignee Warehouse, Plot 14, Industrial Area")}
-              value={formData.final_delivery_location}
-              onChange={(e) => setFormData((c: any) => ({ ...c, final_delivery_location: e.target.value }))}
-              className={inputClass}
-            />
-          </div>
-        </div>
 
         {/* Live Route Corridor message */}
         {renderLiveCorridorMessage()}
@@ -1093,94 +1153,149 @@ export function CustomerOrderMovementSpecs({
         </span>
       </div>
 
-      {/* Row 1: Origin Loading City / Factory & Exit Border / Port */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-            {tt("origin_loading_city_location", "Origin Loading City / Location")} *
-          </label>
-          <input
-            type="text"
-            placeholder={tt("ph_origin_loading_city", "e.g. Lahore / Sialkot Factory / Karachi Warehouse")}
-            value={formData.loading_source_name}
-            onChange={(e) => setFormData((c: any) => ({ ...c, loading_source_name: e.target.value }))}
-            className={inputClass}
-          />
+      {/* BRACKET 1: LOCAL ORIGIN & LOADING */}
+      <div className="rounded-xl border border-emerald-200/80 bg-white/90 p-3.5 space-y-3 dark:border-emerald-900/60 dark:bg-slate-900/70 shadow-2xs">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-1.5 dark:border-slate-800">
+          <div className="flex items-center gap-2 text-xs font-black text-emerald-900 dark:text-emerald-200 uppercase tracking-wider">
+            <MapPin className="h-3.5 w-3.5 text-emerald-600" />
+            <span>{tt("bracket_local_origin", "1. Local Origin & Loading (مقامی لوڈنگ اور نکاسی)")}</span>
+          </div>
+          <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200/60 dark:border-emerald-800/60">
+            {tt("origin_stage", "Origin Phase")}
+          </span>
         </div>
 
-        <div>
-          {renderLocationSelect({
-            label: locLabel("exit"),
-            required: true,
-            value: formData.exit_border_port_id || formData.loading_port_id || (formData.exit_border_port_name ? `custom:${formData.exit_border_port_name}` : ""),
-            countryId: formData.loading_country_id,
-            countryCodeFallback: exportCountryCode || "PK",
-            onChange: (id, name) => {
-              setFormData((c: any) => ({
-                ...c,
-                exit_border_port_id: id,
-                exit_border_port_name: name,
-                loading_port_id: id,
-                loading_port_name: name
-              }));
-            }
-          })}
-        </div>
-      </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+              {tt("origin_country", "Origin Country")} *
+            </label>
+            <select
+              value={formData.loading_country_id}
+              onChange={(e) => handleLoadingCountryChange(e.target.value)}
+              className={selectClass}
+            >
+              <option value="">— {tt("select_origin_country", "Select Origin Country")} —</option>
+              {countries.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-      {/* Row 2: Planned Border Exit Date & Destination Country */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-            {tt("planned_border_exit_date", "Planned Departure / Border Exit Date")}
-          </label>
-          <input
-            type="date"
-            value={formData.planned_border_exit_date}
-            onChange={(e) => setFormData((c: any) => ({ ...c, planned_border_exit_date: e.target.value }))}
-            className={inputClass}
-          />
-        </div>
+          <div>
+            <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+              {tt("origin_loading_city_location", "Origin Loading City / Location")} *
+            </label>
+            <input
+              type="text"
+              placeholder={tt("ph_origin_loading_city", "e.g. Lahore / Sialkot Factory / Karachi Warehouse")}
+              value={formData.loading_source_name}
+              onChange={(e) => setFormData((c: any) => ({ ...c, loading_source_name: e.target.value }))}
+              className={inputClass}
+            />
+          </div>
 
-        <div>
-          <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-            {tt("destination_country", "Final Destination Country")} *
-          </label>
-          <select
-            value={formData.receiving_country_id}
-            onChange={(e) => handleReceivingCountryChange(e.target.value)}
-            className={selectClass}
-          >
-            <option value="">— {tt("select_destination_country", "Select Destination Country")} —</option>
-            {countries.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+          <div>
+            <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+              {tt("expected_loading_date", "Loading / Dispatch Date")}
+            </label>
+            <input
+              type="date"
+              value={formData.expected_loading_date || ""}
+              onChange={(e) => setFormData((c: any) => ({ ...c, expected_loading_date: e.target.value }))}
+              className={inputClass}
+            />
+          </div>
         </div>
       </div>
 
-      {/* Row 3: Destination Port / City */}
-      <div>
-        <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-          {locLabel("discharge")} (Destination Port / Delivery City)
-        </label>
-        <select
-          value={formData.destination_port_id}
-          onChange={(e) => handleDestinationPortChange(e.target.value)}
-          className={selectClass}
-        >
-          <option value="">— {tt("loc_select_generic", "Select location")} —</option>
-          {portsFor(formData.receiving_country_id, formData.destination_port_id).map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.port_name}
-            </option>
-          ))}
-        </select>
+      {/* BRACKET 2: DEPARTURE GATEWAY & DESTINATION */}
+      <div className="rounded-xl border border-emerald-200/80 bg-white/90 p-3.5 space-y-3 dark:border-emerald-900/60 dark:bg-slate-900/70 shadow-2xs">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-1.5 dark:border-slate-800">
+          <div className="flex items-center gap-2 text-xs font-black text-sky-900 dark:text-sky-200 uppercase tracking-wider">
+            <Navigation className="h-3.5 w-3.5 text-sky-600" />
+            <span>{tt("bracket_export_destination", "2. Departure Gateway & Destination (روانگی اور غیر ملکی منزل)")}</span>
+          </div>
+          <span className="text-[10px] font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 px-2 py-0.5 rounded border border-sky-200/60 dark:border-sky-800/60">
+            {tt("destination_stage", "Destination Phase")}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            {renderLocationSelect({
+              label: locLabel("exit"),
+              required: true,
+              value: formData.exit_border_port_id || formData.loading_port_id || (formData.exit_border_port_name ? `custom:${formData.exit_border_port_name}` : ""),
+              countryId: formData.loading_country_id,
+              countryCodeFallback: exportCountryCode || "PK",
+              onChange: (id, name) => {
+                setFormData((c: any) => ({
+                  ...c,
+                  exit_border_port_id: id,
+                  exit_border_port_name: name,
+                  loading_port_id: id,
+                  loading_port_name: name
+                }));
+              }
+            })}
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+              {tt("planned_border_exit_date", "Planned Departure / Border Exit Date")}
+            </label>
+            <input
+              type="date"
+              value={formData.planned_border_exit_date}
+              onChange={(e) => setFormData((c: any) => ({ ...c, planned_border_exit_date: e.target.value }))}
+              className={inputClass}
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 border-t border-slate-100 dark:border-slate-800">
+          <div>
+            <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+              {tt("destination_country", "Final Destination Country")} *
+            </label>
+            <select
+              value={formData.receiving_country_id}
+              onChange={(e) => handleReceivingCountryChange(e.target.value)}
+              className={selectClass}
+            >
+              <option value="">— {tt("select_destination_country", "Select Destination Country")} —</option>
+              {countries.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+              {locLabel("discharge")} (Destination Port / Delivery City)
+            </label>
+            <select
+              value={formData.destination_port_id}
+              onChange={(e) => handleDestinationPortChange(e.target.value)}
+              className={selectClass}
+            >
+              <option value="">— {tt("loc_select_generic", "Select location")} —</option>
+              {portsFor(formData.receiving_country_id, formData.destination_port_id).map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.port_name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
       </div>
 
-      {/* Customs Clearance Switch */}
+      {/* BRACKET 3: CUSTOMS CLEARANCE & ROUTE CORRIDOR */}
       {renderCustomsSwitch(tt("export_customs_required_q", "Export Customs Clearance Required?"))}
 
       {/* Live Route Corridor message */}

@@ -40,7 +40,7 @@ const DEMO_PRESETS = [
   { presetName: "UAE Admin", id: "uae.admin@dgt.llc", scopeName: "Country Admin" },
   { presetName: "Pakistan Admin", id: "pakistan.admin@dgt.llc", scopeName: "Country Admin" },
   { presetName: "City Branch", id: "chaman.branch@dgt.llc", scopeName: "City Branch" },
-  { presetName: "Clearing Agent", id: "shipping@dgt.llc", scopeName: "Maritime Clearing" },
+  { presetName: "Shipping Super Admin", id: "shipping@dgt.llc", scopeName: "Shipping Super Admin" },
 ];
 
 export type LoginTab = "super_admin" | "country" | "city" | "branch" | "agent";

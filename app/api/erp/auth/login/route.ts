@@ -190,21 +190,21 @@ export async function POST(request: NextRequest) {
     await setDirectUserSession({
       userId: "00000000-0000-4000-8000-000000000004",
       email: "shipping@dgt.llc",
-      fullName: "Shipping Line Operator",
-      roles: ["agent_user"],
+      fullName: "Shipping Line Super Admin",
+      roles: ["super_admin"],
       assignments: [{
-        role: "agent_user",
+        role: "super_admin",
         countryId: null,
         countryBranchId: null,
         cityBranchId: null,
         clearingAgentId: null,
-        ledgerVisibility: "shipping_only",
-        operationalDomain: "shipping",
+        ledgerVisibility: "all",
+        operationalDomain: "both",
         mobileProfile: "standard"
       }],
       remember: rememberMe
     });
-    return respondSuccess("/dashboard/logistics");
+    return respondSuccess("/dashboard/super-admin");
   }
 
   const admin = createSupabaseAdminClient() as any;

@@ -10,7 +10,7 @@ describe("purchase booking transfer routing", () => {
   it.each([
     ["Advance Payment", "advance", "/dashboard/journal/purchase-order-payment/advance"],
     ["advance", "advance", "/dashboard/journal/purchase-order-payment/advance"],
-    ["Credit", "credit", "/dashboard/journal/purchase-order-payment/charges"],
+    ["Credit", "credit", "/dashboard/purchase/loading-form"],
     ["Invoice", "remaining", "/dashboard/journal/purchase-order-payment/remaining"],
     ["Final Payment", "remaining", "/dashboard/journal/purchase-order-payment/remaining"],
     [undefined, "remaining", "/dashboard/journal/purchase-order-payment/remaining"]
@@ -20,7 +20,7 @@ describe("purchase booking transfer routing", () => {
 
   it("adds the selected purchase order without changing the destination", () => {
     expect(buildPurchaseBookingTransferUrl("Credit", "PBO / 42")).toBe(
-      "/dashboard/journal/purchase-order-payment/charges?purchaseOrderNo=PBO%20%2F%2042"
+      "/dashboard/purchase/loading-form?purchaseOrderNo=PBO%20%2F%2042"
     );
   });
 

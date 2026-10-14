@@ -1487,22 +1487,23 @@ export function PurchaseBookingJournalReportView({
     setActionsSlot(document.getElementById("erp-page-actions-slot"));
   }, []);
 
-  const handleTransfer = async () => {
-    if (!selected) return;
-    const alreadyTransferred = selected.status === "Posted"
-      || selected.status === "Transferred"
-      || (selected as any).ledgerPostingStatus === "Posted"
-      || (selected as any).ledger_posting_status === "posted";
-    if (alreadyTransferred && !(selected as any).is_edited_since_transfer) {
+  const handleTransfer = async (targetReport?: PurchaseReport) => {
+    const reportToTransfer = targetReport || selected;
+    if (!reportToTransfer) return;
+    const alreadyTransferred = reportToTransfer.status === "Posted"
+      || reportToTransfer.status === "Transferred"
+      || (reportToTransfer as any).ledgerPostingStatus === "Posted"
+      || (reportToTransfer as any).ledger_posting_status === "posted";
+    if (alreadyTransferred && !(reportToTransfer as any).is_edited_since_transfer) {
       alert(trUi("This booking has already been transferred."));
       return;
     }
     
-    const form = selected.form_data?.form || {};
+    const form = reportToTransfer.form_data?.form || {};
 
     setTransferring(true);
     try {
-      const transferResponse = await fetch(`/api/erp/purchases/orders/${selected.id}/transfer`, {
+      const transferResponse = await fetch(`/api/erp/purchases/orders/${reportToTransfer.id}/transfer`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ paymentType: form.paymentType })
@@ -1514,13 +1515,13 @@ export function PurchaseBookingJournalReportView({
       }
 
       setIsDrawerOpen(false);
-      setMessage(`Sent ${selected.purchaseBookingOrderNumber} to Purchase Transfer Payment screen.`);
-      // Navigate directly to the payment section
-      router.push(
-        transferPayload.data?.destinationPath
-          ? `${transferPayload.data.destinationPath}?purchaseOrderNo=${encodeURIComponent(selected.purchaseBookingOrderNumber || "")}`
-          : buildPurchaseBookingTransferUrl(form.paymentType, selected.purchaseBookingOrderNumber)
-      );
+      const orderNo = reportToTransfer.purchaseBookingOrderNumber || (reportToTransfer as any).purchase_order_no || "";
+      setMessage(`Sent ${orderNo} to Purchase Transfer Payment screen.`);
+      // Navigate directly to the payment/loading section
+      const destUrl = transferPayload.data?.destinationPath
+        ? `${transferPayload.data.destinationPath}?purchaseOrderNo=${encodeURIComponent(orderNo)}`
+        : buildPurchaseBookingTransferUrl(form.paymentType, orderNo);
+      router.push(destUrl);
     } catch (err) {
       alert(err instanceof Error ? err.message : "Error transferring booking.");
     } finally {
@@ -2765,7 +2766,7 @@ export function PurchaseBookingJournalReportView({
                           </button>}
                           <button
                             type="button"
-                            onClick={() => { setSelectedId(report.id); handleTransfer(); }}
+                            onClick={() => { setSelectedId(report.id); handleTransfer(report); }}
                             className="inline-flex h-7 w-7 items-center justify-center rounded border border-slate-200 bg-white text-emerald-600 hover:bg-emerald-50 transition shadow-sm"
                             title={trUi("Transfer / Confirm")}
                           >
@@ -2985,7 +2986,7 @@ export function PurchaseBookingJournalReportView({
                                 key: "post-roznamcha-transfer",
                                 label: "Post / Transfer to Roznamcha",
                                 icon: <Send className="h-4 w-4 text-purple-600" />,
-                                onClick: () => { setSelectedId(report.id); handleTransfer(); }
+                                onClick: () => { setSelectedId(report.id); handleTransfer(report); }
                               }
                             ]}
                           />
@@ -3252,7 +3253,7 @@ export function PurchaseBookingJournalReportView({
                             key: "post-roznamcha-transfer",
                             label: "Post / Transfer to Roznamcha",
                             icon: <Send className="h-4 w-4 text-purple-600" />,
-                            onClick: () => { setSelectedId(report.id); handleTransfer(); }
+                            onClick: () => { setSelectedId(report.id); handleTransfer(report); }
                           }
                         ]}
                       />
@@ -3363,7 +3364,7 @@ export function PurchaseBookingJournalReportView({
               {selected && (
                 <Button
                   type="button"
-                  onClick={handleTransfer}
+                  onClick={() => handleTransfer(selected)}
                   disabled={transferring}
                   className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-8"
                 >
