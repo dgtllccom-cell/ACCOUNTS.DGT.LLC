@@ -4529,7 +4529,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
           onClick={() => setExpandedIds((prev) => ({ ...prev, [rowKey]: !prev[rowKey] }))}
         >
           {/* 1. BILL # & Pay S/N */}
-          <td className="py-2.5 px-2.5 whitespace-nowrap">
+          <td className="py-2.5 px-2.5 whitespace-nowrap border-r border-slate-200/80 dark:border-slate-800">
             <div className="flex flex-col gap-0.5">
               <button
                 type="button"
@@ -4559,21 +4559,25 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
           </td>
 
           {/* 2. TYPE */}
-          <td className="py-2.5 px-2 text-center font-bold text-xs">
-            {(row as any).order_type === "local_purchase" ? "Local" : (type || "Booking")}
+          <td className="py-2.5 px-2 text-center font-bold text-xs border-r border-slate-200/80 dark:border-slate-800">
+            {(row as any).order_type === "local_purchase" ? (
+              <span className="text-emerald-700 dark:text-emerald-400 font-extrabold">Local</span>
+            ) : (
+              <span className="text-blue-700 dark:text-blue-400 font-extrabold">{type || "Booking"}</span>
+            )}
           </td>
 
           {/* 3. BRANCH CODE */}
-          <td className="py-2.5 px-2 font-mono font-bold whitespace-nowrap text-xs">{branchCode}</td>
+          <td className="py-2.5 px-2 font-mono font-bold whitespace-nowrap text-xs border-r border-slate-200/80 dark:border-slate-800">{branchCode}</td>
 
           {/* 4. COUNTRY CODE */}
-          <td className="py-2.5 px-2 font-bold whitespace-nowrap text-xs">{countryCode}</td>
+          <td className="py-2.5 px-2 font-bold whitespace-nowrap text-xs border-r border-slate-200/80 dark:border-slate-800">{countryCode}</td>
 
           {/* 5. DATE */}
-          <td className="py-2.5 px-2 whitespace-nowrap font-mono text-xs text-slate-600 dark:text-slate-300">{dateStr}</td>
+          <td className="py-2.5 px-2 whitespace-nowrap font-mono text-xs text-slate-600 dark:text-slate-300 border-r border-slate-200/80 dark:border-slate-800">{dateStr}</td>
 
           {/* 6. A/C / PARTY & STATUS BADGE */}
-          <td className="py-2.5 px-2.5 whitespace-nowrap">
+          <td className="py-2.5 px-2.5 whitespace-nowrap border-r border-slate-200/80 dark:border-slate-800">
             <div className="flex items-center gap-2">
               <span className="font-extrabold text-slate-900 dark:text-white text-xs">{partyName}</span>
               {(() => {
@@ -4633,23 +4637,23 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
           </td>
 
           {/* 7. GOODS NAME */}
-          <td className="py-3 px-2.5 whitespace-nowrap font-medium text-slate-700 dark:text-slate-300">
+          <td className="py-3 px-2.5 whitespace-nowrap font-medium text-slate-700 dark:text-slate-300 border-r border-slate-200/80 dark:border-slate-800">
             {goodsName}
           </td>
 
           {/* 8. QTY */}
-          <td className="py-3 px-2 text-right font-mono font-bold">{totalQty.toLocaleString()}</td>
+          <td className="py-3 px-2 text-right font-mono font-bold border-r border-slate-200/80 dark:border-slate-800">{totalQty.toLocaleString()}</td>
 
           {/* 9. GROSS WEIGHT */}
-          <td className="py-3 px-2 text-right font-mono font-bold">{grossWeight.toLocaleString()}</td>
+          <td className="py-3 px-2 text-right font-mono font-bold border-r border-slate-200/80 dark:border-slate-800">{grossWeight.toLocaleString()}</td>
 
           {/* 10. NET WEIGHT */}
-          <td className="py-3 px-2 text-right font-mono font-bold">{netWeight.toLocaleString()}</td>
+          <td className="py-3 px-2 text-right font-mono font-bold border-r border-slate-200/80 dark:border-slate-800">{netWeight.toLocaleString()}</td>
 
           {/* 11. TOTAL PURCHASE AMOUNT (ORIGINAL CURRENCY) */}
-          <td className="py-3 px-2.5 text-right font-mono font-bold whitespace-nowrap">
+          <td className="py-3 px-2.5 text-right font-mono font-bold whitespace-nowrap border-r border-slate-200/80 dark:border-slate-800">
             {calcs.totalPurchaseFC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{" "}
-            <span className="text-slate-500 font-normal text-[10px]">{calcs.purchCurr}</span>
+            <span className="inline-block px-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold text-[9.5px] uppercase">{calcs.purchCurr}</span>
           </td>
 
           {/* 12. ADVANCE % */}
@@ -4658,19 +4662,19 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
           </td>
 
           {/* 13. PURCHASE ADVANCE AMOUNT (ORIGINAL CURRENCY) */}
-          <td className="py-3 px-2.5 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+          <td className="py-3 px-2.5 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap border-r border-slate-200/80 dark:border-slate-800">
             {calcs.advanceAmountFC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{" "}
-            <span className="text-slate-500 font-normal text-[10px]">{calcs.purchCurr}</span>
+            <span className="inline-block px-1 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-semibold text-[9.5px] uppercase">{calcs.purchCurr}</span>
           </td>
 
           {/* 14. REMAINING PURCHASE AMOUNT (ORIGINAL CURRENCY) */}
-          <td className="py-3 px-2.5 text-right font-mono font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
+          <td className="py-3 px-2.5 text-right font-mono font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap border-r border-slate-200/80 dark:border-slate-800">
             {calcs.remainingPurchaseFC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{" "}
-            <span className="text-slate-500 font-normal text-[10px]">{calcs.purchCurr}</span>
+            <span className="inline-block px-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold text-[9.5px] uppercase">{calcs.purchCurr}</span>
           </td>
 
           {/* 15. ADVANCE PAYMENT DUE DATE (DATE 1) */}
-          <td className="py-3 px-2.5 whitespace-nowrap text-rose-600 dark:text-rose-400 font-bold font-mono">
+          <td className="py-3 px-2.5 whitespace-nowrap text-rose-600 dark:text-rose-400 font-bold font-mono border-r border-slate-200/80 dark:border-slate-800">
             <span className="inline-flex items-center gap-1">
               {dueDateStr}
               <Calendar className="h-3 w-3 inline text-rose-500" />
@@ -4678,48 +4682,48 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
           </td>
 
           {/* 16. EXCHANGE RATE */}
-          <td className="py-3 px-2 text-center font-mono font-bold text-indigo-600 dark:text-indigo-400">
+          <td className="py-3 px-2 text-center font-mono font-bold text-indigo-600 dark:text-indigo-400 border-r border-slate-200/80 dark:border-slate-800">
             {calcs.exRate.toFixed(4)}
           </td>
 
           {/* 17. FINAL CURRENCY (BRANCH) */}
-          <td className="py-3 px-2 text-center font-mono font-bold">{calcs.finalCurr}</td>
+          <td className="py-3 px-2 text-center font-mono font-bold border-r border-slate-200/80 dark:border-slate-800">{calcs.finalCurr}</td>
 
           {/* 18. FINAL ADVANCE AMOUNT (BRANCH CURRENCY) */}
-          <td className="py-3 px-2.5 text-right font-mono font-black text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+          <td className="py-3 px-2.5 text-right font-mono font-black text-emerald-600 dark:text-emerald-400 whitespace-nowrap border-r border-slate-200/80 dark:border-slate-800">
             {calcs.advanceAmountLC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </td>
 
           {/* 19. P CODE */}
-          <td className="py-3 px-2 font-mono text-[11px] font-bold text-slate-600 dark:text-slate-400 whitespace-nowrap">
+          <td className="py-3 px-2 font-mono text-[11px] font-bold text-slate-600 dark:text-slate-400 whitespace-nowrap border-r border-slate-200/80 dark:border-slate-800">
             {pCode}
           </td>
 
           {/* 20. S CODE */}
-          <td className="py-3 px-2 font-mono text-[11px] font-bold text-slate-600 dark:text-slate-400 whitespace-nowrap">
+          <td className="py-3 px-2 font-mono text-[11px] font-bold text-slate-600 dark:text-slate-400 whitespace-nowrap border-r border-slate-200/80 dark:border-slate-800">
             {sCode}
           </td>
 
           {/* 21. ROUTE */}
-          <td className="py-3 px-2 whitespace-nowrap font-medium">{route}</td>
+          <td className="py-3 px-2 whitespace-nowrap font-medium border-r border-slate-200/80 dark:border-slate-800">{route}</td>
 
           {/* 22. LOADING COUNTRY */}
-          <td className="py-3 px-2 whitespace-nowrap font-medium">{loadingCountry}</td>
+          <td className="py-3 px-2 whitespace-nowrap font-medium border-r border-slate-200/80 dark:border-slate-800">{loadingCountry}</td>
 
           {/* 23. LOADING PORT */}
-          <td className="py-3 px-2 whitespace-nowrap font-medium">{loadingPort}</td>
+          <td className="py-3 px-2 whitespace-nowrap font-medium border-r border-slate-200/80 dark:border-slate-800">{loadingPort}</td>
 
           {/* 24. LOADING DATE */}
-          <td className="py-3 px-2 whitespace-nowrap font-mono">{loadingDate}</td>
+          <td className="py-3 px-2 whitespace-nowrap font-mono border-r border-slate-200/80 dark:border-slate-800">{loadingDate}</td>
 
           {/* 25. RECEIVING COUNTRY */}
-          <td className="py-3 px-2 whitespace-nowrap font-medium">{receivingCountry}</td>
+          <td className="py-3 px-2 whitespace-nowrap font-medium border-r border-slate-200/80 dark:border-slate-800">{receivingCountry}</td>
 
           {/* 26. RECEIVING PORT */}
-          <td className="py-3 px-2 whitespace-nowrap font-medium">{receivingPort}</td>
+          <td className="py-3 px-2 whitespace-nowrap font-medium border-r border-slate-200/80 dark:border-slate-800">{receivingPort}</td>
 
           {/* 27. RECEIVING DATE */}
-          <td className="py-3 px-2 whitespace-nowrap font-mono">{receivingDate}</td>
+          <td className="py-3 px-2 whitespace-nowrap font-mono border-r border-slate-200/80 dark:border-slate-800">{receivingDate}</td>
 
           {/* 28. ACTION */}
           <td className="py-3 px-2 text-center" onClick={(e) => e.stopPropagation()}>
@@ -5038,10 +5042,10 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         </div>
 
         {/* Table */}
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm">
           <table className="w-full min-w-[2100px] border-collapse text-left text-xs">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-100/90 dark:border-slate-800 dark:bg-[#080d1a] text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
+              <tr className="border-b border-slate-300 bg-slate-100/95 dark:border-slate-700 dark:bg-[#0c1424] text-[10.5px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200">
                 {[
                   { label: "BILL #", tip: "Purchase Order / Bill Number" },
                   { label: "TYPE", tip: "Order Type" },
@@ -5076,7 +5080,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                     key={col.label}
                     title={col.tip}
                     className={cn(
-                      "px-2.5 py-3 whitespace-nowrap border-r border-slate-200/60 dark:border-slate-800/80 last:border-0 cursor-default",
+                      "px-2.5 py-3 whitespace-nowrap border-r border-slate-300 dark:border-slate-700 last:border-0 cursor-default select-none",
                       i === 7 || i === 8 || i === 9 || i === 10 || i === 12 || i === 13 || i === 17 ? "text-right" :
                       i === 1 || i === 11 || i === 15 || i === 16 || i === 27 ? "text-center" : "text-left"
                     )}
