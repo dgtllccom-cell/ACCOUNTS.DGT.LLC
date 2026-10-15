@@ -17,7 +17,7 @@ const historyQuerySchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
-    const lang = getRequestLanguage(request);
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang") || request.nextUrl.searchParams.get("language"));
     const query = historyQuerySchema.parse({
       sourceType: request.nextUrl.searchParams.get("sourceType") as any,
       sourceId: request.nextUrl.searchParams.get("sourceId"),

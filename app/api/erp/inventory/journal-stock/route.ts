@@ -29,7 +29,7 @@ const querySchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
-    const lang = getRequestLanguage(request);
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang") || request.nextUrl.searchParams.get("language"));
     const query = querySchema.parse({
       search: request.nextUrl.searchParams.get("search") ?? undefined,
       purchaseOrderNo: request.nextUrl.searchParams.get("purchaseOrderNo") ?? undefined,

@@ -36,7 +36,7 @@ const transferSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const session = await requireErpSession();
-    const lang = getRequestLanguage(request);
+    const lang = await getRequestLanguage(request.nextUrl.searchParams.get("lang") || request.nextUrl.searchParams.get("language"));
     const body = await request.json();
     const parsed = transferSchema.safeParse(body);
 

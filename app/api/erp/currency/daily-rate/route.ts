@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
         .limit(1);
 
       if (Array.isArray(rows) && rows.length > 0) {
-        const match = rows[0];
+        const match = rows[0] as any;
         row = {
           rate_date: match.rate_date,
           buying_rate: match.buying_rate,
