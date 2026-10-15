@@ -122,6 +122,7 @@ export function ErpPageActions({ children, backLink, title: titleOverride, subti
     pathname?.startsWith("/dashboard/reports") ||
     pathname?.startsWith("/dashboard/roznamcha/reports") ||
     pathname?.startsWith("/dashboard/ledger") ||
+    pathname?.startsWith("/dashboard/journal") ||
     pathname === "/dashboard/documents" ||
     pathname?.startsWith("/dashboard/documents/") ||
     pathname === "/dashboard/kyc-reports" ||
