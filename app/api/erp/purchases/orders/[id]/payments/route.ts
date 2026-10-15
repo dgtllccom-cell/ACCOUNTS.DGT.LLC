@@ -138,8 +138,14 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
                  coalesce(final_cost, purchase_cost, 0) as order_total,
                  coalesce(advance_amount, 0) as advance_paid,
                  0 as remaining_paid,
-                 0 as credit_amount,
-                 coalesce(remaining_balance, 0) as remaining_due,
+                  case when lower(coalesce(payment_mode, '')) like '%credit%'
+                       then coalesce(final_cost, purchase_cost, 0)
+                       else 0 end as credit_amount,
+                  case when lower(coalesce(payment_mode, '')) like '%credit%' and coalesce(remaining_balance, 0) <= 0
+                       then coalesce(final_cost, purchase_cost, 0)
+                       when coalesce(remaining_balance, 0) > 0 then remaining_balance
+                       else greatest(0, coalesce(final_cost, purchase_cost, 0) - coalesce(advance_amount, 0))
+                  end as remaining_due,
                  'posted' as ledger_posting_status,
                  case when coalesce(remaining_balance, 0) <= 0 and coalesce(advance_amount, 0) > 0 then 'Paid'
                       when coalesce(advance_amount, 0) > 0 then 'Partial'
@@ -268,8 +274,14 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
                coalesce(final_cost, purchase_cost, 0) as order_total,
                coalesce(advance_amount, 0) as advance_paid,
                0 as remaining_paid,
-               0 as credit_amount,
-               coalesce(remaining_balance, 0) as remaining_due,
+                case when lower(coalesce(payment_mode, '')) like '%credit%'
+                     then coalesce(final_cost, purchase_cost, 0)
+                     else 0 end as credit_amount,
+                case when lower(coalesce(payment_mode, '')) like '%credit%' and coalesce(remaining_balance, 0) <= 0
+                     then coalesce(final_cost, purchase_cost, 0)
+                     when coalesce(remaining_balance, 0) > 0 then remaining_balance
+                     else greatest(0, coalesce(final_cost, purchase_cost, 0) - coalesce(advance_amount, 0))
+                end as remaining_due,
                'posted' as ledger_posting_status,
                supplier_name, purchase_account_no, sales_account_no, broker_account_no,
                goods_name, payment_mode, advance_percentage,
@@ -492,7 +504,14 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
           update local_purchases
           set
             advance_amount = case when ${isAdvance} then coalesce(advance_amount, 0) + ${paidAmt} else advance_amount end,
-            remaining_balance = greatest(0, coalesce(remaining_balance, final_cost, purchase_cost, 0) - ${paidAmt}),
+            remaining_balance = greatest(0, (
+              case when lower(coalesce(payment_mode, '')) like '%credit%' and coalesce(remaining_balance, 0) <= 0
+                   then coalesce(final_cost, purchase_cost, 0)
+                   when coalesce(remaining_balance, 0) > 0
+                   then remaining_balance
+                   else coalesce(final_cost, purchase_cost, 0) - coalesce(advance_amount, 0)
+              end
+            ) - ${paidAmt}),
             updated_at = now()
           where id = ${params.id}::uuid;
         `;

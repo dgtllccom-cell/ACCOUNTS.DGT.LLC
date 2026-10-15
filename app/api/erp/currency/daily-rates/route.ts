@@ -211,7 +211,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Branch users cannot create or edit exchange rates
-    const isCountryAdminOrSuper = isSuperAdmin || session.roles?.includes("countryAdmin") || session.permissions?.includes("currency_rates:create");
+    const isCountryAdminOrSuper = isSuperAdmin || session.roles?.includes("country_admin") || session.permissions?.includes("currency_rates:create");
     if (!isCountryAdminOrSuper) {
       return NextResponse.json(
         { ok: false, error: "Branch users are not authorized to create or edit country exchange rates. Rates are managed by the Country Admin." },

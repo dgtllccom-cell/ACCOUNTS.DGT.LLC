@@ -102,8 +102,8 @@ export async function POST(request: NextRequest) {
         action: "user.password_self_changed",
         entityTable: "profiles",
         entityId: session.userId,
-        before: { userId: session.userId, userCode: session.userCode },
-        after: { userId: session.userId, userCode: session.userCode, changedAt: new Date().toISOString() }
+        before: { userId: session.userId, userCode: (session as any).userCode || (session as any).username },
+        after: { userId: session.userId, userCode: (session as any).userCode || (session as any).username, changedAt: new Date().toISOString() }
       });
 
       return apiOk({ ok: true, message: "Password changed successfully" });
@@ -212,14 +212,14 @@ export async function POST(request: NextRequest) {
         targetUserCode: targetProfile.user_code,
         targetRole: targetAssignment?.role || "unknown",
         resetByUserId: session.userId,
-        resetByUserCode: session.userCode,
-        resetByRole: session.role
+        resetByUserCode: (session as any).userCode || (session as any).username,
+        resetByRole: (session as any).role || session.roles?.[0] || "unknown"
       },
       after: {
         targetUserId,
         targetUserCode: targetProfile.user_code,
         resetByUserId: session.userId,
-        resetByUserCode: session.userCode,
+        resetByUserCode: (session as any).userCode || (session as any).username,
         resetTimestamp: new Date().toISOString(),
         isTemporary: Boolean(adminBody.generateTemporary || !adminBody.newPassword),
         reason: adminBody.reason || "Administrative password reset"
