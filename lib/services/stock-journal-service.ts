@@ -27,6 +27,8 @@ import {
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { recordAuditEvent } from "@/lib/audit/enterprise-audit-service";
 import { stockInToWarehouse } from "@/lib/services/purchase-warehouse-stock";
+import { localizeRecordNames } from "@/lib/i18n/localize-records";
+import type { SupportedLanguage } from "@/lib/i18n/languages";
 import {
   EPS,
   allocateLoadings,
@@ -77,6 +79,8 @@ export interface StockJournalRow {
   branchName: string;
   supplierName: string;
   productName: string;
+  /** Goods master id when known — used only to show the product name in the viewer's language */
+  goodsId: string | null;
   brand: string;
   size: string;
   unit: string;
@@ -146,6 +150,8 @@ export type JournalFilters = {
   dateTo?: string;
   page: number;
   limit: number;
+  /** viewer language: product / warehouse NAMES are shown in it (stored names are never changed) */
+  lang?: SupportedLanguage;
 };
 
 const emptyCard = (): CardTotals => ({ lines: 0, qty: 0, byUnit: {} });
@@ -243,6 +249,43 @@ const paymentFromPo = (s: unknown): PaymentState => {
   if (["partial", "partially_paid", "partially paid"].includes(v)) return "partial";
   return "unpaid";
 };
+
+/**
+ * Product and warehouse NAMES are master data: they are shown in the viewer's language through the same record-translation
+ * layer the rest of the ERP uses. The stored names are never touched; anything without a translation keeps its stored text.
+ */
+async function localizeNames(rows: StockJournalRow[], warehouses: any[], lang?: SupportedLanguage) {
+  if (!lang) return;
+  try {
+    // goods: by id when the line carries one, otherwise by exact (case-insensitive) master name
+    const byName = [...new Set(rows.filter((r) => !r.goodsId && r.productName).map((r) => r.productName.trim().toLowerCase()))];
+    const nameToId = new Map<string, string>();
+    if (byName.length) {
+      const found = await withLocalPg((sql) => sql`select id, lower(goods_name) as n from public.goods where deleted_at is null and lower(goods_name) = any(${byName}::text[])`);
+      const count = new Map<string, number>();
+      for (const g of found ?? []) count.set(g.n, (count.get(g.n) ?? 0) + 1);
+      for (const g of found ?? []) if (count.get(g.n) === 1) nameToId.set(g.n, g.id);
+    }
+    const goodsRecords = new Map<string, { id: string; goods_name: string }>();
+    for (const r of rows) {
+      const id = r.goodsId || nameToId.get(r.productName.trim().toLowerCase());
+      if (id && r.productName) goodsRecords.set(id, { id, goods_name: r.productName });
+    }
+    const goodsLocal = await localizeRecordNames([...goodsRecords.values()], "goods", "goods_name", lang);
+    const goodsName = new Map(goodsLocal.map((g) => [g.id, g.goods_name]));
+    for (const r of rows) {
+      const id = r.goodsId || nameToId.get(r.productName.trim().toLowerCase());
+      if (id && goodsName.get(id)) r.productName = goodsName.get(id)!;
+    }
+    // warehouses
+    const whLocal = await localizeRecordNames(warehouses.map((w: any) => ({ id: w.id, warehouse_name: w.warehouse_name })), "warehouses", "warehouse_name", lang);
+    const whName = new Map(whLocal.map((w) => [w.id, w.warehouse_name]));
+    for (const w of warehouses) if (whName.get(w.id)) w.warehouse_name = whName.get(w.id);
+    for (const r of rows) if (r.warehouseId && whName.get(r.warehouseId)) r.warehouseName = whName.get(r.warehouseId)!;
+  } catch {
+    // translation is a courtesy; the stored names stay
+  }
+}
 
 // ──────────────────────────────────────────────────────────────────────────────────────────────
 // READ MODEL
@@ -390,6 +433,7 @@ export async function loadStockJournal(session: ErpSession, f: JournalFilters) {
         ...base,
         lineKey: line.lineKey,
         productName: line.goodsName || "",
+        goodsId: line.goodsId,
         brand: line.brand,
         size: line.size,
         unit: line.unit,
@@ -531,7 +575,7 @@ export async function loadStockJournal(session: ErpSession, f: JournalFilters) {
       goodsTransferHref: `/dashboard/purchase/local-purchase/${lp.id}/goods-transfer`,
     };
     const mk = (over: Partial<StockJournalRow>): StockJournalRow => ({
-      id: "", lineKey: "", stage: "booking", productName: lp.goods_name || "", brand: lp.brand || "", size: lp.size || "",
+      id: "", lineKey: "", stage: "booking", productName: lp.goods_name || "", goodsId: lp.goods_id || null, brand: lp.brand || "", size: lp.size || "",
       unit: lp.quantity_name || "", quantity: 0, bookedQuantity: 0, loadedQuantity: 0, receivedQuantity: 0, damagedQuantity: 0,
       shortageQuantity: 0, outstandingQuantity: 0, customsStatus: "not_applicable", truckOrContainer: lp.truck_no || "",
       loadingRecordId: null, loadingRecordNo: null, blNumber: "", warehouseId: null, warehouseName: null, transferId: null,
@@ -556,6 +600,7 @@ export async function loadStockJournal(session: ErpSession, f: JournalFilters) {
             lineKey: lot.lot_ref || lot.id,
             stage: st,
             productName: lot.goods_name || lp.goods_name || "",
+            goodsId: lot.goods_id || lp.goods_id || null,
             brand: lot.brand || lp.brand || "",
             size: lot.size || lp.size || "",
             unit: lot.unit_name || lp.quantity_name || "",
@@ -571,6 +616,8 @@ export async function loadStockJournal(session: ErpSession, f: JournalFilters) {
       }
     }
   }
+
+  await localizeNames(rows, data.warehouses, f.lang);
 
   // ── Summary: all scoped stock, before any tab / search filter ──
   const summary: StockJournalSummary = {

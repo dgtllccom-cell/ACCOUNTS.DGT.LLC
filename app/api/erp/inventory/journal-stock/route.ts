@@ -3,6 +3,7 @@ import { z } from "zod";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { uuidSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
+import { getRequestLanguage } from "@/lib/i18n/server";
 import { loadStockJournal } from "@/lib/services/stock-journal-service";
 
 export const dynamic = "force-dynamic";
@@ -39,7 +40,8 @@ export async function GET(request: NextRequest) {
     const sp = request.nextUrl.searchParams;
     const q = querySchema.parse(Object.fromEntries([...sp.entries()].map(([k, v]) => [k, v === "" ? undefined : v])));
     const { view, ...filters } = q;
-    const out = await loadStockJournal(session, view === "available" ? { ...filters, stage: "available", page: 1, limit: 2000 } : filters);
+    const lang = await getRequestLanguage(sp.get("lang"));
+    const out = await loadStockJournal(session, view === "available" ? { ...filters, lang, stage: "available", page: 1, limit: 2000 } : { ...filters, lang });
 
     if (view === "available") {
       type Src = { bookingNo: string; sourceType: string; sourceId: string; container: string; stage: string; quantity: number; transferNo: string | null; destination: string | null; customer: string | null; transferId: string | null; loadingRecordId: string | null; canIssue: boolean; canReverse: boolean; lineKey: string };
