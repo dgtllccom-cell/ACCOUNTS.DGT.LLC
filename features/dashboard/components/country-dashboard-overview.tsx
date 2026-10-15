@@ -177,19 +177,19 @@ export function CountryDashboardOverview({ data }: CountryDashboardOverviewProps
       const factor = [0.35, 0.55, 0.7, 0.65, 0.8, 1.0][idx];
       return {
         month: m,
-        sales: Math.round(base > 0 ? (base * factor) / 3 : factor * 400000)
+        sales: Math.round(base > 0 ? (base * factor) / 3 : 0)
       };
     });
   }, [data.salesTotal]);
 
   const monthlyPurchaseTrend = useMemo(() => {
     const months = ["Apr", "May", "Jun", "Jul", "Aug", "Sep"];
-    const base = data.purchaseTotal || 1773648;
+    const base = data.purchaseTotal || 0;
     return months.map((m, idx) => {
       const factor = [0.25, 0.45, 0.6, 0.75, 0.88, 1.0][idx];
       return {
         month: m,
-        purchases: Math.round(base * factor)
+        purchases: Math.round(base > 0 ? (base * factor) / 3 : 0)
       };
     });
   }, [data.purchaseTotal]);
@@ -203,10 +203,7 @@ export function CountryDashboardOverview({ data }: CountryDashboardOverviewProps
         color: CHART_COLORS[idx % CHART_COLORS.length]
       }));
     }
-    return [
-      { name: "United Arab Emirates Main Branch", value: 0, color: "#1d63ed" },
-      { name: "Al Ras Branch", value: 0, color: "#a855f7" }
-    ];
+    return [];
   }, [data.branchSummaries]);
 
   // Sub-branch performance list
@@ -239,31 +236,7 @@ export function CountryDashboardOverview({ data }: CountryDashboardOverviewProps
       }));
     }
 
-    // Default matching Reference Image 1 when no branches configured yet
-    return [
-      {
-        name: "United Arab Emirates Main Branch",
-        code: "ARE-MAIN-001",
-        branchCurrency: "AED",
-        sales: 0,
-        purchases: 0,
-        debit: 0,
-        credit: 3549000,
-        balance: -3549000,
-        status: "Active"
-      },
-      {
-        name: "Al Ras Branch",
-        code: "ARE-RAS-001",
-        branchCurrency: "AED",
-        sales: 0,
-        purchases: 1773648,
-        debit: 3711219,
-        credit: 427219,
-        balance: 3284000,
-        status: "Active"
-      }
-    ];
+    return [];
   }, [data.branchSummaries, data.cityBranches, currency]);
 
   // 8 Cards Data matching Reference Image 1 exactly
@@ -271,7 +244,7 @@ export function CountryDashboardOverview({ data }: CountryDashboardOverviewProps
     {
       id: "branches_kpi",
       label: "TOTAL BRANCHES",
-      value: String(data.branchesCount || 2),
+      value: String(data.branchesCount || 0),
       badge: "↑ +0%",
       badgeType: "up",
       link: "/dashboard/settings/locations",
@@ -282,7 +255,7 @@ export function CountryDashboardOverview({ data }: CountryDashboardOverviewProps
     {
       id: "users_kpi",
       label: "TOTAL USERS",
-      value: String(data.usersCount || 2),
+      value: String(data.usersCount || 0),
       badge: "↑ +0%",
       badgeType: "up",
       link: "/dashboard/users",
@@ -293,8 +266,8 @@ export function CountryDashboardOverview({ data }: CountryDashboardOverviewProps
     {
       id: "accounts_kpi",
       label: "TOTAL ACCOUNTS",
-      value: String(data.accountsCount || 14),
-      badge: "↑ +7%",
+      value: String(data.accountsCount || 0),
+      badge: "—",
       badgeType: "up",
       link: "/dashboard/accounts/setup",
       iconBg: "bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-400",
@@ -326,9 +299,9 @@ export function CountryDashboardOverview({ data }: CountryDashboardOverviewProps
     {
       id: "purchases_kpi",
       label: "TOTAL PURCHASES",
-      value: formatMoney(data.purchaseTotal || 1773648, currency),
-      badge: "↑ -12%",
-      badgeType: "down",
+      value: formatMoney(data.purchaseTotal || 0, currency),
+      badge: data.purchaseTotal > 0 ? "↑ Active" : "—",
+      badgeType: (data.profitLossTotal || 0) < 0 ? "down" : "up",
       link: "/dashboard/purchase/local-purchase",
       iconBg: "bg-pink-50 text-pink-600 dark:bg-pink-950 dark:text-pink-400",
       icon: <ShoppingCart className="h-5 w-5" />,
@@ -348,8 +321,8 @@ export function CountryDashboardOverview({ data }: CountryDashboardOverviewProps
     {
       id: "profit_kpi",
       label: "PROFIT / LOSS",
-      value: formatMoney(data.profitLossTotal || -1773648, currency),
-      badge: "↓ -12%",
+      value: formatMoney(data.profitLossTotal || 0, currency),
+      badge: (data.profitLossTotal || 0) < 0 ? "↓ Loss" : (data.profitLossTotal || 0) > 0 ? "↑ Profit" : "—",
       badgeType: "down",
       link: "/dashboard/bill-cost-profit/reports",
       iconBg: "bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400",
@@ -360,38 +333,7 @@ export function CountryDashboardOverview({ data }: CountryDashboardOverviewProps
 
   return (
     <div className="space-y-5" dir={isRtl ? "rtl" : "ltr"}>
-      {/* ── TOP CONTROL & SETTINGS BAR (Matching User Screenshot & Audio Instructions) ───── */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl border border-slate-200/90 dark:border-slate-800 p-3 px-4 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.04)]">
-        {/* Left: Search input */}
-        <div className="relative flex-1 min-w-[220px] max-w-md">
-          <Search className="h-4 w-4 text-slate-400 absolute left-3 top-2.5" />
-          <input
-            type="text"
-            placeholder={t(lang, "common.search", "Search branches, products, customers, invoices...")}
-            className="w-full h-9 pl-9 pr-3 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/70 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all"
-          />
-        </div>
 
-        {/* Right: Date selector and Settings */}
-        <div className="flex items-center gap-2.5">
-          <div className="flex items-center gap-1.5 h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/70 text-xs font-semibold text-slate-700 dark:text-slate-300">
-            <Calendar className="h-3.5 w-3.5 text-slate-400" />
-            <span>All Dates (2026)</span>
-            <ChevronDown className="h-3 w-3 text-slate-400 ml-0.5" />
-          </div>
-
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setSettingsOpen(true)}
-            className="h-9 px-3.5 rounded-xl border-blue-200 dark:border-blue-900/60 bg-blue-50/80 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 dark:hover:bg-blue-900/50 text-xs font-bold gap-1.5 shadow-2xs transition-all cursor-pointer"
-          >
-            <SlidersHorizontal className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-            <span>{t(lang, "nav.settings", "Settings")}</span>
-          </Button>
-        </div>
-      </div>
 
       {/* ── 8 3D Glass KPI Cards Grid (4 cols × 2 rows) ───────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -645,7 +587,7 @@ export function CountryDashboardOverview({ data }: CountryDashboardOverviewProps
                   {/* Center Text */}
                   <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                     <span className="text-sm font-black text-slate-900 dark:text-white leading-tight">
-                      AED 0
+                      {formatMoney(data.salesTotal || 0, currency)}
                     </span>
                     <span className="text-[9px] font-semibold text-slate-400 uppercase">
                       Total Sales
@@ -657,26 +599,21 @@ export function CountryDashboardOverview({ data }: CountryDashboardOverviewProps
 
             {/* Donut Legend */}
             <div className="space-y-1.5 pt-2 text-[11px] font-medium border-t border-slate-100 dark:border-slate-800">
-              <div className="flex items-center justify-between text-slate-700 dark:text-slate-300">
-                <div className="flex items-center gap-1.5 truncate">
-                  <span className="h-2 w-2 rounded-full bg-blue-600 shrink-0" />
-                  <span className="truncate">United Arab Emirates Main Branch</span>
-                </div>
-                <div className="flex items-center gap-2 font-mono shrink-0">
-                  <span className="text-slate-400">0%</span>
-                  <span className="font-bold">AED 0</span>
-                </div>
-              </div>
-              <div className="flex items-center justify-between text-slate-700 dark:text-slate-300">
-                <div className="flex items-center gap-1.5 truncate">
-                  <span className="h-2 w-2 rounded-full bg-purple-600 shrink-0" />
-                  <span className="truncate">Al Ras Branch</span>
-                </div>
-                <div className="flex items-center gap-2 font-mono shrink-0">
-                  <span className="text-slate-400">0%</span>
-                  <span className="font-bold">AED 0</span>
-                </div>
-              </div>
+              {branchesPieData.length === 0 ? (
+                <div className="text-center py-2 text-slate-400 text-xs">No branch sales data</div>
+              ) : (
+                branchesPieData.slice(0, 4).map((b) => (
+                  <div key={b.name} className="flex items-center justify-between text-slate-700 dark:text-slate-300">
+                    <div className="flex items-center gap-1.5 truncate">
+                      <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: b.color }} />
+                      <span className="truncate">{b.name}</span>
+                    </div>
+                    <div className="flex items-center gap-2 font-mono shrink-0">
+                      <span className="font-bold">{formatMoney(b.value, currency)}</span>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         )}
@@ -724,7 +661,15 @@ export function CountryDashboardOverview({ data }: CountryDashboardOverviewProps
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 font-medium">
-                {branchPerformanceList.map((branch, idx) => (
+                {branchPerformanceList.length === 0 ? (
+                  <tr>
+                    <td colSpan={11} className="py-10 text-center text-xs font-semibold text-slate-400 dark:text-slate-500">
+                      <Building2 className="h-6 w-6 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
+                      {tt("cdash.no_branches", "No sub-branch records configured for this country.")}
+                    </td>
+                  </tr>
+                ) : (
+                  branchPerformanceList.map((branch, idx) => (
                   <tr
                     key={branch.name}
                     className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors text-slate-700 dark:text-slate-300"
@@ -773,7 +718,7 @@ export function CountryDashboardOverview({ data }: CountryDashboardOverviewProps
                       </button>
                     </td>
                   </tr>
-                ))}
+                )))}
               </tbody>
             </table>
           </div>
