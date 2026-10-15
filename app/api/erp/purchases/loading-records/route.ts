@@ -1,4 +1,5 @@
 export const dynamic = "force-dynamic";
+import { parseJsonish } from "@/lib/stock-journal/model";
 
 import { NextRequest } from "next/server";
 import { z } from "zod";
@@ -406,6 +407,7 @@ export async function GET(request: NextRequest) {
             const eligibility = resolveLoadingEligibility(po as any, totalPaidFC);
             if (!eligibility.eligible) continue; // Payment condition not yet satisfied → do NOT show in loading queue
 
+            po.form_data = parseJsonish(po.form_data);
             const form = po.form_data?.form || {};
             const totals = po.form_data?.totals || {};
             const workflow = po.form_data?.workflow || {};
@@ -556,6 +558,8 @@ export async function POST(request: NextRequest) {
           `;
           const po = poRows[0];
           if (!po) return null;
+          // many bookings hold form_data as a JSON string inside the jsonb column; read it as an object so the quantity gate sees the real goods
+          po.form_data = parseJsonish(po.form_data);
 
           const popRows = await tx`
             select coalesce(sum(amount), 0) as total_payments
