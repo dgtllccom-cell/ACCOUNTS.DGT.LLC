@@ -5,6 +5,7 @@ import { ApiClientError, apiError, apiOk, handleApiError } from "@/lib/api/respo
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { requireErpSession, sessionInDomain } from "@/lib/auth/session";
+import { DOMAIN_SUPER_ADMIN_ROLES } from "@/lib/permissions/enterprise-roles";
 import { ledgerScopeSchema, supportedLanguageSchema, uuidSchema } from "@/lib/api/erp-validation";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { localizeRecordNames, getPhraseTranslator } from "@/lib/i18n/localize-records";
@@ -84,6 +85,7 @@ type EnterpriseAccountRow = {
   status: "active" | "archived";
   is_control_account: boolean;
   contacts?: Array<{ type: string; value: string }>;
+  created_by?: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -276,16 +278,21 @@ async function buildAccountsReportViaLocalPg(session: Awaited<ReturnType<typeof 
 
     // RBAC & Scope enforcement
     const isSuperAdmin = session.isSuperAdmin;
+    const isDomainSuperAdmin = Boolean(
+      session.roles?.some((r) => (DOMAIN_SUPER_ADMIN_ROLES as readonly string[]).includes(r))
+    );
     const sessionCountryIds = session.countryIds?.length ? session.countryIds : null;
     const sessionCountryBranchIds = session.countryBranchIds?.length ? session.countryBranchIds : null;
     const sessionCityBranchIds = session.cityBranchIds?.length ? session.cityBranchIds : null;
 
     const rbacSuperAdminGuard = !isSuperAdmin ? sql`and ea.scope != 'super_admin'` : sql``;
     const rbacCountryGuard = (!isSuperAdmin && sessionCountryIds) ? sql`and ea.country_id = any(${sessionCountryIds}::uuid[])` : sql``;
-    const rbacBranchGuard = (!isSuperAdmin && sessionCityBranchIds)
-      ? sql`and ea.city_branch_id = any(${sessionCityBranchIds}::uuid[])`
-      : (!isSuperAdmin && sessionCountryBranchIds)
-      ? sql`and (ea.country_branch_id = any(${sessionCountryBranchIds}::uuid[]) or ea.city_branch_id = any(${sessionCityBranchIds ?? []}::uuid[]))`
+    const rbacBranchGuard = (!isSuperAdmin && (sessionCityBranchIds || sessionCountryBranchIds))
+      ? sql`and (
+          ea.city_branch_id = any(${sessionCityBranchIds ?? []}::uuid[])
+          or (ea.city_branch_id is null and ea.country_branch_id = any(${sessionCountryBranchIds ?? []}::uuid[]))
+          or (ea.city_branch_id is null and ea.country_branch_id is null and ea.country_id = any(${sessionCountryIds ?? []}::uuid[]))
+        )`
       : sql``;
 
     // Operational domain guard
@@ -332,6 +339,9 @@ async function buildAccountsReportViaLocalPg(session: Awaited<ReturnType<typeof 
         ea.status,
         ea.is_control_account,
         ea.contacts,
+        ea.created_by,
+        creator.full_name as creator_name,
+        creator.user_code as creator_user_code,
         ea.created_at,
         ea.updated_at,
         c.name as country_name,
@@ -355,6 +365,7 @@ async function buildAccountsReportViaLocalPg(session: Awaited<ReturnType<typeof 
         bank.phone as bank_phone,
         bank.email as bank_email
       from public.enterprise_accounts ea
+      left join public.profiles creator on creator.id = ea.created_by
       left join public.countries c on c.id = ea.country_id
       left join public.country_branches cb on cb.id = ea.country_branch_id
       left join public.city_branches cib on cib.id = ea.city_branch_id
@@ -384,7 +395,7 @@ async function buildAccountsReportViaLocalPg(session: Awaited<ReturnType<typeof 
           or (
             ea.code in ('PAK-CORP-GEN-001', 'AFG-CORP-GEN-001', 'IND-CORP-GEN-001', '0005-IND-HUB', 'UAE-CORP-GEN-001', 'CT-INTER-PK', 'CT-INTER-AF', 'CT-INTER-IN', 'CT-INTER-AE')
             -- a report shows balances: another country's clearing ledger is Super Admin only
-            and (${session.isSuperAdmin} or (ea.country_id = any(${session.countryIds ?? []}::uuid[]) and ${!sessionCityBranchIds && !sessionCountryBranchIds}))
+            and (${session.isSuperAdmin} or ${isDomainSuperAdmin} or (ea.country_id = any(${session.countryIds ?? []}::uuid[]) and ${!sessionCityBranchIds && !sessionCountryBranchIds}))
           )
         )
         ${statusWhere}
@@ -424,6 +435,9 @@ async function buildAccountsReportViaLocalPg(session: Awaited<ReturnType<typeof 
         case when l.is_active then 'active' else 'inactive' end as status,
         true as is_control_account,
         '[]'::jsonb as contacts,
+        null::uuid as created_by,
+        'Super Admin' as creator_name,
+        'SA' as creator_user_code,
         l.created_at,
         l.updated_at,
         c.name as country_name,
@@ -451,7 +465,7 @@ async function buildAccountsReportViaLocalPg(session: Awaited<ReturnType<typeof 
       where l.deleted_at is null
         and l.is_active = true
         and l.code in ('PAK-CORP-GEN-001', 'AFG-CORP-GEN-001', 'IND-CORP-GEN-001', '0005-IND-HUB', 'UAE-CORP-GEN-001', 'CT-INTER-PK', 'CT-INTER-AF', 'CT-INTER-IN', 'CT-INTER-AE')
-        and (${session.isSuperAdmin} or (l.country_id = any(${session.countryIds ?? []}::uuid[]) and ${!sessionCityBranchIds && !sessionCountryBranchIds}))
+        and (${session.isSuperAdmin} or ${isDomainSuperAdmin} or (l.country_id = any(${session.countryIds ?? []}::uuid[]) and ${!sessionCityBranchIds && !sessionCountryBranchIds}))
       order by l.created_at asc
       limit 20
     `;
@@ -553,12 +567,22 @@ async function buildAccountsReportViaLocalPg(session: Awaited<ReturnType<typeof 
       const branchType = scopeLabel(account.scope);
       const branchName =
         account.scope === "city_branch"
-          ? `${account.city_name ?? "-"} (${account.city_code ?? "-"})`
+          ? (account.city_name ? `${account.city_name} Branch` : "City Branch")
           : account.scope === "main_branch"
-            ? `${account.country_branch_name ?? "-"} (${account.country_branch_code ?? "-"})`
+            ? (account.country_branch_name || (account.country_name ? `${account.country_name} Main Branch` : "Main Branch"))
             : account.scope === "country"
-              ? `${account.country_name ?? "-"} (${account.country_code ?? "-"})`
+              ? (account.country_name ? `${account.country_name} Main Branch` : "Country Level")
               : "Super Admin";
+
+      const branchCode =
+        account.scope === "city_branch"
+          ? (account.city_code || (account.branch_code && account.branch_code !== "BRANCH" ? account.branch_code : null) || account.country_branch_code || account.country_code || "-")
+          : account.scope === "main_branch"
+            ? (account.country_branch_code || (account.branch_code && account.branch_code !== "BRANCH" ? account.branch_code : null) || (account.country_code ? `${account.country_code}-MAIN` : "MAIN"))
+            : (account.country_code || "-");
+
+      const creatorName = account.creator_name || "Super Admin";
+      const creatorCode = account.creator_user_code || "-";
 
       const rawMovements = [
         ...(movementsByAccount.get(account.id) || []),
@@ -597,7 +621,10 @@ async function buildAccountsReportViaLocalPg(session: Awaited<ReturnType<typeof 
         branchName,
         mainBranchName: account.country_branch_name ?? "-",
         cityBranchName: account.city_name ?? "-",
-        branchCode: account.branch_code || account.country_branch_code || account.city_code || "-",
+        branchCode,
+        creatorName,
+        creatorCode,
+        createdBy: creatorName,
         countryId: account.country_id,
         countryName: account.country_name ?? "-",
         countryCode: account.country_code ?? "-",
@@ -755,7 +782,11 @@ export async function GET(request: NextRequest) {
     });
     const effectiveQuery = { ...query };
 
-    if (!session.isSuperAdmin) {
+    const isDomainSuperAdmin = Boolean(
+      session.roles?.some((r) => (DOMAIN_SUPER_ADMIN_ROLES as readonly string[]).includes(r))
+    );
+
+    if (!session.isSuperAdmin && !isDomainSuperAdmin) {
       if (effectiveQuery.countryId && session.countryIds && session.countryIds.length > 0 && !session.countryIds.includes(effectiveQuery.countryId)) {
         return apiError("FORBIDDEN", "Access denied to requested country", 403);
       }
@@ -770,25 +801,25 @@ export async function GET(request: NextRequest) {
       const isMainBranchScope = session.roles.includes("main_branch_admin");
 
       if (isCountryScope) {
-        if (!effectiveQuery.countryId && session.countryIds[0]) {
+        if (!effectiveQuery.countryId && session.countryIds.length === 1) {
           effectiveQuery.countryId = session.countryIds[0];
         }
       } else if (isMainBranchScope) {
-        if (!effectiveQuery.countryId && session.countryIds[0]) {
-          effectiveQuery.countryId = session.countryIds[0];
-        }
-        if (!effectiveQuery.countryBranchId && session.countryBranchIds[0]) {
+        if (!effectiveQuery.countryBranchId && session.countryBranchIds.length === 1) {
           effectiveQuery.countryBranchId = session.countryBranchIds[0];
+        }
+        if (!effectiveQuery.countryId && session.countryIds.length === 1) {
+          effectiveQuery.countryId = session.countryIds[0];
         }
       } else {
-        if (!effectiveQuery.countryId && session.countryIds[0]) {
-          effectiveQuery.countryId = session.countryIds[0];
+        if (!effectiveQuery.cityBranchId && session.cityBranchIds.length === 1) {
+          effectiveQuery.cityBranchId = session.cityBranchIds[0];
         }
-        if (!effectiveQuery.countryBranchId && session.countryBranchIds[0]) {
+        if (!effectiveQuery.countryBranchId && session.countryBranchIds.length === 1) {
           effectiveQuery.countryBranchId = session.countryBranchIds[0];
         }
-        if (!effectiveQuery.cityBranchId && session.cityBranchIds[0]) {
-          effectiveQuery.cityBranchId = session.cityBranchIds[0];
+        if (!effectiveQuery.countryId && session.countryIds.length === 1) {
+          effectiveQuery.countryId = session.countryIds[0];
         }
       }
     }
@@ -822,7 +853,7 @@ export async function GET(request: NextRequest) {
     let accountQuery = supabase
       .from("enterprise_accounts")
       .select(
-        "id, scope, country_id, country_branch_id, city_branch_id, parent_id, customer_id, company_id, bank_id, code, account_number, customer_number, account_serial_number, country_serial_number, branch_serial_number, manual_reference_number, creation_date, branch_code, branch_account_sequence, name, kind, currency, opening_balance, current_balance, status, is_control_account, contacts, created_at, updated_at"
+        "id, scope, country_id, country_branch_id, city_branch_id, parent_id, customer_id, company_id, bank_id, code, account_number, customer_number, account_serial_number, country_serial_number, branch_serial_number, manual_reference_number, creation_date, branch_code, branch_account_sequence, name, kind, currency, opening_balance, current_balance, status, is_control_account, contacts, created_by, created_at, updated_at"
       )
       .is("deleted_at", null)
       .order("created_at", { ascending: false });
@@ -832,15 +863,24 @@ export async function GET(request: NextRequest) {
       if (session.countryIds?.length) {
         accountQuery = accountQuery.in("country_id", session.countryIds);
       }
+      const hierarchyParts: string[] = [];
       if (session.cityBranchIds?.length) {
-        accountQuery = accountQuery.in("city_branch_id", session.cityBranchIds);
-      } else if (session.countryBranchIds?.length) {
-        accountQuery = accountQuery.in("country_branch_id", session.countryBranchIds);
+        hierarchyParts.push(`city_branch_id.in.(${session.cityBranchIds.join(",")})`);
       }
+      if (session.countryBranchIds?.length) {
+        hierarchyParts.push(`and(city_branch_id.is.null,country_branch_id.in.(${session.countryBranchIds.join(",")}))`);
+      }
+      if (session.countryIds?.length) {
+        hierarchyParts.push(`and(city_branch_id.is.null,country_branch_id.is.null,country_id.in.(${session.countryIds.join(",")}))`);
+      }
+      if (hierarchyParts.length > 0) {
+        accountQuery = accountQuery.or(hierarchyParts.join(","));
+      }
+
       if (isShippingDomainOnly(session)) {
         accountQuery = accountQuery.in("operational_domain", ["shipping", "both"]);
       } else if (!sessionInDomain(session, "shipping")) {
-        accountQuery = accountQuery.in("operational_domain", ["business", "both"]);
+        accountQuery = accountQuery.or("operational_domain.is.null,operational_domain.in.(business,both)");
       }
     }
 
@@ -872,6 +912,7 @@ export async function GET(request: NextRequest) {
       // A report carries balances: another country's clearing ledger is Super Admin only.
       const ownCountry = (cid: string | null | undefined) =>
         session.isSuperAdmin ||
+        isDomainSuperAdmin ||
         (!!cid && session.countryIds.includes(cid) && !session.cityBranchIds?.length && !session.countryBranchIds?.length);
       if (coreCountryData && coreCountryData.length > 0) {
         for (const coreAcc of coreCountryData as EnterpriseAccountRow[]) {
@@ -1015,6 +1056,7 @@ export async function GET(request: NextRequest) {
     const customerIds = [...new Set(accountRows.map((row) => row.customer_id).filter((value): value is string => Boolean(value)))];
     const companyIds = [...new Set(accountRows.map((row) => row.company_id).filter((value): value is string => Boolean(value)))];
     const bankIds = [...new Set(accountRows.map((row) => row.bank_id).filter((value): value is string => Boolean(value)))];
+    const creatorIds = [...new Set(accountRows.map((row: any) => row.created_by).filter((value: any): value is string => Boolean(value)))];
 
     const countriesRes = await fetchInChunks(countryIds, 150, async (chunk) => supabase.from("countries").select("id, name, iso2, currency_code").in("id", chunk));
     const countryBranchesRes = await fetchInChunks(countryBranchIds, 150, async (chunk) => supabase.from("country_branches").select("id, country_id, name, code, local_currency, status").in("id", chunk));
@@ -1023,12 +1065,14 @@ export async function GET(request: NextRequest) {
     const customersRes = await fetchInChunks(customerIds, 150, async (chunk) => supabase.from("customers").select("id, customer_name").in("id", chunk));
     const companiesListRes = await fetchInChunks(companyIds, 150, async (chunk) => supabase.from("companies").select("id, name, legal_name").in("id", chunk));
     const banksListRes = await fetchInChunks(bankIds, 150, async (chunk) => supabase.from("banks").select("id, bank_name, branch_name, account_number, phone, email").in("id", chunk));
+    const creatorsRes = await fetchInChunks(creatorIds, 150, async (chunk) => supabase.from("profiles").select("id, full_name, user_code").in("id", chunk));
 
     if (countriesRes.error) throw new Error(countriesRes.error.message);
     if (countryBranchesRes.error) throw new Error(countryBranchesRes.error.message);
     if (cityBranchesRes.error) throw new Error(cityBranchesRes.error.message);
     if (companyRes.error) throw new Error(companyRes.error.message);
     if (customersRes.error) throw new Error(customersRes.error.message);
+    if (creatorsRes.error) throw new Error(creatorsRes.error.message);
 
     const countries = (countriesRes.data ?? []) as Array<{ id: string; name: string; iso2: string | null; currency_code: string }>;
     const countryBranches = (countryBranchesRes.data ?? []) as Array<{
@@ -1065,6 +1109,7 @@ export async function GET(request: NextRequest) {
     const customerLookup = new Map(customers.map((row) => [row.id, row.customer_name] as const));
     const companiesLookup = new Map(((companiesListRes.data ?? []) as any[]).map((row) => [row.id, row]));
     const banksLookup = new Map(((banksListRes.data ?? []) as any[]).map((row) => [row.id, row]));
+    const creatorsLookup = new Map(((creatorsRes.data ?? []) as any[]).map((row) => [row.id, row]));
 
     const postingByAccount = new Map<string, PostingLineRow[]>();
     for (const line of postingLines) {
@@ -1163,10 +1208,10 @@ export async function GET(request: NextRequest) {
         account.scope === "super_admin"
           ? "Super Admin Workspace"
           : account.scope === "country"
-            ? country?.name ?? "-"
+            ? (country?.name ? `${country.name} Main Branch` : "-")
             : account.scope === "main_branch"
-              ? countryBranch?.name ?? "-"
-              : cityBranch?.name ?? "-";
+              ? (countryBranch?.name || (country?.name ? `${country.name} Main Branch` : "-"))
+              : (cityBranch?.name || (cityBranch?.city_name ? `${cityBranch.city_name} Branch` : "-"));
 
       const mainBranchName =
         account.scope === "city_branch"
@@ -1187,8 +1232,12 @@ export async function GET(request: NextRequest) {
           : account.scope === "country"
             ? country?.iso2 ?? "-"
             : account.scope === "main_branch"
-              ? countryBranch?.code ?? "-"
-              : cityBranch?.code ?? "-";
+              ? countryBranch?.code ?? ((account.branch_code && account.branch_code !== "BRANCH") ? account.branch_code : null) ?? (country?.iso2 ? `${country.iso2}-MAIN` : "MAIN")
+              : cityBranch?.code ?? ((account.branch_code && account.branch_code !== "BRANCH") ? account.branch_code : null) ?? countryBranch?.code ?? country?.iso2 ?? "-";
+
+      const creator = (account as any).created_by ? creatorsLookup.get((account as any).created_by) : null;
+      const creatorName = creator?.full_name || "Super Admin";
+      const creatorCode = creator?.user_code || "-";
 
       const linkedComp = account.company_id ? companiesLookup.get(account.company_id) : null;
       const linkedBnk = account.bank_id ? banksLookup.get(account.bank_id) : null;
@@ -1244,7 +1293,10 @@ export async function GET(request: NextRequest) {
         branchName,
         mainBranchName,
         cityBranchName,
-        branchCode: account.branch_code || branchCode,
+        branchCode,
+        creatorName,
+        creatorCode,
+        createdBy: creatorName,
         countryId: account.country_id,
         countryName: country?.name ?? "-",
         countryCode: country?.iso2 ?? "-",

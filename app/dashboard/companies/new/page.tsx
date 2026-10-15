@@ -1,27 +1,16 @@
-import { Suspense } from "react";
-import { CompanyIncorporationForm } from "@/features/companies/components/company-incorporation-form";
-import { EntryMethodSelector } from "@/features/document-intelligence/components/entry-method-selector";
-import { getCurrentErpSession } from "@/lib/auth/session";
+import { redirect } from "next/navigation";
+import type { Route } from "next";
 
-export const metadata = { title: "New Company — Company Setup" };
+export const metadata = { title: "Company Setup — Settings" };
 
 export default async function NewCompanyPage({
-  searchParams
+  searchParams,
 }: {
-  searchParams?: Promise<{ companyId?: string }>;
+  searchParams?: Promise<{ companyId?: string; action?: string }>;
 }) {
   const params = searchParams ? await searchParams : undefined;
-  const session = await getCurrentErpSession();
-  return (
-    <Suspense fallback={<div className="p-8 text-slate-400">Loading company setup...</div>}>
-      <EntryMethodSelector
-        targetModule="companies"
-        domain="business"
-        lang={session?.preferredLanguage ?? "en"}
-        skipGate={Boolean(params?.companyId)}
-      >
-        <CompanyIncorporationForm initialCompanyId={params?.companyId} />
-      </EntryMethodSelector>
-    </Suspense>
-  );
+  if (params?.companyId) {
+    redirect(`/dashboard/settings/company?companyId=${encodeURIComponent(params.companyId)}` as Route);
+  }
+  redirect("/dashboard/settings/company?action=new" as Route);
 }

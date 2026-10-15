@@ -183,12 +183,14 @@ const SHIPPING_LINE_ADMIN_PERMISSIONS: string[] = [
   "communication:read", "communication:create",
   "email_management:read",
   "whatsapp:read", "whatsapp:create",
-  "accounts:create", "accounts:read", "accounts:update",
+  "accounts:create", "accounts:read", "accounts:update", "accounts:approve",
   "ledgers:create", "ledgers:read", "ledgers:update",
   "roznamcha:create", "roznamcha:read", "roznamcha:post",
   "expenses:create", "expenses:read", "expenses:update",
   "transactions:create", "transactions:read",
   "customers:create", "customers:read", "customers:update",
+  "products:create", "products:read", "products:update",
+  "chs_products:create", "chs_products:read", "chs_products:update",
   "settings:read"
 ];
 
@@ -490,6 +492,7 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "accounts:create",
     "accounts:read",
     "accounts:update",
+    "accounts:approve",
     "ledgers:create",
     "ledgers:read",
     "ledgers:update",
@@ -595,6 +598,7 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "accounts:create",
     "accounts:read",
     "accounts:update",
+    "accounts:approve",
     "ledgers:create",
     "ledgers:read",
     "ledgers:update",
@@ -844,8 +848,8 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
     "whatsapp:read", "whatsapp:create", "whatsapp:update", "whatsapp:delete",
     "email_management:create", "email_management:read", "email_management:update",
     "reports:export",
-    "roznamcha:post_cross_branch",
     "accounts:delete",
+    "products:delete", "chs_products:delete",
     "settings:read", "settings:update"
   ]
 };

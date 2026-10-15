@@ -2745,113 +2745,12 @@ export function PurchaseBookingJournalReportView({
                       </Td>
                       <Td center className={cn("font-bold text-[10px] uppercase", !isPosted ? "text-red-600 font-black" : "text-slate-700 dark:text-slate-300")}>{userName}</Td>
                       <Td center onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-center gap-1">
-                          <button
-                            type="button"
-                            onClick={() => setSelectedBillForModal(report)}
-                            className="inline-flex h-7 w-7 items-center justify-center rounded border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition shadow-sm"
-                            title={trUi("Inspect / View Bill Details")}
-                          >
-                            <Eye className="h-3.5 w-3.5" />
-                          </button>
-                          {!isPosted && <button
-                            type="button"
-                            onClick={() => {
-                              router.push(`/dashboard/purchase/new-purchase-booking-order?id=${encodeURIComponent(report.id)}&purchaseOrderNo=${encodeURIComponent(report.purchaseBookingOrderNumber)}`);
-                            }}
-                            className="inline-flex h-7 w-7 items-center justify-center rounded border border-slate-200 bg-white text-blue-600 hover:bg-blue-50 transition shadow-sm"
-                            title={trUi("Edit Booking")}
-                          >
-                            <Edit3 className="h-3.5 w-3.5" />
-                          </button>}
-                          <button
-                            type="button"
-                            onClick={() => { setSelectedId(report.id); handleTransfer(report); }}
-                            className="inline-flex h-7 w-7 items-center justify-center rounded border border-slate-200 bg-white text-emerald-600 hover:bg-emerald-50 transition shadow-sm"
-                            title={trUi("Transfer / Confirm")}
-                          >
-                            <ArrowRight className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const f = report.form_data?.form || {};
-                              const goodsEntries = report.form_data?.goodsEntries || [];
-                              openPurchaseBookingOrderPrintReport({
-                                order: {
-                                  id: report.id,
-                                  systemBillNo: report.purchaseBookingOrderNumber || f.bookingNo || "-",
-                                  manualBillNo: f.salesOrderNo || f.billNo || report.purchaseContractNo,
-                                  superAdminSerialNo: (report as any).super_admin_serial_number || f.superAdminSerialNo,
-                                  countrySerialNo: (report as any).country_transaction_serial_number || f.countrySerialNo,
-                                  branchSerialNo: (report as any).branch_transaction_serial_number || f.branchSerialNo,
-                                  bookingDate: report.bookingDate || report.purchaseDate || new Date().toISOString(),
-                                  supplierName: report.supplierName || f.purchaseAccountName || "SUPPLIER ACCOUNT",
-                                  supplierContact: f.supplierContact,
-                                  buyerName: report.buyerName || f.customerName || "—",
-                                  purchaseAccountNo: report.purchaseAccountNumber || f.purchaseAccountNo || "-",
-                                  purchaseAccountName: report.purchaseAccountName || f.purchaseAccountName || "Purchase Account",
-                                  salesAccountNo: report.salesAccountNumber || f.salesAccountNo || "-",
-                                  salesAccountName: report.salesAccountName || f.salesAccountName || "Sales Account",
-                                  countryName: report.countryName || f.countryName || "UAE",
-                                  branchName: report.branchName || f.branchName || "",
-                                  shippingMode: f.shippingMode || "By Sea",
-                                  containerNumbers: f.containerNumbers || "N/A",
-                                  vesselName: f.vesselName || "N/A",
-                                  loadingCountryPort: f.loadingPort || f.loadingCountry || "N/A",
-                                  receivedCountryPort: f.receivedPort || f.receivedCountry || "N/A",
-                                  goodsItems: goodsEntries.map((g: any, idx: number) => ({
-                                    srNo: idx + 1,
-                                    goodsName: g.goodsName || report.productName || "COMMODITY GOODS",
-                                    grade: g.size || "Standard",
-                                    origin: g.origin || report.countryName || "USA",
-                                    quantity: Number(g.qtyNo || report.quantity || 1),
-                                    unit: g.qtyName || report.unit || "BAGS",
-                                    grossWeight: Number(g.qtyNo * g.qtyKgs || report.totalGrossWeight || 0),
-                                    tareWeight: Number(g.emptyKgs || 0),
-                                    netWeight: Number(g.qtyNo * (g.qtyKgs - (g.emptyKgs || 0)) || report.totalNetWeight || 0),
-                                    rateKg: Number(g.coursePrice || report.purchaseRate || 0),
-                                    amountFc: Number(g.totalAmount || report.totalPurchaseAmount || 0),
-                                    currencyFc: g.purchaseCurrency || report.currency || "",
-                                    exchangeRate: Number(g.exchangeRate || f.exchangeRate || 0),
-                                    amountLc: Number(g.finalAmount || report.finalAmount || 0),
-                                    currencyLc: report.finalCurrency || ""
-                                  })),
-                                  totalPurchaseFc: Number(report.totalPurchaseAmount || 0),
-                                  currencyFc: report.currency || "",
-                                  totalPurchaseLc: Number(report.finalAmount || 0),
-                                  currencyLc: String(f.localCurrency || f.baseCurrency || ""),
-                                  advancePercent: Number(f.advancePercent || 10),
-                                  advanceAmountFc: Number(f.advanceAmountFc || 0),
-                                  advanceAmountLc: Number(f.advanceAmountLc || 0),
-                                  remainingAmountFc: Number(f.remainingAmountFc || 0),
-                                  remainingAmountLc: Number(f.remainingAmountLc || 0),
-                                  advancePaymentDate: f.advancePaymentDate,
-                                  remainingDueDate: f.paymentDate,
-                                  paymentType: f.paymentType || report.paymentStatus || "Advance Payment",
-                                  status: report.status || "Accepted",
-                                  remarks: f.orderReportRemarks || report.goodsDescription || "",
-                                  userName: report.audit?.userName || "—"
-                                },
-                                companyInfo: {
-                                  name: "",
-                                  branch: report.branchName || "",
-                                  printedBy: session?.fullName || session?.email || "—"
-                                },
-                                lang: activeLang
-                              });
-                            }}
-                            className="inline-flex h-7 w-7 items-center justify-center rounded border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition shadow-sm"
-                            title={trUi("Print Full A4 Bill")}
-                          >
-                            <Printer className="h-3.5 w-3.5" />
-                          </button>
-                          
+                        <div className="flex items-center justify-center">
                           {/* Three Dots (: Actions) Menu with all print & inspection options */}
                           <UnifiedActionMenu
                             align="right"
                             ariaLabel={`Actions for ${report.purchaseBookingOrderNumber}`}
-                            buttonClassName="inline-flex h-7 w-7 items-center justify-center rounded border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 transition shadow-sm"
+                            buttonClassName="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 transition shadow-2xs"
                             onView={() => { setSelectedId(report.id); setIsDrawerOpen(true); }}
                             onEdit={() => {
                               router.push(`/dashboard/purchase/new-purchase-booking-order?id=${encodeURIComponent(report.id)}&purchaseOrderNo=${encodeURIComponent(report.purchaseBookingOrderNumber)}`);

@@ -47,9 +47,9 @@ export function resolvePurchaseBookingTransferDestination(
   if (normalized === "credit" || normalized === "credit payment" || normalized.includes("credit")) {
     return {
       flow: "credit",
-      path: "/dashboard/purchase/loading-form",
-      currentStep: "purchase_direct_loading",
-      currentStepName: "Purchase Direct Loading"
+      path: "/dashboard/journal/purchase-order-payment/credit",
+      currentStep: "purchase_credit_payment",
+      currentStepName: "Purchase Credit Payment"
     };
   }
 

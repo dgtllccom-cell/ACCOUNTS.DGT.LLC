@@ -101,9 +101,7 @@ async function lookupAccountMaster(query, countryId, countryBranchId, cityBranch
   const params = new URLSearchParams();
   params.set("q", needle);
   params.set("limit", "500");
-  if (countryId) params.set("countryId", countryId);
-  if (countryBranchId) params.set("countryBranchId", countryBranchId);
-  if (cityBranchId) params.set("cityBranchId", cityBranchId);
+  if (countryId && countryId !== "All") params.set("countryId", countryId);
 
   const response = await fetch(`/api/erp/accounting/accounts/lookup?${params.toString()}`, {
     credentials: "same-origin"
@@ -440,6 +438,8 @@ export function PurchaseOrderWizard({ session }) {
   const [isVerificationSidebarOpen, setIsVerificationSidebarOpen] = useState(false);
   const [previewType, setPreviewType] = useState("booking_report"); // "booking_report" | "contract" | "invoice"
   const [editingGoodsIndex, setEditingGoodsIndex] = useState(null);
+  const [actionMenuIndex, setActionMenuIndex] = useState(null);
+  const [viewingGoodsItem, setViewingGoodsItem] = useState(null);
   const [bookingSearchInput, setBookingSearchInput] = useState("");
   const [bookingSearchLoading, setBookingSearchLoading] = useState(false);
   // Serial numbers (PO / SO / Bill) are assigned by the server on save — never a random
@@ -476,6 +476,17 @@ export function PurchaseOrderWizard({ session }) {
     }
     loadTransfer();
   }, [transferIdParam]);
+
+  useEffect(() => {
+    if (actionMenuIndex === null) return;
+    const onMouseDown = (e) => {
+      if (!e.target.closest("[data-goods-action-menu]")) {
+        setActionMenuIndex(null);
+      }
+    };
+    document.addEventListener("mousedown", onMouseDown);
+    return () => document.removeEventListener("mousedown", onMouseDown);
+  }, [actionMenuIndex]);
 
   async function runHandoverAction(transferId, action) {
     try {
@@ -903,7 +914,7 @@ export function PurchaseOrderWizard({ session }) {
   const [newGoodLoading, setNewGoodLoading] = useState(false);
   const [newGoodError, setNewGoodError] = useState("");
 
-  const renderGlobalInfoCards = () => {
+  const renderGlobalInfoCards = (fullWidth = false) => {
     // Determine logged-in user's branch details
     let loginBranchName = "N/A";
     let loginBranchCode = "N/A";
@@ -1086,7 +1097,7 @@ export function PurchaseOrderWizard({ session }) {
 
     return (
       <div className="w-full mb-3 animate-in fade-in duration-300">
-        <PurchaseBookingReportGrid data={reportData} />
+        <PurchaseBookingReportGrid data={reportData} fullWidth={fullWidth} />
       </div>
     );
   };
@@ -1224,8 +1235,6 @@ export function PurchaseOrderWizard({ session }) {
       try {
         const params = new URLSearchParams({ limit: "1000" });
         if (form.countryId && form.countryId !== "All") params.set("countryId", form.countryId);
-        if (form.countryBranchId) params.set("countryBranchId", form.countryBranchId);
-        if (form.cityBranchId) params.set("cityBranchId", form.cityBranchId);
         const response = await fetch(`/api/erp/accounting/accounts?${params.toString()}`, { cache: "no-store" });
         const res = await response.json();
         let accounts = [];
@@ -1248,7 +1257,7 @@ export function PurchaseOrderWizard({ session }) {
     }
     loadScopedAccounts();
     return () => { cancelled = true; };
-  }, [form.countryId, form.countryBranchId, form.cityBranchId, isSuperAdmin]);
+  }, [form.countryId, isSuperAdmin]);
 
   // Fetch full details when supplierId changes
   useEffect(() => {
@@ -1816,21 +1825,13 @@ export function PurchaseOrderWizard({ session }) {
       }
     }
     
-    // Filter by form selected country - allow global/unassigned accounts
+    // Filter by form selected country - allow global/unassigned accounts or accounts in the selected country
     if (form.countryId && form.countryId !== "All" && acc.countryId && acc.countryId !== form.countryId) {
       return false;
     }
 
-    // Country branch match: allow accounts matching countryBranchId or unassigned
-    if (form.countryBranchId && acc.countryBranchId && acc.countryBranchId !== form.countryBranchId) {
-      return false;
-    }
-
-    // City branch match: allow accounts matching cityBranchId or parent country branch accounts (cityBranchId is null)
-    if (form.cityBranchId && acc.cityBranchId && acc.cityBranchId !== form.cityBranchId) {
-      return false;
-    }
-    
+    // Trade accounts (supplier/vendor/customer/payable/receivable) operate across branches within the country.
+    // Allow accounts in the same country regardless of branch assignment.
     return true;
   };
 
@@ -1941,7 +1942,7 @@ export function PurchaseOrderWizard({ session }) {
   const triggerBackgroundLookup = async (type, query) => {
     if (!query || query.trim().length < 2) return;
     try {
-      const account = await lookupAccountMaster(query, form.countryId, form.countryBranchId, form.cityBranchId, isSuperAdmin);
+      const account = await lookupAccountMaster(query, form.countryId, null, null, isSuperAdmin);
       if (account) {
         applyAccountMaster(type, account);
       }
@@ -1951,16 +1952,16 @@ export function PurchaseOrderWizard({ session }) {
   };
 
   const handleTextChange = (type, val) => {
-    // Update only the local search display state — do NOT overwrite the
-    // form account code field with raw text. The account code will only be
-    // set once a valid account is confirmed via selection or background lookup.
+    const rawVal = val;
+    const cleanVal = (val || "").trim().toLowerCase();
+
     if (type === "purchase") {
       setPurchaseSearch(val);
       setPurchaseDropdownOpen(true);
-      // Clear the stored account if text is cleared
       if (!val.trim()) {
         setForm((prev) => ({
           ...prev,
+          purchaseAccountId: "",
           purchaseAccountNo: "",
           purchaseAccountName: "",
           purchaseAccountBranch: "",
@@ -1977,14 +1978,15 @@ export function PurchaseOrderWizard({ session }) {
           purchaseAccountMobile: "",
           purchaseAccountWhatsapp: "",
         }));
+        return;
       }
     } else {
       setSalesSearch(val);
       setSalesDropdownOpen(true);
-      // Clear the stored account if text is cleared
       if (!val.trim()) {
         setForm((prev) => ({
           ...prev,
+          salesAccountId: "",
           salesAccountNo: "",
           salesAccountName: "",
           salesAccountBranch: "",
@@ -2001,16 +2003,31 @@ export function PurchaseOrderWizard({ session }) {
           salesAccountMobile: "",
           salesAccountWhatsapp: "",
         }));
+        return;
       }
     }
 
+    // Retain the typed Account Code in form state so it is never blanked out if blur/submit occurs
+    setForm((prev) => ({
+      ...prev,
+      ...(type === "purchase" ? { purchaseAccountNo: rawVal } : { salesAccountNo: rawVal })
+    }));
+
+    // Find in dbAccounts
     const matched = dbAccounts.find(acc =>
-      accountMatchesScope(acc) && (
-        (acc.accountCode || "").trim().toLowerCase() === val.trim().toLowerCase() ||
-        (acc.manualReferenceNumber || "").trim().toLowerCase() === val.trim().toLowerCase() ||
-        (acc.customerNumber || "").trim().toLowerCase() === val.trim().toLowerCase() ||
-        (acc.accountName || "").trim().toLowerCase() === val.trim().toLowerCase()
-      )
+      (
+        (acc.accountCode || "").trim().toLowerCase() === cleanVal ||
+        (acc.rawAccountCode || "").trim().toLowerCase() === cleanVal ||
+        (acc.manualReferenceNumber || "").trim().toLowerCase() === cleanVal ||
+        (acc.customerNumber || "").trim().toLowerCase() === cleanVal ||
+        (acc.accountName || "").trim().toLowerCase() === cleanVal
+      ) && accountMatchesScope(acc)
+    ) || dbAccounts.find(acc =>
+      (acc.accountCode || "").trim().toLowerCase() === cleanVal ||
+      (acc.rawAccountCode || "").trim().toLowerCase() === cleanVal ||
+      (acc.manualReferenceNumber || "").trim().toLowerCase() === cleanVal ||
+      (acc.customerNumber || "").trim().toLowerCase() === cleanVal ||
+      (acc.accountName || "").trim().toLowerCase() === cleanVal
     );
 
     if (matched) {
@@ -2021,8 +2038,8 @@ export function PurchaseOrderWizard({ session }) {
         clearTimeout(lookupTimers.current[type]);
       }
       lookupTimers.current[type] = setTimeout(() => {
-        triggerBackgroundLookup(type, val);
-      }, 500);
+        triggerBackgroundLookup(type, rawVal);
+      }, 350);
     }
   };
 
@@ -2030,10 +2047,29 @@ export function PurchaseOrderWizard({ session }) {
     const query = type === "purchase"
       ? (purchaseSearch || form.purchaseAccountNo)
       : (salesSearch || form.salesAccountNo);
+    if (!query || !query.trim()) return;
     setAccountLookupLoading(type);
     setAccountLookupMessage("");
     try {
-      const account = await lookupAccountMaster(query, form.countryId, form.countryBranchId, form.cityBranchId, isSuperAdmin);
+      const cleanVal = query.trim().toLowerCase();
+      const localMatch = dbAccounts.find(acc =>
+        (acc.accountCode || "").trim().toLowerCase() === cleanVal ||
+        (acc.rawAccountCode || "").trim().toLowerCase() === cleanVal ||
+        (acc.manualReferenceNumber || "").trim().toLowerCase() === cleanVal ||
+        (acc.customerNumber || "").trim().toLowerCase() === cleanVal ||
+        (acc.accountName || "").trim().toLowerCase() === cleanVal
+      );
+      if (localMatch) {
+        applyAccountMaster(type, localMatch);
+        setAccountLookupMessage(
+          t(lang, "purchase.wiz_account_loaded", "{0} account loaded: {1}")
+            .replace("{0}", type === "purchase" ? t(lang, "purchase.wiz_type_purchase", "Purchase") : t(lang, "purchase.wiz_type_sales", "Sales"))
+            .replace("{1}", localMatch.accountName || localMatch.accountCode)
+        );
+        return;
+      }
+
+      const account = await lookupAccountMaster(query, form.countryId, null, null, isSuperAdmin);
       if (!account) {
         setAccountLookupMessage(t(lang, "purchase.wiz_account_not_found", "Account not found: {0}.").replace("{0}", query));
         return;
@@ -2265,15 +2301,9 @@ export function PurchaseOrderWizard({ session }) {
 
   const handleViewGoodsEntry = (index) => {
     const row = goodsEntries[index];
-    alert(`View Item:
-
-Goods: ${row.goodsName}
-Brand: ${row.brand}
-Size: ${row.size}
-Origin: ${row.origin}
-Qty: ${row.qtyNo} ${translateOptionLabel(lang, row.qtyName)}
-Price: ${row.coursePrice} ${row.currencyType}
-Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || ""}`);
+    if (row) {
+      setViewingGoodsItem(row);
+    }
   };
 
   const handleCreatePort = async (portName, countryName, transportType, side) => {
@@ -4253,47 +4283,6 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
             </div>
           )}
 
-          {activeTab === "report" && isMounted && document.getElementById("erp-page-actions-slot") && createPortal(
-            <>
-              {!savedOrderId && (
-                <Button
-                  type="button"
-                  onClick={() => handleSavePurchaseOrder(false)}
-                  disabled={savingOrder}
-                  className="h-10 text-[11px] font-black tracking-wider uppercase px-8 bg-emerald-600 hover:bg-emerald-700 text-white shadow-[0_4px_14px_0_rgb(5,150,105,0.39)] hover:shadow-[0_6px_20px_rgba(5,150,105,0.23)] hover:-translate-y-0.5 transition-all duration-200"
-                >
-                  {savingOrder ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4"/>}
-                  {savingOrder ? t(lang, "purchase.accepting", "ACCEPTING...") : t(lang, "purchase.accept_booking", "ACCEPT BOOKING")}
-                </Button>
-              )}
-
-              {savedOrderId && !isTransferred && (
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    onClick={() => setTransferConfirmModal(true)}
-                    disabled={savingOrder}
-                    className="h-10 text-[11px] font-black tracking-wider uppercase px-8 bg-blue-600 hover:bg-blue-700 text-white shadow-[0_4px_14px_0_rgb(37,99,235,0.39)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.23)] hover:-translate-y-0.5 transition-all duration-200"
-                  >
-                    <CheckCircle2 className="h-4 w-4"/> {t(lang, "purchase.transfer_to_payment_caps", "TRANSFER TO PAYMENT")}
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={() => {
-                      if (window.confirm(t(lang, "purchase.confirm_transfer_empty_prompt", "Transfer to Payment Module and go to empty form?"))) {
-                        handleTransferEmpty();
-                      }
-                    }}
-                    disabled={savingOrder}
-                    className="h-10 text-[11px] font-black tracking-wider uppercase px-8 bg-indigo-600 hover:bg-indigo-700 text-white shadow-[0_4px_14px_0_rgb(79,70,229,0.39)] hover:shadow-[0_6px_20px_rgba(79,70,229,0.23)] hover:-translate-y-0.5 transition-all duration-200"
-                  >
-                    <CheckCircle2 className="h-4 w-4"/> {t(lang, "purchase.transfer_to_payment_empty_caps", "TRANSFER TO PAYMENT (EMPTY FORM)")}
-                  </Button>
-                </div>
-              )}
-            </>,
-            document.getElementById("erp-page-actions-slot")
-          )}
 
           {activeTab !== "report" && (
             activeTab === "reports_tab" ? (() => {
@@ -4985,10 +4974,10 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                     </div>
                   </div>
 
-                  {/* ================= MAIN 2-COLUMN WORKSPACE GRID ================= */}
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start w-full">
+                  {/* ================= MAIN 2-COLUMN WORKSPACE ================= */}
+                  <div className="flex flex-col lg:flex-row gap-4 items-start w-full">
                     {/* LEFT COLUMN: Form (Step 1 Booking or Step 2 Goods) */}
-                    <div className="lg:col-span-4 space-y-4 w-full">
+                    <div className="w-full lg:w-[380px] xl:w-[410px] 2xl:w-[430px] shrink-0 space-y-4">
                       {activeTab === "booking" && (
                         <fieldset disabled={isTransferred && !session?.scopes?.isSuperAdmin} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs space-y-4 w-full">
                           <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2.5">
@@ -5023,7 +5012,21 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                   onFocus={() => {
                                     setPurchaseDropdownOpen(true);
                                     setPurchasePinDropdownOpen(false);
-                                    setPurchaseSearch("");
+                                    if (!purchaseSearch && form.purchaseAccountNo) {
+                                      setPurchaseSearch(form.purchaseAccountNo);
+                                    }
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                      e.preventDefault();
+                                      handleAccountLookup("purchase");
+                                      setPurchaseDropdownOpen(false);
+                                    }
+                                  }}
+                                  onBlur={() => {
+                                    if (purchaseSearch && !form.purchaseAccountId) {
+                                      handleAccountLookup("purchase");
+                                    }
                                   }}
                                   className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg pl-2.5 pr-8 py-1.5 text-slate-900 dark:text-slate-100 font-semibold outline-none focus:border-blue-500 text-xs h-9"
                                 />
@@ -5114,7 +5117,21 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                   onFocus={() => {
                                     setSalesDropdownOpen(true);
                                     setSalesPinDropdownOpen(false);
-                                    setSalesSearch("");
+                                    if (!salesSearch && form.salesAccountNo) {
+                                      setSalesSearch(form.salesAccountNo);
+                                    }
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                      e.preventDefault();
+                                      handleAccountLookup("sales");
+                                      setSalesDropdownOpen(false);
+                                    }
+                                  }}
+                                  onBlur={() => {
+                                    if (salesSearch && !form.salesAccountId) {
+                                      handleAccountLookup("sales");
+                                    }
                                   }}
                                   className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg pl-2.5 pr-8 py-1.5 text-slate-900 dark:text-slate-100 font-semibold outline-none focus:border-blue-500 text-xs h-9"
                                 />
@@ -6300,19 +6317,26 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                     </div>
 
                     {/* RIGHT COLUMN: 4 Report Cards (Top) + Purchase Booking Register Table (Bottom) */}
-                    <div className="lg:col-span-8 space-y-4 w-full">
+                    <div className="flex-1 min-w-0 w-full space-y-4">
                       {/* 4 Report Cards */}
-                      {renderGlobalInfoCards()}
+                      {renderGlobalInfoCards(false)}
 
                       {/* ================= PURCHASE BOOKING REGISTER CARD ================= */}
                       <div className="w-full bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs space-y-3">
                         {/* Register Header Toolbar */}
                         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
-                          <div className="flex items-center gap-2">
-                            <FileSpreadsheet className="h-4 w-4 text-blue-600" />
-                            <h3 className="text-xs font-black tracking-tight text-slate-900 dark:text-slate-100">
-                              {t(lang, "purchase.booking_register_title", "Purchase Booking Register")}
-                            </h3>
+                          <div className="flex items-center gap-2.5">
+                            <div className="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
+                              <FileSpreadsheet className="h-4 w-4" />
+                            </div>
+                            <div>
+                              <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">
+                                {t(lang, "purchase.booking_register_title", "Purchase Booking Register")}
+                              </h3>
+                              <p className="text-[10px] text-slate-400 font-medium">
+                                {goodsEntries.length} {t(lang, "purchase.f_total_items", "Total Items")}
+                              </p>
+                            </div>
                           </div>
 
                           <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -6349,23 +6373,23 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                         </div>
 
                         {/* Goods Table */}
-                        <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-                          <table className="w-full text-[9px] text-slate-800 dark:text-slate-200 border-collapse text-left whitespace-nowrap">
+                        <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                          <table className="w-full text-xs text-slate-800 dark:text-slate-200 border-collapse text-left whitespace-nowrap">
                             <thead>
-                              <tr className="bg-slate-100/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 font-bold uppercase tracking-wider">
-                                <Th className="px-3 py-2 text-center w-8">#</Th>
-                                <Th className="px-3 py-2">GOODS NAME</Th>
-                                <Th className="px-3 py-2 text-center">SIZE</Th>
-                                <Th className="px-3 py-2 text-center">BRAND</Th>
-                                <Th className="px-3 py-2 text-center">HS CODE</Th>
-                                <Th className="px-3 py-2 text-center">ORIGIN</Th>
-                                <Th className="px-3 py-2 text-right">QTY</Th>
-                                <Th className="px-3 py-2 text-center">UNIT</Th>
-                                <Th className="px-3 py-2 text-right">{t(lang, "purchase.col_price_ccy", "PRICE")} ({form.currencyType || "USD"})</Th>
-                                <Th className="px-3 py-2 text-right">{t(lang, "purchase.col_amount_ccy", "AMOUNT")} ({form.currencyType || "USD"})</Th>
-                                <Th className="px-3 py-2 text-center">EX. RATE</Th>
-                                <Th className="px-3 py-2 text-right text-emerald-700 dark:text-emerald-400 font-black bg-emerald-500/5">{t(lang, "purchase.col_final_ccy", "FINAL")} ({form.secondaryCurrency || "AED"})</Th>
-                                <Th className="px-3 py-2 text-center w-10">ACTION</Th>
+                              <tr className="bg-slate-100/90 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700 font-bold uppercase tracking-wider text-[10px]">
+                                <Th className="px-3 py-2.5 text-center w-10">#</Th>
+                                <Th className="px-3 py-2.5">{t(lang, "purchase.goods_name", "GOODS NAME")}</Th>
+                                <Th className="px-3 py-2.5 text-center">{t(lang, "purchase.size_label", "SIZE")}</Th>
+                                <Th className="px-3 py-2.5 text-center">{t(lang, "purchase.brand_label", "BRAND")}</Th>
+                                <Th className="px-3 py-2.5 text-center">{t(lang, "purchase.th_hs_code", "HS CODE")}</Th>
+                                <Th className="px-3 py-2.5 text-center">{t(lang, "purchase.origin_country_lbl", "ORIGIN")}</Th>
+                                <Th className="px-3 py-2.5 text-right">{t(lang, "purchase.qty", "QTY")}</Th>
+                                <Th className="px-3 py-2.5 text-center">{t(lang, "purchase.unit_word", "UNIT")}</Th>
+                                <Th className="px-3 py-2.5 text-right">{t(lang, "purchase.col_price_ccy", "PRICE")} ({form.currencyType || "USD"})</Th>
+                                <Th className="px-3 py-2.5 text-right">{t(lang, "purchase.col_amount_ccy", "AMOUNT")} ({form.currencyType || "USD"})</Th>
+                                <Th className="px-3 py-2.5 text-center">{t(lang, "purchase.ex_rate", "EX. RATE")}</Th>
+                                <Th className="px-3 py-2.5 text-right text-emerald-700 dark:text-emerald-400 font-black bg-emerald-500/10">{t(lang, "purchase.col_final_ccy", "FINAL")} ({form.secondaryCurrency || "AED"})</Th>
+                                <Th className="px-3 py-2.5 text-center w-28">{t(lang, "purchase.th_action", "ACTION")}</Th>
                               </tr>
                             </thead>
                             <tbody>
@@ -6386,64 +6410,136 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                                 goodsEntries.map((row, index) => (
                                   <tr
                                     key={index}
-                                    className={`border-t border-slate-200 dark:border-slate-800 transition ${
+                                    className={`border-t border-slate-100 dark:border-slate-800/80 transition ${
                                       editingGoodsIndex === index
                                         ? "bg-amber-500/15 border-l-4 border-l-amber-500 font-bold"
-                                        : "hover:bg-slate-100/50 dark:hover:bg-slate-800/50"
+                                        : "hover:bg-blue-50/40 dark:hover:bg-blue-950/20"
                                     }`}
                                   >
-                                    <td className="px-3 py-2 text-center font-mono text-slate-400">{index + 1}</td>
-                                    <td className="px-3 py-2 font-black text-blue-600 dark:text-blue-400">{row.goodsName}</td>
-                                    <td className="px-3 py-2 text-center font-semibold">{row.size}</td>
-                                    <td className="px-3 py-2 text-center font-semibold">{row.brand}</td>
-                                    <td className="px-3 py-2 text-center font-mono text-slate-400">{row.hsCode}</td>
-                                    <td className="px-3 py-2 text-center font-semibold">{row.origin}</td>
-                                    <td className="px-3 py-2 text-right font-mono font-bold">{Number(row.qtyNo || 0).toLocaleString()}</td>
-                                    <td className="px-3 py-2 text-center font-semibold">{translateOptionLabel(lang, row.qtyName)}</td>
-                                    <td className="px-3 py-2 text-right font-mono font-bold text-slate-600 dark:text-slate-300">{Number(row.coursePrice || row.price || 0).toFixed(2)}</td>
-                                    <td className="px-3 py-2 text-right font-mono font-black text-amber-600 dark:text-amber-400">{Number(row.totalAmount || row.amount || 0).toLocaleString()}</td>
-                                    <td className="px-3 py-2 text-center font-mono text-slate-400">{row.op || "*"} {row.exchangeRate}</td>
-                                    <td className="px-3 py-2 text-right font-mono font-black text-emerald-600 dark:text-emerald-400 bg-emerald-500/5">
+                                    <td className="px-3 py-2.5 text-center font-mono text-slate-400 font-bold">{index + 1}</td>
+                                    <td className="px-3 py-2.5 font-black text-slate-900 dark:text-slate-100 hover:text-blue-600 transition-colors">
+                                      <div className="flex items-center gap-1.5">
+                                        <Package className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+                                        <span>{row.goodsName}</span>
+                                      </div>
+                                    </td>
+                                    <td className="px-3 py-2.5 text-center">
+                                      <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-[11px] border border-slate-200/80 dark:border-slate-700/80">
+                                        {row.size || "-"}
+                                      </span>
+                                    </td>
+                                    <td className="px-3 py-2.5 text-center">
+                                      <span className="px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-bold text-[11px] border border-blue-200/70 dark:border-blue-800/70">
+                                        {row.brand || "-"}
+                                      </span>
+                                    </td>
+                                    <td className="px-3 py-2.5 text-center">
+                                      <span className="px-2 py-0.5 rounded-md bg-slate-50 dark:bg-slate-850 text-slate-600 dark:text-slate-400 font-mono font-bold text-[10.5px] border border-slate-200 dark:border-slate-700">
+                                        {row.hsCode || "-"}
+                                      </span>
+                                    </td>
+                                    <td className="px-3 py-2.5 text-center">
+                                      <span className="px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 font-bold text-[10.5px] border border-emerald-200/60 dark:border-emerald-800/60">
+                                        {row.origin || "-"}
+                                      </span>
+                                    </td>
+                                    <td className="px-3 py-2.5 text-right font-mono font-black text-slate-900 dark:text-slate-100">{Number(row.qtyNo || 0).toLocaleString()}</td>
+                                    <td className="px-3 py-2.5 text-center">
+                                      <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[10.5px] font-bold text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
+                                        {translateOptionLabel(lang, row.qtyName)}
+                                      </span>
+                                    </td>
+                                    <td className="px-3 py-2.5 text-right font-mono font-bold text-slate-700 dark:text-slate-300">{Number(row.coursePrice || row.price || 0).toFixed(2)}</td>
+                                    <td className="px-3 py-2.5 text-right font-mono font-black text-amber-600 dark:text-amber-400">{Number(row.totalAmount || row.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                    <td className="px-3 py-2.5 text-center font-mono text-slate-500 dark:text-slate-400">{row.op || "*"} {row.exchangeRate}</td>
+                                    <td className="px-3 py-2.5 text-right font-mono font-black text-emerald-700 dark:text-emerald-400 bg-emerald-500/10">
                                       {Number(row.finalAmount || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </td>
-                                    <td className="px-3 py-2 text-center">
-                                      <div className="flex items-center justify-center gap-1.5">
-                                        <button
-                                          type="button"
-                                          onClick={() => handleViewGoodsEntry(index)}
-                                          className="flex items-center gap-1 px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[9px] font-bold transition-colors"
-                                          title={t(lang, "common.view", "View")}
-                                        >
-                                          <Eye className="h-3 w-3" /> {t(lang, "common.view", "View")}
-                                        </button>
-                                        <button
-                                          type="button"
-                                          onClick={() => handleEditGoodsEntry(index)}
-                                          className="flex items-center gap-1 px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded text-[9px] font-bold transition-colors shadow-2xs border border-blue-200"
-                                          title={t(lang, "common.edit", "Edit")}
-                                        >
-                                          <Edit3 className="h-3 w-3" /> {t(lang, "common.edit", "Edit")}
-                                        </button>
-                                        <button
-                                          type="button"
-                                          onClick={() => setGoodsEntries(prev => prev.filter((_, idx) => idx !== index))}
-                                          className="flex items-center gap-1 px-2 py-1 bg-red-50 hover:bg-red-100 text-red-600 rounded text-[9px] font-bold transition-colors shadow-2xs border border-red-100"
-                                          title={t(lang, "common.delete", "Delete")}
-                                        >
-                                          <Trash2 className="h-3 w-3" /> {t(lang, "common.delete", "Delete")}
-                                        </button>
-                                      </div>
+                                    <td className="px-3 py-2.5 text-center relative" data-goods-action-menu>
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setActionMenuIndex(actionMenuIndex === index ? null : index);
+                                        }}
+                                        className="h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 inline-flex items-center justify-center shadow-2xs transition-all active:scale-95 cursor-pointer"
+                                        title={t(lang, "purchase.th_action", "Action")}
+                                      >
+                                        <MoreVertical className="h-4 w-4" />
+                                      </button>
+                                      {actionMenuIndex === index && (
+                                        <div className="absolute right-2 top-9 z-50 w-32 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl py-1 text-left animate-in fade-in zoom-in-95 duration-150">
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              setActionMenuIndex(null);
+                                              handleViewGoodsEntry(index);
+                                            }}
+                                            className="w-full flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                                          >
+                                            <Eye className="h-3.5 w-3.5 text-blue-500" />
+                                            <span>{t(lang, "common.view", "View")}</span>
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              setActionMenuIndex(null);
+                                              handleEditGoodsEntry(index);
+                                            }}
+                                            className="w-full flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                                          >
+                                            <Edit3 className="h-3.5 w-3.5 text-amber-500" />
+                                            <span>{t(lang, "common.edit", "Edit")}</span>
+                                          </button>
+                                          <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              setActionMenuIndex(null);
+                                              setGoodsEntries((prev) => prev.filter((_, idx) => idx !== index));
+                                            }}
+                                            className="w-full flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                                          >
+                                            <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                                            <span>{t(lang, "common.delete", "Delete")}</span>
+                                          </button>
+                                        </div>
+                                      )}
                                     </td>
                                   </tr>
                                 ))
                               )}
                             </tbody>
+                            {goodsEntries.length > 0 && (
+                              <tfoot>
+                                <tr className="bg-slate-100/90 dark:bg-slate-800/90 border-t-2 border-slate-300 dark:border-slate-700 font-bold text-xs">
+                                  <td colSpan={6} className="px-3 py-2.5 text-right uppercase tracking-wider text-slate-700 dark:text-slate-300 font-black">
+                                    {t(lang, "purchase.totals_label", "TOTALS:")}
+                                  </td>
+                                  <td className="px-3 py-2.5 text-right font-mono font-black text-slate-900 dark:text-slate-100">
+                                    {goodsEntries.reduce((sum, g) => sum + Number(g.qtyNo || 0), 0).toLocaleString()}
+                                  </td>
+                                  <td className="px-3 py-2.5 text-center text-[10px] text-slate-500 font-semibold">
+                                    {translateOptionLabel(lang, goodsEntries[0]?.qtyName || "ITEMS")}
+                                  </td>
+                                  <td className="px-3 py-2.5 text-right font-mono text-slate-400">-</td>
+                                  <td className="px-3 py-2.5 text-right font-mono font-black text-amber-700 dark:text-amber-400">
+                                    {goodsEntries.reduce((sum, g) => sum + Number(g.totalAmount || g.amount || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  </td>
+                                  <td className="px-3 py-2.5 text-center font-mono text-slate-400">-</td>
+                                  <td className="px-3 py-2.5 text-right font-mono font-black text-emerald-700 dark:text-emerald-400 bg-emerald-500/10">
+                                    {goodsEntries.reduce((sum, g) => sum + Number(g.finalAmount || (Number(g.totalAmount || 0) * Number(g.exchangeRate || 1))), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {form.secondaryCurrency || "AED"}
+                                  </td>
+                                  <td className="px-3 py-2.5"></td>
+                                </tr>
+                              </tfoot>
+                            )}
                           </table>
                         </div>
 
                         {/* Pagination Footer */}
                         <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400 pt-2">
-                          <span>{t(lang, "purchase.showing_entries", "Showing {from} to {to} of {total} entries").replace("{from}", "0").replace("{to}", String(goodsEntries.length)).replace("{total}", String(goodsEntries.length))}</span>
+                          <span>{t(lang, "purchase.showing_entries", "Showing {from} to {to} of {total} entries").replace("{from}", goodsEntries.length > 0 ? "1" : "0").replace("{to}", String(goodsEntries.length)).replace("{total}", String(goodsEntries.length))}</span>
                           <div className="flex items-center gap-2">
                             <select className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2 py-0.5 text-xs text-slate-700 dark:text-slate-300">
                               <option>10</option>
@@ -6467,120 +6563,120 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
 
       {activeTab === "report" && (
         <div className="w-full mt-4 animate-in fade-in duration-300">
-          <div className="mx-auto w-full max-w-[1180px] space-y-6 print:max-w-none">
+          <div className="w-full space-y-6 print:max-w-none">
 
             {/* Step 5 Top Header & Action Toolbar */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 md:p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-center gap-3.5">
-              <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-600">
-                <CheckCircle2 className="h-6 w-6" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[9px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">{t(lang, "purchase.step5_of5", "Step 5 of 5")}</span>
-                  <span className="text-[10px] font-semibold text-slate-400">{t(lang, "purchase.final_verification_label", "Final Verification")}</span>
+            <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-gradient-to-r from-white via-slate-50/50 to-white dark:from-slate-900 dark:via-slate-850 dark:to-slate-900 p-5 md:p-6 shadow-md backdrop-blur-md flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5">
+                <div className="p-3 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 rounded-xl text-emerald-600 dark:text-emerald-400 shadow-sm shadow-emerald-500/10">
+                  <CheckCircle2 className="h-6 w-6" />
                 </div>
-                <h2 className="text-xl font-black uppercase tracking-tight text-slate-900 mt-0.5">{t(lang, "purchase.final_verification_title", "Purchase Booking Final Verification")}</h2>
-                <p className="text-xs font-semibold text-slate-500 mt-0.5">
-                  {t(lang, "purchase.final_verification_subtitle", "Inspect the complete Purchase Order Voucher, account ledger routing, goods manifest, and audit details before saving or transferring.")}
-                </p>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9.5px] font-black uppercase tracking-widest text-emerald-700 bg-emerald-100/80 dark:bg-emerald-950/70 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800 shadow-2xs">{t(lang, "purchase.step5_of5", "Step 5 of 5")}</span>
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t(lang, "purchase.final_verification_label", "Final Verification")}</span>
+                  </div>
+                  <h2 className="text-xl md:text-2xl font-black uppercase tracking-tight text-slate-900 dark:text-slate-100 mt-1">{t(lang, "purchase.final_verification_title", "Purchase Booking Final Verification")}</h2>
+                  <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
+                    {t(lang, "purchase.final_verification_subtitle", "Inspect the complete Purchase Order Voucher, account ledger routing, goods manifest, and audit details before saving or transferring.")}
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setActiveTab("reports_tab")}
-                className="font-bold text-xs h-9 px-4 border-slate-200 hover:bg-slate-50 text-slate-700"
-              >
-                <ChevronLeft className="h-4 w-4 mr-1" /> {t(lang, "purchase.back_to_step4", "Back to Step 4")}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => handleOpenA4Report(true)}
-                className="font-bold text-xs h-9 px-4 border-slate-200 hover:bg-slate-50 text-slate-800"
-              >
-                <Printer className="h-4 w-4 mr-1.5 text-blue-600" /> {t(lang, "purchase.print_a4_voucher", "Print A4 Voucher")}
-              </Button>
-              <Button
-                type="button"
-                onClick={() => handleSavePurchaseOrder(false)}
-                disabled={savingOrder}
-                className="font-bold text-xs h-9 px-5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-all flex items-center gap-1.5"
-              >
-                {savingOrder ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                {savingOrder ? t(lang, "common.saving", "Saving...") : (savedOrderId ? t(lang, "purchase.update_purchase_order", "Update Purchase Order") : t(lang, "purchase.save_purchase_order", "Save Purchase Order"))}
-              </Button>
-              {!isTransferred && (
+              <div className="flex flex-wrap items-center gap-2.5">
                 <Button
                   type="button"
-                  onClick={handleTransfer}
-                  disabled={savingOrder}
-                  className="font-black text-xs h-9 px-5 bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all flex items-center gap-1.5 uppercase"
+                  variant="outline"
+                  onClick={() => setActiveTab("reports_tab")}
+                  className="font-bold text-xs h-10 px-4 rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-2xs transition-all active:scale-98"
                 >
-                  <ArrowRight className="h-4 w-4" /> {savedOrderId ? t(lang, "purchase.transfer_to_payment", "Transfer to Payment") : t(lang, "purchase.save_and_transfer_payment", "Save & Transfer to Payment")}
+                  <ChevronLeft className="h-4 w-4 mr-1" /> {t(lang, "purchase.back_to_step4", "Back to Step 4")}
                 </Button>
-              )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => handleOpenA4Report(true)}
+                  className="font-bold text-xs h-10 px-4 rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 shadow-2xs transition-all active:scale-98"
+                >
+                  <Printer className="h-4 w-4 mr-1.5 text-blue-600 dark:text-blue-400" /> {t(lang, "purchase.print_a4_voucher", "Print A4 Voucher")}
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => handleSavePurchaseOrder(false)}
+                  disabled={savingOrder}
+                  className="font-black text-xs h-10 px-6 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white shadow-[0_4px_12px_rgba(5,150,105,0.3)] hover:shadow-[0_6px_16px_rgba(5,150,105,0.4)] transition-all flex items-center gap-1.5 active:scale-98"
+                >
+                  {savingOrder ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                  {savingOrder ? t(lang, "common.saving", "Saving...") : (savedOrderId ? t(lang, "purchase.update_purchase_order", "Update Purchase Order") : t(lang, "purchase.save_purchase_order", "Save Purchase Order"))}
+                </Button>
+                {!isTransferred && (
+                  <Button
+                    type="button"
+                    onClick={handleTransfer}
+                    disabled={savingOrder}
+                    className="font-black text-xs h-10 px-7 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-700 text-white shadow-[0_4px_14px_rgba(37,99,235,0.35)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.45)] transition-all flex items-center gap-1.5 uppercase active:scale-98"
+                  >
+                    <ArrowRight className="h-4 w-4" /> {savedOrderId ? t(lang, "purchase.transfer_to_payment", "Transfer to Payment") : t(lang, "purchase.save_and_transfer_payment", "Save & Transfer to Payment")}
+                  </Button>
+                )}
+              </div>
             </div>
-          </div>
 
           {/* Transfer / Journal Status Callout Banner */}
           {isTransferred ? (
-            <div className="bg-emerald-50/90 border border-emerald-200 rounded-2xl p-5 shadow-xs space-y-3">
-              <div className="flex items-center gap-2 border-b border-emerald-200/80 pb-2.5">
-                <CheckCircle2 className="h-5 w-5 text-emerald-600 flex-shrink-0" />
-                <h4 className="text-xs font-black uppercase tracking-wider text-emerald-900">{t(lang, "purchase.transfer_completed_posted", "Transfer Completed & Posted")}</h4>
+            <div className="bg-emerald-50/90 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-5 shadow-xs space-y-3">
+              <div className="flex items-center gap-2 border-b border-emerald-200/80 dark:border-emerald-800/80 pb-2.5">
+                <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+                <h4 className="text-xs font-black uppercase tracking-wider text-emerald-900 dark:text-emerald-200">{t(lang, "purchase.transfer_completed_posted", "Transfer Completed & Posted")}</h4>
               </div>
-              <p className="text-xs text-emerald-800 font-medium leading-relaxed">
+              <p className="text-xs text-emerald-800 dark:text-emerald-300 font-medium leading-relaxed">
                 {t(lang, "purchase.transfer_completed_notice", "This Purchase Booking has been automatically transferred and posted to the business journal (Roznamcha). All associated ledger accounts and serial numbers have been logged.")}
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 text-xs font-mono bg-white/80 p-3.5 rounded-xl border border-emerald-200/60">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 text-xs font-mono bg-white/80 dark:bg-slate-900/80 p-3.5 rounded-xl border border-emerald-200/60 dark:border-emerald-800/60">
                 <div>
-                  <span className="block text-[9px] uppercase font-sans font-bold text-emerald-700/80">{t(lang, "purchase.general_serial_no", "General Serial No:")}</span>
-                  <span className="font-black text-emerald-950">{form.generalSerialNumber || `GSN-${new Date().getFullYear()}-0001`}</span>
+                  <span className="block text-[9px] uppercase font-sans font-bold text-emerald-700/80 dark:text-emerald-400">{t(lang, "purchase.general_serial_no", "General Serial No:")}</span>
+                  <span className="font-black text-emerald-950 dark:text-emerald-200">{form.generalSerialNumber || `GSN-${new Date().getFullYear()}-0001`}</span>
                 </div>
                 <div>
-                  <span className="block text-[9px] uppercase font-sans font-bold text-emerald-700/80">{t(lang, "purchase.roznamcha_journal_no", "Roznamcha (Journal) No:")}</span>
-                  <span className="font-black text-emerald-950">{form.journalNumber || `JRN-${new Date().getFullYear()}-8821`}</span>
+                  <span className="block text-[9px] uppercase font-sans font-bold text-emerald-700/80 dark:text-emerald-400">{t(lang, "purchase.roznamcha_journal_no", "Roznamcha (Journal) No:")}</span>
+                  <span className="font-black text-emerald-950 dark:text-emerald-200">{form.journalNumber || `JRN-${new Date().getFullYear()}-8821`}</span>
                 </div>
                 <div>
-                  <span className="block text-[9px] uppercase font-sans font-bold text-emerald-700/80">{t(lang, "purchase.branch_roznamcha", "Branch Roznamcha:")}</span>
-                  <span className="font-black text-emerald-950">{form.branchJournalNumber || `BR-JRN-402`}</span>
+                  <span className="block text-[9px] uppercase font-sans font-bold text-emerald-700/80 dark:text-emerald-400">{t(lang, "purchase.branch_roznamcha", "Branch Roznamcha:")}</span>
+                  <span className="font-black text-emerald-950 dark:text-emerald-200">{form.branchJournalNumber || `BR-JRN-402`}</span>
                 </div>
                 <div>
-                  <span className="block text-[9px] uppercase font-sans font-bold text-emerald-700/80">{t(lang, "purchase.cash_entry_serial", "Cash Entry Serial:")}</span>
-                  <span className="font-black text-emerald-950">{form.cashEntrySerial || `CE-9921`}</span>
+                  <span className="block text-[9px] uppercase font-sans font-bold text-emerald-700/80 dark:text-emerald-400">{t(lang, "purchase.cash_entry_serial", "Cash Entry Serial:")}</span>
+                  <span className="font-black text-emerald-950 dark:text-emerald-200">{form.cashEntrySerial || `CE-9921`}</span>
                 </div>
                 <div>
-                  <span className="block text-[9px] uppercase font-sans font-bold text-emerald-700/80">{t(lang, "purchase.business_entry_ref", "Business Entry Ref:")}</span>
-                  <span className="font-black text-emerald-950 uppercase">{form.businessEntryRef || `BUS-ENT-PURCHASE`}</span>
+                  <span className="block text-[9px] uppercase font-sans font-bold text-emerald-700/80 dark:text-emerald-400">{t(lang, "purchase.business_entry_ref", "Business Entry Ref:")}</span>
+                  <span className="font-black text-emerald-950 dark:text-emerald-200 uppercase">{form.businessEntryRef || `BUS-ENT-PURCHASE`}</span>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="bg-amber-50/80 border border-amber-200 rounded-2xl p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div className="bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-2xl p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <CheckCircle2 className="h-5 w-5 text-amber-600 flex-shrink-0" />
+                <CheckCircle2 className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0" />
                 <div>
-                  <h4 className="text-xs font-black uppercase tracking-wider text-amber-900">{t(lang, "purchase.pending_transfer_status_title", "Pending Transfer Status")}</h4>
-                  <p className="text-xs text-amber-800 font-medium mt-0.5">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-amber-900 dark:text-amber-200">{t(lang, "purchase.pending_transfer_status_title", "Pending Transfer Status")}</h4>
+                  <p className="text-xs text-amber-800 dark:text-amber-300 font-medium mt-0.5">
                     {t(lang, "purchase.booking_verified_ready", "This booking is verified and ready. Transfer to Payment will generate Roznamcha journal entries and update supplier/customer ledgers.")}
                   </p>
                 </div>
               </div>
-              <span className="px-3 py-1 bg-amber-200/60 text-amber-900 text-[10px] font-black uppercase rounded-full border border-amber-300 self-start md:self-auto">
+              <span className="px-3 py-1 bg-amber-200/60 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 text-[10px] font-black uppercase rounded-full border border-amber-300 dark:border-amber-700 self-start md:self-auto">
                 {t(lang, "purchase.pending_verification_badge", "Pending Verification")}
               </span>
             </div>
           )}
 
-          {/* 4-Panel Structured Report Grid */}
-          {renderGlobalInfoCards()}
+          {/* 4-Panel Structured Report Grid - Full Width 4 Columns in Step 5 */}
+          {renderGlobalInfoCards(true)}
 
           {/* Printable Voucher Document Container */}
-          <div className="mx-auto w-full max-w-6xl bg-white border border-slate-200 rounded-2xl p-6 md:p-8 shadow-sm space-y-6">
+          <div className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 md:p-8 shadow-sm space-y-6">
             {/* Voucher Header Banner */}
             <div className="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
               <div className="bg-slate-950 px-6 py-5 text-white flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -6596,90 +6692,90 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                   <span className="text-slate-400">{t(lang, "purchase.voucher_status_label", "Status:")}</span><span className={isTransferred ? "text-emerald-400 font-black" : "text-amber-400 font-black"}>{isTransferred ? t(lang, "purchase.status_transferred", "Transferred") : t(lang, "purchase.status_pending_transfer", "Pending Transfer")}</span>
                 </div>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-0 bg-slate-50 text-xs font-semibold text-slate-700 border-t border-slate-200">
-                <div className="p-3 border-r border-b md:border-b-0 border-slate-200"><span className="block text-[9px] font-black uppercase tracking-wider text-slate-400 mb-0.5">{t(lang, "purchase.voucher_country_label", "Country")}</span>{form.branchCountry || form.origin || "N/A"}</div>
-                <div className="p-3 border-r border-b md:border-b-0 border-slate-200"><span className="block text-[9px] font-black uppercase tracking-wider text-slate-400 mb-0.5">{t(lang, "purchase.voucher_branch_label", "Branch")}</span>{form.branchName || "N/A"}</div>
-                <div className="p-3 border-r border-slate-200"><span className="block text-[9px] font-black uppercase tracking-wider text-slate-400 mb-0.5">{t(lang, "purchase.voucher_branch_code_label", "Branch Code")}</span><span className="font-mono">{form.branchCode || "N/A"}</span></div>
-                <div className="p-3"><span className="block text-[9px] font-black uppercase tracking-wider text-slate-400 mb-0.5">{t(lang, "purchase.voucher_currency_label", "Currency")}</span><span className="font-black text-slate-900">{form.purchaseCurrency || form.currencyType || "N/A"}</span></div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-0 bg-slate-50 dark:bg-slate-800/80 text-xs font-semibold text-slate-700 dark:text-slate-200 border-t border-slate-200 dark:border-slate-800">
+                <div className="p-3 border-r border-b md:border-b-0 border-slate-200 dark:border-slate-800"><span className="block text-[9px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5">{t(lang, "purchase.voucher_country_label", "Country")}</span>{form.branchCountry || form.origin || "N/A"}</div>
+                <div className="p-3 border-r border-b md:border-b-0 border-slate-200 dark:border-slate-800"><span className="block text-[9px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5">{t(lang, "purchase.voucher_branch_label", "Branch")}</span>{form.branchName || "N/A"}</div>
+                <div className="p-3 border-r border-slate-200 dark:border-slate-800"><span className="block text-[9px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5">{t(lang, "purchase.voucher_branch_code_label", "Branch Code")}</span><span className="font-mono">{form.branchCode || "N/A"}</span></div>
+                <div className="p-3"><span className="block text-[9px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5">{t(lang, "purchase.voucher_currency_label", "Currency")}</span><span className="font-black text-slate-900 dark:text-slate-100">{form.purchaseCurrency || form.currencyType || "N/A"}</span></div>
               </div>
             </div>
 
             {/* Accounts Routing Cards (DR & CR) */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div className="border border-slate-200 bg-slate-50/70 p-4 rounded-xl space-y-2">
-                <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                  <h3 className="font-black uppercase text-slate-900 text-xs tracking-wider flex items-center gap-1.5">
-                    <ArrowDownLeft className="h-4 w-4 text-blue-600" /> {t(lang, "purchase.purchase_account_short_title", "Purchase Account")}
+              <div className="border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-850 p-4 rounded-xl space-y-2">
+                <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+                  <h3 className="font-black uppercase text-slate-900 dark:text-slate-100 text-xs tracking-wider flex items-center gap-1.5">
+                    <ArrowDownLeft className="h-4 w-4 text-blue-600 dark:text-blue-400" /> {t(lang, "purchase.purchase_account_short_title", "Purchase Account")}
                   </h3>
-                  <span className="bg-blue-100 text-blue-800 text-[9px] font-black px-2 py-0.5 rounded uppercase">{t(lang, "purchase.dr_debit_badge", "DR (Debit)")}</span>
+                  <span className="bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 text-[9px] font-black px-2 py-0.5 rounded uppercase">{t(lang, "purchase.dr_debit_badge", "DR (Debit)")}</span>
                 </div>
                 <div className="grid grid-cols-[100px_1fr] gap-1.5 text-xs">
-                  <span className="text-slate-500 font-semibold">{t(lang, "purchase.f_account_code", "Account Code")}:</span><span className="font-mono font-bold text-slate-900">{form.purchaseAccountNo || "N/A"}</span>
-                  <span className="text-slate-500 font-semibold">{t(lang, "purchase.f_account_name", "Account Name")}:</span><span className="font-bold text-slate-900">{localizeBiz(form, lang, "purchaseAccountName", form.purchaseAccountName || "N/A")}</span>
-                  <span className="text-slate-500 font-semibold">{t(lang, "purchase.f_company", "Company")}:</span><span className="font-bold text-slate-800">{form.purchaseCompanyName || "N/A"}</span>
+                  <span className="text-slate-500 dark:text-slate-400 font-semibold">{t(lang, "purchase.f_account_code", "Account Code")}:</span><span className="font-mono font-bold text-slate-900 dark:text-slate-100">{form.purchaseAccountNo || "N/A"}</span>
+                  <span className="text-slate-500 dark:text-slate-400 font-semibold">{t(lang, "purchase.f_account_name", "Account Name")}:</span><span className="font-bold text-slate-900 dark:text-slate-100">{localizeBiz(form, lang, "purchaseAccountName", form.purchaseAccountName || "N/A")}</span>
+                  <span className="text-slate-500 dark:text-slate-400 font-semibold">{t(lang, "purchase.f_company", "Company")}:</span><span className="font-bold text-slate-800 dark:text-slate-200">{form.purchaseCompanyName || "N/A"}</span>
                 </div>
               </div>
 
-              <div className="border border-slate-200 bg-slate-50/70 p-4 rounded-xl space-y-2">
-                <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                  <h3 className="font-black uppercase text-slate-900 text-xs tracking-wider flex items-center gap-1.5">
-                    <ArrowUpRight className="h-4 w-4 text-emerald-600" /> {t(lang, "purchase.sales_account_short_title", "Sales Account")}
+              <div className="border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-850 p-4 rounded-xl space-y-2">
+                <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+                  <h3 className="font-black uppercase text-slate-900 dark:text-slate-100 text-xs tracking-wider flex items-center gap-1.5">
+                    <ArrowUpRight className="h-4 w-4 text-emerald-600 dark:text-emerald-400" /> {t(lang, "purchase.sales_account_short_title", "Sales Account")}
                   </h3>
-                  <span className="bg-emerald-100 text-emerald-800 text-[9px] font-black px-2 py-0.5 rounded uppercase">{t(lang, "purchase.cr_credit_badge", "CR (Credit)")}</span>
+                  <span className="bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 text-[9px] font-black px-2 py-0.5 rounded uppercase">{t(lang, "purchase.cr_credit_badge", "CR (Credit)")}</span>
                 </div>
                 <div className="grid grid-cols-[100px_1fr] gap-1.5 text-xs">
-                  <span className="text-slate-500 font-semibold">{t(lang, "purchase.f_account_code", "Account Code")}:</span><span className="font-mono font-bold text-slate-900">{form.salesAccountNo || "N/A"}</span>
-                  <span className="text-slate-500 font-semibold">{t(lang, "purchase.f_account_name", "Account Name")}:</span><span className="font-bold text-slate-900">{localizeBiz(form, lang, "salesAccountName", form.salesAccountName || "N/A")}</span>
-                  <span className="text-slate-500 font-semibold">{t(lang, "purchase.f_company", "Company")}:</span><span className="font-bold text-slate-800">{form.salesCompanyName || "N/A"}</span>
+                  <span className="text-slate-500 dark:text-slate-400 font-semibold">{t(lang, "purchase.f_account_code", "Account Code")}:</span><span className="font-mono font-bold text-slate-900 dark:text-slate-100">{form.salesAccountNo || "N/A"}</span>
+                  <span className="text-slate-500 dark:text-slate-400 font-semibold">{t(lang, "purchase.f_account_name", "Account Name")}:</span><span className="font-bold text-slate-900 dark:text-slate-100">{localizeBiz(form, lang, "salesAccountName", form.salesAccountName || "N/A")}</span>
+                  <span className="text-slate-500 dark:text-slate-400 font-semibold">{t(lang, "purchase.f_company", "Company")}:</span><span className="font-bold text-slate-800 dark:text-slate-200">{form.salesCompanyName || "N/A"}</span>
                 </div>
               </div>
             </div>
 
             {/* Goods Details Table */}
             <div className="space-y-3">
-              <h3 className="font-black text-xs border-b border-slate-200 pb-2.5 uppercase text-slate-900 flex items-center gap-2 tracking-wider">
-                <Package className="h-4 w-4 text-blue-600" /> {t(lang, "purchase.goods_overview_manifest", "Goods Overview Manifest")}
+              <h3 className="font-black text-xs border-b border-slate-200 dark:border-slate-800 pb-2.5 uppercase text-slate-900 dark:text-slate-100 flex items-center gap-2 tracking-wider">
+                <Package className="h-4 w-4 text-blue-600 dark:text-blue-400" /> {t(lang, "purchase.goods_overview_manifest", "Goods Overview Manifest")}
               </h3>
-              <div className="overflow-x-auto rounded-xl border border-slate-200">
+              <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
                 <table className="w-full text-xs text-left border-collapse">
-                  <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase text-[10px] tracking-wider">
+                  <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 uppercase text-[10px] tracking-wider">
                     <tr>
-                      <Th className="p-2.5 font-bold border-r border-slate-200">{t(lang, "purchase.th_goods", "Goods")}</Th>
-                      <Th className="p-2.5 font-bold border-r border-slate-200">{t(lang, "purchase.th_brand", "Brand")}</Th>
-                      <Th className="p-2.5 font-bold border-r border-slate-200 text-center">{t(lang, "purchase.th_origin", "Origin")}</Th>
-                      <Th className="p-2.5 text-right font-bold border-r border-slate-200">{t(lang, "purchase.th_quantity", "Quantity")}</Th>
-                      <Th className="p-2.5 text-right font-bold border-r border-slate-200">{t(lang, "purchase.th_gross_wt", "Gross Wt")}</Th>
-                      <Th className="p-2.5 text-right font-bold border-r border-slate-200">{t(lang, "purchase.th_net_wt", "Net Wt")}</Th>
-                      <Th className="p-2.5 text-right font-bold border-r border-slate-200">{t(lang, "purchase.th_rate", "Rate")}</Th>
-                      <Th className="p-2.5 text-right font-bold border-r border-slate-200">{t(lang, "purchase.th_amount_currency", "Amount ({currency})").replace("{currency}", form.currencyType || "USD")}</Th>
-                      <Th className="p-2.5 text-right font-bold text-emerald-800 bg-emerald-50/50">{t(lang, "purchase.th_final_currency", "Final ({currency})").replace("{currency}", form.secondaryCurrency || "PKR")}</Th>
+                      <Th className="p-2.5 font-bold border-r border-slate-200 dark:border-slate-700">{t(lang, "purchase.th_goods", "Goods")}</Th>
+                      <Th className="p-2.5 font-bold border-r border-slate-200 dark:border-slate-700">{t(lang, "purchase.th_brand", "Brand")}</Th>
+                      <Th className="p-2.5 font-bold border-r border-slate-200 dark:border-slate-700 text-center">{t(lang, "purchase.th_origin", "Origin")}</Th>
+                      <Th className="p-2.5 text-right font-bold border-r border-slate-200 dark:border-slate-700">{t(lang, "purchase.th_quantity", "Quantity")}</Th>
+                      <Th className="p-2.5 text-right font-bold border-r border-slate-200 dark:border-slate-700">{t(lang, "purchase.th_gross_wt", "Gross Wt")}</Th>
+                      <Th className="p-2.5 text-right font-bold border-r border-slate-200 dark:border-slate-700">{t(lang, "purchase.th_net_wt", "Net Wt")}</Th>
+                      <Th className="p-2.5 text-right font-bold border-r border-slate-200 dark:border-slate-700">{t(lang, "purchase.th_rate", "Rate")}</Th>
+                      <Th className="p-2.5 text-right font-bold border-r border-slate-200 dark:border-slate-700">{t(lang, "purchase.th_amount_currency", "Amount ({currency})").replace("{currency}", form.currencyType || "USD")}</Th>
+                      <Th className="p-2.5 text-right font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50/50 dark:bg-emerald-950/40">{t(lang, "purchase.th_final_currency", "Final ({currency})").replace("{currency}", form.secondaryCurrency || "PKR")}</Th>
                     </tr>
                   </thead>
                   <tbody>
                     {goodsEntries.map((row, idx) => (
-                      <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50/60 transition-colors">
-                        <td className="p-2.5 font-bold text-slate-900 border-r border-slate-200">{row.goodsName}</td>
-                        <td className="p-2.5 border-r border-slate-200 text-slate-700">{row.brand}</td>
-                        <td className="p-2.5 border-r border-slate-200 text-center text-slate-700">{row.origin}</td>
-                        <td className="p-2.5 text-right border-r border-slate-200 font-mono font-bold text-slate-900">{Number(row.qtyNo || 0).toLocaleString()} {translateOptionLabel(lang, row.qtyName) || ""}</td>
-                        <td className="p-2.5 text-right border-r border-slate-200 font-mono text-slate-700">{Number(row.grossWeight || (Number(row.qtyNo || 0) * Number(row.qtyKgs || 0)) || 0).toFixed(2)}</td>
-                        <td className="p-2.5 text-right border-r border-slate-200 font-mono font-bold text-slate-800">{Number(row.netWeight || (Number(row.qtyNo || 0) * (Number(row.qtyKgs || 0) - Number(row.emptyKgs || 0))) || 0).toFixed(2)}</td>
-                        <td className="p-2.5 text-right border-r border-slate-200 font-mono text-slate-700">{Number(row.coursePrice || row.price || 0).toFixed(2)}</td>
-                        <td className="p-2.5 text-right border-r border-slate-200 font-mono font-bold text-slate-800">{Number(row.totalAmount || row.amount || 0).toLocaleString()}</td>
-                        <td className="p-2.5 text-right font-mono font-black text-emerald-700 bg-emerald-50/40">
+                      <tr key={idx} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50/60 dark:hover:bg-slate-800/50 transition-colors">
+                        <td className="p-2.5 font-bold text-slate-900 dark:text-slate-100 border-r border-slate-200 dark:border-slate-800">{row.goodsName}</td>
+                        <td className="p-2.5 border-r border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300">{row.brand}</td>
+                        <td className="p-2.5 border-r border-slate-200 dark:border-slate-800 text-center text-slate-700 dark:text-slate-300">{row.origin}</td>
+                        <td className="p-2.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-slate-900 dark:text-slate-100">{Number(row.qtyNo || 0).toLocaleString()} {translateOptionLabel(lang, row.qtyName) || ""}</td>
+                        <td className="p-2.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono text-slate-700 dark:text-slate-300">{Number(row.grossWeight || (Number(row.qtyNo || 0) * Number(row.qtyKgs || 0)) || 0).toFixed(2)}</td>
+                        <td className="p-2.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-slate-800 dark:text-slate-200">{Number(row.netWeight || (Number(row.qtyNo || 0) * (Number(row.qtyKgs || 0) - Number(row.emptyKgs || 0))) || 0).toFixed(2)}</td>
+                        <td className="p-2.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono text-slate-700 dark:text-slate-300">{Number(row.coursePrice || row.price || 0).toFixed(2)}</td>
+                        <td className="p-2.5 text-right border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-slate-800 dark:text-slate-200">{Number(row.totalAmount || row.amount || 0).toLocaleString()}</td>
+                        <td className="p-2.5 text-right font-mono font-black text-emerald-700 dark:text-emerald-400 bg-emerald-50/40 dark:bg-emerald-950/30">
                           {Number(row.finalAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
                       </tr>
                     ))}
                     {goodsEntries.length > 0 && (
-                      <tr className="bg-slate-50 font-bold border-t-2 border-slate-300 text-xs">
-                        <td colSpan={3} className="p-2.5 text-right border-r border-slate-200 font-black uppercase text-slate-700">{t(lang, "purchase.totals_label", "TOTALS:")}</td>
-                        <td className="p-2.5 text-right border-r border-slate-200 font-mono font-black">{Number(reportTotals.totalQty || 0).toLocaleString()} {goodsEntries[0]?.qtyName || ""}</td>
-                        <td className="p-2.5 text-right border-r border-slate-200 font-mono">{Number(reportTotals.totalGross || 0).toFixed(2)}</td>
-                        <td className="p-2.5 text-right border-r border-slate-200 font-mono font-black">{Number(reportTotals.totalNet || 0).toFixed(2)}</td>
-                        <td className="p-2.5 text-right border-r border-slate-200 bg-slate-100 text-slate-400">-</td>
-                        <td className="p-2.5 text-right border-r border-slate-200 font-mono font-black text-slate-900">{Number(reportTotals.grandPrimaryFinal || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                        <td className="p-2.5 text-right font-mono font-black text-emerald-800 bg-emerald-100/70">{Number(reportTotals.grandFinal || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                      <tr className="bg-slate-50 dark:bg-slate-800/80 font-bold border-t-2 border-slate-300 dark:border-slate-700 text-xs">
+                        <td colSpan={3} className="p-2.5 text-right border-r border-slate-200 dark:border-slate-700 font-black uppercase text-slate-700 dark:text-slate-300">{t(lang, "purchase.totals_label", "TOTALS:")}</td>
+                        <td className="p-2.5 text-right border-r border-slate-200 dark:border-slate-700 font-mono font-black text-slate-900 dark:text-slate-100">{Number(reportTotals.totalQty || 0).toLocaleString()} {goodsEntries[0]?.qtyName || ""}</td>
+                        <td className="p-2.5 text-right border-r border-slate-200 dark:border-slate-700 font-mono text-slate-800 dark:text-slate-200">{Number(reportTotals.totalGross || 0).toFixed(2)}</td>
+                        <td className="p-2.5 text-right border-r border-slate-200 dark:border-slate-700 font-mono font-black text-slate-900 dark:text-slate-100">{Number(reportTotals.totalNet || 0).toFixed(2)}</td>
+                        <td className="p-2.5 text-right border-r border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-400">-</td>
+                        <td className="p-2.5 text-right border-r border-slate-200 dark:border-slate-700 font-mono font-black text-slate-900 dark:text-slate-100">{Number(reportTotals.grandPrimaryFinal || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                        <td className="p-2.5 text-right font-mono font-black text-emerald-800 dark:text-emerald-300 bg-emerald-100/70 dark:bg-emerald-900/50">{Number(reportTotals.grandFinal || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                       </tr>
                     )}
                   </tbody>
@@ -6688,169 +6784,169 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
             </div>
 
             {/* Ledger Routing Details Card */}
-            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs space-y-3">
-              <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider border-b border-slate-100 pb-2">{t(lang, "purchase.ledger_routing_post_details", "Ledger Routing & Post Details")}</h4>
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xs space-y-3">
+              <h4 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-2">{t(lang, "purchase.ledger_routing_post_details", "Ledger Routing & Post Details")}</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/80 space-y-1.5">
+                <div className="bg-slate-50 dark:bg-slate-800/80 p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-700/80 space-y-1.5">
                   <div className="flex justify-between items-center mb-1">
-                    <span className="font-bold text-blue-700 uppercase text-[9px] bg-blue-100 px-2 py-0.5 rounded">{t(lang, "purchase.purchase_account_dr_badge", "Purchase Account (DR)")}</span>
-                    <span className="text-slate-600 font-mono font-bold">{form.purchaseAccountNo || "N/A"}</span>
+                    <span className="font-bold text-blue-700 dark:text-blue-300 uppercase text-[9px] bg-blue-100 dark:bg-blue-900/60 px-2 py-0.5 rounded">{t(lang, "purchase.purchase_account_dr_badge", "Purchase Account (DR)")}</span>
+                    <span className="text-slate-600 dark:text-slate-400 font-mono font-bold">{form.purchaseAccountNo || "N/A"}</span>
                   </div>
-                  <div className="font-bold text-slate-900 text-xs truncate" title={form.purchaseAccountName}>{localizeBiz(form, lang, "purchaseAccountName", form.purchaseAccountName || "N/A")}</div>
-                  <div className="flex justify-between text-[10px] text-slate-500">
-                    <span>{t(lang, "purchase.branch_colon_label", "Branch:")} <strong className="text-slate-700">{form.purchaseAccountBranch || "-"}</strong></span>
-                    <span>{t(lang, "purchase.currency_colon_label", "Currency:")} <strong className="text-slate-700">{form.purchaseCurrency || form.purchaseAccountCurrency || "-"}</strong></span>
+                  <div className="font-bold text-slate-900 dark:text-slate-100 text-xs truncate" title={form.purchaseAccountName}>{localizeBiz(form, lang, "purchaseAccountName", form.purchaseAccountName || "N/A")}</div>
+                  <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400">
+                    <span>{t(lang, "purchase.branch_colon_label", "Branch:")} <strong className="text-slate-700 dark:text-slate-300">{form.purchaseAccountBranch || "-"}</strong></span>
+                    <span>{t(lang, "purchase.currency_colon_label", "Currency:")} <strong className="text-slate-700 dark:text-slate-300">{form.purchaseCurrency || form.purchaseAccountCurrency || "-"}</strong></span>
                   </div>
                 </div>
 
-                <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/80 space-y-1.5">
+                <div className="bg-slate-50 dark:bg-slate-800/80 p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-700/80 space-y-1.5">
                   <div className="flex justify-between items-center mb-1">
-                    <span className="font-bold text-emerald-700 uppercase text-[9px] bg-emerald-100 px-2 py-0.5 rounded">{t(lang, "purchase.sales_account_cr_badge", "Sales Account (CR)")}</span>
-                    <span className="text-slate-600 font-mono font-bold">{form.salesAccountNo || "N/A"}</span>
+                    <span className="font-bold text-emerald-700 dark:text-emerald-300 uppercase text-[9px] bg-emerald-100 dark:bg-emerald-900/60 px-2 py-0.5 rounded">{t(lang, "purchase.sales_account_cr_badge", "Sales Account (CR)")}</span>
+                    <span className="text-slate-600 dark:text-slate-400 font-mono font-bold">{form.salesAccountNo || "N/A"}</span>
                   </div>
-                  <div className="font-bold text-slate-900 text-xs truncate" title={form.salesAccountName}>{localizeBiz(form, lang, "salesAccountName", form.salesAccountName || "N/A")}</div>
-                  <div className="flex justify-between text-[10px] text-slate-500">
-                    <span>{t(lang, "purchase.branch_colon_label", "Branch:")} <strong className="text-slate-700">{form.salesAccountBranch || "-"}</strong></span>
-                    <span>{t(lang, "purchase.currency_colon_label", "Currency:")} <strong className="text-slate-700">{form.salesAccountCurrency || "-"}</strong></span>
+                  <div className="font-bold text-slate-900 dark:text-slate-100 text-xs truncate" title={form.salesAccountName}>{localizeBiz(form, lang, "salesAccountName", form.salesAccountName || "N/A")}</div>
+                  <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400">
+                    <span>{t(lang, "purchase.branch_colon_label", "Branch:")} <strong className="text-slate-700 dark:text-slate-300">{form.salesAccountBranch || "-"}</strong></span>
+                    <span>{t(lang, "purchase.currency_colon_label", "Currency:")} <strong className="text-slate-700 dark:text-slate-300">{form.salesAccountCurrency || "-"}</strong></span>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* User, Branch & 4-Tier Serial Hierarchy Audit Card */}
-            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs space-y-3">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                  <ShieldCheck className="h-4 w-4 text-blue-600" /> {t(lang, "purchase.user_audit_serial_hierarchy", "User Audit & Branch 4-Tier Serial Hierarchy")}
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xs space-y-3">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                <h4 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4 text-blue-600 dark:text-blue-400" /> {t(lang, "purchase.user_audit_serial_hierarchy", "User Audit & Branch 4-Tier Serial Hierarchy")}
                 </h4>
-                <span className="text-[9px] font-mono font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                <span className="text-[9px] font-mono font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">
                   {t(lang, "purchase.system_audit_log", "SYSTEM AUDIT LOG")}
                 </span>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/70">
-                  <span className="block text-[9px] font-black uppercase text-slate-400 mb-0.5">{t(lang, "purchase.created_by_user_id", "Created By User ID")}</span>
-                  <span className="font-mono font-bold text-slate-900">{form.userId || session?.userId || "USR-1001"}</span>
+                <div className="bg-slate-50 dark:bg-slate-800/70 p-3 rounded-xl border border-slate-200/70 dark:border-slate-700/70">
+                  <span className="block text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 mb-0.5">{t(lang, "purchase.created_by_user_id", "Created By User ID")}</span>
+                  <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{form.userId || session?.userId || "USR-1001"}</span>
                 </div>
-                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/70">
-                  <span className="block text-[9px] font-black uppercase text-slate-400 mb-0.5">{t(lang, "purchase.user_name_label", "User Name")}</span>
-                  <span className="font-bold text-slate-900 uppercase">{form.userName || session?.fullName || t(lang, "purchase.pmw_super_admin", "Super Admin")}</span>
+                <div className="bg-slate-50 dark:bg-slate-800/70 p-3 rounded-xl border border-slate-200/70 dark:border-slate-700/70">
+                  <span className="block text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 mb-0.5">{t(lang, "purchase.user_name_label", "User Name")}</span>
+                  <span className="font-bold text-slate-900 dark:text-slate-100 uppercase">{form.userName || session?.fullName || t(lang, "purchase.pmw_super_admin", "Super Admin")}</span>
                 </div>
-                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/70">
-                  <span className="block text-[9px] font-black uppercase text-slate-400 mb-0.5">{t(lang, "purchase.working_branch_label", "Working Branch")}</span>
-                  <span className="font-bold text-slate-900 truncate block">{form.branchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}</span>
+                <div className="bg-slate-50 dark:bg-slate-800/70 p-3 rounded-xl border border-slate-200/70 dark:border-slate-700/70">
+                  <span className="block text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 mb-0.5">{t(lang, "purchase.working_branch_label", "Working Branch")}</span>
+                  <span className="font-bold text-slate-900 dark:text-slate-100 truncate block">{form.branchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}</span>
                 </div>
-                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/70">
-                  <span className="block text-[9px] font-black uppercase text-slate-400 mb-0.5">{t(lang, "purchase.verification_date_label", "Verification Date")}</span>
-                  <span className="font-bold text-slate-900 font-mono">{form.purchaseDate || new Date().toISOString().slice(0, 10)}</span>
+                <div className="bg-slate-50 dark:bg-slate-800/70 p-3 rounded-xl border border-slate-200/70 dark:border-slate-700/70">
+                  <span className="block text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 mb-0.5">{t(lang, "purchase.verification_date_label", "Verification Date")}</span>
+                  <span className="font-bold text-slate-900 dark:text-slate-100 font-mono">{form.purchaseDate || new Date().toISOString().slice(0, 10)}</span>
                 </div>
               </div>
 
               {/* 4-Tier Booking Serial Numbers */}
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 pt-1 text-xs">
-                <div className="bg-blue-50/60 p-3 rounded-xl border border-blue-100">
-                  <span className="block text-[9px] font-black uppercase text-blue-700 mb-0.5">{t(lang, "purchase.tier1_super_admin_serial", "1. Super Admin Serial")}</span>
-                  <span className="font-mono font-black text-blue-950">{form.superAdminSerialNumber || `SA-${new Date().getFullYear()}-0082`}</span>
+                <div className="bg-blue-50/60 dark:bg-blue-950/40 p-3 rounded-xl border border-blue-100 dark:border-blue-800">
+                  <span className="block text-[9px] font-black uppercase text-blue-700 dark:text-blue-300 mb-0.5">{t(lang, "purchase.tier1_super_admin_serial", "1. Super Admin Serial")}</span>
+                  <span className="font-mono font-black text-blue-950 dark:text-blue-200">{form.superAdminSerialNumber || `SA-${new Date().getFullYear()}-0082`}</span>
                 </div>
-                <div className="bg-indigo-50/60 p-3 rounded-xl border border-indigo-100">
-                  <span className="block text-[9px] font-black uppercase text-indigo-700 mb-0.5">{t(lang, "purchase.tier2_country_serial", "2. Country Serial")}</span>
-                  <span className="font-mono font-black text-indigo-950">{form.countryTransactionSerialNumber || `UAE-${new Date().getFullYear()}-0042`}</span>
+                <div className="bg-indigo-50/60 dark:bg-indigo-950/40 p-3 rounded-xl border border-indigo-100 dark:border-indigo-800">
+                  <span className="block text-[9px] font-black uppercase text-indigo-700 dark:text-indigo-300 mb-0.5">{t(lang, "purchase.tier2_country_serial", "2. Country Serial")}</span>
+                  <span className="font-mono font-black text-indigo-950 dark:text-indigo-200">{form.countryTransactionSerialNumber || `UAE-${new Date().getFullYear()}-0042`}</span>
                 </div>
-                <div className="bg-sky-50/60 p-3 rounded-xl border border-sky-100">
-                  <span className="block text-[9px] font-black uppercase text-sky-700 mb-0.5">{t(lang, "purchase.tier3_branch_serial", "3. Branch Serial")}</span>
-                  <span className="font-mono font-black text-sky-950">{form.branchTransactionSerialNumber || `ARE-MAIN-${new Date().getFullYear()}-0021`}</span>
+                <div className="bg-sky-50/60 dark:bg-sky-950/40 p-3 rounded-xl border border-sky-100 dark:border-sky-800">
+                  <span className="block text-[9px] font-black uppercase text-sky-700 dark:text-sky-300 mb-0.5">{t(lang, "purchase.tier3_branch_serial", "3. Branch Serial")}</span>
+                  <span className="font-mono font-black text-sky-950 dark:text-sky-200">{form.branchTransactionSerialNumber || `ARE-MAIN-${new Date().getFullYear()}-0021`}</span>
                 </div>
-                <div className="bg-slate-100/80 p-3 rounded-xl border border-slate-200">
-                  <span className="block text-[9px] font-black uppercase text-slate-600 mb-0.5">{t(lang, "purchase.tier4_city_entry_serial", "4. City / Entry Serial")}</span>
-                  <span className="font-mono font-black text-slate-900">{form.cashEntrySerial || form.journalNumber || `CB-${new Date().getFullYear()}-00421`}</span>
+                <div className="bg-slate-100/80 dark:bg-slate-800/80 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+                  <span className="block text-[9px] font-black uppercase text-slate-600 dark:text-slate-400 mb-0.5">{t(lang, "purchase.tier4_city_entry_serial", "4. City / Entry Serial")}</span>
+                  <span className="font-mono font-black text-slate-900 dark:text-slate-100">{form.cashEntrySerial || form.journalNumber || `CB-${new Date().getFullYear()}-00421`}</span>
                 </div>
               </div>
             </div>
 
             {/* Transfer Destination & Roznamcha Debit / Credit Serials */}
-            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs space-y-3">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                  <ArrowRightLeft className="h-4 w-4 text-emerald-600" /> {t(lang, "purchase.transfer_destination_roznamcha_serials", "Transfer Destination & Business Roznamcha Serials")}
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xs space-y-3">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                <h4 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                  <ArrowRightLeft className="h-4 w-4 text-emerald-600 dark:text-emerald-400" /> {t(lang, "purchase.transfer_destination_roznamcha_serials", "Transfer Destination & Business Roznamcha Serials")}
                 </h4>
-                <span className={`text-[9px] font-mono font-black px-2 py-0.5 rounded uppercase border ${isTransferred ? "bg-emerald-100 text-emerald-800 border-emerald-300" : "bg-amber-100 text-amber-900 border-amber-300"}`}>
+                <span className={`text-[9px] font-mono font-black px-2 py-0.5 rounded uppercase border ${isTransferred ? "bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 border-emerald-300 dark:border-emerald-700" : "bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 border-amber-300 dark:border-amber-700"}`}>
                   {isTransferred ? t(lang, "purchase.transfer_locked_completed", "TRANSFER LOCKED & COMPLETED") : t(lang, "purchase.pending_transfer_badge", "PENDING TRANSFER")}
                 </span>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
                 {/* Transfer Destination & Status */}
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
-                  <span className="block text-[9.5px] font-black uppercase text-slate-500 tracking-wider">{t(lang, "purchase.transfer_destination_module", "Transfer Destination Module")}</span>
-                  <div className="font-bold text-slate-900 text-xs">
+                <div className="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2">
+                  <span className="block text-[9.5px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">{t(lang, "purchase.transfer_destination_module", "Transfer Destination Module")}</span>
+                  <div className="font-bold text-slate-900 dark:text-slate-100 text-xs">
                     {isTransferred ? t(lang, "purchase.transfer_destination_completed_text", "Purchase Advance Payment Module & Business Roznamcha") : t(lang, "purchase.transfer_destination_ready_text", "Ready for Transfer to Payment Records")}
                   </div>
-                  <div className="text-[10px] text-slate-500 pt-1 border-t border-slate-200/60">
+                  <div className="text-[10px] text-slate-500 dark:text-slate-400 pt-1 border-t border-slate-200/60 dark:border-slate-700/60">
                     <span className="block font-semibold">{t(lang, "purchase.target_route_label", "Target Route:")}</span>
-                    <code className="font-mono text-blue-700 bg-blue-50 px-1 py-0.5 rounded font-bold">{buildPurchaseBookingTransferUrl(form.paymentType)}</code>
+                    <code className="font-mono text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-1 py-0.5 rounded font-bold">{buildPurchaseBookingTransferUrl(form.paymentType)}</code>
                   </div>
-                  <div className="text-[10px] text-slate-500">
+                  <div className="text-[10px] text-slate-500 dark:text-slate-400">
                     <span>{t(lang, "purchase.transfer_timestamp_label", "Transfer Timestamp:")} </span>
-                    <strong className="font-mono text-slate-800">{form.transferTimestamp || (isTransferred ? new Date().toLocaleString() : t(lang, "purchase.not_transferred_yet", "Not Transferred Yet"))}</strong>
+                    <strong className="font-mono text-slate-800 dark:text-slate-200">{form.transferTimestamp || (isTransferred ? new Date().toLocaleString() : t(lang, "purchase.not_transferred_yet", "Not Transferred Yet"))}</strong>
                   </div>
                 </div>
 
                 {/* Roznamcha Debit 4 Serials */}
-                <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-200/80 space-y-2">
-                  <div className="flex justify-between items-center border-b border-blue-200/60 pb-1.5">
-                    <span className="font-black text-blue-800 uppercase text-[9.5px] tracking-wider">{t(lang, "purchase.debit_roznamcha_serials_dr", "Debit Roznamcha Serials (DR)")}</span>
+                <div className="bg-blue-50/50 dark:bg-blue-950/30 p-4 rounded-xl border border-blue-200/80 dark:border-blue-800/80 space-y-2">
+                  <div className="flex justify-between items-center border-b border-blue-200/60 dark:border-blue-800/60 pb-1.5">
+                    <span className="font-black text-blue-800 dark:text-blue-200 uppercase text-[9.5px] tracking-wider">{t(lang, "purchase.debit_roznamcha_serials_dr", "Debit Roznamcha Serials (DR)")}</span>
                     <span className="bg-blue-600 text-white text-[8.5px] font-black px-1.5 py-0.2 rounded">DR</span>
                   </div>
                   <div className="grid grid-cols-2 gap-1.5 text-[10px] font-mono">
-                    <div><span className="block font-sans font-bold text-slate-500 text-[8.5px]">{t(lang, "purchase.sa_serial_label", "SA SERIAL:")}</span><strong className="text-slate-900">{form.purchaseDrSaSerial || `DR-SA-0082`}</strong></div>
-                    <div><span className="block font-sans font-bold text-slate-500 text-[8.5px]">{t(lang, "purchase.country_serial_label", "COUNTRY SERIAL:")}</span><strong className="text-slate-900">{form.purchaseDrCountrySerial || `DR-UAE-0042`}</strong></div>
-                    <div><span className="block font-sans font-bold text-slate-500 text-[8.5px]">{t(lang, "purchase.branch_serial_label", "BRANCH SERIAL:")}</span><strong className="text-slate-900">{form.purchaseDrBranchSerial || `DR-MAIN-0021`}</strong></div>
-                    <div><span className="block font-sans font-bold text-slate-500 text-[8.5px]">{t(lang, "purchase.city_serial_label", "CITY SERIAL:")}</span><strong className="text-slate-900">{form.purchaseDrCitySerial || `DR-CB-00421`}</strong></div>
+                    <div><span className="block font-sans font-bold text-slate-500 dark:text-slate-400 text-[8.5px]">{t(lang, "purchase.sa_serial_label", "SA SERIAL:")}</span><strong className="text-slate-900 dark:text-slate-100">{form.purchaseDrSaSerial || `DR-SA-0082`}</strong></div>
+                    <div><span className="block font-sans font-bold text-slate-500 dark:text-slate-400 text-[8.5px]">{t(lang, "purchase.country_serial_label", "COUNTRY SERIAL:")}</span><strong className="text-slate-900 dark:text-slate-100">{form.purchaseDrCountrySerial || `DR-UAE-0042`}</strong></div>
+                    <div><span className="block font-sans font-bold text-slate-500 dark:text-slate-400 text-[8.5px]">{t(lang, "purchase.branch_serial_label", "BRANCH SERIAL:")}</span><strong className="text-slate-900 dark:text-slate-100">{form.purchaseDrBranchSerial || `DR-MAIN-0021`}</strong></div>
+                    <div><span className="block font-sans font-bold text-slate-500 dark:text-slate-400 text-[8.5px]">{t(lang, "purchase.city_serial_label", "CITY SERIAL:")}</span><strong className="text-slate-900 dark:text-slate-100">{form.purchaseDrCitySerial || `DR-CB-00421`}</strong></div>
                   </div>
                 </div>
 
                 {/* Roznamcha Credit 4 Serials */}
-                <div className="bg-emerald-50/50 p-4 rounded-xl border border-emerald-200/80 space-y-2">
-                  <div className="flex justify-between items-center border-b border-emerald-200/60 pb-1.5">
-                    <span className="font-black text-emerald-800 uppercase text-[9.5px] tracking-wider">{t(lang, "purchase.credit_roznamcha_serials_cr", "Credit Roznamcha Serials (CR)")}</span>
+                <div className="bg-emerald-50/50 dark:bg-emerald-950/30 p-4 rounded-xl border border-emerald-200/80 dark:border-emerald-800/80 space-y-2">
+                  <div className="flex justify-between items-center border-b border-emerald-200/60 dark:border-emerald-800/60 pb-1.5">
+                    <span className="font-black text-emerald-800 dark:text-emerald-200 uppercase text-[9.5px] tracking-wider">{t(lang, "purchase.credit_roznamcha_serials_cr", "Credit Roznamcha Serials (CR)")}</span>
                     <span className="bg-emerald-600 text-white text-[8.5px] font-black px-1.5 py-0.2 rounded">CR</span>
                   </div>
                   <div className="grid grid-cols-2 gap-1.5 text-[10px] font-mono">
-                    <div><span className="block font-sans font-bold text-slate-500 text-[8.5px]">{t(lang, "purchase.sa_serial_label", "SA SERIAL:")}</span><strong className="text-slate-900">{form.salesCrSaSerial || `CR-SA-0082`}</strong></div>
-                    <div><span className="block font-sans font-bold text-slate-500 text-[8.5px]">{t(lang, "purchase.country_serial_label", "COUNTRY SERIAL:")}</span><strong className="text-slate-900">{form.salesCrCountrySerial || `CR-UAE-0042`}</strong></div>
-                    <div><span className="block font-sans font-bold text-slate-500 text-[8.5px]">{t(lang, "purchase.branch_serial_label", "BRANCH SERIAL:")}</span><strong className="text-slate-900">{form.salesCrBranchSerial || `CR-MAIN-0021`}</strong></div>
-                    <div><span className="block font-sans font-bold text-slate-500 text-[8.5px]">{t(lang, "purchase.city_serial_label", "CITY SERIAL:")}</span><strong className="text-slate-900">{form.salesCrCitySerial || `CR-CB-00421`}</strong></div>
+                    <div><span className="block font-sans font-bold text-slate-500 dark:text-slate-400 text-[8.5px]">{t(lang, "purchase.sa_serial_label", "SA SERIAL:")}</span><strong className="text-slate-900 dark:text-slate-100">{form.salesCrSaSerial || `CR-SA-0082`}</strong></div>
+                    <div><span className="block font-sans font-bold text-slate-500 dark:text-slate-400 text-[8.5px]">{t(lang, "purchase.country_serial_label", "COUNTRY SERIAL:")}</span><strong className="text-slate-900 dark:text-slate-100">{form.salesCrCountrySerial || `CR-UAE-0042`}</strong></div>
+                    <div><span className="block font-sans font-bold text-slate-500 dark:text-slate-400 text-[8.5px]">{t(lang, "purchase.branch_serial_label", "BRANCH SERIAL:")}</span><strong className="text-slate-900 dark:text-slate-100">{form.salesCrBranchSerial || `CR-MAIN-0021`}</strong></div>
+                    <div><span className="block font-sans font-bold text-slate-500 dark:text-slate-400 text-[8.5px]">{t(lang, "purchase.city_serial_label", "CITY SERIAL:")}</span><strong className="text-slate-900 dark:text-slate-100">{form.salesCrCitySerial || `CR-CB-00421`}</strong></div>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Audit Remarks Input */}
-            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs space-y-2">
-              <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider border-b border-slate-100 pb-2">{t(lang, "purchase.audit_final_remarks", "Audit & Final Remarks")}</h4>
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xs space-y-2">
+              <h4 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-2">{t(lang, "purchase.audit_final_remarks", "Audit & Final Remarks")}</h4>
               <textarea
                 value={form.orderReportRemarks || ""}
                 onChange={(e) => handleTextChange("orderReportRemarks", e.target.value)}
-                className="w-full bg-slate-50/80 border border-slate-200 rounded-xl p-3 text-slate-900 outline-none focus:border-blue-500 focus:bg-white resize-none h-24 text-xs font-medium leading-relaxed"
+                className="w-full bg-slate-50/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 resize-none h-24 text-xs font-medium leading-relaxed"
                 placeholder={t(lang, "purchase.audit_remarks_placeholder", "Type verification, approval, or audit remarks before saving/transferring...")}
               />
             </div>
 
             {/* Saved Reports */}
             {reportsList.length > 0 && (
-              <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs space-y-3">
-                <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider border-b border-slate-100 pb-2">{t(lang, "purchase.saved_custom_reports_count", "Saved Custom Reports ({count})").replace("{count}", String(reportsList.length))}</h4>
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xs space-y-3">
+                <h4 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-2">{t(lang, "purchase.saved_custom_reports_count", "Saved Custom Reports ({count})").replace("{count}", String(reportsList.length))}</h4>
                 <div className="space-y-2.5">
                   {reportsList.map((report) => (
-                    <div key={report.id} className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs">
+                    <div key={report.id} className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3.5 text-xs">
                       <div className="flex justify-between items-start mb-1">
-                        <span className="font-bold text-slate-900">{report.name}</span>
+                        <span className="font-bold text-slate-900 dark:text-slate-100">{report.name}</span>
                         <button type="button" onClick={() => handleDeleteReport(report.id)} className="text-red-500 hover:text-red-700 p-1">
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </div>
-                      {report.description && <p className="text-slate-600 mb-1 font-medium text-[11px]">{report.description}</p>}
-                      <p className="text-slate-400 font-mono text-[9px]">{formatShortDate(report.createdAt)}</p>
+                      {report.description && <p className="text-slate-600 dark:text-slate-300 mb-1 font-medium text-[11px]">{report.description}</p>}
+                      <p className="text-slate-400 dark:text-slate-500 font-mono text-[9px]">{formatShortDate(report.createdAt)}</p>
                     </div>
                   ))}
                 </div>
@@ -6859,12 +6955,12 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
           </div>
 
           {/* Step 5 Footer Action Toolbar */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <Button
               type="button"
               variant="outline"
               onClick={() => setActiveTab("reports_tab")}
-              className="font-bold text-xs h-10 px-6 border-slate-200 text-slate-700 hover:bg-slate-50"
+              className="font-bold text-xs h-10 px-6 rounded-xl border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-2xs"
             >
               <ChevronLeft className="h-4 w-4 mr-1.5" /> {t(lang, "purchase.back_to_step4_reports", "Back to Step 4 (Reports)")}
             </Button>
@@ -6874,37 +6970,79 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                 type="button"
                 variant="outline"
                 onClick={() => handleOpenA4Report(true)}
-                className="font-bold text-xs h-10 px-5 border-slate-200 hover:bg-slate-50 text-slate-800"
+                className="font-bold text-xs h-10 px-5 rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 shadow-2xs"
               >
-                <Printer className="h-4 w-4 mr-1.5 text-blue-600" /> {t(lang, "purchase.print_a4_voucher", "Print A4 Voucher")}
+                <Printer className="h-4 w-4 mr-1.5 text-blue-600 dark:text-blue-400" /> {t(lang, "purchase.print_a4_voucher", "Print A4 Voucher")}
               </Button>
-
-              <Button
-                type="button"
-                onClick={() => handleSavePurchaseOrder(false)}
-                disabled={savingOrder}
-                className="font-bold text-xs h-10 px-6 bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-all uppercase tracking-wider flex items-center gap-2"
-              >
-                {savingOrder ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                {savingOrder ? t(lang, "purchase.saving_ellipsis", "Saving...") : (savedOrderId ? t(lang, "purchase.update_purchase_order", "Update Purchase Order") : t(lang, "purchase.save_purchase_order_btn", "Save Purchase Order"))}
-              </Button>
-
-              {!isTransferred && (
-                <Button
-                  type="button"
-                  onClick={handleTransfer}
-                  disabled={savingOrder}
-                  className="font-black text-xs h-10 px-8 bg-blue-600 hover:bg-blue-700 text-white shadow-[0_4px_14px_0_rgb(37,99,235,0.39)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.23)] hover:-translate-y-0.5 transition-all uppercase tracking-wider flex items-center gap-2"
-                >
-                  {savingOrder ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
-                  {savedOrderId ? t(lang, "purchase.transfer_to_payment_btn", "Transfer to Payment") : t(lang, "purchase.save_and_transfer_payment", "Save & Transfer to Payment")}
-                </Button>
-              )}
             </div>
           </div>
         </div>
       </div>
     )}
+      {viewingGoodsItem && (
+        <SimpleModal
+          isOpen={true}
+          onClose={() => setViewingGoodsItem(null)}
+          title={t(lang, "purchase.goods_overview_manifest", "Goods Overview Manifest")}
+          width="md"
+        >
+          <div className="p-4 space-y-4">
+            <div className="flex items-center gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="h-10 w-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                <Package className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-slate-900 dark:text-slate-100 uppercase tracking-tight">{viewingGoodsItem.goodsName || "-"}</h3>
+                <p className="text-[11px] text-slate-500 font-medium">{t(lang, "purchase.brand_label", "BRAND")}: <strong className="text-slate-800 dark:text-slate-200">{viewingGoodsItem.brand || "-"}</strong> • {t(lang, "purchase.origin_country_lbl", "ORIGIN")}: <strong className="text-slate-800 dark:text-slate-200">{viewingGoodsItem.origin || "-"}</strong></p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+              <div className="bg-slate-50 dark:bg-slate-850 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
+                <span className="block text-[9.5px] uppercase font-bold text-slate-400 mb-0.5">{t(lang, "purchase.size_label", "SIZE")}</span>
+                <span className="font-bold text-slate-800 dark:text-slate-200">{viewingGoodsItem.size || "-"}</span>
+              </div>
+              <div className="bg-slate-50 dark:bg-slate-850 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
+                <span className="block text-[9.5px] uppercase font-bold text-slate-400 mb-0.5">{t(lang, "purchase.th_hs_code", "HS CODE")}</span>
+                <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{viewingGoodsItem.hsCode || "-"}</span>
+              </div>
+              <div className="bg-slate-50 dark:bg-slate-850 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
+                <span className="block text-[9.5px] uppercase font-bold text-slate-400 mb-0.5">{t(lang, "purchase.qty", "QTY")}</span>
+                <span className="font-mono font-black text-slate-900 dark:text-slate-100">{Number(viewingGoodsItem.qtyNo || 0).toLocaleString()} {translateOptionLabel(lang, viewingGoodsItem.qtyName)}</span>
+              </div>
+              <div className="bg-slate-50 dark:bg-slate-850 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
+                <span className="block text-[9.5px] uppercase font-bold text-slate-400 mb-0.5">{t(lang, "purchase.th_gross_wt", "Gross Wt")}</span>
+                <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{Number(viewingGoodsItem.grossWeight || 0).toFixed(2)}</span>
+              </div>
+              <div className="bg-slate-50 dark:bg-slate-850 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
+                <span className="block text-[9.5px] uppercase font-bold text-slate-400 mb-0.5">{t(lang, "purchase.th_net_wt", "Net Wt")}</span>
+                <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{Number(viewingGoodsItem.netWeight || 0).toFixed(2)}</span>
+              </div>
+              <div className="bg-slate-50 dark:bg-slate-850 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
+                <span className="block text-[9.5px] uppercase font-bold text-slate-400 mb-0.5">{t(lang, "purchase.th_rate", "Rate")}</span>
+                <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{Number(viewingGoodsItem.coursePrice || viewingGoodsItem.price || 0).toFixed(2)}</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 p-3 rounded-xl bg-slate-100/70 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 text-xs">
+              <div>
+                <span className="block text-[9.5px] uppercase font-bold text-slate-500 mb-0.5">{t(lang, "purchase.col_amount_ccy", "AMOUNT")}</span>
+                <span className="font-mono font-black text-amber-600 dark:text-amber-400 text-sm">{Number(viewingGoodsItem.totalAmount || viewingGoodsItem.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              </div>
+              <div>
+                <span className="block text-[9.5px] uppercase font-bold text-slate-500 mb-0.5">{t(lang, "purchase.col_final_ccy", "FINAL")}</span>
+                <span className="font-mono font-black text-emerald-600 dark:text-emerald-400 text-sm">{Number(viewingGoodsItem.finalAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <Button type="button" onClick={() => setViewingGoodsItem(null)} className="h-9 px-5 text-xs font-bold bg-slate-800 hover:bg-slate-900 text-white rounded-lg">
+                {t(lang, "common.close", "Close")}
+              </Button>
+            </div>
+          </div>
+        </SimpleModal>
+      )}
       {previewModalOpen && (
         <div className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/70 p-4 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="w-full max-w-5xl h-[90vh] bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden relative">

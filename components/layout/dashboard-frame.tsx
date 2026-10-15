@@ -458,16 +458,19 @@ export function DashboardFrame({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  const isSuperUser = Boolean(roles?.includes("super_admin"));
+
   const filteredSearchItems = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    if (!q) return searchItems;
-    return searchItems.filter(
+    const visibleItems = isSuperUser ? searchItems : searchItems.filter(item => !item.href.includes("super-admin"));
+    if (!q) return visibleItems;
+    return visibleItems.filter(
       (item) =>
         item.title.toLowerCase().includes(q) ||
         item.category.toLowerCase().includes(q) ||
         item.keywords.toLowerCase().includes(q)
     );
-  }, [searchQuery, searchItems]);
+  }, [searchQuery, searchItems, isSuperUser]);
 
   const categories = ["All", "Navigation", "Modules", "Actions", "Settings"] as const;
 

@@ -1,38 +1,69 @@
 import { notFound } from "next/navigation";
 import { PurchaseModuleWorkspace } from "@/features/purchases/components/purchase-module-workspace";
+import { requireErpSession } from "@/lib/auth/session";
+import { JournalBookingStockDashboard } from "@/features/journal/components/journal-booking-stock-dashboard";
 
-const stockPages: Record<string, { title: string; description: string }> = {
-  booking: {
-    title: "Booking Stock",
-    description: "Canonical booking rows before loading or payment proof moves them forward."
-  },
-  confirmed: {
-    title: "Remaining Stock",
-    description: "Loaded vehicle rows that still have payment balance or are waiting for land transfer."
-  },
-  import: {
-    title: "Land Stock",
-    description: "Loaded rows whose remaining payment is complete and are ready for destination selection."
-  },
+const stockPages: Record<string, { title: string; description: string; stage: any }> = {
   journal: {
     title: "Journal Stock",
-    description: "Stock movements connected with journal postings, purchase entries, and accounting traceability."
+    description: "Purchase Booking & Local Purchase entries pending loading.",
+    stage: "journal"
+  },
+  loading: {
+    title: "Loading Stock",
+    description: "Stock loaded into trucks and shipping containers in transit.",
+    stage: "loading"
+  },
+  confirmed: {
+    title: "Confirmed Stock",
+    description: "Gate-verified loading records confirmed and ready for destination transfer.",
+    stage: "confirmed"
   },
   warehouse: {
     title: "Warehouse Stock",
-    description: "Warehouse inventory for purchase goods, containers, and branch stock balances."
+    description: "Inventory received and stored in branch and central warehouses.",
+    stage: "warehouse"
+  },
+  export: {
+    title: "Export Stock",
+    description: "Stock allocated and staged for international export shipments.",
+    stage: "export"
+  },
+  "local-market": {
+    title: "Local Market Stock",
+    description: "Goods allocated for branch local market distribution and direct sales.",
+    stage: "local_sales"
+  },
+  transfer: {
+    title: "Stock Transfer",
+    description: "Transfer confirmed loading goods to Warehouse, Export, or Local Market.",
+    stage: "transfer"
+  },
+  history: {
+    title: "Stock Movement History",
+    description: "Complete chronological audit trail of all inventory stage transitions.",
+    stage: "history"
+  },
+  // Legacy route aliases
+  booking: {
+    title: "Booking Stock",
+    description: "Purchase Booking entries in Journal Stock.",
+    stage: "journal"
+  },
+  import: {
+    title: "Import Stock",
+    description: "Import goods loaded in shipping containers.",
+    stage: "loading"
   },
   "in-transit": {
     title: "In Transit Stock",
-    description: "Destination stock moved to in-transit after Land Stock selection."
-  },
-  export: {
-    title: "Re-export Stock",
-    description: "Destination stock moved to re-export after Land Stock selection."
+    description: "Goods loaded in transit to final destinations.",
+    stage: "loading"
   },
   delivered: {
-    title: "Local Sale / Delivered Stock",
-    description: "Destination stock moved to local sale or delivered after Land Stock selection."
+    title: "Delivered / Local Sales Stock",
+    description: "Stock delivered for local market sales.",
+    stage: "local_sales"
   }
 };
 
@@ -40,5 +71,7 @@ export default async function PurchaseStockPage({ params }: { params: Promise<{ 
   const { type } = await params;
   const page = stockPages[type];
   if (!page) notFound();
-  return <PurchaseModuleWorkspace title={page.title} description={page.description} type="stock" />;
+
+  const session = await requireErpSession();
+  return <JournalBookingStockDashboard session={session} initialStage={page.stage} />;
 }

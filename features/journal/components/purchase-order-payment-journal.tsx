@@ -3189,13 +3189,18 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         lpRows = rawLp.map((lp: any) => {
           const rawTotal = Number(lp.final_cost || lp.purchase_cost || 0);
           const rawAdvance = Number(lp.advance_amount || 0);
-          const rawRemaining = Number(lp.remaining_balance ?? Math.max(0, rawTotal - rawAdvance));
           const pMode = String(lp.payment_mode || "Credit").trim();
           const pModeLower = pMode.toLowerCase();
           const isCredit = pModeLower.includes("credit");
           const isAdvance = pModeLower.includes("advance") || Number(lp.advance_percentage || 0) > 0;
           const pType = isAdvance ? "Advance" : (isCredit ? "Credit" : pMode);
           const billNo = lp.contract_no ? `LP-${lp.contract_no}` : (lp.manual_bill_no || `LP-${lp.id?.slice(0, 8)}`);
+
+          const lpPaidAmount = Number(lp.paid_amount || lp.cleared_amount || 0);
+          const rawRemaining = isCredit 
+            ? Math.max(0, rawTotal - lpPaidAmount) 
+            : (Number(lp.remaining_balance) > 0 ? Number(lp.remaining_balance) : Math.max(0, rawTotal - rawAdvance));
+          const isCleared = isCredit ? (lpPaidAmount >= rawTotal && rawTotal > 0) : (rawRemaining <= 0.01 && (rawAdvance > 0 || rawTotal > 0));
 
           return {
             ...lp,
@@ -3206,7 +3211,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
             total_goods_original: rawTotal,
             total_goods_usd: rawTotal,
             advance_paid: rawAdvance,
-            remaining_paid: 0,
+            remaining_paid: lpPaidAmount,
             credit_amount: isCredit ? rawTotal : 0,
             remaining_due: rawRemaining,
             currency_code: lp.purchase_currency || lp.local_currency || "AED",
@@ -3217,7 +3222,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
             purchase_account_name: lp.purchase_account_no ? `Purchase (${lp.purchase_account_no})` : "Purchase Account",
             sales_account_name: lp.supplier_name || lp.sales_account_no || "Supplier Payable",
             status: lp.posting_status || lp.status || "active",
-            payment_status: rawRemaining <= 0.01 && (rawAdvance > 0 || rawTotal > 0) ? "Paid" : (rawAdvance > 0 ? "Partial" : "Pending"),
+            payment_status: isCleared ? "Paid" : (rawAdvance > 0 || lpPaidAmount > 0 ? "Partial" : "Pending"),
             form_data: {
               form: {
                 orderType: "local_purchase",
@@ -3309,12 +3314,19 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
       const hasTransferAudit = Boolean(row.form_data?.form?.transferAudit);
       const statusLower = (row.status || "").toLowerCase();
       
-      // Broad eligibility: Any posted, approved, submitted, active, or valid purchase order in the system is eligible
+      // Broad eligibility: Any purchase order in the system is eligible (including newly booked draft/pending, active, submitted, approved, posted, transferred)
+      const isDraftOrPending = statusLower === "draft"
+        || statusLower === "pending"
+        || postingStatus === "pending"
+        || postingStatus === "draft";
+
       const isPosted = statusLower === "posted"
         || statusLower === "approved"
         || statusLower === "submitted"
         || statusLower === "active"
+        || statusLower === "accepted"
         || statusLower === ""
+        || isDraftOrPending
         || postingStatus === "posted"
         || postingStatus === "transferred"
         || workflowTransferStatus === "transferred"
@@ -3328,8 +3340,18 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         if (rowSource !== sourceFilter) return false;
       }
       if (draft && !(row.payment_status ?? "").toLowerCase().includes(draft)) return false;
-      if (countryFilter && countryFilter !== "All Countries" && rowCountryName(row) !== countryFilter) return false;
-      if (branchFilter && branchFilter !== "All Branches" && rowBranchName(row) !== branchFilter) return false;
+      if (countryFilter && countryFilter !== "All Countries") {
+        const cName = rowCountryName(row).toLowerCase();
+        const fCountry = String(row.form_data?.form?.purchaseCountry || row.form_data?.form?.branchCountry || "").toLowerCase();
+        const filterCountry = countryFilter.toLowerCase();
+        if (!cName.includes(filterCountry) && !fCountry.includes(filterCountry)) return false;
+      }
+      if (branchFilter && branchFilter !== "All Branches") {
+        const bName = rowBranchName(row).toLowerCase();
+        const fBranch = String(row.form_data?.form?.branchName || row.form_data?.form?.purchaseAccountBranch || "").toLowerCase();
+        const filterBranch = branchFilter.toLowerCase();
+        if (!bName.includes(filterBranch) && !fBranch.includes(filterBranch)) return false;
+      }
       if (cityFilter && cityFilter !== "All Cities") {
         const b = (rowBranchName(row) || "").toLowerCase();
         if (!b.includes(cityFilter.toLowerCase())) return false;
@@ -3360,8 +3382,20 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
 
       // Extract form values for clearance calculation
       const finalAmount = orderTotal(row);
-      const paymentType = String(form.paymentType || form.paymentCondition || "").trim().toLowerCase();
-      const isCreditBill = paymentType.includes("credit");
+      const paymentType = String(
+        form.paymentType || 
+        form.paymentCondition || 
+        (row as any).payment_mode || 
+        (row as any).paymentMode ||
+        (row as any).payment_type ||
+        (row as any).transfer_destination ||
+        (row as any).destination ||
+        ""
+      ).trim().toLowerCase();
+      const isCreditBill = paymentType.includes("credit") ||
+        String((row as any).payment_mode || "").toLowerCase().includes("credit") ||
+        String(form.paymentType || "").toLowerCase().includes("credit") ||
+        String((row as any).warehouse_transfer_status || "").toLowerCase().includes("credit");
       const isCashBill = paymentType.includes("cash");
       const advancePercent = isCreditBill ? 0 : Number(form.advancePercent || 0);
       const isAdvanceBill = paymentType.includes("advance") || paymentType.includes("endorsement") || (!isCreditBill && !isCashBill && advancePercent > 0);
@@ -3375,8 +3409,11 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         remainingDue = finalAmount - paidAdvance - remPaid;
       }
       
-      const isCreditPaid = (row.payment_status || "").toLowerCase().includes("posted") || 
-                           (row.payment_status || "").toLowerCase().includes("paid");
+      const rawPaymentStatus = (row.payment_status || "").toLowerCase().trim();
+      const isCreditPaid = rawPaymentStatus === "paid" || 
+                           rawPaymentStatus === "completed" || 
+                           rawPaymentStatus === "fully_paid" || 
+                           (remainingDue <= 0.01 && finalAmount > 0 && rawPaymentStatus !== "unpaid" && rawPaymentStatus !== "pending");
 
       const isAdvanceCleared = advancePercent > 0 ? remainingAdvance <= 0.01 : paidAdvance > 0;
       const isRemainingCleared = remainingDue <= 0.01;

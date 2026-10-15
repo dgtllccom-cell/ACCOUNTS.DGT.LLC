@@ -119,8 +119,7 @@ function whereClause(sql: any, session: ErpSession, f: TrackingListFilter) {
       : f.view === "trucks"
       ? sql`AND (coalesce(al.truck_number,'') <> '' OR coalesce(o.truck_number,'') <> '')`
       : sql``;
-  const domain = f.domain === "business" ? sql`AND h.id IS NOT NULL` : sql``;
-  return sql`WHERE o.deleted_at IS NULL AND ${scope} ${domain} ${mode} ${status} ${view} ${searchCondition(sql, f.query ?? "", f.field ?? "all")}`;
+  return sql`WHERE o.deleted_at IS NULL AND ${scope} ${mode} ${status} ${view} ${searchCondition(sql, f.query ?? "", f.field ?? "all")}`;
 }
 
 const DASH = "—";
@@ -214,9 +213,6 @@ export class ShipmentTrackingService {
         LIMIT 1
       `) as any[];
       const handover = handovers[0] ?? null;
-
-      // the business tracking view only ever shows shipments that came from a business handover
-      if (domain === "business" && !handover) return null;
 
       const activeLeg =
         legs.find((l) => l.id === order.current_leg_id) ||

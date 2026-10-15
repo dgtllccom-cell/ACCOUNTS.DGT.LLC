@@ -21,7 +21,8 @@ import {
   Warehouse,
   Truck,
   ShieldCheck,
-  Printer
+  Printer,
+  BookOpen
 } from "lucide-react";
 import { apiGet } from "@/lib/api/client";
 import { transliterateProperNoun, localizeTerm } from "@/lib/i18n/transliteration";
@@ -51,7 +52,7 @@ export function Party360Modal({
   const lang = useActiveLanguage(langProp);
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState<PartyAffiliationSummary | null>(null);
-  const [activeTab, setActiveTab] = useState<"all" | "companies" | "employees" | "banks" | "warehouses" | "trucks" | "clearingAgents">("all");
+  const [activeTab, setActiveTab] = useState<"all" | "companies" | "employees" | "banks" | "warehouses" | "trucks" | "clearingAgents" | "accounts">("all");
 
   useEffect(() => {
     let isMounted = true;
@@ -191,7 +192,29 @@ export function Party360Modal({
           ) : (
             <>
               {/* Top Overview KPI Banner */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5">
+                {/* Accounts Count */}
+                <div 
+                  onClick={() => setActiveTab("accounts")}
+                  className={`p-3 rounded-2xl border cursor-pointer transition-all ${
+                    activeTab === "accounts" 
+                      ? "border-sky-500 bg-sky-50/80 dark:bg-sky-950/40 shadow-sm" 
+                      : "border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 hover:border-slate-300"
+                  }`}
+                >
+                  <div className="flex items-center justify-between text-sky-600 dark:text-sky-400 mb-1">
+                    <span className="text-[10px] font-black uppercase">
+                      {lang === "ur" ? "کھاتے (Accounts)" : "Accounts"}
+                    </span>
+                    <BookOpen className="h-3.5 w-3.5" />
+                  </div>
+                  <p className="text-lg font-black text-slate-900 dark:text-white">
+                    {(summary.accounts || []).length}
+                  </p>
+                  <p className="text-[9.5px] text-slate-500 truncate">
+                    {lang === "ur" ? "کاروباری کھاتے" : "Chart of Accounts"}
+                  </p>
+                </div>
                 {/* Companies Count */}
                 <div 
                   onClick={() => setActiveTab("companies")}
@@ -354,6 +377,62 @@ export function Party360Modal({
                   </div>
                 </div>
               </div>
+
+              {/* Section 0: Accounts */}
+              {(activeTab === "all" || activeTab === "accounts") && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <BookOpen className="h-4 w-4 text-sky-600" />
+                      <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                        {lang === "ur" ? `کاروباری و شپنگ کھاتے (${(summary.accounts || []).length})` : `Linked Chart of Accounts (${(summary.accounts || []).length})`}
+                      </h3>
+                    </div>
+                  </div>
+
+                  {(summary.accounts || []).length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      {summary.accounts.map((ac) => (
+                        <div
+                          key={ac.id}
+                          className="flex items-center justify-between p-3 rounded-xl border border-sky-100 dark:border-sky-900/40 bg-white dark:bg-slate-900 shadow-xs"
+                        >
+                          <div className="flex items-center gap-2.5 truncate">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-200 font-mono font-bold text-xs">
+                              <BookOpen className="h-4 w-4" />
+                            </div>
+                            <div className="truncate">
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-extrabold text-xs text-slate-900 dark:text-white truncate">
+                                  {ac.name}
+                                </span>
+                                <span className="rounded bg-sky-50 dark:bg-sky-950 px-1.5 py-0.5 font-mono text-[10px] font-bold text-sky-700 dark:text-sky-300">
+                                  {ac.code}
+                                </span>
+                              </div>
+                              <p className="text-[10px] text-slate-500 truncate">
+                                {[ac.domain?.toUpperCase(), ac.currency, ac.branchName || ac.countryName].filter(Boolean).join(" • ")}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <span className="font-mono font-bold text-xs text-slate-800 dark:text-slate-200">
+                              {Number(ac.currentBalance || 0).toLocaleString()} {ac.currency}
+                            </span>
+                            <p className="text-[9.5px] font-bold text-emerald-600 capitalize">
+                              {ac.status || "Active"}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-400 italic bg-slate-50 dark:bg-slate-950/30 p-3 rounded-xl">
+                      {lang === "ur" ? "کوئی منسلک کھاتہ موجود نہیں ہے۔" : "No linked accounts found in chart of accounts."}
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Section 1: Companies Owned / Managed */}
               {(activeTab === "all" || activeTab === "companies") && (

@@ -100,6 +100,7 @@ export type SidebarDeepChild = {
   /** RBAC: when set, the item shows only to a user holding one of these enterprise roles.
    *  Omit to keep the current behaviour (visible to everyone; the page still enforces access). */
   roles?: string[];
+  tone?: "red" | "default";
   /** Strengthened by the current ERP upgrade project — renders the green UPGRADED marker. */
   upgraded?: boolean;
 };
@@ -170,9 +171,9 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         label: nt("Branch & Network"),
         icon: Building2,
         children: [
-          { label: nt("Country Branch Entry"), href: "/dashboard/new-entry/branch-entry/country-branch", icon: Globe2 },
+          { label: nt("Country Branch Entry"), href: "/dashboard/new-entry/branch-entry/country-branch", icon: Globe2, roles: ["super_admin"] },
           { label: nt("City Branch Entry"), href: "/dashboard/new-entry/branch-entry/city-branch", icon: Building2 },
-          { label: nt("Super Admin Branch"), href: "/dashboard/new-entry/branches/super-admin", icon: Building2 },
+          { label: nt("Super Admin Branch"), href: "/dashboard/new-entry/branches/super-admin", icon: Building2, roles: ["super_admin"] },
           { label: nt("Branch General Report"), href: "/dashboard/branch-management/general-report", icon: FileBarChart },
         ],
       },
@@ -267,6 +268,13 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     href: "/dashboard/reports/exchange-rate",
   },
   {
+    key: "money-changer-main",
+    label: nt("Money Changer (Currency Dealing)"),
+    icon: ArrowRightLeft,
+    href: "/dashboard/roznamcha/money-exchange",
+    tone: "red",
+  },
+  {
     key: "ledgers",
     label: nt("Ledgers"),
     icon: BookOpen,
@@ -294,6 +302,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
           { label: nt("Country Bill Payment"), href: "/dashboard/purchase/completed-purchase-bills", icon: FileCheck2 },
           { label: nt("Purchase Loading Records"), href: "/dashboard/purchase/purchase-loading-records", icon: Truck },
           { label: nt("Purchase Transit & Lane"), href: "/dashboard/purchase/purchase-transit-lane?source=purchase_booking", icon: Truck },
+          { label: nt("Track Shipment (Cargo & Containers)"), href: "/dashboard/purchase/shipment-tracking", icon: Compass, tone: "red" },
         ],
       },
       {
@@ -364,16 +373,27 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     label: nt("Journal Stock"),
     icon: Boxes,
     children: [
-      { label: nt("Stock Register / Inventory"), href: "/dashboard/inventory", icon: Package },
-      { label: nt("Stock Reports (Branch)"), href: "/dashboard/inventory/stock-reports/branch", icon: BarChart3 },
-      { label: nt("Stock Reports (Country)"), href: "/dashboard/inventory/stock-reports/country", icon: Globe },
-      { label: nt("Stock Reports (Salesman)"), href: "/dashboard/inventory/stock-reports/salesman", icon: Users },
-      { label: nt("Warehouse Stock"), href: "/dashboard/purchase/stock/warehouse", icon: Boxes },
-      { label: nt("Booking Stock"), href: "/dashboard/purchase/stock/booking", icon: ClipboardList },
-      { label: nt("Confirmed Stock"), href: "/dashboard/purchase/stock/confirmed", icon: CheckSquare },
-      { label: nt("Import Stock"), href: "/dashboard/purchase/stock/import", icon: Ship },
-      { label: nt("In-Transit Stock"), href: "/dashboard/purchase/stock/in-transit", icon: Truck },
-      { label: nt("Journal Stock Checking Report"), href: "/dashboard/inventory/journal-report/branch", icon: FileBarChart },
+      { label: nt("Journal Stock"), href: "/dashboard/purchase/stock/journal", icon: BookOpen, upgraded: true },
+      { label: nt("Loading Stock"), href: "/dashboard/purchase/stock/loading", icon: Truck, upgraded: true },
+      { label: nt("Confirmed Stock"), href: "/dashboard/purchase/stock/confirmed", icon: CheckSquare, upgraded: true },
+      { label: nt("Warehouse Stock"), href: "/dashboard/purchase/stock/warehouse", icon: Warehouse, upgraded: true },
+      { label: nt("Export Stock"), href: "/dashboard/purchase/stock/export", icon: Globe, upgraded: true },
+      { label: nt("Local Market Stock"), href: "/dashboard/purchase/stock/local-market", icon: ShoppingCart, upgraded: true },
+      { label: nt("Stock Transfer"), href: "/dashboard/purchase/stock/transfer", icon: ArrowRightLeft, upgraded: true },
+      {
+        key: "sub-all-stock-reports",
+        label: nt("All Stock Reports"),
+        icon: FileBarChart,
+        children: [
+          { label: nt("Stock Reports Overview"), href: "/dashboard/inventory/stock-reports", icon: BarChart3 },
+          { label: nt("Stock Register / Inventory"), href: "/dashboard/inventory", icon: Package },
+          { label: nt("Stock Reports (Branch)"), href: "/dashboard/inventory/stock-reports/branch", icon: BarChart3 },
+          { label: nt("Stock Reports (Country)"), href: "/dashboard/inventory/stock-reports/country", icon: Globe },
+          { label: nt("Stock Reports (Salesman)"), href: "/dashboard/inventory/stock-reports/salesman", icon: Users },
+          { label: nt("Journal Stock Checking Report"), href: "/dashboard/inventory/journal-report/branch", icon: FileBarChart },
+        ],
+      },
+      { label: nt("Stock Movement History"), href: "/dashboard/purchase/stock/history", icon: History, upgraded: true },
     ],
   },
   {
@@ -405,6 +425,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
           { label: nt("Agent Documents"), href: "/dashboard/clearing-agent/agent-custom-entry", icon: FileText },
           { label: nt("Agent Payment Entry"), href: "/dashboard/clearing-agent/payment-bill-entry", icon: CreditCard },
           { label: nt("Agent Reports"), href: "/dashboard/shipping-line/shipment-report", icon: FileBarChart },
+          { label: nt("Track Shipment (Clearing & Cargo)"), href: "/dashboard/tracking", icon: Compass, tone: "red" },
         ],
       },
       {
@@ -417,11 +438,12 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
       },
       { label: nt("Shipping Lines"), href: "/dashboard/shipping-line", icon: Ship },
       { label: nt("BL Entry"), href: "/dashboard/shipping-line/bl-entry", icon: FileText, upgraded: true },
-      { label: nt("Container & Vessel Tracking"), href: "/dashboard/shipping-line/tracking", icon: Compass, tone: "red" },
+      { label: nt("Track Shipment (Container & Vessel)"), href: "/dashboard/shipping-line/tracking", icon: Compass, tone: "red" },
       { label: nt("Free Country Shipping Claims"), href: "/dashboard/inter-country-transfers?category=shipping_line", icon: ArrowRightLeft },
       { label: nt("Clearing Workspace"), href: "/dashboard/clearing-agent/clearing-workspace", icon: FileCheck2 },
       { label: nt("Logistics Tracking Dashboard"), href: "/dashboard/logistics", icon: BarChart3 },
       { label: nt("Shipping Account Access"), href: "/dashboard/shipping-line/account-access", icon: Wallet },
+      { label: nt("Shipping Accounts Setup"), href: "/dashboard/accounts/setup?domain=shipping", icon: BookOpen, upgraded: true },
     ],
   },
   {
@@ -437,8 +459,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     children: [
       { label: nt("Banks & Bank Accounts"), href: "/dashboard/settings/bank", icon: Landmark },
       { label: nt("Bank Cheque Roznamcha"), href: "/dashboard/roznamcha/reports/bank", icon: Receipt },
-      { label: nt("Money Exchange (Currency Changer)"), href: "/dashboard/roznamcha/money-exchange", icon: ArrowRightLeft },
-      { label: nt("Country Investments"), href: "/dashboard/super-admin/investments", icon: TrendingUp },
+      { label: nt("Country Investments"), href: "/dashboard/super-admin/investments", icon: TrendingUp, roles: ["super_admin"] },
     ],
   },
   {
@@ -446,8 +467,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     label: nt("General Office"),
     icon: Settings,
     children: [
-      { label: nt("Customer Management"), href: "/dashboard/settings/customers", icon: Users },
-      { label: nt("Customer Management Journal"), href: "/dashboard/settings/customers?view=journal", icon: FileSpreadsheet },
+      { label: nt("Customers"), href: "/dashboard/settings/customers", icon: Users },
       { label: nt("Employees Directory & Registration"), href: "/dashboard/general-office/employees", icon: Users },
       { label: nt("Employee KYC & Documents"), href: "/dashboard/general-office/employee-kyc", icon: FileText },
       { label: nt("Attendance & Leave Management"), href: "/dashboard/general-office/leave-attendance", icon: CalendarCheck, upgraded: true },
@@ -457,6 +477,8 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
       { label: nt("Departments & Designations"), href: "/dashboard/general-office/departments", icon: Building2 },
       { label: nt("Gratuity & End-of-Service"), href: "/dashboard/general-office/gratuity", icon: Receipt },
       { label: nt("Share External Forms"), href: "/dashboard/general-office/employees?tab=share-forms", icon: ArrowRightLeft },
+      { label: nt("Goods Master"), href: "/dashboard/settings/management/goods", icon: Package, upgraded: true },
+      { label: nt("CHS Product Management"), href: "/dashboard/settings/management/chs-products", icon: Boxes },
       { label: nt("Dynamic Location & Route Management"), href: "/dashboard/settings/location-master", icon: MapPin, tone: "red" },
       { label: nt("Reusable Route Templates"), href: "/dashboard/settings/route-templates", icon: Route, tone: "red" },
     ],
@@ -482,7 +504,6 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         label: nt("KYC Reports"),
         icon: FileText,
         children: [
-          { label: nt("Customers KYC Report"), href: "/dashboard/settings/customers?tab=kyc-report", icon: Users },
           { label: nt("Employees KYC Report"), href: "/dashboard/general-office/employee-kyc?tab=report", icon: FileText },
         ],
       },
@@ -511,7 +532,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         icon: CheckSquare,
         children: [
           { label: nt("All Reports Hub"), href: "/dashboard/reports", icon: BarChart3 },
-          { label: nt("Super Admin Reports"), href: "/dashboard/reports/super-admin", icon: FileBarChart },
+          { label: nt("Super Admin Reports"), href: "/dashboard/reports/super-admin", icon: FileBarChart, roles: ["super_admin", "super_admin_reports"] },
           { label: nt("Country Admin Reports"), href: "/dashboard/reports/country", icon: Globe },
           { label: nt("Branch Reports"), href: "/dashboard/reports/branch", icon: Building2 },
           { label: nt("Payments & Settlements Report"), href: "/dashboard/reports/payments", icon: Receipt },
@@ -637,8 +658,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     children: [
       { label: nt("System Settings Hub"), href: "/dashboard/settings", icon: Settings },
       { label: nt("Dashboard Settings"), href: "/dashboard/settings/dashboard-settings", icon: Sliders },
-      { label: nt("Company Setup"), href: "/dashboard/settings/company-setup", icon: Building2, upgraded: true },
-      { label: nt("New Company (Form)"), href: "/dashboard/settings/company-setup?action=new", icon: Building2, upgraded: true },
+      { label: nt("Company Settings"), href: "/dashboard/settings/company", icon: Building2, upgraded: true },
       { label: nt("Account Types Setup"), href: "/dashboard/settings/account-type", icon: BookOpen },
       { label: nt("Locations & Cities"), href: "/dashboard/settings/locations", icon: Globe2 },
       { label: nt("Country Tax & Currency"), href: "/dashboard/settings/tax", icon: Landmark },
@@ -883,6 +903,8 @@ function filterByRolesAndPermissions<T extends { key?: string; roles?: string[];
       "ledgers",
       "shipping-cleaning",
       "transfer-handover-center",
+      "general-office",
+      "crm-reports",
       "all-messages",
       "reports-all",
       "settings-menu",
@@ -901,6 +923,13 @@ function filterByRolesAndPermissions<T extends { key?: string; roles?: string[];
         if (it.key === "new-entry") {
           const kids = filterTree(it.children || []);
           return kids.length > 0 ? { ...it, defaultOpen: false, children: kids } : null;
+        }
+        if (it.key === "general-office") {
+          const kids = filterTree(it.children || []);
+          return kids.length > 0 ? { ...it, defaultOpen: false, children: kids } : null;
+        }
+        if (it.key === "crm-reports") {
+          return isPermitted(it) ? it : null;
         }
         if (it.key === "daily-payment") {
           const hasRoznamchaOrExpense =
@@ -950,6 +979,9 @@ function filterByRolesAndPermissions<T extends { key?: string; roles?: string[];
             "/dashboard/settings",
             "/dashboard/settings/dashboard-settings",
             "/dashboard/settings/locations",
+            "/dashboard/settings/management/goods",
+            "/dashboard/settings/management/chs-products",
+            "/dashboard/settings/management",
             "/dashboard/settings/email-accounts",
             "/dashboard/settings/profile"
           ]);
@@ -991,6 +1023,7 @@ export function DigitalDockPremiumSidebar({
 
   const userRolesSet = useMemo(() => new Set((roles ?? []).map(String)), [roles]);
   const userPermsSet = useMemo(() => new Set((permissions ?? []).map(String)), [permissions]);
+  const isSuper = useMemo(() => userRolesSet.has("super_admin") || userPermsSet.has("*:*"), [userRolesSet, userPermsSet]);
   const shippingCtx = useMemo(() => ({
     isShippingScoped,
     operationalDomains,
@@ -1179,7 +1212,7 @@ export function DigitalDockPremiumSidebar({
               {displayBrand}
             </h1>
             <p className="text-[10px] font-bold text-amber-700 dark:text-amber-500 tracking-wider uppercase truncate mt-0.5">
-              DGT.LLC • Super Quality
+              {isSuper ? "DGT.LLC • Global Group" : `DGT.LLC • ${displayBrand}`}
             </p>
           </div>
         </Link>
@@ -1262,6 +1295,7 @@ export function DigitalDockPremiumSidebar({
                   {isOpen && item.children && (
                     <div className="mt-1 ps-2 pe-1 space-y-0.5 animate-in fade-in-50 duration-150">
                       {item.children.map((sub) => {
+                        const isSubRed = isRed || sub.tone === "red";
                         const SubIcon = sub.icon;
                         const subHasChildren = Boolean(sub.children?.length);
                         const subKey = sub.key || `${item.key}-${sub.label}`;
@@ -1279,10 +1313,10 @@ export function DigitalDockPremiumSidebar({
                                 onClick={() => toggleKey(subKey, 2, item.key)}
                                 className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-[13px] transition-all duration-150 cursor-pointer ${
                                   isSubActive || isSubOpen
-                                    ? isRed
+                                    ? isSubRed
                                       ? "text-red-700 font-bold bg-red-100/70 border border-red-200/70"
                                       : "text-[#2563eb] font-bold bg-blue-50/70"
-                                    : isRed
+                                    : isSubRed
                                       ? "text-red-700 font-semibold hover:text-red-800 hover:bg-red-50/60"
                                       : "text-[#0f172a] font-semibold hover:text-[#2563eb] hover:bg-slate-50"
                                 }`}
@@ -1290,27 +1324,28 @@ export function DigitalDockPremiumSidebar({
                                 <div className="flex items-center gap-3 min-w-0 flex-1">
                                   <SubIcon className={`h-4 w-4 shrink-0 transition-colors ${
                                     isSubActive || isSubOpen
-                                      ? isRed ? "text-red-600" : "text-[#2563eb]"
-                                      : isRed ? "text-red-500" : "text-[#0f172a]"
+                                      ? isSubRed ? "text-red-600" : "text-[#2563eb]"
+                                      : isSubRed ? "text-red-500" : "text-[#0f172a]"
                                   }`} />
-                                  <span className="truncate text-left tracking-tight">
+                                  <span className={`truncate text-left tracking-tight ${isSubRed ? "text-red-600 font-bold" : ""}`}>
                                     {tr(sub.label)}
                                   </span>
                                   {hasUpgraded(sub) && <UpgradedMark lang={lang} />}
                                 </div>
                                 {isSubOpen ? (
-                                  <ChevronDown className={`h-3.5 w-3.5 shrink-0 ${isRed ? "text-red-600" : "text-[#2563eb]"}`} />
+                                  <ChevronDown className={`h-3.5 w-3.5 shrink-0 ${isSubRed ? "text-red-600" : "text-[#2563eb]"}`} />
                                 ) : (
-                                  <ChevronRight className={`h-3.5 w-3.5 shrink-0 ${isRed ? "text-red-400" : "text-slate-400"}`} />
+                                  <ChevronRight className={`h-3.5 w-3.5 shrink-0 ${isSubRed ? "text-red-400" : "text-slate-400"}`} />
                                 )}
                               </button>
 
                               {/* Level 3 Deep Children (e.g. Local Purchase, Completed Bills...) */}
                               {isSubOpen && sub.children && (
                                 <div className={`ms-5 ps-3 pe-1 py-1 space-y-0.5 border-l-2 my-0.5 animate-in fade-in-50 duration-150 ${
-                                  isRed ? "border-red-300" : "border-blue-200/60"
+                                  isSubRed ? "border-red-300" : "border-blue-200/60"
                                 }`}>
                                   {sub.children.map((leaf) => {
+                                    const isLeafRed = isSubRed || leaf.tone === "red";
                                     const LeafIcon = leaf.icon;
                                     const isLeafActive = isPathActive(leaf.href, pathname);
                                     return (
@@ -1320,28 +1355,28 @@ export function DigitalDockPremiumSidebar({
                                         onClick={onNavigate}
                                         className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[12px] transition-all duration-150 ${
                                           isLeafActive
-                                            ? isRed
+                                            ? isLeafRed
                                               ? "text-red-700 font-bold bg-red-100/90"
                                               : "text-[#2563eb] font-bold bg-blue-50/90"
-                                            : isRed
-                                              ? "text-red-800 font-medium hover:text-red-600 hover:bg-red-50/70"
+                                            : isLeafRed
+                                              ? "text-red-600 font-bold hover:text-red-700 hover:bg-red-50/70"
                                               : "text-slate-600 font-medium hover:text-[#2563eb] hover:bg-slate-50"
                                         }`}
                                       >
                                         {LeafIcon ? (
                                           <LeafIcon className={`h-3.5 w-3.5 shrink-0 ${
                                             isLeafActive
-                                              ? isRed ? "text-red-600" : "text-[#2563eb]"
-                                              : isRed ? "text-red-400" : "text-slate-400"
+                                              ? isLeafRed ? "text-red-600" : "text-[#2563eb]"
+                                              : isLeafRed ? "text-red-500" : "text-slate-400"
                                           }`} />
                                         ) : (
                                           <span className={`h-1.5 w-1.5 rounded-full ${
                                             isLeafActive
-                                              ? isRed ? "bg-red-600" : "bg-[#2563eb]"
-                                              : isRed ? "bg-red-300" : "bg-slate-300"
+                                              ? isLeafRed ? "bg-red-600" : "bg-[#2563eb]"
+                                              : isLeafRed ? "bg-red-400" : "bg-slate-300"
                                           }`} />
                                         )}
-                                        <span className="truncate tracking-tight">
+                                        <span className={`truncate tracking-tight ${isLeafRed ? "text-red-600 font-bold" : ""}`}>
                                           {tr(leaf.label)}
                                         </span>
                                         {leaf.upgraded && <UpgradedMark lang={lang} />}
@@ -1362,20 +1397,20 @@ export function DigitalDockPremiumSidebar({
                             onClick={onNavigate}
                             className={`flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] transition-all duration-150 ${
                               isSubDirectActive
-                                ? isRed
-                                  ? "text-red-700 font-bold bg-red-100/70 border border-red-200/80"
+                                ? isSubRed
+                                  ? "text-red-700 font-bold bg-red-100/90 border border-red-300 shadow-xs"
                                   : "text-[#2563eb] font-bold bg-blue-50/70"
-                                : isRed
-                                  ? "text-red-800 font-semibold hover:text-red-600 hover:bg-red-50/70"
+                                : isSubRed
+                                  ? "text-red-600 font-bold hover:text-red-700 hover:bg-red-100/60 bg-red-50/40 border border-red-200/50"
                                   : "text-[#0f172a] font-medium hover:text-[#2563eb] hover:bg-slate-50"
                             }`}
                           >
                             <SubIcon className={`h-4 w-4 shrink-0 transition-colors ${
                               isSubDirectActive
-                                ? isRed ? "text-red-600" : "text-[#2563eb]"
-                                : isRed ? "text-red-500" : "text-[#0f172a]"
+                                ? isSubRed ? "text-red-600" : "text-[#2563eb]"
+                                : isSubRed ? "text-red-500" : "text-[#0f172a]"
                             }`} />
-                            <span className="truncate tracking-tight">
+                            <span className={`truncate tracking-tight flex-1 ${isSubRed ? "text-red-600 font-bold" : ""}`}>
                               {tr(sub.label)}
                             </span>
                             {sub.upgraded && <UpgradedMark lang={lang} />}

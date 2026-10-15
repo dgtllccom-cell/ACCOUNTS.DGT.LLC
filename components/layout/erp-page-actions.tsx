@@ -113,6 +113,8 @@ export function ErpPageActions({ children, backLink, title: titleOverride, subti
   // navigation between a report and a non-report page.
   const isReportPage =
     pathname === "/dashboard" ||
+    pathname === "/dashboard/country" ||
+    pathname?.startsWith("/dashboard/country") ||
     pathname === "/dashboard/super-admin" ||
     pathname?.startsWith("/dashboard/super-admin") ||
     pathname?.startsWith("/dashboard/admin") ||
@@ -141,7 +143,8 @@ export function ErpPageActions({ children, backLink, title: titleOverride, subti
     pathname?.startsWith("/dashboard/communication-center") ||
     pathname?.startsWith("/dashboard/messages") ||
     pathname?.startsWith("/dashboard/email") ||
-    pathname?.startsWith("/dashboard/accounts/setup");
+    pathname?.startsWith("/dashboard/accounts/setup") ||
+    pathname?.startsWith("/dashboard/settings/customers");
 
   const title = titleOverride || titleFromPath(pathname || "/dashboard", lang);
   const subtitle = subtitleOverride || t(lang, "pa.subtitle", "Standard ERP navigation and page actions");
@@ -258,57 +261,59 @@ export function ErpPageActions({ children, backLink, title: titleOverride, subti
 
       <div className="flex flex-wrap items-center gap-1.5">
         <div id="erp-page-actions-slot" className="flex flex-wrap items-center gap-1.5 empty:hidden" />
-        <div ref={menuRef} className="relative">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setOpen((current) => !current)}
-            className="h-7 gap-1 rounded-lg border-slate-200 bg-white px-2.5 text-[10px] font-bold text-slate-700 shadow-2xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-            aria-label={t(lang, "pa.open_actions_menu", "Open page actions menu")}
-            title={t(lang, "pa.page_actions", "Page actions")}
-          >
-            <MoreVertical className="h-3.5 w-3.5 text-slate-500" aria-hidden />
-            {t(lang, "pa.actions", "Actions")}
-          </Button>
+        {!pathname?.startsWith("/dashboard/purchase/new-purchase-booking-order") && !pathname?.startsWith("/dashboard/purchase/purchase-order") && (
+          <div ref={menuRef} className="relative">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setOpen((current) => !current)}
+              className="h-7 gap-1 rounded-lg border-slate-200 bg-white px-2.5 text-[10px] font-bold text-slate-700 shadow-2xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              aria-label={t(lang, "pa.open_actions_menu", "Open page actions menu")}
+              title={t(lang, "pa.page_actions", "Page actions")}
+            >
+              <MoreVertical className="h-3.5 w-3.5 text-slate-500" aria-hidden />
+              {t(lang, "pa.actions", "Actions")}
+            </Button>
 
-          {open ? (
-            <div className={cn("absolute right-0 top-full z-40 mt-1.5 w-52 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900")}>
-              <button type="button" onClick={() => closeAndRun(() => { void printPageContent(); })} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
-                <Printer className="h-4 w-4" aria-hidden />
-                {t(lang, "pa.print", "Print")}
-              </button>
-              <button type="button" onClick={() => closeAndRun(() => { void printPageContent(); })} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
-                <DownloadActionIcon className="h-4 w-4" aria-hidden />
-                {t(lang, "pa.pdf_download", "PDF Download")}
-              </button>
-              <button type="button" onClick={() => closeAndRun(emailPage)} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
-                <Mail className="h-4 w-4" aria-hidden />
-                {t(lang, "pa.email", "Email")}
-              </button>
-              <button type="button" onClick={() => closeAndRun(whatsAppShare)} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
-                <Send className="h-4 w-4" aria-hidden />
-                {t(lang, "pa.whatsapp_share", "WhatsApp Share")}
-              </button>
-              <button type="button" onClick={() => closeAndRun(shareToConnect)} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
-                <MessageCircle className="h-4 w-4" aria-hidden />
-                {t(lang, "dgtc.title", "DGT Connect")}
-              </button>
-              <button type="button" onClick={() => closeAndRun(editCurrentRecord)} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
-                <Edit3 className="h-4 w-4" aria-hidden />
-                {t(lang, "pa.edit", "Edit")}
-              </button>
-              <button type="button" onClick={() => closeAndRun(() => window.location.reload())} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
-                <RefreshCw className="h-4 w-4" aria-hidden />
-                {t(lang, "common.refresh", "Refresh")}
-              </button>
-              <button type="button" onClick={() => closeAndRun(() => navigator.clipboard?.writeText(currentUrl()))} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
-                <Share2 className="h-4 w-4" aria-hidden />
-                {t(lang, "pa.copy_link", "Copy Link")}
-              </button>
-            </div>
-          ) : null}
-        </div>
+            {open ? (
+              <div className={cn("absolute right-0 top-full z-40 mt-1.5 w-52 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900")}>
+                <button type="button" onClick={() => closeAndRun(() => { void printPageContent(); })} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
+                  <Printer className="h-4 w-4" aria-hidden />
+                  {t(lang, "pa.print", "Print")}
+                </button>
+                <button type="button" onClick={() => closeAndRun(() => { void printPageContent(); })} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
+                  <DownloadActionIcon className="h-4 w-4" aria-hidden />
+                  {t(lang, "pa.pdf_download", "PDF Download")}
+                </button>
+                <button type="button" onClick={() => closeAndRun(emailPage)} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
+                  <Mail className="h-4 w-4" aria-hidden />
+                  {t(lang, "pa.email", "Email")}
+                </button>
+                <button type="button" onClick={() => closeAndRun(whatsAppShare)} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
+                  <Send className="h-4 w-4" aria-hidden />
+                  {t(lang, "pa.whatsapp_share", "WhatsApp Share")}
+                </button>
+                <button type="button" onClick={() => closeAndRun(shareToConnect)} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
+                  <MessageCircle className="h-4 w-4" aria-hidden />
+                  {t(lang, "dgtc.title", "DGT Connect")}
+                </button>
+                <button type="button" onClick={() => closeAndRun(editCurrentRecord)} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
+                  <Edit3 className="h-4 w-4" aria-hidden />
+                  {t(lang, "pa.edit", "Edit")}
+                </button>
+                <button type="button" onClick={() => closeAndRun(() => window.location.reload())} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
+                  <RefreshCw className="h-4 w-4" aria-hidden />
+                  {t(lang, "common.refresh", "Refresh")}
+                </button>
+                <button type="button" onClick={() => closeAndRun(() => navigator.clipboard?.writeText(currentUrl()))} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
+                  <Share2 className="h-4 w-4" aria-hidden />
+                  {t(lang, "pa.copy_link", "Copy Link")}
+                </button>
+              </div>
+            ) : null}
+          </div>
+        )}
 
         <Button
           type="button"

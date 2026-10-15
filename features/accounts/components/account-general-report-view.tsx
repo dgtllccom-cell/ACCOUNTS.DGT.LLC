@@ -62,6 +62,9 @@ type AccountGeneralReportRow = {
   mainBranchName?: string;
   cityBranchName?: string;
   branchCode: string;
+  creatorName?: string;
+  creatorCode?: string;
+  createdBy?: string;
   countryId: string | null;
   countryName: string;
   countryCode: string;
@@ -677,25 +680,32 @@ export function AccountGeneralReportView({
   const rows = useMemo(() => data?.rows ?? [], [data]);
   const userScope = data?.userScope;
   const isSuperAdmin = userScope?.isSuperAdmin ?? session?.scopes?.isSuperAdmin ?? session?.roles.includes("super_admin") ?? false;
+  const isDomainSuperAdmin = Boolean(
+    session?.roles?.includes("business_super_admin") ||
+    session?.roles?.includes("shipping_super_admin") ||
+    userScope?.roles?.includes("business_super_admin") ||
+    userScope?.roles?.includes("shipping_super_admin")
+  );
+  const isAllAccess = isSuperAdmin || isDomainSuperAdmin;
   const isShippingUser = userScope?.isShippingDomainOnly ?? (
     (session?.scopes?.operationalDomains?.length ?? 0) > 0 &&
     session?.scopes?.operationalDomains?.every((d: string) => d === "shipping_line")
   );
-  const isCountryAdmin = !isSuperAdmin && (
+  const isCountryAdmin = !isAllAccess && (
     (session?.roles.some((r: string) => r.includes("country"))) ||
     ((session?.scopes?.countryIds?.length ?? 0) > 0 && (session?.scopes?.cityBranchIds?.length ?? 0) === 0)
   );
-  const isBranchAdmin = !isSuperAdmin && !isCountryAdmin && (
+  const isBranchAdmin = !isAllAccess && !isCountryAdmin && (
     (session?.roles.some((r: string) => r.includes("branch"))) ||
     ((session?.scopes?.cityBranchIds?.length ?? 0) > 0)
   );
 
   useEffect(() => {
     if (!session) return;
-    if (isSuperAdmin) return;
+    if (isAllAccess) return;
     if (session.scopes?.cityBranchIds?.length) setDashboardScope("branch");
     else setDashboardScope("country");
-  }, [isSuperAdmin, session]);
+  }, [isAllAccess, session]);
 
   const accountOptions = useMemo(() => rows.map(buildAccountOption), [rows]);
   const countryOptions = useMemo(() => {
@@ -710,21 +720,21 @@ export function AccountGeneralReportView({
         });
       }
     }
-    if (!isSuperAdmin) {
+    if (!isAllAccess) {
       return [...map.values()];
     }
     return [{ value: "all", label: tr("ALL COUNTRIES"), keywords: "all countries" }, ...map.values()];
-  }, [rows, isSuperAdmin, tr]);
+  }, [rows, isAllAccess, tr]);
 
   // Ensure Country/Branch Admin filter defaults to their authorized country
   useEffect(() => {
-    if (!isSuperAdmin && countryOptions.length > 0) {
+    if (!isAllAccess && countryOptions.length > 0) {
       if (countryName === "all" || !countryOptions.some((c) => c.value === countryName)) {
         setCountryName(countryOptions[0].value);
         setDraftCountryName(countryOptions[0].value);
       }
     }
-  }, [isSuperAdmin, countryOptions, countryName]);
+  }, [isAllAccess, countryOptions, countryName]);
 
   const branchOptions = useMemo(() => {
     const map = new Map<string, { value: string; label: string; keywords: string }>();
@@ -1232,7 +1242,10 @@ export function AccountGeneralReportView({
         tr("Account No."),
         tr("Account Name"),
         tr("Country"),
+        tr("Country Code"),
+        tr("Branch Name"),
         tr("Branch Code"),
+        tr("Created By"),
         tr("Company"),
         tr("Linked Companies"),
         tr("Bank"),
@@ -1252,7 +1265,10 @@ export function AccountGeneralReportView({
         row.accountCode,
         row.accountName,
         row.countryName,
+        row.countryCode ?? "",
+        row.branchName ?? "",
         row.branchCode,
+        row.creatorName || row.createdBy || "",
         hasCompany ? yesLabel : noLabel,
         hasCompany ? row.companyName : "",
         row.bankName && row.bankName !== "-" ? row.bankName : "",
@@ -1632,7 +1648,7 @@ export function AccountGeneralReportView({
               <User className="h-3 w-3" />
             </div>
             <h4 className="text-[10.5px] font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">
-              {isSuperAdmin
+              {isAllAccess
                 ? tr("1. BRANCH & USER DETAILS")
                 : isCountryAdmin
                 ? `${filteredRows[0]?.countryName?.toUpperCase() || "REGIONAL"} & USER DETAILS`
@@ -1645,7 +1661,7 @@ export function AccountGeneralReportView({
             <div className="flex justify-between items-center">
               <span>{tr("COUNTRY:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">
-                {isSuperAdmin
+                {isAllAccess
                   ? (selectedCountryForSummary || "All Countries")
                   : (filteredRows[0]?.countryName || (session as any)?.countryName || "Authorized Country")}
               </span>
@@ -1655,8 +1671,8 @@ export function AccountGeneralReportView({
               <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">
                 {branchCode !== "all"
                   ? branchCode
-                  : isSuperAdmin
-                  ? "ALL BRANCHES"
+                  : isAllAccess
+                  ? "ALL NETWORK BRANCHES"
                   : isCountryAdmin
                   ? `${filteredRows[0]?.countryName || "REGIONAL"} ALL BRANCHES`
                   : (filteredRows[0]?.branchName || (session as any)?.branchDisplayName || "MAIN BRANCH")}
@@ -1678,7 +1694,9 @@ export function AccountGeneralReportView({
               <span>{tr("ROLE:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">
                 {isSuperAdmin
-                  ? "SUPER ADMIN"
+                  ? "GLOBAL SUPER ADMIN"
+                  : isDomainSuperAdmin
+                  ? "BUSINESS SUPER ADMIN"
                   : isShippingUser
                   ? "SHIPPING LINE USER"
                   : ((session as any)?.roles?.[0]?.replace(/_/g, " ").toUpperCase() || "BRANCH ADMIN")}
@@ -1823,7 +1841,7 @@ export function AccountGeneralReportView({
                 <Globe className="h-3 w-3" />
               </div>
               <h4 className="text-[10.5px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-400">
-                {isSuperAdmin
+                {isAllAccess
                   ? tr("4. ALL COUNTRIES REPORT")
                   : isCountryAdmin
                   ? `${filteredRows[0]?.countryName?.toUpperCase() || "REGIONAL"} BRANCHES & HUBS`
@@ -1843,7 +1861,7 @@ export function AccountGeneralReportView({
             </button>
           </div>
           <div className="p-2.5 flex flex-col gap-1.5 text-[10px] sm:text-[10.5px] font-semibold text-slate-500 dark:text-slate-400 h-full">
-            {isSuperAdmin ? (
+            {isAllAccess ? (
               <>
                 <div className="flex justify-between items-center">
                   <span>{tr("TOTAL COUNTRIES:")}</span>
@@ -1923,7 +1941,7 @@ export function AccountGeneralReportView({
             <div className="flex justify-between items-center mt-auto pt-1.5 border-t border-slate-100 dark:border-slate-800">
               <span className="font-bold text-slate-700 dark:text-slate-300">{tr("COVERAGE:")}</span>
               <span className="font-bold text-blue-600 dark:text-blue-400">
-                {isSuperAdmin
+                {isAllAccess
                   ? "GLOBAL NETWORK"
                   : `${filteredRows[0]?.countryName?.toUpperCase() || "REGIONAL"} NETWORK`}
               </span>
@@ -2127,8 +2145,8 @@ export function AccountGeneralReportView({
                     {[
                       { label: "ACCOUNT NO.", align: "text-center", width: "min-w-[130px]" },
                       { label: "ACCOUNT NAME", align: "text-left", width: "min-w-[210px]" },
-                      { label: "COUNTRY", align: "text-center", width: "min-w-[140px]" },
-                      { label: "BRANCH CODE", align: "text-center", width: "min-w-[110px]" },
+                      { label: "COUNTRY", align: "text-center", width: "min-w-[130px]" },
+                      { label: "BRANCH & CREATED BY", align: "text-left", width: "min-w-[190px]" },
                       { label: "COMPANY", align: "text-center", width: "min-w-[90px]" },
                       { label: "LINKED COMPANIES", align: "text-left", width: "min-w-[160px]" },
                       { label: "BANK", align: "text-left", width: "min-w-[140px]" },
@@ -2211,17 +2229,40 @@ export function AccountGeneralReportView({
 
                           {/* 3. Country */}
                           <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
-                            <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-[10.5px] font-bold shadow-2xs">
-                              <span>{getFlag(row.countryName)}</span>
-                              <span>{localizeTerm(row.countryName, lang)}</span>
+                            <div className="inline-flex flex-col items-center gap-0.5">
+                              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-[10.5px] font-bold shadow-2xs">
+                                <span>{getFlag(row.countryName)}</span>
+                                <span>{localizeTerm(row.countryName, lang)}</span>
+                              </div>
+                              {row.countryCode && row.countryCode !== "-" && (
+                                <span className="font-mono text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase">
+                                  ({row.countryCode})
+                                </span>
+                              )}
                             </div>
                           </td>
 
-                          {/* 4. Branch Code */}
-                          <td className="px-3 py-2.5 border-r border-slate-200/60 dark:border-slate-800/60 text-center align-middle">
-                            <span className="inline-block px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200/70 dark:border-indigo-800 font-mono font-bold text-[10.5px] text-indigo-700 dark:text-indigo-300">
-                              {row.branchCode || "—"}
-                            </span>
+                          {/* 4. Branch & Created By */}
+                          <td className="px-3 py-2 border-r border-slate-200/60 dark:border-slate-800/60 text-left align-middle">
+                            <div className="flex flex-col gap-1">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="font-bold text-[11px] text-slate-900 dark:text-slate-100">
+                                  {localizeTerm(row.branchName || "—", lang)}
+                                </span>
+                                {row.branchCode && row.branchCode !== "—" && (
+                                  <span className="inline-block px-1.5 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 font-mono font-bold text-[9.5px] text-indigo-700 dark:text-indigo-300">
+                                    {row.branchCode}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-1 text-[9.5px] text-slate-500 dark:text-slate-400 font-medium">
+                                <User className="h-2.5 w-2.5 text-blue-500 shrink-0" />
+                                <span>{tr("By:")}</span>
+                                <span className="font-bold text-slate-700 dark:text-slate-300">
+                                  {row.creatorName || row.createdBy || "Super Admin"}
+                                </span>
+                              </div>
+                            </div>
                           </td>
 
                           {/* 5. Company (Yes/No) */}

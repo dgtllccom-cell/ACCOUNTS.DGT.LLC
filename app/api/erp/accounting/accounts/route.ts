@@ -58,6 +58,17 @@ function hasRealServiceRoleKey() {
  */
 function requiresAccountApproval(session: Awaited<ReturnType<typeof requireErpSession>>) {
   if (session.isSuperAdmin) return false;
+  const roles = new Set(session.roles ?? []);
+  if (
+    roles.has("business_super_admin") ||
+    roles.has("shipping_super_admin") ||
+    roles.has("country_admin") ||
+    roles.has("main_branch_admin") ||
+    roles.has("city_branch_admin") ||
+    roles.has("shipping_line_admin")
+  ) {
+    return false;
+  }
   const permissions = new Set(session.permissions ?? []);
   return !(
     permissions.has("approvals:approve") ||

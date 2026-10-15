@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Route } from "next";
-import { Building2, Save, X, RefreshCcw, CheckCircle2, User, MapPin, Phone, FileText, Info, Paperclip, Send, ArrowLeft } from "lucide-react";
+import { Building2, Save, X, RefreshCcw, CheckCircle2, User, MapPin, Phone, FileText, Info, Paperclip, Send, ArrowLeft, Camera, Upload, ChevronRight, Eye, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -83,7 +83,7 @@ export function CustomerForm({
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
 
   // Form states
-  const [customerType, setCustomerType] = useState("Male");
+  const [customerType, setCustomerType] = useState("Country Owner / Main Head");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [fatherName, setFatherName] = useState("");
@@ -296,16 +296,18 @@ export function CustomerForm({
   const city = locationMeta.city?.name ?? "";
   const areaName = locationMeta.area?.name ?? "";
 
+  const isBusiness = customerType === "Corporate / Business Company" || customerType === "Business";
+
   // Sync utilities for dynamic prefilling
   useEffect(() => {
-    const fullName = customerType === "Business" ? businessName : `${firstName} ${lastName}`.trim();
+    const fullName = isBusiness ? businessName : `${firstName} ${lastName}`.trim();
     if (fullName) {
       setAccountName((prev) => prev || fullName);
-      if (customerType === "Business") {
+      if (isBusiness) {
         setCompanyName((prev) => prev || fullName);
       }
     }
-  }, [customerType, businessName, firstName, lastName]);
+  }, [isBusiness, businessName, firstName, lastName]);
 
   useEffect(() => {
     if (country) {
@@ -373,7 +375,7 @@ export function CustomerForm({
   }, [locationMeta.country]);
 
   const ready = Boolean(
-    (customerType === "Business" ? businessName.trim() : (firstName.trim() || lastName.trim()))
+    (isBusiness ? businessName.trim() : (firstName.trim() || lastName.trim()))
   );
 
   const previewLocation = useMemo(() => {
@@ -395,8 +397,8 @@ export function CustomerForm({
       customerType,
       firstName,
       lastName,
-      fatherName: customerType === "Business" ? "" : fatherName,
-      businessName: customerType === "Business" ? businessName : "",
+      fatherName: isBusiness ? "" : fatherName,
+      businessName: isBusiness ? businessName : "",
       country,
       stateProvince: stateName,
       district: districtName,
@@ -441,7 +443,7 @@ export function CustomerForm({
     const firstWhatsapp = contacts.find((c) => c.type === "WhatsApp")?.value || "";
     const firstEmail = contacts.find((c) => c.type === "Email")?.value || "";
 
-    const resolvedCustomerName = customerType === "Business" 
+    const resolvedCustomerName = isBusiness 
       ? businessName.trim() 
       : ([firstName, lastName].filter(Boolean).join(" ").trim() || "New Person");
 
@@ -454,11 +456,11 @@ export function CustomerForm({
       customerName: resolvedCustomerName,
       firstName: firstName.trim() || null,
       lastName: lastName.trim() || null,
-      fatherName: customerType === "Business" ? null : (fatherName.trim() || null),
-      gender: customerType === "Business" ? null : customerType,
+      fatherName: isBusiness ? null : (fatherName.trim() || null),
+      gender: isBusiness ? null : customerType,
       photoUrl: passportPicture || null,
-      companyName: customerType === "Business" ? businessName.trim() : (companyName || null),
-      contactPerson: customerType === "Business" ? `${firstName} ${lastName}`.trim() : null,
+      companyName: isBusiness ? businessName.trim() : (companyName || null),
+      contactPerson: isBusiness ? `${firstName} ${lastName}`.trim() : null,
       mobile: firstMobile || null,
       whatsapp: firstWhatsapp || null,
       email: firstEmail || null,
@@ -554,8 +556,8 @@ export function CustomerForm({
             : " " + t(lang, "dintake.wizard_prefilled_hint", "Review every field, then save and post as usual.")}
         </div>
       ) : null}
-      {/* Page Title */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+      {/* Top Header Bar matching Screenshot 3 */}
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-xs">
         <div className="flex items-center gap-3">
           <Button
             type="button"
@@ -565,16 +567,18 @@ export function CustomerForm({
               if (onClose) onClose();
               else router.push("/dashboard/settings/customers" as Route);
             }}
-            className="gap-1.5 h-9 px-3 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl font-bold text-xs shadow-xs"
+            className="gap-2 h-9 px-3.5 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl font-bold text-xs shadow-xs"
           >
-            <ArrowLeft className="h-4 w-4" />
-            <span>{getLabel("backToCustomers", lang) || "Back"}</span>
+            <ArrowLeft className={`h-4 w-4 ${isRtl ? "rotate-180" : ""}`} />
+            <span>{getLabel("backToCustomers", lang)}</span>
           </Button>
 
-          <div className="h-6 w-px bg-slate-200 dark:bg-slate-700" />
+          <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
 
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-teal-600">{t(lang, "cusm.settings_management", "Settings / Management")}</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
+              {t(lang, "cusm.settings_management", "Settings / Management")}
+            </p>
             <h1 className="mt-0.5 text-xl font-black tracking-tight text-slate-900 dark:text-slate-100">
               {initialCustomerId ? getLabel("editCustomerDetails", lang) : getLabel("customerDetails", lang)}
             </h1>
@@ -583,60 +587,77 @@ export function CustomerForm({
             </p>
           </div>
         </div>
+
         <div className="flex items-center gap-2.5">
           <Button
             type="button"
             onClick={() => setShowSendModal(true)}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs gap-1.5 h-9 rounded-xl shadow-xs px-3.5"
+            className="bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs gap-2 h-9 rounded-xl shadow-xs px-4"
           >
             <Send className="h-3.5 w-3.5" />
-            <span>{lang === "ur" ? "کسٹمر کو بھیجیں (SEND TO CUSTOMER)" : lang === "ar" ? "إرسال للعميل (SEND TO CUSTOMER)" : lang === "fa" ? "ارسال به مشتری (SEND TO CUSTOMER)" : lang === "ps" ? "پیرودونکي ته لیږل (SEND TO CUSTOMER)" : "SEND TO CUSTOMER"}</span>
+            <span>{getLabel("sendToCustomer", lang)}</span>
           </Button>
 
-          <span
-            className={
-              ready
-                ? "inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 border border-emerald-200"
-                : "inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 border border-amber-200"
-            }
+          <Button
+            type="button"
+            variant="outline"
+            onClick={submitForm}
+            disabled={saving}
+            className="border-amber-300 bg-amber-50/70 hover:bg-amber-100 text-amber-900 font-bold text-xs gap-2 h-9 rounded-xl shadow-xs px-4"
           >
-            <CheckCircle2 className="h-4 w-4" aria-hidden />
-            {ready ? getLabel("ready", lang) : getLabel("draftStatus", lang)}
-          </span>
+            <Bookmark className="h-3.5 w-3.5 text-amber-600" />
+            <span>{getLabel("saveAsDraft", lang)}</span>
+          </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs font-semibold text-slate-500 mb-2">
+      {/* 4-Step Horizontal Stepper matching Screenshot 3 */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-2.5 shadow-xs flex items-center justify-between gap-2 overflow-x-auto">
         {[
-          { id: 1, label: getLabel("stepPersonalInfo", lang) },
-          { id: 2, label: getLabel("stepLocation", lang) },
-          { id: 3, label: getLabel("stepContactsDocs", lang) },
-          { id: 4, label: getLabel("stepReviewSave", lang) },
-        ].map((s) => {
+          { id: 1, title: getLabel("stepPersonalInfoTitle", lang), sub: getLabel("stepPersonalInfoSub", lang) },
+          { id: 2, title: getLabel("stepLocationTitle", lang), sub: getLabel("stepLocationSub", lang) },
+          { id: 3, title: getLabel("stepContactsDocsTitle", lang), sub: getLabel("stepContactsDocsSub", lang) },
+          { id: 4, title: getLabel("stepReviewSaveTitle", lang), sub: getLabel("stepReviewSaveSub", lang) },
+        ].map((s, idx, arr) => {
           const active = currentStep === s.id;
           const completed = currentStep > s.id;
           return (
-            <button
-              key={s.id}
-              type="button"
-              onClick={() => setCurrentStep(s.id as any)}
-              className={`flex items-center gap-2.5 border rounded-xl p-3 text-start transition-all w-full justify-start ${
-                active
-                  ? "border-teal-600 bg-teal-50/80 dark:bg-teal-950/40 text-teal-800 dark:text-teal-300 font-bold shadow-xs ring-2 ring-teal-500/20"
-                  : completed
-                  ? "border-emerald-200 bg-emerald-50/60 text-emerald-800 font-bold"
-                  : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-              }`}
-            >
-              <div
-                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-xs font-black ${
-                  active ? "bg-teal-600 text-white shadow-xs" : completed ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-600 border border-slate-200"
+            <div key={s.id} className="flex items-center flex-1 min-w-[190px] gap-2">
+              <button
+                type="button"
+                onClick={() => setCurrentStep(s.id as any)}
+                className={`flex items-center gap-3 p-2.5 rounded-xl text-start transition-all w-full ${
+                  active
+                    ? "border-2 border-blue-500 bg-blue-50/60 dark:bg-blue-950/40 text-blue-900 dark:text-blue-200 shadow-xs"
+                    : completed
+                    ? "border border-emerald-200 bg-emerald-50/40 text-emerald-800"
+                    : "border border-transparent bg-transparent text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800/50"
                 }`}
               >
-                {completed ? <CheckCircle2 className="h-4 w-4" /> : s.id}
-              </div>
-              <span className="truncate text-xs font-bold leading-tight">{s.label}</span>
-            </button>
+                <div
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-black transition-colors ${
+                    active
+                      ? "bg-blue-600 text-white shadow-sm"
+                      : completed
+                      ? "bg-emerald-600 text-white"
+                      : "bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700"
+                  }`}
+                >
+                  {completed ? <CheckCircle2 className="h-4 w-4" /> : s.id}
+                </div>
+                <div className="min-w-0">
+                  <p className={`text-xs font-bold truncate leading-tight ${active ? "text-blue-950 dark:text-blue-100" : "text-slate-800 dark:text-slate-200"}`}>
+                    {s.title}
+                  </p>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-0.5 leading-tight">
+                    {s.sub}
+                  </p>
+                </div>
+              </button>
+              {idx < arr.length - 1 && (
+                <ChevronRight className={`h-4 w-4 shrink-0 mx-1 ${isRtl ? "rotate-180" : ""} text-slate-300 dark:text-slate-600`} />
+              )}
+            </div>
           );
         })}
       </div>
@@ -644,14 +665,18 @@ export function CustomerForm({
       <div className="grid gap-6 lg:grid-cols-12">
         {/* Left Form Panels */}
         <div className="lg:col-span-7 xl:col-span-7 space-y-6">
-          <div className="grid gap-6 md:grid-cols-2">
           {currentStep === 1 && (
-            <Card className="rounded-xl border shadow-sm bg-white overflow-hidden md:col-span-2">
-              <div className="border-b px-5 py-4 bg-slate-50 flex items-center gap-2">
-                <User className="h-4.5 w-4.5 text-teal-600" />
-                <h2 className="font-semibold text-slate-800 text-sm">{getLabel("personalInfo", lang)}</h2>
+            <Card className="rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-xs bg-white dark:bg-slate-900 overflow-hidden">
+              <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs shrink-0">
+                  <User className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="font-bold text-slate-900 dark:text-slate-100 text-base">{getLabel("personalInfo", lang)}</h2>
+                  <p className="text-xs text-slate-500 mt-0.5">{getLabel("personalInfoSub", lang)}</p>
+                </div>
               </div>
-              <CardContent className="p-5 space-y-4">
+              <CardContent className="p-6 space-y-5">
                 <VoiceFormFill
                   context="customer"
                   lang={lang}
@@ -674,28 +699,32 @@ export function CustomerForm({
                     }
                   }}
                 />
+
+                {/* Customer Type dropdown with emojis matching Screenshot 3 */}
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">{getLabel("customerType", lang)} *</Label>
+                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    {getLabel("customerType", lang)} <span className="text-rose-500">*</span>
+                  </Label>
                   <select
                     value={customerType}
                     onChange={(e) => {
                       setCustomerType(e.target.value);
-                      if (e.target.value !== "Business") setBusinessName("");
+                      if (e.target.value !== "Corporate / Business Company") setBusinessName("");
                     }}
-                    className="flex min-h-[44px] w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500/20 font-sans leading-relaxed"
+                    className="flex min-h-[46px] w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2.5 text-sm font-semibold text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 shadow-xs"
                   >
                     {[
-                      { value: "Country Owner", label: lang === "ur" ? "👑 کنٹری اونر / مین ہیڈ" : lang === "ps" ? "👑 د هیواد مالک / مشر" : lang === "fa" ? "👑 مالک کشوری / رئیس" : lang === "ar" ? "👑 مالك الدولة / رئيس" : "👑 Country Owner / Main Head" },
-                      { value: "Branch Owner", label: lang === "ur" ? "🏛️ برانچ اونر / سٹی منیجر" : lang === "ps" ? "🏛️ د څانګې مالک / مدیر" : lang === "fa" ? "🏛️ مالک شعبه / مدیر" : lang === "ar" ? "🏛️ مالك الفرع / مدير" : "🏛️ Branch Owner / Manager" },
-                      { value: "Company Owner", label: lang === "ur" ? "🏢 کمپنی اونر / پارٹنر" : lang === "ps" ? "🏢 د شرکت مالک / شریک" : lang === "fa" ? "🏢 مالک شرکت / شریک" : lang === "ar" ? "🏢 مالك الشركة / الشريك" : "🏢 Company Owner / Partner" },
-                      { value: "Manager", label: lang === "ur" ? "👔 منیجر / ڈائریکٹر" : lang === "ps" ? "👔 مدیر / لارښود" : lang === "fa" ? "👔 مدیر / دایرکتور" : lang === "ar" ? "👔 مدير / المشرف" : "👔 Manager / Director" },
-                      { value: "Employee", label: lang === "ur" ? "💼 ملازم / عملہ" : lang === "ps" ? "💼 کارمند / عمله" : lang === "fa" ? "💼 کارمند / پرسنل" : lang === "ar" ? "💼 موظف / طاقم العمل" : "💼 Employee / Staff" },
-                      { value: "Customer", label: lang === "ur" ? "👤 کسٹمر / کلائنٹ" : lang === "ps" ? "👤 پیرودونکی / ګاهک" : lang === "fa" ? "👤 مشتری / خریدار" : lang === "ar" ? "👤 عميل / زبون" : "👤 Customer / Client" },
-                      { value: "Vendor", label: lang === "ur" ? "🏭 سپلائر / وینڈر" : lang === "ps" ? "🏭 عرضه کوونکی / وېشونکی" : lang === "fa" ? "🏭 تأمین‌کننده / فروشنده" : lang === "ar" ? "🏭 مورد / بائع" : "🏭 Supplier / Vendor" },
-                      { value: "Truck Owner", label: lang === "ur" ? "🚚 مالک ٹرک / ٹرانسپورٹر" : lang === "ps" ? "🚚 د ټرک مالک / ټرانسپورټر" : lang === "fa" ? "🚚 مالک موتربار / ترانسپورت" : lang === "ar" ? "🚚 مالك الشاحنة / ناقل" : "🚚 Truck Owner / Transporter" },
-                      { value: "Driver", label: lang === "ur" ? "🚛 ٹرک ڈرائیور" : lang === "ps" ? "🚛 د ټرک چلوونکی" : lang === "fa" ? "🚛 راننده موتربار" : lang === "ar" ? "🚛 سائق الشاحنة" : "🚛 Truck Driver" },
-                      { value: "Clearing Agent", label: lang === "ur" ? "🛃 کسٹم / کلیئرنگ ایجنٹ" : lang === "ps" ? "🛃 ګمرکي ایجنټ" : lang === "fa" ? "🛃 کارگزار گمرکی" : lang === "ar" ? "🛃 مخلص جمركي" : "🛃 Customs / Clearing Agent" },
-                      { value: "Business", label: lang === "ur" ? "🏢 کارپوریٹ کمپنی" : lang === "ps" ? "🏢 کارپوریټ شرکت" : lang === "fa" ? "🏢 شرکت تجاری" : lang === "ar" ? "🏢 شركة أعمال" : "🏢 Corporate / Business Company" }
+                      { value: "Country Owner / Main Head", label: "👑 Country Owner / Main Head" },
+                      { value: "Branch Owner / Manager", label: "🏛️ Branch Owner / Manager" },
+                      { value: "Company Owner / Partner", label: "🏢 Company Owner / Partner" },
+                      { value: "Manager / Director", label: "👔 Manager / Director" },
+                      { value: "Employee / Staff", label: "💼 Employee / Staff" },
+                      { value: "Customer / Client", label: "👤 Customer / Client" },
+                      { value: "Supplier / Vendor", label: "🏭 Supplier / Vendor" },
+                      { value: "Truck Owner / Transporter", label: "🚚 Truck Owner / Transporter" },
+                      { value: "Truck Driver", label: "🚛 Truck Driver" },
+                      { value: "Customs / Clearing Agent", label: "📊 Customs / Clearing Agent" },
+                      { value: "Corporate / Business Company", label: "🏢 Corporate / Business Company" },
                     ].map((opt) => (
                       <option key={opt.value} value={opt.value}>
                         {opt.label}
@@ -704,81 +733,119 @@ export function CustomerForm({
                   </select>
                 </div>
 
-                {/* Quick Save Banner for fast person creation */}
-                <div className="flex items-center justify-between bg-teal-50 border border-teal-200 rounded-xl p-3">
+                {/* Quick Save Banner */}
+                <div className="flex items-center justify-between bg-teal-50/70 border border-teal-200/80 rounded-xl p-3.5 gap-3">
                   <div className="text-xs text-teal-800">
-                    <span className="font-bold">⚡ {getLabel("quickSaveAvailableLabel", lang)}</span> {getLabel("quickSaveAvailableMsg", lang)}
+                    <p className="font-bold flex items-center gap-1 text-teal-900">
+                      <span>⚡</span> {getLabel("quickSaveAvailableLabel", lang)}
+                    </p>
+                    <p className="text-[11px] text-teal-700 mt-0.5">{getLabel("quickSaveAvailableMsg", lang)}</p>
                   </div>
                   <Button
                     type="button"
                     onClick={submitForm}
                     disabled={!ready || saving}
                     size="sm"
-                    className="bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs h-8 px-4 rounded-lg shadow-xs"
+                    className="bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs h-9 px-4 rounded-xl shadow-xs shrink-0 gap-1.5"
                   >
-                    <Save className="h-3.5 w-3.5 mr-1" />
-                    {saving ? "Saving..." : "Save Person Master"}
+                    <Save className="h-3.5 w-3.5" />
+                    <span>{getLabel("savePersonMaster", lang)}</span>
                   </Button>
                 </div>
 
-                {customerType === "Business" && (
+                {/* Names */}
+                {isBusiness && (
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold text-slate-700">{getLabel("businessNameCompanyName", lang)} *</Label>
+                    <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      {getLabel("businessNameCompanyName", lang)} <span className="text-rose-500">*</span>
+                    </Label>
                     <Input
                       value={businessName}
                       onChange={(e) => setBusinessName(e.target.value)}
                       placeholder={getLabel("companyNamePlaceholderExample", lang)}
-                      className="bg-white text-slate-900 border-slate-200 text-xs h-10"
+                      className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-700 text-xs h-11 rounded-xl"
                     />
                   </div>
                 )}
 
-                <div className="grid gap-3 grid-cols-2">
+                <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold text-slate-700">
-                      {customerType === "Business" ? `${getLabel("representativeFirstName", lang)} *` : `${getLabel("firstName", lang)} *`}
+                    <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      {isBusiness ? getLabel("representativeFirstName", lang) : getLabel("firstName", lang)} <span className="text-rose-500">*</span>
                     </Label>
-                    <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder={getLabel("firstName", lang)} className="bg-white text-slate-900 border-slate-200 text-xs h-10" />
+                    <div className="relative">
+                      <User className={`absolute ${isRtl ? "right-3" : "left-3"} top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400`} />
+                      <Input
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        placeholder={getLabel("firstName", lang)}
+                        className={`bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-700 text-xs h-11 rounded-xl ${isRtl ? "pr-9" : "pl-9"}`}
+                      />
+                    </div>
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold text-slate-700">
-                      {customerType === "Business" ? `${getLabel("representativeLastName", lang)} *` : `${getLabel("lastName", lang)} *`}
+                    <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      {isBusiness ? getLabel("representativeLastName", lang) : getLabel("lastName", lang)} <span className="text-rose-500">*</span>
                     </Label>
-                    <Input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder={getLabel("lastName", lang)} className="bg-white text-slate-900 border-slate-200 text-xs h-10" />
+                    <div className="relative">
+                      <User className={`absolute ${isRtl ? "right-3" : "left-3"} top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400`} />
+                      <Input
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        placeholder={getLabel("lastName", lang)}
+                        className={`bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-700 text-xs h-11 rounded-xl ${isRtl ? "pr-9" : "pl-9"}`}
+                      />
+                    </div>
                   </div>
                 </div>
 
-                {customerType !== "Business" && (
+                {!isBusiness && (
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold text-slate-700">{getLabel("fatherNameRepresentative", lang)}</Label>
-                    <Input value={fatherName} onChange={(e) => setFatherName(e.target.value)} placeholder={getLabel("fatherName", lang)} className="bg-white text-slate-900 border-slate-200 text-xs h-10" />
+                    <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      {getLabel("fatherNameRepresentative", lang)}
+                    </Label>
+                    <div className="relative">
+                      <User className={`absolute ${isRtl ? "right-3" : "left-3"} top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400`} />
+                      <Input
+                        value={fatherName}
+                        onChange={(e) => setFatherName(e.target.value)}
+                        placeholder={getLabel("fatherName", lang)}
+                        className={`bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-200 dark:border-slate-700 text-xs h-11 rounded-xl ${isRtl ? "pr-9" : "pl-9"}`}
+                      />
+                    </div>
                   </div>
                 )}
 
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">{getLabel("passportSizePicture", lang)} *</Label>
-                  <div className="flex flex-col items-center w-max gap-2 mt-2">
-                    {passportPicture ? (
-                      <div className="relative h-16 w-16 overflow-hidden rounded-full border shadow-sm">
-                        <img src={passportPicture} alt={getLabel("passportSizePicture", lang)} className="h-full w-full object-cover" />
-                        <button
-                          type="button"
-                          onClick={() => setPassportPicture("")}
-                          className="absolute right-0 top-0 grid h-5 w-5 place-items-center rounded-full bg-rose-500 text-white shadow-sm"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="grid h-16 w-16 place-items-center rounded-full bg-slate-50 border-2 border-dashed border-slate-300">
-                        <User className="h-6 w-6 text-slate-300" />
-                      </div>
-                    )}
+                {/* Passport Size Picture matching Screenshot 3 */}
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    {getLabel("passportSizePicture", lang)} <span className="text-rose-500">*</span>
+                  </Label>
+                  <div className="flex items-center gap-4">
+                    <div className="relative shrink-0">
+                      {passportPicture ? (
+                        <div className="relative h-20 w-20 overflow-hidden rounded-full border-2 border-blue-500 shadow-xs">
+                          <img src={passportPicture} alt={getLabel("passportSizePicture", lang)} className="h-full w-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => setPassportPicture("")}
+                            className="absolute right-0 top-0 grid h-5 w-5 place-items-center rounded-full bg-rose-500 text-white shadow-sm"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="relative h-20 w-20 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 flex items-center justify-center">
+                          <User className="h-10 w-10 text-slate-300 dark:text-slate-600" />
+                          <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-xs border-2 border-white dark:border-slate-900">
+                            <Camera className="h-3 w-3" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
 
-                    <Label className="cursor-pointer flex items-center justify-center h-7 px-3 rounded-full bg-slate-100 hover:bg-slate-200 border text-slate-500 shadow-sm transition gap-1.5 text-[10px] font-semibold">
-                      <Paperclip className="h-3 w-3" />
-                      <span>{getLabel("attach", lang)}</span>
-                      <Input
+                    <label className="flex-1 cursor-pointer">
+                      <input
                         type="file"
                         accept="image/*"
                         onChange={(e) => {
@@ -791,8 +858,43 @@ export function CustomerForm({
                         }}
                         className="hidden"
                       />
-                    </Label>
+                      <div className="border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 rounded-2xl p-4 flex flex-col items-center justify-center text-center bg-slate-50/50 dark:bg-slate-800/40 hover:bg-blue-50/20 transition-all">
+                        <Upload className="h-5 w-5 text-blue-600 mb-1" />
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                          {getLabel("clickToUploadPhoto", lang)}
+                        </span>
+                        <span className="text-[10px] text-slate-400 mt-0.5">
+                          {getLabel("uploadPhotoHint1", lang)}
+                        </span>
+                        <span className="text-[10px] text-slate-400">
+                          {getLabel("uploadPhotoHint2", lang)}
+                        </span>
+                      </div>
+                    </label>
                   </div>
+                </div>
+
+                {/* Bottom Navigation Buttons */}
+                <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setCurrentStep(1)}
+                    disabled={currentStep === 1}
+                    className="border-slate-200 text-slate-600 font-bold text-xs h-10 px-5 rounded-xl"
+                  >
+                    <ArrowLeft className={`h-3.5 w-3.5 ${isRtl ? "rotate-180 ml-1.5" : "mr-1.5"}`} />
+                    <span>{getLabel("stepBack", lang)}</span>
+                  </Button>
+
+                  <Button
+                    type="button"
+                    onClick={() => setCurrentStep(2)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs h-10 px-6 rounded-xl shadow-xs flex items-center gap-1.5"
+                  >
+                    <span>{getLabel("stepNext", lang)}</span>
+                    <ArrowLeft className={`h-3.5 w-3.5 ${isRtl ? "" : "rotate-180"}`} />
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -1114,7 +1216,6 @@ export function CustomerForm({
               </CardContent>
             </Card>
           )}
-          </div>
 
           {/* Form Actions */}
           <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">
@@ -1158,90 +1259,137 @@ export function CustomerForm({
           ) : null}
         </div>
 
-        {/* Right Preview Panel */}
-        <aside className="lg:col-span-5 xl:col-span-5 h-fit rounded-xl border bg-card p-6 shadow-sm xl:sticky xl:top-24">
-          <div className="flex items-center justify-between border-b pb-3 mb-4">
+        {/* Right Preview Panel matching Screenshot 3 */}
+        <aside className="lg:col-span-5 xl:col-span-5 h-fit rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xs xl:sticky xl:top-24">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3.5 mb-5">
             <div className="flex items-center gap-2">
-              <Building2 className="h-4.5 w-4.5 text-teal-600" />
-              <h2 className="font-semibold text-slate-800 text-sm">{getLabel("livePreview", lang)}</h2>
+              <Eye className="h-4.5 w-4.5 text-blue-600" />
+              <h2 className="font-bold text-slate-900 dark:text-slate-100 text-sm">{getLabel("livePreview", lang)}</h2>
             </div>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 border border-amber-200">
-              <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
-              {getLabel("draftPreview", lang)}
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 dark:bg-amber-950/40 px-2.5 py-0.5 text-[11px] font-bold text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+              <Eye className="h-3 w-3" />
+              <span>{getLabel("draftPreview", lang)}</span>
             </span>
           </div>
 
-          <div className="space-y-4 text-xs">
-            {customerType === "Business" && (
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{getLabel("businessCompanyName", lang)}</p>
-                <p className="text-sm font-extrabold text-slate-900 mt-0.5">{businessName || getLabel("newBusiness", lang)}</p>
-              </div>
-            )}
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                {customerType === "Business" ? getLabel("representativeName", lang) : getLabel("customerName", lang)}
-              </p>
-              <div className="flex items-center gap-3">
-                {passportPicture && (
-                  <img src={passportPicture} alt={getLabel("passportSizePicture", lang)} className="h-10 w-10 rounded-full border shadow-sm object-cover" />
+          <div className="space-y-5">
+            {/* Avatar & Customer Name/Type matching Screenshot 3 */}
+            <div className="flex items-center gap-4">
+              <div className="h-20 w-20 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-700 overflow-hidden">
+                {passportPicture ? (
+                  <img src={passportPicture} alt={getLabel("passportSizePicture", lang)} className="h-full w-full object-cover" />
+                ) : (
+                  <User className="h-10 w-10 text-slate-300 dark:text-slate-600" />
                 )}
-                <p className="text-sm font-extrabold text-slate-900">
-                  {firstName || lastName ? `${firstName} ${lastName}`.trim() : getLabel("newCustomer", lang)}
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  {getLabel("customerName", lang)}
+                </p>
+                <p className="text-base font-black text-slate-900 dark:text-slate-100 truncate">
+                  {isBusiness
+                    ? (businessName || getLabel("newBusiness", lang))
+                    : (firstName || lastName ? `${firstName} ${lastName}`.trim() : getLabel("newCustomer", lang))}
+                </p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-2">
+                  {getLabel("customerType", lang)}
+                </p>
+                <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 truncate">
+                  {customerType}
                 </p>
               </div>
             </div>
-            {customerType !== "Business" && fatherName && (
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{getLabel("fatherName", lang)}</p>
-                <p className="text-xs font-semibold text-slate-700 mt-0.5">{fatherName}</p>
-              </div>
-            )}
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{getLabel("customerType", lang)}</p>
-              <p className="text-xs font-semibold text-slate-700 mt-0.5">{customerType}</p>
-            </div>
-            <div className="border-t pt-3">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{getLabel("location", lang)}</p>
-              <p className="text-xs text-slate-700 font-semibold mt-0.5">{previewLocation}</p>
-              {cityCode && <p className="text-[10px] text-muted-foreground mt-0.5 font-mono" dir="ltr">{getLabel("zipCode", lang)}: {cityCode}</p>}
-            </div>
-            {address && (
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{getLabel("fullAddress", lang)}</p>
-                <p className="text-xs text-slate-600 leading-relaxed mt-0.5">{address}</p>
-              </div>
-            )}
 
-            <div className="border-t pt-3 space-y-2">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{getLabel("contacts", lang)} ({contacts.filter(c => c.value.trim()).length})</p>
-              {contacts.filter(c => c.value.trim()).map((c, idx) => {
-                const label = c.type.startsWith("Custom: ") ? c.type.slice(8) : c.type;
-                return (
-                  <div key={idx} className="flex justify-between items-center">
-                    <span className="text-slate-500 font-semibold">{label || "Custom"}:</span>
-                    <span className="font-bold text-slate-800 font-mono text-left" dir="ltr">{c.value}</span>
-                  </div>
-                );
-              })}
-              {contacts.filter(c => c.value.trim()).length === 0 && (
-                <p className="text-[10px] italic text-muted-foreground">{getLabel("noContactsEntered", lang)}</p>
+            {/* Location Section */}
+            <div className="border-t border-slate-100 dark:border-slate-800 pt-4">
+              <div className="flex items-center justify-between mb-1.5">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5 text-slate-400" />
+                  <span>{getLabel("location", lang)}</span>
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep(2)}
+                  className="text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline"
+                >
+                  {getLabel("editBtn", lang)}
+                </button>
+              </div>
+              <p className="text-xs text-slate-700 dark:text-slate-300 font-semibold">
+                {previewLocation !== "-" ? previewLocation : "-"}
+              </p>
+              {address && (
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                  {address}
+                </p>
               )}
             </div>
 
-            <div className="border-t pt-3 space-y-2">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{getLabel("documents", lang)} ({documents.filter(d => d.number.trim()).length})</p>
-              {documents.filter(d => d.number.trim()).map((d, idx) => {
-                const label = d.type.startsWith("Custom: ") ? d.type.slice(8) : d.type;
-                return (
-                  <div key={idx} className="flex justify-between items-center">
-                    <span className="text-slate-500 font-semibold">{label || "Custom"}:</span>
-                    <span className="font-bold text-slate-800 font-mono text-left" dir="ltr">{d.number}</span>
-                  </div>
-                );
-              })}
-              {documents.filter(d => d.number.trim()).length === 0 && (
-                <p className="text-[10px] italic text-muted-foreground">{getLabel("noDocumentsEntered", lang)}</p>
+            {/* Contacts Section */}
+            <div className="border-t border-slate-100 dark:border-slate-800 pt-4">
+              <div className="flex items-center justify-between mb-1.5">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                  <Phone className="h-3.5 w-3.5 text-slate-400" />
+                  <span>{getLabel("contacts", lang)} ({contacts.filter(c => c.value.trim()).length})</span>
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep(3)}
+                  className="text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline"
+                >
+                  {getLabel("editBtn", lang)}
+                </button>
+              </div>
+              {contacts.filter(c => c.value.trim()).length > 0 ? (
+                <div className="space-y-1.5">
+                  {contacts.filter(c => c.value.trim()).map((c, idx) => {
+                    const label = c.type.startsWith("Custom: ") ? c.type.slice(8) : c.type;
+                    return (
+                      <div key={idx} className="flex justify-between items-center text-xs">
+                        <span className="text-slate-500 font-semibold">{label}:</span>
+                        <span className="font-bold text-slate-800 dark:text-slate-200 font-mono" dir="ltr">{c.value}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-400 dark:text-slate-500 italic">
+                  {getLabel("noContactsEntered", lang)}
+                </p>
+              )}
+            </div>
+
+            {/* Documents Section */}
+            <div className="border-t border-slate-100 dark:border-slate-800 pt-4">
+              <div className="flex items-center justify-between mb-1.5">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                  <FileText className="h-3.5 w-3.5 text-slate-400" />
+                  <span>{getLabel("documents", lang)} ({documents.filter(d => d.number.trim()).length})</span>
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep(3)}
+                  className="text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline"
+                >
+                  {getLabel("editBtn", lang)}
+                </button>
+              </div>
+              {documents.filter(d => d.number.trim()).length > 0 ? (
+                <div className="space-y-1.5">
+                  {documents.filter(d => d.number.trim()).map((d, idx) => {
+                    const label = d.type.startsWith("Custom: ") ? d.type.slice(8) : d.type;
+                    return (
+                      <div key={idx} className="flex justify-between items-center text-xs">
+                        <span className="text-slate-500 font-semibold">{label}:</span>
+                        <span className="font-bold text-slate-800 dark:text-slate-200 font-mono" dir="ltr">{d.number}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-400 dark:text-slate-500 italic">
+                  {getLabel("noDocumentsEntered", lang)}
+                </p>
               )}
             </div>
           </div>

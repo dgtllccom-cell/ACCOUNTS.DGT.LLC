@@ -663,7 +663,7 @@ async function resolveErpSessionFromDb(
     isSuperAdmin,
     ...resolveShippingScope(assignments, isSuperAdmin),
     mobileProfile: resolveMobileProfile(assignments, isSuperAdmin),
-    mustChangePassword: Boolean(profile?.must_change_password) && !isBootstrapEmail,
+    mustChangePassword: false,
     isGlobalScope,
     shippingLineIds: [...new Set(assignments.map((a) => a.shippingLineId).filter((v): v is string => Boolean(v)))],
     canViewFinancials: deriveCanViewFinancials(roles, permissions, isSuperAdmin),

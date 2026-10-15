@@ -349,104 +349,144 @@ export default async function CountryDashboardPage(props: { searchParams?: Promi
         recentRoznamcha: [], branchSummaries: loaded.branchSummaries.map((b) => zeroNumbers(b)) }
     : loaded;
 
+  const countryFlag = (data.countryName || "").toLowerCase().includes("emirates") || (data.countryName || "").toLowerCase().includes("uae")
+    ? "🇦🇪"
+    : (data.countryName || "").toLowerCase().includes("afghanistan")
+    ? "🇦🇫"
+    : (data.countryName || "").toLowerCase().includes("pakistan")
+    ? "🇵🇰"
+    : (data.countryName || "").toLowerCase().includes("india")
+    ? "🇮🇳"
+    : "🌐";
+
   return (
-    <div className="space-y-6">
-      {/* Super Admin Country Selector Bar */}
-      {(isSuperAdmin || (domainSuper && countries.length > 1)) && countries.length > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <div className="flex items-center gap-2">
-            <Globe className="h-5 w-5 text-primary" />
-            <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-              {t(lang, "cpage.country_scope", "Country Scope:")}
-            </span>
-          </div>
-          <div className="flex flex-wrap items-center gap-1.5">
-            {isSuperAdmin && (
-              <Button
-                asChild
-                size="sm"
-                variant={countryId === "all" ? "default" : "outline"}
-                className="h-8 rounded-lg text-xs font-bold"
-              >
-                <Link href={`/dashboard/country?countryId=all&tab=${currentTab}` as Route}>
-                  {t(lang, "cpage.all_countries_global", "All Countries (Global)")}
-                </Link>
-              </Button>
-            )}
-            {countries.map((c) => (
-              <Button
+    <div className="space-y-4" dir={lang !== "en" ? "rtl" : "ltr"}>
+      {/* ── BREADCRUMB & COUNTRY SELECTOR PILLS (Matching Image 1) ────────── */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        {/* Left: Breadcrumbs */}
+        <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
+          <Link href="/dashboard" className="hover:text-blue-600 transition-colors">
+            {t(lang, "nav.dashboard", "Home")}
+          </Link>
+          <span className="text-slate-400">›</span>
+          <Link href="/dashboard" className="hover:text-blue-600 transition-colors">
+            {t(lang, "nav.dashboard", "Dashboard")}
+          </Link>
+          <span className="text-slate-400">›</span>
+          <span className="font-bold text-slate-800 dark:text-slate-200">
+            {t(lang, "cmd.country_admin_dashboard", "Country Dashboard")}
+          </span>
+        </div>
+
+        {/* Right: Country Pills (Image 1 top-right) */}
+        <div className="flex flex-wrap items-center gap-2">
+          {countries.map((c) => {
+            const isSelected = countryId === c.id;
+            const flag = (c.name || "").toLowerCase().includes("afghanistan")
+              ? "🇦🇫"
+              : (c.name || "").toLowerCase().includes("india")
+              ? "🇮🇳"
+              : (c.name || "").toLowerCase().includes("pakistan")
+              ? "🇵🇰"
+              : (c.name || "").toLowerCase().includes("emirates") || (c.name || "").toLowerCase().includes("uae")
+              ? "🇦🇪"
+              : "🌐";
+
+            return (
+              <Link
                 key={c.id}
-                asChild
-                size="sm"
-                variant={countryId === c.id ? "default" : "outline"}
-                className="h-8 rounded-lg text-xs font-bold"
+                href={`/dashboard/country?countryId=${c.id}&tab=${currentTab}` as Route}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all shadow-2xs ${
+                  isSelected
+                    ? "bg-[#1d63ed] text-white shadow-md shadow-blue-600/25 ring-2 ring-blue-500/30"
+                    : "bg-white dark:bg-slate-800 border border-slate-200/90 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
+                }`}
               >
-                <Link href={`/dashboard/country?countryId=${c.id}&tab=${currentTab}` as Route}>
-                  {c.name} ({c.currency_code})
-                </Link>
-              </Button>
-            ))}
+                <span>{flag}</span>
+                <span>{c.name} ({c.currency_code})</span>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── MODERN HERO BANNER (Glassmorphic Design without Dubai photo) ───────── */}
+      <div className="relative rounded-3xl overflow-hidden border border-blue-200/60 dark:border-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)] min-h-[165px] bg-gradient-to-r from-blue-50/90 via-sky-50/60 to-indigo-50/80 dark:from-slate-900 dark:via-blue-950/40 dark:to-slate-900">
+        {/* Soft Ambient Light Effects */}
+        <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-blue-400/15 to-indigo-400/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-1/4 w-72 h-72 bg-sky-400/10 rounded-full blur-2xl pointer-events-none" />
+
+        {/* Content */}
+        <div className="relative z-10 p-5 sm:p-6 flex flex-col justify-between min-h-[165px]">
+          <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+            <div className="space-y-1.5 max-w-xl">
+              {/* Role Badge */}
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-blue-50/80 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-900 text-[11px] font-bold text-blue-700 dark:text-blue-300 backdrop-blur-xs">
+                {isSuperAdmin
+                  ? "Global Super Admin"
+                  : domainSuper
+                  ? "Business Super Admin"
+                  : "Country Admin"}
+              </div>
+
+              {/* Title with UAE Flag Icon */}
+              <div className="flex items-center gap-3 pt-0.5">
+                <div className="h-8 w-11 rounded-md overflow-hidden shadow-xs border border-slate-200 dark:border-slate-700 flex items-center justify-center bg-white text-lg">
+                  {countryFlag}
+                </div>
+                <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+                  {data.countryName} {t(lang, "common.dashboard", "Dashboard")}
+                </h1>
+              </div>
+
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium">
+                {t(lang, "cpage.subtitle", "Country-level reporting, city branches, local ledger stand, and product inventory details.")}
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-2.5 self-start md:self-center shrink-0">
+              <Link
+                href="/dashboard/new-entry/branch-entry/city-branch"
+                className="h-9 px-3.5 rounded-xl border border-slate-200/90 dark:border-slate-700 bg-white/90 dark:bg-slate-900/90 hover:bg-white text-slate-800 dark:text-slate-100 text-xs font-bold inline-flex items-center gap-2 shadow-xs backdrop-blur-xs transition-all cursor-pointer"
+              >
+                <Building className="h-4 w-4 text-blue-600" />
+                <span>+ {t(lang, "cpage.add_branch", "Add Branch")}</span>
+              </Link>
+              <Link
+                href={`/dashboard/country?countryId=${countryId}&tab=${currentTab === "overview" ? "products" : "overview"}` as Route}
+                className="h-9 px-4 rounded-xl bg-[#6366f1] hover:bg-[#4f46e5] text-white text-xs font-bold inline-flex items-center gap-2 shadow-md shadow-indigo-500/25 transition-all cursor-pointer"
+              >
+                <Database className="h-4 w-4" />
+                <span>{currentTab === "overview" ? t(lang, "cpage.view_products", "View Products") : t(lang, "cpage.view_overview", "View Overview")}</span>
+              </Link>
+            </div>
+          </div>
+
+          {/* Navigation Tabs below (Overview | Products & Inventory) */}
+          <div className="flex items-center gap-6 pt-4 border-t border-slate-200/60 dark:border-slate-800/60 mt-3">
+            <Link
+              href={`/dashboard/country?countryId=${countryId}&tab=overview` as Route}
+              className={`text-xs font-bold pb-1 transition-all relative ${
+                currentTab === "overview"
+                  ? "text-blue-600 dark:text-blue-400 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-blue-600 dark:after:bg-blue-400"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-800"
+              }`}
+            >
+              {t(lang, "cpage.overview", "Overview")}
+            </Link>
+            <Link
+              href={`/dashboard/country?countryId=${countryId}&tab=products` as Route}
+              className={`text-xs font-bold pb-1 transition-all relative ${
+                currentTab === "products"
+                  ? "text-blue-600 dark:text-blue-400 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-blue-600 dark:after:bg-blue-400"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-800"
+              }`}
+            >
+              {t(lang, "cpage.products_inventory", "Products & Inventory")}
+            </Link>
           </div>
         </div>
-      )}
-
-      <section className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="inline-flex h-6 items-center rounded-md bg-sky-50 px-2 py-0.5 text-xs font-semibold text-sky-700 ring-1 ring-inset ring-sky-700/10 dark:bg-sky-950/40 dark:text-sky-300 dark:ring-sky-500/20">
-              {isSuperAdmin
-                ? t(lang, "cpage.global_super_admin_scope", "Global Super Admin Scope")
-                : domainSuper
-                  ? t(lang, "role.business_super_admin", "Business Super Admin")
-                  : t(lang, "cpage.country_admin_scope", "Country Admin Scope")}
-            </span>
-          </div>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
-            {data.countryName} {t(lang, "common.dashboard", "Dashboard")}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {t(lang, "cpage.subtitle", "Country-level reporting, city branches, local ledger stand, and product inventory details.")}
-          </p>
-        </div>
-
-        <div className="flex gap-2">
-          <Button asChild variant="outline">
-            <Link href="/dashboard/new-entry/branch-entry/city-branch">
-              <Building className="mr-2 h-4 w-4" /> {t(lang, "cpage.add_branch", "Add Branch")}
-            </Link>
-          </Button>
-          <Button asChild>
-            <Link href={`/dashboard/country?countryId=${countryId}&tab=${currentTab === "overview" ? "products" : "overview"}` as Route}>
-              {currentTab === "overview" ? t(lang, "cpage.view_products", "View Products") : t(lang, "cpage.view_overview", "View Overview")}
-            </Link>
-          </Button>
-        </div>
-      </section>
-
-      {/* Tabs list navigation */}
-      <div className="border-b border-slate-200 dark:border-slate-800">
-        <nav className="flex space-x-6" aria-label={t(lang, "cpage.tabs_aria", "Tabs")}>
-          <Link
-            href={`/dashboard/country?countryId=${countryId}&tab=overview` as Route}
-            className={`border-b-2 py-2 px-1 text-sm font-semibold transition duration-150 ${
-              currentTab === "overview"
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:border-slate-300 hover:text-foreground"
-            }`}
-          >
-            {t(lang, "cpage.overview", "Overview")}
-          </Link>
-          <Link
-            href={`/dashboard/country?countryId=${countryId}&tab=products` as Route}
-            className={`border-b-2 py-2 px-1 text-sm font-semibold transition duration-150 ${
-              currentTab === "products"
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:border-slate-300 hover:text-foreground"
-            }`}
-          >
-            {t(lang, "cpage.products_inventory", "Products & Inventory")}
-          </Link>
-        </nav>
       </div>
 
       {currentTab === "products" ? (

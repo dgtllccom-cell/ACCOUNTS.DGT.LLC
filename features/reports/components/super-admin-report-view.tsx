@@ -222,6 +222,33 @@ export function SuperAdminReportView({
     setActionsOpen(false);
   };
 
+  const [downloadingAuditExcel, setDownloadingAuditExcel] = useState(false);
+  const handleDownloadUrduAuditExcel = async () => {
+    try {
+      setDownloadingAuditExcel(true);
+      const res = await fetch("/api/erp/reports/audit-excel");
+      if (!res.ok) {
+        window.open("/reports/DGT_ERP_Complete_Business_System_Urdu_Audit_Report.xlsx", "_blank");
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `DGT_ERP_Complete_Business_System_Urdu_Audit_Report_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error(e);
+      window.open("/reports/DGT_ERP_Complete_Business_System_Urdu_Audit_Report.xlsx", "_blank");
+    } finally {
+      setDownloadingAuditExcel(false);
+      setActionsOpen(false);
+    }
+  };
+
   const handlePrint = () => {
     window.print();
     setActionsOpen(false);
@@ -377,6 +404,19 @@ export function SuperAdminReportView({
               <span>{t(lang, "common.refresh", "Refresh")}</span>
             </Button>
 
+            {viewerRole === "GLOBAL" && (
+              <Button
+                type="button"
+                size="sm"
+                onClick={handleDownloadUrduAuditExcel}
+                disabled={downloadingAuditExcel}
+                className="h-8.5 px-3 rounded-lg text-xs font-extrabold bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white gap-1.5 shadow-xs border border-emerald-500/30"
+              >
+                <Download className="h-3.5 w-3.5" />
+                <span>{lang === "ur" ? "اردو آڈٹ ایکسل رپورٹ" : "Urdu Audit Excel"}</span>
+              </Button>
+            )}
+
             <div className="relative">
               <Button
                 type="button"
@@ -390,9 +430,18 @@ export function SuperAdminReportView({
 
               {actionsOpen && (
                 <div
-                  className="absolute end-0 top-full mt-1.5 w-44 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900 z-50 animate-in fade-in zoom-in-95"
+                  className="absolute end-0 top-full mt-1.5 w-56 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900 z-50 animate-in fade-in zoom-in-95"
                   onMouseLeave={() => setActionsOpen(false)}
                 >
+                  <button
+                    type="button"
+                    onClick={handleDownloadUrduAuditExcel}
+                    disabled={downloadingAuditExcel}
+                    className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-bold text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/40"
+                  >
+                    <Download className="h-3.5 w-3.5 text-emerald-600" />
+                    <span>{downloadingAuditExcel ? "..." : (lang === "ur" ? "مکمل اردو آڈٹ رپورٹ (.xlsx)" : "Urdu Audit Report (.xlsx)")}</span>
+                  </button>
                   <button
                     type="button"
                     onClick={handleExportCsv}

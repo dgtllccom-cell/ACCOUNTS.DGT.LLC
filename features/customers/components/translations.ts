@@ -1283,6 +1283,504 @@ export const customerTranslations: Record<string, Record<SupportedLanguage, stri
     ar: "لم يتم رفع أي ملفات مستندات لهذا العميل.",
     fa: "هیچ فایل سندی برای این مشتری بارگذاری نشده است.",
     ps: "د دې پیرودونکي لپاره هیڅ سند فایلونه پورته شوي نه دي."
+  },
+  // ── 5-Language additions for matching Customer Management UI (Image 2 & 3) ──
+  searchAndFilters: {
+    en: "Search & Filters",
+    ur: "تلاش اور فلٹرز",
+    ar: "البحث والتصفية",
+    fa: "جستجو و فیلترها",
+    ps: "لټون او فلټرونه"
+  },
+  allReports: {
+    en: "All Reports",
+    ur: "تمام رپورٹس",
+    ar: "جميع التقارير",
+    fa: "همه گزارش‌ها",
+    ps: "ټول راپورونه"
+  },
+  drafts: {
+    en: "Drafts",
+    ur: "ڈرافٹس",
+    ar: "المسودات",
+    fa: "پیش‌نویس‌ها",
+    ps: "مسودې"
+  },
+  addCustomerBtn: {
+    en: "Add Customer",
+    ur: "کسٹمر شامل کریں",
+    ar: "إضافة عميل",
+    fa: "افزودن مشتری",
+    ps: "پیرودونکی اضافه کړئ"
+  },
+  customerListSub: {
+    en: "All registered customers",
+    ur: "تمام رجسٹرڈ کسٹمرز",
+    ar: "جميع العملاء المسجلين",
+    fa: "همه مشتریان ثبت‌شده",
+    ps: "ټول ثبت شوي پیرودونکي"
+  },
+  registeredThisMonth: {
+    en: "Registered This Month",
+    ur: "اس ماہ رجسٹرڈ",
+    ar: "المسجلون هذا الشهر",
+    fa: "ثبت‌نام این ماه",
+    ps: "په دې میاشت کې ثبت شوي"
+  },
+  registeredThisMonthSub: {
+    en: "New customers",
+    ur: "نئے کسٹمرز",
+    ar: "العملاء الجدد",
+    fa: "مشتریان جدید",
+    ps: "نوي پیرودونکي"
+  },
+  customerByCountry: {
+    en: "Customer by Country",
+    ur: "ملک کے لحاظ سے کسٹمرز",
+    ar: "العملاء حسب الدولة",
+    fa: "مشتریان بر اساس کشور",
+    ps: "د هیواد له مخې پیرودونکي"
+  },
+  customerByCountrySub: {
+    en: "Country wise report",
+    ur: "ملک وار رپورٹ",
+    ar: "تقرير حسب الدولة",
+    fa: "گزارش تفکیک کشور",
+    ps: "د هیواد وار راپور"
+  },
+  customerByBranch: {
+    en: "Customer by Branch",
+    ur: "برانچ کے لحاظ سے کسٹمرز",
+    ar: "العملاء حسب الفرع",
+    fa: "مشتریان بر اساس شعبه",
+    ps: "د څانګې له مخې پیرودونکي"
+  },
+  customerByBranchSub: {
+    en: "Branch wise report",
+    ur: "برانچ وار رپورٹ",
+    ar: "تقرير حسب الفرع",
+    fa: "گزارش تفکیک شعبه",
+    ps: "د څانګې وار راپور"
+  },
+  customerByStatus: {
+    en: "Customer by Status",
+    ur: "سٹیٹس کے لحاظ سے کسٹمرز",
+    ar: "العملاء حسب الحالة",
+    fa: "مشتریان بر اساس وضعیت",
+    ps: "د حالت له مخې پیرودونکي"
+  },
+  customerByStatusSub: {
+    en: "Active, Inactive, etc.",
+    ur: "فعال، غیر فعال، وغیرہ",
+    ar: "نشط، غير نشط، إلخ",
+    fa: "فعال، غیرفعال، و غیره",
+    ps: "فعال، غیر فعال، او نور"
+  },
+  exportData: {
+    en: "Export Data",
+    ur: "ڈیٹا برآمد کریں",
+    ar: "تصدير البيانات",
+    fa: "خروجی داده‌ها",
+    ps: "د معلوماتو صادرول"
+  },
+  exportDataSub: {
+    en: "Excel / PDF / Print",
+    ur: "ایکسل / پی ڈی ایف / پرنٹ",
+    ar: "إكسل / PDF / طباعة",
+    fa: "اکسل / پی‌دی‌اف / چاپ",
+    ps: "ایکسل / پی ډی ایف / چاپ"
+  },
+  viewDrafts: {
+    en: "View Drafts",
+    ur: "ڈرافٹس دیکھیں",
+    ar: "عرض المسودات",
+    fa: "مشاهده پیش‌نویس‌ها",
+    ps: "مسودې کتل"
+  },
+  viewDraftsSub: {
+    en: "All saved drafts",
+    ur: "تمام محفوظ شدہ ڈرافٹس",
+    ar: "جميع المسودات المحفوظة",
+    fa: "همه پیش‌نویس‌های ذخیره‌شده",
+    ps: "ټولې خوندي شوې مسودې"
+  },
+  myDrafts: {
+    en: "My Drafts",
+    ur: "میرے ڈرافٹس",
+    ar: "مسوداتي",
+    fa: "پیش‌نویس‌های من",
+    ps: "زما مسودې"
+  },
+  myDraftsSub: {
+    en: "Drafts by me",
+    ur: "میری تیار کردہ مسودات",
+    ar: "المسودات بواسطتي",
+    fa: "پیش‌نویس‌های تهیه شده توسط من",
+    ps: "زما لخوا جوړې شوې مسودې"
+  },
+  draftsByUsers: {
+    en: "Drafts by Users",
+    ur: "صارفین کے ڈرافٹس",
+    ar: "مسودات المستخدمين",
+    fa: "پیش‌نویس‌های کاربران",
+    ps: "د کاروونکو مسودې"
+  },
+  draftsByUsersSub: {
+    en: "User wise drafts",
+    ur: "صارف وار مسودات",
+    ar: "مسودات حسب المستخدم",
+    fa: "پیش‌نویس‌های تفکیک کاربر",
+    ps: "د کاروونکو له مخې مسودې"
+  },
+  todaysDrafts: {
+    en: "Today's Drafts",
+    ur: "آج کے ڈرافٹس",
+    ar: "مسودات اليوم",
+    fa: "پیش‌نویس‌های امروز",
+    ps: "د نن ورځې مسودې"
+  },
+  todaysDraftsSub: {
+    en: "Drafts created today",
+    ur: "آج تیار کردہ مسودات",
+    ar: "المسودات المنشأة اليوم",
+    fa: "پیش‌نویس‌های ایجاد شده امروز",
+    ps: "نن جوړې شوې مسودې"
+  },
+  restoreDraft: {
+    en: "Restore Draft",
+    ur: "ڈرافٹ بحال کریں",
+    ar: "استعادة المسودة",
+    fa: "بازیابی پیش‌نویس",
+    ps: "مسوده بېرته راوستل"
+  },
+  restoreDraftSub: {
+    en: "Open selected draft",
+    ur: "منتخب مسودہ کھولیں",
+    ar: "فتح المسودة المحددة",
+    fa: "باز کردن پیش‌نویس انتخابی",
+    ps: "ټاکل شوې مسوده پرانیستل"
+  },
+  manageDrafts: {
+    en: "Manage Drafts",
+    ur: "ڈرافٹس کا انتظام",
+    ar: "إدارة المسودات",
+    fa: "مدیریت پیش‌نویس‌ها",
+    ps: "د مسودو مدیریت"
+  },
+  manageDraftsSub: {
+    en: "Delete / Clear drafts",
+    ur: "مسودات حذف / صاف کریں",
+    ar: "حذف / مسح المسودات",
+    fa: "حذف / پاکسازی پیش‌نویس‌ها",
+    ps: "د مسودو پاکول / ړنګول"
+  },
+  newCustomerSub: {
+    en: "Add new customer",
+    ur: "نیا کسٹمر شامل کریں",
+    ar: "إضافة عميل جديد",
+    fa: "افزودن مشتری جدید",
+    ps: "نوی پیرودونکی اضافه کړئ"
+  },
+  importCustomers: {
+    en: "Import Customers",
+    ur: "کسٹمرز درآمد کریں",
+    ar: "استيراد العملاء",
+    fa: "وارد کردن مشتریان",
+    ps: "د پیرودونکو واردول"
+  },
+  importCustomersSub: {
+    en: "Import from Excel",
+    ur: "ایکسل سے امپورٹ کریں",
+    ar: "استيراد من إكسل",
+    fa: "وارد کردن از اکسل",
+    ps: "له ایکسل څخه راوړل"
+  },
+  quickAdd: {
+    en: "Quick Add",
+    ur: "فوری اندراج",
+    ar: "إضافة سريعة",
+    fa: "افزودن سریع",
+    ps: "چټک اضافه کول"
+  },
+  quickAddSub: {
+    en: "Minimal form",
+    ur: "مختصر فارم",
+    ar: "نموذج مختصر",
+    fa: "فرم خلاصه",
+    ps: "لنډه فورمه"
+  },
+  duplicateCheck: {
+    en: "Duplicate Check",
+    ur: "ڈپلیکیٹ چیک",
+    ar: "فحص التكرار",
+    fa: "بررسی تکراری",
+    ps: "د تکرار کتل"
+  },
+  duplicateCheckSub: {
+    en: "Check existing customer",
+    ur: "موجودہ کسٹمر کی جانچ کریں",
+    ar: "التحقق من العميل الحالي",
+    fa: "بررسی مشتریان موجود",
+    ps: "شته پیرودونکی کتل"
+  },
+  openLastDraft: {
+    en: "Open Last Draft",
+    ur: "آخری ڈرافٹ کھولیں",
+    ar: "فتح آخر مسودة",
+    fa: "باز کردن آخرین پیش‌نویس",
+    ps: "وروستۍ مسوده پرانیستل"
+  },
+  openLastDraftSub: {
+    en: "Continue saved draft",
+    ur: "محفوظ شدہ ڈرافٹ جاری رکھیں",
+    ar: "متابعة المسودة المحفوظة",
+    fa: "ادامه پیش‌نویس ذخیره‌شده",
+    ps: "خوندي شوې مسوده دوام ورکول"
+  },
+  totalBranches: {
+    en: "Total Branches",
+    ur: "کل برانچیں",
+    ar: "إجمالي الفروع",
+    fa: "مجموع شعب",
+    ps: "ټولې څانګې"
+  },
+  customersThisBranch: {
+    en: "Customers (This Branch)",
+    ur: "کسٹمرز (اس برانچ کے)",
+    ar: "العملاء (هذا الفرع)",
+    fa: "مشتریان (این شعبه)",
+    ps: "پیرودونکي (دا څانګه)"
+  },
+  topCountry: {
+    en: "Top Country",
+    ur: "نمایاں ملک",
+    ar: "أعلى دولة",
+    fa: "کشور برتر",
+    ps: "غوره هیواد"
+  },
+  branchAndUserDetails: {
+    en: "Branch & User Details",
+    ur: "برانچ اور صارف کی تفصیلات",
+    ar: "تفاصيل الفرع والمستخدمين",
+    fa: "اطلاعات شعبه و کاربران",
+    ps: "د څانګې او کاروونکي توضیحات"
+  },
+  customerSummary: {
+    en: "Customer Summary",
+    ur: "کسٹمر سمری",
+    ar: "ملخص العملاء",
+    fa: "خلاصه مشتریان",
+    ps: "د پیرودونکو لنډیز"
+  },
+  totalUsers: {
+    en: "Total Users",
+    ur: "کل صارفین",
+    ar: "إجمالي المستخدمين",
+    fa: "مجموع کاربران",
+    ps: "ټول کاروونکي"
+  },
+  activeUsers: {
+    en: "Active Users",
+    ur: "فعال صارفین",
+    ar: "المستخدمون النشطون",
+    fa: "کاربران فعال",
+    ps: "فعال کاروونکي"
+  },
+  inactiveUsers: {
+    en: "Inactive Users",
+    ur: "غیر فعال صارفین",
+    ar: "المستخدمون غير النشطين",
+    fa: "کاربران غیرفعال",
+    ps: "غیر فعال کاروونکي"
+  },
+  newThisMonth: {
+    en: "New This Month",
+    ur: "اس ماہ نئے",
+    ar: "جديد هذا الشهر",
+    fa: "جدید این ماه",
+    ps: "په دې میاشت کې نوي"
+  },
+  customerRegisterTitle: {
+    en: "Customer Register",
+    ur: "کسٹمر رجسٹر",
+    ar: "سجل العملاء",
+    fa: "دفتر ثبت مشتریان",
+    ps: "د پیرودونکو راجستر"
+  },
+  customerRegisterSubtitle: {
+    en: "Manage and view all registered customers.",
+    ur: "تمام رجسٹرڈ کسٹمرز کا انتظام اور جائزہ لیں۔",
+    ar: "إدارة وعرض جميع العملاء المسجلين.",
+    fa: "مدیریت و مشاهده تمامی مشتریان ثبت‌شده.",
+    ps: "د ټولو ثبت شویو پیرودونکو اداره او کتل."
+  },
+  allLeads: {
+    en: "All Leads",
+    ur: "تمام لیڈز",
+    ar: "جميع العملاء المحتملين",
+    fa: "همه مشتریان بالقوه",
+    ps: "ټول پیرودونکي"
+  },
+  sendToCustomer: {
+    en: "Send to Customer",
+    ur: "کسٹمر کو بھیجیں",
+    ar: "إرسال إلى العميل",
+    fa: "ارسال به مشتری",
+    ps: "پیرودونکي ته لیږل"
+  },
+  saveAsDraft: {
+    en: "Save as Draft",
+    ur: "ڈرافٹ کے طور پر محفوظ کریں",
+    ar: "حفظ كمسودة",
+    fa: "ذخیره به عنوان پیش‌نویس",
+    ps: "د مسودې په توګه خوندي کول"
+  },
+  stepPersonalInfoTitle: {
+    en: "Personal Info",
+    ur: "ذاتی معلومات",
+    ar: "المعلومات الشخصية",
+    fa: "اطلاعات شخصی",
+    ps: "شخصي معلومات"
+  },
+  stepPersonalInfoSub: {
+    en: "Basic information & identity",
+    ur: "بنیادی معلومات و شناخت",
+    ar: "المعلومات الأساسية والهوية",
+    fa: "اطلاعات پایه و هویت",
+    ps: "بنسټیز معلومات او هویت"
+  },
+  stepLocationTitle: {
+    en: "Location",
+    ur: "مقام و پتہ",
+    ar: "الموقع والعنوان",
+    fa: "موقعیت و آدرس",
+    ps: "ځای او پته"
+  },
+  stepLocationSub: {
+    en: "Address & business location",
+    ur: "پتہ اور کاروباری مقام",
+    ar: "العنوان وموقع العمل",
+    fa: "آدرس و محل کسب‌وکار",
+    ps: "پته او د سوداګرۍ ځای"
+  },
+  stepContactsDocsTitle: {
+    en: "Contacts & Docs",
+    ur: "رابطہ و دستاویزات",
+    ar: "جهات الاتصال والوثائق",
+    fa: "تماس‌ها و مدارک",
+    ps: "اړیکې او اسناد"
+  },
+  stepContactsDocsSub: {
+    en: "Contact details & documents",
+    ur: "رابطے کی تفصیلات اور دستاویزات",
+    ar: "بيانات الاتصال والمستندات",
+    fa: "اطلاعات تماس و مدارک",
+    ps: "د اړیکو جزئیات او اسناد"
+  },
+  stepReviewSaveTitle: {
+    en: "Review & Save",
+    ur: "جائزہ اور محفوظ کریں",
+    ar: "المراجعة والحفظ",
+    fa: "بررسی و ذخیره",
+    ps: "کتنه او خوندي کول"
+  },
+  stepReviewSaveSub: {
+    en: "Verify and save customer",
+    ur: "تصدیق کریں اور کسٹمر محفوظ کریں",
+    ar: "التحقق وحفظ العميل",
+    fa: "تأیید و ذخیره مشتری",
+    ps: "تایید او پیرودونکی خوندي کړئ"
+  },
+  clickToUploadPhoto: {
+    en: "Click to upload photo",
+    ur: "تصویر اپ لوڈ کرنے کے لیے کلک کریں",
+    ar: "انقر لتحميل الصورة",
+    fa: "برای بارگذاری عکس کلیک کنید",
+    ps: "د عکس پورته کولو لپاره کلیک وکړئ"
+  },
+  uploadPhotoHint1: {
+    en: "PNG, JPG (Max 2MB)",
+    ur: "PNG, JPG (زیادہ سے زیادہ 2MB)",
+    ar: "PNG, JPG (الحد الأقصى 2 ميجابايت)",
+    fa: "PNG, JPG (حداکثر ۲ مگابایت)",
+    ps: "PNG, JPG (تر ټولو زیات 2MB)"
+  },
+  uploadPhotoHint2: {
+    en: "Passport size recommended",
+    ur: "پاسپورٹ سائز تصویر تجویز کردہ",
+    ar: "يوصى بحجم صورة جواز السفر",
+    fa: "عکس اندازه پاسپورت توصیه می‌شود",
+    ps: "د پاسپورت د کچې عکس وړاندیز شوی"
+  },
+  editBtn: {
+    en: "Edit",
+    ur: "تبدیل کریں",
+    ar: "تعديل",
+    fa: "ویرایش",
+    ps: "سمول"
+  },
+  savePersonMaster: {
+    en: "Save Person Master",
+    ur: "پرسن ماسٹر محفوظ کریں",
+    ar: "حفظ الشخص الرئيسي",
+    fa: "ذخیره شخص اصلی",
+    ps: "اصلي شخص خوندي کول"
+  },
+  personalInfoSub: {
+    en: "Enter customer's basic information and identity details",
+    ur: "کسٹمر کی بنیادی معلومات اور شناختی تفصیلات درج کریں",
+    ar: "أدخل المعلومات الأساسية وتفاصيل هوية العميل",
+    fa: "اطلاعات پایه و مشخصات هویتی مشتری را وارد کنید",
+    ps: "د پیرودونکي لومړني معلومات او د هویت توضیحات دننه کړئ"
+  },
+  stepBack: {
+    en: "Back",
+    ur: "پیچھے",
+    ar: "السابق",
+    fa: "قبلی",
+    ps: "شاته"
+  },
+  stepNext: {
+    en: "Next",
+    ur: "اگلا",
+    ar: "التالي",
+    fa: "بعدی",
+    ps: "بل"
+  },
+  customersGroup: {
+    en: "Customers",
+    ur: "کسٹمرز",
+    ar: "العملاء",
+    fa: "مشتریان",
+    ps: "پیرودونکي"
+  },
+  perPage: {
+    en: "per page",
+    ur: "فی صفحہ",
+    ar: "لكل صفحة",
+    fa: "در هر صفحه",
+    ps: "په هره پاڼه کې"
+  },
+  showing: {
+    en: "Showing",
+    ur: "دکھایا جا رہا ہے",
+    ar: "عرض",
+    fa: "نمایش",
+    ps: "ښودل کیږي"
+  },
+  to: {
+    en: "to",
+    ur: "تا",
+    ar: "إلى",
+    fa: "تا",
+    ps: "تر"
+  },
+  of: {
+    en: "of",
+    ur: "از",
+    ar: "من",
+    fa: "از",
+    ps: "له"
   }
 };
 

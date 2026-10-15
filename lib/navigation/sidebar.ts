@@ -605,98 +605,81 @@ export const sidebarTree: SidebarNode[] = [
     iconKey: "clipboard-list",
     children: [
       {
-        key: "journal-stock-sub",
+        key: "stock-journal",
         labelKey: "nav.journal_stock",
-        iconKey: "file-text",
+        href: "/dashboard/purchase/stock/journal" as Route
+      },
+      {
+        key: "stock-loading",
+        labelKey: "nav.loading_stock" as any,
+        href: "/dashboard/purchase/stock/loading" as Route
+      },
+      {
+        key: "stock-confirmed",
+        labelKey: "nav.confirmed_stock",
+        href: "/dashboard/purchase/stock/confirmed" as Route
+      },
+      {
+        key: "stock-warehouse",
+        labelKey: "nav.warehouse_stock",
+        href: "/dashboard/purchase/stock/warehouse" as Route
+      },
+      {
+        key: "stock-export",
+        labelKey: "nav.export_stock",
+        href: "/dashboard/purchase/stock/export" as Route
+      },
+      {
+        key: "stock-local-market",
+        labelKey: "nav.local_market_stock" as any,
+        href: "/dashboard/purchase/stock/local-market" as Route
+      },
+      {
+        key: "stock-transfer",
+        labelKey: "nav.stock_transfer" as any,
+        href: "/dashboard/purchase/stock/transfer" as Route
+      },
+      {
+        key: "stock-all-reports-group",
+        labelKey: "nav.all_stock_reports" as any,
+        iconKey: "bar-chart",
         children: [
           {
-            key: "journal-stock-group",
-            labelKey: "nav.journal_stock_report",
-            iconKey: "bar-chart",
-            children: [
-              {
-                key: "salesman-report",
-                labelKey: "nav.salesman_report",
-                href: "/dashboard/inventory/stock-reports/salesman" as Route
-              },
-              {
-                key: "country-report",
-                labelKey: "nav.country_report",
-                href: "/dashboard/inventory/stock-reports/country" as Route
-              },
-              {
-                key: "branch-report",
-                labelKey: "nav.branch_report",
-                href: "/dashboard/inventory/stock-reports/branch" as Route
-              }
-            ]
+            key: "stock-reports-overview",
+            labelKey: "nav.all_stock_reports" as any,
+            href: "/dashboard/inventory/stock-reports" as Route
           },
           {
-            key: "journal-bill-checking-group",
-            labelKey: "nav.journal_stock_checking_report",
-            iconKey: "file-text",
-            children: [
-              {
-                key: "journal-salesman-report",
-                labelKey: "nav.journal_salesman_report",
-                href: "/dashboard/inventory/journal-report/salesman" as Route
-              },
-              {
-                key: "journal-country-report",
-                labelKey: "nav.journal_country_report",
-                href: "/dashboard/inventory/journal-report/country" as Route
-              },
-              {
-                key: "journal-branch-report",
-                labelKey: "nav.journal_branch_report",
-                href: "/dashboard/inventory/journal-report/branch" as Route
-              }
-            ]
+            key: "stock-inventory-register",
+            labelKey: "nav.stock",
+            href: "/dashboard/inventory" as Route
+          },
+          {
+            key: "stock-branch-report",
+            labelKey: "nav.branch_report",
+            href: "/dashboard/inventory/stock-reports/branch" as Route
+          },
+          {
+            key: "stock-country-report",
+            labelKey: "nav.country_report",
+            href: "/dashboard/inventory/stock-reports/country" as Route
+          },
+          {
+            key: "stock-salesman-report",
+            labelKey: "nav.salesman_report",
+            href: "/dashboard/inventory/stock-reports/salesman" as Route
+          },
+          {
+            key: "journal-branch-report",
+            labelKey: "nav.journal_branch_report",
+            href: "/dashboard/inventory/journal-report/branch" as Route
           }
         ]
       },
       {
-        key: "stock-sub",
-        labelKey: "nav.stock",
-        iconKey: "clipboard-list",
-        menuSettingKey: "menu_purchase_stock_section",
-        children: [
-          {
-            key: "stock-booking",
-            labelKey: "nav.booking_stock",
-            href: "/dashboard/purchase/stock/booking" as Route
-          },
-          {
-            key: "stock-confirmed",
-            labelKey: "nav.confirmed_stock",
-            href: "/dashboard/purchase/stock/confirmed" as Route
-          },
-          {
-            key: "stock-import",
-            labelKey: "nav.import_stock",
-            href: "/dashboard/purchase/stock/import" as Route
-          },
-          {
-            key: "stock-warehouse",
-            labelKey: "nav.warehouse_stock",
-            href: "/dashboard/purchase/stock/warehouse" as Route
-          },
-          {
-            key: "stock-in-transit",
-            labelKey: "nav.in_transit_stock",
-            href: "/dashboard/purchase/stock/in-transit" as Route
-          },
-          {
-            key: "stock-export",
-            labelKey: "nav.export_stock",
-            href: "/dashboard/purchase/stock/export" as Route
-          },
-          {
-            key: "stock-delivered",
-            labelKey: "nav.delivered_stock",
-            href: "/dashboard/purchase/stock/delivered" as Route
-          }
-        ]
+        key: "stock-history",
+        labelKey: "nav.stock_movement_history" as any,
+        href: "/dashboard/purchase/stock/history" as Route
       }
     ]
   },

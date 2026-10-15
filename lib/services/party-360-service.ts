@@ -75,6 +75,19 @@ export type PartyAffiliationSummary = {
     clearingAgentCode?: string | null;
   }>;
 
+  accounts: Array<{
+    id: string;
+    code: string;
+    name: string;
+    currency: string;
+    currentBalance: number;
+    domain: string;
+    scope: string;
+    status?: string | null;
+    countryName?: string;
+    branchName?: string;
+  }>;
+
   transactionsSummary: {
     totalEntries: number;
     latestEntryDate?: string | null;
@@ -258,8 +271,7 @@ export class Party360Service {
         };
       });
 
-      // 4d. Clearing agent records directly linked to this person (an individual acting
-      // as a clearing agent). Shipping lines have no person FK by design — not surfaced here.
+      // 4d. Clearing agent records directly linked to this person
       const allClearingAgents = await sql`
         SELECT id, name, clearing_agent_code, person_id
         FROM public.clearing_agents
@@ -267,6 +279,31 @@ export class Party360Service {
       `;
       const matchedClearingAgents = (resolvedCustomerId ? allClearingAgents.filter((ca: any) => ca.person_id === resolvedCustomerId) : [])
         .map((ca: any) => ({ id: ca.id, name: ca.name, clearingAgentCode: ca.clearing_agent_code }));
+
+      // 4e. Accounts (Chart of Accounts / Enterprise Accounts) linked to this person
+      const allAccounts = await sql`
+        SELECT ea.id, ea.code, ea.name, ea.currency, ea.current_balance, ea.scope, ea.operational_domain, ea.status,
+               ea.branch_code, ea.customer_id, co.name AS country_name, cb.name AS branch_name
+        FROM public.enterprise_accounts ea
+        LEFT JOIN public.countries co ON co.id = ea.country_id
+        LEFT JOIN public.country_branches cb ON cb.id = ea.country_branch_id
+        WHERE ea.deleted_at IS NULL
+          AND (${resolvedCustomerId ? sql`ea.customer_id = ${resolvedCustomerId}::uuid` : sql`false`}
+               OR (${targetName ? sql`LOWER(btrim(ea.name)) = LOWER(btrim(${targetName}))` : sql`false`}))
+        ORDER BY ea.code ASC
+      `;
+      const matchedAccounts = allAccounts.map((ac: any) => ({
+        id: ac.id,
+        code: ac.code,
+        name: ac.name,
+        currency: ac.currency,
+        currentBalance: Number(ac.current_balance || 0),
+        domain: ac.operational_domain,
+        scope: ac.scope,
+        status: ac.status,
+        countryName: ac.country_name,
+        branchName: ac.branch_name || ac.branch_code
+      }));
 
       // 5. Aggregate transaction counts if customerRow exists
       let totalEntries = 0;
@@ -306,6 +343,7 @@ export class Party360Service {
         warehouses: matchedWarehouses,
         trucks: matchedTrucks,
         clearingAgents: matchedClearingAgents,
+        accounts: matchedAccounts,
         transactionsSummary: {
           totalEntries,
           latestEntryDate
@@ -440,6 +478,7 @@ export class Party360Service {
           warehouses: [],
           trucks: [],
           clearingAgents: [],
+          accounts: [],
           transactionsSummary: {
             totalEntries: 0
           }

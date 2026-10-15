@@ -36,6 +36,12 @@ export type CustomerRow = {
   employee_code?: string | null;
   employee_designation?: string | null;
   employee_department?: string | null;
+  is_employee?: boolean;
+  is_truck_owner?: boolean;
+  is_truck_driver?: boolean;
+  accounts_count?: number;
+  banks_count?: number;
+  is_clearing_agent?: boolean;
 };
 
 export type CustomerContactRow = {
@@ -100,7 +106,13 @@ export class CustomersRepository {
           ct.name as city_name,
           emp.employee_code,
           emp.designation as employee_designation,
-          emp.department as employee_department
+          emp.department as employee_department,
+          (emp.employee_code IS NOT NULL) as is_employee,
+          COALESCE(trk.is_truck_owner, false) as is_truck_owner,
+          COALESCE(trk.is_truck_driver, false) as is_truck_driver,
+          COALESCE(act.accounts_count, 0) as accounts_count,
+          COALESCE(bnk.banks_count, 0) as banks_count,
+          (COALESCE(clr.clearing_count, 0) > 0) as is_clearing_agent
         FROM public.customers c
         LEFT JOIN public.countries cnt ON c.country_id = cnt.id
         LEFT JOIN public.states_provinces sp ON c.state_province_id = sp.id
@@ -113,6 +125,28 @@ export class CustomersRepository {
           ORDER BY e.created_at DESC
           LIMIT 1
         ) emp ON true
+        LEFT JOIN LATERAL (
+          SELECT 
+            bool_or(t.owner_person_id = c.id) as is_truck_owner,
+            bool_or(t.driver_person_id = c.id) as is_truck_driver
+          FROM public.trucks t
+          WHERE t.owner_person_id = c.id OR t.driver_person_id = c.id
+        ) trk ON true
+        LEFT JOIN LATERAL (
+          SELECT COUNT(*)::int as accounts_count
+          FROM public.enterprise_accounts ea
+          WHERE ea.customer_id = c.id AND ea.deleted_at IS NULL
+        ) act ON true
+        LEFT JOIN LATERAL (
+          SELECT COUNT(*)::int as banks_count
+          FROM public.banks b
+          WHERE b.owner_person_id = c.id AND b.deleted_at IS NULL
+        ) bnk ON true
+        LEFT JOIN LATERAL (
+          SELECT COUNT(*)::int as clearing_count
+          FROM public.clearing_agents ca
+          WHERE ca.person_id = c.id AND ca.deleted_at IS NULL
+        ) clr ON true
         WHERE c.deleted_at IS NULL
           AND (${input.countryId ? sql`c.country_id = ${input.countryId}::uuid` : sql`true`})
           AND (${
