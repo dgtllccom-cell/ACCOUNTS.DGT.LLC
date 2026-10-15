@@ -117,17 +117,23 @@ export async function GET(request: NextRequest) {
         : [];
 
       // 4. Fetch Stock Transfers
-      const allTransfers = await sql`
-        SELECT 
-          jst.*,
-          w.warehouse_name, w.warehouse_code,
-          p.full_name as created_by_name
-        FROM public.journal_stock_transfers jst
-        LEFT JOIN public.warehouses w ON w.id = jst.warehouse_id
-        LEFT JOIN public.profiles p ON p.id = jst.created_by
-        WHERE jst.deleted_at IS NULL
-        ORDER BY jst.created_at ASC;
-      `;
+      let allTransfers: any[] = [];
+      try {
+        allTransfers = await sql`
+          SELECT 
+            jst.*,
+            w.warehouse_name, w.warehouse_code,
+            p.full_name as created_by_name
+          FROM public.journal_stock_transfers jst
+          LEFT JOIN public.warehouses w ON w.id = jst.warehouse_id
+          LEFT JOIN public.profiles p ON p.id = jst.created_by
+          WHERE jst.deleted_at IS NULL
+          ORDER BY jst.created_at ASC;
+        `;
+      } catch (err: any) {
+        console.warn("Transfers query fallback:", err?.message);
+        allTransfers = [];
+      }
 
       // 5. Fetch Warehouses for dropdown / lookup
       const warehouseList = await sql`
@@ -250,7 +256,7 @@ export async function GET(request: NextRequest) {
             size: item.size || form.size || "-",
             unit,
             bookedQuantity: bookedQty,
-            loadedQuantity: 0,
+            loadedQuantity: itemLoadedQty,
             transferredQuantity: 0,
             availableQuantity: journalStockBalance,
             currentStage: "journal",
@@ -264,6 +270,16 @@ export async function GET(request: NextRequest) {
             warehouseId: null,
             warehouseName: null,
             remarks: form.remarks || null,
+            loadings: itemLoadings.map((lr) => ({
+              id: lr.id,
+              loadingRecordNo: lr.loading_record_no,
+              containerNumber: lr.container_number || lr.vehicle_no || lr.truck_id || "-",
+              loadedQuantity: Number(lr.loaded_quantity || 0),
+              loadingDate: lr.loaded_at || lr.created_at,
+              driverName: lr.driver_name || lr.carrier_name || "-",
+              warehouseName: lr.receiving_warehouse_name || "-",
+              status: lr.loading_status || "loaded"
+            })),
             canTransfer: false // Transfers happen from Loading Stock
           });
         }
@@ -444,7 +460,7 @@ export async function GET(request: NextRequest) {
           size: lp.size || "-",
           unit,
           bookedQuantity: bookedQty,
-          loadedQuantity: 0,
+          loadedQuantity: loadedQty,
           transferredQuantity: 0,
           availableQuantity: journalAvailableQty,
           currentStage: "journal",
@@ -458,6 +474,16 @@ export async function GET(request: NextRequest) {
           warehouseId: null,
           warehouseName: null,
           remarks: lp.remarks || null,
+          loadings: isLoaded ? [{
+            id: `LP-LOAD-${lp.id}`,
+            loadingRecordNo: displayBillNo,
+            containerNumber: truckOrContainer,
+            loadedQuantity: loadedQty,
+            loadingDate: lp.created_at,
+            driverName: lp.driver_name || "-",
+            warehouseName: lp.warehouse_name || "-",
+            status: "transferred"
+          }] : [],
           canTransfer: false
         });
       }
