@@ -718,7 +718,7 @@ export function CountryDashboardOverview({ data }: CountryDashboardOverviewProps
                       </button>
                     </td>
                   </tr>
-                ))}
+                )))}
               </tbody>
             </table>
           </div>
