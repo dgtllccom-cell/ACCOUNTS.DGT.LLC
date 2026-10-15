@@ -10,12 +10,13 @@ import { t } from "@/lib/i18n/ui";
 import { getCurrentErpSession } from "@/lib/auth/session";
 import { CountryProductsDashboard } from "@/features/dashboard/components/country-products-dashboard";
 import { CountryDashboardOverview } from "@/features/dashboard/components/country-dashboard-overview";
+import { CountrySelectDropdown } from "@/components/dashboard/country-select-dropdown";
+import { CountryHeaderControls } from "@/components/dashboard/country-header-controls";
 
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { domainSuperAdminDomain } from "@/lib/permissions/enterprise-roles";
 
 export const metadata = { title: "Country Dashboard" };
-
 
 type RecentEntry = {
   id: string;
@@ -76,10 +77,23 @@ type CountryItem = {
   currency_code: string;
 };
 
+/**
+ * Load ONLY countries where actual branches exist in the real database.
+ * No duplicate dummy countries or countries without physical branch networks.
+ */
 async function loadCountryList(): Promise<CountryItem[]> {
   try {
     const res = await withLocalPg(async (sql) => {
-      const rows = await sql<CountryItem[]>`SELECT id, name, currency_code FROM countries WHERE deleted_at IS NULL ORDER BY name ASC;`;
+      const rows = await sql<CountryItem[]>`
+        SELECT DISTINCT c.id, c.name, c.currency_code
+        FROM countries c
+        WHERE c.deleted_at IS NULL
+          AND (
+            EXISTS (SELECT 1 FROM country_branches cb WHERE cb.country_id = c.id AND cb.deleted_at IS NULL)
+            OR EXISTS (SELECT 1 FROM city_branches ctb WHERE ctb.country_id = c.id AND ctb.deleted_at IS NULL)
+          )
+        ORDER BY c.name ASC;
+      `;
       return rows;
     });
     return res || [];
@@ -124,8 +138,8 @@ async function loadCountryData(countryId: string): Promise<CountryDashboardData>
           ? sql`SELECT id, country_branch_id, city_branch_id, debit_total, credit_total, current_balance, currency FROM ledgers WHERE deleted_at IS NULL;`.catch(() => [])
           : sql`SELECT id, country_branch_id, city_branch_id, debit_total, credit_total, current_balance, currency FROM ledgers WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => []),
         isAll
-          ? sql`SELECT order_total, country_branch_id, city_branch_id FROM purchase_orders WHERE deleted_at IS NULL;`.catch(() => [])
-          : sql`SELECT order_total, country_branch_id, city_branch_id FROM purchase_orders WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => []),
+          ? sql`SELECT order_total, country_branch_id, city_branch_id, form_data FROM purchase_orders WHERE deleted_at IS NULL;`.catch(() => [])
+          : sql`SELECT order_total, country_branch_id, city_branch_id, form_data FROM purchase_orders WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => []),
         isAll
           ? sql`SELECT order_total, country_branch_id, city_branch_id FROM sales_orders WHERE deleted_at IS NULL;`.catch(() => [])
           : sql`SELECT order_total, country_branch_id, city_branch_id FROM sales_orders WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => []),
@@ -227,7 +241,19 @@ async function loadCountryData(countryId: string): Promise<CountryDashboardData>
       return sum + val;
     }, 0);
 
-    const productsCount = (productsCountRes || []).length;
+    // Derive distinct goods from purchase orders if products table has not registered formal SKUs yet
+    const goodsFromPOs = new Set<string>();
+    for (const p of (purchaseRows || [])) {
+      const fd = p.form_data || {};
+      if (fd.form?.goodsName) goodsFromPOs.add(String(fd.form.goodsName));
+      if (Array.isArray(fd.goodsEntries)) {
+        for (const g of fd.goodsEntries) {
+          if (g.goodsName || g.name) goodsFromPOs.add(String(g.goodsName || g.name));
+        }
+      }
+    }
+    const productsCount = (productsCountRes || []).length || goodsFromPOs.size;
+
     const recentRoznamcha: RecentEntry[] = (recentRows || []).map((row: any) => ({
       id: row.id,
       voucher_no: row.voucher_no,
@@ -292,8 +318,7 @@ export default async function CountryDashboardPage(props: { searchParams?: Promi
   const session = await getCurrentErpSession();
   const isSuperAdmin = Boolean(session?.isSuperAdmin || session?.roles.includes("super_admin"));
 
-  // A Business Super Admin works across every country that has a branch network: it may switch between those countries
-  // (never "all", never a country outside its scope) and sees only its own domain's branches.
+  // Only load countries where physical branches exist in the real database
   const domainSuper = !isSuperAdmin && session ? domainSuperAdminDomain(session.roles) : null;
   const allCountries = await loadCountryList();
   const countries = domainSuper ? allCountries.filter((c) => session!.countryIds.includes(c.id)) : allCountries;
@@ -305,11 +330,13 @@ export default async function CountryDashboardPage(props: { searchParams?: Promi
   }
 
   if (isSuperAdmin) {
-    // Super Admin defaults to 'all' or selected country or the first available country
-    if (searchParams.countryId) {
+    // If countryId in query is valid and exists in real branch countries, use it
+    if (searchParams.countryId && countries.some((c) => c.id === searchParams.countryId)) {
       countryId = searchParams.countryId;
     } else if (countries.length > 0) {
-      countryId = countries[0].id;
+      // Default to UAE or the first active country
+      const uae = countries.find((c) => (c.name || "").toLowerCase().includes("emirates") || c.currency_code === "AED");
+      countryId = uae ? uae.id : countries[0].id;
     } else {
       countryId = "all";
     }
@@ -329,7 +356,6 @@ export default async function CountryDashboardPage(props: { searchParams?: Promi
   }
 
   const loadedRaw = await loadCountryData(countryId);
-  // domain super admin: branch lists / per-branch summaries only for its own domain's city branches
   const ownCities = new Set(session?.cityBranchIds ?? []);
   const loaded = domainSuper
     ? (() => {
@@ -339,8 +365,7 @@ export default async function CountryDashboardPage(props: { searchParams?: Promi
         return { ...loadedRaw, cityBranches, branchSummaries, branchesCount: mains + cityBranches.length };
       })()
     : loadedRaw;
-  // Field-level financial permission: amounts are never SENT to a login that may not see them (zeros + empty lists in the
-  // payload, every numeric field of the per-branch summaries zeroed) and a notice explains why.
+
   const financialsHidden = !isSuperAdmin && session?.canViewFinancials === false;
   const zeroNumbers = <T extends Record<string, unknown>>(row: T): T =>
     Object.fromEntries(Object.entries(row).map(([k, v]) => [k, typeof v === "number" ? 0 : v])) as T;
@@ -361,8 +386,8 @@ export default async function CountryDashboardPage(props: { searchParams?: Promi
 
   return (
     <div className="space-y-4" dir={lang !== "en" ? "rtl" : "ltr"}>
-      {/* ── BREADCRUMB & COUNTRY SELECTOR PILLS (Matching Image 1) ────────── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+      {/* ── TOP BREADCRUMB & CONTROLS TOOLBAR (Country Dropdown, Date Selector, Settings) ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md p-2.5 px-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xs">
         {/* Left: Breadcrumbs */}
         <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
           <Link href="/dashboard" className="hover:text-blue-600 transition-colors">
@@ -378,46 +403,25 @@ export default async function CountryDashboardPage(props: { searchParams?: Promi
           </span>
         </div>
 
-        {/* Right: Country Pills (Image 1 top-right) */}
-        <div className="flex flex-wrap items-center gap-2">
-          {countries.map((c) => {
-            const isSelected = countryId === c.id;
-            const flag = (c.name || "").toLowerCase().includes("afghanistan")
-              ? "🇦🇫"
-              : (c.name || "").toLowerCase().includes("india")
-              ? "🇮🇳"
-              : (c.name || "").toLowerCase().includes("pakistan")
-              ? "🇵🇰"
-              : (c.name || "").toLowerCase().includes("emirates") || (c.name || "").toLowerCase().includes("uae")
-              ? "🇦🇪"
-              : "🌐";
-
-            return (
-              <Link
-                key={c.id}
-                href={`/dashboard/country?countryId=${c.id}&tab=${currentTab}` as Route}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all shadow-2xs ${
-                  isSelected
-                    ? "bg-[#1d63ed] text-white shadow-md shadow-blue-600/25 ring-2 ring-blue-500/30"
-                    : "bg-white dark:bg-slate-800 border border-slate-200/90 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
-                }`}
-              >
-                <span>{flag}</span>
-                <span>{c.name} ({c.currency_code})</span>
-              </Link>
-            );
-          })}
+        {/* Right: Country Dropdown, Date Selector, Settings (Cleanly Grouped) */}
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <CountrySelectDropdown
+            countries={countries}
+            currentCountryId={countryId}
+            currentTab={currentTab}
+          />
+          <CountryHeaderControls />
         </div>
       </div>
 
-      {/* ── MODERN HERO BANNER (Glassmorphic Design without Dubai photo) ───────── */}
-      <div className="relative rounded-3xl overflow-hidden border border-blue-200/60 dark:border-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)] min-h-[165px] bg-gradient-to-r from-blue-50/90 via-sky-50/60 to-indigo-50/80 dark:from-slate-900 dark:via-blue-950/40 dark:to-slate-900">
+      {/* ── MODERN HERO BANNER (Glassmorphic Design) ───────────────────────── */}
+      <div className="relative rounded-3xl overflow-hidden border border-blue-200/60 dark:border-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)] min-h-[155px] bg-gradient-to-r from-blue-50/90 via-sky-50/60 to-indigo-50/80 dark:from-slate-900 dark:via-blue-950/40 dark:to-slate-900">
         {/* Soft Ambient Light Effects */}
         <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-blue-400/15 to-indigo-400/15 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-1/4 w-72 h-72 bg-sky-400/10 rounded-full blur-2xl pointer-events-none" />
 
         {/* Content */}
-        <div className="relative z-10 p-5 sm:p-6 flex flex-col justify-between min-h-[165px]">
+        <div className="relative z-10 p-5 sm:p-6 flex flex-col justify-between min-h-[155px]">
           <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
             <div className="space-y-1.5 max-w-xl">
               {/* Role Badge */}
@@ -429,7 +433,7 @@ export default async function CountryDashboardPage(props: { searchParams?: Promi
                   : "Country Admin"}
               </div>
 
-              {/* Title with UAE Flag Icon */}
+              {/* Title with Country Flag */}
               <div className="flex items-center gap-3 pt-0.5">
                 <div className="h-8 w-11 rounded-md overflow-hidden shadow-xs border border-slate-200 dark:border-slate-700 flex items-center justify-center bg-white text-lg">
                   {countryFlag}
@@ -444,26 +448,19 @@ export default async function CountryDashboardPage(props: { searchParams?: Promi
               </p>
             </div>
 
-            {/* Action Buttons */}
+            {/* Action Buttons: View Products / View Overview toggle */}
             <div className="flex items-center gap-2.5 self-start md:self-center shrink-0">
-              <Link
-                href="/dashboard/new-entry/branch-entry/city-branch"
-                className="h-9 px-3.5 rounded-xl border border-slate-200/90 dark:border-slate-700 bg-white/90 dark:bg-slate-900/90 hover:bg-white text-slate-800 dark:text-slate-100 text-xs font-bold inline-flex items-center gap-2 shadow-xs backdrop-blur-xs transition-all cursor-pointer"
-              >
-                <Building className="h-4 w-4 text-blue-600" />
-                <span>+ {t(lang, "cpage.add_branch", "Add Branch")}</span>
-              </Link>
               <Link
                 href={`/dashboard/country?countryId=${countryId}&tab=${currentTab === "overview" ? "products" : "overview"}` as Route}
                 className="h-9 px-4 rounded-xl bg-[#6366f1] hover:bg-[#4f46e5] text-white text-xs font-bold inline-flex items-center gap-2 shadow-md shadow-indigo-500/25 transition-all cursor-pointer"
               >
                 <Database className="h-4 w-4" />
-                <span>{currentTab === "overview" ? t(lang, "cpage.view_products", "View Products") : t(lang, "cpage.view_overview", "View Overview")}</span>
+                <span>{currentTab === "overview" ? t(lang, "cpage.view_products", "View Products & Inventory") : t(lang, "cpage.view_overview", "View Overview")}</span>
               </Link>
             </div>
           </div>
 
-          {/* Navigation Tabs below (Overview | Products & Inventory) */}
+          {/* Navigation Tabs (Overview | Products & Inventory) */}
           <div className="flex items-center gap-6 pt-4 border-t border-slate-200/60 dark:border-slate-800/60 mt-3">
             <Link
               href={`/dashboard/country?countryId=${countryId}&tab=overview` as Route}
