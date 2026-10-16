@@ -84,6 +84,17 @@ Build green is necessary but NOT sufficient. Switch EN→UR→PS→FA→AR and c
 (menu, title, cards, filters, table headers, statuses, modals, print/export) follows the language with
 correct RTL — no half-English screen.
 
+## STOCK JOURNAL — ONE canonical implementation (do not restore or fork older copies)
+`/dashboard/purchase/stock/*` (Purchase Booking & Local Purchase → Loading → Receiving & Customs → Confirm Stock → Sale / Export) is ONE
+implementation, documented in `docs/stock-journal.md`:
+- service `lib/services/stock-journal-service.ts` + pure model `lib/stock-journal/model.ts` (`parseJsonish` reads string-encoded `form_data`);
+- routes `app/api/erp/inventory/journal-stock/{route,confirm,issue,reverse,customs,history}`; the old `/transfer` route is deleted for good;
+- screen `features/journal/components/journal-booking-stock-dashboard.tsx` (i18n namespace `sj.*`, all five languages);
+- ledger table `journal_stock_transfers` (migration 20261235). Physical stock stays in `product_inventory_balances` + `stock_movements`;
+  never add a parallel stock path. Stock leaves ONLY through Goods Issue / Dispatch / Delivery (`issueStock` / `issueForSalesOrder`).
+- Before merging anything that touches these files run `npm run stock:guard` (also in prebuild, pre-commit and CI). If a merge conflict
+  appears in them, keep THIS implementation; port any wanted idea into it instead of reverting.
+
 ## Reference docs
 `docs/multilingual-architecture.md`, `docs/LOCALIZATION_5_LANGUAGE_SPEC.md`,
 `docs/universal-print-pdf-requirements.md`, `docs/i18n-guard.md`.

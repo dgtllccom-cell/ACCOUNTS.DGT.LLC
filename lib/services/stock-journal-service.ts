@@ -17,10 +17,11 @@
  */
 import type { ErpSession } from "@/lib/auth/session";
 import { ApiClientError } from "@/lib/api/response";
+import { ErpPermissionError, hasRolePermission, isGlobalSession } from "@/lib/permissions/middleware";
 import {
   assertExplicitScopeAllowed,
   authorizeApiScope,
-  authorizeApiScopeEither,
+  recordInSessionScope,
   sessionSqlScope,
   sqlScopeCondition,
 } from "@/lib/api/scope-middleware";
@@ -54,6 +55,19 @@ const num = (v: unknown) => {
   return Number.isFinite(n) ? n : 0;
 };
 const iso = (v: unknown) => (v ? new Date(v as any).toISOString() : null);
+
+/**
+ * Authorization for every Stock Journal ACTION: the role must hold purchases:<action> AND the record must lie inside the caller's scope
+ * by the SAME rule the list uses (recordInSessionScope = sqlScopeCondition), so a row a user can see is a row they can act on — and a row
+ * outside their country / branch can be neither seen nor touched. A Country-to-Country booking is also in scope for its destination side.
+ */
+function assertRecordAccess(session: ErpSession, action: "read" | "update", rec: { country_id?: string | null; country_branch_id?: string | null; city_branch_id?: string | null }, dest?: { country_id?: string | null; country_branch_id?: string | null; city_branch_id?: string | null } | null) {
+  if (!hasRolePermission(session, "purchases", action)) throw new ErpPermissionError(`Missing permission: purchases:${action}`);
+  if (isGlobalSession(session)) return;
+  const destSet = !!dest && !!(dest.country_id || dest.country_branch_id || dest.city_branch_id);
+  if (recordInSessionScope(session, rec) || (destSet && recordInSessionScope(session, dest))) return;
+  throw new ErpPermissionError("This record is outside your authorized country / branch scope.");
+}
 
 // ──────────────────────────────────────────────────────────────────────────────────────────────
 // Row shape shared with the dashboard
@@ -782,12 +796,7 @@ export async function confirmStock(session: ErpSession, input: ConfirmInput) {
       const poRows = await tx`select * from public.purchase_orders where id = ${input.purchaseOrderId}::uuid and deleted_at is null for update`;
       const po = poRows[0];
       if (!po) throw new ApiClientError("Purchase booking not found.", { status: 404, code: "NOT_FOUND" });
-      authorizeApiScopeEither(session, {
-        resource: "purchases",
-        action: "update",
-        source: { countryId: po.country_id, countryBranchId: po.country_branch_id, cityBranchId: po.city_branch_id },
-        destination: { countryId: po.dest_country_id, countryBranchId: po.dest_country_branch_id, cityBranchId: po.dest_city_branch_id },
-      });
+      assertRecordAccess(session, "update", po, { country_id: po.dest_country_id, country_branch_id: po.dest_country_branch_id, city_branch_id: po.dest_city_branch_id });
 
       const plrs = await tx`select * from public.purchase_loading_records where purchase_order_id = ${po.id}::uuid and deleted_at is null order by created_at asc, id asc`;
       const clearing = await clearingCustoms(tx, plrs);
@@ -925,7 +934,7 @@ export async function issueStock(session: ErpSession, input: IssueInput) {
       const rows = await tx`select * from public.journal_stock_transfers where id = ${input.transferId}::uuid and deleted_at is null for update`;
       const row = rows[0];
       if (!row) throw new ApiClientError("Stock allocation not found.", { status: 404, code: "NOT_FOUND" });
-      authorizeApiScope(session, { resource: "purchases", action: "update", countryId: row.country_id, countryBranchId: row.country_branch_id, cityBranchId: row.city_branch_id });
+      assertRecordAccess(session, "update", row);
       let so: any = null;
       if (input.salesOrderNo) {
         so = await salesOrderByNo(tx, input.salesOrderNo.trim());
@@ -970,7 +979,7 @@ export async function reverseConfirmation(session: ErpSession, input: { transfer
     sql.begin(async (tx: Tx) => {
       const row = (await tx`select * from public.journal_stock_transfers where id = ${input.transferId}::uuid and deleted_at is null for update`)[0];
       if (!row) throw new ApiClientError("Stock allocation not found.", { status: 404, code: "NOT_FOUND" });
-      authorizeApiScope(session, { resource: "purchases", action: "update", countryId: row.country_id, countryBranchId: row.country_branch_id, cityBranchId: row.city_branch_id });
+      assertRecordAccess(session, "update", row);
       if (row.status === "reversed") return { transfer: row, replayed: true };
       if (row.status === "issued") throw new ApiClientError("Issued stock cannot be reversed here — the goods have already left. Record a return instead.", { status: 409, code: "ALREADY_ISSUED" });
       const qty = num(row.quantity);
@@ -1010,11 +1019,7 @@ export async function setCustomsStatus(session: ErpSession, input: { loadingReco
         select plr.*, po.dest_country_id, po.dest_country_branch_id, po.dest_city_branch_id from public.purchase_loading_records plr
         left join public.purchase_orders po on po.id = plr.purchase_order_id where plr.id = ${input.loadingRecordId}::uuid and plr.deleted_at is null for update of plr`)[0];
       if (!r) throw new ApiClientError("Loading record not found.", { status: 404, code: "NOT_FOUND" });
-      authorizeApiScopeEither(session, {
-        resource: "purchases", action: "update",
-        source: { countryId: r.country_id, countryBranchId: r.country_branch_id, cityBranchId: r.city_branch_id },
-        destination: { countryId: r.dest_country_id, countryBranchId: r.dest_country_branch_id, cityBranchId: r.dest_city_branch_id },
-      });
+      assertRecordAccess(session, "update", r, { country_id: r.dest_country_id, country_branch_id: r.dest_country_branch_id, city_branch_id: r.dest_city_branch_id });
       const u = await tx`
         update public.purchase_loading_records
         set customs_status = ${input.customsStatus}, customs_reference = coalesce(${input.reference ?? null}, customs_reference),
@@ -1052,11 +1057,7 @@ export async function getStockHistory(session: ErpSession, q: { sourceType: "pur
         select po.*, c.name as country_name from public.purchase_orders po left join public.countries c on c.id = po.country_id
         where po.id = ${q.sourceId}::uuid and po.deleted_at is null`)[0];
       if (!po) throw new ApiClientError("Purchase booking not found.", { status: 404, code: "NOT_FOUND" });
-      authorizeApiScopeEither(session, {
-        resource: "purchases", action: "read",
-        source: { countryId: po.country_id, countryBranchId: po.country_branch_id, cityBranchId: po.city_branch_id },
-        destination: { countryId: po.dest_country_id, countryBranchId: po.dest_country_branch_id, cityBranchId: po.dest_city_branch_id },
-      });
+      assertRecordAccess(session, "read", po, { country_id: po.dest_country_id, country_branch_id: po.dest_country_branch_id, city_branch_id: po.dest_city_branch_id });
       const { lines, form } = extractPoGoodsLines(po.form_data);
       head = { billNo: po.purchase_order_no, supplier: String(form.salesAccountName || form.supplierName || ""), country: po.country_name, goods: lines.map((l) => ({ name: l.goodsName, unit: l.unit, booked: l.booked })), status: po.status, ledger: po.ledger_posting_status, payment: po.payment_status };
       events.push({ at: iso(po.created_at)!, type: "booking", title: "booking_created", reference: po.purchase_order_no, quantity: lines.reduce((s, l) => s + l.booked, 0), unit: lines[0]?.unit });
@@ -1090,7 +1091,7 @@ export async function getStockHistory(session: ErpSession, q: { sourceType: "pur
     } else {
       const lp = (await sql`select lp.*, c.name as country_name from public.local_purchases lp left join public.countries c on c.id = lp.country_id where lp.id = ${q.sourceId}::uuid and lp.deleted_at is null`)[0];
       if (!lp) throw new ApiClientError("Local purchase not found.", { status: 404, code: "NOT_FOUND" });
-      authorizeApiScope(session, { resource: "purchases", action: "read", countryId: lp.country_id, countryBranchId: lp.country_branch_id, cityBranchId: lp.city_branch_id });
+      assertRecordAccess(session, "read", lp);
       head = { billNo: lp.contract_no ? `LP-${lp.contract_no}` : lp.manual_bill_no, supplier: lp.supplier_name, country: lp.country_name, goods: [{ name: lp.goods_name, unit: lp.quantity_name, booked: num(lp.numbers) || num(lp.quantity_kgs) }], status: lp.status };
       events.push({ at: iso(lp.created_at)!, type: "booking", title: "booking_created", reference: lp.manual_bill_no || lp.contract_no, quantity: num(lp.numbers) || num(lp.quantity_kgs), unit: lp.quantity_name });
       const lotMoves = await sql`

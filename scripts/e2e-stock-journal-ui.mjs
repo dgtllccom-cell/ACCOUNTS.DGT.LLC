@@ -72,6 +72,7 @@ try {
     const ctx = await browser.newContext({ viewport: { width: D.w, height: D.h }, deviceScaleFactor: D.dpr, isMobile: D.mobile, hasTouch: D.mobile, acceptDownloads: true });
     await ctx.addCookies([{ name: "erp_session", value: cookie.slice(12), domain: "localhost", path: "/" }, { name: "erp_lang", value: lang, domain: "localhost", path: "/" }]);
     await ctx.addInitScript((l) => { try { localStorage.setItem("erp_lang", l); localStorage.setItem("erp_app_install_dismissed", "1"); } catch {} }, lang);
+    await ctx.addInitScript(() => { try { window.print = () => { window.top.__printed = (window.top.__printed || 0) + 1; }; } catch {} });
     const p = await ctx.newPage();
     const errors = [];
     p.on("pageerror", (e) => errors.push(String(e).slice(0, 200)));
@@ -82,6 +83,40 @@ try {
     const rowsFor = () => p.locator('[data-testid="sj-row"]:visible');
     // wait until the table / cards finished reloading (aria-busy) so assertions never read the previous tab's rows
     const settle = async () => { await p.waitForTimeout(400); await p.waitForFunction(() => !document.querySelector('[aria-busy="true"]'), null, { timeout: 60000 }); await p.waitForTimeout(300); };
+
+
+    // Print / PDF: preview content, the Print button, and a real PDF download — in every language
+    const reportChecks = async () => {
+      await p.getByTestId("sj-tab-all").click(); // print the whole fixture (every stage), not whichever tab happens to be empty
+      await settle();
+      await p.getByTestId("sj-print").click();
+      await p.waitForSelector("iframe", { timeout: 60000 });
+      await p.waitForTimeout(3000);
+      await shot("12-print-preview");
+      const frame = p.frames().filter((f) => f !== p.mainFrame()).slice(-1)[0];
+      const txt = frame ? await frame.evaluate(() => document.body.innerText).catch(() => "") : "";
+      check(`${lang}: A4 report preview has content (title, cards, rows)`, txt.length > 300, txt.replace(/\s+/g, " ").slice(0, 80));
+      check(`${lang}: A4 report is in ${lang}` + (rtl ? " (RTL script)" : ""), rtl ? /[؀-ۿ]/.test(txt) && !/Purchase No\.|Booking Stock/i.test(txt) : /booking stock/i.test(txt) && txt.includes(TAG));
+      const docDir = frame ? await frame.evaluate(() => document.documentElement.dir || document.body.dir || "").catch(() => "") : "";
+      check(`${lang}: A4 report direction ${rtl ? "rtl" : "ltr"}`, rtl ? docDir === "rtl" : docDir !== "rtl", docDir);
+      await p.evaluate(() => { window.__printed = 0; });
+      await p.locator("button:has(svg.lucide-printer)").last().click();
+      await p.waitForTimeout(800);
+      check(`${lang}: Print button sends the report to print once`, (await p.evaluate(() => window.__printed || 0)) === 1);
+      const [dl] = await Promise.all([
+        p.waitForEvent("download", { timeout: 180000 }).catch(() => null),
+        (async () => { await p.locator("button:has(svg.lucide-download)").last().click(); await p.waitForTimeout(500); await p.locator("div.absolute button:has(svg.lucide-file-text)").first().click(); })(),
+      ]);
+      if (dl) {
+        const f = `${OUT}/${lang}-stock-journal.pdf`;
+        await dl.saveAs(f);
+        const buf = fs.readFileSync(f);
+        const pages = (buf.toString("latin1").match(/\/Type\s*\/Page[^s]/g) || []).length;
+        check(`${lang}: Download PDF produced a real PDF`, buf.subarray(0, 4).toString() === "%PDF" && buf.length > 10000, `${Math.round(buf.length / 1024)} KB, ${pages} page(s), ${dl.suggestedFilename()}`);
+      } else check(`${lang}: Download PDF produced a real PDF`, false, "no download event");
+      await p.locator("div.fixed.inset-0 button:has(svg.lucide-x)").first().click().catch(() => {});
+      await p.waitForTimeout(500);
+    };
 
     await p.goto(BASE + "/dashboard/purchase/stock/journal", { waitUntil: "load", timeout: 240000 });
     await p.waitForSelector('[data-testid="stock-journal"]', { timeout: 120000 });
@@ -103,6 +138,7 @@ try {
     await p.getByTestId("sj-tab-booking").click();
     await settle();
     const bookingText = (await rowsFor().allInnerTexts()).join("\n");
+    await p.waitForFunction(() => { const r = [...document.querySelectorAll('[data-testid="sj-row"]')].filter((e) => e.offsetParent !== null); return r.length > 0 && r.every((e) => e.dataset.stage === "booking"); }, null, { timeout: 20000 }).catch(() => {});
     const bookingStages = await rowsFor().evaluateAll((els) => els.map((e) => e.dataset.stage));
     check(`${lang}: Booking tab lists ONLY booking-stage rows`, bookingStages.length > 0 && bookingStages.every((x) => x === "booking"), [...new Set(bookingStages)].join(","));
     check(`${lang}: Booking tab quantity 30`, /\b30\b/.test(bookingText), bookingText.replace(/\s+/g, " ").slice(0, 120));
@@ -214,13 +250,7 @@ try {
       const m2 = (after.data?.rows || []).filter((r) => r.sourceId === po.id);
       check("en: reversal returned the 30 to Ready for Confirmation", near(m2.filter((r) => r.stage === "ready" && r.loadingRecordId === plrs[0].id).reduce((s, r) => s + r.quantity, 0), 45), m2.map((r) => r.stage + ":" + r.quantity).join(","));
 
-      // Print / PDF opens the report preview
-      await p.getByTestId("sj-print").click();
-      await p.waitForSelector("iframe", { timeout: 60000 });
-      await p.waitForTimeout(2500);
-      await shot("12-print-preview");
-      const printed = await p.evaluate(() => document.querySelectorAll("iframe").length);
-      check("en: Print / PDF opens the A4 report preview", printed >= 1);
+      await reportChecks();
     } else {
       // other languages: the same screen, translated, with RTL — open the modals that carry the most text
       await shot("03-ready-" + lang);
@@ -238,6 +268,7 @@ try {
       await p.waitForTimeout(1800);
       await shot("05-available");
       check(`${lang}: no horizontal page overflow on the Available report`, !(await overflow()));
+      await reportChecks();
     }
 
     check(`${lang}: no page errors`, errors.length === 0, errors[0] || "");

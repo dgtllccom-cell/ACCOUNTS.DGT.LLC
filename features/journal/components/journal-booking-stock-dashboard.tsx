@@ -194,7 +194,7 @@ export function JournalBookingStockDashboard({ session, initialStage = "all", in
   const flash = (m: string) => { setBanner(m); window.setTimeout(() => setBanner(null), 7000); };
   const refreshAfter = (m: string) => { flash(m); void load(page); };
 
-  const goTab = (t: StockTab) => { setTab(t); setPage(1); setExpanded(null); if (t !== "available") setDestination(""); };
+  const goTab = (t: StockTab) => { setLoading(true); setTab(t); setPage(1); setExpanded(null); if (t !== "available") setDestination(""); };
 
   const exportCsv = async () => {
     const res = await api<ApiRows>(`/api/erp/inventory/journal-stock?${query(1, { limit: "2000" })}`);
@@ -386,7 +386,7 @@ export function JournalBookingStockDashboard({ session, initialStage = "all", in
               </select></label>
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
-            <button type="button" onClick={() => { setApplied(f); setPage(1); }} className="min-h-[40px] rounded-lg bg-blue-600 px-4 text-[13px] font-bold text-white hover:bg-blue-700">{s.t("apply", "Apply filters")}</button>
+            <button type="button" onClick={() => { setLoading(true); setApplied(f); setPage(1); }} className="min-h-[40px] rounded-lg bg-blue-600 px-4 text-[13px] font-bold text-white hover:bg-blue-700">{s.t("apply", "Apply filters")}</button>
             <button type="button" onClick={() => { const z = { search: "", goodsName: "", purchaseOrderNo: "", containerNo: "", warehouseId: "", dateFrom: "", dateTo: "" }; setF(z); setApplied(z); setDestination(""); }} className="min-h-[40px] rounded-lg border border-slate-300 px-4 text-[13px] font-bold text-slate-700 dark:border-slate-600 dark:text-slate-100">{s.t("reset", "Reset")}</button>
           </div>
         </div>
@@ -402,7 +402,7 @@ export function JournalBookingStockDashboard({ session, initialStage = "all", in
           </div>
           <div className="relative w-full xl:w-96">
             <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input data-testid="sj-search" value={f.search} onChange={(e) => setF({ ...f, search: e.target.value })} onKeyDown={(e) => { if (e.key === "Enter") { setApplied({ ...f }); setPage(1); } }} placeholder={s.t("search_ph", "Search purchase no., product, supplier, container, customer…")} className="min-h-[42px] w-full rounded-lg border border-slate-300 bg-white ps-9 pe-3 text-[14px] dark:border-slate-600 dark:bg-slate-900" />
+            <input data-testid="sj-search" value={f.search} onChange={(e) => setF({ ...f, search: e.target.value })} onKeyDown={(e) => { if (e.key === "Enter") { setLoading(true); setApplied({ ...f }); setPage(1); } }} placeholder={s.t("search_ph", "Search purchase no., product, supplier, container, customer…")} className="min-h-[42px] w-full rounded-lg border border-slate-300 bg-white ps-9 pe-3 text-[14px] dark:border-slate-600 dark:bg-slate-900" />
           </div>
         </div>
         {tab === "available" && (
