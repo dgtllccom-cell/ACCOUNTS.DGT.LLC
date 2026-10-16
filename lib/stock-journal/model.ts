@@ -71,6 +71,8 @@ export type GoodsLine = {
   booked: number;
   brand: string;
   size: string;
+  grossWeight: number;
+  netWeight: number;
 };
 
 /** Every booking yields at least one line — a Draft with no quantity yet still appears (quantity 0, flagged). */
@@ -89,19 +91,33 @@ export function extractPoGoodsLines(formData: unknown): { lines: GoodsLine[]; fo
   if (entries.length > 0) {
     lines = entries.map((g, index) => {
       const goodsName = str(g.goodsName ?? g.goods_name ?? g.name) || str(form.goodsName) || "";
+      const booked = q4(num(g.qtyNo ?? g.quantity ?? g.qty ?? 0));
+      const qtyKgs = num(g.qtyKgs ?? form.qtyKgs ?? 0);
+      const rawGross = num(g.grossWeight ?? g.gross_weight ?? g.gross);
+      const grossWeight = rawGross > 0 ? rawGross : (booked > 0 && qtyKgs > 0 ? booked * qtyKgs : 0);
+      const rawNet = num(g.netWeight ?? g.net_weight ?? g.net);
+      const netWeight = rawNet > 0 ? rawNet : (grossWeight > 0 ? Math.max(0, grossWeight - num(g.emptyDeduct ?? g.totalEmptyDeduct ?? 0)) : grossWeight);
       return {
         lineKey: key(goodsName),
         index,
         goodsName,
         goodsId: str(g.goodsId ?? g.goods_id) || null,
         unit: str(g.qtyName ?? g.unit ?? g.unitName) || str(form.qtyName ?? form.unitName),
-        booked: q4(num(g.qtyNo ?? g.quantity ?? g.qty ?? 0)),
+        booked,
         brand: str(g.brand) || str(form.brand),
         size: str(g.size) || str(form.size),
+        grossWeight,
+        netWeight,
       };
     });
   } else {
     const goodsName = str(form.goodsName ?? form.goods_name);
+    const booked = q4(num(form.qtyNo ?? form.quantity ?? form.qtyNumber ?? 0));
+    const qtyKgs = num(form.qtyKgs ?? 0);
+    const rawGross = num(form.totalGrossWeight ?? form.grossWeight ?? form.gross_weight);
+    const grossWeight = rawGross > 0 ? rawGross : (booked > 0 && qtyKgs > 0 ? booked * qtyKgs : 0);
+    const rawNet = num(form.totalNetWeight ?? form.netWeight ?? form.net_weight);
+    const netWeight = rawNet > 0 ? rawNet : (grossWeight > 0 ? Math.max(0, grossWeight - num(form.totalEmptyDeduct ?? 0)) : grossWeight);
     lines = [
       {
         lineKey: key(goodsName),
@@ -109,9 +125,11 @@ export function extractPoGoodsLines(formData: unknown): { lines: GoodsLine[]; fo
         goodsName,
         goodsId: str(form.goodsId ?? form.goods_id) || null,
         unit: str(form.qtyName ?? form.unit ?? form.unitName),
-        booked: q4(num(form.qtyNo ?? form.quantity ?? form.qtyNumber ?? 0)),
+        booked,
         brand: str(form.brand),
         size: str(form.size),
+        grossWeight,
+        netWeight,
       },
     ];
   }
