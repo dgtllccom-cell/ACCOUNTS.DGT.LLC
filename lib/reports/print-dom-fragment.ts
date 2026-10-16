@@ -178,9 +178,18 @@ ${styleLinks}
   #__frag h2 { font-size: 15px !important; line-height: 1.3 !important; }
   #__frag h1, #__frag h2, #__frag h3 { text-wrap: balance; overflow-wrap: break-word; }
   #__frag button, #__frag input, #__frag select, #__frag textarea { display: none !important; }
-  /* Keep whole cards / widgets together across page breaks */
-  #__frag [class*="rounded-xl"], #__frag [class*="rounded-2xl"],
-  #__frag [class*="rounded-lg"][class*="border"], #__frag [data-card] {
+  /* Multi-page document pagination: allow voucher root and large document containers to paginate cleanly */
+  #__frag, #__frag > div, #sales-booking-voucher-root, [data-printable-document] {
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+  /* Keep whole sub-cards / widgets together across page breaks */
+  #__frag [class*="rounded-xl"]:not(#sales-booking-voucher-root),
+  #__frag [class*="rounded-2xl"]:not(#sales-booking-voucher-root),
+  #__frag [class*="rounded-lg"][class*="border"]:not(#sales-booking-voucher-root),
+  #__frag [data-card] {
     page-break-inside: avoid; break-inside: avoid;
   }
   /* KPI / stat card rows: keep a compact single band instead of a tall 3x2 grid */
@@ -192,7 +201,11 @@ ${styleLinks}
   }
   .no-print, .no-print-toolbar { display: none !important; }
   #__frag { padding: 4mm; }
-  @media print { #__frag { padding: 0; } }
+  @media print {
+    #__frag { padding: 0; }
+    .page-break-before { page-break-before: always; break-before: page; }
+    .page-break-after { page-break-after: always; break-after: page; }
+  }
 </style>
 </head>
 <body><div id="__frag">${inner}</div></body>

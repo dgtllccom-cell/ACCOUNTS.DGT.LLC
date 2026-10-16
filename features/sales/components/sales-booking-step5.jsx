@@ -111,17 +111,17 @@ export function SalesBookingStep5({
       {/* Main 2-Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* LEFT COLUMN: FINAL VERIFICATION & TRANSFER PANEL */}
-        <div className="lg:col-span-4 bg-slate-950 text-white rounded-2xl p-5 shadow-xl border border-slate-800 space-y-5">
+        <div className="lg:col-span-4 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800 space-y-5">
           {/* Header */}
-          <div className="flex items-center gap-3 border-b border-slate-800 pb-3">
+          <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
             <span className="w-6 h-6 rounded-lg bg-blue-600 text-white font-black text-xs flex items-center justify-center shrink-0">
               5
             </span>
             <div>
-              <h3 className="text-xs font-black uppercase tracking-wider text-slate-100">
+              <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">
                 {tUi(lang, "sales.final_verification_transfer", "FINAL VERIFICATION & TRANSFER")}
               </h3>
-              <p className="text-[10px] text-slate-400 font-medium">
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
                 Check all information and confirm to transfer
               </p>
             </div>
@@ -131,25 +131,25 @@ export function SalesBookingStep5({
           <div className="space-y-2 text-xs">
             {checklistItems.map((item, idx) => (
               <div key={idx} className="flex items-center gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span className="text-[11px] font-semibold text-slate-200">{item}</span>
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200">{item}</span>
               </div>
             ))}
           </div>
 
           {/* Transfer Operations */}
-          <div className="space-y-2.5 border-t border-slate-800 pt-3">
-            <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+          <div className="space-y-2.5 border-t border-slate-100 dark:border-slate-800 pt-3">
+            <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
               TRANSFER OPERATIONS
             </div>
             <div className="space-y-1.5">
               {transferOperations.map((op, idx) => (
                 <div key={idx} className="flex items-center justify-between text-xs py-0.5">
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                    <span className="text-[10.5px] font-medium text-slate-300">{op}</span>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <span className="text-[10.5px] font-medium text-slate-700 dark:text-slate-300">{op}</span>
                   </div>
-                  <span className="px-1.5 py-0.2 rounded text-[8.5px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                  <span className="px-1.5 py-0.5 rounded text-[8.5px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30">
                     Ready
                   </span>
                 </div>
@@ -158,14 +158,14 @@ export function SalesBookingStep5({
           </div>
 
           {/* Total Transaction Value Box */}
-          <div className="rounded-xl bg-slate-900 border border-slate-800 p-3.5 text-center space-y-1">
-            <div className="text-[9.5px] font-black uppercase tracking-wider text-slate-400">
+          <div className="rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 p-3.5 text-center space-y-1 shadow-2xs">
+            <div className="text-[9.5px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
               TOTAL TRANSACTION VALUE
             </div>
-            <div className="text-xl font-black text-emerald-400 font-mono tracking-tight">
+            <div className="text-xl font-black text-emerald-600 dark:text-emerald-400 font-mono tracking-tight">
               {currency} {totals.totalAmountLocal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
-            <div className="text-[10px] text-slate-400 font-mono">
+            <div className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
               USD {totals.totalAmountUsd.toLocaleString(undefined, { minimumFractionDigits: 2 })} | Rate: {totals.exRate.toFixed(4)}
             </div>
           </div>
@@ -175,10 +175,10 @@ export function SalesBookingStep5({
             type="button"
             disabled={savingOrder || isTransferred}
             onClick={handleTransferClick}
-            className={`w-full py-6 rounded-xl font-black text-xs uppercase tracking-wider shadow-lg flex flex-col items-center justify-center gap-0.5 transition-all ${
+            className={`w-full py-6 rounded-xl font-black text-xs uppercase tracking-wider shadow-md flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer ${
               isTransferred
-                ? "bg-slate-800 text-emerald-400 border border-emerald-500/50 cursor-not-allowed"
-                : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-950/40 hover:-translate-y-0.5"
+                ? "bg-slate-200 dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 cursor-not-allowed"
+                : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-900/20 hover:-translate-y-0.5"
             }`}
           >
             {savingOrder ? (
@@ -187,7 +187,7 @@ export function SalesBookingStep5({
                 <span>Transferring to Ledger & Stock...</span>
               </div>
             ) : isTransferred ? (
-              <div className="flex items-center gap-1.5 text-xs text-emerald-300">
+              <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-300">
                 <ShieldCheck className="w-4 h-4" />
                 <span>Transferred to Ledger Successfully</span>
               </div>
@@ -204,41 +204,13 @@ export function SalesBookingStep5({
             )}
           </Button>
 
-          {/* Action Buttons: Preview PDF, Download PDF, Print Voucher */}
-          <div className="space-y-1.5 border-t border-slate-800 pt-3">
-            <Button
-              type="button"
-              onClick={onPreviewPdf}
-              className="w-full h-8.5 bg-slate-900 hover:bg-slate-850 text-slate-200 border border-slate-800 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5"
-            >
-              <Eye className="w-3.5 h-3.5 text-blue-400" />
-              Preview PDF (Voucher)
-            </Button>
-            <Button
-              type="button"
-              onClick={onDownloadPdf}
-              className="w-full h-8.5 bg-slate-900 hover:bg-slate-850 text-slate-200 border border-slate-800 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5"
-            >
-              <Download className="w-3.5 h-3.5 text-slate-400" />
-              Download PDF
-            </Button>
-            <Button
-              type="button"
-              onClick={onPrint}
-              className="w-full h-8.5 bg-slate-900 hover:bg-slate-850 text-slate-200 border border-slate-800 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5"
-            >
-              <Printer className="w-3.5 h-3.5 text-slate-400" />
-              Print Voucher
-            </Button>
-          </div>
-
           {/* Bottom Buttons: Back & Save as Draft */}
-          <div className="flex items-center gap-2 pt-2 border-t border-slate-800 text-xs">
+          <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
             <Button
               type="button"
               variant="outline"
               onClick={onBack}
-              className="flex-1 h-8.5 border-slate-700 text-slate-300 hover:bg-slate-800 text-[11px] font-bold"
+              className="flex-1 h-8.5 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-[11px] font-bold"
             >
               <ChevronLeft className="w-3.5 h-3.5 rtl:rotate-180 mr-1" />
               Back to Review (Step 4)
@@ -247,9 +219,9 @@ export function SalesBookingStep5({
               type="button"
               variant="outline"
               onClick={onSaveDraft}
-              className="flex-1 h-8.5 border-slate-700 text-slate-300 hover:bg-slate-800 text-[11px] font-bold flex items-center justify-center gap-1"
+              className="flex-1 h-8.5 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-[11px] font-bold flex items-center justify-center gap-1"
             >
-              <Save className="w-3.5 h-3.5 text-blue-400" />
+              <Save className="w-3.5 h-3.5 text-blue-600" />
               Save as Draft
             </Button>
           </div>

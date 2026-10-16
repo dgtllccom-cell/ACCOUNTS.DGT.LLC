@@ -12,10 +12,12 @@ import {
   Globe2,
   User,
   MapPin,
-  FileText
+  FileText,
+  Eye
 } from "lucide-react";
 import { t as tUi } from "@/lib/i18n/ui";
 import { cn } from "@/lib/utils";
+import { AccountDetailsModal } from "./account-details-modal";
 
 export function getCurrencyFlag(currency) {
   const c = String(currency || "").toUpperCase();
@@ -57,10 +59,13 @@ export function SalesBookingUpperCards({
   mode = "all", // "all" | "customer" | "sales" | "booking"
   readOnly = false,
   dbCompanies = [],
+  dbAccounts = [],
   currencyOptions = ["AED", "USD", "EUR", "GBP", "PKR", "SAR", "INR"]
 }) {
   const [salesCompOpen, setSalesCompOpen] = useState(false);
   const [customerCompOpen, setCustomerCompOpen] = useState(false);
+  const [viewModalAccount, setViewModalAccount] = useState(null);
+  const [viewModalType, setViewModalType] = useState("customer");
 
   const bookingDateFormatted = formatDisplayDate(form.salesDate || form.bookingDate);
   const bookingNo = form.salesOrderNo || "SB-2026-0001";
@@ -71,6 +76,48 @@ export function SalesBookingUpperCards({
   const branch = form.branchName || "Dubai Main Branch";
   const createdBy = form.userName || "Admin User";
   const operationType = form.saleMode === "export" ? "Export" : (form.operationType || "Export");
+
+  const handleOpenAccountModal = (type) => {
+    if (type === "sales") {
+      const codeToMatch = String(salesAccountCode || "").trim().toLowerCase();
+      const acc = dbAccounts.find(
+        (a) => (a.accountCode || a.code || "").trim().toLowerCase() === codeToMatch
+      ) || {
+        accountCode: salesAccountCode,
+        accountName: salesAccountName,
+        cityBranchName: salesBranch,
+        kind: salesBusinessName,
+        currency: salesCurrency,
+        companyName: salesCompany,
+        address: salesAddress,
+        licenseNo: salesLicense,
+        gstTrn: salesGst,
+        currentBalance: form.salesAccountCurrentBalance ?? 0,
+        manualReferenceNumber: form.salesAccountManualReferenceNumber ?? ""
+      };
+      setViewModalAccount(acc);
+      setViewModalType("sales");
+    } else {
+      const codeToMatch = String(customerAccountCode || "").trim().toLowerCase();
+      const acc = dbAccounts.find(
+        (a) => (a.accountCode || a.code || "").trim().toLowerCase() === codeToMatch
+      ) || {
+        accountCode: customerAccountCode,
+        accountName: customerAccountName,
+        cityBranchName: customerBranch,
+        kind: customerBusinessName,
+        currency: customerCurrency,
+        companyName: customerCompany,
+        address: customerAddress,
+        licenseNo: customerLicense,
+        gstTrn: customerGst,
+        currentBalance: form.customerAccountCurrentBalance ?? 0,
+        manualReferenceNumber: form.customerAccountManualReferenceNumber ?? ""
+      };
+      setViewModalAccount(acc);
+      setViewModalType("customer");
+    }
+  };
 
   // Sales Account (CR)
   const salesAccountCode = form.salesAccountNo || "SA-001";
@@ -243,7 +290,18 @@ export function SalesBookingUpperCards({
       <div className="p-3 text-[10px] space-y-1.5 leading-tight text-slate-700 dark:text-slate-300">
         <div className="grid grid-cols-[90px_1fr] items-center gap-1">
           <span className="text-slate-500 font-semibold">{tUi(lang, "sales.account_code_lbl", "Account Code")}</span>
-          <span className="font-bold font-mono text-slate-900 dark:text-slate-100">: {salesAccountCode}</span>
+          <div className="flex items-center justify-between gap-1">
+            <span className="font-bold font-mono text-slate-900 dark:text-slate-100">: {salesAccountCode}</span>
+            <button
+              type="button"
+              onClick={() => handleOpenAccountModal("sales")}
+              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8.5px] font-bold bg-emerald-100 hover:bg-emerald-200 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 dark:hover:bg-emerald-900 border border-emerald-300 dark:border-emerald-700 transition-colors shadow-2xs cursor-pointer ml-auto"
+              title="View Sales Account Details"
+            >
+              <Eye className="w-2.5 h-2.5" />
+              <span>View</span>
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-[90px_1fr] items-center gap-1">
@@ -367,7 +425,18 @@ export function SalesBookingUpperCards({
       <div className="p-3 text-[10px] space-y-1.5 leading-tight text-slate-700 dark:text-slate-300">
         <div className="grid grid-cols-[90px_1fr] items-center gap-1">
           <span className="text-slate-500 font-semibold">{tUi(lang, "sales.account_code_lbl", "Account Code")}</span>
-          <span className="font-bold font-mono text-slate-900 dark:text-slate-100">: {customerAccountCode}</span>
+          <div className="flex items-center justify-between gap-1">
+            <span className="font-bold font-mono text-slate-900 dark:text-slate-100">: {customerAccountCode}</span>
+            <button
+              type="button"
+              onClick={() => handleOpenAccountModal("customer")}
+              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8.5px] font-bold bg-amber-100 hover:bg-amber-200 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 dark:hover:bg-amber-900 border border-amber-300 dark:border-amber-700 transition-colors shadow-2xs cursor-pointer ml-auto"
+              title="View Customer Account Details"
+            >
+              <Eye className="w-2.5 h-2.5" />
+              <span>View</span>
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-[90px_1fr] items-center gap-1">
@@ -471,21 +540,44 @@ export function SalesBookingUpperCards({
     </div>
   );
 
+  const modalNode = (
+    <AccountDetailsModal
+      isOpen={Boolean(viewModalAccount)}
+      onClose={() => setViewModalAccount(null)}
+      account={viewModalAccount}
+      accountType={viewModalType}
+      lang={lang}
+    />
+  );
+
   if (mode === "customer") {
-    return renderCustomerCard();
+    return (
+      <>
+        {renderCustomerCard()}
+        {modalNode}
+      </>
+    );
   }
   if (mode === "sales") {
-    return renderSalesCard();
+    return (
+      <>
+        {renderSalesCard()}
+        {modalNode}
+      </>
+    );
   }
   if (mode === "booking") {
     return renderBookingCard();
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-      {renderBookingCard()}
-      {renderSalesCard()}
-      {renderCustomerCard()}
-    </div>
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        {renderBookingCard()}
+        {renderSalesCard()}
+        {renderCustomerCard()}
+      </div>
+      {modalNode}
+    </>
   );
 }
