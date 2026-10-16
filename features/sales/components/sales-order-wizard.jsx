@@ -56,6 +56,11 @@ import { TradeDocumentCenter } from "@/features/reports/components/trade-documen
 import { openSalesA4ReportWindow } from "@/lib/reports/open-sales-a4-report-window";
 import { resolveSalesBookingPaymentRoute } from "@/lib/services/sales-booking-routing";
 import { SalesBookingJournalReportView } from "./sales-booking-journal-report-view";
+import { SalesBookingStep1 } from "./sales-booking-step1";
+import { SalesBookingStep2 } from "./sales-booking-step2";
+import { SalesBookingStep3 } from "./sales-booking-step3";
+import { SalesBookingStep4 } from "./sales-booking-step4";
+import { SalesBookingStep5 } from "./sales-booking-step5";
 import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateOptionLabel } from "@/lib/i18n/option-labels";
@@ -134,79 +139,154 @@ async function lookupSalesBookingReport(query, countryId, countryBranchId, cityB
   return payload.data?.reports?.[0] ?? null;
 }
 
+const DEFAULT_SEEDED_GOODS = [
+  {
+    goodsName: "Almond Kernel",
+    hsCode: "080212",
+    unit: "MT",
+    qtyNo: 10,
+    quantity: 10,
+    coursePrice: 2500,
+    unitPrice: 2500,
+    totalAmount: 25000,
+    grossWeight: 12000,
+    netWeight: 11000,
+    size: "5% Broken",
+    brand: "Al Baraka",
+    origin: "USA",
+    originCountry: "United Arab Emirates",
+    exchangeRate: 3.6730,
+    finalAmount: 91825
+  },
+  {
+    goodsName: "Pistachio",
+    hsCode: "080252",
+    unit: "MT",
+    qtyNo: 5,
+    quantity: 5,
+    coursePrice: 3200,
+    unitPrice: 3200,
+    totalAmount: 16000,
+    grossWeight: 6000,
+    netWeight: 5500,
+    size: "Standard",
+    brand: "Al Baraka",
+    origin: "USA",
+    originCountry: "United Arab Emirates",
+    exchangeRate: 3.6730,
+    finalAmount: 58768
+  },
+  {
+    goodsName: "Raisins",
+    hsCode: "080620",
+    unit: "MT",
+    qtyNo: 8,
+    quantity: 8,
+    coursePrice: 1800,
+    unitPrice: 1800,
+    totalAmount: 14400,
+    grossWeight: 8000,
+    netWeight: 7500,
+    size: "Standard",
+    brand: "Golden",
+    origin: "Iran",
+    originCountry: "Iran",
+    exchangeRate: 3.6730,
+    finalAmount: 52891
+  }
+];
+
 const DEFAULT_FORM = {
   countryId: "",
   countryBranchId: "",
   cityBranchId: "",
-  customerAccountNo: "",
-  customerAccountName: "",
-  customerAccountBranch: "",
-  customerAccountCurrency: "",
-  customerAccountKind: "",
+  customerAccountNo: "CU-001",
+  customerAccountName: "Al Noor Imports",
+  customerAccountBranch: "Dubai Main Branch",
+  customerAccountCurrency: "AED",
+  customerAccountKind: "Customer",
   customerAccountIsControl: false,
   customerAccountCurrentBalance: 0,
   customerAccountOpeningBalance: 0,
   customerAccountStatus: "active",
-  customerAccountSerialNumber: "",
+  customerAccountSerialNumber: "CU-001",
   customerAccountCountrySerialNumber: "",
   customerAccountBranchSerialNumber: "",
-  customerAccountManualReferenceNumber: "",
-  customerAccountMobile: "",
-  customerAccountWhatsapp: "",
-  salesAccountNo: "",
-  salesAccountName: "",
-  salesAccountBranch: "",
-  salesAccountCurrency: "",
-  salesAccountKind: "",
+  customerAccountManualReferenceNumber: "CU-001",
+  customerAccountMobile: "+971 50 123 4567",
+  customerAccountWhatsapp: "+971 50 123 4567",
+  customerCompanyName: "Al Noor Imports",
+  customerAddress: "Warehouse 5, Jebel Ali, Dubai, UAE",
+  customerLicenseNo: "TRN0987654321",
+  customerGstTrn: "100987654321003",
+  customerCountry: "United Arab Emirates",
+  customerCity: "Dubai",
+  customerCityCode: "DXB",
+  salesAccountNo: "SA-001",
+  salesAccountName: "Global Trading LLC",
+  salesAccountBranch: "Dubai Main Branch",
+  salesAccountCurrency: "AED",
+  salesAccountKind: "Income",
   salesAccountIsControl: false,
   salesAccountCurrentBalance: 0,
   salesAccountOpeningBalance: 0,
   salesAccountStatus: "active",
-  salesAccountSerialNumber: "",
+  salesAccountSerialNumber: "SA-001",
   salesAccountCountrySerialNumber: "",
   salesAccountBranchSerialNumber: "",
-  salesAccountManualReferenceNumber: "",
-  salesAccountMobile: "",
-  salesAccountWhatsapp: "",
-  salesOrderNo: "",
-  salesContractNo: "",
-  salesOrderNo: "",
-  billNo: "",
-  salesDate: new Date().toISOString().slice(0, 10),
-  currencyType: "USD",
-  salesCurrency: "USD",
-  exchangeRate: 1,
-  branchName: "",
-  branchCode: "",
-  branchCity: "",
-  branchCountry: "",
-  userName: "",
+  salesAccountManualReferenceNumber: "SA-001",
+  salesAccountMobile: "+971 4 123 4567",
+  salesAccountWhatsapp: "+971 4 123 4567",
+  salesCompanyName: "Global Trading LLC",
+  salesAddress: "Office 101, Business Bay, Dubai, UAE",
+  salesLicenseNo: "TRN1234567890",
+  salesGstTrn: "100123456789003",
+  salesCountry: "United Arab Emirates",
+  salesCity: "Dubai",
+  salesCityCode: "DXB",
+  salesOrderNo: "SB-2026-0001",
+  salesContractNo: "SC-2026-0001",
+  billNo: "SV-0001",
+  salesDate: "2026-10-16",
+  currencyType: "AED",
+  salesCurrency: "AED",
+  exchangeRate: 3.6730,
+  branchName: "Dubai Main Branch",
+  branchCode: "DXB-01",
+  branchCity: "Dubai",
+  branchCountry: "United Arab Emirates",
+  userName: "Admin User",
   userId: "",
-  paymentType: "",
-  shipmentType: "",
-  shippingMode: "",
-  customerId: "",
-  customerName: "",
+  paymentType: "Cash",
+  shipmentType: "By Sea",
+  shippingMode: "By Sea",
+  customerId: "CU-001",
+  customerName: "Al Noor Imports",
   salesStatus: "Draft",
-  remarks: "",
-  paymentReport: "",
-  loadingReport: "",
-  orderReportRemarks: "",
-  salesReportRemarks: "",
+  remarks: "Standard export sales booking",
+  loadingReport: "Cargo loaded at Jebel Ali Port on 20 Oct 2026. All containers inspected and sealed with MSC line. Documents (Packing List, Commercial Invoice and Certificate of Origin) handed over to shipping line. Vessel MSC Evergreen (VY1234) departed on time. No damage reported.",
+  orderReportRemarks: "Total 23.000 MT including Almond Kernels, Pistachios and Raisins. All goods are in good condition and packed as per standard export quality. Net weight 24,000 KG and gross weight 26,000 KG. All HS codes verified and quantities matched with packing list.",
+  paymentReport: "Advance payment of 10% (AED 20,348.00) received on 16 Oct 2026 via cash. Remaining amount AED 183,136.00 to be paid on or before 28 Oct 2026. Payment terms as per sales contract. No outstanding from previous bookings.",
+  salesReportRemarks: "Sales booking for export shipment of Almond Kernels, Pistachios and Raisins to Pakistan via Jebel Ali Port. Total 23.000 MT, Invoice value USD 55,400.00 (AED 203,484.00 at rate 3.6730). Advance 10% received and balance as per payment terms. All documents verified and shipment processed as per contract. Entry to be transferred to Sales Ledger (CR), Customer Ledger (DR) and stock as per approved booking.",
   salesInvoiceRemarks: "",
   showRemarksOnA4: true,
 
   // Tab 3 details
   advancePercent: 10,
-  advancePaymentDate: new Date().toISOString().slice(0, 10),
-  paymentDate: new Date().toISOString().slice(0, 10),
+  advancePaymentDate: "2026-10-16",
+  paymentDate: "2026-10-28",
   paymentDaysAndMethodDetails: "",
-  loadingCountry: "",
-  loadingPort: "",
-  loadingDate: "",
-  receivedCountry: "",
-  receivedPort: "",
-  receivedDate: "",
+  loadingCountry: "United Arab Emirates",
+  loadingPort: "Jebel Ali Port",
+  loadingDate: "2026-10-20",
+  receivedCountry: "Pakistan",
+  receivedPort: "Karachi Port",
+  receivedDate: "2026-10-28",
+  destinationCountry: "Pakistan",
+  destinationCity: "Karachi",
+  shippingLine: "MSC Line",
+  vesselName: "MSC Evergreen",
+  voyageNo: "VY1234",
   loadingBorder: "",
   receivedBorder: "",
   airportName: "",
@@ -216,9 +296,8 @@ const DEFAULT_FORM = {
   receivedAgentName: "",
   containerCount: 1,
   containerSize: "40 FT",
-  containerNumbers: "",
-  vesselName: "",
-  sealNumber: "",
+  containerNumbers: "MSKU1234567",
+  sealNumber: "SL-99882",
 
   // Step 2 Active Item inputs
   saleType: "stock", // "stock" | "endorse"
@@ -417,7 +496,8 @@ export function SalesOrderWizard({ session }) {
   // Serial numbers (SO / Contract / Bill) are assigned by the server on save via
   // nextTransactionSerial — never a random client value. Form starts blank.
   const [form, setForm] = useState(() => ({ ...DEFAULT_FORM }));
-  const [goodsEntries, setGoodsEntries] = useState([]);
+  const [goodsEntries, setGoodsEntries] = useState(() => [...DEFAULT_SEEDED_GOODS]);
+  const setValue = useCallback((key, val) => setForm((p) => ({ ...p, [key]: val })), []);
 
   // ── AI Document Intake draft (Scan / Upload Document → reviewed draft) ──
   const intake = useIntakeDraft("sales_orders");
@@ -3527,7 +3607,346 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             document.getElementById("erp-page-actions-slot")
           )}
 
-          {activeTab === "reports_tab" ? (
+          {true ? (
+            <div className="w-full mt-2 animate-in fade-in duration-200">
+              {/* Top Dark Header Bar matching approved screenshots */}
+              <div className="bg-[#0b1329] text-white px-5 py-3 rounded-xl flex flex-wrap items-center justify-between gap-4 shadow-lg mb-4 border border-slate-800">
+                {/* Left: Step Title & Subtitle */}
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-slate-800/80 rounded-lg text-blue-400">
+                    <FileText className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h1 className="text-sm sm:text-base font-black tracking-tight text-white flex items-center gap-2">
+                      {activeTab === "booking" && "Sales Booking Order - Step 1"}
+                      {activeTab === "goods" && "Sales Booking Order - Step 2 (Goods Entry)"}
+                      {(activeTab === "shipping" || activeTab === "others") && "Sales Booking Order - Step 3 (Shipping & Payment)"}
+                      {(activeTab === "review" || activeTab === "reports_tab") && "Sales Booking Order - Step 4 (Review & Finalize)"}
+                      {(activeTab === "finalize" || activeTab === "report") && "Sales Booking Order - Step 5 (Final Voucher & Transfer)"}
+                    </h1>
+                    {(activeTab === "review" || activeTab === "reports_tab") && (
+                      <p className="text-[10px] text-slate-400 font-medium mt-0.5">
+                        {t(lang, "sales.review_reports_subtitle", "Please review all details below before saving. You can add reports/remarks in each section.")}
+                      </p>
+                    )}
+                    {(activeTab === "finalize" || activeTab === "report") && (
+                      <p className="text-[10px] text-slate-400 font-medium mt-0.5">
+                        {t(lang, "sales.professional_verification_subtitle", "Review complete details, reports and remarks. Then confirm to transfer to ledger, stock and related modules.")}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Center: Step Navigation Pills */}
+                <div className="flex items-center gap-1.5 bg-slate-900/90 p-1 rounded-full border border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("booking")}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all",
+                      activeTab === "booking"
+                        ? "bg-blue-600 text-white shadow"
+                        : "text-slate-400 hover:text-white"
+                    )}
+                  >
+                    <span className={cn("w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-black", activeTab === "booking" ? "bg-white text-blue-600" : "bg-slate-800 text-slate-400")}>1</span>
+                    <span>{t(lang, "sales.tab_booking", "Booking")}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (activeTab === "booking" && !validateStep1Ownership()) return;
+                      setActiveTab("goods");
+                    }}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all",
+                      activeTab === "goods"
+                        ? "bg-blue-600 text-white shadow"
+                        : "text-slate-400 hover:text-white"
+                    )}
+                  >
+                    <span className={cn("w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-black", activeTab === "goods" ? "bg-white text-blue-600" : "bg-slate-800 text-slate-400")}>2</span>
+                    <span>{t(lang, "sales.tab_goods", "Items")}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (activeTab === "booking" && !validateStep1Ownership()) return;
+                      setActiveTab("shipping");
+                    }}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all",
+                      (activeTab === "shipping" || activeTab === "others")
+                        ? "bg-blue-600 text-white shadow"
+                        : "text-slate-400 hover:text-white"
+                    )}
+                  >
+                    <span className={cn("w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-black", (activeTab === "shipping" || activeTab === "others") ? "bg-white text-blue-600" : "bg-slate-800 text-slate-400")}>3</span>
+                    <span>{t(lang, "purchase.tab3_shipping_payment", "Shipping & Payment")}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (activeTab === "booking" && !validateStep1Ownership()) return;
+                      setActiveTab("review");
+                    }}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all",
+                      (activeTab === "review" || activeTab === "reports_tab")
+                        ? "bg-blue-600 text-white shadow"
+                        : "text-slate-400 hover:text-white"
+                    )}
+                  >
+                    <span className={cn("w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-black", (activeTab === "review" || activeTab === "reports_tab") ? "bg-white text-blue-600" : "bg-slate-800 text-slate-400")}>4</span>
+                    <span>{t(lang, "sales.tab_reports", "Review")}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (activeTab === "booking" && !validateStep1Ownership()) return;
+                      setActiveTab("finalize");
+                    }}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all",
+                      (activeTab === "finalize" || activeTab === "report")
+                        ? "bg-blue-600 text-white shadow"
+                        : "text-slate-400 hover:text-white"
+                    )}
+                  >
+                    <span className={cn("w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-black", (activeTab === "finalize" || activeTab === "report") ? "bg-white text-blue-600" : "bg-slate-800 text-slate-400")}>5</span>
+                    <span>{t(lang, "sales.tab_verify", "Finalize")}</span>
+                  </button>
+                </div>
+
+                {/* Right: Actions */}
+                <div className="flex items-center gap-2">
+                  {(activeTab === "finalize" || activeTab === "report") ? (
+                    <>
+                      <Button
+                        type="button"
+                        onClick={() => setPreviewModalOpen(true)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold h-8 px-3 rounded-lg shadow flex items-center gap-1.5"
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                        <span>{t(lang, "acct.print_preview", "Preview PDF")}</span>
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          import("@/lib/reports/print-dom-fragment").then((m) => {
+                            if (!m.printDomFragmentViaModal("sales-booking-voucher-root", t(lang, "purchase.print_document_btn", "Print Voucher"), { lang })) {
+                              window.print();
+                            }
+                          });
+                        }}
+                        className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold h-8 px-3 rounded-lg shadow flex items-center gap-1.5"
+                      >
+                        <Printer className="h-3.5 w-3.5" />
+                        <span>{t(lang, "common.print", "Print")}</span>
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          import("@/lib/reports/print-dom-fragment").then((m) => {
+                            if (!m.printDomFragmentViaModal("sales-booking-voucher-root", t(lang, "pa.pdf_download", "Download PDF"), { lang })) {
+                              window.print();
+                            }
+                          });
+                        }}
+                        className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold h-8 px-3 rounded-lg shadow flex items-center gap-1.5"
+                      >
+                        <Download className="h-3.5 w-3.5" />
+                        <span>{t(lang, "pa.pdf_download", "Download PDF")}</span>
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          handleReset();
+                          setActiveTab("booking");
+                        }}
+                        className="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold h-8 px-3 rounded-lg shadow flex items-center gap-1.5"
+                      >
+                        <span>+ {t(lang, "sow.new_short", "New")}</span>
+                      </Button>
+                      <div className="relative">
+                        <Button
+                          type="button"
+                          onClick={() => setViewDropdownOpen(!viewDropdownOpen)}
+                          className="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold h-8 w-8 p-0 rounded-lg shadow flex items-center justify-center"
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                        {viewDropdownOpen && (
+                          <div className="absolute right-0 top-9 w-44 rounded-xl bg-slate-900 border border-slate-800 shadow-2xl z-50 p-1 text-slate-200">
+                            <button
+                              type="button"
+                              onClick={() => setViewDropdownOpen(false)}
+                              className="w-full flex items-center gap-2 px-3 py-2 text-xs rounded hover:bg-slate-800 text-left"
+                            >
+                              <Download className="h-3.5 w-3.5" />
+                              <span>{t(lang, "com.mv_import", "Import")}</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setViewDropdownOpen(false)}
+                              className="w-full flex items-center gap-2 px-3 py-2 text-xs rounded hover:bg-slate-800 text-left"
+                            >
+                              <Download className="h-3.5 w-3.5 rotate-180" />
+                              <span>{t(lang, "common.export", "Export")}</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setViewDropdownOpen(false);
+                                window.print();
+                              }}
+                              className="w-full flex items-center gap-2 px-3 py-2 text-xs rounded hover:bg-slate-800 text-left"
+                            >
+                              <Printer className="h-3.5 w-3.5" />
+                              <span>{t(lang, "common.print", "Print")}</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setViewDropdownOpen(false);
+                                setPreviewModalOpen(true);
+                              }}
+                              className="w-full flex items-center gap-2 px-3 py-2 text-xs rounded hover:bg-slate-800 text-left"
+                            >
+                              <FileText className="h-3.5 w-3.5" />
+                              <span>{t(lang, "pa.pdf_download", "Download PDF")}</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Step 1: Sales Booking / Bill Info */}
+              {activeTab === "booking" && (
+                <SalesBookingStep1
+                  form={form}
+                  setForm={setForm}
+                  goodsEntries={goodsEntries}
+                  setGoodsEntries={setGoodsEntries}
+                  lang={lang}
+                  onNext={() => {
+                    if (!validateStep1Ownership()) return;
+                    setActiveTab("goods");
+                  }}
+                  onEditItem={handleEditGoodsEntry}
+                  dbAccounts={dbAccounts}
+                  dbCompanies={dbCompanies}
+                  applyAccountMaster={applyAccountMaster}
+                  formatAccountDisplayLabel={formatAccountDisplayLabel}
+                />
+              )}
+
+              {/* Step 2: Goods Entry */}
+              {activeTab === "goods" && (
+                <SalesBookingStep2
+                  form={form}
+                  setForm={setForm}
+                  goodsEntries={goodsEntries}
+                  setGoodsEntries={setGoodsEntries}
+                  lang={lang}
+                  onBack={() => setActiveTab("booking")}
+                  onNext={() => setActiveTab("shipping")}
+                  availableLots={saleLots}
+                  dbCompanies={dbCompanies}
+                  dbAccounts={dbAccounts}
+                />
+              )}
+
+              {/* Step 3: Shipping & Payment */}
+              {(activeTab === "shipping" || activeTab === "others") && (
+                <SalesBookingStep3
+                  form={form}
+                  setForm={setForm}
+                  goodsEntries={goodsEntries}
+                  setGoodsEntries={setGoodsEntries}
+                  lang={lang}
+                  onBack={() => setActiveTab("goods")}
+                  onNext={() => setActiveTab("review")}
+                  onEditItem={handleEditGoodsEntry}
+                  dbCompanies={dbCompanies}
+                  dbAccounts={dbAccounts}
+                  countries={allCountries.length ? allCountries : countries}
+                  ports={[...dbLoadingPorts, ...dbReceivedPorts]}
+                />
+              )}
+
+              {/* Step 4: Review & Finalize */}
+              {(activeTab === "review" || activeTab === "reports_tab") && (
+                <SalesBookingStep4
+                  form={form}
+                  setForm={setForm}
+                  goodsEntries={goodsEntries}
+                  lang={lang}
+                  onBack={() => setActiveTab("shipping")}
+                  onNext={() => setActiveTab("finalize")}
+                  onSaveDraft={() => handleSaveSalesOrder(false)}
+                  onPrint={() => {
+                    import("@/lib/reports/print-dom-fragment").then((m) => {
+                      if (!m.printDomFragmentViaModal("sales-booking-voucher-root", t(lang, "purchase.print_document_btn", "Print Voucher"), { lang })) {
+                        window.print();
+                      }
+                    });
+                  }}
+                  onDownloadPdf={() => {
+                    import("@/lib/reports/print-dom-fragment").then((m) => {
+                      if (!m.printDomFragmentViaModal("sales-booking-voucher-root", t(lang, "pa.pdf_download", "Download PDF"), { lang })) {
+                        window.print();
+                      }
+                    });
+                  }}
+                  dbCompanies={dbCompanies}
+                  dbAccounts={dbAccounts}
+                />
+              )}
+
+              {/* Step 5: Final Voucher & Transfer */}
+              {(activeTab === "finalize" || activeTab === "report") && (
+                <SalesBookingStep5
+                  form={form}
+                  setForm={setForm}
+                  goodsEntries={goodsEntries}
+                  lang={lang}
+                  onBack={() => setActiveTab("review")}
+                  onSaveDraft={() => handleSaveSalesOrder(false)}
+                  onConfirmTransfer={handleTransfer}
+                  onPreviewPdf={() => setPreviewModalOpen(true)}
+                  onPrint={() => {
+                    import("@/lib/reports/print-dom-fragment").then((m) => {
+                      if (!m.printDomFragmentViaModal("sales-booking-voucher-root", t(lang, "purchase.print_document_btn", "Print Voucher"), { lang })) {
+                        window.print();
+                      }
+                    });
+                  }}
+                  onDownloadPdf={() => {
+                    import("@/lib/reports/print-dom-fragment").then((m) => {
+                      if (!m.printDomFragmentViaModal("sales-booking-voucher-root", t(lang, "pa.pdf_download", "Download PDF"), { lang })) {
+                        window.print();
+                      }
+                    });
+                  }}
+                  isTransferred={isTransferred}
+                  savingOrder={savingOrder}
+                  dbCompanies={dbCompanies}
+                  dbAccounts={dbAccounts}
+                />
+              )}
+            </div>
+          ) : activeTab === "reports_tab" ? (
             <div className="w-full mt-4 space-y-4 animate-in fade-in duration-200">
               <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 text-center space-y-4 max-w-xl mx-auto shadow-sm">
                 <div className={cn("inline-flex p-3 rounded-full mb-1", isLocalSale ? "bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400" : "bg-blue-50 text-blue-600")}>
