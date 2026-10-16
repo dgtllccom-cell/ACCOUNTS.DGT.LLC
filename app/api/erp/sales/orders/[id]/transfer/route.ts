@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { issueForSalesOrder } from "@/lib/services/stock-journal-service";
 import { assertReservationsReady, finalizeForOrder, usesManagedLots } from "@/lib/sales/managed-lot-sales";
 import { z } from "zod";
 import { apiOk, handleApiError } from "@/lib/api/response";
@@ -384,6 +385,27 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         deductedBy: session.userId,
         transfers: finalized.map((f: any) => ({ transferNo: f.transfer_no, lotId: f.lot_id, qty: Number(f.qty), purpose: f.purpose })),
       };
+    }
+
+    // Stock Journal: confirmed allocations linked to THIS sales booking leave the warehouse exactly once, here (Goods Issue / Delivery).
+    // Reserved stock is hidden from the normal warehouse sale source (quantity_available), so it can never be deducted twice.
+    // A failure here never blocks the posting that already happened — the allocation simply stays "confirmed" and can be issued from the Stock Journal.
+    try {
+      const journalIssued = await withLocalPg((sql) =>
+        sql.begin((tx: any) => issueForSalesOrder(tx, { salesOrderId: params.id, salesOrderNo: orderRow.sales_order_no ?? null, userId: session.userId }))
+      );
+      if (journalIssued && journalIssued.length > 0) {
+        stockDeductionAudit = {
+          ...(stockDeductionAudit ?? {}),
+          deducted: true,
+          stockJournal: true,
+          deductedAt: now,
+          deductedBy: session.userId,
+          journalTransfers: journalIssued.map((t: any) => ({ transferNo: t.transfer_no, qty: Number(t.quantity), destination: t.destination_type })),
+        };
+      }
+    } catch (journalErr) {
+      console.warn("[sales-transfer] Stock Journal issue skipped:", journalErr instanceof Error ? journalErr.message : journalErr);
     }
 
     if (isStockSale && !alreadyDeducted && !managedDeduction) {

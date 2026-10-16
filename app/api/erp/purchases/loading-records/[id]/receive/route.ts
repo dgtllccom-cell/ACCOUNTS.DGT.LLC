@@ -11,7 +11,12 @@ import { stockInToWarehouse } from "@/lib/services/purchase-warehouse-stock";
 const paramsSchema = z.object({ id: z.string().uuid() });
 
 const bodySchema = z.object({
-  receivedQuantity: z.coerce.number().positive(),
+  receivedQuantity: z.coerce.number().min(0),
+  /** goods that arrived damaged / went missing — recorded against the loading, never stocked */
+  damagedQuantity: z.coerce.number().min(0).default(0),
+  shortageQuantity: z.coerce.number().min(0).default(0),
+  customsStatus: z.enum(["pending", "submitted", "cleared", "not_applicable"]).nullish(),
+  customsReference: z.string().trim().max(120).nullish(),
   warehouseId: z.string().uuid(),
   goodsId: z.string().uuid().optional(),
   unitCost: z.coerce.number().min(0).default(0),
@@ -81,12 +86,19 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         }
 
         const alreadyReceived = money(record.received_quantity);
+        const alreadyDamaged = money(record.damaged_quantity);
+        const alreadyShort = money(record.shortage_quantity);
         const loaded = money(record.loaded_quantity);
         const newReceivedTotal = alreadyReceived + money(body.receivedQuantity);
+        const newDamagedTotal = alreadyDamaged + money(body.damagedQuantity);
+        const newShortTotal = alreadyShort + money(body.shortageQuantity);
 
-        if (newReceivedTotal > loaded + 0.0001) {
+        if (money(body.receivedQuantity) + money(body.damagedQuantity) + money(body.shortageQuantity) <= 0) {
+          throw new Error("Enter the received, damaged or shortage quantity.");
+        }
+        if (newReceivedTotal + newDamagedTotal + newShortTotal > loaded + 0.0001) {
           throw new Error(
-            `Received quantity would exceed loaded quantity. Loaded: ${loaded}, already received: ${alreadyReceived}, remaining to receive: ${money(loaded - alreadyReceived)}.`
+            `Received + damaged + shortage would exceed the loaded quantity. Loaded: ${loaded}, already accounted: ${money(alreadyReceived + alreadyDamaged + alreadyShort)}, remaining: ${money(loaded - alreadyReceived - alreadyDamaged - alreadyShort)}.`
           );
         }
 
@@ -106,12 +118,17 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         }
 
         const nowIso = new Date().toISOString();
-        const newStatus = newReceivedTotal >= loaded ? "received" : "partially_received";
+        const newStatus = newReceivedTotal + newDamagedTotal + newShortTotal >= loaded - 0.0001 ? "received" : "partially_received";
 
         await tx`
           update purchase_loading_records
           set
             received_quantity = ${newReceivedTotal},
+            damaged_quantity = ${newDamagedTotal},
+            shortage_quantity = ${newShortTotal},
+            customs_status = coalesce(${body.customsStatus ?? null}, customs_status),
+            customs_reference = coalesce(${body.customsReference ?? null}, customs_reference),
+            customs_cleared_at = case when ${body.customsStatus ?? null} = 'cleared' then ${nowIso}::timestamptz else customs_cleared_at end,
             received_at = ${nowIso},
             received_by = ${session.userId}::uuid,
             receiving_warehouse_id = ${body.warehouseId}::uuid,
@@ -124,26 +141,37 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         `;
 
         // ── Reuse the existing stock write path (same tables the rest of the ERP uses) ──
-        const { stockMovementId } = await stockInToWarehouse(tx, {
-          goodsId,
-          warehouseId: body.warehouseId,
-          quantity: money(body.receivedQuantity),
-          unitCost: money(body.unitCost),
-          scope: destinationScope,
-          referenceNo: record.loading_record_no,
-          purchaseOrderId: record.purchase_order_id ?? null,
-          loadingRecordId: params.id,
-          userId: session.userId,
-          remarks: body.remarks ?? null
-        });
+        // only the GOOD quantity becomes stock; damage / shortage stay on the loading record
+        let stockMovementId: string | null = null;
+        if (money(body.receivedQuantity) > 0) {
+          ({ stockMovementId } = await stockInToWarehouse(tx, {
+            goodsId,
+            warehouseId: body.warehouseId,
+            quantity: money(body.receivedQuantity),
+            unitCost: money(body.unitCost),
+            // a plain same-country booking has no destination scope: stock then belongs to the booking's own country / branch
+            scope: {
+              countryId: destinationScope.countryId ?? record.country_id ?? null,
+              countryBranchId: destinationScope.countryBranchId ?? record.country_branch_id ?? null,
+              cityBranchId: destinationScope.cityBranchId ?? record.city_branch_id ?? null
+            },
+            referenceNo: record.loading_record_no,
+            purchaseOrderId: record.purchase_order_id ?? null,
+            loadingRecordId: params.id,
+            userId: session.userId,
+            remarks: body.remarks ?? null
+          }));
+        }
         const movementRows = [{ id: stockMovementId }];
 
         return {
           loadingRecordId: params.id,
           loadingStatus: newStatus,
           receivedQuantity: newReceivedTotal,
+          damagedQuantity: newDamagedTotal,
+          shortageQuantity: newShortTotal,
           loadedQuantity: loaded,
-          remainingToReceive: money(loaded - newReceivedTotal),
+          remainingToReceive: money(loaded - newReceivedTotal - newDamagedTotal - newShortTotal),
           stockMovementId: movementRows[0]?.id ?? null
         };
       });

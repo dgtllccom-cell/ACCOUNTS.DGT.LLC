@@ -56,3 +56,12 @@ node scripts/nav-duplicate-guard.mjs || {
   echo "  Bypass only if you are certain:  git commit --no-verify"
   exit 1
 }
+
+echo "• Stock Journal canonical-implementation guard…"
+node scripts/stock-journal-guard.mjs || {
+  echo ""
+  echo "✗ commit blocked: the Stock Journal implementation was overwritten or an older copy was restored."
+  echo "  Restore it from git history and read docs/stock-journal.md (one implementation, one service)."
+  echo "  Bypass only if you are certain:  git commit --no-verify"
+  exit 1
+}
