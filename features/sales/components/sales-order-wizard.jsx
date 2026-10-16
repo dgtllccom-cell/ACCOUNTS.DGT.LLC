@@ -1004,7 +1004,6 @@ export function SalesOrderWizard({ session }) {
   const [sellerDetail, setSellerDetail] = useState(null);
   const [customerDetail, setCustomerDetail] = useState(null);
 
-  const setValue = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
   const isSubmittingRef = React.useRef(false);
   const currentItemTotals = useMemo(() => calculateItemTotals(form), [form]);
 
