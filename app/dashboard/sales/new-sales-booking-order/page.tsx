@@ -14,7 +14,7 @@ export default async function NewSalesBookingOrderPage({
   const sp = searchParams ? await searchParams : {};
   const orderId = sp.salesOrderId || sp.salesId || sp.orderId || sp.id || sp.salesOrderNo || null;
   return (
-    <div className="container mx-auto px-4 py-3">
+    <div className="w-full px-2 sm:px-4 lg:px-6 py-2">
       <EntryMethodSelector
         targetModule="sales_orders"
         domain="business"

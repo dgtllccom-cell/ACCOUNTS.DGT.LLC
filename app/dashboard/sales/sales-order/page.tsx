@@ -4,7 +4,7 @@ import { SalesOrderManagementDashboard } from "@/features/sales/components/sales
 
 export default function SalesOrdersConsolePage() {
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="w-full px-3 sm:px-6 lg:px-8 py-4">
       <SalesOrderManagementDashboard />
     </div>
   );
