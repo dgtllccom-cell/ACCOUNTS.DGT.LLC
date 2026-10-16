@@ -1003,9 +1003,24 @@ function toLedgerOption(row: any): SearchSelectOption {
   const account = ledgerName(row);
   const accountNo = ledgerCode(row);
   const branch = row?.cityBranchName ?? row?.city_branch_name ?? row?.countryBranchName ?? row?.country_branch_name ?? "";
-  const label = branch ? `[${branch}] ${accountNo} - ${account}` : `${accountNo} - ${account}`;
-  const keywords = [accountNo, account, branch].filter(Boolean).join(" ");
-  return { value: ledgerId(row) || "", label, keywords };
+  const rawBalance = row?.currentBalance ?? row?.current_balance ?? row?.balance ?? 0;
+  const balanceNum = Number(rawBalance) || 0;
+  const curr = ledgerCurrency(row) || "AED";
+  const formattedBalance = `${balanceNum.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${curr}`;
+  
+  // Name first, then Account Number, then Branch, then Balance
+  const label = `${account} — ${accountNo}${branch ? ` — [${branch}]` : ""} — ${formattedBalance}`;
+  const keywords = [account, accountNo, branch, String(balanceNum), curr].filter(Boolean).join(" ");
+
+  return {
+    value: ledgerId(row) || "",
+    label,
+    keywords,
+    primaryText: account, // Name first
+    code: accountNo,      // Account Number
+    branch: branch || undefined,
+    secondaryText: `Balance: ${formattedBalance}`
+  };
 }
 
 function getInitialPurchaseOrderNo(): string {
@@ -3098,11 +3113,10 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         const scopedCityBranchId = selectedOrderForLedger?.city_branch_id ?? (session?.scopes?.cityBranchIds?.[0] || session?.cityBranchId || null);
         
         const res = await listLedgerReportLedgers({
-          reportScope: scopedCityBranchId ? "branch" : scopedCountryId ? "country" : "super_admin",
+          reportScope: scopedCountryId ? "country" : "super_admin",
           countryId: scopedCountryId,
           countryBranchId: scopedCountryBranchId,
-          cityBranchId: scopedCityBranchId,
-          limit: 1000
+          limit: 2000
         });
         if (!cancelled) {
           setLedgers(Array.isArray(res.ledgers) ? res.ledgers : []);
@@ -3113,7 +3127,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
     }
     fetchLedgers();
     return () => { cancelled = true; };
-  }, [session, selectedOrderForLedger?.country_id, selectedOrderForLedger?.country_branch_id, selectedOrderForLedger?.city_branch_id]);
+  }, [session, selectedOrderForLedger?.country_id, selectedOrderForLedger?.country_branch_id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -4058,28 +4072,12 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
       // Auto-resolve initial paymentDebitLedgerId for the selected order
       const isUuid = (val: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(val || "").trim());
       const f = selected.form_data?.form || {};
-      const candidateDebitIds = [
-        (selected as any).supplier_ledger_id,
-        (selected as any).supplierLedgerId,
-        f.supplierAccountId,
-        f.supplier_ledger_id,
-        f.supplierLedgerId,
-        f.salesAccountLedgerId,
-        f.salesAccountId,
-        f.purchaseAccountLedgerId,
-        f.purchaseAccountId
-      ].filter(Boolean);
+      const sCode = String(f.salesAccountNo || f.supplierAccountNo || f.supplierAccountCode || (selected as any).sales_account_no || (selected as any).supplier_account_no || "").trim().toLowerCase();
+      const sName = String(f.salesAccountName || f.supplierName || f.supplierAccountName || (selected as any).supplier_name || "").trim().toLowerCase();
 
       let foundDebit = "";
-      for (const cid of candidateDebitIds) {
-        if (isUuid(String(cid))) {
-          foundDebit = String(cid);
-          break;
-        }
-      }
-      if (!foundDebit) {
-        const sCode = String(f.salesAccountNo || f.supplierAccountNo || f.supplierAccountCode || "").trim().toLowerCase();
-        const sName = String(f.salesAccountName || f.supplierName || f.supplierAccountName || "").trim().toLowerCase();
+      // 1. Direct match in loaded ledgers by account code or supplier name
+      if (sCode || sName) {
         const matched = ledgers.find((l) => {
           const id = ledgerId(l);
           if (!id || !isUuid(id)) return false;
@@ -4089,6 +4087,31 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         });
         if (matched) foundDebit = ledgerId(matched) || "";
       }
+
+      // 2. Fallback to candidate IDs only if verified in ledgers
+      if (!foundDebit) {
+        const candidateDebitIds = [
+          (selected as any).supplier_ledger_id,
+          (selected as any).supplierLedgerId,
+          f.supplier_ledger_id,
+          f.supplierLedgerId,
+          f.salesAccountLedgerId,
+          f.salesAccountId,
+          f.supplierAccountId,
+          f.purchaseAccountLedgerId,
+          f.purchaseAccountId
+        ].filter(Boolean);
+
+        for (const cid of candidateDebitIds) {
+          const matchedByCandidate = ledgers.find((l) => ledgerId(l) === String(cid));
+          if (matchedByCandidate) {
+            foundDebit = ledgerId(matchedByCandidate) || "";
+            break;
+          }
+        }
+      }
+
+      // 3. Fallback to any liability/payable ledger
       if (!foundDebit) {
         const matchedPayable = ledgers.find((l) => {
           const id = ledgerId(l);
@@ -4162,34 +4185,31 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
     }
   }
 
-  // Load custom select options
+  // Load custom select options for CR Account (Payment Source: Cash / Bank)
   const ledgerOptions = useMemo(() => {
-    // Determine the target country and branch to filter by
-    const targetCountryId = selected?.country_id || session?.scopes?.countryIds?.[0] || session?.countryId || null;
-    const targetCityBranchId = selected?.city_branch_id || session?.scopes?.cityBranchIds?.[0] || session?.cityBranchId || null;
-    const targetCountryBranchId = selected?.country_branch_id || null;
+    const isCashOrBank = (l: any) => {
+      const code = ledgerCode(l).toLowerCase();
+      const name = ledgerName(l).toLowerCase();
+      const nature = String(l.nature || l.account_type || l.category || "").toLowerCase();
+      return (
+        code.includes("cash") || code.includes("bank") ||
+        name.includes("cash") || name.includes("bank") ||
+        nature.includes("cash") || nature.includes("bank") ||
+        nature.includes("asset")
+      );
+    };
 
-    // Filter by the active order's branch and country scope
-    const filteredLedgers = ledgers.filter((l) => {
-      const lCountryId = l.country_id || l.countryId;
-      const lCityBranchId = l.city_branch_id || l.cityBranchId;
-      const lCountryBranchId = l.country_branch_id || l.countryBranchId;
-
-      if (targetCountryId && lCountryId && lCountryId !== targetCountryId) {
-        return false;
-      }
-      if (targetCityBranchId && lCityBranchId && lCityBranchId !== targetCityBranchId) {
-        return false;
-      }
-      if (!targetCityBranchId && targetCountryBranchId && lCountryBranchId && lCountryBranchId !== targetCountryBranchId) {
-        return false;
-      }
-      return true;
+    // Sort: Cash and Bank accounts first, then alphabetically by name
+    const sorted = [...ledgers].sort((a, b) => {
+      const aCB = isCashOrBank(a);
+      const bCB = isCashOrBank(b);
+      if (aCB && !bCB) return -1;
+      if (!aCB && bCB) return 1;
+      return ledgerName(a).localeCompare(ledgerName(b));
     });
 
-    const list = filteredLedgers.length > 0 ? filteredLedgers : ledgers;
-    return list.map(toLedgerOption);
-  }, [ledgers, session, selected]);
+    return sorted.map(toLedgerOption);
+  }, [ledgers]);
 
   // Calculate dynamic currency values
   const isLocalCurrency = currency === baseCurrency;
@@ -4289,35 +4309,15 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
       const form = selected.form_data?.form || {};
 
       // 1. Resolve debit ledger ID (Supplier / Trade Payable / Purchase party)
-      let debitLedgerId = paymentDebitLedgerId;
-      if (!debitLedgerId || !isUuid(debitLedgerId)) {
-        const candidateDebitIds = [
-          (selected as any).supplier_ledger_id,
-          (selected as any).supplierLedgerId,
-          form.supplierAccountId,
-          form.supplier_ledger_id,
-          form.supplierLedgerId,
-          form.salesAccountLedgerId,
-          form.salesAccountId,
-          form.purchaseAccountLedgerId,
-          form.purchaseAccountId,
-          form.supplierId,
-          selectedForm.salesAccountLedgerId,
-          selectedForm.supplierAccountId,
-          selectedForm.purchaseAccountLedgerId
-        ].filter(Boolean);
-
-        for (const candidate of candidateDebitIds) {
-          if (isUuid(String(candidate))) {
-            debitLedgerId = String(candidate).trim();
-            break;
-          }
-        }
+      let debitLedgerId = "";
+      const isKnownLedger = (id: string) => isUuid(id) && ledgers.some((l) => ledgerId(l) === id);
+      if (isKnownLedger(paymentDebitLedgerId)) {
+        debitLedgerId = paymentDebitLedgerId;
       }
 
-      if (!debitLedgerId || !isUuid(debitLedgerId)) {
-        const supplierCode = String(form.salesAccountNo || form.supplierAccountNo || form.supplierAccountCode || doubleEntry.debitCode || "").trim().toLowerCase();
-        const supplierName = String(form.salesAccountName || form.supplierName || form.supplierAccountName || doubleEntry.debitName || "").trim().toLowerCase();
+      if (!debitLedgerId) {
+        const supplierCode = String(form.salesAccountNo || form.supplierAccountNo || form.supplierAccountCode || (selected as any).sales_account_no || doubleEntry.debitCode || "").trim().toLowerCase();
+        const supplierName = String(form.salesAccountName || form.supplierName || form.supplierAccountName || (selected as any).supplier_name || doubleEntry.debitName || "").trim().toLowerCase();
         
         const matchedLedger = ledgers.find((l) => {
           const id = ledgerId(l);
@@ -4331,6 +4331,39 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
 
         if (matchedLedger) {
           debitLedgerId = ledgerId(matchedLedger) || "";
+        }
+      }
+
+      if (!debitLedgerId) {
+        const candidateDebitIds = [
+          (selected as any).supplier_ledger_id,
+          (selected as any).supplierLedgerId,
+          form.supplier_ledger_id,
+          form.supplierLedgerId,
+          form.salesAccountLedgerId,
+          form.purchaseAccountLedgerId,
+          paymentDebitLedgerId,
+          form.supplierAccountId,
+          form.salesAccountId,
+          form.purchaseAccountId,
+          form.supplierId
+        ].filter(Boolean);
+
+        for (const candidate of candidateDebitIds) {
+          const matchedByCandidate = ledgers.find((l) => ledgerId(l) === String(candidate));
+          if (matchedByCandidate) {
+            debitLedgerId = ledgerId(matchedByCandidate) || "";
+            break;
+          }
+        }
+
+        if (!debitLedgerId) {
+          for (const candidate of candidateDebitIds) {
+            if (isUuid(String(candidate))) {
+              debitLedgerId = String(candidate).trim();
+              break;
+            }
+          }
         }
       }
 
@@ -4392,6 +4425,8 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         kind: ["advance", "remaining", "credit", "booking"].includes(activeMode) ? activeMode : "advance",
         debitLedgerId,
         creditLedgerId,
+        debitLedgerCode: doubleEntry.debitCode,
+        creditLedgerCode: doubleEntry.creditCode,
         paymentType,
         roznamchaType,
         roznamchaNumber,
@@ -5204,8 +5239,8 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
         <SimpleModal
           title=""
           onClose={() => setSelectedId("")}
-          maxWidth="max-w-4xl"
-          className="w-[95vw] max-w-4xl h-[90vh] max-h-[850px] p-0 overflow-hidden bg-slate-50 dark:bg-[#070e20] text-slate-900 dark:text-slate-100 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col"
+          maxWidth="max-w-[1360px]"
+          className="w-[96vw] max-w-[1360px] h-[92vh] max-h-[920px] p-0 overflow-hidden bg-slate-50 dark:bg-[#070e20] text-slate-900 dark:text-slate-100 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col"
         >
           {(() => {
             const form = selected.form_data?.form || {};
@@ -6176,6 +6211,9 @@ export function PurchaseOrderPaymentJournal({ mode = "advance", approvedLayout =
                             placeholder={t("search_credit_account_cash_bank", currentLanguage)}
                             options={ledgerOptions}
                             disabled={loading}
+                            richList={true}
+                            triggerClassName="h-8 text-xs font-semibold bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 shadow-xs"
+                            className="w-full"
                             onValueChange={(val) => {
                               setPaymentSourceLedgerId(val);
                               const led = ledgers.find((l) => ledgerId(l) === val);

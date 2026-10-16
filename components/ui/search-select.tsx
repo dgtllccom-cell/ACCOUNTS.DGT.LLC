@@ -216,7 +216,10 @@ export function SearchSelect({
           </button>
         </PopoverTrigger>
         <PopoverContent
-          className="w-[var(--radix-popover-trigger-width)] min-w-[320px] p-0 rounded-xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 isolate z-[999999]"
+          className={cn(
+            "w-[var(--radix-popover-trigger-width)] p-0 rounded-xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 isolate z-[999999]",
+            richList ? "min-w-[360px] sm:min-w-[520px]" : "min-w-[320px]"
+          )}
           align="start"
           style={{ backgroundColor: "var(--card, #ffffff)", opacity: 1 }}
         >
@@ -287,7 +290,7 @@ export function SearchSelect({
                       onValueChange(opt.value);
                       setOpenSafe(false);
                     }}
-                    className={cn("flex justify-between items-center text-xs", richList && "py-2")}
+                    className={cn("flex justify-between items-center text-xs cursor-pointer", richList && "py-2.5 px-3")}
                     title={opt.label}
                   >
                     {richList ? (
@@ -306,7 +309,7 @@ export function SearchSelect({
                               {opt.primaryText || opt.label}
                             </div>
                             {opt.secondaryText && (
-                              <div className="truncate text-[10px] text-slate-400">{opt.secondaryText}</div>
+                              <div className="truncate text-[10.5px] font-semibold text-emerald-600 dark:text-emerald-400">{opt.secondaryText}</div>
                             )}
                           </div>
                           {opt.code && (
