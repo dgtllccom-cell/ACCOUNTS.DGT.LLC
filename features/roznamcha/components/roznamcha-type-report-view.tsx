@@ -36,6 +36,12 @@ import { openJournalReportWindow } from "@/lib/reports/open-journal-report-windo
 import { openUniversalPrintReport } from "@/lib/reports/universal-print-engine";
 import { resolveLedgerBranding } from "@/lib/reports/resolve-ledger-branding";
 import { Th } from "@/components/ui/translated-th";
+import { HEADER_TRANSLATIONS } from "@/lib/i18n/table-headers";
+
+function translateHeader(key: string, lang: SupportedLanguage): string {
+  if (lang === "en") return key;
+  return HEADER_TRANSLATIONS[key]?.[lang as "ur" | "ar" | "fa" | "ps"] || key;
+}
 
 export type RoznamchaEntryCategory = "business" | "bank" | "cash" | "invoice" | "transfer";
 
@@ -97,6 +103,7 @@ function formatEntryType(val: string | null | undefined, lang: SupportedLanguage
 type ReportLine = {
   id: string;
   payment_entry_type: string | null;
+  description?: string | null;
   debit: number | null;
   credit: number | null;
   currency: string | null;
@@ -229,6 +236,53 @@ function primaryLine(row: ReportRow): ReportLine | undefined {
   return row.roznamcha_lines?.[0];
 }
 
+function getLineRoznamchaType(row: ReportRow, line: ReportLine | undefined | null, lang: SupportedLanguage): { code: string; label: string; badgeClass: string } {
+  const d = Number(line?.debit || 0);
+  const c = Number(line?.credit || 0);
+  const ledgerName = (line?.ledgers?.name || "").toLowerCase();
+  const ledgerCode = (line?.account_number || line?.ledgers?.code || "").toLowerCase();
+  const jrn = (row.journal_no || "").toUpperCase();
+  const vch = (row.voucher_no || "").toUpperCase();
+  const txType = (row.source_transaction_type || "").toLowerCase();
+
+  const isCash = ledgerName.includes("cash") || ledgerCode.includes("csh") || jrn.startsWith("CSH-") || vch.startsWith("CSH-") || row.entry_category === "cash" || row.source_module === "cash_entry";
+  const isBank = ledgerName.includes("bank") || ledgerCode.includes("bnk") || ledgerCode.includes("bank") || jrn.startsWith("BNK-") || vch.startsWith("BR-") || vch.startsWith("BP-") || row.entry_category === "bank";
+
+  if (isCash) {
+    if (d > 0) {
+      return { code: "CR", label: translateHeader("CASH RECEIPT (CR)", lang), badgeClass: "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300" };
+    }
+    if (c > 0) {
+      return { code: "CP", label: translateHeader("CASH PAYMENT (CP)", lang), badgeClass: "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950 dark:text-amber-300" };
+    }
+    return { code: "CR", label: translateHeader("CASH RECEIPT (CR)", lang), badgeClass: "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300" };
+  }
+
+  if (isBank) {
+    if (d > 0) {
+      return { code: "BR", label: translateHeader("BANK RECEIPT (BR)", lang), badgeClass: "bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-950 dark:text-blue-300" };
+    }
+    if (c > 0) {
+      return { code: "BP", label: translateHeader("BANK PAYMENT (BP)", lang), badgeClass: "bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-950 dark:text-purple-300" };
+    }
+    return { code: "BR", label: translateHeader("BANK RECEIPT (BR)", lang), badgeClass: "bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-950 dark:text-blue-300" };
+  }
+
+  if (txType.includes("transfer")) {
+    return { code: "TR", label: t(lang, "roz.transfer_report", "Transfer"), badgeClass: "bg-cyan-100 text-cyan-800 border-cyan-300 dark:bg-cyan-950 dark:text-cyan-300" };
+  }
+
+  if (d > 0 && c === 0) {
+    return { code: "DR", label: translateHeader("DEBIT", lang), badgeClass: "bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950 dark:text-rose-300" };
+  }
+  if (c > 0 && d === 0) {
+    return { code: "CR", label: translateHeader("CREDIT", lang), badgeClass: "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300" };
+  }
+
+  const catLabel = getCategoryLabel(row.entry_category, lang);
+  return { code: "JV", label: catLabel !== "-" ? catLabel : translateHeader("JOURNAL VOUCHER (JV)", lang), badgeClass: "bg-slate-100 text-slate-800 border-slate-300 dark:bg-slate-800 dark:text-slate-300" };
+}
+
 
 
 export function RoznamchaTypeReportView({
@@ -340,6 +394,19 @@ export function RoznamchaTypeReportView({
 
   const rows = data?.entries ?? [];
 
+  const displayRows = useMemo(() => {
+    if (!rows || rows.length === 0) return [];
+    return rows.flatMap((row) => {
+      const lines = row.roznamcha_lines && row.roznamcha_lines.length > 0 ? row.roznamcha_lines : [null];
+      return lines.map((line, lineIndex) => ({
+        row,
+        line,
+        lineIndex,
+        totalLines: lines.length,
+      }));
+    });
+  }, [rows]);
+
   function applySearch() {
     setPage(1);
     loadData();
@@ -390,32 +457,41 @@ export function RoznamchaTypeReportView({
       tt("rozrep.debit", "Debit"),
       tt("rozrep.credit", "Credit"),
       tt("rozrep.balance", "Balance"),
+      tt("tax_einv.rep_direction", "Direction"),
       tt("rozrep.bill_ref", "Bill/Ref No"),
       tt("rozrep.status", "Status")
     ];
 
-    const lines = rows.map((row, idx) => {
-      const line = primaryLine(row);
-      const debit = Number(line?.debit || 0);
-      const credit = Number(line?.credit || 0);
-      return [
-        idx + 1 + (page - 1) * pageSize,
-        cleanDate(row.entry_date || row.created_at),
-        entrySerial(row),
-        row.countries?.name ?? "-",
-        branchName(row),
-        row.profiles?.full_name ?? "-",
-        formatEntryType(row.source_transaction_type || row.type, currentLang),
-        getCategoryLabel(row.entry_category, currentLang),
-        line?.account_number || line?.ledgers?.code || "-",
-        line?.ledgers?.name ?? "-",
-        row.narration || "-",
-        line?.currency ?? row.countries?.currency_code ?? "-",
-        debit ? debit.toFixed(2) : "0.00",
-        credit ? credit.toFixed(2) : "0.00",
-        (credit - debit).toFixed(2),
-        billNumber(row),
-      ].map(String).map(csvEscape).join(",");
+    let csvIdx = 1;
+    const lines = rows.flatMap((row) => {
+      const lineList = row.roznamcha_lines && row.roznamcha_lines.length > 0 ? row.roznamcha_lines : [null];
+      return lineList.map((line) => {
+        const debit = Number(line?.debit || 0);
+        const credit = Number(line?.credit || 0);
+        const netDiff = Math.abs(debit - credit);
+        const balDir = debit > credit ? "DR" : credit > debit ? "CR" : "—";
+        const rType = getLineRoznamchaType(row, line, currentLang);
+        return [
+          csvIdx++,
+          cleanDate(row.entry_date || row.created_at),
+          entrySerial(row),
+          row.countries?.name ?? "-",
+          branchName(row),
+          row.profiles?.full_name ?? "-",
+          formatEntryType(row.source_transaction_type || row.type, currentLang),
+          `${rType.code} · ${rType.label}`,
+          line?.account_number || line?.ledgers?.code || "-",
+          line?.ledgers?.name ?? "-",
+          line?.description || row.narration || "-",
+          line?.currency ?? row.countries?.currency_code ?? "-",
+          debit ? debit.toFixed(2) : "0.00",
+          credit ? credit.toFixed(2) : "0.00",
+          netDiff.toFixed(2),
+          balDir,
+          billNumber(row),
+          formatStatus(row.status, currentLang)
+        ].map(String).map(csvEscape).join(",");
+      });
     });
 
     const csvContent = "\uFEFF" + [headers.map(csvEscape).join(","), ...lines].join("\r\n");
@@ -440,8 +516,14 @@ export function RoznamchaTypeReportView({
 
   async function printReport() {
     const printRows = await fetchAllRowsForPrint();
-    const totDr = data?.totalDebit ?? printRows.reduce((s, r) => s + Number(primaryLine(r)?.debit || 0), 0);
-    const totCr = data?.totalCredit ?? printRows.reduce((s, r) => s + Number(primaryLine(r)?.credit || 0), 0);
+    let totDr = 0;
+    let totCr = 0;
+    for (const r of printRows) {
+      for (const l of r.roznamcha_lines ?? []) {
+        totDr += Number(l.debit || 0);
+        totCr += Number(l.credit || 0);
+      }
+    }
 
     const sc = sessionInfo?.scopes;
     const brand = await resolveLedgerBranding(
@@ -456,6 +538,7 @@ export function RoznamchaTypeReportView({
       sessionInfo?.user?.fullName,
     );
 
+    let printIdx = 1;
     openUniversalPrintReport({
       title: localizedPageTitle,
       subtitle: `From: ${fromDate || "Start"} | To: ${toDate || "Today"} | Total Entries: ${data?.totalCount ?? printRows.length}`,
@@ -474,31 +557,44 @@ export function RoznamchaTypeReportView({
       columns: [
         { key: "srNo", label: tt("rozrep.sno", "S.No"), width: "4%", align: "center" },
         { key: "entryDate", label: tt("rozrep.date", "Date"), format: "date", width: "8%" },
-        { key: "entrySerial", label: tt("rozrep.entry_serial", "Entry Serial"), align: "center", width: "10%" },
-        { key: "countryName", label: tt("rozrep.country", "Country"), width: "9%" },
-        { key: "branchName", label: tt("rozrep.branch", "Branch"), width: "10%" },
-        { key: "userName", label: tt("rozrep.user", "User"), width: "9%" },
-        { key: "entryType", label: tt("rozrep.entry_type", "Entry Type"), width: "9%" },
-        { key: "accountNo", label: tt("rozrep.account_no", "Account No"), width: "9%" },
-        { key: "narration", label: tt("rozrep.narration", "Narration / Remarks"), width: "18%" },
+        { key: "entrySerial", label: tt("rozrep.entry_serial", "Entry Serial"), align: "center", width: "9%" },
+        { key: "countryName", label: tt("rozrep.country", "Country"), width: "8%" },
+        { key: "branchName", label: tt("rozrep.branch", "Branch"), width: "9%" },
+        { key: "userName", label: tt("rozrep.user", "User"), width: "8%" },
+        { key: "entryType", label: tt("rozrep.entry_type", "Entry Type"), width: "8%" },
+        { key: "roznamchaType", label: tt("rozrep.roznamcha_type", "Roznamcha Type"), width: "10%" },
+        { key: "accountNo", label: tt("rozrep.account_no", "Account No"), width: "8%" },
+        { key: "accountName", label: tt("rozrep.account_name", "Account Name"), width: "12%" },
+        { key: "narration", label: tt("rozrep.narration", "Narration / Remarks"), width: "12%" },
         { key: "debit", label: tt("rozrep.debit", "Debit"), format: "currency", align: "right", width: "7%" },
         { key: "credit", label: tt("rozrep.credit", "Credit"), format: "currency", align: "right", width: "7%" },
+        { key: "balance", label: tt("rozrep.balance", "Balance"), align: "right", width: "8%" },
       ],
-      rows: printRows.map((row, idx) => {
-        const line = primaryLine(row);
-        return {
-          srNo: idx + 1,
-          entryDate: cleanDate(row.entry_date || row.created_at),
-          entrySerial: entrySerial(row),
-          countryName: row.countries?.name ?? "-",
-          branchName: branchName(row),
-          userName: row.profiles?.full_name ?? "-",
-          entryType: formatEntryType(row.source_transaction_type || row.type, currentLang),
-          accountNo: line?.account_number || line?.ledgers?.code || "-",
-          narration: row.narration || "-",
-          debit: Number(line?.debit || 0),
-          credit: Number(line?.credit || 0),
-        };
+      rows: printRows.flatMap((row) => {
+        const lineList = row.roznamcha_lines && row.roznamcha_lines.length > 0 ? row.roznamcha_lines : [null];
+        return lineList.map((line) => {
+          const debit = Number(line?.debit || 0);
+          const credit = Number(line?.credit || 0);
+          const netDiff = Math.abs(debit - credit);
+          const balDir = debit > credit ? "DR" : credit > debit ? "CR" : "—";
+          const rType = getLineRoznamchaType(row, line, currentLang);
+          return {
+            srNo: printIdx++,
+            entryDate: cleanDate(row.entry_date || row.created_at),
+            entrySerial: entrySerial(row),
+            countryName: row.countries?.name ?? "-",
+            branchName: branchName(row),
+            userName: row.profiles?.full_name ?? "-",
+            entryType: formatEntryType(row.source_transaction_type || row.type, currentLang),
+            roznamchaType: `${rType.code} · ${rType.label}`,
+            accountNo: line?.account_number || line?.ledgers?.code || "-",
+            accountName: line?.ledgers?.name ?? "-",
+            narration: line?.description || row.narration || "-",
+            debit,
+            credit,
+            balance: `${fmtNumber(netDiff)} ${balDir}`,
+          };
+        });
       }),
       totals: {
         debit: totDr,
@@ -729,7 +825,21 @@ export function RoznamchaTypeReportView({
             </div>
             <div className="flex justify-between items-center mt-auto pt-1.5 border-t border-slate-100 dark:border-slate-800">
               <span className="text-slate-700 dark:text-slate-300 font-bold">{tt("jrn.net_balance", "Net Balance")} (AED):</span>
-              <span className="font-black text-blue-600 dark:text-blue-400 font-mono text-sm">{fmtNumber(data?.netBalance ?? 0)}</span>
+              <div className="flex items-center gap-1.5">
+                <span className="font-black text-blue-600 dark:text-blue-400 font-mono text-sm">{fmtNumber(Math.abs(data?.netBalance ?? 0))}</span>
+                {data?.netBalance ? (
+                  <span className={cn(
+                    "rounded px-1.5 py-0.2 text-[9px] font-black uppercase border tracking-wider",
+                    data.netBalance > 0
+                      ? "bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border-rose-300/40"
+                      : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300/40"
+                  )}>
+                    {data.netBalance > 0 ? "DR" : "CR"}
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-slate-400 font-mono">—</span>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -943,6 +1053,11 @@ export function RoznamchaTypeReportView({
         <CardHeader className="py-2 px-3 flex flex-row items-center justify-between border-b border-slate-100 dark:border-slate-800">
           <CardTitle className="text-xs font-bold text-slate-700 dark:text-slate-300">
             {tt("rozrep.total_entries", "Total Entries")}: <span className="font-extrabold text-blue-600 dark:text-blue-400">{data?.totalCount ?? 0}</span>
+            {displayRows.length > (rows.length || 0) && (
+              <span className="ms-2 text-slate-400 font-normal">
+                ({displayRows.length} lines)
+              </span>
+            )}
           </CardTitle>
           <div className="text-[10.5px] font-semibold text-slate-500">
             {tt("rozrep.showing_page", "Showing Page")} {page} {tt("rozrep.of", "of")} {Math.ceil((data?.totalCount ?? 0) / pageSize) || 1}
@@ -980,45 +1095,75 @@ export function RoznamchaTypeReportView({
               <tbody>
                 {loading ? (
                   <tr><td colSpan={17} className="p-8 text-center text-sm text-muted-foreground">{tt("rozrep.loading_entries", "Loading Entries...")}</td></tr>
-                ) : rows.length ? (
-                  rows.map((row, idx) => {
-                    const line = primaryLine(row);
+                ) : displayRows.length ? (
+                  displayRows.map(({ row, line, lineIndex, totalLines }, idx) => {
                     const debit = Number(line?.debit || 0);
                     const credit = Number(line?.credit || 0);
+                    const netDiff = Math.abs(debit - credit);
+                    const balDirection = debit > credit ? "DR" : credit > debit ? "CR" : "—";
+                    const rType = getLineRoznamchaType(row, line, currentLang);
+                    const isEven = idx % 2 === 0;
+
                     return (
-                      <tr key={row.id} className={cn("border-t hover:bg-muted/40", idx % 2 ? "bg-muted/10" : "bg-background")}>
-                        <ReportTd className="text-center font-mono">{idx + 1 + (page - 1) * pageSize}</ReportTd>
-                        <ReportTd className="text-center font-mono whitespace-nowrap font-medium">
+                      <tr key={`${row.id}-${line?.id || lineIndex}`} className={cn("border-t hover:bg-muted/40 transition-colors", isEven ? "bg-background" : "bg-muted/10")}>
+                        <ReportTd className="text-center font-mono text-[11px] text-slate-500">{idx + 1 + (page - 1) * pageSize}</ReportTd>
+                        <ReportTd className="text-center font-mono whitespace-nowrap font-medium text-[11px]">
                           {cleanDate(row.entry_date || row.created_at)}
                         </ReportTd>
-                        <ReportTd className="text-center font-mono font-bold text-blue-600 dark:text-blue-400 whitespace-nowrap">
+                        <ReportTd className="text-center font-mono font-bold text-blue-600 dark:text-blue-400 whitespace-nowrap text-[11px]">
                           {entrySerial(row)}
+                          {totalLines > 1 && (
+                            <span className="ms-1 text-[9px] font-normal text-slate-400">
+                              ({lineIndex + 1}/{totalLines})
+                            </span>
+                          )}
                         </ReportTd>
-                        <ReportTd className="text-center whitespace-nowrap">{row.countries?.name ?? "-"}</ReportTd>
-                        <ReportTd className="text-center whitespace-nowrap">{branchName(row)}</ReportTd>
-                        <ReportTd className="text-center whitespace-nowrap">{row.profiles?.full_name ?? "-"}</ReportTd>
+                        <ReportTd className="text-center whitespace-nowrap text-[11px] font-medium">{row.countries?.name ?? "-"}</ReportTd>
+                        <ReportTd className="text-center whitespace-nowrap text-[11px] font-medium">{branchName(row)}</ReportTd>
+                        <ReportTd className="text-center whitespace-nowrap text-[11px] text-slate-600 dark:text-slate-300">{row.profiles?.full_name ?? "-"}</ReportTd>
                         <ReportTd className="text-center whitespace-nowrap font-medium text-[11px]">
                           {formatEntryType(row.source_transaction_type || row.type, currentLang)}
                         </ReportTd>
-                        <ReportTd className="text-center whitespace-nowrap font-semibold">
-                          {getCategoryLabel(row.entry_category, currentLang)}
+                        <ReportTd className="text-center whitespace-nowrap">
+                          <span className={cn("inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-bold border", rType.badgeClass)}>
+                            <span className="font-mono font-black">{rType.code}</span>
+                            <span className="hidden sm:inline font-medium">· {rType.label}</span>
+                          </span>
                         </ReportTd>
-                        <ReportTd className="text-center font-mono font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                        <ReportTd className="text-center font-mono font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap text-[11px]">
                           {line?.account_number || line?.ledgers?.code || "-"}
                         </ReportTd>
-                        <ReportTd className="text-start font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap">
+                        <ReportTd className="text-start font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap text-[11px]">
                           {line?.ledgers?.name ?? "-"}
                         </ReportTd>
-                        <ReportTd className="text-start max-w-[240px] truncate text-slate-600 dark:text-slate-300">
-                          <span title={row.narration || ""}>{row.narration || "-"}</span>
+                        <ReportTd className="text-start max-w-[240px] truncate text-slate-600 dark:text-slate-300 text-[11px]">
+                          <span title={line?.description || row.narration || ""}>{line?.description || row.narration || "-"}</span>
                         </ReportTd>
-                        <ReportTd className="text-center font-mono font-bold text-slate-700 dark:text-slate-300">
+                        <ReportTd className="text-center font-mono font-bold text-slate-700 dark:text-slate-300 text-[11px]">
                           {line?.currency ?? row.countries?.currency_code ?? "-"}
                         </ReportTd>
-                        <ReportTd className="text-end font-mono font-bold text-rose-600">{debit ? fmtNumber(debit) : "-"}</ReportTd>
-                        <ReportTd className="text-end font-mono font-bold text-emerald-600">{credit ? fmtNumber(credit) : "-"}</ReportTd>
-                        <ReportTd className="text-end font-mono font-bold">{fmtNumber(credit - debit)}</ReportTd>
-                        <ReportTd className="text-center font-mono text-[11px] whitespace-nowrap">{billNumber(row)}</ReportTd>
+                        <ReportTd className="text-end font-mono font-bold text-rose-600 text-[11px]">{debit ? fmtNumber(debit) : "-"}</ReportTd>
+                        <ReportTd className="text-end font-mono font-bold text-emerald-600 text-[11px]">{credit ? fmtNumber(credit) : "-"}</ReportTd>
+                        <ReportTd className="text-end whitespace-nowrap">
+                          {netDiff > 0 ? (
+                            <div className="inline-flex items-center gap-1 font-mono font-bold justify-end text-[11px]">
+                              <span className={balDirection === "DR" ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}>
+                                {fmtNumber(netDiff)}
+                              </span>
+                              <span className={cn(
+                                "rounded px-1.5 py-0.2 text-[9px] font-black uppercase tracking-wider border",
+                                balDirection === "DR"
+                                  ? "bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border-rose-300/40"
+                                  : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300/40"
+                              )}>
+                                {balDirection}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-slate-400 font-mono font-medium text-[11px]">0.00 —</span>
+                          )}
+                        </ReportTd>
+                        <ReportTd className="text-center font-mono text-[11px] whitespace-nowrap text-slate-600 dark:text-slate-400">{billNumber(row)}</ReportTd>
                         <ReportTd className="text-center whitespace-nowrap">
                           <span className={cn(
                             "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",

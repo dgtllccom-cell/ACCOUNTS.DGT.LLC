@@ -87,19 +87,51 @@ export async function GET(request: NextRequest) {
       let categoryCondPg;
       switch (entryCategory) {
         case "cash":
-          categoryCondPg = sql`(e.entry_category = 'cash' or e.source_module = 'cash_entry' or e.source_transaction_type in ('Cash Book No.', 'Receipt No.'))`;
+          categoryCondPg = sql`(
+            (e.entry_category = 'cash' or e.source_module = 'cash_entry' or e.source_transaction_type in ('Cash Book No.', 'Receipt No.'))
+            and e.entry_category is distinct from 'shipping'
+          )`;
           break;
         case "invoice":
-          categoryCondPg = sql`(e.entry_category = 'invoice' or e.source_module in ('purchase', 'local_purchase') or e.source_transaction_type ilike '%purchase%')`;
+          categoryCondPg = sql`(
+            (e.entry_category = 'invoice' or e.source_module in ('purchase', 'local_purchase') or e.source_transaction_type ilike '%purchase%')
+            and e.entry_category is distinct from 'shipping'
+          )`;
           break;
         case "transfer":
-          categoryCondPg = sql`(e.entry_category = 'transfer' or e.source_transaction_type ilike '%transfer%')`;
+          categoryCondPg = sql`(
+            (e.entry_category = 'transfer' or e.source_transaction_type ilike '%transfer%')
+            and e.entry_category is distinct from 'shipping'
+          )`;
           break;
         case "bank":
-          categoryCondPg = sql`(e.entry_category = 'bank' and e.source_module is distinct from 'cash_entry')`;
+          categoryCondPg = sql`(
+            (
+              e.entry_category = 'bank'
+              or e.journal_no ilike 'BNK-%'
+              or e.voucher_no ilike 'BR-%'
+              or e.voucher_no ilike 'BP-%'
+              or exists (
+                select 1 from public.roznamcha_lines bkl
+                join public.ledgers bklg on bklg.id = bkl.ledger_id
+                where bkl.roznamcha_entry_id = e.id and (bklg.name ilike '%bank%' or bklg.code ilike '%bank%' or bklg.code ilike '%bnk%')
+              )
+            )
+            and e.source_module is distinct from 'cash_entry'
+            and e.entry_category is distinct from 'shipping'
+          )`;
           break;
         case "business":
-          categoryCondPg = sql`e.entry_category = 'business'`;
+          categoryCondPg = sql`(
+            (
+              e.entry_category = 'business'
+              or e.entry_category is null
+              or e.entry_category in ('bank', 'cash', 'invoice', 'transfer')
+              or e.source_module in ('sales', 'purchase', 'local_purchase', 'goods_transfer', 'bill_expenses', 'cash_entry')
+            )
+            and (e.entry_category is distinct from 'shipping')
+            and (e.source_module is null or (e.source_module not ilike '%clearing%' and e.source_module is distinct from 'shipping'))
+          )`;
           break;
         default:
           categoryCondPg = sql`true`;
@@ -156,7 +188,7 @@ export async function GET(request: NextRequest) {
       const lineRows = entryIds.length
         ? await sql`
             select
-              rl.id, rl.roznamcha_entry_id, rl.payment_entry_type, rl.debit, rl.credit, rl.currency, rl.account_number, rl.ledger_id,
+              rl.id, rl.roznamcha_entry_id, rl.payment_entry_type, rl.debit, rl.credit, rl.currency, rl.account_number, rl.ledger_id, rl.description,
               case when l.id is not null then jsonb_build_object('name', l.name, 'code', l.code) else null end as ledgers
             from public.roznamcha_lines rl
             left join public.ledgers l on l.id = rl.ledger_id
@@ -186,19 +218,19 @@ export async function GET(request: NextRequest) {
       // unreliable entry_category alone. No data is changed — only the report filter is widened.
       switch (entryCategory) {
         case "cash":
-          query = query.or("entry_category.eq.cash,source_module.eq.cash_entry");
+          query = query.or("entry_category.eq.cash,source_module.eq.cash_entry").not("entry_category", "eq", "shipping");
           break;
         case "invoice":
-          query = query.or("entry_category.eq.invoice,source_module.eq.purchase,source_module.eq.local_purchase,source_transaction_type.ilike.*purchase*");
+          query = query.or("entry_category.eq.invoice,source_module.eq.purchase,source_module.eq.local_purchase,source_transaction_type.ilike.*purchase*").not("entry_category", "eq", "shipping");
           break;
         case "transfer":
-          query = query.or("entry_category.eq.transfer,source_transaction_type.ilike.*transfer*");
+          query = query.or("entry_category.eq.transfer,source_transaction_type.ilike.*transfer*").not("entry_category", "eq", "shipping");
           break;
         case "bank":
-          query = query.eq("entry_category", "bank");
+          query = query.or("entry_category.eq.bank,journal_no.ilike.BNK-*,voucher_no.ilike.BR-*,voucher_no.ilike.BP-*").not("entry_category", "eq", "shipping");
           break;
         case "business":
-          query = query.eq("entry_category", "business");
+          query = query.or("entry_category.eq.business,entry_category.is.null,source_module.in.(sales,purchase,local_purchase,goods_transfer,bill_expenses,cash_entry)").not("entry_category", "eq", "shipping");
           break;
         default:
           break; // "all" or null -> no category filter
