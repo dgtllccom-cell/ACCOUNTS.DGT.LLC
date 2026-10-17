@@ -30,7 +30,7 @@
 	<string>Main</string>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
-		<string>armv7</string>
+		<string>arm64</string>
 	</array>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
@@ -48,15 +48,11 @@
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Digital Dock ERP uses the camera so you can photograph invoices, contracts and other documents for AI Document Intake.</string>
+	<string>This app uses the camera so you can photograph invoices, contracts and other documents and attach them to ERP records.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Digital Dock ERP needs photo library access so you can attach existing document images to ERP records.</string>
-	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Digital Dock ERP can save exported reports and documents to your photo library.</string>
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>remote-notification</string>
-	</array>
+	<string>This app needs photo library access so you can attach existing document images to ERP records.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app uses the microphone only when you tap a voice-input button to dictate remarks into an ERP form.</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 </dict>
