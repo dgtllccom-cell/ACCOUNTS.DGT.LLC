@@ -138,6 +138,7 @@ const BASE_ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/dashboard/inventory/stock-reports/country": ["inventory:read", "products:read", "route:/dashboard/inventory/stock-reports/country"],
   "/dashboard/inventory/stock-reports/salesman": ["inventory:read", "products:read", "route:/dashboard/inventory/stock-reports/salesman"],
   "/dashboard/purchase/stock": ["purchases:read", "inventory:read", "route:/dashboard/purchase/stock"],
+  "/dashboard/purchase/stock/report": ["purchases:read", "inventory:read", "route:/dashboard/purchase/stock/report"],
   "/dashboard/purchase/stock/journal": ["purchases:read", "inventory:read", "route:/dashboard/purchase/stock/journal"],
   "/dashboard/purchase/stock/loading": ["purchases:read", "inventory:read", "route:/dashboard/purchase/stock/loading"],
   "/dashboard/purchase/stock/warehouse": ["inventory:read", "purchases:read", "warehouses:read", "route:/dashboard/purchase/stock/warehouse"],

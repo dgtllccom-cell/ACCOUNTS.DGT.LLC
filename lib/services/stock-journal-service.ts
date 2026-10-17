@@ -61,7 +61,7 @@ const iso = (v: unknown) => (v ? new Date(v as any).toISOString() : null);
  * by the SAME rule the list uses (recordInSessionScope = sqlScopeCondition), so a row a user can see is a row they can act on — and a row
  * outside their country / branch can be neither seen nor touched. A Country-to-Country booking is also in scope for its destination side.
  */
-function assertRecordAccess(session: ErpSession, action: "read" | "update", rec: { country_id?: string | null; country_branch_id?: string | null; city_branch_id?: string | null }, dest?: { country_id?: string | null; country_branch_id?: string | null; city_branch_id?: string | null } | null) {
+export function assertRecordAccess(session: ErpSession, action: "read" | "update", rec: { country_id?: string | null; country_branch_id?: string | null; city_branch_id?: string | null }, dest?: { country_id?: string | null; country_branch_id?: string | null; city_branch_id?: string | null } | null) {
   if (!hasRolePermission(session, "purchases", action)) throw new ErpPermissionError(`Missing permission: purchases:${action}`);
   if (isGlobalSession(session)) return;
   const destSet = !!dest && !!(dest.country_id || dest.country_branch_id || dest.city_branch_id);
