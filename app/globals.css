@@ -1042,3 +1042,41 @@ button, a {
     page-break-inside: avoid !important;
   }
 }
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Grid view for tables (shared mechanism — components/layout/table-card-view-controller.tsx).
+   Screen only: print always uses the real table. The same <table> is restyled as responsive cards; rows, filters, sorting, pagination,
+   totals and actions are untouched (pure presentation).
+   ─────────────────────────────────────────────────────────────────────────── */
+@media screen {
+  main[data-erp-content][data-view-mode="grid"] table[data-card-ready] { display: block; width: 100% !important; min-width: 0 !important; border: 0; background: transparent; }
+  main[data-erp-content][data-view-mode="grid"] table[data-card-ready] thead,
+  main[data-erp-content][data-view-mode="grid"] table[data-card-ready] colgroup { display: none; }
+  main[data-erp-content][data-view-mode="grid"] table[data-card-ready] tbody {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr)); gap: 0.75rem; padding: 0.25rem 0; align-items: start;
+  }
+  main[data-erp-content][data-view-mode="grid"] table[data-card-ready] tbody tr {
+    display: block; min-width: 0; border: 1px solid hsl(var(--border)); border-radius: 0.9rem; background: hsl(var(--card));
+    padding: 0.6rem 0.8rem; box-shadow: 0 1px 2px rgb(0 0 0 / 0.04); height: auto !important;
+  }
+  main[data-erp-content][data-view-mode="grid"] table[data-card-ready] tbody tr:hover { border-color: hsl(var(--primary) / 0.45); }
+  main[data-erp-content][data-view-mode="grid"] table[data-card-ready] tbody td {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; width: auto !important; max-width: none !important;
+    min-width: 0; border: 0 !important; padding: 0.18rem 0 !important; text-align: start !important; white-space: normal !important; position: static !important;
+    overflow-wrap: anywhere;
+  }
+  main[data-erp-content][data-view-mode="grid"] table[data-card-ready] tbody td::before {
+    content: attr(data-label); flex: 0 0 40%; max-width: 44%; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+    color: hsl(var(--muted-foreground)); padding-top: 0.12rem;
+  }
+  main[data-erp-content][data-view-mode="grid"] table[data-card-ready] tbody td[data-label=""]::before { display: none; }
+  main[data-erp-content][data-view-mode="grid"] table[data-card-ready] tbody td[data-label=""] { justify-content: flex-start; }
+  main[data-erp-content][data-view-mode="grid"] table[data-card-ready] tbody td[colspan] { display: block; text-align: center !important; }
+  main[data-erp-content][data-view-mode="grid"] table[data-card-ready] tbody tr:has(> td[colspan]:only-child) { grid-column: 1 / -1; }
+  main[data-erp-content][data-view-mode="grid"] table[data-card-ready] tfoot { display: block; margin-top: 0.5rem; }
+  main[data-erp-content][data-view-mode="grid"] table[data-card-ready] tfoot tr { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; border: 1px solid hsl(var(--border)); border-radius: 0.9rem; padding: 0.5rem 0.8rem; }
+  main[data-erp-content][data-view-mode="grid"] table[data-card-ready] tfoot td,
+  main[data-erp-content][data-view-mode="grid"] table[data-card-ready] tfoot th { display: block; border: 0 !important; padding: 0.1rem 0 !important; }
+  /* the table's horizontal-scroll wrappers must not clip the cards */
+  main[data-erp-content][data-view-mode="grid"] :has(> table[data-card-ready]) { overflow: visible !important; max-width: 100%; }
+}

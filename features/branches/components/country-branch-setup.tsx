@@ -1454,7 +1454,7 @@ function CountryBranchSetupContent() {
                     }}
                     className="font-bold text-xs h-9 px-4 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer disabled:opacity-40"
                   >
-                    {t(lang, "cnbs.back_arrow", "← Back")}
+                    {t(lang, "common.previous", "Previous")}
                   </Button>
                   <Button
                     type="reset"

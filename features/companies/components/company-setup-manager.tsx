@@ -108,9 +108,6 @@ export function CompanySetupManager({ initialCompanyId, initialAction, lang: ini
           <button type="button" data-testid="csm-new" onClick={() => toNew()} className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-700">
             <Plus className="h-4 w-4" /> {s.t("register_new", "Register New Company")}
           </button>
-          <button type="button" onClick={() => router.push("/dashboard" as Route)} className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-3.5 py-2 text-xs font-bold hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800">
-            <ArrowLeft className={cn("h-3.5 w-3.5", s.isRtl && "rotate-180")} /> {s.t("back", "Back to Dashboard")}
-          </button>
         </div>
       </div>
 

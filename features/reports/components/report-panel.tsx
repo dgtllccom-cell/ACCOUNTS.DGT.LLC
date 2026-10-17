@@ -1,5 +1,6 @@
 "use client";
 
+import { ViewModeToggle } from "@/components/layout/view-mode-toggle";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createPortal } from "react-dom";
@@ -630,6 +631,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
           </Button>
 
           {/* Live Search Input */}
+          <ViewModeToggle />
           <div className="relative min-w-[140px] sm:min-w-[180px]">
             <Search className="pointer-events-none absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
             <Input

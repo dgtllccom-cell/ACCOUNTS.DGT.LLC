@@ -1550,7 +1550,7 @@ function CityBranchSetupContent() {
             onClick={() => setActiveStep((step) => Math.max(1, step - 1))}
             className="h-8 px-2.5 text-xs text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-900/50"
           >
-            <ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> {t(lang, "common.back")}
+            <ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> {t(lang, "common.previous")}
           </Button>
           <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block" />
           <div className="flex flex-col">
@@ -2521,7 +2521,7 @@ function CityBranchSetupContent() {
                 </Button>
                 <div className="flex flex-wrap gap-2">
                   <Button type="button" variant="outline" disabled={saving || activeStep === 1} onClick={() => setActiveStep((step) => Math.max(1, step - 1))} className="border-slate-300 bg-white text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 disabled:bg-slate-100 disabled:text-slate-400">
-                    <ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> {t(lang, "common.back")}
+                    <ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> {t(lang, "common.previous")}
                   </Button>
                   {activeStep < 9 ? (
                     <Button type="button" onClick={() => setActiveStep((step) => Math.min(9, step + 1))} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-md hover:shadow-lg border-0">

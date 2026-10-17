@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useErpPageMenu } from "@/components/layout/erp-page-menu";
 import {
   Activity,
   AlertCircle,
@@ -161,6 +163,13 @@ export function LogisticsDashboardOverview({
   const [activeTab, setActiveTab] = useState<"documents" | "containers" | "trucks" | "agents" | "alerts">("documents");
   const [trendRange, setTrendRange] = useState("Last 6 Months");
   const [actionsOpen, setActionsOpen] = useState(false);
+  const router = useRouter();
+  // ONE ⋮ menu: the quick-create actions live in the global page-actions menu (no second "Actions" menu in the page).
+  useErpPageMenu([
+    { key: "bl", label: t(lang, "lgdash.new_shipment", "New Shipment / BL"), icon: <Plus className="h-4 w-4 text-blue-600" aria-hidden />, onSelect: () => router.push("/dashboard/shipping-line/bl-entry") },
+    { key: "order", label: t(lang, "lgdash.customer_order", "Customer Order"), icon: <Users className="h-4 w-4 text-blue-600" aria-hidden />, onSelect: () => router.push("/dashboard/clearing-agent/customer-order") },
+    { key: "truck", label: t(lang, "lgdash.register_truck", "Register Truck"), icon: <Truck className="h-4 w-4 text-blue-600" aria-hidden />, onSelect: () => router.push("/dashboard/clearing-agent/truck-registration") }
+  ], { hideDefaults: ["edit"] });
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [visibleWidgets, setVisibleWidgets] = useState<Record<string, boolean>>({});
 
@@ -378,57 +387,6 @@ export function LogisticsDashboardOverview({
                   <span>Settings</span>
                 </button>
 
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setActionsOpen(!actionsOpen);
-                    }}
-                    className="h-9 px-4 rounded-xl bg-[#1d63ed] hover:bg-[#1a55cd] text-white text-xs font-bold inline-flex items-center gap-2 shadow-md shadow-blue-500/25 transition-all cursor-pointer"
-                  >
-                    <span>Actions</span>
-                    <ChevronDown className="h-3.5 w-3.5" />
-                  </button>
-
-                  {actionsOpen && (
-                    <div
-                      onClick={(e) => e.stopPropagation()}
-                      className="absolute right-0 top-full mt-1.5 w-56 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl py-1.5 z-50 animate-in fade-in-50 duration-150"
-                    >
-                      <Link
-                        href="/dashboard/shipping-line/bl-entry"
-                        className="flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-800 hover:text-blue-600"
-                      >
-                        <Plus className="h-3.5 w-3.5 text-blue-600" />
-                        New Shipment / BL
-                      </Link>
-                      <Link
-                        href="/dashboard/clearing-agent/customer-order"
-                        className="flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-800 hover:text-blue-600"
-                      >
-                        <Users className="h-3.5 w-3.5 text-blue-600" />
-                        Customer Order
-                      </Link>
-                      <Link
-                        href="/dashboard/clearing-agent/truck-registration"
-                        className="flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-800 hover:text-blue-600"
-                      >
-                        <Truck className="h-3.5 w-3.5 text-blue-600" />
-                        Register Truck
-                      </Link>
-                      <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
-                      <button
-                        type="button"
-                        onClick={() => window.location.reload()}
-                        className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-left"
-                      >
-                        <RefreshCw className="h-3.5 w-3.5 text-slate-500" />
-                        Refresh Dashboard
-                      </button>
-                    </div>
-                  )}
-                </div>
               </div>
             </div>
 
