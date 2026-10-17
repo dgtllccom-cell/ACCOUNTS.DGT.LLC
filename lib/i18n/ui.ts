@@ -1136,6 +1136,13 @@ export type UiKey =
   // Account profile A4 report (acct.*)
   | "acct.report_title" | "acct.report_subtitle" | "acct.overview" | "acct.sec_account_info"
   | "acct.sec_customer_info" | "acct.sec_company_details" | "acct.sec_bank_details"
+  | "vm.grid"
+  | "vm.list"
+  | "vm.switch"
+  | "lgdash.new_shipment"
+  | "lgdash.customer_order"
+  | "lgdash.register_truck"
+  | "pbjr.confirm_post"
   | "acct.sec_tax_info" | "acct.sec_audit_info" | "acct.account_name" | "acct.account_code"
   | "acct.account_group" | "acct.currency" | "acct.as_on" | "acct.status" | "acct.time"
   | "acct.report_type" | "acct.last_updated" | "acct.opening_balance" | "acct.current_balance"
@@ -36310,6 +36317,13 @@ const en: Dict = {
   "acct.warehouse_name": "Warehouse",
   "acct.warehouse_location": "Location",
   "acct.warehouse_code": "Code",
+  "pbjr.confirm_post": "Post booking {no} to the ledger now? This creates the Debit / Credit entries once and cannot be repeated.",
+  "lgdash.new_shipment": "New Shipment / BL",
+  "lgdash.customer_order": "Customer Order",
+  "lgdash.register_truck": "Register Truck",
+  "vm.grid": "Grid view",
+  "vm.list": "List view",
+  "vm.switch": "Switch view",
 };
 
 const ur: Dict = {
@@ -60868,6 +60882,13 @@ const ur: Dict = {
   "acct.warehouse_name": "گودام",
   "acct.warehouse_location": "مقام",
   "acct.warehouse_code": "کوڈ",
+  "pbjr.confirm_post": "بکنگ {no} ابھی لیجر میں پوسٹ کریں؟ اس سے ڈیبٹ / کریڈٹ اندراجات ایک ہی بار بنیں گے اور دوبارہ نہیں بن سکیں گے۔",
+  "lgdash.new_shipment": "نئی شپمنٹ / بی ایل",
+  "lgdash.customer_order": "کسٹمر آرڈر",
+  "lgdash.register_truck": "ٹرک رجسٹر کریں",
+  "vm.grid": "گرڈ ویو",
+  "vm.list": "لسٹ ویو",
+  "vm.switch": "ویو تبدیل کریں",
 };
 
 const ar: Dict = {
@@ -85427,6 +85448,13 @@ const ar: Dict = {
   "acct.warehouse_name": "المستودع",
   "acct.warehouse_location": "الموقع",
   "acct.warehouse_code": "الرمز",
+  "pbjr.confirm_post": "هل تريد ترحيل الحجز {no} إلى الدفتر الآن؟ سيُنشئ ذلك قيود المدين / الدائن مرة واحدة فقط ولا يمكن تكراره.",
+  "lgdash.new_shipment": "شحنة جديدة / بوليصة شحن",
+  "lgdash.customer_order": "طلب العميل",
+  "lgdash.register_truck": "تسجيل شاحنة",
+  "vm.grid": "عرض الشبكة",
+  "vm.list": "عرض القائمة",
+  "vm.switch": "تبديل العرض",
 };
 
 const fa: Dict = {
@@ -109985,6 +110013,13 @@ const fa: Dict = {
   "acct.warehouse_name": "انبار",
   "acct.warehouse_location": "مکان",
   "acct.warehouse_code": "کد",
+  "pbjr.confirm_post": "رزرو {no} هم‌اکنون در دفتر ثبت شود؟ این کار ثبت‌های بدهکار / بستانکار را فقط یک‌بار ایجاد می‌کند و قابل تکرار نیست.",
+  "lgdash.new_shipment": "محموله جدید / بارنامه",
+  "lgdash.customer_order": "سفارش مشتری",
+  "lgdash.register_truck": "ثبت کامیون",
+  "vm.grid": "نمای شبکه‌ای",
+  "vm.list": "نمای فهرست",
+  "vm.switch": "تغییر نما",
 };
 
 const ps: Dict = {
@@ -134550,6 +134585,13 @@ const ps: Dict = {
   "acct.warehouse_name": "ګودام",
   "acct.warehouse_location": "ځای",
   "acct.warehouse_code": "کوډ",
+  "pbjr.confirm_post": "ایا اوس د بکنګ {no} په لیجر کې ثبت کړئ؟ دا به د ډیبېټ / کریډېټ ثبتونه یوازې یو ځل جوړ کړي او بیا نه شي تکرارېدلی.",
+  "lgdash.new_shipment": "نوې لېږد / BL",
+  "lgdash.customer_order": "د پیرودونکي امر",
+  "lgdash.register_truck": "ټرک ثبتول",
+  "vm.grid": "د ګرید لید",
+  "vm.list": "د لیست لید",
+  "vm.switch": "لید بدل کړئ",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

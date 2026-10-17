@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import { apiOk, handleApiError } from "@/lib/api/response";
+import { ApiClientError, apiOk, handleApiError } from "@/lib/api/response";
 import { uuidSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
@@ -304,7 +304,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     const expectedFinalAmount = Number(orderRow.order_total || 0) > 0 ? Number(orderRow.order_total) : (totalPurchaseAmount * exRate);
     if (existingPayment) {
       if (isPurchaseBookingTransferLocked(orderRow)) {
-        throw new Error("This booking has already been transferred.");
+        throw new ApiClientError("This booking has already been transferred.", { status: 409, code: "ALREADY_TRANSFERRED" });
       }
       paymentId = String(existingPayment.id);
       roznamchaEntryId = existingPayment.roznamcha_entry_id;
@@ -343,7 +343,14 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         p_narration: goodsAuditRemark
       });
 
-      if (rpcErr) throw new Error(`Business Roznamcha posting failed: ${rpcErr.message}`);
+      if (rpcErr) {
+        // The database allows ONE live booking payment per order (uq_po_payments_one_live_booking): a second concurrent transfer loses the race here
+        // and its whole posting is rolled back — report it as what it is instead of a generic posting failure.
+        if (/uq_po_payments_one_live_booking|duplicate key/i.test(String(rpcErr.message))) {
+          throw new ApiClientError("This booking has already been transferred.", { status: 409, code: "ALREADY_TRANSFERRED" });
+        }
+        throw new Error(`Business Roznamcha posting failed: ${rpcErr.message}`);
+      }
       if (!rpcPaymentId) throw new Error("Business Roznamcha posting did not return a payment id.");
       paymentId = String(rpcPaymentId);
       const { data: pRec, error: paymentRecordError } = await adminSupabase

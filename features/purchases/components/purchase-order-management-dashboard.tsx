@@ -1,5 +1,6 @@
 "use client";
 
+import { newIdempotencyKey } from "@/lib/api/idempotency-client";
 import { DownloadActionIcon, PdfActionIcon } from "@/components/ui/download-action-icon";
 import { DocumentAttachmentIcon } from "@/components/documents/document-attachment-icon";
 import { useCallback, useEffect, useMemo, useState, Fragment } from "react";
@@ -1744,7 +1745,7 @@ export function PurchaseOrderManagementDashboard() {
       const paymentType = itemToTransfer.form_data?.form?.paymentType || itemToTransfer.paymentType;
       const transferResponse = await fetch(`/api/erp/purchases/orders/${itemToTransfer.id}/transfer`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "Idempotency-Key": newIdempotencyKey("pb-transfer", String(itemToTransfer.id)) },
         body: JSON.stringify({ paymentType })
       });
 

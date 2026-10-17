@@ -1,6 +1,7 @@
 "use client";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { newIdempotencyKey } from "@/lib/api/idempotency-client";
 import React, { useEffect, useMemo, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -207,7 +208,7 @@ function PurchaseTransferErpReportViewContent({
     try {
       const res = await fetch(`/api/erp/purchases/orders/${d.id}/transfer`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "Idempotency-Key": newIdempotencyKey("pb-transfer-payment", String(d.id)) },
         body: JSON.stringify({ advancePaid: advanceAmountLc })
       });
       const json = await res.json();
