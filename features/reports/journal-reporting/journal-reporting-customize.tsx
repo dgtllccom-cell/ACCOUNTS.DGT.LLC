@@ -15,25 +15,31 @@ import type { ErpScreen } from "@/lib/i18n/use-erp-screen";
 export function columnLabel(s: ErpScreen, key: JournalColumnKey): string {
   const map: Record<JournalColumnKey, [string, string]> = {
     date: ["col_date", "Date"],
-    journalNo: ["col_journal_no", "Journal No."],
     voucherNo: ["col_voucher_no", "Voucher No."],
-    referenceNo: ["col_reference", "Reference"],
-    accountName: ["col_account", "Account"],
-    customerName: ["col_customer", "Customer/Supplier"],
-    description: ["col_description", "Description"],
-    debit: ["col_debit", "Debit"],
-    credit: ["col_credit", "Credit"],
+    journalNo: ["col_journal_no", "Journal No."],
+    accountCode: ["col_account_code", "Account Code"],
+    accountName: ["col_account", "Account Name"],
+    accountNumber: ["col_account_number", "Account No."],
+    countryName: ["col_country", "Country"],
+    branchName: ["col_branch", "Branch"],
+    entryType: ["col_entry_type", "Entry Type"],
     currency: ["col_currency", "Currency"],
     usdRate: ["col_exchange_rate", "Exchange Rate"],
+    credit: ["col_credit", "Total Credit"],
+    debit: ["col_debit", "Total Debit"],
+    finalBalance: ["col_final_balance", "Final Balance"],
+    drCr: ["col_dr_cr", "DR / CR"],
+    status: ["col_status", "Status"],
+    referenceNo: ["col_reference", "Reference"],
+    description: ["col_description", "Description"],
+    customerName: ["col_customer", "Customer/Supplier"],
     companyName: ["col_company", "Company"],
-    countryName: ["col_country", "Country"],
-    countryBranchName: ["col_branch", "Branch"],
+    countryBranchName: ["col_country_branch", "Country Branch"],
     cityBranchName: ["col_city_branch", "City Branch"],
     createdByName: ["col_created_by", "Created By"],
-    approvedByName: ["col_approved_by", "Approved By"],
-    status: ["col_status", "Status"]
+    approvedByName: ["col_approved_by", "Approved By"]
   };
-  const [key2, fallback] = map[key];
+  const [key2, fallback] = map[key] || ["", key];
   return s.t(key2, fallback);
 }
 

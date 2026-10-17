@@ -2116,15 +2116,19 @@ export function CashEntryForm({
     ];
 
     if (firstLine) {
+      const lineAmt = Number(firstLine.debit || 0) > 0 ? Number(firstLine.debit) : Number(firstLine.credit || 0);
+      const isLineDebit = Number(firstLine.debit || 0) > 0;
       rowsForPrint.push({
         label: t(lang, "cef.print_counterparty_account", "Counterparty Account"),
-        value: `${firstLine.account_number || "-"} | ${firstLine.ledgers?.name || "-"} | ${firstLine.debit ? t(lang, "cef.print_debit_receive", "Debit (Receive)") : t(lang, "cef.print_credit_pay", "Credit (Pay)")} ${fmtAmount(Number(firstLine.debit || firstLine.credit || 0))} ${firstLine.currency || ""}`
+        value: `${firstLine.account_number || firstLine.ledgers?.code || "-"} | ${firstLine.ledgers?.name || "-"} | ${isLineDebit ? t(lang, "cef.print_debit_receive", "Debit (Receive)") : t(lang, "cef.print_credit_pay", "Credit (Pay)")} ${fmtAmount(lineAmt)} ${firstLine.currency || "AED"}`
       });
     }
     if (secondLine) {
+      const lineAmt = Number(secondLine.debit || 0) > 0 ? Number(secondLine.debit) : Number(secondLine.credit || 0);
+      const isLineDebit = Number(secondLine.debit || 0) > 0;
       rowsForPrint.push({
         label: t(lang, "cef.print_cash_bank_account", "Cash/Bank Account"),
-        value: `${secondLine.account_number || "-"} | ${secondLine.ledgers?.name || "-"} | ${secondLine.debit ? t(lang, "cef.print_debit_receive", "Debit (Receive)") : t(lang, "cef.print_credit_pay", "Credit (Pay)")} ${fmtAmount(Number(secondLine.debit || secondLine.credit || 0))} ${secondLine.currency || ""}`
+        value: `${secondLine.account_number || secondLine.ledgers?.code || "-"} | ${secondLine.ledgers?.name || "-"} | ${isLineDebit ? t(lang, "cef.print_debit_receive", "Debit (Receive)") : t(lang, "cef.print_credit_pay", "Credit (Pay)")} ${fmtAmount(lineAmt)} ${secondLine.currency || "AED"}`
       });
     }
     return rowsForPrint;
@@ -2134,10 +2138,62 @@ export function CashEntryForm({
     try {
       const res = await apiGet<any>(`/api/erp/roznamcha/${id}`);
       if (res.found && res.header) {
+        const header = res.header;
+        const lines = res.lines || [];
+
+        const counterpartyLine = lines.find((l: any) => l.ledger_id && l.ledger_id === header.counter_ledger_id) || lines[0];
+        const cashBankLine = lines.find((l: any) => l.id !== counterpartyLine?.id) || lines[1];
+
+        const financialLines = lines.map((l: any) => {
+          const deb = Number(l.debit || 0);
+          const cred = Number(l.credit || 0);
+          const rate = Number(l.usd_rate || header.exchange_rate || 1.0);
+          const conv = Number(l.usd_amount || (deb ? deb / (rate || 1) : cred / (rate || 1)) || 0);
+          return {
+            description: l.description || header.narration || "Cash Entry",
+            accountCode: l.account_number || l.ledgers?.code || "-",
+            accountName: l.ledgers?.name || l.accounts?.name || "-",
+            currency: l.currency || header.countries?.currency_code || "AED",
+            debit: deb,
+            credit: cred,
+            exchangeRate: rate,
+            convertedAmount: conv
+          };
+        });
+
+        const totalDebit = financialLines.reduce((s: number, l: any) => s + l.debit, 0);
+        const totalCredit = financialLines.reduce((s: number, l: any) => s + l.credit, 0);
+        const diff = totalDebit - totalCredit;
+        const balDir: "DR" | "CR" | "—" = diff > 0 ? "DR" : diff < 0 ? "CR" : "—";
+
         openA4ReportWindow({
           title: t(lang, "cef.print_title", "Roznamcha Cash Entry"),
           subtitle: `${res.header.voucher_no || ""} · ${res.header.entry_date || ""}`,
           rows: buildA4RowsForEntry(res),
+          cashEntryData: {
+            companyName: "DGT LLC",
+            voucherNo: header.voucher_no || "-",
+            journalNo: header.journal_no || "-",
+            entrySerial: counterpartyLine?.entry_serial_number || header.super_admin_serial_number || header.entry_serial_number || "-",
+            entryDate: header.entry_date || "-",
+            status: header.status || "posted",
+            counterpartyName: counterpartyLine?.ledgers?.name || counterpartyLine?.accounts?.name || "-",
+            counterpartyCode: counterpartyLine?.ledgers?.code || counterpartyLine?.account_number || "-",
+            accountNo: counterpartyLine?.account_number || "-",
+            country: header.countries?.name || "-",
+            branch: header.city_branches?.name || header.country_branches?.name || "-",
+            bankName: cashBankLine?.ledgers?.name || "-",
+            paymentMethod: header.payment_method_id || header.source_transaction_type || "Cash",
+            financialLines,
+            totalDebit,
+            totalCredit,
+            balanceDirection: balDir,
+            finalBalance: Math.abs(diff) || totalDebit || totalCredit,
+            currency: financialLines[0]?.currency || "AED",
+            narration: resolveVerifiedTranslation(header.translations?.narration, lang) || translateNarrationBlock(header.narration, lang) || header.narration || "-",
+            createdBy: header.profiles?.full_name || header.created_by || "User",
+            approvedBy: header.approver_profile?.full_name || header.approved_by || "System"
+          },
           autoPrint: false,
           lang
         });

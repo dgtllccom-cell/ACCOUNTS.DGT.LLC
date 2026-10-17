@@ -318,11 +318,9 @@ export async function GET(request: NextRequest) {
     let pendingCount = 0;
     for (const row of rows) {
       const lines = row.roznamcha_lines ?? [];
-      const primaryLine = lines[0];
-      if (primaryLine) {
-        const amt = Number(primaryLine.debit || primaryLine.credit || 0);
-        if (isDebitLine(primaryLine.payment_entry_type)) totalDebit += amt;
-        else totalCredit += amt;
+      for (const line of lines) {
+        totalDebit += Number(line.debit || 0);
+        totalCredit += Number(line.credit || 0);
       }
       if (row.status === "posted" || row.status === "transferred") postedCount += 1;
       else pendingCount += 1;
