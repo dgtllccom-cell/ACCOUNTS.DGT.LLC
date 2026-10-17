@@ -492,8 +492,24 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       "Paid Amount: " + body.amount
     ].filter(Boolean).join(" | ");
 
-    // payment amount, expressed in the order's purchase currency, for validation
-    const bodyAmountPur = toPurchaseCcy(Number(body.amount), bodyCcy, bodyRate);
+    // payment amount, expressed in the order's purchase currency, for validation.
+    // When the payment is entered in the branch country's LOCAL currency (the form's default: Final Local Amount = purchase amount × rate)
+    // the amount is already local — post_purchase_* treats it as base (rate 1) — so converting it again with the USD→local rate (as if it were a
+    // foreign-currency amount) overstated it by exactly that rate and rejected valid payments ("cannot exceed remaining payable").
+    // Convert local → purchase currency by DIVIDING by the rate. The client's rate is only honoured within ±10% of the order's own rate, so
+    // it can never be used to understate the amount and slip past the overpayment check.
+    const localCcyRows = orderRow.country_id
+      ? ((await withLocalPg((sql) => sql`select upper(currency_code) as c from countries where id = ${orderRow.country_id}::uuid limit 1`)) as any[])
+      : [];
+    const localCcy = String(localCcyRows[0]?.c || "").toUpperCase();
+    let bodyAmountPur: number;
+    if (bodyCcy !== orderCcy && localCcy && bodyCcy === localCcy) {
+      const bodyLocalRate = Number(body.exchangeRate || 0);
+      const usable = bodyLocalRate > 0 && orderRate > 0 && Math.abs(bodyLocalRate / orderRate - 1) <= 0.1 ? bodyLocalRate : orderRate || 1;
+      bodyAmountPur = Number(body.amount) / usable;
+    } else {
+      bodyAmountPur = toPurchaseCcy(Number(body.amount), bodyCcy, bodyRate);
+    }
 
     if (body.kind === "advance" && advancePercent > 0) {
       const maxAllowedAdvancePur = Math.max(remainingAdvancePur, remainingDuePur);
