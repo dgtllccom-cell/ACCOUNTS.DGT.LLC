@@ -1112,6 +1112,15 @@ export function DigitalDockPremiumSidebar({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
+  // Keep the page you are on visible in the (long) menu — the red tracking entries sit deep inside the Shipping section.
+  useEffect(() => {
+    const h = window.setTimeout(() => {
+      const exact = Array.from(document.querySelectorAll<HTMLElement>("nav a[href]")).find((el) => el.getAttribute("href")?.split("?")[0] === pathname);
+      (exact ?? document.querySelector<HTMLElement>('nav a[aria-current="page"]'))?.scrollIntoView({ block: "nearest" });
+    }, 250);
+    return () => window.clearTimeout(h);
+  }, [pathname]);
+
   // CRM Report Center Floating Panel State
   const [crmPanelOpen, setCrmPanelOpen] = useState(false);
   const [crmSearchText, setCrmSearchText] = useState("");
@@ -1370,6 +1379,7 @@ export function DigitalDockPremiumSidebar({
                                       <Link
                                         key={leaf.label + leaf.href}
                                         href={leaf.href}
+                                        aria-current={isLeafActive ? "page" : undefined}
                                         onClick={onNavigate}
                                         className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[12px] transition-all duration-150 ${
                                           isLeafActive
@@ -1394,7 +1404,7 @@ export function DigitalDockPremiumSidebar({
                                               : isLeafRed ? "bg-red-400" : "bg-slate-300"
                                           }`} />
                                         )}
-                                        <span className={`truncate tracking-tight ${isLeafRed ? "text-red-600 font-bold" : ""}`}>
+                                        <span className={`tracking-tight ${isLeafRed ? "text-red-600 font-bold break-words leading-snug" : "truncate"}`}>
                                           {tr(leaf.label)}
                                         </span>
                                         {leaf.upgraded && <UpgradedMark lang={lang} />}
@@ -1412,6 +1422,7 @@ export function DigitalDockPremiumSidebar({
                           <Link
                             key={sub.label + (sub.href || "")}
                             href={sub.href || "/dashboard"}
+                            aria-current={isSubDirectActive ? "page" : undefined}
                             onClick={onNavigate}
                             className={`flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] transition-all duration-150 ${
                               isSubDirectActive
@@ -1428,7 +1439,7 @@ export function DigitalDockPremiumSidebar({
                                 ? isSubRed ? "text-red-600" : "text-[#2563eb]"
                                 : isSubRed ? "text-red-500" : "text-[#0f172a]"
                             }`} />
-                            <span className={`truncate tracking-tight flex-1 ${isSubRed ? "text-red-600 font-bold" : ""}`}>
+                            <span className={`tracking-tight flex-1 ${isSubRed ? "text-red-600 font-bold break-words leading-snug" : "truncate"}`}>
                               {tr(sub.label)}
                             </span>
                             {sub.upgraded && <UpgradedMark lang={lang} />}
