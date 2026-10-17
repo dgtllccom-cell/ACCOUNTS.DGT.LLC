@@ -1,5 +1,6 @@
 "use client";
 
+import { accountSectionsFor } from "@/lib/accounts/account-type-sections";
 import { useMemo } from "react";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import {
@@ -120,6 +121,17 @@ export function AccountLiveReportPanel({
   const primaryWhItem = linkedWarehouses?.find((w) => w.isPrimary) || linkedWarehouses?.[0];
   const effectiveWarehouse = warehouseDetail || primaryWhItem?.detail || primaryWhItem || null;
 
+  // What applies is decided by the selected Account Type + linked-master toggles (same rules as the wizard steps and the print / PDF report)
+  const hasData = (o: any) => Boolean(o && typeof o === "object" && Object.values(o).some((v) => v !== null && v !== undefined && v !== "" && !(Array.isArray(v) && v.length === 0)));
+  const show = accountSectionsFor({
+    accountTitle, subType, category,
+    companyRequired, bankRequired, warehouseRequired,
+    hasCustomer: hasData(customerDetail?.customer ?? customerDetail),
+    hasCompany: Boolean(linkedCompanies?.length) && companyRequired,
+    hasBank: Boolean(linkedBanks?.length) && bankRequired,
+    hasWarehouse: Boolean(linkedWarehouses?.length) && warehouseRequired
+  });
+
   // Contact resolution
   const primaryPhone =
     contacts?.find((c) => c.type?.toLowerCase().includes("mobile") || c.type?.toLowerCase().includes("phone"))?.value ||
@@ -219,6 +231,7 @@ export function AccountLiveReportPanel({
         </div>
 
         {/* Card 2: Customer Information */}
+        {show.customer && (
         <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-4 space-y-3">
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
             <div className="flex items-center gap-2">
@@ -275,8 +288,10 @@ export function AccountLiveReportPanel({
             </div>
           </div>
         </div>
+        )}
 
         {/* Card 3: Company Details */}
+        {show.company && (
         <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-4 space-y-3">
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
             <div className="flex items-center gap-2">
@@ -344,8 +359,10 @@ export function AccountLiveReportPanel({
             </div>
           </div>
         </div>
+        )}
 
         {/* Card 4: Bank Details */}
+        {show.bank && (
         <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-4 space-y-3">
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
             <div className="flex items-center gap-2">
@@ -413,8 +430,10 @@ export function AccountLiveReportPanel({
             </div>
           </div>
         </div>
+        )}
 
         {/* Card 5: Warehouse Details */}
+        {show.warehouse && (
         <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-4 space-y-3">
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
             <div className="flex items-center gap-2">
@@ -470,6 +489,7 @@ export function AccountLiveReportPanel({
             </div>
           </div>
         </div>
+        )}
 
         {/* Card 6: Audit Information */}
         <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-4 space-y-3">

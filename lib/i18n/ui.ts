@@ -36306,6 +36306,10 @@ const en: Dict = {
   "sbr.col_warehouse": "Warehouse",
   "report.no_reports_available": "No reports are available for your login on this page. Your Shipping Line reports are in Shipping & Clearing Reports.",
   "report.open_shipping_reports": "Open Shipping & Clearing Reports",
+  "acct.sec_warehouse_details": "Warehouse Details",
+  "acct.warehouse_name": "Warehouse",
+  "acct.warehouse_location": "Location",
+  "acct.warehouse_code": "Code",
 };
 
 const ur: Dict = {
@@ -60860,6 +60864,10 @@ const ur: Dict = {
   "sbr.col_warehouse": "گودام",
   "report.no_reports_available": "اس صفحے پر آپ کے لاگ اِن کے لیے کوئی رپورٹ دستیاب نہیں۔ آپ کی شپنگ لائن رپورٹس «شپنگ اور کلیئرنگ رپورٹس» میں ہیں۔",
   "report.open_shipping_reports": "شپنگ اور کلیئرنگ رپورٹس کھولیں",
+  "acct.sec_warehouse_details": "گودام کی تفصیلات",
+  "acct.warehouse_name": "گودام",
+  "acct.warehouse_location": "مقام",
+  "acct.warehouse_code": "کوڈ",
 };
 
 const ar: Dict = {
@@ -85415,6 +85423,10 @@ const ar: Dict = {
   "sbr.col_warehouse": "المستودع",
   "report.no_reports_available": "لا توجد تقارير متاحة لحسابك في هذه الصفحة. تقارير خط الشحن الخاصة بك موجودة في «تقارير الشحن والتخليص».",
   "report.open_shipping_reports": "فتح تقارير الشحن والتخليص",
+  "acct.sec_warehouse_details": "تفاصيل المستودع",
+  "acct.warehouse_name": "المستودع",
+  "acct.warehouse_location": "الموقع",
+  "acct.warehouse_code": "الرمز",
 };
 
 const fa: Dict = {
@@ -109969,6 +109981,10 @@ const fa: Dict = {
   "sbr.col_warehouse": "انبار",
   "report.no_reports_available": "هیچ گزارشی برای ورود شما در این صفحه در دسترس نیست. گزارش‌های خط کشتیرانی شما در «گزارش‌های حمل و ترخیص» است.",
   "report.open_shipping_reports": "باز کردن گزارش‌های حمل و ترخیص",
+  "acct.sec_warehouse_details": "جزئیات انبار",
+  "acct.warehouse_name": "انبار",
+  "acct.warehouse_location": "مکان",
+  "acct.warehouse_code": "کد",
 };
 
 const ps: Dict = {
@@ -134530,6 +134546,10 @@ const ps: Dict = {
   "sbr.col_warehouse": "ګودام",
   "report.no_reports_available": "پدې پاڼه کې ستاسو د ننوتلو لپاره هېڅ راپور نشته. ستاسو د کښتۍ کرښې راپورونه په «د لېږد او ترخیص راپورونو» کې دي.",
   "report.open_shipping_reports": "د لېږد او ترخیص راپورونه خلاصول",
+  "acct.sec_warehouse_details": "د ګودام تفصیلات",
+  "acct.warehouse_name": "ګودام",
+  "acct.warehouse_location": "ځای",
+  "acct.warehouse_code": "کوډ",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
