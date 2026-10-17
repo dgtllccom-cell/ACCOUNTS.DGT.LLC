@@ -292,7 +292,7 @@ export function ReportDataTable({
                         col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left"
                       )}
                     >
-                      {col.render ? col.render(row, lang, onRowClick) : formatCell(row[col.key], col.format, col.currency ?? currency)}
+                      {col.render ? col.render(row, lang, onRowClick) : formatCell(row[col.key], col.format, (col.currency ? (row as any).currency : undefined) ?? col.currency ?? currency)}
                     </td>
                   ))}
                 </tr>

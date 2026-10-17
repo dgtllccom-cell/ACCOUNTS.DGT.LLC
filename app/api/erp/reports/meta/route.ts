@@ -3,6 +3,7 @@ import { recordInHierarchyScope, recordInSessionScope } from "@/lib/api/scope-mi
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { resolveReportScope } from "@/lib/permissions/middleware";
+import { isShippingDomainOnly, SHIPPING_ONLY_REPORT_TYPES } from "@/lib/permissions/shipping-explicit-gate";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
@@ -100,7 +101,10 @@ function extractProject(value: unknown): string | null {
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
-    const reportTypes = request.nextUrl.searchParams.get("workspace") === "super-admin" ? superAdminReportTypes : standardReportTypes;
+    const allReportTypes = request.nextUrl.searchParams.get("workspace") === "super-admin" ? superAdminReportTypes : standardReportTypes;
+    // /api/erp/reports/scoped refuses Business report types for a Shipping-only login, so never offer them (the page used to open on a
+    // forbidden type and show an error). The list may be empty — the panel then explains where the Shipping reports are.
+    const reportTypes = isShippingDomainOnly(session) ? allReportTypes.filter((t) => SHIPPING_ONLY_REPORT_TYPES.has(t.key)) : allReportTypes;
     const lang = (["en", "ur", "ar", "fa", "ps"].includes(request.nextUrl.searchParams.get("lang") || "") ? request.nextUrl.searchParams.get("lang") : session.preferredLanguage) as SupportedLanguage;
     const scope = resolveReportScope(session);
 

@@ -170,6 +170,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
   const [meta, setMeta] = useState<ReportMeta | null>(null);
   const [metaLoading, setMetaLoading] = useState(true);
   const [metaError, setMetaError] = useState<string | null>(null);
+  const [noReports, setNoReports] = useState(false);
 
   const [filters, setFilters] = useState<ReportFilterValues>(DEFAULT_FILTERS);
   const [reportResult, setReportResult] = useState<ReportResult | null>(null);
@@ -267,6 +268,8 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
         if (cancelled) return;
         if (json.ok) {
           setMeta(json.data);
+          setNoReports(!(json.data.reportTypes?.length > 0));
+          if (!(json.data.reportTypes?.length > 0)) return;
           const rawUrlType = searchParams.get("type") || searchParams.get("reportType");
           let targetReportType = rawUrlType || json.data.reportTypes?.[0]?.key || (workspace === "super-admin" ? "ledger" : "roznamcha");
           if (targetReportType === "exchange-rates") targetReportType = "exchange-rate";
@@ -345,7 +348,9 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
   const netBalanceVal = Number(reportSummary?.balance || reportSummary?.netBalance || reportSummary?.totalAmount || (totalCreditVal - totalDebitVal));
   const clearedCount = Number(reportSummary?.clearedCount || reportSummary?.postedCount || 0);
   const remainingCount = Math.max(0, totalEntriesCount - clearedCount);
-  const currentCurrencySymbol = appliedCurrency !== "all" ? appliedCurrency : "AED";
+  const summaryByCurrency = Object.entries((reportSummary?.byCurrency ?? {}) as Record<string, { records: number; debit: number; credit: number; net: number }>).sort((x, y) => y[1].records - x[1].records);
+  const mixedCurrency = Boolean(reportSummary?.mixedCurrency) && summaryByCurrency.length > 1;
+  const currentCurrencySymbol = mixedCurrency ? "" : summaryByCurrency.length === 1 ? summaryByCurrency[0][0] : appliedCurrency !== "all" ? appliedCurrency : "AED";
 
   // Active country / branch names for Card 1
   const selectedMainBranch = meta?.mainBranches.find((b) => b.id === filters.mainBranchId);
@@ -570,6 +575,15 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
           <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
           <p className="text-xs font-semibold text-slate-500">{_("report.loading_report_engine", "Loading Report Engine...")}</p>
         </div>
+      </div>
+    );
+  }
+
+  if (noReports) {
+    return (
+      <div className="rounded-2xl border border-slate-200 bg-white p-8 dark:border-slate-800 dark:bg-slate-900" dir={isRTL ? "rtl" : "ltr"} data-testid="report-none-available">
+        <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">{_("report.no_reports_available", "No reports are available for your login on this page. Your Shipping Line reports are in Shipping & Clearing Reports.")}</p>
+        <a href="/dashboard/reports/shipping" className="mt-4 inline-flex min-h-[40px] items-center rounded-lg bg-blue-700 px-4 text-sm font-bold text-white">{_("report.open_shipping_reports", "Open Shipping & Clearing Reports")}</a>
       </div>
     );
   }
@@ -916,6 +930,17 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
               <span>{_("report.kpi_total_records", "Total Records")}:</span>
               <span className="font-black text-slate-800 dark:text-slate-200">{totalEntriesCount}</span>
             </div>
+            {mixedCurrency && (
+              <div className="flex flex-col gap-0.5 rounded-lg bg-slate-50 p-2 font-mono text-[10.5px] dark:bg-slate-800/60" data-testid="report-by-currency">
+                <div className="flex justify-between gap-2 text-[9.5px] font-bold uppercase text-slate-400"><span>&nbsp;</span><span>{_("report.col_credit")}</span><span>{_("report.col_debit")}</span><span>{_("report.col_balance")}</span></div>
+                {summaryByCurrency.slice(0, 4).map(([cur, v]) => (
+                  <div key={cur} className="flex justify-between gap-2"><span className="font-black text-slate-700 dark:text-slate-200">{cur}</span><span className="text-emerald-600">{fmtNum(v.credit)}</span><span className="text-rose-600">{fmtNum(v.debit)}</span><span className="text-blue-600">{fmtNum(v.net)}</span></div>
+                ))}
+                {summaryByCurrency.length > 4 && <span className="text-slate-500">+{summaryByCurrency.length - 4}</span>}
+              </div>
+            )}
+            {!mixedCurrency && (
+              <>
             <div className="flex justify-between items-center">
               <span>{_("report.kpi_total_credit", "Total Credit")} ({currentCurrencySymbol}):</span>
               <span className="font-black text-emerald-600 dark:text-emerald-400 font-mono">{fmtNum(totalCreditVal)}</span>
@@ -928,6 +953,8 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
               <span className="text-slate-700 dark:text-slate-300 font-bold">{_("report.kpi_net_balance", "Net Balance")} ({currentCurrencySymbol}):</span>
               <span className="font-black text-blue-600 dark:text-blue-400 font-mono text-sm">{fmtNum(netBalanceVal)}</span>
             </div>
+              </>
+            )}
           </div>
         </div>
 

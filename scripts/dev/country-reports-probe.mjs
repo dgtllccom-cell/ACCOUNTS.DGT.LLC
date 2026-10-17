@@ -1,0 +1,21 @@
+/** DEV only — probe /dashboard/reports/country as a role. BASE=http://localhost:3510 OUT=<dir> ROLE=super_admin|country_admin [COUNTRY=<uuid>] [LANG_CODE=en] node scripts/dev/country-reports-probe.mjs */
+import fs from "node:fs"; import { chromium } from "playwright";
+const BASE = process.env.BASE || "http://localhost:3510"; if (!/localhost/.test(BASE)) throw new Error("DEV only");
+const OUT = process.env.OUT; fs.mkdirSync(OUT, { recursive: true });
+const ROLE = process.env.ROLE || "super_admin", LANG = process.env.LANG_CODE || "en";
+const body = { role: ROLE, ...(process.env.COUNTRY ? { countryId: process.env.COUNTRY } : {}), ...(process.env.DOMAIN ? { operationalDomain: process.env.DOMAIN } : {}) };
+const r = await fetch(BASE + "/api/erp/auth/dev-session", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+const token = r.headers.getSetCookie().map((c) => c.split(";")[0]).find((c) => c.startsWith("erp_session=")).slice(12);
+const b = await chromium.launch(); const ctx = await b.newContext({ viewport: { width: Number(process.env.W || 1440), height: 900 } });
+await ctx.addCookies([{ name: "erp_session", value: token, domain: "localhost", path: "/" }, { name: "erp_lang", value: LANG, domain: "localhost", path: "/" }]);
+await ctx.addInitScript(([l]) => { try { localStorage.setItem("erp_lang", l); localStorage.setItem("erp_app_install_dismissed", "1"); } catch {} }, [LANG]);
+const p = await ctx.newPage(); const errs = [], bad = [];
+p.on("pageerror", (e) => errs.push("pageerror: " + String(e).slice(0, 300)));
+p.on("console", (m) => { if (m.type() === "error" && !/favicon|ResizeObserver|DevTools|presence|dgt-connect/i.test(m.text())) errs.push("console: " + m.text().slice(0, 300)); });
+p.on("response", (x) => { if (x.status() >= 400 && /\/api\//.test(x.url()) && !/dgt-connect|presence/.test(x.url())) bad.push(x.status() + " " + x.url().replace(BASE, "")); });
+await p.goto(BASE + "/dashboard/reports/country", { waitUntil: "load", timeout: 240000 });
+await p.waitForFunction(() => !/Loading Report Engine/.test(document.body.innerText), null, { timeout: 150000 }).catch(() => console.log("STILL LOADING after 150s")); await p.waitForTimeout(4000);
+await p.screenshot({ path: `${OUT}/${ROLE}-${LANG}.png` });
+console.log("TITLE:", await p.title()); console.log("TEXT:", (await p.evaluate(() => document.body.innerText)).replace(/\s+/g, " ").slice(700, 1900));
+console.log("TESTIDS:", await p.evaluate(() => ["report-none-available","report-by-currency"].map((i) => i + "=" + document.querySelectorAll("[data-testid='" + i + "']").length).join(" "))); console.log("ERRORS:", errs.slice(0, 6)); console.log("BAD API:", bad.slice(0, 10));
+await b.close();

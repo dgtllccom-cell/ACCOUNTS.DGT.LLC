@@ -4684,6 +4684,8 @@ export type UiKey =
   | "report.show_all_columns"
   | "report.loading"
   | "report.error"
+  | "report.no_reports_available"
+  | "report.open_shipping_reports"
   | "report.desc_cash_entry"
   | "report.desc_receipts"
   | "report.desc_payments"
@@ -36302,6 +36304,8 @@ const en: Dict = {
   "sbr.official": "Official ERP System Generated Document",
   "sbr.col_unit": "Unit",
   "sbr.col_warehouse": "Warehouse",
+  "report.no_reports_available": "No reports are available for your login on this page. Your Shipping Line reports are in Shipping & Clearing Reports.",
+  "report.open_shipping_reports": "Open Shipping & Clearing Reports",
 };
 
 const ur: Dict = {
@@ -60854,6 +60858,8 @@ const ur: Dict = {
   "sbr.official": "سرکاری ERP سسٹم سے تیار کردہ دستاویز",
   "sbr.col_unit": "یونٹ",
   "sbr.col_warehouse": "گودام",
+  "report.no_reports_available": "اس صفحے پر آپ کے لاگ اِن کے لیے کوئی رپورٹ دستیاب نہیں۔ آپ کی شپنگ لائن رپورٹس «شپنگ اور کلیئرنگ رپورٹس» میں ہیں۔",
+  "report.open_shipping_reports": "شپنگ اور کلیئرنگ رپورٹس کھولیں",
 };
 
 const ar: Dict = {
@@ -85407,6 +85413,8 @@ const ar: Dict = {
   "sbr.official": "مستند رسمي صادر عن نظام ERP",
   "sbr.col_unit": "الوحدة",
   "sbr.col_warehouse": "المستودع",
+  "report.no_reports_available": "لا توجد تقارير متاحة لحسابك في هذه الصفحة. تقارير خط الشحن الخاصة بك موجودة في «تقارير الشحن والتخليص».",
+  "report.open_shipping_reports": "فتح تقارير الشحن والتخليص",
 };
 
 const fa: Dict = {
@@ -109959,6 +109967,8 @@ const fa: Dict = {
   "sbr.official": "سند رسمی تولیدشده توسط سیستم ERP",
   "sbr.col_unit": "واحد",
   "sbr.col_warehouse": "انبار",
+  "report.no_reports_available": "هیچ گزارشی برای ورود شما در این صفحه در دسترس نیست. گزارش‌های خط کشتیرانی شما در «گزارش‌های حمل و ترخیص» است.",
+  "report.open_shipping_reports": "باز کردن گزارش‌های حمل و ترخیص",
 };
 
 const ps: Dict = {
@@ -134518,6 +134528,8 @@ const ps: Dict = {
   "sbr.official": "د ERP سیستم رسمي جوړ شوی سند",
   "sbr.col_unit": "واحد",
   "sbr.col_warehouse": "ګودام",
+  "report.no_reports_available": "پدې پاڼه کې ستاسو د ننوتلو لپاره هېڅ راپور نشته. ستاسو د کښتۍ کرښې راپورونه په «د لېږد او ترخیص راپورونو» کې دي.",
+  "report.open_shipping_reports": "د لېږد او ترخیص راپورونه خلاصول",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

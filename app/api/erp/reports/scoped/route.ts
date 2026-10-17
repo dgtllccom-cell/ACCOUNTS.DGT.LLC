@@ -963,6 +963,17 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Rows carry their OWN currency and are not converted, so adding AED + PKR + USD rows into one figure and labelling it "USD"
+    // misstates the totals. Alongside the existing summary, return totals per currency (and say when more than one is present).
+    const byCurrency: Record<string, { records: number; debit: number; credit: number; net: number }> = {};
+    for (const r of data as any[]) {
+      if (!r || r.currency == null || (r.debit === undefined && r.credit === undefined)) continue;
+      const c = String(r.currency).toUpperCase();
+      const e = (byCurrency[c] ??= { records: 0, debit: 0, credit: 0, net: 0 });
+      e.records += 1; e.debit += Number(r.debit || 0); e.credit += Number(r.credit || 0); e.net = e.credit - e.debit;
+    }
+    if (Object.keys(byCurrency).length > 0) summary = { ...summary, byCurrency, mixedCurrency: Object.keys(byCurrency).length > 1 };
+
     return apiOk({
       reportType: parsed.reportType,
       scope: {
