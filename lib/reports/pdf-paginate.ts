@@ -63,6 +63,12 @@ export async function renderPaginatedPdf(opts: PaginatedPdfOptions): Promise<voi
       /* fonts are best effort */
     }
 
+    // Multi-section documents (several tables + cards, e.g. the Stock Balance journals) declare data-pdf-flow and are paginated block by block.
+    if (doc.querySelector("[data-pdf-flow]")) {
+      await renderFlowPages(doc, iframe, opts, W, H);
+      return;
+    }
+
     const table = doc.querySelector<HTMLElement>("table.data-table, table.report-table");
     const tbody = table?.querySelector("tbody");
     if (!table || !tbody) throw new Error("no data table to paginate");
@@ -187,4 +193,131 @@ export async function renderPaginatedPdf(opts: PaginatedPdfOptions): Promise<voi
   } finally {
     iframe.remove();
   }
+}
+
+
+/**
+ * Flow pagination for multi-section reports.
+ *   <div data-pdf-flow>
+ *     <section class="pdf-head">…letterhead (first page only; later pages get the small .pdf-runhead)…</section>
+ *     <section class="pdf-block">…a card / panel (never split)…</section>
+ *     <section class="pdf-block" data-splittable> <h2 class="block-title"> + <table> (rows may continue on the next page, header repeated) </section>
+ *   </div>
+ * Blocks are packed onto A4 pages greedily; "PAGE x / N" is stamped on every page; nothing is clipped or dropped.
+ */
+async function renderFlowPages(doc: Document, iframe: HTMLIFrameElement, opts: PaginatedPdfOptions, W: number, H: number) {
+  const orientation = opts.orientation;
+  const style = doc.createElement("style");
+  style.textContent = `
+    html, body { width:${W}px !important; margin:0 !important; padding:0 !important; background:#fff !important; overflow:visible !important; height:auto !important; }
+    .no-print-toolbar, .custom-modal-overlay, .toolbar, .screen-only { display:none !important; }
+    .pdf-page { width:${W}px; height:${H}px; box-sizing:border-box; padding:${MARGIN}px ${MARGIN}px ${MARGIN + MARKER_H}px ${MARGIN}px; position:relative; overflow:hidden; background:#fff; page-break-after:always; break-after:page; }
+    .pdf-page:last-child { page-break-after:auto; break-after:auto; }
+    .pdf-marker { position:absolute; bottom:${Math.round(MARGIN / 2)}px; inset-inline-end:${MARGIN}px; font:700 10px sans-serif; color:#112b3d; direction:ltr; }
+    tr { break-inside:avoid; page-break-inside:avoid; }
+    .pdf-runhead { display:flex !important; }
+  `;
+  doc.head.appendChild(style);
+
+  const flow = doc.querySelector<HTMLElement>("[data-pdf-flow]")!;
+  const head = flow.querySelector<HTMLElement>(".pdf-head");
+  const runhead = flow.querySelector<HTMLElement>(".pdf-runhead");
+  const blocks = Array.from(flow.querySelectorAll<HTMLElement>(":scope > .pdf-block"));
+  const budget = H - MARGIN * 2 - MARKER_H;
+  const mkPage = () => { const p = doc.createElement("div"); p.className = "pdf-page"; p.setAttribute("dir", opts.rtl ? "rtl" : "ltr"); return p; };
+
+  const stage = doc.createElement("div");
+  stage.style.cssText = `position:absolute;left:0;top:0;width:${W - MARGIN * 2}px;visibility:hidden;`;
+  doc.body.appendChild(stage);
+  const heightOf = (nodes: HTMLElement[]) => {
+    stage.innerHTML = "";
+    nodes.forEach((n) => stage.appendChild(n.cloneNode(true)));
+    return stage.getBoundingClientRect().height;
+  };
+
+  // split one splittable block into row-chunks that each fit in `room` (title + thead repeat on every chunk)
+  const chunksOf = (block: HTMLElement, fixed: HTMLElement[], room: number): HTMLElement[] => {
+    const table = block.querySelector<HTMLElement>("table");
+    const tbody = table?.querySelector("tbody");
+    if (!table || !tbody) return [block];
+    const rows = Array.from(tbody.querySelectorAll<HTMLElement>(":scope > tr"));
+    const body = rows.filter((r) => !r.classList.contains("total-row"));
+    const totals = rows.filter((r) => r.classList.contains("total-row"));
+    const make = (subset: HTMLElement[], withTotals: boolean) => {
+      const c = block.cloneNode(true) as HTMLElement;
+      const tb = c.querySelector("tbody")!;
+      tb.innerHTML = "";
+      subset.forEach((r) => tb.appendChild(r.cloneNode(true)));
+      if (withTotals) totals.forEach((r) => tb.appendChild(r.cloneNode(true)));
+      return c;
+    };
+    const out: HTMLElement[] = [];
+    let cursor = 0;
+    let avail = room;
+    while (cursor < body.length) {
+      let count = 0;
+      for (let step = 16; step >= 1; step = Math.floor(step / 2) || (step === 1 ? 0 : 1)) {
+        while (cursor + count < body.length && heightOf([...fixed, make(body.slice(cursor, cursor + count + step), false)]) <= avail) count += step;
+        if (step === 1) break;
+      }
+      if (count === 0) count = 1;
+      const last = cursor + count >= body.length;
+      out.push(make(body.slice(cursor, cursor + count), last));
+      cursor += count;
+      avail = budget - heightOf(runhead ? [runhead] : []);
+    }
+    if (out.length === 0) out.push(make([], true));
+    return out;
+  };
+
+  const pagesNodes: HTMLElement[][] = [[]];
+  const used = () => pagesNodes[pagesNodes.length - 1];
+  if (head) used().push(head);
+  for (const block of blocks) {
+    const fixed = used();
+    const need = heightOf([...fixed, block]);
+    if (need <= budget) { used().push(block); continue; }
+    if (block.hasAttribute("data-splittable")) {
+      const room = budget - heightOf(fixed);
+      // not even the title + a few rows fit beside what is already on this page → continue on a fresh page
+      const startNew = room < 120 && fixed.length > 0;
+      if (startNew) { pagesNodes.push(runhead ? [runhead.cloneNode(true) as HTMLElement] : []); }
+      const base = startNew ? (runhead ? [runhead] : []) : fixed;
+      const chunks = chunksOf(block, base, budget - heightOf(base));
+      chunks.forEach((c, i) => {
+        if (i > 0) pagesNodes.push(runhead ? [runhead.cloneNode(true) as HTMLElement] : []);
+        used().push(c);
+      });
+    } else {
+      pagesNodes.push(runhead ? [runhead.cloneNode(true) as HTMLElement] : []);
+      used().push(block);
+    }
+  }
+
+  const total = pagesNodes.length;
+  const built = pagesNodes.map((nodes, i) => {
+    const page = mkPage();
+    nodes.forEach((n) => page.appendChild(n.cloneNode(true)));
+    if (i === 0) page.querySelectorAll(".pdf-runhead").forEach((n) => n.remove());
+    const marker = doc.createElement("div");
+    marker.className = "pdf-marker";
+    marker.textContent = `${opts.pageWord} ${i + 1} / ${total}`;
+    page.appendChild(marker);
+    return page;
+  });
+  doc.body.innerHTML = "";
+  doc.body.appendChild(style);
+  built.forEach((p) => doc.body.appendChild(p));
+  iframe.style.height = `${H * total}px`;
+
+  const [{ default: html2canvas }, { jsPDF }] = await Promise.all([import("html2canvas"), import("jspdf")]);
+  const pdf = new jsPDF({ orientation, unit: "mm", format: "a4", compress: true });
+  const pageW = orientation === "landscape" ? 297 : 210;
+  const pageH = orientation === "landscape" ? 210 : 297;
+  for (let i = 0; i < built.length; i += 1) {
+    const canvas = await html2canvas(built[i], { scale: 1.4, useCORS: true, logging: false, backgroundColor: "#ffffff", width: W, height: H, windowWidth: W, windowHeight: H });
+    if (i > 0) pdf.addPage("a4", orientation);
+    pdf.addImage(canvas.toDataURL("image/jpeg", 0.8), "JPEG", 0, 0, pageW, pageH);
+  }
+  pdf.save(opts.filename);
 }

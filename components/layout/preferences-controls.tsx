@@ -144,6 +144,7 @@ export function PreferencesControls() {
             if (prev === next) return prev;
             document.documentElement.lang = getHtmlLanguage(next);
             document.documentElement.dir = rtlLanguages.includes(next) ? "rtl" : "ltr";
+            injectWebFonts(next); // same-tab switches from in-page language chips (and other tabs) load the script's web font too
             return next;
           });
         }

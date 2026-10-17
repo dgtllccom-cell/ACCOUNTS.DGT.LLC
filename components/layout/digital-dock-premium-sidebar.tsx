@@ -385,6 +385,7 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
         label: nt("All Stock Reports"),
         icon: FileBarChart,
         children: [
+          { label: nt("Goods Movement & Stock Report"), href: "/dashboard/purchase/stock/report", icon: FileBarChart, upgraded: true },
           { label: nt("Stock Reports Overview"), href: "/dashboard/inventory/stock-reports", icon: BarChart3 },
           { label: nt("Stock Register / Inventory"), href: "/dashboard/inventory", icon: Package },
           { label: nt("Stock Reports (Branch)"), href: "/dashboard/inventory/stock-reports/branch", icon: BarChart3 },

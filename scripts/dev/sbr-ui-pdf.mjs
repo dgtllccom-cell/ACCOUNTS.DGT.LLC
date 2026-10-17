@@ -1,0 +1,32 @@
+/** DEV only — full Stock Journal print preview + PDF download. BASE=http://localhost:3510 OUT=<dir> [LANG_CODE=en] node scripts/dev/sbr-ui-pdf.mjs */
+import fs from "node:fs";
+import { chromium } from "playwright";
+const BASE = process.env.BASE || "http://localhost:3510"; if (!/localhost/.test(BASE)) throw new Error("DEV only");
+const OUT = process.env.OUT; fs.mkdirSync(OUT, { recursive: true });
+const LANG = process.env.LANG_CODE || "en";
+const results = []; const check = (n, ok, d = "") => { results.push({ n, ok: !!ok }); console.log(ok ? "PASS" : "FAIL", n, d ? "· " + String(d).slice(0, 180) : ""); };
+const r = await fetch(BASE + "/api/erp/auth/dev-session", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ role: "super_admin" }) });
+const token = r.headers.getSetCookie().map((c) => c.split(";")[0]).find((c) => c.startsWith("erp_session=")).slice(12);
+const b = await chromium.launch(); const ctx = await b.newContext({ viewport: { width: 1440, height: 900 }, acceptDownloads: true });
+await ctx.addCookies([{ name: "erp_session", value: token, domain: "localhost", path: "/" }, { name: "erp_lang", value: LANG, domain: "localhost", path: "/" }]);
+await ctx.addInitScript(([l]) => { try { localStorage.setItem("erp_lang", l); localStorage.setItem("erp_app_install_dismissed", "1"); } catch {} }, [LANG]);
+const p = await ctx.newPage();
+p.on("console", (m) => { if (/pdf|error|fail|paginate/i.test(m.text())) console.log("  [console]", m.text().slice(0, 200)); });
+p.on("pageerror", (e) => console.log("  [pageerror]", String(e).slice(0, 200)));
+await p.goto(BASE + "/dashboard/purchase/stock/report", { waitUntil: "load", timeout: 240000 });
+await p.waitForSelector("[data-testid='sbr-cards']", { timeout: 180000 });
+await p.waitForFunction(() => !document.querySelector(".animate-spin"), null, { timeout: 120000 }).catch(() => {});
+await p.locator("[data-testid='sbr-print']").click();
+await p.waitForSelector("iframe", { timeout: 120000 }); await p.waitForTimeout(6000);
+const fr = p.frames().filter((f) => f !== p.mainFrame()).pop();
+const info = await fr.evaluate(() => ({ text: document.body.innerText.length, flow: !!document.querySelector("[data-pdf-flow]"), blocks: document.querySelectorAll(".pdf-block").length, rows: document.querySelectorAll("tbody tr").length, landscape: /landscape/.test([...document.querySelectorAll("style")].map((s) => s.textContent).join(" ")) }));
+check("journal preview rendered with sections", info.text > 500 && info.blocks > 0, JSON.stringify(info));
+check("journal is the landscape flow document", info.flow && info.landscape);
+await p.screenshot({ path: `${OUT}/${LANG}-journal-preview.png` });
+const dl = p.waitForEvent("download", { timeout: 420000 }).catch(() => null);
+await p.locator("button:has-text('Download')").first().hover(); await p.locator("button:has-text('Download')").first().click({ force: true }); await p.waitForTimeout(800);
+await p.locator("button:has-text('Save as PDF')").first().click({ force: true });
+const d = await dl;
+if (d) { const f = `${OUT}/${LANG}-journal.pdf`; await d.saveAs(f); const buf = fs.readFileSync(f); const pages = (buf.toString("latin1").match(/\/Type\s*\/Page[^s]/g) || []).length; check("PDF downloaded (valid header)", buf.slice(0, 4).toString() === "%PDF", buf.length + " bytes"); check("PDF has multiple pages", pages > 1, pages + " pages"); }
+else check("PDF download event", false, "no download");
+await b.close(); console.log(`\n${results.filter((x) => x.ok).length}/${results.length} passed`);
