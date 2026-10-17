@@ -107,6 +107,12 @@ export interface StockJournalRow {
   damagedQuantity: number;
   shortageQuantity: number;
   outstandingQuantity: number;
+  origin: string;
+  grossWeight: number;
+  netWeight: number;
+  bookingNo: string;
+  invoiceNo: string;
+  shipDetails: string;
   bookingStatus: "draft" | "confirmed";
   invoiceStatus: "posted" | "unposted";
   paymentStatus: PaymentState;
@@ -152,6 +158,7 @@ export interface StockJournalSummary {
 export type JournalFilters = {
   stage: "all" | "booking" | "confirmed_booking" | "transit" | "receiving" | "ready" | "available" | "sold" | "reserved";
   destination?: DestinationType;
+  sourceType?: "all" | "purchase_booking" | "local_purchase";
   search?: string;
   goodsName?: string;
   purchaseOrderNo?: string;
@@ -420,6 +427,12 @@ export async function loadStockJournal(session: ErpSession, f: JournalFilters) {
     const systemNo = po.purchase_order_no || "-";
     const manualNo = String(form.manualBillNumber || form.billNo || po.purchase_contract_no || "").trim();
     const bookingConfirmed = String(po.ledger_posting_status || "").toLowerCase() === "posted" || !["", "draft"].includes(String(po.status || "").toLowerCase());
+    const origin = String(form.originCountry || form.origin || form.countryOfOrigin || po.country_name || "").trim();
+    const rawBookingNo = String(form.bookingNo || form.bookingNumber || po.purchase_order_no || "").trim();
+    const bookingNo = rawBookingNo ? (rawBookingNo.startsWith("#") ? rawBookingNo : `#${rawBookingNo}`) : "#PB-001";
+    const rawInvNo = String(form.invoiceNo || form.invoiceNumber || form.supplierInvoiceNo || manualNo || "").trim();
+    const invoiceNo = rawInvNo ? (rawInvNo.startsWith("#") ? rawInvNo : `#${rawInvNo}`) : "#PI-001";
+
     const base = {
       sourceType: "purchase_booking" as const,
       sourceId: po.id,
@@ -452,6 +465,12 @@ export async function loadStockJournal(session: ErpSession, f: JournalFilters) {
         size: line.size,
         unit: line.unit,
         bookedQuantity: line.booked,
+        grossWeight: line.grossWeight || 0,
+        netWeight: line.netWeight || 0,
+        origin,
+        bookingNo,
+        invoiceNo,
+        shipDetails: "",
         quantityNotEntered: line.booked <= EPS && lineChunks.length === 0,
         overLoaded: !!overLoaded[line.lineKey],
         goodsTransferHref: null,
@@ -503,6 +522,7 @@ export async function loadStockJournal(session: ErpSession, f: JournalFilters) {
           loadingRecordNo: lf.no,
           truckOrContainer: lf.containerNo || lf.vehicleNo || "",
           blNumber: lf.blNumber,
+          shipDetails: [lf.containerNo, lf.vehicleNo, lf.blNumber].filter(Boolean).join(" · ") || lf.containerNo || lf.vehicleNo || "—",
           customsStatus: lf.customsStatus,
           loadedQuantity: ch.loaded,
           receivedQuantity: ch.receivedGood,
@@ -588,10 +608,20 @@ export async function loadStockJournal(session: ErpSession, f: JournalFilters) {
       paymentStatus: (cost > 0 && paid + 0.005 >= cost ? "paid" : paid > 0 ? "partial" : "unpaid") as PaymentState,
       goodsTransferHref: `/dashboard/purchase/local-purchase/${lp.id}/goods-transfer`,
     };
+    const lpQty = num(lp.quantity_kgs || num(lp.numbers || 0) * 50);
+    const lpBookingNo = contractNo ? `#PB-${contractNo}` : `#PB-${String(lp.id).slice(0, 6).toUpperCase()}`;
+    const lpInvoiceNo = lp.manual_bill_no ? `#PI-${lp.manual_bill_no}` : `#PI-${String(lp.id).slice(0, 6).toUpperCase()}`;
     const mk = (over: Partial<StockJournalRow>): StockJournalRow => ({
       id: "", lineKey: "", stage: "booking", productName: lp.goods_name || "", goodsId: lp.goods_id || null, brand: lp.brand || "", size: lp.size || "",
       unit: lp.quantity_name || "", quantity: 0, bookedQuantity: 0, loadedQuantity: 0, receivedQuantity: 0, damagedQuantity: 0,
-      shortageQuantity: 0, outstandingQuantity: 0, customsStatus: "not_applicable", truckOrContainer: lp.truck_no || "",
+      shortageQuantity: 0, outstandingQuantity: 0,
+      origin: lp.country_name || "",
+      grossWeight: lpQty,
+      netWeight: lpQty,
+      bookingNo: lpBookingNo,
+      invoiceNo: lpInvoiceNo,
+      shipDetails: lp.truck_no ? `TRK: ${lp.truck_no}` : "—",
+      customsStatus: "not_applicable", truckOrContainer: lp.truck_no || "",
       loadingRecordId: null, loadingRecordNo: null, blNumber: "", warehouseId: null, warehouseName: null, transferId: null,
       transferNo: null, destinationType: null, customerName: null, salesOrderNo: null, documentRef: null, issueType: null,
       confirmedAt: null, issuedAt: null, quantityNotEntered: false, legacyReceived: false, overLoaded: false,
@@ -669,12 +699,13 @@ export async function loadStockJournal(session: ErpSession, f: JournalFilters) {
   const search = f.search?.toLowerCase().trim();
   const filtered = rows.filter((r) => {
     if (!stageOk(r)) return false;
+    if (f.sourceType && f.sourceType !== "all" && r.sourceType !== f.sourceType) return false;
     if (f.destination && r.destinationType !== f.destination) return false;
     if (f.warehouseId && r.warehouseId !== f.warehouseId) return false;
     if (f.goodsName && !has(r.productName, f.goodsName.toLowerCase().trim())) return false;
     if (f.purchaseOrderNo && !has(r.billNumber, f.purchaseOrderNo.toLowerCase().trim())) return false;
     if (f.containerNo && !has(r.truckOrContainer, f.containerNo.toLowerCase().trim())) return false;
-    if (search && ![r.billNumber, r.productName, r.supplierName, r.truckOrContainer, r.loadingRecordNo, r.transferNo, r.customerName, r.salesOrderNo, r.blNumber, r.warehouseName].some((v) => has(v, search))) return false;
+    if (search && ![r.billNumber, r.productName, r.supplierName, r.truckOrContainer, r.loadingRecordNo, r.transferNo, r.customerName, r.salesOrderNo, r.blNumber, r.warehouseName, r.origin, r.bookingNo, r.invoiceNo, r.countryName, r.branchName].some((v) => has(v, search))) return false;
     return true;
   });
   filtered.sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));

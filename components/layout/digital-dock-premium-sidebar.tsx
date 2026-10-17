@@ -373,10 +373,28 @@ export const DAMAN_SIDEBAR_ITEMS: SidebarMenuItem[] = [
     label: nt("Journal Stock"),
     icon: Boxes,
     children: [
-      { label: nt("Journal Stock"), href: "/dashboard/purchase/stock/journal", icon: BookOpen, upgraded: true },
+      {
+        key: "sub-journal-stock-group",
+        label: nt("Journal Stock"),
+        icon: BookOpen,
+        children: [
+          { label: nt("Journal Stock (All)"), href: "/dashboard/purchase/stock/journal", icon: BookOpen, upgraded: true },
+          { label: nt("Booking Stock (Journal)"), href: "/dashboard/purchase/stock/booking", icon: FileText, upgraded: true },
+          { label: nt("Local Purchase Stock"), href: "/dashboard/purchase/stock/local-purchase", icon: ShoppingCart, upgraded: true },
+        ],
+      },
       { label: nt("Loading Stock"), href: "/dashboard/purchase/stock/loading", icon: Truck, upgraded: true },
       { label: nt("Confirmed Stock"), href: "/dashboard/purchase/stock/confirmed", icon: CheckSquare, upgraded: true },
-      { label: nt("Warehouse Stock"), href: "/dashboard/purchase/stock/warehouse", icon: Warehouse, upgraded: true },
+      {
+        key: "sub-warehouse-stock-group",
+        label: nt("Warehouse Stock"),
+        icon: Warehouse,
+        children: [
+          { label: nt("Warehouse Stock (All)"), href: "/dashboard/purchase/stock/warehouse", icon: Warehouse, upgraded: true },
+          { label: nt("Warehouse Booking Stock"), href: "/dashboard/purchase/stock/warehouse-booking", icon: Package, upgraded: true },
+          { label: nt("Warehouse Local Stock"), href: "/dashboard/purchase/stock/warehouse-local", icon: ShoppingCart, upgraded: true },
+        ],
+      },
       { label: nt("Export Stock"), href: "/dashboard/purchase/stock/export", icon: Globe, upgraded: true },
       { label: nt("Local Market Stock"), href: "/dashboard/purchase/stock/local-market", icon: ShoppingCart, upgraded: true },
       { label: nt("Stock Transfer"), href: "/dashboard/purchase/stock/transfer", icon: ArrowRightLeft, upgraded: true },

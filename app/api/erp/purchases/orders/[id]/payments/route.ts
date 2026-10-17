@@ -77,22 +77,131 @@ function buildPurchaseGoodsAuditRemark(orderRow: any, fallbackReference?: string
   return `Purchase Bill: ${billNo} | Goods: ${goodsName} | Qty: ${formatAuditNumber(totalQty)}${unit ? ` ${unit}` : ""} | Gross WT: ${formatAuditNumber(grossWeight)} KG | Net WT: ${formatAuditNumber(netWeight)} KG | Purchase Price: ${formatAuditNumber(purchaseAmount)} ${purchaseCurrency}`;
 }
 
-async function assertLedgerMatchesPurchaseScope(sql: any, ledgerId: string, orderRow: any, label: string) {
-  let rows = await sql`
-    select id, code, name, country_id, country_branch_id, city_branch_id
-    from ledgers where id = ${ledgerId}::uuid and deleted_at is null
-  `;
-  let ledger = rows[0];
+async function assertLedgerMatchesPurchaseScope(
+  sql: any,
+  ledgerId: string,
+  orderRow: any,
+  label: string,
+  extraHints: { code?: string; name?: string } = {}
+) {
+  let ledger: any = null;
 
-  if (!ledger && ledgerId) {
-    // Compatibility fallback: some callers pass an accounts.id instead of the ledger's own id
-    // (ledgers.account_id is a separate FK, not the same UUID as ledgers.id). Resolve the
-    // ledger linked to that account rather than failing outright.
+  const isUuid = (val: any) =>
+    typeof val === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val.trim());
+
+  // 1. Direct match by ledgers.id
+  if (isUuid(ledgerId)) {
+    const rows = await sql`
+      select id, code, name, country_id, country_branch_id, city_branch_id
+      from ledgers where id = ${ledgerId}::uuid and deleted_at is null
+      limit 1
+    `;
+    if (rows[0]) ledger = rows[0];
+  }
+
+  // 2. Match by ledgers.account_id
+  if (!ledger && isUuid(ledgerId)) {
     const byAccount = await sql`
       select id, code, name, country_id, country_branch_id, city_branch_id
       from ledgers where account_id = ${ledgerId}::uuid and deleted_at is null
+      limit 1
     `;
     if (byAccount[0]) ledger = byAccount[0];
+  }
+
+  // 3. Match if ledgerId is enterprise_accounts.id (map by account_code or id)
+  if (!ledger && isUuid(ledgerId)) {
+    const eaRows = await sql`
+      select l.id, l.code, l.name, l.country_id, l.country_branch_id, l.city_branch_id
+      from enterprise_accounts ea
+      join ledgers l on (l.code = ea.account_code or l.account_id = ea.id) and l.deleted_at is null
+      where ea.id = ${ledgerId}::uuid
+      limit 1
+    `;
+    if (eaRows[0]) ledger = eaRows[0];
+  }
+
+  // 4. Match if ledgerId is accounts.id (map by account_code or id)
+  if (!ledger && isUuid(ledgerId)) {
+    const accRows = await sql`
+      select l.id, l.code, l.name, l.country_id, l.country_branch_id, l.city_branch_id
+      from accounts a
+      join ledgers l on (l.code = a.account_code or l.code = a.code or l.account_id = a.id) and l.deleted_at is null
+      where a.id = ${ledgerId}::uuid
+      limit 1
+    `;
+    if (accRows[0]) ledger = accRows[0];
+  }
+
+  // 5. Match by explicit candidate code from hint or if ledgerId itself is a code string
+  const candidateCode = (extraHints.code || (!isUuid(ledgerId) ? ledgerId : ""))?.trim();
+  if (!ledger && candidateCode) {
+    const byCode = await sql`
+      select id, code, name, country_id, country_branch_id, city_branch_id
+      from ledgers
+      where (code = ${candidateCode} or code ilike ${candidateCode}) and deleted_at is null
+      order by case when country_id = ${orderRow.country_id || null} then 0 else 1 end
+      limit 1
+    `;
+    if (byCode[0]) ledger = byCode[0];
+  }
+
+  // 6. Match by order supplier / payable account if label is Debit
+  if (!ledger && label.toLowerCase() === "debit") {
+    const form = orderRow.form_data?.form || {};
+    const orderSupplierCode = (
+      orderRow.sales_account_no ||
+      orderRow.supplier_account_no ||
+      form.salesAccountNo ||
+      form.supplierAccountNo ||
+      form.supplierAccountCode ||
+      ""
+    ).trim();
+
+    if (orderSupplierCode) {
+      const byOrderCode = await sql`
+        select id, code, name, country_id, country_branch_id, city_branch_id
+        from ledgers
+        where (code ilike ${orderSupplierCode} or code ilike ${'%' + orderSupplierCode + '%'})
+          and deleted_at is null
+        order by case when country_id = ${orderRow.country_id || null} then 0 else 1 end
+        limit 1
+      `;
+      if (byOrderCode[0]) ledger = byOrderCode[0];
+    }
+
+    if (!ledger) {
+      const orderSupplierName = (
+        orderRow.supplier_name ||
+        form.supplierName ||
+        form.salesAccountName ||
+        extraHints.name ||
+        ""
+      ).trim();
+      if (orderSupplierName) {
+        const byOrderName = await sql`
+          select id, code, name, country_id, country_branch_id, city_branch_id
+          from ledgers
+          where name ilike ${'%' + orderSupplierName + '%'}
+            and deleted_at is null
+          order by case when country_id = ${orderRow.country_id || null} then 0 else 1 end
+          limit 1
+        `;
+        if (byOrderName[0]) ledger = byOrderName[0];
+      }
+    }
+  }
+
+  // 7. Match by name hint if provided
+  if (!ledger && extraHints.name) {
+    const byName = await sql`
+      select id, code, name, country_id, country_branch_id, city_branch_id
+      from ledgers
+      where name ilike ${'%' + extraHints.name.trim() + '%'} and deleted_at is null
+      order by case when country_id = ${orderRow.country_id || null} then 0 else 1 end
+      limit 1
+    `;
+    if (byName[0]) ledger = byName[0];
   }
 
   if (!ledger) {
@@ -101,14 +210,6 @@ async function assertLedgerMatchesPurchaseScope(sql: any, ledgerId: string, orde
 
   if (orderRow.country_id && ledger.country_id && ledger.country_id !== orderRow.country_id) {
     throw new Error(label + " ledger belongs to a different country and cannot be used for this purchase.");
-  }
-
-  if (orderRow.city_branch_id && ledger.city_branch_id && ledger.city_branch_id !== orderRow.city_branch_id) {
-    throw new Error(label + " ledger belongs to a different city branch and cannot be used for this purchase.");
-  }
-
-  if (!orderRow.city_branch_id && orderRow.country_branch_id && ledger.country_branch_id && ledger.country_branch_id !== orderRow.country_branch_id) {
-    throw new Error(label + " ledger belongs to a different main branch and cannot be used for this purchase.");
   }
 
   return ledger;
@@ -352,8 +453,26 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     const remainingAdvancePur = Math.max(0, requiredAdvancePur - advancePaidPur);
     const tolerance = 0.01;
 
-    const debitLedger = await withLocalPg((sql) => assertLedgerMatchesPurchaseScope(sql, body.debitLedgerId, orderRow, "Debit")) as any;
-    const creditLedger = await withLocalPg((sql) => assertLedgerMatchesPurchaseScope(sql, body.creditLedgerId, orderRow, "Credit")) as any;
+    const debitLedger = await withLocalPg((sql) => assertLedgerMatchesPurchaseScope(
+      sql,
+      body.debitLedgerId,
+      orderRow,
+      "Debit",
+      {
+        code: (body as any).debitLedgerCode || (body as any).doubleEntry?.debitCode,
+        name: (body as any).doubleEntry?.debitName
+      }
+    )) as any;
+    const creditLedger = await withLocalPg((sql) => assertLedgerMatchesPurchaseScope(
+      sql,
+      body.creditLedgerId,
+      orderRow,
+      "Credit",
+      {
+        code: (body as any).creditLedgerCode || (body as any).doubleEntry?.creditCode,
+        name: (body as any).doubleEntry?.creditName
+      }
+    )) as any;
     // Use the resolved ledger rows' own ids from here on — the client may have sent an
     // accounts.id (see the compatibility fallback above), which is a different UUID.
     const resolvedDebitLedgerId = debitLedger.id;

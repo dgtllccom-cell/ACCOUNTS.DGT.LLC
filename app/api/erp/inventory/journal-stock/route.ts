@@ -14,6 +14,7 @@ const DESTS = ["warehouse", "local_sales", "export", "direct_sale"] as const;
 const querySchema = z.object({
   stage: z.enum(STAGES).default("all"),
   destination: z.enum(DESTS).optional(),
+  sourceType: z.enum(["all", "purchase_booking", "local_purchase"]).optional(),
   view: z.enum(["rows", "available"]).default("rows"),
   search: z.string().trim().max(140).optional(),
   purchaseOrderNo: z.string().trim().max(140).optional(),

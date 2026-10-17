@@ -10,12 +10,14 @@ import {
   Trash2,
   Mic,
   Pin,
-  Sparkles
+  Sparkles,
+  Eye
 } from "lucide-react";
 import { t as tUi } from "@/lib/i18n/ui";
 import { Button } from "@/components/ui/button";
 import { SalesBookingUpperCards } from "./sales-booking-upper-cards";
 import { VoiceFormFill } from "@/components/voice-form-fill";
+import { AccountDetailsModal } from "./account-details-modal";
 
 export function SalesBookingStep1({
   form,
@@ -34,6 +36,46 @@ export function SalesBookingStep1({
   const [customerOpen, setCustomerOpen] = useState(false);
   const [salesSearch, setSalesSearch] = useState("");
   const [salesOpen, setSalesOpen] = useState(false);
+  const [viewModalAccount, setViewModalAccount] = useState(null);
+  const [viewModalType, setViewModalType] = useState("customer");
+
+  const handleOpenAccountDetails = (type) => {
+    if (type === "sales") {
+      const code = String(form.salesAccountNo || "").trim().toLowerCase();
+      const acc = dbAccounts.find((a) => (a.accountCode || a.code || "").trim().toLowerCase() === code) || {
+        accountCode: form.salesAccountNo || "SA-001",
+        accountName: form.salesAccountName || "Global Trading LLC",
+        cityBranchName: form.salesAccountBranch || form.branchName || "Main Branch",
+        kind: form.salesAccountKind || "General Trading",
+        currency: form.salesCurrency || "AED",
+        companyName: form.salesCompanyName || form.salesAccountName,
+        address: form.salesCompanyAddress || "Office 101, Business Bay, Dubai, UAE",
+        licenseNo: form.salesLicenseNo || "TRN1234567890",
+        gstTrn: form.salesGstTrn || "100123456789003",
+        currentBalance: form.salesAccountCurrentBalance ?? 0,
+        manualReferenceNumber: form.salesAccountManualReferenceNumber ?? ""
+      };
+      setViewModalAccount(acc);
+      setViewModalType("sales");
+    } else {
+      const code = String(form.customerAccountNo || "").trim().toLowerCase();
+      const acc = dbAccounts.find((a) => (a.accountCode || a.code || "").trim().toLowerCase() === code) || {
+        accountCode: form.customerAccountNo || "CU-001",
+        accountName: form.customerAccountName || "Al Noor Imports",
+        cityBranchName: form.customerAccountBranch || form.branchName || "Main Branch",
+        kind: form.customerAccountKind || "Import & Export",
+        currency: form.customerAccountCurrency || form.salesCurrency || "AED",
+        companyName: form.customerCompanyName || form.customerAccountName,
+        address: form.customerCompanyAddress || "Warehouse 5, Jebel Ali, Dubai, UAE",
+        licenseNo: form.customerLicenseNo || "TRN0987654321",
+        gstTrn: form.customerGstTrn || "100987654321003",
+        currentBalance: form.customerAccountCurrentBalance ?? 0,
+        manualReferenceNumber: form.customerAccountManualReferenceNumber ?? ""
+      };
+      setViewModalAccount(acc);
+      setViewModalType("customer");
+    }
+  };
 
   // Filter accounts
   const filteredCustomerAccounts = dbAccounts.filter((acc) => {
@@ -106,9 +148,23 @@ export function SalesBookingStep1({
 
         {/* Customer Account (DR) * */}
         <div className="space-y-1 relative">
-          <label className="block text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-            {tUi(lang, "sales.customer_account_dr", "Customer Account (DR)")} <span className="text-red-500">*</span>
-          </label>
+          <div className="flex items-center justify-between">
+            <label className="block text-[10px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+              {tUi(lang, "sales.customer_account_dr", "Customer Account (DR)")} <span className="text-red-500">*</span>
+            </label>
+            {form.customerAccountNo && (
+              <button
+                type="button"
+                onClick={() => handleOpenAccountDetails("customer")}
+                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 hover:bg-amber-200 text-amber-900 dark:bg-amber-950/70 dark:text-amber-300 dark:hover:bg-amber-900 border border-amber-300 dark:border-amber-700 transition-colors shadow-2xs cursor-pointer"
+                title="View Customer Account Details"
+              >
+                <Eye className="w-2.5 h-2.5" />
+                <span>View</span>
+              </button>
+            )}
+          </div>
           <div className="relative">
             <input
               type="text"
@@ -119,15 +175,22 @@ export function SalesBookingStep1({
                 setCustomerOpen(true);
               }}
               onFocus={() => setCustomerOpen(true)}
-              className="w-full h-9 pl-8 pr-3 text-xs bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg outline-none focus:border-blue-500 font-semibold"
+              className="w-full h-9 pl-8 pr-3 text-xs bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg outline-none focus:border-amber-500 font-semibold"
             />
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-3 pointer-events-none" />
           </div>
 
           {customerOpen && (
-            <div className="absolute left-0 top-15 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl z-50 p-1 max-h-56 overflow-y-auto">
-              <div className="p-1.5 text-[9px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
-                Select Customer Account ({filteredCustomerAccounts.length})
+            <div className="absolute left-0 top-full mt-1 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl z-50 p-1 max-h-56 overflow-y-auto">
+              <div className="p-1.5 text-[9px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <span>Select Customer Account ({filteredCustomerAccounts.length})</span>
+                <button
+                  type="button"
+                  onClick={() => setCustomerOpen(false)}
+                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-bold px-1"
+                >
+                  ✕
+                </button>
               </div>
               {filteredCustomerAccounts.map((acc) => (
                 <button
@@ -135,10 +198,21 @@ export function SalesBookingStep1({
                   type="button"
                   onClick={() => {
                     if (applyAccountMaster) applyAccountMaster("purchase", acc);
+                    setForm((prev) => ({
+                      ...prev,
+                      customerAccountNo: acc.accountCode || acc.code || "",
+                      customerAccountName: acc.accountName || acc.name || "",
+                      customerAccountBranch: acc.cityBranchName || acc.branchName || prev.branchName || "",
+                      customerAccountKind: acc.kind || acc.businessName || prev.customerAccountKind || "Asset / Accounts Receivable",
+                      customerCompanyName: acc.companyName || acc.name || prev.customerCompanyName,
+                      customerCompanyAddress: acc.address || prev.customerCompanyAddress,
+                      customerLicenseNo: acc.licenseNo || prev.customerLicenseNo,
+                      customerGstTrn: acc.gstTrn || prev.customerGstTrn,
+                    }));
                     setCustomerOpen(false);
                     setCustomerSearch("");
                   }}
-                  className="w-full text-left p-2 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/40 text-xs transition-colors border-b border-slate-50 dark:border-slate-800/40"
+                  className="w-full text-left p-2 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/40 text-xs transition-colors border-b border-slate-50 dark:border-slate-800/40 cursor-pointer"
                 >
                   <div className="font-bold text-slate-800 dark:text-slate-200">{acc.accountName}</div>
                   <div className="text-[10px] text-slate-500 flex justify-between">
@@ -156,9 +230,23 @@ export function SalesBookingStep1({
 
         {/* Sales Account (CR) * */}
         <div className="space-y-1 relative">
-          <label className="block text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-            {tUi(lang, "sales.sales_account_cr", "Sales Account (CR)")} <span className="text-red-500">*</span>
-          </label>
+          <div className="flex items-center justify-between">
+            <label className="block text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+              {tUi(lang, "sales.sales_account_cr", "Sales Account (CR)")} <span className="text-red-500">*</span>
+            </label>
+            {form.salesAccountNo && (
+              <button
+                type="button"
+                onClick={() => handleOpenAccountDetails("sales")}
+                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 hover:bg-emerald-200 text-emerald-900 dark:bg-emerald-950/70 dark:text-emerald-300 dark:hover:bg-emerald-900 border border-emerald-300 dark:border-emerald-700 transition-colors shadow-2xs cursor-pointer"
+                title="View Sales Account Details"
+              >
+                <Eye className="w-2.5 h-2.5" />
+                <span>View</span>
+              </button>
+            )}
+          </div>
           <div className="relative">
             <input
               type="text"
@@ -169,15 +257,22 @@ export function SalesBookingStep1({
                 setSalesOpen(true);
               }}
               onFocus={() => setSalesOpen(true)}
-              className="w-full h-9 pl-8 pr-3 text-xs bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg outline-none focus:border-blue-500 font-semibold"
+              className="w-full h-9 pl-8 pr-3 text-xs bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg outline-none focus:border-emerald-500 font-semibold"
             />
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-3 pointer-events-none" />
           </div>
 
           {salesOpen && (
-            <div className="absolute left-0 top-15 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl z-50 p-1 max-h-56 overflow-y-auto">
-              <div className="p-1.5 text-[9px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
-                Select Sales Account ({filteredSalesAccounts.length})
+            <div className="absolute left-0 top-full mt-1 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl z-50 p-1 max-h-56 overflow-y-auto">
+              <div className="p-1.5 text-[9px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <span>Select Sales Account ({filteredSalesAccounts.length})</span>
+                <button
+                  type="button"
+                  onClick={() => setSalesOpen(false)}
+                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-bold px-1"
+                >
+                  ✕
+                </button>
               </div>
               {filteredSalesAccounts.map((acc) => (
                 <button
@@ -185,10 +280,21 @@ export function SalesBookingStep1({
                   type="button"
                   onClick={() => {
                     if (applyAccountMaster) applyAccountMaster("sales", acc);
+                    setForm((prev) => ({
+                      ...prev,
+                      salesAccountNo: acc.accountCode || acc.code || "",
+                      salesAccountName: acc.accountName || acc.name || "",
+                      salesAccountBranch: acc.cityBranchName || acc.branchName || prev.branchName || "",
+                      salesAccountKind: acc.kind || acc.businessName || prev.salesAccountKind || "Income / Revenue",
+                      salesCompanyName: acc.companyName || acc.name || prev.salesCompanyName,
+                      salesCompanyAddress: acc.address || prev.salesCompanyAddress,
+                      salesLicenseNo: acc.licenseNo || prev.salesLicenseNo,
+                      salesGstTrn: acc.gstTrn || prev.salesGstTrn,
+                    }));
                     setSalesOpen(false);
                     setSalesSearch("");
                   }}
-                  className="w-full text-left p-2 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-xs transition-colors border-b border-slate-50 dark:border-slate-800/40"
+                  className="w-full text-left p-2 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-xs transition-colors border-b border-slate-50 dark:border-slate-800/40 cursor-pointer"
                 >
                   <div className="font-bold text-slate-800 dark:text-slate-200">{acc.accountName}</div>
                   <div className="text-[10px] text-slate-500 flex justify-between">
@@ -416,6 +522,15 @@ export function SalesBookingStep1({
           </div>
         </div>
       </div>
+
+      {/* Account Details Modal */}
+      <AccountDetailsModal
+        isOpen={!!viewModalAccount}
+        onClose={() => setViewModalAccount(null)}
+        account={viewModalAccount}
+        accountType={viewModalType}
+        lang={lang}
+      />
     </div>
   );
 }

@@ -385,6 +385,9 @@ export const purchaseOrderPaymentPostSchema = scopeSchema.extend({
   exchangeRate: z.coerce.number().finite().positive().default(1),
   debitLedgerId: uuidSchema,
   creditLedgerId: uuidSchema,
+  debitLedgerCode: z.string().trim().optional(),
+  creditLedgerCode: z.string().trim().optional(),
+  doubleEntry: z.record(z.string(), z.unknown()).optional(),
   referenceNo: z.string().trim().max(120).optional(),
   narration: z.string().trim().max(1000).optional(),
   typeDetails: z.record(z.string(), z.unknown()).optional()
