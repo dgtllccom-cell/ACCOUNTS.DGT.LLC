@@ -859,6 +859,10 @@ export function UserJournalReport() {
                                     setActiveActionUserId(null);
                                     openUserHandoverSlipWindow({
                                       userData: {
+                                        userId: row.userId,
+                                        userCode: row.userCode,
+                                        branchType: row.branchType,
+                                        registrationDate: row.registrationDate,
                                         fullName: row.fullName,
                                         username: row.email?.split("@")[0] || row.userCode,
                                         role: row.role,
@@ -881,6 +885,10 @@ export function UserJournalReport() {
                                     setActiveActionUserId(null);
                                     openUserHandoverSlipWindow({
                                       userData: {
+                                        userId: row.userId,
+                                        userCode: row.userCode,
+                                        branchType: row.branchType,
+                                        registrationDate: row.registrationDate,
                                         fullName: row.fullName,
                                         username: row.email?.split("@")[0] || row.userCode,
                                         role: row.role,
@@ -1084,6 +1092,10 @@ export function UserJournalReport() {
                 onClick={() => {
                   openUserHandoverSlipWindow({
                     userData: {
+                      userId: tempPasswordModal.user.id,
+                      userCode: tempPasswordModal.user.username,
+                      branchType: "",
+                      registrationDate: "",
                       fullName: tempPasswordModal.user.name,
                       username: tempPasswordModal.user.username,
                       role: tempPasswordModal.user.role,
@@ -1091,7 +1103,7 @@ export function UserJournalReport() {
                       branchName: tempPasswordModal.user.branchName,
                       branchCode: tempPasswordModal.user.branchCode,
                       email: tempPasswordModal.user.email,
-                      status: tempPasswordModal.user.status,
+                      status: tempPasswordModal.user.status ?? "",
                       temporaryPassword: tempPasswordModal.tempPassword,
                     },
                     format: "a4",
@@ -1108,6 +1120,10 @@ export function UserJournalReport() {
                 onClick={() => {
                   openUserHandoverSlipWindow({
                     userData: {
+                      userId: tempPasswordModal.user.id,
+                      userCode: tempPasswordModal.user.username,
+                      branchType: "",
+                      registrationDate: "",
                       fullName: tempPasswordModal.user.name,
                       username: tempPasswordModal.user.username,
                       role: tempPasswordModal.user.role,
@@ -1115,7 +1131,7 @@ export function UserJournalReport() {
                       branchName: tempPasswordModal.user.branchName,
                       branchCode: tempPasswordModal.user.branchCode,
                       email: tempPasswordModal.user.email,
-                      status: tempPasswordModal.user.status,
+                      status: tempPasswordModal.user.status ?? "",
                       temporaryPassword: tempPasswordModal.tempPassword,
                     },
                     format: "slip",

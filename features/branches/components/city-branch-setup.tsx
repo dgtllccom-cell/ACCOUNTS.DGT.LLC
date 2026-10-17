@@ -880,7 +880,9 @@ function CityBranchSetupContent() {
       country: null,
       state: null,
       district: null,
-      city: row.city_name ? { id: row.city_id ?? "", name: row.city_name, code: "" } : null,
+      city: row.city_name
+        ? { id: row.city_id ?? "", country_id: "", state_province_id: null, district_id: null, name: row.city_name, code: "", zip_code: null, phone_area_code: null, is_active: true }
+        : null,
       area: null
     });
     setCurrency(row.local_currency || "");
