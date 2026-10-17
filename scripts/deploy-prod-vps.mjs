@@ -90,6 +90,7 @@ try {
 
 const remoteScript = `
 set -e
+export DGT_DEPLOY_GATE=1
 
 echo "[VPS 1/5] Navigating to /var/www/dgt-nextjs..."
 cd /var/www/dgt-nextjs
