@@ -53,7 +53,7 @@ Fees and rules change — confirm on each official page before paying (my source
 Passwords, 2-step codes and the signing key must never be sent through chat.
 
 ## 7. What I already prepared
-* Android: two signed release bundles (`DGT.llc-B-Business-release.aab`, `DGT.llc-BS-Shipping-release.aab`), signed release APKs for Samsung, and test APKs — folder `C:\Users\dgtll\OneDrive\Desktop\DGT-Mobile-Apps\` (exact paths in the report).
+* Android: two signed release bundles (`DGTllc-B-release.aab`, `DGTllc-BS-release.aab`), signed release APKs for Samsung, rebuilt 2026-10-18 from current code — folder `B:\accounts.dgt.llc.code_project\mobile-builds\release-2026-10-18\` with `SHA256SUMS.txt` (older builds: `archive-2026-10-10-pre-ua-fix`).
 * Listings (5 languages), icons/feature graphics, privacy policy page, data-safety answers, iOS build script and requirements, Production deployment plan with backup/rollback, device-approval system (built and tested on DEV).
 
 ## 8. iPhone/iPad — remaining steps (all need a Mac + Apple account)

@@ -20,7 +20,7 @@ Costs and rules change — confirm on the official page before paying. (Sources 
 2. Open the signup link → **Organization** → enter legal name, D-U-N-S, address, phone, website → pay USD 25.
 3. Verify identity (ID + company documents) and the phone/e-mail shown to users.
 4. Create app → "DGT.llc B" (package must be `com.dgtllc.b`), then again for "DGT.llc BS" (`com.dgtllc.bs`). Free app, category Business.
-5. Enrol in **Play App Signing** when asked; upload `DGT.llc-B-Business-release.aab` / `DGT.llc-BS-Shipping-release.aab` (Production or Internal testing track first).
+5. Enrol in **Play App Signing** when asked; upload `DGTllc-B-release.aab` / `DGTllc-BS-release.aab` (folder `mobile-builds\release-2026-10-18`) (Production or Internal testing track first).
 6. Complete: store listing (text in `docs/store/listing-*.md`, icon 512, feature graphic 1024×500, phone + tablet screenshots), Privacy policy URL, Data safety (`data-safety.md`), content rating questionnaire, target audience 18+, app access (give reviewers a login).
 7. New personal accounts must run a 14-day closed test with 12 testers; organisation accounts are normally exempt (verify the current Google policy) — one more reason to register as an organisation.
 

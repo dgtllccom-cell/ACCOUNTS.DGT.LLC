@@ -28,7 +28,7 @@ I cannot create the accounts (account creation, identity checks, payments and ag
 | Age / content rating | Everyone / 4+ (business tool; no user-generated public content, no violence, gambling, etc.) | same |
 | Descriptions (5 languages) | `docs/store/listing-b.md` | `docs/store/listing-bs.md` |
 | Icons & feature graphic | `DGT-Mobile-Apps\Store-graphics\b\` | `...\bs\` |
-| Files | `DGT.llc-B-Business-release.aab` (+ signed `.apk` for Samsung) | `DGT.llc-BS-Shipping-release.aab` (+ signed `.apk`) |
+| Files | `DGTllc-B-release.aab` (+ `DGTllc-B-release-signed.apk` for Samsung) | `DGTllc-BS-release.aab` (+ `DGTllc-BS-release-signed.apk`) |
 | Review login | **[CONFIRM]** least-privilege Production account (needed by all 3 reviewers) | a shipping-only reviewer account |
 
 ## 1. Google Play Console — https://play.google.com/console/signup
